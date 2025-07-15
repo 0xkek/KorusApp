@@ -1,11 +1,13 @@
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import React from 'react';
+import * as Haptics from 'expo-haptics';
+import React, { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Post as PostType } from '../types';
 // import { sendLocalNotification } from '../utils/notifications';
 import Reply from './Reply';
+import { Fonts, FontSizes } from '../constants/Fonts';
 
 interface PostProps {
   post: PostType;
@@ -15,7 +17,8 @@ interface PostProps {
   onLike: (postId: number) => void;
   onReply: (postId: number, quotedText?: string, quotedUsername?: string) => void;
   onBump: (postId: number) => void;
-  onTip: (postId: number) => void;
+  onTip: (postId: number, amount: number) => void;
+  onShowTipModal: (postId: number) => void;
   onLikeReply: (postId: number, replyId: number) => void;
   onTipReply: (postId: number, replyId: number) => void;
   onBumpReply: (replyId: number) => void;
@@ -32,6 +35,7 @@ export default function Post({
   onReply,
   onBump,
   onTip,
+  onShowTipModal,
   onLikeReply,
   onTipReply,
   onBumpReply,
@@ -39,6 +43,28 @@ export default function Post({
   onToggleReplySorting,
 }: PostProps) {
   const { colors, isDarkMode } = useTheme();
+  
+  // Double-tap to like functionality
+  const lastTapTime = useRef(0);
+  const DOUBLE_TAP_DELAY = 300;
+
+  const handleDoubleTap = (event?: any) => {
+    const now = Date.now();
+    if (now - lastTapTime.current < DOUBLE_TAP_DELAY) {
+      // Double tap detected - trigger like only if not already liked
+      if (!post.liked) {
+        onLike(post.id);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        
+        // Trigger particle explosion for double-tap like
+        if (event && global.createParticleExplosion) {
+          const touch = event.nativeEvent;
+          global.createParticleExplosion('like', touch.pageX || 200, touch.pageY || 300);
+        }
+      }
+    }
+    lastTapTime.current = now;
+  };
 
   // Flatten all replies (replies are already sorted in HomeScreen)
   const flattenReplies = (replies: any[]): any[] => {
@@ -67,8 +93,18 @@ export default function Post({
     return Date.now() < post.bumpExpiresAt;
   };
 
-  const handleLike = () => {
+  const handleLike = (event?: any) => {
+    // Only trigger particle explosion when adding a like, not removing it
+    const isAddingLike = !post.liked;
+    
     onLike(post.id);
+    
+    // Trigger particle explosion only when giving a like
+    if (isAddingLike && event && global.createParticleExplosion) {
+      const touch = event.nativeEvent;
+      global.createParticleExplosion('like', touch.pageX || 200, touch.pageY || 300);
+    }
+    
     // Send notification if not liking own post
     if (post.wallet !== currentUserWallet) {
       // sendLocalNotification({
@@ -79,8 +115,15 @@ export default function Post({
     }
   };
 
-  const handleReply = (postId: number, quotedText?: string, quotedUsername?: string) => {
+  const handleReply = (postId: number, quotedText?: string, quotedUsername?: string, event?: any) => {
     onReply(postId, quotedText, quotedUsername);
+    
+    // Trigger particle explosion
+    if (event && global.createParticleExplosion) {
+      const touch = event.nativeEvent;
+      global.createParticleExplosion('reply', touch.pageX || 200, touch.pageY || 300);
+    }
+    
     // Send notification if not replying to own post
     if (post.wallet !== currentUserWallet && !quotedText) {
       // sendLocalNotification({
@@ -91,8 +134,15 @@ export default function Post({
     }
   };
 
-  const handleBump = () => {
+  const handleBump = (event?: any) => {
     onBump(post.id);
+    
+    // Trigger particle explosion
+    if (event && global.createParticleExplosion) {
+      const touch = event.nativeEvent;
+      global.createParticleExplosion('bump', touch.pageX || 200, touch.pageY || 300);
+    }
+    
     // Send notification if not bumping own post
     if (post.wallet !== currentUserWallet) {
       // sendLocalNotification({
@@ -103,8 +153,9 @@ export default function Post({
     }
   };
 
-  const handleTip = () => {
-    onTip(post.id);
+  const handleTip = (amount: number, event?: any) => {
+    onTip(post.id, amount);
+    
     // Send notification if not tipping own post
     if (post.wallet !== currentUserWallet) {
       // sendLocalNotification({
@@ -113,6 +164,11 @@ export default function Post({
       //   postId: post.id,
       // });
     }
+  };
+
+  const handleShowTipModal = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onShowTipModal(post.id);
   };
 
   const currentlyBumped = isBumpActive();
@@ -170,7 +226,14 @@ export default function Post({
               </View>
             </View>
 
-            <Text style={styles.postContent}>{post.content}</Text>
+            <TouchableOpacity
+              onPress={handleDoubleTap}
+              activeOpacity={1}
+              style={styles.postContentContainer}
+            >
+              <Text style={styles.postContent}>{post.content}</Text>
+            </TouchableOpacity>
+
 
             <View style={styles.postActions}>
               <Pressable
@@ -179,7 +242,7 @@ export default function Post({
                   post.liked && styles.likedBtn,
                   pressed && styles.pressedBtn
                 ]}
-                onPress={handleLike}
+                onPress={(e) => handleLike(e)}
                 android_disableSound={true}
               >
                 <BlurView intensity={25} style={styles.actionBlur}>
@@ -208,7 +271,7 @@ export default function Post({
                   flatReplies.length > 0 && styles.activeBtn,
                   pressed && styles.pressedBtn
                 ]}
-                onPress={() => flatReplies.length > 0 ? onToggleReplies(post.id) : handleReply(post.id)}
+                onPress={(e) => flatReplies.length > 0 ? onToggleReplies(post.id) : handleReply(post.id, undefined, undefined, e)}
                 android_disableSound={true}
               >
                 <BlurView intensity={25} style={styles.actionBlur}>
@@ -237,7 +300,7 @@ export default function Post({
                   currentlyBumped && styles.activeBtn,
                   pressed && styles.pressedBtn
                 ]}
-                onPress={handleBump}
+                onPress={(e) => handleBump(e)}
                 disabled={currentlyBumped}
                 android_disableSound={true}
               >
@@ -255,7 +318,7 @@ export default function Post({
                       styles.actionText,
                       currentlyBumped && styles.activeText
                     ]}>
-                      {currentlyBumped ? 'Bumped!' : '⬆️ Bump'}
+                      {currentlyBumped ? 'Bumped!' : 'Bump'}
                     </Text>
                   </LinearGradient>
                 </BlurView>
@@ -267,7 +330,7 @@ export default function Post({
                   post.tips > 0 && styles.activeBtn,
                   pressed && styles.pressedBtn
                 ]}
-                onPress={handleTip}
+                onPress={handleShowTipModal}
                 android_disableSound={true}
               >
                 <BlurView intensity={25} style={styles.actionBlur}>
@@ -424,8 +487,8 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   tipText: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: FontSizes.xs,
+    fontFamily: Fonts.bold,
     color: '#000',
   },
   postHeader: {
@@ -447,17 +510,16 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   avatarText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: FontSizes.lg,
+    fontFamily: Fonts.bold,
     color: '#000000',
   },
   postMeta: {
     flex: 1,
   },
   username: {
-    fontSize: 14,
-    fontWeight: '700',
-    fontFamily: 'monospace',
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.mono,
     color: '#43e97b',
     letterSpacing: -0.5,
     textShadowColor: 'rgba(67, 233, 123, 0.4)',
@@ -465,17 +527,20 @@ const styles = StyleSheet.create({
     textShadowRadius: 15,
   },
   time: {
-    fontSize: 12,
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.medium,
     marginTop: 3,
     color: 'rgba(255, 255, 255, 0.6)',
-    fontWeight: '500',
+  },
+  postContentContainer: {
+    position: 'relative',
   },
   postContent: {
-    fontSize: 16,
+    fontSize: FontSizes.lg,
+    fontFamily: Fonts.medium,
     lineHeight: 24,
     marginBottom: 20,
     color: '#e0e0e0',
-    fontWeight: '500',
   },
   postActions: {
     flexDirection: 'row',
@@ -534,24 +599,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   actionText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.semiBold,
     color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
+    letterSpacing: 0.2,
   },
   likedText: {
     color: '#ff4444',
-    fontWeight: '700',
+    fontFamily: Fonts.bold,
     textShadowColor: 'rgba(255, 68, 68, 0.4)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
+    letterSpacing: 0.2,
   },
   activeText: {
     color: '#43e97b',
-    fontWeight: '700',
+    fontFamily: Fonts.bold,
     textShadowColor: 'rgba(67, 233, 123, 0.4)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
+    letterSpacing: 0.2,
   },
   showRepliesBtn: {
     marginTop: 15,
@@ -559,12 +627,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   showRepliesText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.semiBold,
     color: '#43e97b',
     textShadowColor: 'rgba(67, 233, 123, 0.3)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
+    letterSpacing: 0.3,
   },
   hideRepliesBtn: {
     padding: 10,
@@ -572,9 +641,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   hideRepliesText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.semiBold,
     color: 'rgba(255, 255, 255, 0.6)',
+    letterSpacing: 0.3,
   },
   repliesContainer: {
     marginTop: 15,
@@ -602,8 +672,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sortToggleText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: FontSizes.xs,
+    fontFamily: Fonts.semiBold,
     color: 'rgba(255, 255, 255, 0.8)',
   },
   sortIndicator: {
@@ -614,8 +684,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(25, 25, 25, 0.6)',
   },
   sortText: {
-    fontSize: 10,
-    fontWeight: '500',
+    fontSize: FontSizes.xs,
+    fontFamily: Fonts.medium,
     color: 'rgba(255, 255, 255, 0.5)',
   },
   flatReplyContainer: {
@@ -637,8 +707,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   topReplyText: {
-    fontSize: 9,
-    fontWeight: '700',
+    fontSize: FontSizes.xs,
+    fontFamily: Fonts.bold,
     color: '#000',
   },
 });

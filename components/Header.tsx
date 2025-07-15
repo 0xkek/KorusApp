@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import { Fonts, FontSizes } from '../constants/Fonts';
 
 interface HeaderProps {
   onComposePress?: () => void;
@@ -327,8 +328,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   mainTitle: {
-    fontSize: 25,
-    fontWeight: '900',
+    fontSize: FontSizes['4xl'],
+    fontFamily: Fonts.extraBold,
     color: '#ffffff',
     letterSpacing: -1,
   },
@@ -348,9 +349,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   postBtnTxt: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.bold,
     color: '#000000',
+    letterSpacing: 0.3,
   },
   categoriesArea: {
     paddingTop: 10,
@@ -396,10 +398,12 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   categoryBtnTxt: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.bold,
     color: '#ffffff',
     textAlign: 'center',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   categoryBtnTxtSelected: {
     color: '#000000',
@@ -470,10 +474,11 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   subBtnTxt: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.semiBold,
     color: '#ffffff',
     textAlign: 'center',
+    letterSpacing: 0.3,
   },
   scrollIndicator: {
     position: 'absolute',

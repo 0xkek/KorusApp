@@ -140,10 +140,15 @@ export default function SubcategoryFeedScreen() {
     ));
   };
 
-  const handleTip = (postId: number) => {
+  const handleShowTipModal = (postId: number) => {
+    // For subcategory feed, use simple tip for now
+    handleTip(postId, 1);
+  };
+
+  const handleTip = (postId: number, amount: number = 1) => {
     setPosts(posts.map(post =>
       post.id === postId
-        ? { ...post, tips: post.tips + 1 }
+        ? { ...post, tips: post.tips + amount }
         : post
     ));
   };
@@ -320,6 +325,7 @@ export default function SubcategoryFeedScreen() {
                 onReply={handleReply}
                 onBump={handleBump}
                 onTip={handleTip}
+                onShowTipModal={handleShowTipModal}
                 onLikeReply={handleLikeReply}
                 onTipReply={handleTipReply}
                 onBumpReply={handleBumpReply}

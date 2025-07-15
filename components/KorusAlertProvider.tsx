@@ -5,6 +5,8 @@ interface AlertData {
   title: string;
   message: string;
   type?: 'success' | 'bump' | 'info';
+  autoDismiss?: boolean;
+  autoDismissDelay?: number;
 }
 
 interface KorusAlertContextType {
@@ -52,6 +54,8 @@ export const KorusAlertProvider: React.FC<KorusAlertProviderProps> = ({ children
           message={alertData.message}
           type={alertData.type}
           onClose={hideAlert}
+          autoDismiss={alertData.autoDismiss}
+          autoDismissDelay={alertData.autoDismissDelay}
         />
       )}
     </KorusAlertContext.Provider>

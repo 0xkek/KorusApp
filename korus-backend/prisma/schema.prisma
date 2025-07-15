@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  walletAddress    String   @id @db.VarChar(44)
+  tier            String   @default("standard") // "premium" or "standard"
+  walletSource    String   @default("app")      // "seeker" or "app"
+  genesisVerified Boolean  @default(false)
+  allyBalance     Decimal  @default(0) @db.Decimal(18, 6)
+  totalInteractionScore Int @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  posts           Post[]
+  replies         Reply[]
+  interactions    Interaction[]
+  
+  @@map("users")
+}
+
+model Post {
+  id              String   @id @default(cuid())
+  authorWallet    String   @db.VarChar(44)
+  content         String   @db.Text
+  topic           String   @db.VarChar(50)
+  subtopic        String   @db.VarChar(100)
+  
+  // Bump system
+  bumped          Boolean  @default(false)
+  bumpedAt        DateTime?
+  bumpExpiresAt   DateTime?
+  
+  // Interaction counts (for quick display)
+  likeCount       Int      @default(0)
+  replyCount      Int      @default(0)
+  tipCount        Int      @default(0)
+  bumpCount       Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  author          User     @relation(fields: [authorWallet], references: [walletAddress])
+  replies         Reply[]
+  
+  @@map("posts")
+}
+
+model Reply {
+  id              String   @id @default(cuid())
+  postId          String
+  authorWallet    String   @db.VarChar(44)
+  content         String   @db.Text
+  parentReplyId   String?  // For nested replies
+  
+  likeCount       Int      @default(0)
+  tipCount        Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  post            Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author          User     @relation(fields: [authorWallet], references: [walletAddress])
+  parentReply     Reply?   @relation("ReplyToReply", fields: [parentReplyId], references: [id])
+  childReplies    Reply[]  @relation("ReplyToReply")
+  
+  @@map("replies")
+}
+
+model Interaction {
+  id              String   @id @default(cuid())
+  userWallet      String   @db.VarChar(44)
+  targetType      String   @db.VarChar(10) // "post" or "reply"
+  targetId        String   // ID of post or reply
+  interactionType String   @db.VarChar(10) // "like", "tip", "bump"
+  amount          Decimal? @db.Decimal(18, 6) // For tips
+  
+  createdAt       DateTime @default(now())
+  
+  // Relations
+  user            User     @relation(fields: [userWallet], references: [walletAddress])
+  
+  // Prevent duplicate interactions
+  @@unique([userWallet, targetId, interactionType])
+  @@map("interactions")
+}

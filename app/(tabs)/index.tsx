@@ -3,6 +3,11 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+// Global type declaration for scroll to top function
+declare global {
+  var scrollToTop: (() => void) | undefined;
+}
 import { useKorusAlert } from '../../components/KorusAlertProvider';
 import { useTheme } from '../../context/ThemeContext';
 import { initialPosts, subtopicData } from '../../data/mockData';
@@ -13,8 +18,10 @@ import { generateWalletAddress } from '../../utils/wallet';
 // Components
 import CreatePostModal from '../../components/CreatePostModal';
 import Header from '../../components/Header';
+import ParticleSystem from '../../components/ParticleSystem';
 import Post from '../../components/Post';
 import ReplyModal from '../../components/ReplyModal';
+import TipModal from '../../components/TipModal';
 
 // Reply sorting types
 type ReplySortType = 'best' | 'recent';
@@ -29,6 +36,7 @@ export default function HomeScreen() {
   const [activeSubtopic, setActiveSubtopic] = useState('Job Search');
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [showReplyModal, setShowReplyModal] = useState(false);
+  const [showTipModal, setShowTipModal] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
   const [quotedText, setQuotedText] = useState<string>('');
   const [quotedUsername, setQuotedUsername] = useState<string>('');
@@ -45,6 +53,12 @@ export default function HomeScreen() {
   // Current user wallet (in real app, this would come from wallet creation)
   const [currentUserWallet] = useState(generateWalletAddress());
   
+  // Mock wallet balance for demo (in real app, this would come from backend)
+  const [walletBalance, setWalletBalance] = useState(150.75);
+  
+  // ScrollView ref for scroll to top functionality
+  const scrollViewRef = useRef<ScrollView>(null);
+  
   // Scroll position tracking for header collapse
   const [scrollY, setScrollY] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -56,11 +70,19 @@ export default function HomeScreen() {
     registerForPushNotificationsAsync();
     const cleanupListeners = setupNotificationListeners();
     
+    // Setup global scroll to top function
+    global.scrollToTop = () => {
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    };
+    
     return () => {
       cleanupListeners();
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
+      // Cleanup global function
+      global.scrollToTop = undefined;
     };
   }, []);
 
@@ -90,7 +112,7 @@ export default function HomeScreen() {
     // Set scroll end after 150ms of no scrolling
     scrollTimeoutRef.current = setTimeout(() => {
       setIsScrolling(false);
-    }, 150);
+    }, 150) as any;
   };
 
   // Reply sorting functions
@@ -412,18 +434,33 @@ export default function HomeScreen() {
     }
   };
 
-  const handleTip = (postId: number) => {
+  const handleShowTipModal = (postId: number) => {
+    setSelectedPostId(postId);
+    setShowTipModal(true);
+  };
+
+  const handleTip = (postId: number, amount: number) => {
+    // Check if user has sufficient balance
+    if (amount > walletBalance) {
+      showAlert({
+        title: 'Insufficient Funds',
+        message: `You only have ${walletBalance.toFixed(2)} $ALLY in your wallet. Please enter a smaller amount.`,
+        type: 'info'
+      });
+      return;
+    }
+
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    
+    // Deduct from wallet balance
+    setWalletBalance(prev => prev - amount);
+    
+    // Update post tips
     setPosts(posts.map(post =>
       post.id === postId
-        ? { ...post, tips: post.tips + 1 }
+        ? { ...post, tips: post.tips + amount }
         : post
     ));
-    showAlert({
-      title: 'Success',
-      message: 'Tip sent! 💰',
-      type: 'success'
-    });
   };
 
   // Enhanced post sorting with bump expiration
@@ -445,43 +482,45 @@ export default function HomeScreen() {
   });
 
   return (
-    <View style={styles.container}>
-      {/* SolMint-Level Phone Background System (NO external particles) */}
-      
-      {/* Base dark gradient layer (matches SolMint phone background) */}
-      <LinearGradient
-        colors={[
-          'rgba(30, 30, 30, 0.95)',
-          'rgba(20, 20, 20, 0.98)',
-          'rgba(15, 15, 15, 0.99)',
-          'rgba(10, 10, 10, 1)',
-        ]}
-        style={styles.baseBackground}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      />
-      
-      {/* Green overlay gradient (simulates SolMint's ::before pseudo-element) */}
-      <LinearGradient
-        colors={[
-          'rgba(67, 233, 123, 0.08)',
-          'rgba(56, 249, 215, 0.05)',
-          'transparent',
-          'rgba(67, 233, 123, 0.06)',
-          'rgba(56, 249, 215, 0.1)',
-        ]}
-        style={styles.greenOverlay}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      />
+    <ParticleSystem>
+      <View style={styles.container}>
+        {/* SolMint-Level Phone Background System (NO external particles) */}
         
-      <View style={styles.contentContainer}>
+        {/* Base dark gradient layer (matches SolMint phone background) */}
+        <LinearGradient
+          colors={[
+            'rgba(30, 30, 30, 0.95)',
+            'rgba(20, 20, 20, 0.98)',
+            'rgba(15, 15, 15, 0.99)',
+            'rgba(10, 10, 10, 1)',
+          ]}
+          style={styles.baseBackground}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+        
+        {/* Green overlay gradient (simulates SolMint's ::before pseudo-element) */}
+        <LinearGradient
+          colors={[
+            'rgba(67, 233, 123, 0.08)',
+            'rgba(56, 249, 215, 0.05)',
+            'transparent',
+            'rgba(67, 233, 123, 0.06)',
+            'rgba(56, 249, 215, 0.1)',
+          ]}
+          style={styles.greenOverlay}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+          
+        <View style={styles.contentContainer}>
         {/* Status bar background overlay */}
         <View style={styles.statusBarOverlay} />
         
         <Header onCategoryChange={handleCategoryChange} isCollapsed={headerCollapsed} />
         
         <ScrollView 
+          ref={scrollViewRef}
           style={styles.content} 
           contentContainerStyle={[
             styles.scrollContent, 
@@ -518,6 +557,7 @@ export default function HomeScreen() {
               onReply={handleReply}
               onBump={handleBump}
               onTip={handleTip}
+              onShowTipModal={handleShowTipModal}
               onLikeReply={handleLikeReply}
               onTipReply={handleTipReply}
               onBumpReply={handleBumpReply}
@@ -569,8 +609,24 @@ export default function HomeScreen() {
           onContentChange={setNewReplyContent}
           onSubmit={handleCreateReply}
         />
+
+        <TipModal
+          visible={showTipModal}
+          username={selectedPostId ? posts.find(p => p.id === selectedPostId)?.wallet || '' : ''}
+          walletBalance={walletBalance}
+          onClose={() => {
+            setShowTipModal(false);
+            setSelectedPostId(null);
+          }}
+          onTip={(amount, event) => {
+            if (selectedPostId) {
+              handleTip(selectedPostId, amount);
+            }
+          }}
+        />
+        </View>
       </View>
-    </View>
+    </ParticleSystem>
   );
 }
 

@@ -9,10 +9,11 @@ import { KorusAlertProvider } from '../components/KorusAlertProvider';
 export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    Inter_Regular: require('../assets/fonts/Inter_Regular.ttf'),
-    Inter_Medium: require('../assets/fonts/Inter_Medium.ttf'),
-    Inter_SemiBold: require('../assets/fonts/Inter_SemiBold.ttf'),
-    Inter_Bold: require('../assets/fonts/Inter_Bold.ttf'),
+    'Poppins-Regular': require('../assets/fonts/Poppins-Regular.ttf'),
+    'Poppins-Medium': require('../assets/fonts/Poppins-Medium.ttf'),
+    'Poppins-SemiBold': require('../assets/fonts/Poppins-SemiBold.ttf'),
+    'Poppins-Bold': require('../assets/fonts/Poppins-Bold.ttf'),
+    'Poppins-ExtraBold': require('../assets/fonts/Poppins-ExtraBold.ttf'),
   });
 
   if (!loaded) {

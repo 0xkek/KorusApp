@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import { Fonts, FontSizes } from '../constants/Fonts';
 
 interface CreatePostModalProps {
   visible: boolean;
@@ -160,8 +161,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: FontSizes.xl,
+    fontFamily: Fonts.bold,
     color: '#ffffff',
     letterSpacing: -0.02,
   },
@@ -176,13 +177,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   closeButton: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: FontSizes.lg,
+    fontFamily: Fonts.bold,
     color: 'rgba(255, 255, 255, 0.7)',
   },
   modalSubtitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.semiBold,
     color: 'rgba(67, 233, 123, 0.9)',
     marginBottom: 20,
     letterSpacing: -0.01,
@@ -198,8 +199,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(67, 233, 123, 0.4)',
     borderRadius: 20,
     padding: 18,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: FontSizes.lg,
+    fontFamily: Fonts.medium,
     color: '#ffffff',
     minHeight: 140,
     textAlignVertical: 'top',
@@ -232,9 +233,10 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: FontSizes.lg,
+    fontFamily: Fonts.semiBold,
     color: '#ffffff',
+    letterSpacing: 0.3,
   },
   postButton: {
     flex: 1,
@@ -249,10 +251,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   postButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: FontSizes.lg,
+    fontFamily: Fonts.bold,
     color: '#000000',
-    letterSpacing: -0.01,
+    letterSpacing: 0.3,
   },
   postButtonTextDisabled: {
     color: 'rgba(255, 255, 255, 0.4)',

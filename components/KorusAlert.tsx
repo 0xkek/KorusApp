@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface KorusAlertProps {
@@ -9,6 +9,8 @@ interface KorusAlertProps {
   message: string;
   type?: 'success' | 'bump' | 'info';
   onClose: () => void;
+  autoDismiss?: boolean;
+  autoDismissDelay?: number;
 }
 
 export default function KorusAlert({
@@ -17,7 +19,20 @@ export default function KorusAlert({
   message,
   type = 'info',
   onClose,
+  autoDismiss = false,
+  autoDismissDelay = 2000,
 }: KorusAlertProps) {
+
+  // Auto-dismiss functionality
+  useEffect(() => {
+    if (visible && autoDismiss) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, autoDismissDelay);
+
+      return () => clearTimeout(timer);
+    }
+  }, [visible, autoDismiss, autoDismissDelay, onClose]);
 
   return (
     <Modal
@@ -42,20 +57,22 @@ export default function KorusAlert({
               <Text style={styles.title}>{title}</Text>
               <Text style={styles.message}>{message}</Text>
 
-              <TouchableOpacity
-                style={styles.okButton}
-                onPress={onClose}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={['#43e97b', '#38f9d7']}
-                  style={styles.okButtonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
+              {!autoDismiss && (
+                <TouchableOpacity
+                  style={styles.okButton}
+                  onPress={onClose}
+                  activeOpacity={0.8}
                 >
-                  <Text style={styles.okButtonText}>OK</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+                  <LinearGradient
+                    colors={['#43e97b', '#38f9d7']}
+                    style={styles.okButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <Text style={styles.okButtonText}>OK</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
             </LinearGradient>
           </BlurView>
         </View>
