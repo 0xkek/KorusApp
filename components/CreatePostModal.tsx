@@ -1,7 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import React from 'react';
-import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 
@@ -12,7 +12,7 @@ interface CreatePostModalProps {
   activeSubtopic: string;
   onClose: () => void;
   onContentChange: (text: string) => void;
-  onSubmit: () => void;
+  onSubmit: (category: string, subcategory: string) => void;
 }
 
 export default function CreatePostModal({
@@ -25,6 +25,49 @@ export default function CreatePostModal({
   onSubmit,
 }: CreatePostModalProps) {
   const { colors } = useTheme();
+  
+  // Local state for category selection
+  const [selectedCategory, setSelectedCategory] = useState(activeTab.toUpperCase());
+  const [selectedSubcategory, setSelectedSubcategory] = useState(activeSubtopic);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [showSubcategoryDropdown, setShowSubcategoryDropdown] = useState(false);
+
+  // Categories and subcategories (matching Header component)
+  const categories = [
+    'CAREER', 'HEALTH', 'RELATIONSHIPS', 'FINANCE', 'TECHNOLOGY', 
+    'LIFESTYLE', 'EDUCATION', 'ENTERTAINMENT', 'SPORTS', 'TRAVEL', 
+    'BUSINESS', 'POLITICS'
+  ];
+  
+  const subcategories: { [key: string]: string[] } = {
+    CAREER: ['Job Search', 'Interviews', 'Networking', 'Salary Negotiations'],
+    HEALTH: ['Mental Health', 'Fitness', 'Nutrition', 'Medical'],
+    RELATIONSHIPS: ['Dating', 'Marriage', 'Family', 'Friendship'],
+    FINANCE: ['Investing', 'Budgeting', 'Crypto', 'Real Estate'],
+    TECHNOLOGY: ['AI/ML', 'Web Dev', 'Mobile Apps', 'Blockchain'],
+    LIFESTYLE: ['Fashion', 'Home', 'Food', 'Travel'],
+    EDUCATION: ['College', 'Online Learning', 'Certifications', 'Skills'],
+    ENTERTAINMENT: ['Movies', 'Music', 'Gaming', 'Books'],
+    SPORTS: ['Football', 'Basketball', 'Soccer', 'Fitness'],
+    TRAVEL: ['Destinations', 'Tips', 'Budget Travel', 'Solo Travel'],
+    BUSINESS: ['Startups', 'Marketing', 'Leadership', 'Strategy'],
+    POLITICS: ['Elections', 'Policy', 'Local Gov', 'International']
+  };
+
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category);
+    setSelectedSubcategory(subcategories[category][0]); // Default to first subcategory
+    setShowCategoryDropdown(false);
+  };
+
+  const handleSubcategorySelect = (subcategory: string) => {
+    setSelectedSubcategory(subcategory);
+    setShowSubcategoryDropdown(false);
+  };
+
+  const handleSubmit = () => {
+    onSubmit(selectedCategory, selectedSubcategory);
+  };
 
   return (
     <Modal
@@ -55,9 +98,111 @@ export default function CreatePostModal({
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.modalSubtitle}>
-                Topic: {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} → {activeSubtopic}
-              </Text>
+              {/* Category Selection */}
+              <View style={styles.categorySelection}>
+                <Text style={styles.selectionLabel}>Category:</Text>
+                <TouchableOpacity 
+                  style={styles.dropdown}
+                  onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                >
+                  <LinearGradient
+                    colors={['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']}
+                    style={styles.dropdownGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <Text style={styles.dropdownText}>
+                      {selectedCategory}
+                    </Text>
+                    <Text style={styles.dropdownArrow}>
+                      {showCategoryDropdown ? '▲' : '▼'}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+                
+                {showCategoryDropdown && (
+                  <ScrollView style={styles.dropdownList} nestedScrollEnabled>
+                    {categories.map((category) => (
+                      <TouchableOpacity
+                        key={category}
+                        style={styles.dropdownItem}
+                        onPress={() => handleCategorySelect(category)}
+                      >
+                        <LinearGradient
+                          colors={
+                            selectedCategory === category
+                              ? ['rgba(67, 233, 123, 0.2)', 'rgba(56, 249, 215, 0.1)']
+                              : ['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']
+                          }
+                          style={styles.dropdownItemGradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        >
+                          <Text style={[
+                            styles.dropdownItemText,
+                            selectedCategory === category && styles.dropdownItemTextSelected
+                          ]}>
+                            {category}
+                          </Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                )}
+              </View>
+
+              {/* Subcategory Selection */}
+              <View style={styles.categorySelection}>
+                <Text style={styles.selectionLabel}>Subcategory:</Text>
+                <TouchableOpacity 
+                  style={styles.dropdown}
+                  onPress={() => setShowSubcategoryDropdown(!showSubcategoryDropdown)}
+                >
+                  <LinearGradient
+                    colors={['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']}
+                    style={styles.dropdownGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <Text style={styles.dropdownText}>
+                      {selectedSubcategory}
+                    </Text>
+                    <Text style={styles.dropdownArrow}>
+                      {showSubcategoryDropdown ? '▲' : '▼'}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+                
+                {showSubcategoryDropdown && (
+                  <ScrollView style={styles.dropdownList} nestedScrollEnabled>
+                    {subcategories[selectedCategory]?.map((subcategory) => (
+                      <TouchableOpacity
+                        key={subcategory}
+                        style={styles.dropdownItem}
+                        onPress={() => handleSubcategorySelect(subcategory)}
+                      >
+                        <LinearGradient
+                          colors={
+                            selectedSubcategory === subcategory
+                              ? ['rgba(67, 233, 123, 0.2)', 'rgba(56, 249, 215, 0.1)']
+                              : ['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']
+                          }
+                          style={styles.dropdownItemGradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        >
+                          <Text style={[
+                            styles.dropdownItemText,
+                            selectedSubcategory === subcategory && styles.dropdownItemTextSelected
+                          ]}>
+                            {subcategory}
+                          </Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                )}
+              </View>
 
               <View style={styles.textInputContainer}>
                 <TextInput
@@ -92,7 +237,7 @@ export default function CreatePostModal({
                     styles.postButton,
                     !content.trim() && styles.postButtonDisabled
                   ]}
-                  onPress={onSubmit}
+                  onPress={handleSubmit}
                   disabled={!content.trim()}
                   activeOpacity={0.8}
                 >
@@ -181,13 +326,62 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
     color: 'rgba(255, 255, 255, 0.7)',
   },
-  modalSubtitle: {
+  categorySelection: {
+    marginBottom: 16,
+  },
+  selectionLabel: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.semiBold,
-    color: 'rgba(67, 233, 123, 0.9)',
-    marginBottom: 20,
-    letterSpacing: -0.01,
-    textTransform: 'uppercase',
+    color: '#43e97b',
+    marginBottom: 8,
+  },
+  dropdown: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(67, 233, 123, 0.3)',
+    overflow: 'hidden',
+  },
+  dropdownGradient: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  dropdownText: {
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.medium,
+    color: '#ffffff',
+  },
+  dropdownArrow: {
+    fontSize: FontSizes.sm,
+    color: '#43e97b',
+    fontWeight: 'bold',
+  },
+  dropdownList: {
+    maxHeight: 150,
+    borderWidth: 1,
+    borderColor: 'rgba(67, 233, 123, 0.3)',
+    borderRadius: 12,
+    marginTop: 4,
+  },
+  dropdownItem: {
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginVertical: 1,
+  },
+  dropdownItemGradient: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  dropdownItemText: {
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.medium,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  dropdownItemTextSelected: {
+    color: '#43e97b',
+    fontFamily: Fonts.bold,
   },
   textInputContainer: {
     borderRadius: 20,

@@ -1,18 +1,18 @@
 import { Alert } from 'react-native';
 
 export function generateWalletAddress(): string {
-  // Generate a mock wallet address
-  const chars = '0123456789abcdef';
-  let result = '0x';
-  for (let i = 0; i < 40; i++) {
+  // Generate a mock Solana-style wallet address (base58, 32-44 chars)
+  const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  let result = '';
+  for (let i = 0; i < 44; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;
 }
 
 export function validateWalletAddress(address: string): boolean {
-  // Basic validation for Ethereum-style addresses
-  const regex = /^0x[a-fA-F0-9]{40}$/;
+  // Basic validation for Solana-style addresses (base58, 32-44 chars)
+  const regex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
   return regex.test(address);
 }
 

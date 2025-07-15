@@ -24,6 +24,9 @@ interface PostProps {
   onBumpReply: (replyId: number) => void;
   onToggleReplies: (postId: number) => void;
   onToggleReplySorting: (postId: number) => void;
+  onReport?: (postId: number) => void;
+  onShowProfile?: (wallet: string) => void;
+  onShowReportModal?: (postId: number) => void;
 }
 
 export default function Post({
@@ -41,6 +44,9 @@ export default function Post({
   onBumpReply,
   onToggleReplies,
   onToggleReplySorting,
+  onReport,
+  onShowProfile,
+  onShowReportModal,
 }: PostProps) {
   const { colors, isDarkMode } = useTheme();
   
@@ -171,6 +177,16 @@ export default function Post({
     onShowTipModal(post.id);
   };
 
+  const handleReport = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    onShowReportModal?.(post.id);
+  };
+
+  const handleShowProfile = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onShowProfile?.(post.wallet);
+  };
+
   const currentlyBumped = isBumpActive();
 
   return (
@@ -198,31 +214,70 @@ export default function Post({
             style={styles.post}
             activeOpacity={0.98}
           >
-            {post.tips > 0 && (
+            {/* Sponsored Tag */}
+            {post.sponsored && (
               <LinearGradient
-                colors={['#43e97b', '#38f9d7']}
-                style={styles.tipBadge}
+                colors={['#FFD700', '#FFA500']}
+                style={styles.sponsoredBadge}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Text style={styles.tipText}>+{post.tips} $ALLY</Text>
+                <Text style={styles.sponsoredText}>SPONSORED</Text>
               </LinearGradient>
             )}
 
+            {/* Top-right badges area */}
+            <View style={styles.topRightBadges}>
+              {/* Report Button - 3 dots to the left of tip badge */}
+              {post.wallet !== currentUserWallet && onShowReportModal && (
+                <TouchableOpacity
+                  style={styles.reportBadge}
+                  onPress={handleReport}
+                  activeOpacity={0.7}
+                >
+                  <LinearGradient
+                    colors={['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']}
+                    style={styles.reportBadgeGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <Text style={styles.reportBadgeText}>⋮</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
+              
+              {post.tips > 0 && (
+                <LinearGradient
+                  colors={['#43e97b', '#38f9d7']}
+                  style={styles.tipBadge}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Text style={styles.tipText}>+{post.tips} $ALLY</Text>
+                </LinearGradient>
+              )}
+            </View>
+
             <View style={styles.postHeader}>
-              <LinearGradient
-                colors={['#43e97b', '#38f9d7']}
-                style={styles.avatar}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <Text style={styles.avatarText}>
-                  {post.wallet.slice(0, 2)}
-                </Text>
-              </LinearGradient>
+              <TouchableOpacity onPress={handleShowProfile} activeOpacity={0.8}>
+                <LinearGradient
+                  colors={['#43e97b', '#38f9d7']}
+                  style={styles.avatar}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Text style={styles.avatarText}>
+                    {post.wallet.slice(0, 2)}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
               <View style={styles.postMeta}>
                 <Text style={styles.username}>{post.wallet}</Text>
-                <Text style={styles.time}>{post.time}</Text>
+                <View style={styles.metaRow}>
+                  <Text style={styles.time}>{post.time}</Text>
+                  <Text style={styles.subcategoryDot}>•</Text>
+                  <Text style={styles.subcategory}>{post.subcategory}</Text>
+                </View>
               </View>
             </View>
 
@@ -472,14 +527,19 @@ const styles = StyleSheet.create({
   bumpedBlurContainer: {
     borderColor: 'rgba(67, 233, 123, 0.6)',
   },
-  tipBadge: {
+  topRightBadges: {
     position: 'absolute',
     top: 15,
     right: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    zIndex: 3,
+  },
+  tipBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    zIndex: 3,
     shadowColor: '#43e97b',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
@@ -490,6 +550,26 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.xs,
     fontFamily: Fonts.bold,
     color: '#000',
+  },
+  sponsoredBadge: {
+    position: 'absolute',
+    top: 15,
+    left: 15,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    zIndex: 3,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  sponsoredText: {
+    fontSize: FontSizes.xs,
+    fontFamily: Fonts.bold,
+    color: '#000000',
+    letterSpacing: 1,
   },
   postHeader: {
     flexDirection: 'row',
@@ -526,11 +606,25 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 15,
   },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 3,
+  },
   time: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.medium,
-    marginTop: 3,
     color: 'rgba(255, 255, 255, 0.6)',
+  },
+  subcategoryDot: {
+    fontSize: FontSizes.sm,
+    color: 'rgba(255, 255, 255, 0.4)',
+    marginHorizontal: 6,
+  },
+  subcategory: {
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.medium,
+    color: 'rgba(67, 233, 123, 0.8)',
   },
   postContentContainer: {
     position: 'relative',
@@ -620,6 +714,24 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
     letterSpacing: 0.2,
+  },
+  reportBadge: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 107, 107, 0.4)',
+  },
+  reportBadgeGradient: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reportBadgeText: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.6)',
+    letterSpacing: -2,
   },
   showRepliesBtn: {
     marginTop: 15,

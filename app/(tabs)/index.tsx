@@ -10,17 +10,19 @@ declare global {
 }
 import { useKorusAlert } from '../../components/KorusAlertProvider';
 import { useTheme } from '../../context/ThemeContext';
+import { useWallet } from '../../context/WalletContext';
 import { initialPosts, subtopicData } from '../../data/mockData';
 import { Post as PostType, Reply } from '../../types';
 import { registerForPushNotificationsAsync, setupNotificationListeners } from '../../utils/notifications';
-import { generateWalletAddress } from '../../utils/wallet';
 
 // Components
 import CreatePostModal from '../../components/CreatePostModal';
 import Header from '../../components/Header';
 import ParticleSystem from '../../components/ParticleSystem';
 import Post from '../../components/Post';
+import ProfileModal from '../../components/ProfileModal';
 import ReplyModal from '../../components/ReplyModal';
+import ReportModal from '../../components/ReportModal';
 import TipModal from '../../components/TipModal';
 
 // Reply sorting types
@@ -29,6 +31,7 @@ type ReplySortType = 'best' | 'recent';
 export default function HomeScreen() {
   const { colors } = useTheme();
   const { showAlert } = useKorusAlert();
+  const { walletAddress, balance, deductBalance } = useWallet();
   const router = useRouter();
   
   // State
@@ -37,7 +40,10 @@ export default function HomeScreen() {
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [showReplyModal, setShowReplyModal] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedWallet, setSelectedWallet] = useState<string>('');
   const [quotedText, setQuotedText] = useState<string>('');
   const [quotedUsername, setQuotedUsername] = useState<string>('');
   const [newPostContent, setNewPostContent] = useState('');
@@ -50,11 +56,8 @@ export default function HomeScreen() {
   // Reply sorting state - track sorting preference per post
   const [replySortPreferences, setReplySortPreferences] = useState<Record<number, ReplySortType>>({});
   
-  // Current user wallet (in real app, this would come from wallet creation)
-  const [currentUserWallet] = useState(generateWalletAddress());
-  
-  // Mock wallet balance for demo (in real app, this would come from backend)
-  const [walletBalance, setWalletBalance] = useState(150.75);
+  // Current user wallet comes from wallet context
+  const currentUserWallet = walletAddress || 'loading...';
   
   // ScrollView ref for scroll to top functionality
   const scrollViewRef = useRef<ScrollView>(null);
@@ -219,7 +222,7 @@ export default function HomeScreen() {
     }
   };
 
-  const handleCreatePost = () => {
+  const handleCreatePost = (category: string, subcategory: string) => {
     if (newPostContent.trim()) {
       const newPost: PostType = {
         id: posts.length + 1,
@@ -233,8 +236,8 @@ export default function HomeScreen() {
         bumped: false,
         bumpedAt: undefined,
         bumpExpiresAt: undefined,
-        category: activeTab.toUpperCase(),
-        subcategory: activeSubtopic
+        category: category,
+        subcategory: subcategory
       };
 
       setPosts([newPost, ...posts]);
@@ -439,12 +442,36 @@ export default function HomeScreen() {
     setShowTipModal(true);
   };
 
+  const handleReport = (postId: number) => {
+    showAlert({
+      title: 'Post Reported',
+      message: 'Thank you for reporting this post. Our moderation team will review it.',
+      type: 'success'
+    });
+  };
+
+  const handleShowProfile = (wallet: string) => {
+    setSelectedWallet(wallet);
+    setShowProfileModal(true);
+  };
+
+  const handleShowReportModal = (postId: number) => {
+    setSelectedPostId(postId);
+    setShowReportModal(true);
+  };
+
+  const handleConfirmReport = () => {
+    if (selectedPostId) {
+      handleReport(selectedPostId);
+    }
+  };
+
   const handleTip = (postId: number, amount: number) => {
     // Check if user has sufficient balance
-    if (amount > walletBalance) {
+    if (amount > balance) {
       showAlert({
         title: 'Insufficient Funds',
-        message: `You only have ${walletBalance.toFixed(2)} $ALLY in your wallet. Please enter a smaller amount.`,
+        message: `You only have ${balance.toFixed(2)} $ALLY in your wallet. Please enter a smaller amount.`,
         type: 'info'
       });
       return;
@@ -453,7 +480,7 @@ export default function HomeScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     
     // Deduct from wallet balance
-    setWalletBalance(prev => prev - amount);
+    deductBalance(amount);
     
     // Update post tips
     setPosts(posts.map(post =>
@@ -563,6 +590,9 @@ export default function HomeScreen() {
               onBumpReply={handleBumpReply}
               onToggleReplies={toggleReplies}
               onToggleReplySorting={toggleReplySorting}
+              onReport={handleReport}
+              onShowProfile={handleShowProfile}
+              onShowReportModal={handleShowReportModal}
             />
           ))}
         </ScrollView>
@@ -613,7 +643,7 @@ export default function HomeScreen() {
         <TipModal
           visible={showTipModal}
           username={selectedPostId ? posts.find(p => p.id === selectedPostId)?.wallet || '' : ''}
-          walletBalance={walletBalance}
+          walletBalance={balance}
           onClose={() => {
             setShowTipModal(false);
             setSelectedPostId(null);
@@ -623,6 +653,26 @@ export default function HomeScreen() {
               handleTip(selectedPostId, amount);
             }
           }}
+        />
+
+        <ProfileModal
+          visible={showProfileModal}
+          wallet={selectedWallet}
+          allPosts={posts}
+          onClose={() => {
+            setShowProfileModal(false);
+            setSelectedWallet('');
+          }}
+        />
+
+        <ReportModal
+          visible={showReportModal}
+          onClose={() => {
+            setShowReportModal(false);
+            setSelectedPostId(null);
+          }}
+          onConfirm={handleConfirmReport}
+          postId={selectedPostId || undefined}
         />
         </View>
       </View>

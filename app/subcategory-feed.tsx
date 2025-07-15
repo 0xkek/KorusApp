@@ -14,7 +14,7 @@ import {
 import { GestureHandlerRootView, PanGestureHandler } from 'react-native-gesture-handler';
 import { initialPosts } from '../data/mockData';
 import { Post as PostType, Reply } from '../types';
-import { generateWalletAddress } from '../utils/wallet';
+import { useWallet } from '../context/WalletContext';
 import CreatePostModal from '../components/CreatePostModal';
 import Post from '../components/Post';
 
@@ -34,8 +34,9 @@ export default function SubcategoryFeedScreen() {
   const [replySortPreferences, setReplySortPreferences] = useState<Record<number, ReplySortType>>({});
   const [newPostContent, setNewPostContent] = useState('');
   
-  // Current user wallet (should match your home screen)
-  const [currentUserWallet] = useState(generateWalletAddress());
+  // Current user wallet from context
+  const { walletAddress } = useWallet();
+  const currentUserWallet = walletAddress || 'loading...';
 
   // Load posts for this specific subcategory
   useEffect(() => {

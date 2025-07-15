@@ -1,18 +1,20 @@
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 
 interface HeaderProps {
-  onComposePress?: () => void;
   onCategoryChange?: (category: string | null, subcategory: string | null) => void;
   isCollapsed?: boolean; // New prop to control collapsed state
 }
 
-export default function Header({ onComposePress, onCategoryChange, isCollapsed = false }: HeaderProps) {
+export default function Header({ onCategoryChange, isCollapsed = false }: HeaderProps) {
   const { colors, isDarkMode } = useTheme();
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   
@@ -91,6 +93,7 @@ export default function Header({ onComposePress, onCategoryChange, isCollapsed =
     subScrollRef.current?.scrollTo({ x: newX, animated: true });
   };
 
+
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
@@ -120,26 +123,7 @@ export default function Header({ onComposePress, onCategoryChange, isCollapsed =
               {/* Header Content */}
               {!isCollapsed && (
                 <View style={styles.headerRow}>
-                  <View style={styles.titleArea}>
-                    <Text style={styles.mainTitle}>KORUS</Text>
-                  </View>
-                  
-                  {onComposePress && (
-                    <TouchableOpacity
-                      style={styles.postBtn}
-                      onPress={onComposePress}
-                      activeOpacity={0.8}
-                    >
-                      <LinearGradient
-                        colors={['#43e97b', '#38f9d7']}
-                        style={styles.postBtnGrad}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                      >
-                        <Text style={styles.postBtnTxt}>✨ Post</Text>
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  )}
+                  <Text style={styles.mainTitle}>KORUS</Text>
                 </View>
               )}
 
@@ -190,16 +174,9 @@ export default function Header({ onComposePress, onCategoryChange, isCollapsed =
                     onPress={scrollCategoriesRight}
                     activeOpacity={0.7}
                   >
-                    <LinearGradient
-                      colors={['transparent', 'rgba(30, 30, 30, 0.9)', 'rgba(30, 30, 30, 0.95)']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.scrollIndicatorGradient}
-                    >
-                      <View style={styles.arrowContainer}>
-                        <Text style={styles.scrollArrow}>{'>'}</Text>
-                      </View>
-                    </LinearGradient>
+                    <View style={styles.arrowContainer}>
+                      <Text style={styles.scrollArrow}>{'>'}</Text>
+                    </View>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -261,16 +238,9 @@ export default function Header({ onComposePress, onCategoryChange, isCollapsed =
                       onPress={scrollSubcategoriesRight}
                       activeOpacity={0.7}
                     >
-                      <LinearGradient
-                        colors={['transparent', 'rgba(30, 30, 30, 0.9)', 'rgba(30, 30, 30, 0.95)']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.scrollIndicatorGradient}
-                      >
-                        <View style={styles.arrowContainer}>
-                          <Text style={styles.scrollArrow}>{'>'}</Text>
-                        </View>
-                      </LinearGradient>
+                      <View style={styles.arrowContainer}>
+                        <Text style={styles.scrollArrow}>{'>'}</Text>
+                      </View>
                     </TouchableOpacity>
                   </View>
                 </LinearGradient>
@@ -317,42 +287,15 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
     height: 40, // Fixed height, no animation
-  },
-  titleArea: {
-    flex: 1,
-    alignItems: 'center',
   },
   mainTitle: {
     fontSize: FontSizes['4xl'],
     fontFamily: Fonts.extraBold,
     color: '#ffffff',
     letterSpacing: -1,
-  },
-  postBtn: {
-    borderRadius: 25,
-    shadowColor: '#43e97b',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.8,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  postBtnGrad: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  postBtnTxt: {
-    fontSize: FontSizes.base,
-    fontFamily: Fonts.bold,
-    color: '#000000',
-    letterSpacing: 0.3,
   },
   categoriesArea: {
     paddingTop: 10,
@@ -416,6 +359,7 @@ const styles = StyleSheet.create({
     width: 40,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'transparent',
   },
   subContainer: {
     marginBottom: 10,
@@ -488,6 +432,7 @@ const styles = StyleSheet.create({
     width: 40,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'transparent',
   },
   scrollIndicatorGradient: {
     width: 40,
@@ -496,14 +441,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   arrowContainer: {
-    width: '100%',
-    height: '100%',
+    width: 24,
+    height: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#43e97b',
+    borderRadius: 12,
+    shadowColor: '#43e97b',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    elevation: 5,
   },
   scrollArrow: {
-    fontSize: 16,
-    color: 'rgba(67, 233, 123, 0.6)',
+    fontSize: 14,
+    color: '#000000',
     fontWeight: 'bold',
   },
 });

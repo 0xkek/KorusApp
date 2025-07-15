@@ -122,7 +122,8 @@ export const initialPosts: Post[] = [
     bumpedAt: undefined,
     bumpExpiresAt: undefined,
     category: 'CAREER',
-    subcategory: 'Leadership'
+    subcategory: 'Leadership',
+    sponsored: true
   },
   {
     id: 5,

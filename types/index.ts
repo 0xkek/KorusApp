@@ -26,6 +26,7 @@ export interface Post {
   bumpExpiresAt?: number; // When the bump expires
   category: string;      // Category field
   subcategory: string;   // Subcategory field
+  sponsored?: boolean;   // Sponsored/paid post flag
 }
 
 export interface User {
