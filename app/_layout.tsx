@@ -1,15 +1,18 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { ThemeProvider } from '../context/ThemeContext';
+import { KorusAlertProvider } from '../components/KorusAlertProvider';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    Inter_Regular: require('../assets/fonts/Inter_Regular.ttf'),
+    Inter_Medium: require('../assets/fonts/Inter_Medium.ttf'),
+    Inter_SemiBold: require('../assets/fonts/Inter_SemiBold.ttf'),
+    Inter_Bold: require('../assets/fonts/Inter_Bold.ttf'),
   });
 
   if (!loaded) {
@@ -18,12 +21,15 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
+    <ThemeProvider>
+      <KorusAlertProvider>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="subcategory-feed" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar style="light" />
+      </KorusAlertProvider>
     </ThemeProvider>
   );
 }
