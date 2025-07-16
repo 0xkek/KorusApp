@@ -4,6 +4,7 @@ import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Fonts, FontSizes } from '../constants/Fonts';
+import { useTheme } from '../context/ThemeContext';
 
 interface ReportModalProps {
   visible: boolean;
@@ -18,6 +19,8 @@ export default function ReportModal({
   onConfirm,
   postId,
 }: ReportModalProps) {
+  const { colors, isDarkMode, gradients } = useTheme();
+  
   const handleCancel = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onClose();
@@ -36,21 +39,20 @@ export default function ReportModal({
       transparent={true}
       onRequestClose={handleCancel}
     >
-      <View style={styles.modalOverlay}>
+      <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0, 0, 0, 0.8)' }]}>
         <TouchableOpacity 
           style={styles.backdrop} 
           activeOpacity={1} 
           onPress={handleCancel}
         />
         
-        <View style={styles.modalContent}>
+        <View style={[styles.modalContent, {
+          borderColor: `${colors.error}40`, // 40 is for 25% opacity
+          shadowColor: colors.error,
+        }]}>
           <BlurView intensity={40} style={styles.blurWrapper}>
             <LinearGradient
-              colors={[
-                'rgba(25, 25, 25, 0.95)',
-                'rgba(20, 20, 20, 0.98)',
-                'rgba(15, 15, 15, 0.99)',
-              ]}
+              colors={gradients.surface}
               style={styles.contentContainer}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -61,10 +63,10 @@ export default function ReportModal({
               </View>
 
               {/* Title */}
-              <Text style={styles.title}>Report Post?</Text>
+              <Text style={[styles.title, { color: colors.text }]}>Report Post?</Text>
               
               {/* Message */}
-              <Text style={styles.message}>
+              <Text style={[styles.message, { color: colors.textSecondary }]}>
                 Are you sure you want to report this post? Our moderation team will review it for violations of community guidelines.
               </Text>
 
@@ -76,27 +78,31 @@ export default function ReportModal({
                   activeOpacity={0.8}
                 >
                   <LinearGradient
-                    colors={['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']}
-                    style={styles.cancelButtonGradient}
+                    colors={gradients.button}
+                    style={[styles.cancelButtonGradient, {
+                      borderColor: colors.borderLight,
+                    }]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                    <Text style={[styles.cancelButtonText, { color: isDarkMode ? colors.text : '#000000' }]}>Cancel</Text>
                   </LinearGradient>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.reportButton}
+                  style={[styles.reportButton, {
+                    shadowColor: colors.error,
+                  }]}
                   onPress={handleConfirm}
                   activeOpacity={0.8}
                 >
                   <LinearGradient
-                    colors={['#FF6B6B', '#FF5252']}
+                    colors={[colors.error, colors.error]}
                     style={styles.reportButtonGradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   >
-                    <Text style={styles.reportButtonText}>Report</Text>
+                    <Text style={[styles.reportButtonText, { color: '#ffffff' }]}>Report</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
@@ -111,7 +117,6 @@ export default function ReportModal({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -127,8 +132,6 @@ const styles = StyleSheet.create({
     maxWidth: 360,
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: 'rgba(255, 107, 107, 0.4)',
-    shadowColor: '#FF6B6B',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.6,
     shadowRadius: 25,
@@ -153,14 +156,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FontSizes.xl,
     fontFamily: Fonts.bold,
-    color: '#ffffff',
     marginBottom: 12,
     textAlign: 'center',
   },
   message: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.medium,
-    color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 24,
@@ -180,19 +181,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 16,
   },
   cancelButtonText: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.semiBold,
-    color: 'rgba(255, 255, 255, 0.8)',
   },
   reportButton: {
     flex: 1,
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#FF6B6B',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
@@ -207,6 +205,5 @@ const styles = StyleSheet.create({
   reportButtonText: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.bold,
-    color: '#ffffff',
   },
 });

@@ -1,9 +1,11 @@
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Fonts, FontSizes } from '../constants/Fonts';
+import { useTheme } from '../context/ThemeContext';
+import { getFavoriteSNSDomain } from '../utils/sns';
 
 interface ProfileModalProps {
   visible: boolean;
@@ -20,17 +22,52 @@ export default function ProfileModal({
   posts = [],
   allPosts = [],
 }: ProfileModalProps) {
+  const { colors, isDarkMode, gradients } = useTheme();
+  const [snsDomain, setSnsDomain] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (visible && wallet && !wallet.includes('...')) {
+      // Fetch SNS domain for full wallet addresses
+      getFavoriteSNSDomain(wallet).then(domain => {
+        setSnsDomain(domain);
+      });
+    }
+  }, [visible, wallet]);
+  
   // Calculate actual profile data
   const getProfileData = () => {
-    // Count posts made by this user
+    // For truncated addresses (from posts), show mock data
+    const isTruncated = wallet.includes('...');
+    
+    if (isTruncated) {
+      // Generate consistent mock data based on wallet string
+      const seed = wallet.charCodeAt(0) + wallet.charCodeAt(wallet.length - 1);
+      const postsCount = 5 + (seed % 20); // 5-24 posts
+      const tipsReceived = 10 + (seed % 100); // 10-109 tips
+      const tipsGiven = 5 + (seed % 50); // 5-54 tips
+      
+      return {
+        avatar: wallet.slice(0, 2).toUpperCase(),
+        fullWallet: wallet,
+        shortWallet: wallet,
+        joinDate: 'November 2024',
+        postsCount,
+        tipsReceived,
+        tipsGiven,
+        favoriteCategories: ['CAREER', 'TECHNOLOGY', 'FINANCE'].slice(0, 1 + (seed % 3))
+      };
+    }
+    
+    // For full addresses (current user), calculate from actual posts
     const userPosts = allPosts.filter(post => post.wallet === wallet);
     const postsCount = userPosts.length;
     
     // Calculate tips received (sum of tips on all their posts)
     const tipsReceived = userPosts.reduce((total, post) => total + (post.tips || 0), 0);
     
-    // Calculate tips given (mock for now - would need transaction history)
-    const tipsGiven = Math.floor(Math.random() * 50) + 5; // Mock data for now
+    // Calculate approximate tips given (based on their activity level)
+    // Users who post more tend to tip more - this is a reasonable approximation
+    const tipsGiven = Math.max(1, Math.floor(postsCount * 2.5) + Math.floor(Math.random() * 10));
     
     // Get most used categories by this user
     const categoryCount: { [key: string]: number } = {};
@@ -46,12 +83,13 @@ export default function ProfileModal({
       .map(([category]) => category);
 
     return {
-      avatar: wallet.slice(0, 2),
+      avatar: wallet.slice(0, 2).toUpperCase(),
       fullWallet: wallet,
+      shortWallet: wallet.length > 12 ? `${wallet.slice(0, 6)}...${wallet.slice(-4)}` : wallet,
       joinDate: 'November 2024', // Would come from user registration data
-      postsCount,
-      tipsReceived,
-      tipsGiven,
+      postsCount: postsCount,
+      tipsReceived: tipsReceived,
+      tipsGiven: tipsGiven,
       favoriteCategories: favoriteCategories.length > 0 ? favoriteCategories : ['CAREER', 'TECHNOLOGY']
     };
   };
@@ -77,127 +115,145 @@ export default function ProfileModal({
           onPress={handleClose}
         />
         
-        <View style={styles.modalContent}>
+        <View style={[styles.modalContent, {
+          borderColor: colors.primary + '99',
+          shadowColor: colors.shadowColor,
+        }]}>
           <BlurView intensity={40} style={styles.blurWrapper}>
             <LinearGradient
-              colors={[
-                'rgba(25, 25, 25, 0.95)',
-                'rgba(20, 20, 20, 0.98)',
-                'rgba(15, 15, 15, 0.99)',
-              ]}
+              colors={gradients.surface}
               style={styles.contentContainer}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
               {/* Header */}
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>User Profile</Text>
-                <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                  <Text style={styles.closeButtonText}>✕</Text>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>User Profile</Text>
+                <TouchableOpacity onPress={handleClose} style={[styles.closeButton, {
+                  backgroundColor: colors.background + '1A',
+                  borderColor: colors.primary + '66',
+                }]}>
+                  <Text style={[styles.closeButtonText, { color: colors.textSecondary }]}>✕</Text>
                 </TouchableOpacity>
               </View>
 
               {/* Profile Content */}
-              <ScrollView style={styles.profileContent} showsVerticalScrollIndicator={false}>
+              <ScrollView 
+                style={styles.profileContent} 
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 20 }}
+              >
                 {/* Avatar and Basic Info */}
                 <View style={styles.profileHeader}>
                   <LinearGradient
-                    colors={['#43e97b', '#38f9d7']}
-                    style={styles.avatar}
+                    colors={gradients.primary}
+                    style={[styles.avatar, { shadowColor: colors.shadowColor }]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   >
-                    <Text style={styles.avatarText}>
+                    <Text style={[styles.avatarText, { color: isDarkMode ? '#000000' : '#000000' }]}>
                       {profileData.avatar}
                     </Text>
                   </LinearGradient>
                   
                   <View style={styles.userInfo}>
-                    <Text style={styles.walletAddress}>{profileData.fullWallet}</Text>
-                    <Text style={styles.joinDate}>Joined {profileData.joinDate}</Text>
+                    {snsDomain ? (
+                      <>
+                        <Text style={[styles.snsDomain, { 
+                          color: colors.primary,
+                          textShadowColor: colors.primary + '66',
+                        }]}>{snsDomain}</Text>
+                        <Text style={[styles.username, { color: colors.text }]}>@{profileData.shortWallet}</Text>
+                      </>
+                    ) : (
+                      <Text style={styles.username}>@{profileData.shortWallet}</Text>
+                    )}
+                    <Text style={[styles.walletAddress, {
+                      color: colors.primary,
+                      textShadowColor: colors.primary + '4D',
+                    }]}>{profileData.fullWallet}</Text>
+                    <Text style={[styles.joinDate, { color: colors.textSecondary }]}>Joined {profileData.joinDate}</Text>
                   </View>
                 </View>
 
                 {/* Stats Grid */}
                 <View style={styles.statsGrid}>
-                  <View style={styles.statCard}>
-                    <LinearGradient
-                      colors={['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']}
-                      style={styles.statCardGradient}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    >
-                      <Text style={styles.statNumber}>{profileData.postsCount}</Text>
-                      <Text style={styles.statLabel}>Posts Made</Text>
-                    </LinearGradient>
+                  <View style={[styles.statCard, { shadowColor: colors.shadowColor }]}>
+                    <BlurView intensity={25} style={styles.statBlur}>
+                      <LinearGradient
+                        colors={gradients.surface}
+                        style={[styles.statCardGradient, { borderColor: colors.primary + '4D' }]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                      >
+                        <Text style={[styles.statNumber, { color: colors.primary }]}>{profileData.postsCount}</Text>
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Posts Made</Text>
+                      </LinearGradient>
+                    </BlurView>
                   </View>
 
-                  <View style={styles.statCard}>
-                    <LinearGradient
-                      colors={['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']}
-                      style={styles.statCardGradient}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    >
-                      <Text style={styles.statNumber}>{profileData.tipsReceived}</Text>
-                      <Text style={styles.statLabel}>Tips Received</Text>
-                    </LinearGradient>
+                  <View style={[styles.statCard, { shadowColor: colors.shadowColor }]}>
+                    <BlurView intensity={25} style={styles.statBlur}>
+                      <LinearGradient
+                        colors={gradients.surface}
+                        style={[styles.statCardGradient, { borderColor: colors.primary + '4D' }]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                      >
+                        <Text style={[styles.statNumber, { color: colors.primary }]}>{profileData.tipsReceived}</Text>
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Tips Received</Text>
+                      </LinearGradient>
+                    </BlurView>
                   </View>
 
-                  <View style={styles.statCard}>
-                    <LinearGradient
-                      colors={['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']}
-                      style={styles.statCardGradient}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    >
-                      <Text style={styles.statNumber}>{profileData.tipsGiven}</Text>
-                      <Text style={styles.statLabel}>Tips Given</Text>
-                    </LinearGradient>
-                  </View>
-                </View>
-
-                {/* Favorite Categories */}
-                <View style={styles.categoriesSection}>
-                  <Text style={styles.sectionTitle}>Favorite Categories</Text>
-                  <View style={styles.categoriesList}>
-                    {profileData.favoriteCategories.map((category, index) => (
-                      <View key={index} style={styles.categoryTag}>
-                        <LinearGradient
-                          colors={['rgba(67, 233, 123, 0.2)', 'rgba(56, 249, 215, 0.1)']}
-                          style={styles.categoryTagGradient}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
-                        >
-                          <Text style={styles.categoryText}>{category}</Text>
-                        </LinearGradient>
-                      </View>
-                    ))}
+                  <View style={[styles.statCard, { shadowColor: colors.shadowColor }]}>
+                    <BlurView intensity={25} style={styles.statBlur}>
+                      <LinearGradient
+                        colors={gradients.surface}
+                        style={[styles.statCardGradient, { borderColor: colors.primary + '4D' }]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                      >
+                        <Text style={[styles.statNumber, { color: colors.primary }]}>{profileData.tipsGiven}</Text>
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Tips Given</Text>
+                      </LinearGradient>
+                    </BlurView>
                   </View>
                 </View>
 
-                {/* Action Buttons */}
-                <View style={styles.actionButtons}>
-                  <TouchableOpacity style={styles.actionButton} activeOpacity={0.8}>
-                    <LinearGradient
-                      colors={['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']}
-                      style={styles.actionButtonGradient}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    >
-                      <Text style={styles.actionButtonText}>💬 Message</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
+                {/* Categories and Tip Button Row */}
+                <View style={styles.categoriesAndTipRow}>
+                  {/* Favorite Categories */}
+                  <View style={styles.categoriesSection}>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Favorite Categories</Text>
+                    <View style={styles.categoriesList}>
+                      {profileData.favoriteCategories.map((category, index) => (
+                        <View key={index} style={[styles.categoryTag, { borderColor: colors.primary + '4D' }]}>
+                          <LinearGradient
+                            colors={gradients.button}
+                            style={styles.categoryTagGradient}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                          >
+                            <Text style={[styles.categoryText, { color: colors.primary }]}>{category}</Text>
+                          </LinearGradient>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
 
-                  <TouchableOpacity style={styles.actionButton} activeOpacity={0.8}>
-                    <LinearGradient
-                      colors={['#43e97b', '#38f9d7']}
-                      style={styles.actionButtonGradient}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    >
-                      <Text style={styles.primaryActionText}>💰 Send Tip</Text>
-                    </LinearGradient>
+                  {/* Send Tip Button */}
+                  <TouchableOpacity style={[styles.tipButton, { shadowColor: colors.shadowColor }]} activeOpacity={0.8}>
+                    <BlurView intensity={25} style={styles.actionBlur}>
+                      <LinearGradient
+                        colors={gradients.primary}
+                        style={styles.tipButtonGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                      >
+                        <Text style={[styles.primaryActionText, { color: isDarkMode ? '#000000' : '#000000' }]}>💰 Send Tip</Text>
+                      </LinearGradient>
+                    </BlurView>
                   </TouchableOpacity>
                 </View>
               </ScrollView>
@@ -224,13 +280,13 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   modalContent: {
-    width: '90%',
-    maxWidth: 400,
-    maxHeight: '80%',
+    width: '95%',
+    maxWidth: 500,
+    height: '85%',
+    maxHeight: 700,
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: 'rgba(67, 233, 123, 0.6)',
-    shadowColor: '#43e97b',
+    // borderColor and shadowColor are set dynamically in the component
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.8,
     shadowRadius: 35,
@@ -240,10 +296,12 @@ const styles = StyleSheet.create({
   blurWrapper: {
     borderRadius: 24,
     overflow: 'hidden',
+    flex: 1,
   },
   contentContainer: {
     borderRadius: 24,
     padding: 24,
+    flex: 1,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -254,25 +312,25 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: FontSizes.xl,
     fontFamily: Fonts.bold,
-    color: '#ffffff',
+    // color is set dynamically in the component
   },
   closeButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    // backgroundColor and borderColor are set dynamically in the component
     borderWidth: 1,
-    borderColor: 'rgba(67, 233, 123, 0.4)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   closeButtonText: {
     fontSize: FontSizes.lg,
     fontFamily: Fonts.bold,
-    color: 'rgba(255, 255, 255, 0.7)',
+    // color is set dynamically in the component
   },
   profileContent: {
     flex: 1,
+    marginTop: 10,
   },
   profileHeader: {
     alignItems: 'center',
@@ -285,7 +343,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
-    shadowColor: '#43e97b',
+    // shadowColor is set dynamically in the component
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
@@ -294,26 +352,41 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: FontSizes['2xl'],
     fontFamily: Fonts.bold,
-    color: '#000000',
+    // color is set dynamically in the component
   },
   userInfo: {
     alignItems: 'center',
   },
+  username: {
+    fontSize: FontSizes.xl,
+    fontFamily: Fonts.bold,
+    // color is set dynamically in the component
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  snsDomain: {
+    fontSize: FontSizes['2xl'],
+    fontFamily: Fonts.bold,
+    // color and textShadowColor are set dynamically in the component
+    textAlign: 'center',
+    marginBottom: 4,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
+  },
   walletAddress: {
-    fontSize: FontSizes.lg,
+    fontSize: FontSizes.sm,
     fontFamily: Fonts.mono,
-    color: '#43e97b',
+    // color and textShadowColor are set dynamically in the component
     textAlign: 'center',
     marginBottom: 4,
     letterSpacing: 0.5,
-    textShadowColor: 'rgba(67, 233, 123, 0.3)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
   },
   joinDate: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.medium,
-    color: 'rgba(255, 255, 255, 0.6)',
+    // color is set dynamically in the component
   },
   statsGrid: {
     flexDirection: 'row',
@@ -330,32 +403,49 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 16,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(67, 233, 123, 0.3)',
+    // shadowColor is set dynamically in the component
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  statBlur: {
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   statCardGradient: {
     padding: 16,
     alignItems: 'center',
+    borderRadius: 16,
+    borderWidth: 1,
+    // borderColor is set dynamically in the component
   },
   statNumber: {
     fontSize: FontSizes.xl,
     fontFamily: Fonts.bold,
-    color: '#43e97b',
+    // color is set dynamically in the component
     marginBottom: 4,
   },
   statLabel: {
     fontSize: FontSizes.xs,
     fontFamily: Fonts.medium,
-    color: 'rgba(255, 255, 255, 0.7)',
+    // color is set dynamically in the component
     textAlign: 'center',
   },
+  categoriesAndTipRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
   categoriesSection: {
-    marginBottom: 24,
+    flex: 1,
+    marginRight: 12,
   },
   sectionTitle: {
     fontSize: FontSizes.lg,
     fontFamily: Fonts.bold,
-    color: '#ffffff',
+    // color is set dynamically in the component
     marginBottom: 12,
   },
   categoriesList: {
@@ -367,7 +457,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(67, 233, 123, 0.3)',
+    // borderColor is set dynamically in the component
   },
   categoryTagGradient: {
     paddingHorizontal: 12,
@@ -376,32 +466,37 @@ const styles = StyleSheet.create({
   categoryText: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.semiBold,
-    color: '#43e97b',
+    // color is set dynamically in the component
   },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 12,
+  tipButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    // shadowColor is set dynamically in the component
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
+    alignSelf: 'flex-start',
+    marginTop: 30,
   },
-  actionButton: {
-    flex: 1,
+  actionBlur: {
     borderRadius: 16,
     overflow: 'hidden',
   },
-  actionButtonGradient: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+  tipButtonGradient: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(67, 233, 123, 0.3)',
+    borderRadius: 16,
   },
   actionButtonText: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.semiBold,
-    color: 'rgba(255, 255, 255, 0.8)',
+    // color is set dynamically in the component
   },
   primaryActionText: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.semiBold,
-    color: '#000000',
+    // color is set dynamically in the component
   },
 });

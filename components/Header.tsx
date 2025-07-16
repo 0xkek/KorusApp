@@ -3,20 +3,26 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import { useWallet } from '../context/WalletContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
+import SettingsModal from './SettingsModal';
+import { Ionicons } from '@expo/vector-icons';
 
 interface HeaderProps {
   onCategoryChange?: (category: string | null, subcategory: string | null) => void;
   isCollapsed?: boolean; // New prop to control collapsed state
+  onProfileClick?: () => void; // New prop for profile click
 }
 
-export default function Header({ onCategoryChange, isCollapsed = false }: HeaderProps) {
-  const { colors, isDarkMode } = useTheme();
+export default function Header({ onCategoryChange, isCollapsed = false, onProfileClick }: HeaderProps) {
+  const { colors, isDarkMode, gradients, theme } = useTheme();
+  const { walletAddress, selectedAvatar, selectedNFTAvatar, snsDomain } = useWallet();
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
   
   // ScrollView refs for programmatic scrolling
   const categoryScrollRef = useRef<ScrollView>(null);
@@ -24,6 +30,9 @@ export default function Header({ onCategoryChange, isCollapsed = false }: Header
   
   // Header slide-up animation
   const headerTranslateY = useRef(new Animated.Value(0)).current;
+  
+  // Create dynamic styles based on theme
+  const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
   
   useEffect(() => {
     // Slide the entire header up/down
@@ -75,6 +84,11 @@ export default function Header({ onCategoryChange, isCollapsed = false }: Header
   const handleSubcategoryPress = (subcategory: string) => {
     setSelectedSubcategory(subcategory);
     onCategoryChange?.(selectedCategory, subcategory);
+    // Collapse subcategories after selection
+    setTimeout(() => {
+      setSelectedCategory(null);
+      setSelectedSubcategory(null);
+    }, 100); // Small delay to allow navigation to happen first
   };
 
   // Scroll functions with dynamic positioning
@@ -94,12 +108,62 @@ export default function Header({ onCategoryChange, isCollapsed = false }: Header
   };
 
 
+  // Dynamic styles based on theme
+  const dynamicStyles = StyleSheet.create({
+    container: {
+      ...styles.container,
+      backgroundColor: colors.background,
+    },
+    mainFrame: {
+      ...styles.mainFrame,
+      borderColor: colors.border,
+      shadowColor: colors.shadowColor,
+    },
+    mainTitle: {
+      ...styles.mainTitle,
+      color: colors.text,
+    },
+    profileIconText: {
+      ...styles.profileIconText,
+      color: isDarkMode ? '#000000' : '#ffffff',
+    },
+    settingsIconText: {
+      ...styles.settingsIconText,
+      color: isDarkMode ? '#000000' : '#ffffff',
+    },
+    categoryBtnTxt: {
+      ...styles.categoryBtnTxt,
+      color: colors.text,
+    },
+    categoryBtnTxtSelected: {
+      ...styles.categoryBtnTxtSelected,
+      color: isDarkMode ? '#000000' : '#ffffff',
+    },
+    arrowContainer: {
+      ...styles.arrowContainer,
+      backgroundColor: colors.primary,
+      shadowColor: colors.shadowColor,
+    },
+    scrollArrow: {
+      ...styles.scrollArrow,
+      color: isDarkMode ? '#000000' : '#ffffff',
+    },
+    categoriesArea: {
+      ...styles.categoriesArea,
+      borderTopColor: colors.borderLight,
+    },
+    subBtnTxt: {
+      ...styles.subBtnTxt,
+      color: colors.text,
+    },
+  });
+
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor="#000000" />
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={colors.background} />
       <Animated.View 
         style={[
-          styles.container, 
+          dynamicStyles.container, 
           isCollapsed && styles.containerCollapsed,
           {
             transform: [{ translateY: headerTranslateY }],
@@ -107,15 +171,10 @@ export default function Header({ onCategoryChange, isCollapsed = false }: Header
         ]}
       >
         {/* Combined Header + Categories Frame */}
-        <View style={styles.mainFrame}>
+        <View style={dynamicStyles.mainFrame}>
           <BlurView intensity={40} style={styles.blurWrapper}>
             <LinearGradient
-              colors={[
-                'rgba(30, 30, 30, 0.95)',
-                'rgba(20, 20, 20, 0.98)',
-                'rgba(15, 15, 15, 0.99)',
-                'rgba(10, 10, 10, 1)',
-              ]}
+              colors={gradients.surface}
               style={styles.gradientWrapper}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -123,12 +182,65 @@ export default function Header({ onCategoryChange, isCollapsed = false }: Header
               {/* Header Content */}
               {!isCollapsed && (
                 <View style={styles.headerRow}>
-                  <Text style={styles.mainTitle}>KORUS</Text>
+                  {/* Profile Icon */}
+                  <TouchableOpacity 
+                    style={styles.profileIconContainer}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      onProfileClick?.();
+                    }}
+                  >
+                    <LinearGradient
+                      colors={gradients.primary}
+                      style={styles.profileIcon}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      {selectedNFTAvatar ? (
+                        <Image 
+                          source={{ uri: selectedNFTAvatar.image || selectedNFTAvatar.uri }}
+                          style={styles.profileIconNFT}
+                        />
+                      ) : selectedAvatar ? (
+                        <Text style={styles.profileIconEmoji}>{selectedAvatar}</Text>
+                      ) : (
+                        <Text style={styles.profileIconText}>
+                          {walletAddress ? walletAddress.slice(0, 2).toUpperCase() : '??'}
+                        </Text>
+                      )}
+                    </LinearGradient>
+                  </TouchableOpacity>
+                  
+                  <Text style={dynamicStyles.mainTitle}>KORUS</Text>
+                  
+                  {/* Settings Icon */}
+                  <TouchableOpacity 
+                    style={styles.settingsIconContainer}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setShowSettings(true);
+                    }}
+                  >
+                    <LinearGradient
+                      colors={gradients.primary}
+                      style={styles.settingsIcon}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <Ionicons 
+                        name="settings-outline" 
+                        size={20} 
+                        color={isDarkMode ? '#000' : '#fff'} 
+                      />
+                    </LinearGradient>
+                  </TouchableOpacity>
                 </View>
               )}
 
               {/* Categories Section - Always visible */}
-              <View style={[styles.categoriesArea, isCollapsed && styles.categoriesAreaCollapsed]}>
+              <View style={[styles.categoriesArea, { borderTopColor: colors.borderLight }, isCollapsed && styles.categoriesAreaCollapsed]}>
                 <View style={styles.categoryScrollContainer}>
                   <ScrollView 
                     ref={categoryScrollRef}
@@ -150,8 +262,8 @@ export default function Header({ onCategoryChange, isCollapsed = false }: Header
                         <LinearGradient
                           colors={
                             selectedCategory === category
-                              ? ['#43e97b', '#38f9d7']
-                              : ['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']
+                              ? gradients.primary
+                              : gradients.button
                           }
                           style={styles.categoryBtnGrad}
                           start={{ x: 0, y: 0 }}
@@ -187,15 +299,10 @@ export default function Header({ onCategoryChange, isCollapsed = false }: Header
         {/* Subcategories Frame */}
         {selectedCategory && (
           <View style={styles.subContainer}>
-            <View style={styles.subFrame}>
+            <View style={dynamicStyles.subFrame}>
               <BlurView intensity={25} style={styles.subBlur}>
                 <LinearGradient
-                  colors={[
-                    'rgba(30, 30, 30, 0.95)',
-                    'rgba(20, 20, 20, 0.98)',
-                    'rgba(15, 15, 15, 0.99)',
-                    'rgba(10, 10, 10, 1)',
-                  ]}
+                  colors={gradients.surface}
                   style={styles.subGradient}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
@@ -215,19 +322,24 @@ export default function Header({ onCategoryChange, isCollapsed = false }: Header
                           onPress={() => handleSubcategoryPress(subcategory)}
                           activeOpacity={0.8}
                         >
-                          <LinearGradient
-                            colors={['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']}
-                            style={[
-                              styles.subBtnGrad,
-                              selectedSubcategory === subcategory && styles.subBtnGradSelected
-                            ]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                          >
-                            <Text style={styles.subBtnTxt}>
-                              {subcategory}
-                            </Text>
-                          </LinearGradient>
+                          <BlurView intensity={20} style={styles.subBtnBlur}>
+                            <LinearGradient
+                              colors={selectedSubcategory === subcategory ? gradients.primary : gradients.button}
+                              style={[
+                                styles.subBtnGrad,
+                                selectedSubcategory === subcategory && styles.subBtnGradSelected
+                              ]}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
+                            >
+                              <Text style={[
+                                styles.subBtnTxt,
+                                { color: selectedSubcategory === subcategory ? (isDarkMode ? '#000' : '#fff') : colors.text }
+                              ]}>
+                                {subcategory}
+                              </Text>
+                            </LinearGradient>
+                          </BlurView>
                         </TouchableOpacity>
                       ))}
                     </ScrollView>
@@ -249,18 +361,23 @@ export default function Header({ onCategoryChange, isCollapsed = false }: Header
           </View>
         )}
       </Animated.View>
+      
+      <SettingsModal
+        visible={showSettings}
+        onClose={() => setShowSettings(false)}
+      />
     </>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   container: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     backgroundColor: '#1a1a1a',
-    paddingTop: 50,
+    paddingTop: 35,
     paddingHorizontal: 15,
     paddingBottom: 8,
     zIndex: 1000,
@@ -271,8 +388,8 @@ const styles = StyleSheet.create({
   mainFrame: {
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: 'rgba(67, 233, 123, 0.6)',
-    shadowColor: '#43e97b',
+    borderColor: colors.primary + '99' || 'rgba(67, 233, 123, 0.6)',
+    shadowColor: colors.shadowColor || '#43e97b',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.8,
     shadowRadius: 35,
@@ -287,15 +404,70 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   headerRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 10,
     height: 40, // Fixed height, no animation
+    paddingHorizontal: 15,
   },
   mainTitle: {
     fontSize: FontSizes['4xl'],
     fontFamily: Fonts.extraBold,
     color: '#ffffff',
     letterSpacing: -1,
+  },
+  profileIconContainer: {
+    width: 40,
+    height: 40,
+    marginLeft: -20,
+  },
+  profileIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#43e97b',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  profileIconText: {
+    fontSize: FontSizes.lg,
+    fontFamily: Fonts.bold,
+    color: '#000000',
+  },
+  profileIconEmoji: {
+    fontSize: 20,
+  },
+  profileIconNFT: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  settingsIconContainer: {
+    width: 40,
+    height: 40,
+    marginRight: -20,
+  },
+  settingsIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#43e97b',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  settingsIconText: {
+    fontSize: 24,
+    color: '#000000',
+    fontWeight: 'bold',
   },
   categoriesArea: {
     paddingTop: 10,
@@ -332,9 +504,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: 'rgba(67, 233, 123, 0.4)',
+    borderColor: colors.border || 'rgba(67, 233, 123, 0.4)',
     minWidth: 100,
-    shadowColor: '#43e97b',
+    shadowColor: colors.shadowColor || '#43e97b',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -367,8 +539,8 @@ const styles = StyleSheet.create({
   subFrame: {
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(67, 233, 123, 0.15)',
-    shadowColor: '#43e97b',
+    borderColor: colors.borderLight || 'rgba(67, 233, 123, 0.15)',
+    shadowColor: colors.shadowColor || '#43e97b',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 10,
@@ -393,25 +565,30 @@ const styles = StyleSheet.create({
   subBtn: {
     borderRadius: 16,
     marginRight: 12,
+    overflow: 'hidden',
+  },
+  subBtnBlur: {
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   subBtnGrad: {
     paddingHorizontal: 18,
     paddingVertical: 12,
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: 'rgba(67, 233, 123, 0.4)',
+    borderColor: colors.border || 'rgba(67, 233, 123, 0.4)',
     minWidth: 100,
     alignItems: 'center',
-    shadowColor: '#43e97b',
+    shadowColor: colors.shadowColor || '#43e97b',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 2,
   },
   subBtnGradSelected: {
-    borderColor: 'rgba(67, 233, 123, 0.9)',
+    borderColor: colors.primary || 'rgba(67, 233, 123, 0.9)',
     borderWidth: 2,
-    shadowColor: '#43e97b',
+    shadowColor: colors.shadowColor || '#43e97b',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
@@ -420,7 +597,6 @@ const styles = StyleSheet.create({
   subBtnTxt: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.semiBold,
-    color: '#ffffff',
     textAlign: 'center',
     letterSpacing: 0.3,
   },
@@ -445,9 +621,9 @@ const styles = StyleSheet.create({
     height: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#43e97b',
+    backgroundColor: colors.primary || '#43e97b',
     borderRadius: 12,
-    shadowColor: '#43e97b',
+    shadowColor: colors.shadowColor || '#43e97b',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 6,
@@ -455,7 +631,7 @@ const styles = StyleSheet.create({
   },
   scrollArrow: {
     fontSize: 14,
-    color: '#000000',
+    color: isDarkMode ? '#000000' : '#ffffff',
     fontWeight: 'bold',
   },
 });

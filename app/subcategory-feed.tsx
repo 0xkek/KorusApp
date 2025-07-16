@@ -15,6 +15,7 @@ import { GestureHandlerRootView, PanGestureHandler } from 'react-native-gesture-
 import { initialPosts } from '../data/mockData';
 import { Post as PostType, Reply } from '../types';
 import { useWallet } from '../context/WalletContext';
+import { useTheme } from '../context/ThemeContext';
 import CreatePostModal from '../components/CreatePostModal';
 import Post from '../components/Post';
 
@@ -26,6 +27,7 @@ type ReplySortType = 'best' | 'recent';
 export default function SubcategoryFeedScreen() {
   const { category, subcategory } = useLocalSearchParams();
   const router = useRouter();
+  const { colors, isDarkMode, gradients } = useTheme();
   
   const [posts, setPosts] = useState<PostType[]>([]);
   const [showCreatePost, setShowCreatePost] = useState(false);
@@ -237,17 +239,12 @@ export default function SubcategoryFeedScreen() {
   };
 
   return (
-    <GestureHandlerRootView style={styles.container}>
+    <GestureHandlerRootView style={[styles.container, { backgroundColor: colors.background }]}>
       <PanGestureHandler onGestureEvent={handleSwipeGesture}>
         <View style={styles.container}>
       {/* Background Gradients - match your home screen style */}
       <LinearGradient
-        colors={[
-          'rgba(30, 30, 30, 0.95)',
-          'rgba(20, 20, 20, 0.98)',
-          'rgba(15, 15, 15, 0.99)',
-          'rgba(10, 10, 10, 1)',
-        ]}
+        colors={gradients.surface}
         style={styles.baseBackground}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -255,11 +252,11 @@ export default function SubcategoryFeedScreen() {
       
       <LinearGradient
         colors={[
-          'rgba(67, 233, 123, 0.08)',
-          'rgba(56, 249, 215, 0.05)',
+          colors.primary + '14',
+          colors.secondary + '0C',
           'transparent',
-          'rgba(67, 233, 123, 0.06)',
-          'rgba(56, 249, 215, 0.1)',
+          colors.primary + '0F',
+          colors.secondary + '1A',
         ]}
         style={styles.greenOverlay}
         start={{ x: 0, y: 0 }}
@@ -268,24 +265,24 @@ export default function SubcategoryFeedScreen() {
       
       <View style={styles.contentContainer}>
         {/* Custom Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { borderBottomColor: colors.primary }]}>
           <TouchableOpacity 
-            style={styles.backButton}
+            style={[styles.backButton, { backgroundColor: colors.primary }]}
             onPress={() => router.back()}
           >
-            <Text style={styles.backButtonText}>Back</Text>
+            <Text style={[styles.backButtonText, { color: isDarkMode ? '#000' : '#fff' }]}>Back</Text>
           </TouchableOpacity>
           
           <View style={styles.headerContent}>
-            <Text style={styles.categoryText}>{category}</Text>
-            <Text style={styles.subcategoryText}>{subcategory}</Text>
+            <Text style={[styles.categoryText, { color: colors.text }]}>{category}</Text>
+            <Text style={[styles.subcategoryText, { color: colors.primary }]}>{subcategory}</Text>
           </View>
           
           <TouchableOpacity 
-            style={styles.composeButton}
+            style={[styles.composeButton, { backgroundColor: colors.primary }]}
             onPress={() => setShowCreatePost(true)}
           >
-            <Text style={styles.composeButtonText}>+</Text>
+            <Text style={[styles.composeButtonText, { color: isDarkMode ? '#000' : '#fff' }]}>+</Text>
           </TouchableOpacity>
         </View>
 
@@ -296,19 +293,19 @@ export default function SubcategoryFeedScreen() {
         >
           {isLoading ? (
             <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Loading {subcategory} posts...</Text>
+              <Text style={[styles.loadingText, { color: colors.text }]}>Loading {subcategory} posts...</Text>
             </View>
           ) : sortedPosts.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyTitle}>No {subcategory} posts yet</Text>
-              <Text style={styles.emptySubtitle}>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>No {subcategory} posts yet</Text>
+              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
                 Be the first to share something in {subcategory}!
               </Text>
               <TouchableOpacity 
-                style={styles.createFirstPostButton}
+                style={[styles.createFirstPostButton, { backgroundColor: colors.primary }]}
                 onPress={() => setShowCreatePost(true)}
               >
-                <Text style={styles.createFirstPostText}>Create First Post</Text>
+                <Text style={[styles.createFirstPostText, { color: isDarkMode ? '#000' : '#fff' }]}>Create First Post</Text>
               </TouchableOpacity>
             </View>
           ) : (

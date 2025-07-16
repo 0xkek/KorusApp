@@ -1,14 +1,16 @@
 import { Tabs } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import React, { useRef, useState } from 'react';
-import { Platform, Text, TouchableOpacity } from 'react-native';
+import { Platform, Text, TouchableOpacity, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 
-import { Colors } from '../../constants/Colors';
-import { useColorScheme } from '../../hooks/useColorScheme';
+import { useTheme } from '../../context/ThemeContext';
 import WalletModal from '../../components/WalletModal';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { colors, isDarkMode, gradients } = useTheme();
   const lastTapTime = useRef(0);
   const DOUBLE_TAP_DELAY = 300; // 300ms for double tap
   const [showWalletModal, setShowWalletModal] = useState(false);
@@ -25,19 +27,98 @@ export default function TabLayout() {
     lastTapTime.current = now;
   };
 
+  const TabBarIcon = ({ name, color, focused, size = 24 }: { name: any, color: string, focused: boolean, size?: number }) => (
+    <View style={{ alignItems: 'center', justifyContent: 'center', width: 32, height: 32 }}>
+      {focused ? (
+        <BlurView intensity={20} style={{ borderRadius: 16, overflow: 'hidden' }}>
+          <LinearGradient
+            colors={gradients.primary}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              alignItems: 'center',
+              justifyContent: 'center',
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.6,
+              shadowRadius: 8,
+              elevation: 4,
+            }}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <Ionicons name={name} size={size} color={isDarkMode ? '#000' : '#fff'} />
+          </LinearGradient>
+        </BlurView>
+      ) : (
+        <Ionicons name={name} size={size} color={color} />
+      )}
+    </View>
+  );
+
   return (
     <>
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: '#00ff88',
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: colors.textSecondary,
           headerShown: false,
           tabBarStyle: {
-            backgroundColor: '#000000',
-            borderTopColor: '#333333',
+            backgroundColor: 'transparent',
+            borderTopWidth: 0,
+            height: 80,
+            paddingBottom: 20,
+            paddingTop: 10,
+            shadowColor: colors.shadowColor,
+            shadowOffset: { width: 0, height: -2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 8,
+            position: 'absolute',
+          },
+          tabBarBackground: () => (
+            <View style={{ flex: 1 }}>
+              {/* Custom theme-colored border */}
+              <View 
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 2,
+                  backgroundColor: colors.primary,
+                  zIndex: 10,
+                }}
+              />
+              {/* Background gradient */}
+              <LinearGradient
+                colors={gradients.surface}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                }}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
+            </View>
+          ),
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: '600',
+            marginTop: 4,
           },
           tabBarButton: (props) => (
             <TouchableOpacity
-              style={props.style}
+              style={[props.style, { 
+                flex: 1, 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                paddingVertical: 8,
+              }]}
               onPress={(e) => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 props.onPress?.(e);
@@ -53,13 +134,16 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <Text style={{ color, fontSize: 20, fontWeight: focused ? 'bold' : 'normal' }}>
-              🏠
-            </Text>
+            <TabBarIcon name={focused ? "home" : "home-outline"} color={color} focused={focused} />
           ),
           tabBarButton: (props) => (
             <TouchableOpacity
-              style={props.style}
+              style={[props.style, { 
+                flex: 1, 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                paddingVertical: 8,
+              }]}
               onPress={(e) => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 handleHomeTabPress();
@@ -77,9 +161,7 @@ export default function TabLayout() {
         options={{
           title: 'Explore',
           tabBarIcon: ({ color, focused }) => (
-            <Text style={{ color, fontSize: 20, fontWeight: focused ? 'bold' : 'normal' }}>
-              🔍
-            </Text>
+            <TabBarIcon name={focused ? "compass" : "compass-outline"} color={color} focused={focused} />
           ),
         }}
       />
@@ -88,9 +170,7 @@ export default function TabLayout() {
         options={{
           title: 'Wallet',
           tabBarIcon: ({ color, focused }) => (
-            <Text style={{ color, fontSize: 20, fontWeight: focused ? 'bold' : 'normal' }}>
-              💰
-            </Text>
+            <TabBarIcon name={focused ? "wallet" : "wallet-outline"} color={color} focused={focused} />
           ),
         }}
         listeners={{

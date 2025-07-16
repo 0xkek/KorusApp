@@ -11,7 +11,7 @@ export const subtopicData: { [key: string]: string[] } = {
 export const initialPosts: Post[] = [
   {
     id: 1,
-    wallet: '7xK9...mP4q',
+    wallet: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU', // has shadowy.sol
     time: '2h ago',
     content: "Been struggling with imposter syndrome at my new job. Senior dev role but I feel like I'm drowning. How do you push through that voice saying you don't belong? 🚀",
     likes: 23,
@@ -67,7 +67,7 @@ export const initialPosts: Post[] = [
   },
   {
     id: 2,
-    wallet: '9nF2...vR8s',
+    wallet: 'GKJRSuAqFatpGpNcB3dQkUDddt5p5uTwYdM2qygYzRBe', // has defi.sol
     time: '4h ago',
     content: "Update: Took everyone's advice and had the conversation with my manager about workload. Set better boundaries. Thanks for the push, community! 🙏",
     likes: 47,
@@ -96,7 +96,7 @@ export const initialPosts: Post[] = [
   },
   {
     id: 3,
-    wallet: '3mT8...dH7k',
+    wallet: 'E7r83mAKJRSuAZFatpGpNcBdK3dQkTDddt5p5uUYqwY', // has moonshot.sol
     time: '6h ago',
     content: "Thinking about making a career pivot from finance to tech. 32 years old, no CS background. Is it too late to start? Looking for honest perspectives. 💭",
     likes: 31,

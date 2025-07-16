@@ -6,12 +6,14 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import SearchBar from '../../components/SearchBar';
 import Post from '../../components/Post';
 import { useWallet } from '../../context/WalletContext';
+import { useTheme } from '../../context/ThemeContext';
 import { initialPosts } from '../../data/mockData';
 import { Post as PostType } from '../../types';
 import { Fonts, FontSizes } from '../../constants/Fonts';
 
 export default function ExploreScreen() {
   const router = useRouter();
+  const { colors, isDarkMode, gradients } = useTheme();
   const [searchHistory, setSearchHistory] = useState<string[]>([
     'mental health tips',
     'career advice',
@@ -66,15 +68,10 @@ export default function ExploreScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Background - Match homepage */}
       <LinearGradient
-        colors={[
-          'rgba(30, 30, 30, 0.95)',
-          'rgba(20, 20, 20, 0.98)',
-          'rgba(15, 15, 15, 0.99)',
-          'rgba(10, 10, 10, 1)',
-        ]}
+        colors={gradients.surface}
         style={styles.background}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -82,11 +79,11 @@ export default function ExploreScreen() {
       
       <LinearGradient
         colors={[
-          'rgba(67, 233, 123, 0.08)',
-          'rgba(56, 249, 215, 0.05)',
+          colors.primary + '14',
+          colors.secondary + '0C',
           'transparent',
-          'rgba(67, 233, 123, 0.06)',
-          'rgba(56, 249, 215, 0.1)',
+          colors.primary + '0F',
+          colors.secondary + '1A',
         ]}
         style={styles.greenOverlay}
         start={{ x: 0, y: 0 }}

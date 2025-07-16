@@ -14,10 +14,12 @@ import { useWallet } from '../../context/WalletContext';
 import { initialPosts, subtopicData } from '../../data/mockData';
 import { Post as PostType, Reply } from '../../types';
 import { registerForPushNotificationsAsync, setupNotificationListeners } from '../../utils/notifications';
+import { Ionicons } from '@expo/vector-icons';
 
 // Components
 import CreatePostModal from '../../components/CreatePostModal';
 import Header from '../../components/Header';
+import MyProfileModal from '../../components/MyProfileModal';
 import ParticleSystem from '../../components/ParticleSystem';
 import Post from '../../components/Post';
 import ProfileModal from '../../components/ProfileModal';
@@ -29,9 +31,9 @@ import TipModal from '../../components/TipModal';
 type ReplySortType = 'best' | 'recent';
 
 export default function HomeScreen() {
-  const { colors } = useTheme();
+  const { colors, isDarkMode, gradients } = useTheme();
   const { showAlert } = useKorusAlert();
-  const { walletAddress, balance, deductBalance } = useWallet();
+  const { walletAddress, balance, deductBalance, selectedAvatar, selectedNFTAvatar } = useWallet();
   const router = useRouter();
   
   // State
@@ -43,6 +45,7 @@ export default function HomeScreen() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showMyProfileModal, setShowMyProfileModal] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<string>('');
   const [quotedText, setQuotedText] = useState<string>('');
   const [quotedUsername, setQuotedUsername] = useState<string>('');
@@ -510,17 +513,12 @@ export default function HomeScreen() {
 
   return (
     <ParticleSystem>
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* SolMint-Level Phone Background System (NO external particles) */}
         
         {/* Base dark gradient layer (matches SolMint phone background) */}
         <LinearGradient
-          colors={[
-            'rgba(30, 30, 30, 0.95)',
-            'rgba(20, 20, 20, 0.98)',
-            'rgba(15, 15, 15, 0.99)',
-            'rgba(10, 10, 10, 1)',
-          ]}
+          colors={gradients.surface}
           style={styles.baseBackground}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -529,11 +527,11 @@ export default function HomeScreen() {
         {/* Green overlay gradient (simulates SolMint's ::before pseudo-element) */}
         <LinearGradient
           colors={[
-            'rgba(67, 233, 123, 0.08)',
-            'rgba(56, 249, 215, 0.05)',
+            colors.primary + '14',
+            colors.secondary + '0C',
             'transparent',
-            'rgba(67, 233, 123, 0.06)',
-            'rgba(56, 249, 215, 0.1)',
+            colors.primary + '0F',
+            colors.secondary + '1A',
           ]}
           style={styles.greenOverlay}
           start={{ x: 0, y: 0 }}
@@ -544,7 +542,11 @@ export default function HomeScreen() {
         {/* Status bar background overlay */}
         <View style={styles.statusBarOverlay} />
         
-        <Header onCategoryChange={handleCategoryChange} isCollapsed={headerCollapsed} />
+        <Header 
+          onCategoryChange={handleCategoryChange} 
+          isCollapsed={headerCollapsed} 
+          onProfileClick={() => setShowMyProfileModal(true)}
+        />
         
         <ScrollView 
           ref={scrollViewRef}
@@ -552,7 +554,7 @@ export default function HomeScreen() {
           contentContainerStyle={[
             styles.scrollContent, 
             { 
-              paddingTop: headerCollapsed ? 60 : 230,
+              paddingTop: headerCollapsed ? 40 : 210,
             }
           ]}
           showsVerticalScrollIndicator={false}
@@ -579,6 +581,8 @@ export default function HomeScreen() {
               }}
               expandedPosts={expandedPosts}
               currentUserWallet={currentUserWallet}
+              currentUserAvatar={selectedAvatar}
+              currentUserNFTAvatar={selectedNFTAvatar}
               replySortType={getReplySortType(post.id)}
               onLike={handleLike}
               onReply={handleReply}
@@ -599,7 +603,7 @@ export default function HomeScreen() {
 
         {/* Floating Action Button */}
         <TouchableOpacity
-          style={styles.fab}
+          style={[styles.fab, { shadowColor: colors.shadowColor }]}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             setShowCreatePost(true);
@@ -607,12 +611,16 @@ export default function HomeScreen() {
           activeOpacity={0.8}
         >
           <LinearGradient
-            colors={['rgba(67, 233, 123, 0.6)', 'rgba(56, 249, 215, 0.6)']}
+            colors={gradients.primary}
             style={styles.fabGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            <Text style={styles.fabIcon}>✏️</Text>
+            <Ionicons 
+              name="create-outline" 
+              size={24} 
+              color={isDarkMode ? '#000' : '#fff'} 
+            />
           </LinearGradient>
         </TouchableOpacity>
 
@@ -674,6 +682,14 @@ export default function HomeScreen() {
           onConfirm={handleConfirmReport}
           postId={selectedPostId || undefined}
         />
+
+        <MyProfileModal
+          visible={showMyProfileModal}
+          allPosts={posts}
+          onClose={() => {
+            setShowMyProfileModal(false);
+          }}
+        />
         </View>
       </View>
     </ParticleSystem>
@@ -710,7 +726,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 50,
+    height: 25,
     backgroundColor: 'rgb(10, 10, 10)',
     zIndex: 2000,
   },
@@ -744,6 +760,5 @@ const styles = StyleSheet.create({
   },
   fabIcon: {
     fontSize: 24,
-    color: '#000000',
   },
 });

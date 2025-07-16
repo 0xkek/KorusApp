@@ -15,7 +15,7 @@ interface TipModalProps {
 }
 
 export default function TipModal({ visible, onClose, onTip, username, walletBalance }: TipModalProps) {
-  const { colors, isDarkMode } = useTheme();
+  const { colors, isDarkMode, gradients } = useTheme();
   const [tipAmount, setTipAmount] = useState('');
 
   // Check if entered amount exceeds balance
@@ -72,25 +72,21 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
       animationType="fade"
       onRequestClose={handleClose}
     >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { backgroundColor: 'rgba(0, 0, 0, 0.7)' }]}>
         <Pressable style={styles.backdrop} onPress={handleClose} />
         
-        <BlurView intensity={60} style={styles.modalContainer}>
+        <BlurView intensity={60} style={[styles.modalContainer, { borderColor: `${colors.primary}66` }]}>
           <LinearGradient
-            colors={[
-              'rgba(30, 30, 30, 0.95)',
-              'rgba(20, 20, 20, 0.98)',
-              'rgba(15, 15, 15, 0.99)',
-            ]}
+            colors={gradients.surface}
             style={styles.modalGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
             {/* Header */}
             <View style={styles.header}>
-              <Text style={styles.title}>💰 Tip {username}</Text>
-              <Text style={styles.subtitle}>Enter amount in $ALLY tokens</Text>
-              <Text style={styles.balanceText}>
+              <Text style={[styles.title, { color: colors.primary, textShadowColor: `${colors.primary}66` }]}>💰 Tip {username}</Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Enter amount in $ALLY tokens</Text>
+              <Text style={[styles.balanceText, { color: colors.primary, textShadowColor: `${colors.primary}66` }]}>
                 Balance: {walletBalance.toFixed(2)} $ALLY
               </Text>
             </View>
@@ -99,27 +95,28 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
             <View style={styles.inputContainer}>
               <BlurView intensity={25} style={styles.inputBlur}>
                 <LinearGradient
-                  colors={['rgba(25, 25, 25, 0.9)', 'rgba(20, 20, 20, 0.95)']}
-                  style={styles.inputGradient}
+                  colors={gradients.surface}
+                  style={[styles.inputGradient, { borderColor: colors.borderLight }]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
-                  <Text style={styles.currencySymbol}>$ALLY</Text>
+                  <Text style={[styles.currencySymbol, { color: colors.primary, textShadowColor: `${colors.primary}66` }]}>$ALLY</Text>
                   <TextInput
                     style={[
                       styles.amountInput,
+                      { color: colors.text },
                       isInsufficient && tipAmount && styles.insufficientInput,
-                      isValidAmount && styles.validInput
+                      isValidAmount && { color: colors.primary }
                     ]}
                     value={tipAmount}
                     onChangeText={handleAmountChange}
                     placeholder="0"
-                    placeholderTextColor="rgba(255, 255, 255, 0.3)"
+                    placeholderTextColor={colors.textSecondary}
                     keyboardType="decimal-pad"
                     returnKeyType="done"
                     onSubmitEditing={handleTip}
                     autoFocus={true}
-                    selectionColor="#43e97b"
+                    selectionColor={colors.primary}
                     maxLength={10}
                   />
                 </LinearGradient>
@@ -128,8 +125,8 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
 
             {/* Warning Message */}
             {isInsufficient && tipAmount && (
-              <View style={styles.warningContainer}>
-                <Text style={styles.warningText}>
+              <View style={[styles.warningContainer, { backgroundColor: `${colors.error}1A`, borderColor: `${colors.error}4D` }]}>
+                <Text style={[styles.warningText, { color: colors.error }]}>
                   ⚠️ Insufficient funds. You can tip up to {walletBalance.toFixed(2)} $ALLY
                 </Text>
               </View>
@@ -138,16 +135,16 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
             {/* Action Buttons */}
             <View style={styles.actions}>
               <TouchableOpacity
-                style={styles.cancelButton}
+                style={[styles.cancelButton, { shadowColor: colors.shadowColor }]}
                 onPress={handleClose}
                 activeOpacity={0.8}
               >
                 <BlurView intensity={25} style={styles.actionBlur}>
                   <LinearGradient
-                    colors={['rgba(25, 25, 25, 0.9)', 'rgba(20, 20, 20, 0.95)']}
-                    style={styles.actionGradient}
+                    colors={gradients.surface}
+                    style={[styles.actionGradient, { borderColor: colors.borderLight }]}
                   >
-                    <Text style={styles.actionText}>Cancel</Text>
+                    <Text style={[styles.actionText, { color: colors.textSecondary }]}>Cancel</Text>
                   </LinearGradient>
                 </BlurView>
               </TouchableOpacity>
@@ -155,7 +152,8 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
               <TouchableOpacity
                 style={[
                   styles.tipButton,
-                  !isValidAmount && styles.disabledButton
+                  !isValidAmount && styles.disabledButton,
+                  { shadowColor: colors.shadowColor }
                 ]}
                 onPress={handleTip}
                 activeOpacity={0.8}
@@ -165,13 +163,14 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
                   <LinearGradient
                     colors={
                       isValidAmount
-                        ? ['rgba(67, 233, 123, 0.8)', 'rgba(56, 249, 215, 0.8)']
-                        : ['rgba(25, 25, 25, 0.9)', 'rgba(20, 20, 20, 0.95)']
+                        ? gradients.primary
+                        : gradients.surface
                     }
-                    style={styles.actionGradient}
+                    style={[styles.actionGradient, { borderColor: colors.borderLight }]}
                   >
                     <Text style={[
                       styles.actionText,
+                      { color: isValidAmount ? (isDarkMode ? '#000000' : '#000000') : colors.textSecondary },
                       isValidAmount && styles.enabledActionText
                     ]}>
                       Send Tip
@@ -192,7 +191,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
   backdrop: {
     position: 'absolute',
@@ -207,7 +205,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: 'rgba(67, 233, 123, 0.4)',
   },
   modalGradient: {
     padding: 24,
@@ -219,26 +216,21 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FontSizes['3xl'],
     fontFamily: Fonts.extraBold,
-    color: '#43e97b',
     textAlign: 'center',
     marginBottom: 8,
-    textShadowColor: 'rgba(67, 233, 123, 0.4)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 12,
   },
   subtitle: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.medium,
-    color: 'rgba(255, 255, 255, 0.7)',
     textAlign: 'center',
     marginBottom: 8,
   },
   balanceText: {
     fontSize: FontSizes.lg,
     fontFamily: Fonts.semiBold,
-    color: '#43e97b',
     textAlign: 'center',
-    textShadowColor: 'rgba(67, 233, 123, 0.4)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
   },
@@ -256,14 +248,11 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   currencySymbol: {
     fontSize: FontSizes.xl,
     fontFamily: Fonts.bold,
-    color: '#43e97b',
     marginRight: 12,
-    textShadowColor: 'rgba(67, 233, 123, 0.4)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
   },
@@ -271,28 +260,24 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: FontSizes['3xl'],
     fontFamily: Fonts.semiBold,
-    color: '#ffffff',
     textAlign: 'center',
   },
   insufficientInput: {
-    color: '#ff4444',
+    color: '#ff4444', // Will be overridden by inline style
   },
   validInput: {
-    color: '#43e97b',
+    // Color handled by inline style
   },
   warningContainer: {
     marginBottom: 16,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: 'rgba(255, 68, 68, 0.1)',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 68, 68, 0.3)',
   },
   warningText: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.medium,
-    color: '#ff6b6b',
     textAlign: 'center',
   },
   actions: {
@@ -303,7 +288,6 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -313,7 +297,6 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -332,16 +315,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   actionText: {
     fontSize: FontSizes.lg,
     fontFamily: Fonts.semiBold,
-    color: 'rgba(255, 255, 255, 0.8)',
     letterSpacing: 0.3,
   },
   enabledActionText: {
-    color: '#000000',
     fontFamily: Fonts.bold,
     letterSpacing: 0.3,
   },

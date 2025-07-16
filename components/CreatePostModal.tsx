@@ -24,7 +24,7 @@ export default function CreatePostModal({
   onContentChange,
   onSubmit,
 }: CreatePostModalProps) {
-  const { colors } = useTheme();
+  const { colors, isDarkMode, gradients } = useTheme();
   
   // Local state for category selection
   const [selectedCategory, setSelectedCategory] = useState(activeTab.toUpperCase());
@@ -76,15 +76,11 @@ export default function CreatePostModal({
       transparent={true}
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+      <View style={[styles.modalOverlay, { backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.9)' : 'rgba(0, 0, 0, 0.8)' }]}>
+        <View style={[styles.modalContent, { borderColor: colors.primary, shadowColor: colors.shadowColor }]}>
           <BlurView intensity={40} style={styles.blurWrapper}>
             <LinearGradient
-              colors={[
-                'rgba(25, 25, 25, 0.95)',
-                'rgba(20, 20, 20, 0.98)',
-                'rgba(15, 15, 15, 0.99)',
-              ]}
+              colors={gradients.surface}
               style={styles.contentContainer}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -93,35 +89,35 @@ export default function CreatePostModal({
                 <Text style={styles.modalTitle}>
                   Share with the community
                 </Text>
-                <TouchableOpacity onPress={onClose} style={styles.closeButtonContainer}>
-                  <Text style={styles.closeButton}>✕</Text>
+                <TouchableOpacity onPress={onClose} style={[styles.closeButtonContainer, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
+                  <Text style={[styles.closeButton, { color: colors.textSecondary }]}>✕</Text>
                 </TouchableOpacity>
               </View>
 
               {/* Category Selection */}
               <View style={styles.categorySelection}>
-                <Text style={styles.selectionLabel}>Category:</Text>
+                <Text style={[styles.selectionLabel, { color: colors.primary }]}>Category:</Text>
                 <TouchableOpacity 
-                  style={styles.dropdown}
+                  style={[styles.dropdown, { borderColor: colors.borderLight }]}
                   onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
                 >
                   <LinearGradient
-                    colors={['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']}
+                    colors={gradients.surface}
                     style={styles.dropdownGradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   >
-                    <Text style={styles.dropdownText}>
+                    <Text style={[styles.dropdownText, { color: colors.text }]}>
                       {selectedCategory}
                     </Text>
-                    <Text style={styles.dropdownArrow}>
+                    <Text style={[styles.dropdownArrow, { color: colors.primary }]}>
                       {showCategoryDropdown ? '▲' : '▼'}
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
                 
                 {showCategoryDropdown && (
-                  <ScrollView style={styles.dropdownList} nestedScrollEnabled>
+                  <ScrollView style={[styles.dropdownList, { borderColor: colors.borderLight }]} nestedScrollEnabled>
                     {categories.map((category) => (
                       <TouchableOpacity
                         key={category}
@@ -131,8 +127,8 @@ export default function CreatePostModal({
                         <LinearGradient
                           colors={
                             selectedCategory === category
-                              ? ['rgba(67, 233, 123, 0.2)', 'rgba(56, 249, 215, 0.1)']
-                              : ['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']
+                              ? gradients.primary
+                              : gradients.surface
                           }
                           style={styles.dropdownItemGradient}
                           start={{ x: 0, y: 0 }}
@@ -140,6 +136,7 @@ export default function CreatePostModal({
                         >
                           <Text style={[
                             styles.dropdownItemText,
+                            { color: selectedCategory === category ? colors.primary : colors.textSecondary },
                             selectedCategory === category && styles.dropdownItemTextSelected
                           ]}>
                             {category}
@@ -153,28 +150,28 @@ export default function CreatePostModal({
 
               {/* Subcategory Selection */}
               <View style={styles.categorySelection}>
-                <Text style={styles.selectionLabel}>Subcategory:</Text>
+                <Text style={[styles.selectionLabel, { color: colors.primary }]}>Subcategory:</Text>
                 <TouchableOpacity 
-                  style={styles.dropdown}
+                  style={[styles.dropdown, { borderColor: colors.borderLight }]}
                   onPress={() => setShowSubcategoryDropdown(!showSubcategoryDropdown)}
                 >
                   <LinearGradient
-                    colors={['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']}
+                    colors={gradients.surface}
                     style={styles.dropdownGradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   >
-                    <Text style={styles.dropdownText}>
+                    <Text style={[styles.dropdownText, { color: colors.text }]}>
                       {selectedSubcategory}
                     </Text>
-                    <Text style={styles.dropdownArrow}>
+                    <Text style={[styles.dropdownArrow, { color: colors.primary }]}>
                       {showSubcategoryDropdown ? '▲' : '▼'}
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
                 
                 {showSubcategoryDropdown && (
-                  <ScrollView style={styles.dropdownList} nestedScrollEnabled>
+                  <ScrollView style={[styles.dropdownList, { borderColor: colors.borderLight }]} nestedScrollEnabled>
                     {subcategories[selectedCategory]?.map((subcategory) => (
                       <TouchableOpacity
                         key={subcategory}
@@ -184,8 +181,8 @@ export default function CreatePostModal({
                         <LinearGradient
                           colors={
                             selectedSubcategory === subcategory
-                              ? ['rgba(67, 233, 123, 0.2)', 'rgba(56, 249, 215, 0.1)']
-                              : ['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']
+                              ? gradients.primary
+                              : gradients.surface
                           }
                           style={styles.dropdownItemGradient}
                           start={{ x: 0, y: 0 }}
@@ -193,6 +190,7 @@ export default function CreatePostModal({
                         >
                           <Text style={[
                             styles.dropdownItemText,
+                            { color: selectedSubcategory === subcategory ? colors.primary : colors.textSecondary },
                             selectedSubcategory === subcategory && styles.dropdownItemTextSelected
                           ]}>
                             {subcategory}
@@ -206,9 +204,9 @@ export default function CreatePostModal({
 
               <View style={styles.textInputContainer}>
                 <TextInput
-                  style={styles.textInput}
+                  style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.borderLight, color: colors.text, shadowColor: colors.shadowColor }]}
                   placeholder="What's on your mind? Share your experience, ask for advice, or offer support..."
-                  placeholderTextColor="rgba(255, 255, 255, 0.4)"
+                  placeholderTextColor={colors.textSecondary}
                   multiline
                   value={content}
                   onChangeText={onContentChange}
@@ -223,12 +221,12 @@ export default function CreatePostModal({
                   activeOpacity={0.8}
                 >
                   <LinearGradient
-                    colors={['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']}
-                    style={styles.cancelButtonGradient}
+                    colors={gradients.surface}
+                    style={[styles.cancelButtonGradient, { borderColor: colors.borderLight, shadowColor: colors.shadowColor }]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                    <Text style={[styles.cancelButtonText, { color: colors.text }]}>Cancel</Text>
                   </LinearGradient>
                 </TouchableOpacity>
 
@@ -244,8 +242,8 @@ export default function CreatePostModal({
                   <LinearGradient
                     colors={
                       !content.trim() 
-                        ? ['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']
-                        : ['#43e97b', '#38f9d7']
+                        ? gradients.surface
+                        : gradients.button
                     }
                     style={styles.postButtonGradient}
                     start={{ x: 0, y: 0 }}
@@ -253,6 +251,7 @@ export default function CreatePostModal({
                   >
                     <Text style={[
                       styles.postButtonText,
+                      { color: !content.trim() ? colors.textSecondary : (isDarkMode ? '#000000' : '#000000') },
                       !content.trim() && styles.postButtonTextDisabled
                     ]}>
                       Share
@@ -271,7 +270,6 @@ export default function CreatePostModal({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
     justifyContent: 'flex-end',
   },
   modalContent: {
@@ -279,8 +277,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     borderWidth: 2,
     borderBottomWidth: 0,
-    borderColor: 'rgba(67, 233, 123, 0.6)',
-    shadowColor: '#43e97b',
     shadowOffset: { width: 0, height: -8 },
     shadowOpacity: 0.8,
     shadowRadius: 35,
@@ -308,23 +304,19 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: FontSizes.xl,
     fontFamily: Fonts.bold,
-    color: '#ffffff',
     letterSpacing: -0.02,
   },
   closeButtonContainer: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(67, 233, 123, 0.4)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   closeButton: {
     fontSize: FontSizes.lg,
     fontFamily: Fonts.bold,
-    color: 'rgba(255, 255, 255, 0.7)',
   },
   categorySelection: {
     marginBottom: 16,
@@ -332,13 +324,11 @@ const styles = StyleSheet.create({
   selectionLabel: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.semiBold,
-    color: '#43e97b',
     marginBottom: 8,
   },
   dropdown: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(67, 233, 123, 0.3)',
     overflow: 'hidden',
   },
   dropdownGradient: {
@@ -351,17 +341,14 @@ const styles = StyleSheet.create({
   dropdownText: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.medium,
-    color: '#ffffff',
   },
   dropdownArrow: {
     fontSize: FontSizes.sm,
-    color: '#43e97b',
     fontWeight: 'bold',
   },
   dropdownList: {
     maxHeight: 150,
     borderWidth: 1,
-    borderColor: 'rgba(67, 233, 123, 0.3)',
     borderRadius: 12,
     marginTop: 4,
   },
@@ -377,10 +364,8 @@ const styles = StyleSheet.create({
   dropdownItemText: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.medium,
-    color: 'rgba(255, 255, 255, 0.8)',
   },
   dropdownItemTextSelected: {
-    color: '#43e97b',
     fontFamily: Fonts.bold,
   },
   textInputContainer: {
@@ -388,18 +373,14 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   textInput: {
-    backgroundColor: 'rgba(30, 30, 30, 0.95)',
     borderWidth: 2,
-    borderColor: 'rgba(67, 233, 123, 0.4)',
     borderRadius: 20,
     padding: 18,
     fontSize: FontSizes.lg,
     fontFamily: Fonts.medium,
-    color: '#ffffff',
     minHeight: 140,
     textAlignVertical: 'top',
     lineHeight: 24,
-    shadowColor: '#43e97b',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -419,8 +400,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: 'rgba(67, 233, 123, 0.4)',
-    shadowColor: '#43e97b',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -429,7 +408,6 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: FontSizes.lg,
     fontFamily: Fonts.semiBold,
-    color: '#ffffff',
     letterSpacing: 0.3,
   },
   postButton: {
@@ -447,10 +425,8 @@ const styles = StyleSheet.create({
   postButtonText: {
     fontSize: FontSizes.lg,
     fontFamily: Fonts.bold,
-    color: '#000000',
     letterSpacing: 0.3,
   },
   postButtonTextDisabled: {
-    color: 'rgba(255, 255, 255, 0.4)',
   },
 });

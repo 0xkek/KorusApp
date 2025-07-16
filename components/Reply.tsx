@@ -3,6 +3,7 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Reply as ReplyType } from '../types';
+import { Ionicons } from '@expo/vector-icons';
 // import { sendLocalNotification } from '../utils/notifications';
 
 interface ReplyProps {
@@ -24,7 +25,7 @@ export default function Reply({
   onBump,
   onTip,
 }: ReplyProps) {
-  const { colors, isDarkMode } = useTheme();
+  const { colors, isDarkMode, gradients } = useTheme();
 
   // Helper function to check if reply's bump is still active
   const isBumpActive = (reply: ReplyType) => {
@@ -104,46 +105,46 @@ export default function Reply({
   return (
     <View style={styles.replyContainer}>
       <LinearGradient
-        colors={[
-          'rgba(30, 30, 30, 0.9)',
-          'rgba(25, 25, 25, 0.95)',
-          'rgba(20, 20, 20, 0.98)',
-        ]}
+        colors={gradients.surface.map((color, index) => 
+          index === 0 ? color.replace('0.95', '0.9') : 
+          index === 1 ? color.replace('0.98', '0.95') : 
+          color.replace('0.99', '0.98')
+        ).slice(0, 3)}
         style={styles.replyGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <View style={styles.reply}>
+        <View style={[styles.reply, { borderColor: colors.borderLight }]}>
           {/* Green accent border */}
-          <View style={styles.leftAccent} />
+          <View style={[styles.leftAccent, { backgroundColor: colors.primary, shadowColor: colors.shadowColor }]} />
           
           {reply.tips > 0 && (
             <LinearGradient
-              colors={['#43e97b', '#38f9d7']}
-              style={styles.replyTipBadge}
+              colors={gradients.primary}
+              style={[styles.replyTipBadge, { shadowColor: colors.shadowColor }]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <Text style={styles.replyTipText}>+{reply.tips} $ALLY</Text>
+              <Text style={[styles.replyTipText, { color: isDarkMode ? '#000' : '#fff' }]}>+{reply.tips} $ALLY</Text>
             </LinearGradient>
           )}
 
           <View style={styles.replyHeader}>
             <LinearGradient
-              colors={['#43e97b', '#38f9d7']}
-              style={styles.replyAvatar}
+              colors={gradients.primary}
+              style={[styles.replyAvatar, { shadowColor: colors.shadowColor }]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <Text style={styles.replyAvatarText}>
+              <Text style={[styles.replyAvatarText, { color: isDarkMode ? '#000' : '#fff' }]}>
                 {reply.wallet.slice(0, 2)}
               </Text>
             </LinearGradient>
             <View style={styles.replyMeta}>
-              <Text style={styles.replyUsername}>
+              <Text style={[styles.replyUsername, { color: colors.primary, textShadowColor: colors.primary + '33' }]}>
                 {reply.wallet}
               </Text>
-              <Text style={styles.replyTime}>
+              <Text style={[styles.replyTime, { color: colors.textTertiary }]}>
                 {reply.time}
               </Text>
             </View>
@@ -152,46 +153,58 @@ export default function Reply({
           {/* Show quoted content if exists */}
           {quotedText && (
             <LinearGradient
-              colors={['rgba(67, 233, 123, 0.08)', 'rgba(56, 249, 215, 0.06)']}
-              style={styles.quoteContainer}
+              colors={[
+                colors.primary + '14', 
+                colors.secondary + '0F'
+              ]}
+              style={[styles.quoteContainer, { borderColor: colors.borderLight }]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <View style={styles.quoteAccent} />
-              <Text style={styles.quotedText}>
+              <View style={[styles.quoteAccent, { backgroundColor: colors.primary }]} />
+              <Text style={[styles.quotedText, { color: colors.textTertiary }]}>
                 &ldquo;{quotedText}&rdquo;
               </Text>
             </LinearGradient>
           )}
 
-          <Text style={styles.replyContent}>
+          <Text style={[styles.replyContent, { color: colors.textSecondary }]}>
             {replyText}
           </Text>
 
-          <View style={styles.replyActions}>
+          <View style={[styles.replyActions, { borderTopColor: colors.borderLight }]}>
             <TouchableOpacity
               style={[
                 styles.replyActionBtn,
-                reply.liked && styles.replyLikedBtn
+                reply.liked && [styles.replyLikedBtn, { shadowColor: colors.primary }]
               ]}
               onPress={handleLike}
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={['rgba(45, 45, 45, 0.8)', 'rgba(35, 35, 35, 0.9)']}
+                colors={gradients.button}
                 style={[
                   styles.replyActionBtnGradient,
-                  reply.liked && styles.replyLikedBtnGradient
+                  { borderColor: colors.borderLight },
+                  reply.liked && [styles.replyLikedBtnGradient, { borderColor: colors.primary }]
                 ]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Text style={[
-                  styles.replyActionText,
-                  reply.liked && styles.replyLikedText
-                ]}>
-                  ❤️ {reply.likes}
-                </Text>
+                <View style={styles.replyActionContent}>
+                  <Ionicons 
+                    name={reply.liked ? "heart" : "heart-outline"} 
+                    size={14} 
+                    color={reply.liked ? colors.primary : colors.textSecondary} 
+                  />
+                  <Text style={[
+                    styles.replyActionText,
+                    { color: colors.textSecondary },
+                    reply.liked && [styles.replyLikedText, { color: colors.primary }]
+                  ]}>
+                    {reply.likes}
+                  </Text>
+                </View>
               </LinearGradient>
             </TouchableOpacity>
 
@@ -201,12 +214,12 @@ export default function Reply({
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={['rgba(45, 45, 45, 0.8)', 'rgba(35, 35, 35, 0.9)']}
-                style={styles.replyActionBtnGradient}
+                colors={gradients.button}
+                style={[styles.replyActionBtnGradient, { borderColor: colors.borderLight }]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Text style={styles.replyActionText}>
+                <Text style={[styles.replyActionText, { color: colors.textSecondary }]}>
                   💬 Quote
                 </Text>
               </LinearGradient>
@@ -215,23 +228,25 @@ export default function Reply({
             <TouchableOpacity
               style={[
                 styles.replyActionBtn,
-                bumpActive && styles.replyActiveBtn
+                bumpActive && [styles.replyActiveBtn, { shadowColor: colors.shadowColor }]
               ]}
               onPress={handleBump}
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={['rgba(45, 45, 45, 0.8)', 'rgba(35, 35, 35, 0.9)']}
+                colors={gradients.button}
                 style={[
                   styles.replyActionBtnGradient,
-                  bumpActive && styles.replyActiveBtnGradient
+                  { borderColor: colors.borderLight },
+                  bumpActive && [styles.replyActiveBtnGradient, { borderColor: colors.primary }]
                 ]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
                 <Text style={[
                   styles.replyActionText,
-                  bumpActive && styles.replyActiveText
+                  { color: colors.textSecondary },
+                  bumpActive && [styles.replyActiveText, { color: colors.primary }]
                 ]}>
                   {bumpActive ? 'Bumped!' : '⬆️ Bump'}
                 </Text>
@@ -241,23 +256,25 @@ export default function Reply({
             <TouchableOpacity
               style={[
                 styles.replyActionBtn,
-                reply.tips > 0 && styles.replyActiveBtn
+                reply.tips > 0 && [styles.replyActiveBtn, { shadowColor: colors.shadowColor }]
               ]}
               onPress={handleTip}
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={['rgba(45, 45, 45, 0.8)', 'rgba(35, 35, 35, 0.9)']}
+                colors={gradients.button}
                 style={[
                   styles.replyActionBtnGradient,
-                  reply.tips > 0 && styles.replyActiveBtnGradient
+                  { borderColor: colors.borderLight },
+                  reply.tips > 0 && [styles.replyActiveBtnGradient, { borderColor: colors.primary }]
                 ]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
                 <Text style={[
                   styles.replyActionText,
-                  reply.tips > 0 && styles.replyActiveText
+                  { color: colors.textSecondary },
+                  reply.tips > 0 && [styles.replyActiveText, { color: colors.primary }]
                 ]}>
                   💰 Tip
                 </Text>
@@ -448,6 +465,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: 'rgba(255, 255, 255, 0.7)',
     textAlign: 'center',
+    marginLeft: 3,
+  },
+  replyActionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   replyLikedText: {
     color: '#ff4444',

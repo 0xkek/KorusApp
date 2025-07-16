@@ -4,6 +4,7 @@ import React from 'react';
 import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
+import { Ionicons } from '@expo/vector-icons';
 
 interface ReplyModalProps {
   visible: boolean;
@@ -24,7 +25,8 @@ export default function ReplyModal({
   onContentChange,
   onSubmit,
 }: ReplyModalProps) {
-  const { colors } = useTheme();
+  const { colors, isDarkMode, gradients } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
 
   return (
     <Modal
@@ -37,11 +39,7 @@ export default function ReplyModal({
         <View style={styles.modalContent}>
           <BlurView intensity={40} style={styles.blurWrapper}>
             <LinearGradient
-              colors={[
-                'rgba(25, 25, 25, 0.95)',
-                'rgba(20, 20, 20, 0.98)',
-                'rgba(15, 15, 15, 0.99)',
-              ]}
+              colors={gradients.surface}
               style={styles.contentContainer}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -90,7 +88,7 @@ export default function ReplyModal({
                   activeOpacity={0.8}
                 >
                   <LinearGradient
-                    colors={['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']}
+                    colors={gradients.button}
                     style={styles.cancelButtonGradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
@@ -111,19 +109,26 @@ export default function ReplyModal({
                   <LinearGradient
                     colors={
                       !content.trim() 
-                        ? ['rgba(40, 40, 40, 0.9)', 'rgba(30, 30, 30, 0.95)']
-                        : ['#43e97b', '#38f9d7']
+                        ? gradients.button
+                        : gradients.primary
                     }
                     style={styles.postButtonGradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   >
-                    <Text style={[
-                      styles.postButtonText,
-                      !content.trim() && styles.postButtonTextDisabled
-                    ]}>
-                      💬 Reply
-                    </Text>
+                    <View style={styles.buttonContent}>
+                      <Ionicons 
+                        name="chatbubble-outline" 
+                        size={18} 
+                        color={!content.trim() ? colors.textSecondary : (isDarkMode ? '#000000' : '#ffffff')} 
+                      />
+                      <Text style={[
+                        styles.postButtonText,
+                        !content.trim() && styles.postButtonTextDisabled
+                      ]}>
+                        Reply
+                      </Text>
+                    </View>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
@@ -135,10 +140,10 @@ export default function ReplyModal({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    backgroundColor: colors.modalBackground,
     justifyContent: 'flex-end',
   },
   modalContent: {
@@ -146,8 +151,8 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     borderWidth: 2,
     borderBottomWidth: 0,
-    borderColor: 'rgba(67, 233, 123, 0.6)',
-    shadowColor: '#43e97b',
+    borderColor: colors.primary + '99',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: -8 },
     shadowOpacity: 0.8,
     shadowRadius: 35,
@@ -175,32 +180,32 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: FontSizes.xl,
     fontFamily: Fonts.bold,
-    color: '#ffffff',
+    color: colors.text,
     letterSpacing: -0.02,
   },
   closeButtonContainer: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(67, 233, 123, 0.4)',
+    borderColor: colors.borderLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   closeButton: {
     fontSize: FontSizes.lg,
     fontFamily: Fonts.bold,
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: colors.textSecondary,
   },
   quoteContainer: {
-    backgroundColor: 'rgba(67, 233, 123, 0.08)',
+    backgroundColor: colors.primary + '14',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     position: 'relative',
     borderWidth: 1,
-    borderColor: 'rgba(67, 233, 123, 0.3)',
+    borderColor: colors.borderLight,
   },
   quoteAccent: {
     position: 'absolute',
@@ -208,27 +213,27 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 3,
-    backgroundColor: '#43e97b',
+    backgroundColor: colors.primary,
   },
   quoteHeader: {
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 6,
     fontFamily: 'monospace',
-    color: '#43e97b',
+    color: colors.primary,
     paddingLeft: 8,
   },
   quotedText: {
     fontSize: 14,
     fontStyle: 'italic',
     lineHeight: 20,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: colors.text,
     paddingLeft: 8,
   },
   modalSubtitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: 'rgba(67, 233, 123, 0.9)',
+    color: colors.primary,
     marginBottom: 20,
     letterSpacing: -0.01,
   },
@@ -237,18 +242,18 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   textInput: {
-    backgroundColor: 'rgba(30, 30, 30, 0.95)',
+    backgroundColor: colors.surface,
     borderWidth: 2,
-    borderColor: 'rgba(67, 233, 123, 0.4)',
+    borderColor: colors.borderLight,
     borderRadius: 20,
     padding: 18,
     fontSize: 16,
     fontWeight: '500',
-    color: '#ffffff',
+    color: colors.text,
     minHeight: 100,
     textAlignVertical: 'top',
     lineHeight: 24,
-    shadowColor: '#43e97b',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -268,8 +273,8 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: 'rgba(67, 233, 123, 0.4)',
-    shadowColor: '#43e97b',
+    borderColor: colors.borderLight,
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -278,7 +283,7 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: FontSizes.lg,
     fontFamily: Fonts.semiBold,
-    color: '#ffffff',
+    color: colors.text,
     letterSpacing: 0.3,
   },
   postButton: {
@@ -296,10 +301,16 @@ const styles = StyleSheet.create({
   postButtonText: {
     fontSize: FontSizes.lg,
     fontFamily: Fonts.bold,
-    color: '#000000',
+    color: isDarkMode ? '#000000' : '#ffffff',
     letterSpacing: 0.3,
   },
   postButtonTextDisabled: {
-    color: 'rgba(255, 255, 255, 0.4)',
+    color: colors.textSecondary,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
 });
