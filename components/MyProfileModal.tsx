@@ -8,6 +8,7 @@ import { useWallet } from '../context/WalletContext';
 import { useTheme } from '../context/ThemeContext';
 import AvatarSelectionModal from './AvatarSelectionModal';
 import NFTAvatarModal from './NFTAvatarModal';
+import { Ionicons } from '@expo/vector-icons';
 
 interface MyProfileModalProps {
   visible: boolean;
@@ -171,7 +172,11 @@ export default function MyProfileModal({
                       )}
                     </LinearGradient>
                     <View style={styles.editIconContainer}>
-                      <Text style={styles.editIcon}>📷</Text>
+                      <Ionicons 
+                        name="camera-outline" 
+                        size={16} 
+                        color={colors.primary}
+                      />
                     </View>
                   </TouchableOpacity>
                   
@@ -193,7 +198,11 @@ export default function MyProfileModal({
                       >
                         {copied ? (
                           <View style={styles.checkIcon}>
-                            <Text style={styles.checkMark}>✓</Text>
+                            <Ionicons 
+                              name="checkmark" 
+                              size={14} 
+                              color={colors.primary}
+                            />
                           </View>
                         ) : (
                           <View style={styles.copyIconContainer}>
@@ -231,42 +240,57 @@ export default function MyProfileModal({
                           <Text style={styles.selectedSNSText}>
                             {snsDomain || 'Select a domain'}
                           </Text>
-                          <Text style={[styles.dropdownArrow, showSNSDropdown && styles.dropdownArrowOpen]}>
-                            ▼
-                          </Text>
+                          <Ionicons 
+                            name={showSNSDropdown ? "chevron-up" : "chevron-down"} 
+                            size={16} 
+                            color={isDarkMode ? '#000' : '#fff'}
+                          />
                         </LinearGradient>
                       </BlurView>
                     </TouchableOpacity>
                     
                     {/* Dropdown Menu */}
                     {showSNSDropdown && (
-                      <View style={styles.snsDropdownMenu}>
-                        {allSNSDomains.map((snsItem, index) => (
-                          <TouchableOpacity
-                            key={index}
-                            style={[
-                              styles.snsDropdownItem,
-                              snsItem.domain === snsDomain && styles.snsDropdownItemActive,
-                              index === allSNSDomains.length - 1 && styles.snsDropdownItemLast
-                            ]}
-                            onPress={() => {
-                              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                              setFavoriteSNSDomain(snsItem.domain);
-                              setShowSNSDropdown(false);
-                            }}
-                            activeOpacity={0.8}
+                      <View style={styles.snsDropdownWrapper}>
+                        <BlurView intensity={25} style={styles.snsDropdownBlur}>
+                          <LinearGradient
+                            colors={gradients.surface}
+                            style={styles.snsDropdownMenu}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
                           >
-                            <Text style={[
-                              styles.snsDropdownItemText,
-                              snsItem.domain === snsDomain && styles.snsDropdownItemTextActive
-                            ]}>
-                              {snsItem.domain}
-                            </Text>
-                            {snsItem.domain === snsDomain && (
-                              <Text style={styles.activeCheckmark}>✓</Text>
-                            )}
-                          </TouchableOpacity>
-                        ))}
+                            {allSNSDomains.map((snsItem, index) => (
+                              <TouchableOpacity
+                                key={index}
+                                style={[
+                                  styles.snsDropdownItem,
+                                  snsItem.domain === snsDomain && styles.snsDropdownItemActive,
+                                  index === allSNSDomains.length - 1 && styles.snsDropdownItemLast
+                                ]}
+                                onPress={() => {
+                                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                  setFavoriteSNSDomain(snsItem.domain);
+                                  setShowSNSDropdown(false);
+                                }}
+                                activeOpacity={0.7}
+                              >
+                                <Text style={[
+                                  styles.snsDropdownItemText,
+                                  snsItem.domain === snsDomain && styles.snsDropdownItemTextActive
+                                ]}>
+                                  {snsItem.domain}
+                                </Text>
+                                {snsItem.domain === snsDomain && (
+                                  <Ionicons 
+                                    name="checkmark" 
+                                    size={18} 
+                                    color={colors.primary}
+                                  />
+                                )}
+                              </TouchableOpacity>
+                            ))}
+                          </LinearGradient>
+                        </BlurView>
                       </View>
                     )}
                   </View>
@@ -436,12 +460,12 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   smallBalanceAmount: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.bold,
-    color: isDarkMode ? '#000000' : '#000000',
+    color: isDarkMode ? '#000000' : '#ffffff',
   },
   smallBalanceLabel: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.medium,
-    color: isDarkMode ? '#000000' : '#000000',
+    color: isDarkMode ? '#000000' : '#ffffff',
     opacity: 0.8,
   },
   modalTitle: {
@@ -501,13 +525,10 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  editIcon: {
-    fontSize: 16,
-  },
   avatarText: {
     fontSize: FontSizes['2xl'],
     fontFamily: Fonts.bold,
-    color: isDarkMode ? '#000000' : '#000000',
+    color: isDarkMode ? '#000000' : '#ffffff',
   },
   avatarEmoji: {
     fontSize: 40,
@@ -565,11 +586,6 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checkMark: {
-    fontSize: 14,
-    color: colors.primary,
-    fontFamily: Fonts.bold,
-  },
   username: {
     fontSize: FontSizes.xl,
     fontFamily: Fonts.bold,
@@ -625,14 +641,14 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   balanceLabel: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.medium,
-    color: isDarkMode ? '#000000' : '#000000',
+    color: isDarkMode ? '#000000' : '#ffffff',
     opacity: 0.8,
     marginBottom: 4,
   },
   balanceAmount: {
     fontSize: FontSizes['3xl'],
     fontFamily: Fonts.bold,
-    color: isDarkMode ? '#000000' : '#000000',
+    color: isDarkMode ? '#000000' : '#ffffff',
   },
   statsGrid: {
     flexDirection: 'row',
@@ -733,41 +749,40 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   selectedSNSText: {
     fontSize: FontSizes.xl,
     fontFamily: Fonts.bold,
-    color: isDarkMode ? '#000000' : '#000000',
+    color: isDarkMode ? '#000000' : '#ffffff',
   },
-  dropdownArrow: {
-    fontSize: FontSizes.sm,
-    color: isDarkMode ? '#000000' : '#000000',
-    opacity: 0.8,
-    transform: [{ rotate: '0deg' }],
-  },
-  dropdownArrowOpen: {
-    transform: [{ rotate: '180deg' }],
-  },
-  snsDropdownMenu: {
+  snsDropdownWrapper: {
     position: 'absolute',
-    top: 90,
+    top: 80,
     left: 0,
     right: 0,
-    backgroundColor: colors.background,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
     overflow: 'hidden',
     shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 10,
+    elevation: 8,
+    zIndex: 200,
+  },
+  snsDropdownBlur: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  snsDropdownMenu: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    overflow: 'hidden',
   },
   snsDropdownItem: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    borderBottomColor: colors.border,
   },
   snsDropdownItemLast: {
     borderBottomWidth: 0,
@@ -783,10 +798,5 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   snsDropdownItemTextActive: {
     color: colors.primary,
     fontFamily: Fonts.semiBold,
-  },
-  activeCheckmark: {
-    fontSize: FontSizes.lg,
-    color: colors.primary,
-    fontFamily: Fonts.bold,
   },
 });

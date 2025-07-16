@@ -454,58 +454,95 @@ export default function Post({
 
             {/* Replies Section */}
             {flatReplies.length > 0 && !expandedPosts.has(post.id) && (
-              <TouchableOpacity
-                style={[styles.showRepliesBtn, { borderTopColor: colors.borderLight }]}
-                onPress={() => onToggleReplies(post.id)}
-                activeOpacity={1}
-              >
-                <Text style={[styles.showRepliesText, { color: colors.primary, textShadowColor: colors.primary + '4D' }]}>
-                  View {flatReplies.length} {flatReplies.length === 1 ? 'reply' : 'replies'} ↓
-                </Text>
-              </TouchableOpacity>
+              <View style={[styles.showRepliesSection, { borderTopColor: colors.borderLight }]}>
+                <TouchableOpacity
+                  style={styles.showRepliesBtn}
+                  onPress={() => onToggleReplies(post.id)}
+                  activeOpacity={0.8}
+                >
+                  <BlurView intensity={25} style={styles.showRepliesBlur}>
+                    <LinearGradient
+                      colors={gradients.button}
+                      style={[styles.showRepliesBtnGradient, { borderColor: colors.borderLight }]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <View style={styles.showRepliesContent}>
+                        <Ionicons 
+                          name="chatbubbles-outline" 
+                          size={16} 
+                          color={colors.primary} 
+                        />
+                        <Text style={[styles.showRepliesText, { color: colors.primary }]}>
+                          View {flatReplies.length} {flatReplies.length === 1 ? 'reply' : 'replies'}
+                        </Text>
+                        <Ionicons 
+                          name="chevron-down" 
+                          size={14} 
+                          color={colors.primary} 
+                        />
+                      </View>
+                    </LinearGradient>
+                  </BlurView>
+                </TouchableOpacity>
+              </View>
             )}
 
             {expandedPosts.has(post.id) && flatReplies.length > 0 && (
               <View style={styles.repliesContainer}>
-                <TouchableOpacity
-                  style={styles.hideRepliesBtn}
-                  onPress={() => onToggleReplies(post.id)}
-                  activeOpacity={1}
-                >
-                  <Text style={[styles.hideRepliesText, { color: colors.textTertiary }]}>
-                    Hide replies ↑
-                  </Text>
-                </TouchableOpacity>
-
-                {/* Enhanced Sort Controls */}
-                <View style={styles.sortControls}>
+                {/* Hide Replies + Sort Controls Row */}
+                <View style={styles.repliesControlsRow}>
                   <TouchableOpacity
-                    style={styles.sortToggle}
-                    onPress={() => onToggleReplySorting(post.id)}
-                    activeOpacity={1}
+                    style={styles.hideRepliesBtn}
+                    onPress={() => onToggleReplies(post.id)}
+                    activeOpacity={0.8}
                   >
-                    <BlurView intensity={20} style={styles.sortBlur}>
+                    <BlurView intensity={20} style={styles.hideRepliesBlur}>
                       <LinearGradient
                         colors={gradients.button}
-                        style={styles.sortToggleGradient}
+                        style={[styles.hideRepliesBtnGradient, { borderColor: colors.border }]}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                       >
-                        <Text style={[styles.sortToggleText, { color: colors.textSecondary }]}>
-                          Sort: {replySortType === 'best' ? '🏆 Best' : '🕐 Recent'}
-                        </Text>
+                        <View style={styles.hideRepliesContent}>
+                          <Ionicons 
+                            name="chevron-up" 
+                            size={14} 
+                            color={colors.textSecondary} 
+                          />
+                          <Text style={[styles.hideRepliesText, { color: colors.textSecondary }]}>
+                            Hide replies
+                          </Text>
+                        </View>
                       </LinearGradient>
                     </BlurView>
                   </TouchableOpacity>
 
-                  <View style={[styles.sortIndicator, { backgroundColor: isDarkMode ? 'rgba(25, 25, 25, 0.6)' : 'rgba(240, 240, 240, 0.6)' }]}>
-                    <Text style={[styles.sortText, { color: colors.textTertiary }]}>
-                      {replySortType === 'best' 
-                        ? '🔥 Showing most appreciated replies' 
-                        : '⏰ Showing newest replies first'
-                      }
-                    </Text>
-                  </View>
+                  <TouchableOpacity
+                    style={styles.sortToggle}
+                    onPress={() => onToggleReplySorting(post.id)}
+                    activeOpacity={0.8}
+                  >
+                    <BlurView intensity={20} style={styles.sortBlur}>
+                      <LinearGradient
+                        colors={gradients.button}
+                        style={[styles.sortToggleGradient, { borderColor: colors.border }]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                      >
+                        <View style={styles.sortToggleContent}>
+                          <Ionicons 
+                            name={replySortType === 'best' ? "trophy-outline" : "time-outline"} 
+                            size={14} 
+                            color={colors.textSecondary} 
+                          />
+                          <Text style={[styles.sortToggleText, { color: colors.textSecondary }]}>
+                            Sort: {replySortType === 'best' ? 'Best' : 'Recent'}
+                          </Text>
+                        </View>
+                      </LinearGradient>
+                    </BlurView>
+                  </TouchableOpacity>
                 </View>
 
                 {flatReplies.map((reply, index) =>
@@ -811,38 +848,77 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.6)',
     letterSpacing: -2,
   },
-  showRepliesBtn: {
-    marginTop: 6,
-    paddingTop: 4,
-    paddingBottom: 0,
+  showRepliesSection: {
+    marginTop: 15,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(67, 233, 123, 0.1)',
     alignItems: 'center',
+  },
+  showRepliesBtn: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  showRepliesBlur: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  showRepliesBtnGradient: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  showRepliesContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
   showRepliesText: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.semiBold,
-    color: '#43e97b',
-    textShadowColor: 'rgba(67, 233, 123, 0.3)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
     letterSpacing: 0.3,
   },
   hideRepliesBtn: {
-    padding: 10,
     alignItems: 'center',
-    marginBottom: 10,
+  },
+  hideRepliesBlur: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  hideRepliesBtnGradient: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  hideRepliesContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
   },
   hideRepliesText: {
     fontSize: FontSizes.sm,
-    fontFamily: Fonts.semiBold,
-    color: 'rgba(255, 255, 255, 0.6)',
-    letterSpacing: 0.3,
+    fontFamily: Fonts.medium,
+    letterSpacing: 0.2,
   },
   repliesContainer: {
     marginTop: 15,
   },
-  sortControls: {
+  repliesControlsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 15,
-    gap: 6,
+    gap: 12,
   },
   sortToggle: {
     borderRadius: 16,
@@ -861,23 +937,17 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 16,
     alignItems: 'center',
+    borderWidth: 1,
+  },
+  sortToggleContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
   },
   sortToggleText: {
     fontSize: FontSizes.xs,
     fontFamily: Fonts.semiBold,
-    color: 'rgba(255, 255, 255, 0.8)',
-  },
-  sortIndicator: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    alignItems: 'center',
-    backgroundColor: 'rgba(25, 25, 25, 0.6)',
-  },
-  sortText: {
-    fontSize: FontSizes.xs,
-    fontFamily: Fonts.medium,
-    color: 'rgba(255, 255, 255, 0.5)',
   },
   flatReplyContainer: {
     marginBottom: 10,

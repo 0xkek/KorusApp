@@ -219,9 +219,16 @@ export default function Reply({
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Text style={[styles.replyActionText, { color: colors.textSecondary }]}>
-                  💬 Quote
-                </Text>
+                <View style={styles.replyActionContent}>
+                  <Ionicons 
+                    name="chatbubble-outline" 
+                    size={12} 
+                    color={colors.textSecondary} 
+                  />
+                  <Text style={[styles.replyActionText, { color: colors.textSecondary }]}>
+                    Quote
+                  </Text>
+                </View>
               </LinearGradient>
             </TouchableOpacity>
 
@@ -243,13 +250,20 @@ export default function Reply({
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Text style={[
-                  styles.replyActionText,
-                  { color: colors.textSecondary },
-                  bumpActive && [styles.replyActiveText, { color: colors.primary }]
-                ]}>
-                  {bumpActive ? 'Bumped!' : '⬆️ Bump'}
-                </Text>
+                <View style={styles.replyActionContent}>
+                  <Ionicons 
+                    name="arrow-up-outline" 
+                    size={12} 
+                    color={bumpActive ? colors.primary : colors.textSecondary} 
+                  />
+                  <Text style={[
+                    styles.replyActionText,
+                    { color: colors.textSecondary },
+                    bumpActive && [styles.replyActiveText, { color: colors.primary }]
+                  ]}>
+                    {bumpActive ? 'Bumped!' : 'Bump'}
+                  </Text>
+                </View>
               </LinearGradient>
             </TouchableOpacity>
 
@@ -271,13 +285,20 @@ export default function Reply({
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Text style={[
-                  styles.replyActionText,
-                  { color: colors.textSecondary },
-                  reply.tips > 0 && [styles.replyActiveText, { color: colors.primary }]
-                ]}>
-                  💰 Tip
-                </Text>
+                <View style={styles.replyActionContent}>
+                  <Ionicons 
+                    name="cash-outline" 
+                    size={12} 
+                    color={reply.tips > 0 ? colors.primary : colors.textSecondary} 
+                  />
+                  <Text style={[
+                    styles.replyActionText,
+                    { color: colors.textSecondary },
+                    reply.tips > 0 && [styles.replyActiveText, { color: colors.primary }]
+                  ]}>
+                    Tip
+                  </Text>
+                </View>
               </LinearGradient>
             </TouchableOpacity>
           </View>

@@ -2,6 +2,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
 interface KorusAlertProps {
   visible: boolean;
@@ -22,6 +23,8 @@ export default function KorusAlert({
   autoDismiss = false,
   autoDismissDelay = 2000,
 }: KorusAlertProps) {
+  const { colors, isDarkMode, gradients } = useTheme();
+  const styles = createStyles(colors, isDarkMode);
 
   // Auto-dismiss functionality
   useEffect(() => {
@@ -45,11 +48,7 @@ export default function KorusAlert({
         <View style={styles.alertContainer}>
           <BlurView intensity={40} style={styles.blurWrapper}>
             <LinearGradient
-              colors={[
-                'rgba(25, 25, 25, 0.95)',
-                'rgba(20, 20, 20, 0.98)',
-                'rgba(15, 15, 15, 0.99)',
-              ]}
+              colors={gradients.surface}
               style={styles.contentContainer}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -64,7 +63,7 @@ export default function KorusAlert({
                   activeOpacity={0.8}
                 >
                   <LinearGradient
-                    colors={['#43e97b', '#38f9d7']}
+                    colors={gradients.primary}
                     style={styles.okButtonGradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
@@ -81,10 +80,10 @@ export default function KorusAlert({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: colors.overlayBackground,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -95,8 +94,8 @@ const styles = StyleSheet.create({
     maxWidth: 320,
     minHeight: 200,
     borderWidth: 2,
-    borderColor: 'rgba(67, 233, 123, 0.6)',
-    shadowColor: '#43e97b',
+    borderColor: colors.primary + '99',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.8,
     shadowRadius: 35,
@@ -104,18 +103,21 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   blurWrapper: {
-    borderRadius: 24,
+    borderRadius: 22,
     overflow: 'hidden',
+    flex: 1,
   },
   contentContainer: {
-    borderRadius: 24,
+    borderRadius: 22,
     padding: 24,
     alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
   },
   title: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#ffffff',
+    color: colors.text,
     textAlign: 'center',
     marginBottom: 12,
     letterSpacing: -0.02,
@@ -123,7 +125,7 @@ const styles = StyleSheet.create({
   message: {
     fontSize: 16,
     fontWeight: '500',
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 24,
@@ -136,7 +138,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 14,
     alignItems: 'center',
-    shadowColor: '#43e97b',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
@@ -145,7 +147,7 @@ const styles = StyleSheet.create({
   okButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#000000',
+    color: isDarkMode ? '#000000' : '#ffffff',
     letterSpacing: -0.01,
   },
 });

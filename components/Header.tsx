@@ -170,6 +170,28 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
           }
         ]}
       >
+        {/* Background gradient system matching main app */}
+        <LinearGradient
+          colors={gradients.surface}
+          style={styles.headerBaseBackground}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+        
+        {/* Color overlay gradient */}
+        <LinearGradient
+          colors={[
+            colors.primary + '14',
+            colors.secondary + '0C',
+            'transparent',
+            colors.primary + '0F',
+            colors.secondary + '1A',
+          ]}
+          style={styles.headerColorOverlay}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+
         {/* Combined Header + Categories Frame */}
         <View style={dynamicStyles.mainFrame}>
           <BlurView intensity={40} style={styles.blurWrapper}>
@@ -269,12 +291,20 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 1 }}
                         >
-                          <Text style={[
-                            styles.categoryBtnTxt,
-                            selectedCategory === category && styles.categoryBtnTxtSelected
-                          ]}>
-                            {category} {selectedCategory === category ? '▼' : '▽'}
-                          </Text>
+                          <View style={styles.categoryBtnContent}>
+                            <Text style={[
+                              dynamicStyles.categoryBtnTxt,
+                              selectedCategory === category && dynamicStyles.categoryBtnTxtSelected
+                            ]}>
+                              {category}
+                            </Text>
+                            <Ionicons 
+                              name={selectedCategory === category ? "chevron-down" : "chevron-down-outline"} 
+                              size={14} 
+                              color={selectedCategory === category ? (isDarkMode ? '#000' : '#fff') : colors.text}
+                              style={{ marginLeft: 4 }}
+                            />
+                          </View>
                         </LinearGradient>
                       </TouchableOpacity>
                     ))}
@@ -299,7 +329,7 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
         {/* Subcategories Frame */}
         {selectedCategory && (
           <View style={styles.subContainer}>
-            <View style={dynamicStyles.subFrame}>
+            <View style={[styles.subFrame, { borderColor: colors.borderLight, shadowColor: colors.shadowColor }]}>
               <BlurView intensity={25} style={styles.subBlur}>
                 <LinearGradient
                   colors={gradients.surface}
@@ -333,7 +363,7 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
                               end={{ x: 1, y: 1 }}
                             >
                               <Text style={[
-                                styles.subBtnTxt,
+                                dynamicStyles.subBtnTxt,
                                 { color: selectedSubcategory === subcategory ? (isDarkMode ? '#000' : '#fff') : colors.text }
                               ]}>
                                 {subcategory}
@@ -376,11 +406,25 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#1a1a1a',
     paddingTop: 35,
     paddingHorizontal: 15,
     paddingBottom: 8,
     zIndex: 1000,
+  },
+  headerBaseBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  headerColorOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1,
   },
   containerCollapsed: {
     paddingBottom: 4,
@@ -395,6 +439,7 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     shadowRadius: 35,
     elevation: 15,
     marginBottom: 10,
+    zIndex: 2,
   },
   blurWrapper: {
     borderRadius: 24,
@@ -523,6 +568,11 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   categoryBtnTxtSelected: {
     color: '#000000',
   },
+  categoryBtnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   categoryScrollIndicator: {
     position: 'absolute',
     right: -15,
@@ -535,6 +585,7 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   },
   subContainer: {
     marginBottom: 10,
+    zIndex: 2,
   },
   subFrame: {
     borderRadius: 20,
