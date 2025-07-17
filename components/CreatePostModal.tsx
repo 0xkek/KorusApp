@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
+import { Ionicons } from '@expo/vector-icons';
 
 interface CreatePostModalProps {
   visible: boolean;
@@ -90,7 +91,7 @@ export default function CreatePostModal({
                   Share with the community
                 </Text>
                 <TouchableOpacity onPress={onClose} style={[styles.closeButtonContainer, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
-                  <Text style={[styles.closeButton, { color: colors.textSecondary }]}>✕</Text>
+                  <Ionicons name="close" size={18} color={colors.textSecondary} />
                 </TouchableOpacity>
               </View>
 

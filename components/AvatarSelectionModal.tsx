@@ -4,6 +4,8 @@ import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Fonts, FontSizes } from '../constants/Fonts';
+import { useTheme } from '../context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 interface AvatarSelectionModalProps {
   visible: boolean;
@@ -18,6 +20,8 @@ export default function AvatarSelectionModal({
   onClose,
   onSelect,
 }: AvatarSelectionModalProps) {
+  const { colors, gradients, isDarkMode } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
   
   // Predefined avatar options
   const avatarOptions = [
@@ -57,44 +61,59 @@ export default function AvatarSelectionModal({
       transparent={true}
       onRequestClose={handleClose}
     >
-      <View style={styles.modalOverlay}>
+      <View style={[styles.modalOverlay, { backgroundColor: colors.overlayBackground }]}>
         <TouchableOpacity 
           style={styles.backdrop} 
           activeOpacity={1} 
           onPress={handleClose}
         />
         
-        <View style={styles.modalContent}>
+        <View style={[
+          styles.modalContent,
+          {
+            borderColor: colors.border,
+            shadowColor: colors.shadowColor,
+          }
+        ]}>
           <BlurView intensity={40} style={styles.blurWrapper}>
             <LinearGradient
-              colors={[
-                'rgba(25, 25, 25, 0.95)',
-                'rgba(20, 20, 20, 0.98)',
-                'rgba(15, 15, 15, 0.99)',
-              ]}
+              colors={gradients.surface}
               style={styles.contentContainer}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
               {/* Header */}
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Choose Avatar</Text>
-                <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                  <Text style={styles.closeButtonText}>✕</Text>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>Choose Avatar</Text>
+                <TouchableOpacity onPress={handleClose} style={[
+                  styles.closeButton,
+                  {
+                    backgroundColor: colors.surfaceLight + '1A',
+                    borderColor: colors.border,
+                  }
+                ]}>
+                  <Ionicons 
+                    name="close" 
+                    size={24} 
+                    color={colors.textSecondary}
+                  />
                 </TouchableOpacity>
               </View>
 
               {/* Current Avatar Preview */}
               <View style={styles.previewContainer}>
                 <LinearGradient
-                  colors={['#43e97b', '#38f9d7']}
-                  style={styles.previewAvatar}
+                  colors={gradients.primary}
+                  style={[
+                    styles.previewAvatar,
+                    { shadowColor: colors.shadowColor }
+                  ]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
                   <Text style={styles.previewAvatarText}>{selectedAvatar}</Text>
                 </LinearGradient>
-                <Text style={styles.previewLabel}>Preview</Text>
+                <Text style={[styles.previewLabel, { color: colors.textTertiary }]}>Preview</Text>
               </View>
 
               {/* Avatar Grid */}
@@ -109,14 +128,21 @@ export default function AvatarSelectionModal({
                       key={index}
                       style={[
                         styles.avatarOption,
-                        selectedAvatar === avatar && styles.avatarOptionSelected
+                        selectedAvatar === avatar && [
+                          styles.avatarOptionSelected,
+                          { borderColor: colors.primary }
+                        ]
                       ]}
                       onPress={() => handleSelect(avatar)}
                       activeOpacity={0.8}
                     >
                       <View style={[
                         styles.avatarOptionInner,
-                        selectedAvatar === avatar && styles.avatarOptionInnerSelected
+                        { backgroundColor: colors.surfaceLight + '1A' },
+                        selectedAvatar === avatar && [
+                          styles.avatarOptionInnerSelected,
+                          { backgroundColor: colors.primary + '33' }
+                        ]
                       ]}>
                         <Text style={styles.avatarOptionText}>{avatar}</Text>
                       </View>
@@ -127,17 +153,20 @@ export default function AvatarSelectionModal({
 
               {/* Confirm Button */}
               <TouchableOpacity 
-                style={styles.confirmButton} 
+                style={[
+                  styles.confirmButton,
+                  { shadowColor: colors.shadowColor }
+                ]} 
                 onPress={handleConfirm}
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={['#43e97b', '#38f9d7']}
+                  colors={gradients.primary}
                   style={styles.confirmButtonGradient}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
-                  <Text style={styles.confirmButtonText}>Save Avatar</Text>
+                  <Text style={[styles.confirmButtonText, { color: isDarkMode ? '#000' : '#fff' }]}>Save Avatar</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </LinearGradient>
@@ -148,10 +177,9 @@ export default function AvatarSelectionModal({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -169,8 +197,6 @@ const styles = StyleSheet.create({
     maxHeight: 600,
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: 'rgba(67, 233, 123, 0.6)',
-    shadowColor: '#43e97b',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.8,
     shadowRadius: 35,
@@ -196,22 +222,14 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: FontSizes.xl,
     fontFamily: Fonts.bold,
-    color: '#ffffff',
   },
   closeButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(67, 233, 123, 0.4)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  closeButtonText: {
-    fontSize: FontSizes.lg,
-    fontFamily: Fonts.bold,
-    color: 'rgba(255, 255, 255, 0.7)',
   },
   previewContainer: {
     alignItems: 'center',
@@ -224,7 +242,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
-    shadowColor: '#43e97b',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
@@ -236,7 +253,6 @@ const styles = StyleSheet.create({
   previewLabel: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.medium,
-    color: 'rgba(255, 255, 255, 0.6)',
   },
   gridContainer: {
     flex: 1,
@@ -259,25 +275,20 @@ const styles = StyleSheet.create({
   },
   avatarOptionSelected: {
     borderWidth: 2,
-    borderColor: '#43e97b',
   },
   avatarOptionInner: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarOptionInnerSelected: {
-    backgroundColor: 'rgba(67, 233, 123, 0.2)',
-  },
+  avatarOptionInnerSelected: {},
   avatarOptionText: {
     fontSize: 28,
   },
   confirmButton: {
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#43e97b',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
@@ -292,6 +303,5 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.bold,
-    color: '#000000',
   },
 });

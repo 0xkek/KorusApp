@@ -3,6 +3,8 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { BlurView } from 'expo-blur';
+import { Ionicons } from '@expo/vector-icons';
 import SearchBar from '../../components/SearchBar';
 import Post from '../../components/Post';
 import { useWallet } from '../../context/WalletContext';
@@ -14,6 +16,7 @@ import { Fonts, FontSizes } from '../../constants/Fonts';
 export default function ExploreScreen() {
   const router = useRouter();
   const { colors, isDarkMode, gradients } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
   const [searchHistory, setSearchHistory] = useState<string[]>([
     'mental health tips',
     'career advice',
@@ -93,8 +96,28 @@ export default function ExploreScreen() {
       <View style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Text style={styles.backButtonText}>Back</Text>
+          <TouchableOpacity 
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.back();
+            }} 
+            style={styles.backButton}
+            activeOpacity={0.8}
+          >
+            <BlurView intensity={25} style={styles.backButtonBlur}>
+              <LinearGradient
+                colors={gradients.primary}
+                style={styles.backButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Ionicons 
+                  name="arrow-back" 
+                  size={20} 
+                  color={isDarkMode ? '#000' : '#fff'} 
+                />
+              </LinearGradient>
+            </BlurView>
           </TouchableOpacity>
           <View style={styles.titleContainer}>
             <Text style={styles.title}>Search</Text>
@@ -214,7 +237,7 @@ export default function ExploreScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -244,18 +267,28 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   backButton: {
-    width: 60,
+    width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#43e97b',
+    marginTop: 8,
+    shadowColor: colors.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  backButtonBlur: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  backButtonGradient: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
-  },
-  backButtonText: {
-    color: '#000000',
-    fontSize: 14,
-    fontFamily: Fonts.bold,
   },
   titleContainer: {
     flex: 1,
@@ -264,13 +297,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FontSizes['4xl'],
     fontFamily: Fonts.bold,
-    color: '#43e97b',
+    color: colors.primary,
     marginBottom: 8,
+    textShadowColor: colors.primary + '66',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
   },
   subtitle: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.regular,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   headerSpacer: {
@@ -289,7 +325,7 @@ const styles = StyleSheet.create({
   searchInfoText: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.regular,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: colors.textSecondary,
   },
   loadingContainer: {
     flex: 1,
@@ -300,7 +336,7 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.medium,
-    color: '#43e97b',
+    color: colors.primary,
   },
   noResults: {
     flex: 1,
@@ -312,14 +348,14 @@ const styles = StyleSheet.create({
   noResultsTitle: {
     fontSize: FontSizes.xl,
     fontFamily: Fonts.bold,
-    color: '#ffffff',
+    color: colors.text,
     textAlign: 'center',
     marginBottom: 12,
   },
   noResultsText: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.regular,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -332,7 +368,7 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.regular,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: colors.textSecondary,
     textAlign: 'center',
   },
 });

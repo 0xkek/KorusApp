@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import * as SecureStore from 'expo-secure-store';
 import { Theme, getTheme } from '../constants/Themes';
 
-type ColorScheme = 'mint' | 'purple' | 'blue';
+type ColorScheme = 'mint' | 'purple' | 'blue' | 'gold';
 
 interface ThemeContextType {
   theme: Theme;

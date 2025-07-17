@@ -5,7 +5,9 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { useWallet } from '../context/WalletContext';
+import { useTheme } from '../context/ThemeContext';
 import { fetchNFTsFromWallet, getFallbackNFTImage, NFT } from '../utils/nft';
+import { Ionicons } from '@expo/vector-icons';
 
 interface NFTAvatarModalProps {
   visible: boolean;
@@ -21,6 +23,8 @@ export default function NFTAvatarModal({
   onSelectEmoji,
 }: NFTAvatarModalProps) {
   const { walletAddress } = useWallet();
+  const { colors, gradients, isDarkMode } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
   const [nfts, setNfts] = useState<NFT[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedNFT, setSelectedNFT] = useState<NFT | null>(null);
@@ -84,46 +88,64 @@ export default function NFTAvatarModal({
       transparent={true}
       onRequestClose={handleClose}
     >
-      <View style={styles.modalOverlay}>
+      <View style={[styles.modalOverlay, { backgroundColor: colors.overlayBackground }]}>
         <TouchableOpacity 
           style={styles.backdrop} 
           activeOpacity={1} 
           onPress={handleClose}
         />
         
-        <View style={styles.modalContent}>
+        <View style={[
+          styles.modalContent,
+          {
+            borderColor: colors.border,
+            shadowColor: colors.shadowColor,
+          }
+        ]}>
           <BlurView intensity={40} style={styles.blurWrapper}>
             <LinearGradient
-              colors={[
-                'rgba(25, 25, 25, 0.95)',
-                'rgba(20, 20, 20, 0.98)',
-                'rgba(15, 15, 15, 0.99)',
-              ]}
+              colors={gradients.surface}
               style={styles.contentContainer}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
               {/* Header */}
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Choose NFT Avatar</Text>
-                <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                  <Text style={styles.closeButtonText}>✕</Text>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>Choose NFT Avatar</Text>
+                <TouchableOpacity onPress={handleClose} style={[
+                  styles.closeButton,
+                  {
+                    backgroundColor: colors.surfaceLight + '1A',
+                    borderColor: colors.border,
+                  }
+                ]}>
+                  <Ionicons 
+                    name="close" 
+                    size={24} 
+                    color={colors.textSecondary}
+                  />
                 </TouchableOpacity>
               </View>
 
               {/* Current Selection Preview */}
               {selectedNFT && (
                 <View style={styles.previewContainer}>
-                  <View style={styles.previewImageContainer}>
+                  <View style={[
+                    styles.previewImageContainer,
+                    {
+                      borderColor: colors.primary,
+                      shadowColor: colors.shadowColor,
+                    }
+                  ]}>
                     <Image 
                       source={{ uri: getImageSource(selectedNFT) }}
                       style={styles.previewImage}
                       onError={() => handleImageError(selectedNFT.mint)}
                     />
                   </View>
-                  <Text style={styles.previewName}>{selectedNFT.name}</Text>
+                  <Text style={[styles.previewName, { color: colors.text }]}>{selectedNFT.name}</Text>
                   {selectedNFT.collection && (
-                    <Text style={styles.previewCollection}>{selectedNFT.collection.name}</Text>
+                    <Text style={[styles.previewCollection, { color: colors.textTertiary }]}>{selectedNFT.collection.name}</Text>
                   )}
                 </View>
               )}
@@ -131,12 +153,12 @@ export default function NFTAvatarModal({
               {/* Content */}
               {loading ? (
                 <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="large" color="#43e97b" />
-                  <Text style={styles.loadingText}>Loading your NFTs...</Text>
+                  <ActivityIndicator size="large" color={colors.primary} />
+                  <Text style={[styles.loadingText, { color: colors.textTertiary }]}>Loading your NFTs...</Text>
                 </View>
               ) : nfts.length === 0 ? (
                 <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>No NFTs found in your wallet</Text>
+                  <Text style={[styles.emptyText, { color: colors.textTertiary }]}>No NFTs found in your wallet</Text>
                   <TouchableOpacity 
                     style={styles.emojiButton} 
                     onPress={() => {
@@ -146,12 +168,12 @@ export default function NFTAvatarModal({
                     activeOpacity={0.8}
                   >
                     <LinearGradient
-                      colors={['#43e97b', '#38f9d7']}
+                      colors={gradients.primary}
                       style={styles.emojiButtonGradient}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                     >
-                      <Text style={styles.emojiButtonText}>Use Emoji Avatar Instead</Text>
+                      <Text style={[styles.emojiButtonText, { color: isDarkMode ? '#000' : '#fff' }]}>Use Emoji Avatar Instead</Text>
                     </LinearGradient>
                   </TouchableOpacity>
                 </View>
@@ -168,7 +190,14 @@ export default function NFTAvatarModal({
                           key={nft.mint}
                           style={[
                             styles.nftItem,
-                            selectedNFT?.mint === nft.mint && styles.nftItemSelected
+                            { backgroundColor: colors.surfaceLight + '0D' },
+                            selectedNFT?.mint === nft.mint && [
+                              styles.nftItemSelected,
+                              {
+                                borderColor: colors.primary,
+                                shadowColor: colors.shadowColor,
+                              }
+                            ]
                           ]}
                           onPress={() => handleSelect(nft)}
                           activeOpacity={0.8}
@@ -178,7 +207,7 @@ export default function NFTAvatarModal({
                             style={styles.nftImage}
                             onError={() => handleImageError(nft.mint)}
                           />
-                          <Text style={styles.nftName} numberOfLines={1}>
+                          <Text style={[styles.nftName, { color: colors.text }]} numberOfLines={1}>
                             {nft.name}
                           </Text>
                         </TouchableOpacity>
@@ -189,29 +218,39 @@ export default function NFTAvatarModal({
                   {/* Action Buttons */}
                   <View style={styles.actionButtons}>
                     <TouchableOpacity 
-                      style={styles.secondaryButton} 
+                      style={[
+                        styles.secondaryButton,
+                        {
+                          borderColor: colors.border,
+                          backgroundColor: colors.surfaceLight + '0D',
+                        }
+                      ]} 
                       onPress={() => {
                         onSelectEmoji();
                         onClose();
                       }}
                       activeOpacity={0.8}
                     >
-                      <Text style={styles.secondaryButtonText}>Use Emoji Instead</Text>
+                      <Text style={[styles.secondaryButtonText, { color: colors.textSecondary }]}>Use Emoji Instead</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity 
-                      style={[styles.confirmButton, !selectedNFT && styles.confirmButtonDisabled]} 
+                      style={[
+                        styles.confirmButton,
+                        { shadowColor: colors.shadowColor },
+                        !selectedNFT && styles.confirmButtonDisabled
+                      ]} 
                       onPress={handleConfirm}
                       activeOpacity={0.8}
                       disabled={!selectedNFT}
                     >
                       <LinearGradient
-                        colors={selectedNFT ? ['#43e97b', '#38f9d7'] : ['#333', '#444']}
+                        colors={selectedNFT ? gradients.primary : gradients.button}
                         style={styles.confirmButtonGradient}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                       >
-                        <Text style={styles.confirmButtonText}>Use NFT as Avatar</Text>
+                        <Text style={[styles.confirmButtonText, { color: isDarkMode ? '#000' : '#fff' }]}>Use NFT as Avatar</Text>
                       </LinearGradient>
                     </TouchableOpacity>
                   </View>
@@ -225,10 +264,9 @@ export default function NFTAvatarModal({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -246,8 +284,6 @@ const styles = StyleSheet.create({
     maxHeight: 700,
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: 'rgba(67, 233, 123, 0.6)',
-    shadowColor: '#43e97b',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.8,
     shadowRadius: 35,
@@ -273,22 +309,14 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: FontSizes.xl,
     fontFamily: Fonts.bold,
-    color: '#ffffff',
   },
   closeButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(67, 233, 123, 0.4)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  closeButtonText: {
-    fontSize: FontSizes.lg,
-    fontFamily: Fonts.bold,
-    color: 'rgba(255, 255, 255, 0.7)',
   },
   previewContainer: {
     alignItems: 'center',
@@ -301,8 +329,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 12,
     borderWidth: 3,
-    borderColor: '#43e97b',
-    shadowColor: '#43e97b',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
@@ -315,13 +341,11 @@ const styles = StyleSheet.create({
   previewName: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.bold,
-    color: '#ffffff',
     marginBottom: 4,
   },
   previewCollection: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.medium,
-    color: 'rgba(255, 255, 255, 0.6)',
   },
   loadingContainer: {
     flex: 1,
@@ -332,7 +356,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: FontSizes.base,
     fontFamily: Fonts.medium,
-    color: 'rgba(255, 255, 255, 0.6)',
   },
   emptyContainer: {
     flex: 1,
@@ -343,7 +366,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: FontSizes.lg,
     fontFamily: Fonts.medium,
-    color: 'rgba(255, 255, 255, 0.6)',
     textAlign: 'center',
     marginBottom: 24,
   },
@@ -359,7 +381,6 @@ const styles = StyleSheet.create({
   emojiButtonText: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.bold,
-    color: '#000000',
   },
   nftGrid: {
     flex: 1,
@@ -378,13 +399,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 16,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 2,
     borderColor: 'transparent',
   },
   nftItemSelected: {
-    borderColor: '#43e97b',
-    shadowColor: '#43e97b',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
@@ -393,13 +411,12 @@ const styles = StyleSheet.create({
   nftImage: {
     width: '100%',
     aspectRatio: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: colors.surfaceLight + '1A',
   },
   nftName: {
     padding: 12,
     fontSize: FontSizes.sm,
     fontFamily: Fonts.medium,
-    color: '#ffffff',
     textAlign: 'center',
   },
   actionButtons: {
@@ -412,19 +429,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(67, 233, 123, 0.4)',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   secondaryButtonText: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.semiBold,
-    color: 'rgba(255, 255, 255, 0.8)',
   },
   confirmButton: {
     flex: 1,
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#43e97b',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
@@ -442,6 +455,5 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.bold,
-    color: '#000000',
   },
 });

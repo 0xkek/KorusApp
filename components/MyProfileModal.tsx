@@ -136,7 +136,11 @@ export default function MyProfileModal({
                     </BlurView>
                   </View>
                   <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                    <Text style={styles.closeButtonText}>✕</Text>
+                    <Ionicons 
+                      name="close" 
+                      size={18} 
+                      color={colors.textSecondary}
+                    />
                   </TouchableOpacity>
                 </View>
               </View>

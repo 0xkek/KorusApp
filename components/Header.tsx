@@ -14,9 +14,10 @@ interface HeaderProps {
   onCategoryChange?: (category: string | null, subcategory: string | null) => void;
   isCollapsed?: boolean; // New prop to control collapsed state
   onProfileClick?: () => void; // New prop for profile click
+  onSubcategoriesVisibilityChange?: (visible: boolean) => void; // New prop for subcategory visibility
 }
 
-export default function Header({ onCategoryChange, isCollapsed = false, onProfileClick }: HeaderProps) {
+export default function Header({ onCategoryChange, isCollapsed = false, onProfileClick, onSubcategoriesVisibilityChange }: HeaderProps) {
   const { colors, isDarkMode, gradients, theme } = useTheme();
   const { walletAddress, selectedAvatar, selectedNFTAvatar, snsDomain } = useWallet();
   const router = useRouter();
@@ -42,6 +43,11 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
       useNativeDriver: true,
     }).start();
   }, [isCollapsed]);
+
+  // Notify parent when subcategories visibility changes
+  useEffect(() => {
+    onSubcategoriesVisibilityChange?.(!!selectedCategory);
+  }, [selectedCategory]);
   
   const categories = [
     'CAREER', 'HEALTH', 'RELATIONSHIPS', 'FINANCE', 'TECHNOLOGY', 
@@ -112,7 +118,6 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
   const dynamicStyles = StyleSheet.create({
     container: {
       ...styles.container,
-      backgroundColor: colors.background,
     },
     mainFrame: {
       ...styles.mainFrame,
@@ -170,27 +175,6 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
           }
         ]}
       >
-        {/* Background gradient system matching main app */}
-        <LinearGradient
-          colors={gradients.surface}
-          style={styles.headerBaseBackground}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        />
-        
-        {/* Color overlay gradient */}
-        <LinearGradient
-          colors={[
-            colors.primary + '14',
-            colors.secondary + '0C',
-            'transparent',
-            colors.primary + '0F',
-            colors.secondary + '1A',
-          ]}
-          style={styles.headerColorOverlay}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        />
 
         {/* Combined Header + Categories Frame */}
         <View style={dynamicStyles.mainFrame}>
@@ -410,21 +394,6 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     paddingHorizontal: 15,
     paddingBottom: 8,
     zIndex: 1000,
-  },
-  headerBaseBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  headerColorOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1,
   },
   containerCollapsed: {
     paddingBottom: 4,

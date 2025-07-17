@@ -55,6 +55,7 @@ export default function HomeScreen() {
   const [posts, setPosts] = useState<PostType[]>(initialPosts);
   const [refreshing, setRefreshing] = useState(false);
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
+  const [showingSubcategories, setShowingSubcategories] = useState(false);
   
   // Reply sorting state - track sorting preference per post
   const [replySortPreferences, setReplySortPreferences] = useState<Record<number, ReplySortType>>({});
@@ -546,6 +547,7 @@ export default function HomeScreen() {
           onCategoryChange={handleCategoryChange} 
           isCollapsed={headerCollapsed} 
           onProfileClick={() => setShowMyProfileModal(true)}
+          onSubcategoriesVisibilityChange={setShowingSubcategories}
         />
         
         <ScrollView 
@@ -554,7 +556,7 @@ export default function HomeScreen() {
           contentContainerStyle={[
             styles.scrollContent, 
             { 
-              paddingTop: headerCollapsed ? 40 : 210,
+              paddingTop: headerCollapsed ? 16 : (showingSubcategories ? 272 : 192),
             }
           ]}
           showsVerticalScrollIndicator={false}

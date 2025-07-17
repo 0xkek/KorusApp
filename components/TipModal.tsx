@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
+import { Ionicons } from '@expo/vector-icons';
 
 interface TipModalProps {
   visible: boolean;
@@ -84,7 +85,10 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
           >
             {/* Header */}
             <View style={styles.header}>
-              <Text style={[styles.title, { color: colors.primary, textShadowColor: `${colors.primary}66` }]}>💰 Tip {username}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="cash-outline" size={28} color={colors.primary} style={{ marginRight: 8 }} />
+                <Text style={[styles.title, { color: colors.primary, textShadowColor: `${colors.primary}66` }]}>Tip {username}</Text>
+              </View>
               <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Enter amount in $ALLY tokens</Text>
               <Text style={[styles.balanceText, { color: colors.primary, textShadowColor: `${colors.primary}66` }]}>
                 Balance: {walletBalance.toFixed(2)} $ALLY

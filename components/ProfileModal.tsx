@@ -6,6 +6,7 @@ import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { useTheme } from '../context/ThemeContext';
 import { getFavoriteSNSDomain } from '../utils/sns';
+import { Ionicons } from '@expo/vector-icons';
 
 interface ProfileModalProps {
   visible: boolean;
@@ -133,7 +134,7 @@ export default function ProfileModal({
                   backgroundColor: colors.background + '1A',
                   borderColor: colors.primary + '66',
                 }]}>
-                  <Text style={[styles.closeButtonText, { color: colors.textSecondary }]}>✕</Text>
+                  <Ionicons name="close" size={18} color={colors.textSecondary} />
                 </TouchableOpacity>
               </View>
 
@@ -251,7 +252,10 @@ export default function ProfileModal({
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                       >
-                        <Text style={[styles.primaryActionText, { color: isDarkMode ? '#000000' : '#000000' }]}>💰 Send Tip</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Ionicons name="cash-outline" size={20} color={isDarkMode ? '#000000' : '#000000'} style={{ marginRight: 6 }} />
+                          <Text style={[styles.primaryActionText, { color: isDarkMode ? '#000000' : '#000000' }]}>Send Tip</Text>
+                        </View>
                       </LinearGradient>
                     </BlurView>
                   </TouchableOpacity>

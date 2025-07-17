@@ -205,7 +205,7 @@ export default function Post({
           styles.blurContainer,
           { borderColor: colors.border },
           currentlyBumped && [styles.bumpedBlurContainer, { borderColor: colors.border }],
-          post.sponsored && [styles.sponsoredBlurContainer, { borderColor: colors.warning + '99', shadowColor: colors.warning }]
+          post.sponsored && [styles.sponsoredBlurContainer, { borderColor: colors.primary + '99', shadowColor: colors.primary }]
         ]}
       >
         <LinearGradient
@@ -278,8 +278,8 @@ export default function Post({
                   <Text style={[styles.username, { color: colors.primary, textShadowColor: colors.primary + '66' }]}>{displayName}</Text>
                   {post.sponsored && (
                     <LinearGradient
-                      colors={[colors.warning, colors.warning + 'CC']}
-                      style={[styles.sponsoredBadge, { shadowColor: colors.warning }]}
+                      colors={gradients.primary}
+                      style={[styles.sponsoredBadge, { shadowColor: colors.primary }]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                     >
@@ -602,8 +602,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(67, 233, 123, 0.4)',
   },
   sponsoredBlurContainer: {
-    borderColor: 'rgba(255, 215, 0, 0.6)',
-    shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
@@ -656,7 +654,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
-    shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
     shadowRadius: 6,

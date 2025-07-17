@@ -5,11 +5,15 @@ import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useWallet } from '../context/WalletContext';
+import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const { hasWallet, isLoading, createNewWallet, importFromSeedVault, walletAddress } = useWallet();
+  const { colors, isDarkMode, gradients } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
   const [checkingSeedVault, setCheckingSeedVault] = useState(false);
   const [creatingWallet, setCreatingWallet] = useState(false);
 
@@ -59,10 +63,10 @@ export default function WelcomeScreen() {
     return (
       <View style={styles.container}>
         <LinearGradient
-          colors={['#0a0a0a', '#0f0f0f', '#141414']}
+          colors={gradients.surface}
           style={styles.background}
         />
-        <ActivityIndicator size="large" color="#43e97b" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -71,20 +75,22 @@ export default function WelcomeScreen() {
     <View style={styles.container}>
       {/* Background gradient */}
       <LinearGradient
-        colors={['#0a0a0a', '#0f0f0f', '#141414']}
+        colors={gradients.surface}
         style={styles.background}
       />
       
       {/* Green overlay */}
       <LinearGradient
         colors={[
-          'rgba(67, 233, 123, 0.08)',
-          'rgba(56, 249, 215, 0.05)',
+          colors.primary + '14',
+          colors.secondary + '0C',
           'transparent',
-          'rgba(67, 233, 123, 0.06)',
-          'rgba(56, 249, 215, 0.1)',
+          colors.primary + '0F',
+          colors.secondary + '1A',
         ]}
         style={styles.greenOverlay}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       />
 
       <View style={styles.content}>
@@ -97,12 +103,32 @@ export default function WelcomeScreen() {
         {/* Wallet Setup Card */}
         <BlurView intensity={40} style={styles.cardContainer}>
           <LinearGradient
-            colors={['rgba(30, 30, 30, 0.95)', 'rgba(20, 20, 20, 0.98)']}
+            colors={gradients.surface}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={styles.card}
           >
-            <Text style={styles.cardTitle}>
-              {checkingSeedVault ? '🔍 Checking for Seed Vault...' : '👋 Welcome to Korus'}
-            </Text>
+            <View style={styles.cardTitleContainer}>
+              {checkingSeedVault ? (
+                <>
+                  <Ionicons 
+                    name="search" 
+                    size={24} 
+                    color={colors.primary}
+                  />
+                  <Text style={styles.cardTitle}>Checking for Seed Vault...</Text>
+                </>
+              ) : (
+                <>
+                  <Ionicons 
+                    name="hand-left-outline" 
+                    size={24} 
+                    color={colors.primary}
+                  />
+                  <Text style={styles.cardTitle}>Welcome to Korus</Text>
+                </>
+              )}
+            </View>
             
             <Text style={styles.cardDescription}>
               {checkingSeedVault 
@@ -121,11 +147,13 @@ export default function WelcomeScreen() {
                   activeOpacity={0.8}
                 >
                   <LinearGradient
-                    colors={['#43e97b', '#38f9d7']}
+                    colors={gradients.primary}
                     style={styles.buttonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                   >
                     {creatingWallet ? (
-                      <ActivityIndicator color="#000" />
+                      <ActivityIndicator color={isDarkMode ? '#000' : '#fff'} />
                     ) : (
                       <Text style={styles.primaryButtonText}>Create New Wallet</Text>
                     )}
@@ -156,7 +184,7 @@ export default function WelcomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -186,8 +214,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FontSizes['6xl'],
     fontFamily: Fonts.extraBold,
-    color: '#43e97b',
-    textShadowColor: 'rgba(67, 233, 123, 0.4)',
+    color: colors.primary,
+    textShadowColor: colors.primary + '66',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 20,
     letterSpacing: -2,
@@ -195,30 +223,41 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: FontSizes.lg,
     fontFamily: Fonts.medium,
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: colors.textSecondary,
     marginTop: 8,
   },
   cardContainer: {
     borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: 'rgba(67, 233, 123, 0.4)',
+    borderColor: colors.primary + '66',
+    shadowColor: colors.shadowColor,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.8,
+    shadowRadius: 35,
+    elevation: 15,
   },
   card: {
     padding: 32,
     borderRadius: 24,
   },
+  cardTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
   cardTitle: {
     fontSize: FontSizes['2xl'],
     fontFamily: Fonts.bold,
-    color: '#ffffff',
+    color: colors.text,
     textAlign: 'center',
-    marginBottom: 16,
   },
   cardDescription: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.regular,
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 32,
     lineHeight: 22,
@@ -236,7 +275,7 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     fontSize: FontSizes.lg,
     fontFamily: Fonts.bold,
-    color: '#000000',
+    color: isDarkMode ? '#000000' : '#ffffff',
     letterSpacing: 0.5,
   },
   secondaryButton: {
@@ -248,18 +287,20 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
   secondaryButtonText: {
     fontSize: FontSizes.lg,
     fontFamily: Fonts.semiBold,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: colors.text,
     letterSpacing: 0.3,
   },
   disclaimer: {
     fontSize: FontSizes.xs,
     fontFamily: Fonts.regular,
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: colors.textTertiary,
     textAlign: 'center',
     lineHeight: 16,
   },

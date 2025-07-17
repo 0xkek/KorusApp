@@ -6,6 +6,7 @@ import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View, Switch } f
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { useTheme } from '../context/ThemeContext';
 import { themeOptions } from '../constants/Themes';
+import { Ionicons } from '@expo/vector-icons';
 
 interface SettingsModalProps {
   visible: boolean;
@@ -89,7 +90,7 @@ export default function SettingsModal({
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Settings</Text>
                 <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                  <Text style={styles.closeButtonText}>✕</Text>
+                  <Ionicons name="close" size={18} color={colors.textSecondary} />
                 </TouchableOpacity>
               </View>
 
@@ -267,11 +268,19 @@ export default function SettingsModal({
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.aboutRow} activeOpacity={0.7}>
                       <Text style={styles.aboutLabel}>Terms of Service</Text>
-                      <Text style={styles.aboutArrow}>›</Text>
+                      <Ionicons 
+                        name="chevron-forward" 
+                        size={20} 
+                        color={colors.textTertiary}
+                      />
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.aboutRow} activeOpacity={0.7}>
                       <Text style={styles.aboutLabel}>Privacy Policy</Text>
-                      <Text style={styles.aboutArrow}>›</Text>
+                      <Ionicons 
+                        name="chevron-forward" 
+                        size={20} 
+                        color={colors.textTertiary}
+                      />
                     </TouchableOpacity>
                       </LinearGradient>
                     </BlurView>

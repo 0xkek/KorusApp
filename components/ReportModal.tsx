@@ -5,6 +5,7 @@ import React from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { useTheme } from '../context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 interface ReportModalProps {
   visible: boolean;
@@ -59,7 +60,11 @@ export default function ReportModal({
             >
               {/* Warning Icon */}
               <View style={styles.iconContainer}>
-                <Text style={styles.warningIcon}>⚠️</Text>
+                <Ionicons 
+                  name="warning-outline" 
+                  size={48} 
+                  color={colors.error}
+                />
               </View>
 
               {/* Title */}

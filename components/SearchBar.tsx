@@ -12,6 +12,8 @@ import {
   Keyboard
 } from 'react-native';
 import { Fonts, FontSizes } from '../constants/Fonts';
+import { useTheme } from '../context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -32,6 +34,8 @@ export default function SearchBar({
   onClearHistory,
   showCategoryFilter = false
 }: SearchBarProps) {
+  const { colors, isDarkMode, gradients } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -90,17 +94,17 @@ export default function SearchBar({
       {/* Search Input */}
       <BlurView intensity={25} style={styles.searchContainer}>
         <LinearGradient
-          colors={[
-            'rgba(30, 30, 30, 0.95)',
-            'rgba(20, 20, 20, 0.98)',
-            'rgba(15, 15, 15, 0.99)',
-          ]}
+          colors={gradients.surface}
           style={styles.searchGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
           <View style={styles.searchIcon}>
-            <Text style={styles.searchIconText}>🔍</Text>
+            <Ionicons 
+              name="search" 
+              size={20} 
+              color={colors.textSecondary}
+            />
           </View>
           
           <TextInput
@@ -111,11 +115,11 @@ export default function SearchBar({
             onBlur={handleBlur}
             onSubmitEditing={handleSubmit}
             placeholder={placeholder}
-            placeholderTextColor="rgba(255, 255, 255, 0.5)"
+            placeholderTextColor={colors.textTertiary}
             returnKeyType="search"
             autoCorrect={false}
             autoCapitalize="none"
-            selectionColor="#43e97b"
+            selectionColor={colors.primary}
           />
           
           {query.length > 0 && (
@@ -124,7 +128,11 @@ export default function SearchBar({
                 <Text style={styles.searchSubmitText}>Search</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
-                <Text style={styles.clearButtonText}>✕</Text>
+                <Ionicons 
+                  name="close" 
+                  size={18} 
+                  color={colors.textSecondary}
+                />
               </TouchableOpacity>
             </View>
           )}
@@ -147,11 +155,7 @@ export default function SearchBar({
               >
                 <BlurView intensity={20} style={styles.categoryBlur}>
                   <LinearGradient
-                    colors={[
-                      'rgba(30, 30, 30, 0.95)',
-                      'rgba(20, 20, 20, 0.98)',
-                      'rgba(15, 15, 15, 0.99)',
-                    ]}
+                    colors={gradients.surface}
                     style={styles.categoryGradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
@@ -170,11 +174,7 @@ export default function SearchBar({
       {showHistory && searchHistory.length > 0 && (
         <BlurView intensity={40} style={styles.historyContainer}>
           <LinearGradient
-            colors={[
-              'rgba(30, 30, 30, 0.95)',
-              'rgba(20, 20, 20, 0.98)',
-              'rgba(15, 15, 15, 0.99)',
-            ]}
+            colors={gradients.surface}
             style={styles.historyGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -197,7 +197,12 @@ export default function SearchBar({
                   onPress={() => handleSuggestionPress(item)}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.historyIcon}>🕐</Text>
+                  <Ionicons 
+                    name="time-outline" 
+                    size={16} 
+                    color={colors.textSecondary}
+                    style={styles.historyIcon}
+                  />
                   <Text style={styles.historyText}>{item}</Text>
                 </TouchableOpacity>
               )}
@@ -211,7 +216,7 @@ export default function SearchBar({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   container: {
     zIndex: 100,
   },
@@ -221,8 +226,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: 'rgba(67, 233, 123, 0.8)',
-    shadowColor: '#43e97b',
+    borderColor: colors.primary + 'CC',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.6,
     shadowRadius: 8,
@@ -233,23 +238,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    backgroundColor: 'transparent',
   },
   searchIcon: {
     marginRight: 12,
-  },
-  searchIconText: {
-    fontSize: FontSizes.lg,
-    color: 'rgba(255, 255, 255, 0.6)',
   },
   searchInput: {
     flex: 1,
     fontSize: FontSizes.base,
     fontFamily: Fonts.regular,
-    color: '#ffffff',
+    color: colors.text,
     paddingVertical: 4,
   },
   searchInputFocused: {
-    color: '#43e97b',
+    color: colors.primary,
   },
   inputActions: {
     flexDirection: 'row',
@@ -259,23 +261,19 @@ const styles = StyleSheet.create({
   searchSubmitButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: 'rgba(67, 233, 123, 0.2)',
+    backgroundColor: colors.primary + '33',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(67, 233, 123, 0.4)',
+    borderColor: colors.primary + '66',
   },
   searchSubmitText: {
     fontSize: FontSizes.xs,
     fontFamily: Fonts.semiBold,
-    color: '#43e97b',
+    color: colors.primary,
   },
   clearButton: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-  },
-  clearButtonText: {
-    fontSize: FontSizes.sm,
-    color: 'rgba(255, 255, 255, 0.6)',
   },
   categoryContainer: {
     marginBottom: 10,
@@ -288,8 +286,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(67, 233, 123, 0.3)',
-    shadowColor: '#43e97b',
+    borderColor: colors.primary + '4D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -303,13 +301,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(67, 233, 123, 0.2)',
+    borderColor: colors.primary + '33',
   },
   categoryText: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.semiBold,
-    color: '#ffffff',
-    textShadowColor: 'rgba(67, 233, 123, 0.4)',
+    color: colors.text,
+    textShadowColor: colors.primary + '66',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 4,
   },
@@ -319,7 +317,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(67, 233, 123, 0.2)',
+    borderColor: colors.primary + '33',
     maxHeight: 200,
   },
   historyGradient: {
@@ -334,7 +332,7 @@ const styles = StyleSheet.create({
   historyTitle: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.semiBold,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: colors.text,
   },
   clearHistoryButton: {
     paddingHorizontal: 8,
@@ -343,7 +341,7 @@ const styles = StyleSheet.create({
   clearHistoryText: {
     fontSize: FontSizes.xs,
     fontFamily: Fonts.medium,
-    color: '#43e97b',
+    color: colors.primary,
   },
   historyList: {
     maxHeight: 120,
@@ -355,14 +353,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   historyIcon: {
-    fontSize: FontSizes.sm,
     marginRight: 12,
-    color: 'rgba(255, 255, 255, 0.5)',
   },
   historyText: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.regular,
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: colors.textSecondary,
     flex: 1,
   },
 });

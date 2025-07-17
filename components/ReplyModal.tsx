@@ -49,7 +49,7 @@ export default function ReplyModal({
                   {quotedText ? 'Reply with quote' : 'Reply to post'}
                 </Text>
                 <TouchableOpacity onPress={onClose} style={styles.closeButtonContainer}>
-                  <Text style={styles.closeButton}>✕</Text>
+                  <Ionicons name="close" size={18} color={colors.textSecondary} />
                 </TouchableOpacity>
               </View>
 

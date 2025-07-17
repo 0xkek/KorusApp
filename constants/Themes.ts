@@ -233,6 +233,79 @@ const blueLight: Theme = {
   },
 };
 
+// Gold theme - Luxury and warmth
+const goldDark: Theme = {
+  name: 'Gold Dark',
+  isDark: true,
+  colors: {
+    primary: '#FFD700',        // Gold
+    secondary: '#FFA500',      // Orange Gold
+    background: '#0a0a0a',
+    surface: '#141414',
+    surfaceLight: '#1f1f1f',
+    text: '#ffffff',
+    textSecondary: 'rgba(255, 255, 255, 0.8)',
+    textTertiary: 'rgba(255, 255, 255, 0.6)',
+    border: 'rgba(255, 215, 0, 0.4)',
+    borderLight: 'rgba(255, 215, 0, 0.1)',
+    success: '#FFD700',
+    error: '#ff3b30',
+    warning: '#FFD700',
+    shadowColor: '#FFD700',
+    overlayBackground: 'rgba(0, 0, 0, 0.7)',
+    modalBackground: 'rgba(0, 0, 0, 0.85)',
+  },
+  gradients: {
+    primary: ['#FFD700', '#FFA500'], // Gold to Orange Gold
+    secondary: ['#FFA500', '#FF8C00'], // Orange Gold to Dark Orange
+    surface: [
+      'rgba(30, 30, 30, 0.95)',
+      'rgba(20, 20, 20, 0.98)',
+      'rgba(15, 15, 15, 0.99)',
+      'rgba(10, 10, 10, 1)',
+    ],
+    button: ['rgba(25, 25, 25, 0.9)', 'rgba(20, 20, 20, 0.95)'],
+  },
+};
+
+const goldLight: Theme = {
+  name: 'Gold Light',
+  isDark: false,
+  colors: {
+    primary: '#DAA520',         // Darker gold for light mode
+    secondary: '#B8860B',       // Dark goldenrod
+    background: '#fffef5',      // Soft gold-tinted white
+    surface: '#faf8f0',
+    surfaceLight: '#f5f3e8',
+    text: '#1a1a0f',           // Dark brown-black
+    textSecondary: 'rgba(26, 26, 15, 0.8)',
+    textTertiary: 'rgba(26, 26, 15, 0.6)',
+    border: 'rgba(218, 165, 32, 0.4)',
+    borderLight: 'rgba(218, 165, 32, 0.15)',
+    success: '#DAA520',
+    error: '#d32f2f',
+    warning: '#B8860B',
+    shadowColor: 'rgba(218, 165, 32, 0.5)',
+    overlayBackground: 'rgba(255, 255, 255, 0.85)',
+    modalBackground: 'rgba(255, 255, 255, 0.95)',
+  },
+  gradients: {
+    primary: ['#DAA520', '#B8860B'], // Goldenrod to Dark Goldenrod
+    secondary: ['#B8860B', '#996515'], // Dark Goldenrod to Darker
+    surface: [
+      'rgba(255, 254, 245, 0.98)',
+      'rgba(254, 253, 244, 0.99)',
+      'rgba(252, 250, 240, 0.99)',
+      'rgba(250, 245, 230, 1)',
+    ],
+    button: [
+      'rgba(255, 254, 245, 0.95)',
+      'rgba(254, 253, 244, 0.98)',
+      'rgba(252, 250, 240, 0.99)',
+    ],
+  },
+};
+
 export const themes = {
   mintDark,
   mintLight,
@@ -240,15 +313,18 @@ export const themes = {
   purpleLight,
   blueDark,
   blueLight,
+  goldDark,
+  goldLight,
 };
 
 export const themeOptions = [
   { label: 'Mint', value: 'mint' },
   { label: 'Purple', value: 'purple' },
   { label: 'Blue Sky', value: 'blue' },
+  { label: 'Gold', value: 'gold' },
 ];
 
-export const getTheme = (colorScheme: 'mint' | 'purple' | 'blue', isDark: boolean): Theme => {
+export const getTheme = (colorScheme: 'mint' | 'purple' | 'blue' | 'gold', isDark: boolean): Theme => {
   const themeKey = `${colorScheme}${isDark ? 'Dark' : 'Light'}` as keyof typeof themes;
   return themes[themeKey];
 };
