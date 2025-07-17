@@ -108,7 +108,7 @@ export default function SubcategoryFeedScreen() {
   };
 
   // Handler functions to match your existing Post component props
-  const handleCreatePost = () => {
+  const handleCreatePost = (categoryParam: string, subcategoryParam: string, imageUrl?: string) => {
     if (newPostContent.trim()) {
       const newPost: PostType = {
         id: Date.now(),
@@ -122,8 +122,9 @@ export default function SubcategoryFeedScreen() {
         bumped: false,
         bumpedAt: undefined,
         bumpExpiresAt: undefined,
-        category: category as string,
-        subcategory: subcategory as string,
+        category: categoryParam,
+        subcategory: subcategoryParam,
+        imageUrl: imageUrl,
       };
       setPosts([newPost, ...posts]);
       setNewPostContent('');

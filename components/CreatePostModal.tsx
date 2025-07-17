@@ -1,10 +1,11 @@
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 
 interface CreatePostModalProps {
   visible: boolean;
@@ -13,7 +14,7 @@ interface CreatePostModalProps {
   activeSubtopic: string;
   onClose: () => void;
   onContentChange: (text: string) => void;
-  onSubmit: (category: string, subcategory: string) => void;
+  onSubmit: (category: string, subcategory: string, imageUrl?: string) => void;
 }
 
 export default function CreatePostModal({
@@ -32,6 +33,7 @@ export default function CreatePostModal({
   const [selectedSubcategory, setSelectedSubcategory] = useState(activeSubtopic);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showSubcategoryDropdown, setShowSubcategoryDropdown] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // Categories and subcategories (matching Header component)
   const categories = [
@@ -67,7 +69,32 @@ export default function CreatePostModal({
   };
 
   const handleSubmit = () => {
-    onSubmit(selectedCategory, selectedSubcategory);
+    onSubmit(selectedCategory, selectedSubcategory, selectedImage || undefined);
+    setSelectedImage(null); // Reset image after submission
+  };
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'We need camera roll permissions to upload images.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0].uri);
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
   };
 
   return (
@@ -87,7 +114,7 @@ export default function CreatePostModal({
               end={{ x: 1, y: 1 }}
             >
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>
                   Share with the community
                 </Text>
                 <TouchableOpacity onPress={onClose} style={[styles.closeButtonContainer, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
@@ -99,7 +126,7 @@ export default function CreatePostModal({
               <View style={styles.categorySelection}>
                 <Text style={[styles.selectionLabel, { color: colors.primary }]}>Category:</Text>
                 <TouchableOpacity 
-                  style={[styles.dropdown, { borderColor: colors.borderLight }]}
+                  style={[styles.dropdown, { borderColor: colors.primary + '40', backgroundColor: colors.surface }]}
                   onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
                 >
                   <LinearGradient
@@ -118,7 +145,7 @@ export default function CreatePostModal({
                 </TouchableOpacity>
                 
                 {showCategoryDropdown && (
-                  <ScrollView style={[styles.dropdownList, { borderColor: colors.borderLight }]} nestedScrollEnabled>
+                  <ScrollView style={[styles.dropdownList, { borderColor: colors.primary + '40', backgroundColor: colors.surface }]} nestedScrollEnabled>
                     {categories.map((category) => (
                       <TouchableOpacity
                         key={category}
@@ -153,7 +180,7 @@ export default function CreatePostModal({
               <View style={styles.categorySelection}>
                 <Text style={[styles.selectionLabel, { color: colors.primary }]}>Subcategory:</Text>
                 <TouchableOpacity 
-                  style={[styles.dropdown, { borderColor: colors.borderLight }]}
+                  style={[styles.dropdown, { borderColor: colors.primary + '40', backgroundColor: colors.surface }]}
                   onPress={() => setShowSubcategoryDropdown(!showSubcategoryDropdown)}
                 >
                   <LinearGradient
@@ -172,7 +199,7 @@ export default function CreatePostModal({
                 </TouchableOpacity>
                 
                 {showSubcategoryDropdown && (
-                  <ScrollView style={[styles.dropdownList, { borderColor: colors.borderLight }]} nestedScrollEnabled>
+                  <ScrollView style={[styles.dropdownList, { borderColor: colors.primary + '40', backgroundColor: colors.surface }]} nestedScrollEnabled>
                     {subcategories[selectedCategory]?.map((subcategory) => (
                       <TouchableOpacity
                         key={subcategory}
@@ -214,6 +241,37 @@ export default function CreatePostModal({
                   maxLength={500}
                 />
               </View>
+
+              {/* Image preview */}
+              {selectedImage && (
+                <View style={styles.imagePreviewContainer}>
+                  <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+                  <TouchableOpacity 
+                    style={[styles.removeImageButton, { backgroundColor: colors.surface }]}
+                    onPress={removeImage}
+                  >
+                    <Ionicons name="close-circle" size={24} color={colors.error} />
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* Image picker button */}
+              <TouchableOpacity 
+                style={styles.imagePickerButton}
+                onPress={pickImage}
+              >
+                <LinearGradient
+                  colors={[colors.primary + '15', colors.primary + '08']}
+                  style={[styles.imagePickerGradient, { borderColor: colors.primary + '50' }]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Ionicons name="image-outline" size={20} color={colors.primary} />
+                  <Text style={[styles.imagePickerText, { color: colors.primary }]}>
+                    {selectedImage ? 'Change Image' : 'Add Image'}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
 
               <View style={styles.modalActions}>
                 <TouchableOpacity 
@@ -329,8 +387,13 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     borderRadius: 12,
-    borderWidth: 1,
+    borderWidth: 1.5,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   dropdownGradient: {
     flexDirection: 'row',
@@ -349,9 +412,14 @@ const styles = StyleSheet.create({
   },
   dropdownList: {
     maxHeight: 150,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderRadius: 12,
     marginTop: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   dropdownItem: {
     borderRadius: 8,
@@ -374,7 +442,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   textInput: {
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderRadius: 20,
     padding: 18,
     fontSize: FontSizes.lg,
@@ -382,10 +450,10 @@ const styles = StyleSheet.create({
     minHeight: 140,
     textAlignVertical: 'top',
     lineHeight: 24,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
   },
   modalActions: {
     flexDirection: 'row',
@@ -429,5 +497,47 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   postButtonTextDisabled: {
+  },
+  imagePreviewContainer: {
+    marginTop: 12,
+    marginBottom: 8,
+    position: 'relative',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  imagePreview: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    borderRadius: 12,
+    padding: 4,
+  },
+  imagePickerButton: {
+    borderRadius: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+    overflow: 'hidden',
+  },
+  imagePickerGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    borderWidth: 2,
+  },
+  imagePickerText: {
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.medium,
   },
 });

@@ -27,6 +27,7 @@ export interface Post {
   category: string;      // Category field
   subcategory: string;   // Subcategory field
   sponsored?: boolean;   // Sponsored/paid post flag
+  imageUrl?: string;     // Optional image URL
 }
 
 export interface User {

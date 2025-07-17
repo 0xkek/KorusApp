@@ -226,7 +226,7 @@ export default function HomeScreen() {
     }
   };
 
-  const handleCreatePost = (category: string, subcategory: string) => {
+  const handleCreatePost = (category: string, subcategory: string, imageUrl?: string) => {
     if (newPostContent.trim()) {
       const newPost: PostType = {
         id: posts.length + 1,
@@ -241,7 +241,8 @@ export default function HomeScreen() {
         bumpedAt: undefined,
         bumpExpiresAt: undefined,
         category: category,
-        subcategory: subcategory
+        subcategory: subcategory,
+        imageUrl: imageUrl
       };
 
       setPosts([newPost, ...posts]);

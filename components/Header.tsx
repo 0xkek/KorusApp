@@ -306,21 +306,10 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
                   </TouchableOpacity>
                 </View>
               </View>
-            </LinearGradient>
-          </BlurView>
-        </View>
 
-        {/* Subcategories Frame */}
-        {selectedCategory && (
-          <View style={styles.subContainer}>
-            <View style={[styles.subFrame, { borderColor: colors.borderLight, shadowColor: colors.shadowColor }]}>
-              <BlurView intensity={25} style={styles.subBlur}>
-                <LinearGradient
-                  colors={gradients.surface}
-                  style={styles.subGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                >
+              {/* Subcategories Section - Inside main frame */}
+              {selectedCategory && (
+                <View style={[styles.subcategoriesArea, { borderTopColor: colors.borderLight }]}>
                   <View style={styles.subScrollContainer}>
                     <ScrollView 
                       ref={subScrollRef}
@@ -369,11 +358,11 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
                       </View>
                     </TouchableOpacity>
                   </View>
-                </LinearGradient>
-              </BlurView>
-            </View>
-          </View>
-        )}
+                </View>
+              )}
+            </LinearGradient>
+          </BlurView>
+        </View>
       </Animated.View>
       
       <SettingsModal
@@ -491,6 +480,13 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   categoriesAreaCollapsed: {
     paddingTop: 0,
     borderTopWidth: 0,
+  },
+  subcategoriesArea: {
+    paddingTop: 12,
+    paddingBottom: 10,
+    marginTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(67, 233, 123, 0.1)',
   },
   categoryScrollContainer: {
     position: 'relative',

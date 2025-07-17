@@ -302,6 +302,17 @@ export default function Post({
             >
               <Text style={[styles.postContent, { color: colors.textSecondary }]}>{post.content}</Text>
             </TouchableOpacity>
+            
+            {/* Display image if present */}
+            {post.imageUrl && (
+              <View style={styles.imageContainer}>
+                <Image 
+                  source={{ uri: post.imageUrl }} 
+                  style={styles.postImage}
+                  resizeMode="cover"
+                />
+              </View>
+            )}
 
 
             <View style={[styles.postActions, { borderTopColor: colors.borderLight }]}>
@@ -737,6 +748,16 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 12,
     color: '#e0e0e0',
+  },
+  imageContainer: {
+    marginBottom: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  postImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 16,
   },
   postActions: {
     flexDirection: 'row',
