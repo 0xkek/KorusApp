@@ -15,6 +15,9 @@ export const initialPosts: Post[] = [
     time: '2h ago',
     content: "Been struggling with imposter syndrome at my new job. Senior dev role but I feel like I'm drowning. How do you push through that voice saying you don't belong? 🚀",
     likes: 23,
+    imageUrl: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80',
+    isPremium: true,
+    userTheme: '#FFD700', // Gold theme
     replies: [
       {
         id: 101,
@@ -27,6 +30,8 @@ export const initialPosts: Post[] = [
         bumped: false,
         bumpedAt: undefined,
         bumpExpiresAt: undefined,
+        isPremium: true,
+        userTheme: '#9945FF', // Purple theme
         replies: [
           {
             id: 1001,
@@ -115,6 +120,7 @@ export const initialPosts: Post[] = [
     time: '8h ago',
     content: "Pro tip: Before every difficult conversation, I write down 3 things I want to achieve. Keeps me focused and less emotional. Game changer for performance reviews. ⚡",
     likes: 64,
+    imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&q=80',
     replies: [],
     tips: 0,
     liked: false,
@@ -123,7 +129,8 @@ export const initialPosts: Post[] = [
     bumpExpiresAt: undefined,
     category: 'CAREER',
     subcategory: 'Leadership',
-    sponsored: true
+    sponsored: true,
+    isPremium: true
   },
   {
     id: 5,
@@ -138,7 +145,8 @@ export const initialPosts: Post[] = [
     bumpedAt: undefined,
     bumpExpiresAt: undefined,
     category: 'CAREER',
-    subcategory: 'Networking'
+    subcategory: 'Networking',
+    isPremium: false
   },
   {
     id: 6,
@@ -146,6 +154,8 @@ export const initialPosts: Post[] = [
     time: '1d ago',
     content: "Just hit my first $10K in crypto gains this month! 📈 Started with DeFi staking and it's been incredible. The community support here is unmatched.",
     likes: 156,
+    imageUrl: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=800&q=80',
+    isPremium: true,
     replies: [
       {
         id: 601,
@@ -158,6 +168,7 @@ export const initialPosts: Post[] = [
         bumped: false,
         bumpedAt: undefined,
         bumpExpiresAt: undefined,
+        isPremium: true,
         replies: []
       }
     ],
@@ -175,6 +186,7 @@ export const initialPosts: Post[] = [
     time: '1d ago',
     content: "NFT drop went live this morning and sold out in 12 minutes! 🎨 The utility features we built are game-changing. Thanks to everyone who believed in the vision.",
     likes: 234,
+    imageUrl: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80',
     replies: [],
     tips: 15,
     liked: false,
@@ -190,6 +202,7 @@ export const initialPosts: Post[] = [
     time: '2d ago',
     content: "Web3 development is the future, but the learning curve is steep. Anyone else making the transition from Web2? Share your resources! 🌐",
     likes: 78,
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
     replies: [
       {
         id: 801,

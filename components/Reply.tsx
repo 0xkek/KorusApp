@@ -4,6 +4,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Reply as ReplyType } from '../types';
 import { Ionicons } from '@expo/vector-icons';
+import { Fonts, FontSizes } from '../constants/Fonts';
 // import { sendLocalNotification } from '../utils/notifications';
 
 interface ReplyProps {
@@ -14,9 +15,15 @@ interface ReplyProps {
   onReply: (postId: number, quotedText?: string, quotedUsername?: string) => void;
   onBump: (replyId: number) => void;
   onTip: (postId: number, replyId: number) => void;
+  depth?: number;
+  isLastInThread?: boolean;
+  hasMoreSiblings?: boolean;
+  parentUsername?: string;
+  post?: any; // To check if reply author is OP
+  isDetailView?: boolean; // New prop to distinguish between homepage and detail view
 }
 
-export default function Reply({
+function Reply({
   reply,
   postId,
   currentUserWallet,
@@ -24,6 +31,12 @@ export default function Reply({
   onReply,
   onBump,
   onTip,
+  depth = 0,
+  isLastInThread = false,
+  hasMoreSiblings = false,
+  parentUsername,
+  post,
+  isDetailView = false,
 }: ReplyProps) {
   const { colors, isDarkMode, gradients } = useTheme();
 
@@ -103,20 +116,15 @@ export default function Reply({
   };
 
   return (
-    <View style={styles.replyContainer}>
-      <LinearGradient
-        colors={gradients.surface.map((color, index) => 
-          index === 0 ? color.replace('0.95', '0.9') : 
-          index === 1 ? color.replace('0.98', '0.95') : 
-          color.replace('0.99', '0.98')
-        ).slice(0, 3)}
-        style={styles.replyGradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
-        <View style={[styles.reply, { borderColor: colors.borderLight }]}>
-          {/* Green accent border */}
-          <View style={[styles.leftAccent, { backgroundColor: colors.primary, shadowColor: colors.shadowColor }]} />
+    <View style={[styles.replyContainer, { marginHorizontal: isDetailView ? 15 : 0 }]}>
+      <View style={[styles.blurContainer, { borderColor: colors.border, backgroundColor: colors.surface + '20' }]}>
+        <LinearGradient
+          colors={gradients.surface}
+          style={styles.replyGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.reply}>
           
           {reply.tips > 0 && (
             <LinearGradient
@@ -132,7 +140,14 @@ export default function Reply({
           <View style={styles.replyHeader}>
             <LinearGradient
               colors={gradients.primary}
-              style={[styles.replyAvatar, { shadowColor: colors.shadowColor }]}
+              style={[
+                styles.replyAvatar, 
+                { 
+                  shadowColor: colors.shadowColor,
+                  borderWidth: 3,
+                  borderColor: reply.userTheme || '#43e97b'
+                }
+              ]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
@@ -141,14 +156,28 @@ export default function Reply({
               </Text>
             </LinearGradient>
             <View style={styles.replyMeta}>
-              <Text style={[styles.replyUsername, { color: colors.primary, textShadowColor: colors.primary + '33' }]}>
-                {reply.wallet}
-              </Text>
+              <View style={styles.usernameRow}>
+                <Text style={[styles.replyUsername, { color: colors.primary, textShadowColor: colors.primary + '33' }]}>
+                  {reply.wallet}
+                </Text>
+                {reply.isPremium && (
+                  <View style={[styles.verifiedBadge, { backgroundColor: '#FFD700' }]}>
+                    <Ionicons name="checkmark" size={8} color="#000" />
+                  </View>
+                )}
+              </View>
               <Text style={[styles.replyTime, { color: colors.textTertiary }]}>
                 {reply.time}
               </Text>
             </View>
           </View>
+
+          {/* Twitter-style replying to indicator */}
+          {parentUsername && (
+            <Text style={[styles.replyingTo, { color: colors.textTertiary }]}>
+              Replying to <Text style={{ color: colors.primary }}>@{parentUsername.slice(0, 8)}...</Text>
+            </Text>
+          )}
 
           {/* Show quoted content if exists */}
           {quotedText && (
@@ -185,7 +214,7 @@ export default function Reply({
                 colors={gradients.button}
                 style={[
                   styles.replyActionBtnGradient,
-                  { borderColor: colors.borderLight },
+                  { borderColor: colors.primary + '50' },
                   reply.liked && [styles.replyLikedBtnGradient, { borderColor: colors.primary }]
                 ]}
                 start={{ x: 0, y: 0 }}
@@ -235,41 +264,6 @@ export default function Reply({
             <TouchableOpacity
               style={[
                 styles.replyActionBtn,
-                bumpActive && [styles.replyActiveBtn, { shadowColor: colors.shadowColor }]
-              ]}
-              onPress={handleBump}
-              activeOpacity={0.8}
-            >
-              <LinearGradient
-                colors={gradients.button}
-                style={[
-                  styles.replyActionBtnGradient,
-                  { borderColor: colors.borderLight },
-                  bumpActive && [styles.replyActiveBtnGradient, { borderColor: colors.primary }]
-                ]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <View style={styles.replyActionContent}>
-                  <Ionicons 
-                    name="arrow-up-outline" 
-                    size={12} 
-                    color={bumpActive ? colors.primary : colors.textSecondary} 
-                  />
-                  <Text style={[
-                    styles.replyActionText,
-                    { color: colors.textSecondary },
-                    bumpActive && [styles.replyActiveText, { color: colors.primary }]
-                  ]}>
-                    {bumpActive ? 'Bumped!' : 'Bump'}
-                  </Text>
-                </View>
-              </LinearGradient>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.replyActionBtn,
                 reply.tips > 0 && [styles.replyActiveBtn, { shadowColor: colors.shadowColor }]
               ]}
               onPress={handleTip}
@@ -279,7 +273,7 @@ export default function Reply({
                 colors={gradients.button}
                 style={[
                   styles.replyActionBtnGradient,
-                  { borderColor: colors.borderLight },
+                  { borderColor: colors.primary + '50' },
                   reply.tips > 0 && [styles.replyActiveBtnGradient, { borderColor: colors.primary }]
                 ]}
                 start={{ x: 0, y: 0 }}
@@ -302,53 +296,41 @@ export default function Reply({
               </LinearGradient>
             </TouchableOpacity>
           </View>
-        </View>
-      </LinearGradient>
+          </View>
+        </LinearGradient>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   replyContainer: {
-    borderRadius: 16,
-    marginBottom: 10,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 6,
+    marginBottom: 16,
+    borderRadius: 24,
+  },
+  blurContainer: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    borderWidth: 2,
   },
   replyGradient: {
-    borderRadius: 16,
-    padding: 1,
+    borderRadius: 24,
+    padding: 0,
   },
   reply: {
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(67, 233, 123, 0.1)',
-    padding: 15,
+    borderRadius: 24,
+    padding: 20,
+    paddingBottom: 12,
     position: 'relative',
     overflow: 'hidden',
   },
-  leftAccent: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 3,
-    backgroundColor: '#43e97b',
-    shadowColor: '#43e97b',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
-  },
   replyTipBadge: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 15,
+    top: 16,
+    right: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
     zIndex: 1,
     shadowColor: '#43e97b',
     shadowOffset: { width: 0, height: 2 },
@@ -357,7 +339,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   replyTipText: {
-    fontSize: 8,
+    fontSize: 10,
     fontWeight: '700',
     color: '#000',
   },
@@ -366,10 +348,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+  replyingTo: {
+    fontSize: 13,
+    marginBottom: 8,
+    marginTop: -4,
+  },
   replyAvatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -380,15 +367,20 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   replyAvatarText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#000000',
   },
   replyMeta: {
     flex: 1,
   },
+  usernameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
   replyUsername: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
     fontFamily: 'monospace',
     color: '#43e97b',
@@ -396,6 +388,18 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(67, 233, 123, 0.2)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
+  },
+  verifiedBadge: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 0,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 2,
   },
   replyTime: {
     fontSize: 11,
@@ -428,11 +432,11 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
   },
   replyContent: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: FontSizes.lg,
+    fontFamily: Fonts.medium,
+    lineHeight: 24,
     marginBottom: 12,
     color: '#e0e0e0',
-    fontWeight: '500',
   },
   replyActions: {
     flexDirection: 'row',
@@ -466,11 +470,11 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   replyActionBtnGradient: {
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
     alignItems: 'center',
   },
   replyLikedBtnGradient: {
@@ -482,11 +486,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   replyActionText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
     color: 'rgba(255, 255, 255, 0.7)',
     textAlign: 'center',
-    marginLeft: 3,
+    marginLeft: 4,
   },
   replyActionContent: {
     flexDirection: 'row',
@@ -501,4 +505,18 @@ const styles = StyleSheet.create({
     color: '#43e97b',
     fontWeight: '700',
   },
+});
+
+// Memoize Reply component
+export default React.memo(Reply, (prevProps, nextProps) => {
+  // Check if reply data changed
+  if (prevProps.reply.id !== nextProps.reply.id ||
+      prevProps.reply.likes !== nextProps.reply.likes ||
+      prevProps.reply.liked !== nextProps.reply.liked ||
+      prevProps.reply.bumped !== nextProps.reply.bumped ||
+      prevProps.reply.tips !== nextProps.reply.tips) {
+    return false;
+  }
+  
+  return true;
 });

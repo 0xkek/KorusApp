@@ -14,6 +14,7 @@ export default function TabLayout() {
   const lastTapTime = useRef(0);
   const DOUBLE_TAP_DELAY = 300; // 300ms for double tap
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(2); // Mock unread count
 
   // Global scroll to top function - we'll use event emitter pattern
   const handleHomeTabPress = () => {
@@ -162,6 +163,48 @@ export default function TabLayout() {
           title: 'Explore',
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon name={focused ? "compass" : "compass-outline"} color={color} focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          title: 'Alerts',
+          tabBarIcon: ({ color, focused }) => (
+            <View>
+              <TabBarIcon name={focused ? "notifications" : "notifications-outline"} color={color} focused={focused} />
+              {unreadNotifications > 0 && (
+                <View style={{
+                  position: 'absolute',
+                  top: -4,
+                  right: -4,
+                  backgroundColor: '#FF4444',
+                  borderRadius: 8,
+                  minWidth: 16,
+                  height: 16,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingHorizontal: 4,
+                }}>
+                  <Text style={{
+                    color: '#fff',
+                    fontSize: 10,
+                    fontWeight: 'bold',
+                  }}>
+                    {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                  </Text>
+                </View>
+              )}
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="events"
+        options={{
+          title: 'Events',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? "calendar" : "calendar-outline"} color={color} focused={focused} />
           ),
         }}
       />

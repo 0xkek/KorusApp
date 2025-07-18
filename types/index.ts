@@ -10,6 +10,10 @@ export interface Reply {
   bumped: boolean;
   bumpedAt?: number;
   bumpExpiresAt?: number; // When the bump expires
+  depth?: number; // Track nesting depth for visual threading
+  parentId?: number; // Track parent reply for threading
+  isPremium?: boolean; // Premium user status
+  userTheme?: string; // User's selected theme color
 }
 
 export interface Post {
@@ -28,6 +32,9 @@ export interface Post {
   subcategory: string;   // Subcategory field
   sponsored?: boolean;   // Sponsored/paid post flag
   imageUrl?: string;     // Optional image URL
+  videoUrl?: string;     // Optional video URL
+  isPremium?: boolean;   // Premium user status
+  userTheme?: string;    // User's selected theme color
 }
 
 export interface User {

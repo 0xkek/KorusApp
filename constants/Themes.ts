@@ -306,6 +306,144 @@ const goldLight: Theme = {
   },
 };
 
+// Cherry Blossom theme
+const cherryDark: Theme = {
+  name: 'Cherry Dark',
+  isDark: true,
+  colors: {
+    primary: '#FF6B9D',
+    secondary: '#FF8E9E',
+    background: '#1a1a1a',
+    surface: '#252525',
+    surfaceLight: '#303030',
+    text: '#ffffff',
+    textSecondary: 'rgba(255, 255, 255, 0.8)',
+    textTertiary: 'rgba(255, 255, 255, 0.6)',
+    border: 'rgba(255, 107, 157, 0.4)',
+    borderLight: 'rgba(255, 107, 157, 0.1)',
+    success: '#43e97b',
+    error: '#ff3b30',
+    warning: '#FFD700',
+    shadowColor: '#FF6B9D',
+    overlayBackground: 'rgba(0, 0, 0, 0.8)',
+  },
+  gradients: {
+    primary: ['#FF6B9D', '#FF8E9E'],
+    surface: [
+      'rgba(30, 20, 25, 0.95)',
+      'rgba(20, 15, 18, 0.98)',
+      'rgba(15, 10, 13, 0.99)',
+      'rgba(10, 5, 8, 1)',
+    ],
+    button: ['rgba(25, 20, 22, 0.9)', 'rgba(20, 15, 18, 0.95)'],
+  },
+};
+
+const cherryLight: Theme = {
+  name: 'Cherry Light',
+  isDark: false,
+  colors: {
+    primary: '#FF4F7F',
+    secondary: '#FF7A85',
+    background: '#fdfffe',
+    surface: '#fdf8fa',
+    surfaceLight: '#faf2f4',
+    text: '#2e1a1f',
+    textSecondary: 'rgba(46, 26, 31, 0.75)',
+    textTertiary: 'rgba(46, 26, 31, 0.55)',
+    border: 'rgba(255, 79, 127, 0.35)',
+    borderLight: 'rgba(255, 79, 127, 0.15)',
+    success: '#43e97b',
+    error: '#dc3545',
+    warning: '#f39c12',
+    shadowColor: 'rgba(255, 79, 127, 0.25)',
+    overlayBackground: 'rgba(253, 248, 250, 0.95)',
+  },
+  gradients: {
+    primary: ['#FF4F7F', '#FF7A85'],
+    surface: [
+      'rgba(253, 248, 250, 0.98)',
+      'rgba(250, 242, 244, 0.99)',
+      'rgba(247, 235, 237, 0.99)',
+      'rgba(242, 225, 228, 1)',
+    ],
+    button: [
+      'rgba(255, 254, 254, 0.95)',
+      'rgba(254, 252, 252, 0.98)',
+      'rgba(252, 248, 249, 0.99)',
+    ],
+  },
+};
+
+// Cyber Neon theme
+const cyberDark: Theme = {
+  name: 'Cyber Dark',
+  isDark: true,
+  colors: {
+    primary: '#00FFF0',
+    secondary: '#FF10F0',
+    background: '#0a0a0a',
+    surface: '#141414',
+    surfaceLight: '#1f1f1f',
+    text: '#ffffff',
+    textSecondary: 'rgba(255, 255, 255, 0.8)',
+    textTertiary: 'rgba(255, 255, 255, 0.6)',
+    border: 'rgba(0, 255, 240, 0.4)',
+    borderLight: 'rgba(0, 255, 240, 0.1)',
+    success: '#00FFF0',
+    error: '#ff3b30',
+    warning: '#FFD700',
+    shadowColor: '#00FFF0',
+    overlayBackground: 'rgba(0, 0, 0, 0.8)',
+  },
+  gradients: {
+    primary: ['#00FFF0', '#FF10F0'],
+    surface: [
+      'rgba(20, 20, 20, 0.95)',
+      'rgba(15, 15, 15, 0.98)',
+      'rgba(10, 10, 10, 0.99)',
+      'rgba(5, 5, 5, 1)',
+    ],
+    button: ['rgba(25, 25, 25, 0.9)', 'rgba(20, 20, 20, 0.95)'],
+  },
+};
+
+const cyberLight: Theme = {
+  name: 'Cyber Light',
+  isDark: false,
+  colors: {
+    primary: '#00D4D4',
+    secondary: '#E01FCD',
+    background: '#fdfffe',
+    surface: '#f8faf9',
+    surfaceLight: '#f2f6f3',
+    text: '#1a1a1a',
+    textSecondary: 'rgba(26, 26, 26, 0.75)',
+    textTertiary: 'rgba(26, 26, 26, 0.55)',
+    border: 'rgba(0, 212, 212, 0.35)',
+    borderLight: 'rgba(0, 212, 212, 0.15)',
+    success: '#00D4D4',
+    error: '#dc3545',
+    warning: '#f39c12',
+    shadowColor: 'rgba(0, 212, 212, 0.25)',
+    overlayBackground: 'rgba(248, 250, 249, 0.95)',
+  },
+  gradients: {
+    primary: ['#00D4D4', '#E01FCD'],
+    surface: [
+      'rgba(248, 250, 249, 0.98)',
+      'rgba(242, 246, 243, 0.99)',
+      'rgba(235, 242, 237, 0.99)',
+      'rgba(225, 235, 228, 1)',
+    ],
+    button: [
+      'rgba(255, 254, 254, 0.95)',
+      'rgba(254, 252, 252, 0.98)',
+      'rgba(252, 248, 249, 0.99)',
+    ],
+  },
+};
+
 export const themes = {
   mintDark,
   mintLight,
@@ -315,6 +453,10 @@ export const themes = {
   blueLight,
   goldDark,
   goldLight,
+  cherryDark,
+  cherryLight,
+  cyberDark,
+  cyberLight,
 };
 
 export const themeOptions = [
@@ -322,9 +464,11 @@ export const themeOptions = [
   { label: 'Purple', value: 'purple' },
   { label: 'Blue Sky', value: 'blue' },
   { label: 'Gold', value: 'gold' },
+  { label: 'Cherry Blossom', value: 'cherry' },
+  { label: 'Cyber Neon', value: 'cyber' },
 ];
 
-export const getTheme = (colorScheme: 'mint' | 'purple' | 'blue' | 'gold', isDark: boolean): Theme => {
+export const getTheme = (colorScheme: 'mint' | 'purple' | 'blue' | 'gold' | 'cherry' | 'cyber', isDark: boolean): Theme => {
   const themeKey = `${colorScheme}${isDark ? 'Dark' : 'Light'}` as keyof typeof themes;
   return themes[themeKey];
 };

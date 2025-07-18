@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 // Global type declaration for scroll to top function
 declare global {
@@ -15,6 +15,7 @@ import { initialPosts, subtopicData } from '../../data/mockData';
 import { Post as PostType, Reply } from '../../types';
 import { registerForPushNotificationsAsync, setupNotificationListeners } from '../../utils/notifications';
 import { Ionicons } from '@expo/vector-icons';
+import * as SecureStore from 'expo-secure-store';
 
 // Components
 import CreatePostModal from '../../components/CreatePostModal';
@@ -27,13 +28,15 @@ import ReplyModal from '../../components/ReplyModal';
 import ReportModal from '../../components/ReportModal';
 import TipModal from '../../components/TipModal';
 
+const HIDE_SPONSORED_KEY = 'korus_hide_sponsored_posts';
+
 // Reply sorting types
 type ReplySortType = 'best' | 'recent';
 
 export default function HomeScreen() {
   const { colors, isDarkMode, gradients } = useTheme();
   const { showAlert } = useKorusAlert();
-  const { walletAddress, balance, deductBalance, selectedAvatar, selectedNFTAvatar } = useWallet();
+  const { walletAddress, balance, deductBalance, selectedAvatar, selectedNFTAvatar, isPremium } = useWallet();
   const router = useRouter();
   
   // State
@@ -56,6 +59,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
   const [showingSubcategories, setShowingSubcategories] = useState(false);
+  const [hideSponsoredPosts, setHideSponsoredPosts] = useState(false);
   
   // Reply sorting state - track sorting preference per post
   const [replySortPreferences, setReplySortPreferences] = useState<Record<number, ReplySortType>>({});
@@ -63,8 +67,8 @@ export default function HomeScreen() {
   // Current user wallet comes from wallet context
   const currentUserWallet = walletAddress || 'loading...';
   
-  // ScrollView ref for scroll to top functionality
-  const scrollViewRef = useRef<ScrollView>(null);
+  // FlatList ref for scroll to top functionality
+  const flatListRef = useRef<FlatList>(null);
   
   // Scroll position tracking for header collapse
   const [scrollY, setScrollY] = useState(0);
@@ -77,9 +81,12 @@ export default function HomeScreen() {
     registerForPushNotificationsAsync();
     const cleanupListeners = setupNotificationListeners();
     
+    // Load sponsored posts preference
+    loadHideSponsoredPreference();
+    
     // Setup global scroll to top function
     global.scrollToTop = () => {
-      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     };
     
@@ -92,6 +99,17 @@ export default function HomeScreen() {
       global.scrollToTop = undefined;
     };
   }, []);
+
+  const loadHideSponsoredPreference = async () => {
+    try {
+      const savedHideSponsored = await SecureStore.getItemAsync(HIDE_SPONSORED_KEY);
+      if (savedHideSponsored === 'true' && isPremium) {
+        setHideSponsoredPosts(true);
+      }
+    } catch (error) {
+      console.error('Error loading sponsored posts preference:', error);
+    }
+  };
 
   // Handle header collapse with hysteresis to prevent flicker
   useEffect(() => {
@@ -242,7 +260,9 @@ export default function HomeScreen() {
         bumpExpiresAt: undefined,
         category: category,
         subcategory: subcategory,
-        imageUrl: imageUrl
+        imageUrl: imageUrl,
+        isPremium: isPremium,
+        userTheme: colors.primary
       };
 
       setPosts([newPost, ...posts]);
@@ -276,7 +296,9 @@ export default function HomeScreen() {
         replies: [],
         bumped: false,
         bumpedAt: undefined,
-        bumpExpiresAt: undefined
+        bumpExpiresAt: undefined,
+        isPremium: isPremium,
+        userTheme: colors.primary
       };
 
       setPosts(posts.map(post =>
@@ -290,7 +312,7 @@ export default function HomeScreen() {
       setQuotedText('');
       setQuotedUsername('');
       setShowReplyModal(false);
-      setSelectedPostId(null);
+      // Keep selectedPostId so user can reply multiple times to the same post
       showAlert({
         title: 'Success',
         message: 'Your reply has been posted!',
@@ -495,8 +517,17 @@ export default function HomeScreen() {
     ));
   };
 
+  // Filter sponsored posts if user has premium and setting is enabled
+  const filteredPosts = posts.filter(post => {
+    // If user has premium and wants to hide sponsored posts, filter them out
+    if (isPremium && hideSponsoredPosts && post.sponsored) {
+      return false;
+    }
+    return true;
+  });
+
   // Enhanced post sorting with bump expiration
-  const sortedPosts = posts.sort((a, b) => {
+  const sortedPosts = filteredPosts.sort((a, b) => {
     const aActive = isBumpActive(a);
     const bActive = isBumpActive(b);
     
@@ -542,7 +573,22 @@ export default function HomeScreen() {
           
         <View style={styles.contentContainer}>
         {/* Status bar background overlay */}
-        <View style={styles.statusBarOverlay} />
+        <LinearGradient
+          colors={isDarkMode ? [
+            'rgba(20, 20, 20, 0.98)',
+            'rgba(25, 25, 25, 0.95)',
+            'rgba(30, 30, 30, 0.85)',
+            'transparent'
+          ] : [
+            'rgba(253, 255, 254, 0.98)',
+            'rgba(248, 250, 249, 0.95)',
+            'rgba(242, 246, 243, 0.85)',
+            'transparent'
+          ]}
+          style={styles.statusBarOverlay}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+        />
         
         <Header 
           onCategoryChange={handleCategoryChange} 
@@ -551,13 +597,13 @@ export default function HomeScreen() {
           onSubcategoriesVisibilityChange={setShowingSubcategories}
         />
         
-        <ScrollView 
-          ref={scrollViewRef}
+        <FlatList 
+          ref={flatListRef}
           style={styles.content} 
           contentContainerStyle={[
             styles.scrollContent, 
             { 
-              paddingTop: headerCollapsed ? 16 : (showingSubcategories ? 272 : 192),
+              paddingTop: headerCollapsed ? 16 : (showingSubcategories ? 287 : 207),
             }
           ]}
           showsVerticalScrollIndicator={false}
@@ -574,10 +620,10 @@ export default function HomeScreen() {
               enabled={scrollY < 30 && !isScrolling}
             />
           }
-        >
-          {sortedPosts.map((post, index) => (
+          data={sortedPosts}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item: post }) => (
             <Post
-              key={post.id}
               post={{
                 ...post,
                 replies: sortReplies(post.replies, getReplySortType(post.id))
@@ -601,8 +647,12 @@ export default function HomeScreen() {
               onShowProfile={handleShowProfile}
               onShowReportModal={handleShowReportModal}
             />
-          ))}
-        </ScrollView>
+          )}
+          initialNumToRender={10}
+          maxToRenderPerBatch={5}
+          windowSize={10}
+          removeClippedSubviews={true}
+        />
 
         {/* Floating Action Button */}
         <TouchableOpacity
@@ -729,8 +779,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 25,
-    backgroundColor: 'rgb(10, 10, 10)',
+    height: 50,
     zIndex: 2000,
   },
   content: {

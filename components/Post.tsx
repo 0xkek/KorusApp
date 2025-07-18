@@ -1,15 +1,18 @@
-import { BlurView } from 'expo-blur';
+// import { BlurView } from 'expo-blur'; // Removed for performance
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import React, { useRef, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import { useWallet } from '../context/WalletContext';
 import { Post as PostType } from '../types';
 // import { sendLocalNotification } from '../utils/notifications';
 import Reply from './Reply';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { useDisplayName } from '../hooks/useSNSDomain';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useVideoPlayer, VideoView } from 'expo-video';
 
 interface PostProps {
   post: PostType;
@@ -17,7 +20,7 @@ interface PostProps {
   currentUserWallet: string;
   currentUserAvatar?: string | null;
   currentUserNFTAvatar?: any | null;
-  replySortType: 'best' | 'recent';
+  replySortType?: 'best' | 'recent';
   onLike: (postId: number) => void;
   onReply: (postId: number, quotedText?: string, quotedUsername?: string) => void;
   onBump: (postId: number) => void;
@@ -27,19 +30,20 @@ interface PostProps {
   onTipReply: (postId: number, replyId: number) => void;
   onBumpReply: (replyId: number) => void;
   onToggleReplies: (postId: number) => void;
-  onToggleReplySorting: (postId: number) => void;
+  onToggleReplySorting?: (postId: number) => void;
   onReport?: (postId: number) => void;
   onShowProfile?: (wallet: string) => void;
   onShowReportModal?: (postId: number) => void;
+  showAsDetail?: boolean;
 }
 
-export default function Post({
+function Post({
   post,
   expandedPosts,
   currentUserWallet,
   currentUserAvatar,
   currentUserNFTAvatar,
-  replySortType,
+  replySortType = 'best',
   onLike,
   onReply,
   onBump,
@@ -53,9 +57,37 @@ export default function Post({
   onReport,
   onShowProfile,
   onShowReportModal,
+  showAsDetail = false,
 }: PostProps) {
+  const router = useRouter();
   const { colors, isDarkMode, gradients } = useTheme();
-  const displayName = useDisplayName(post.wallet);
+  const { isPremium: currentUserIsPremium } = useWallet();
+  const displayName = useDisplayName(post.wallet, currentUserIsPremium || false);
+  
+  // Video player wrapper component
+  const VideoPlayerWrapper = ({ videoUrl, colors }: { videoUrl: string; colors: any }) => {
+    const player = useVideoPlayer(videoUrl, player => {
+      player.loop = false;
+    });
+
+    return (
+      <TouchableOpacity 
+        activeOpacity={1} 
+        style={styles.videoContainer}
+        onPress={(e) => {
+          e.stopPropagation();
+          // Don't navigate when clicking on video
+        }}
+      >
+        <VideoView 
+          style={styles.postVideo} 
+          player={player}
+          allowsFullscreen
+          allowsPictureInPicture
+        />
+      </TouchableOpacity>
+    );
+  };
   
   // Double-tap to like functionality
   const lastTapTime = useRef(0);
@@ -79,20 +111,25 @@ export default function Post({
     lastTapTime.current = now;
   };
 
-  // Flatten all replies (replies are already sorted in HomeScreen)
-  const flattenReplies = (replies: any[]): any[] => {
+  // Flatten all replies with depth tracking
+  const flattenReplies = (replies: any[], depth = 0, parentId?: number): any[] => {
     let flattened: any[] = [];
-    const processReply = (reply: any) => {
-      flattened.push(reply);
+    const processReply = (reply: any, currentDepth: number, currentParentId?: number) => {
+      flattened.push({ ...reply, depth: currentDepth, parentId: currentParentId });
       if (reply.replies && reply.replies.length > 0) {
-        reply.replies.forEach(processReply);
+        reply.replies.forEach((childReply: any) => 
+          processReply(childReply, currentDepth + 1, reply.id)
+        );
       }
     };
-    replies.forEach(processReply);
+    replies.forEach(reply => processReply(reply, depth, parentId));
     return flattened;
   };
 
   const flatReplies = flattenReplies(post.replies);
+  
+  // Check if current user has replied to this post
+  const hasUserReplied = flatReplies.some(reply => reply.wallet === currentUserWallet);
 
   // Calculate interaction score for top reply badge
   const calculateInteractionScore = (reply: any) => {
@@ -129,6 +166,20 @@ export default function Post({
   };
 
   const handleReply = (postId: number, quotedText?: string, quotedUsername?: string, event?: any) => {
+    // If not in detail view and clicking reply button (not quoting)
+    if (!showAsDetail && !quotedText) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      
+      // If replies are already expanded, open the reply modal instead of hiding
+      if (expandedPosts.has(post.id)) {
+        onReply(postId, quotedText, quotedUsername);
+      } else {
+        // First click: expand replies
+        onToggleReplies(post.id);
+      }
+      return;
+    }
+    
     onReply(postId, quotedText, quotedUsername);
     
     // Trigger particle explosion
@@ -199,11 +250,10 @@ export default function Post({
   return (
     <View style={styles.postContainer}>
       {/* Main glassmorphism card with subtle glow */}
-      <BlurView 
-        intensity={40} 
+      <View 
         style={[
           styles.blurContainer,
-          { borderColor: colors.border },
+          { borderColor: colors.border, backgroundColor: colors.surface + '20' },
           currentlyBumped && [styles.bumpedBlurContainer, { borderColor: colors.border }],
           post.sponsored && [styles.sponsoredBlurContainer, { borderColor: colors.primary + '99', shadowColor: colors.primary }]
         ]}
@@ -214,10 +264,7 @@ export default function Post({
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
-          <TouchableOpacity
-            style={styles.post}
-            activeOpacity={0.98}
-          >
+          <View style={styles.post}>
 
             {/* Top-right badges area */}
             <View style={styles.topRightBadges}>
@@ -251,72 +298,106 @@ export default function Post({
               )}
             </View>
 
-            <View style={styles.postHeader}>
-              <TouchableOpacity onPress={handleShowProfile} activeOpacity={0.8}>
-                <LinearGradient
-                  colors={gradients.primary}
-                  style={[styles.avatar, { shadowColor: colors.shadowColor }]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
+            {/* Clickable content area */}
+            <TouchableOpacity
+              activeOpacity={0.98}
+              onPress={() => {
+                if (!showAsDetail) {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push(`/post/${post.id}`);
+                }
+              }}
+              style={styles.clickableContent}
+            >
+              <View style={styles.postHeader}>
+                <TouchableOpacity 
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    handleShowProfile();
+                  }} 
+                  activeOpacity={0.8}
                 >
-                  {post.wallet === currentUserWallet && currentUserNFTAvatar ? (
-                    <Image 
-                      source={{ uri: currentUserNFTAvatar.image || currentUserNFTAvatar.uri }}
-                      style={styles.nftAvatar}
-                    />
-                  ) : post.wallet === currentUserWallet && currentUserAvatar ? (
-                    <Text style={styles.avatarEmoji}>{currentUserAvatar}</Text>
-                  ) : (
-                    <Text style={[styles.avatarText, { color: isDarkMode ? '#000' : '#fff' }]}>
-                      {post.wallet.slice(0, 2)}
-                    </Text>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
-              <View style={styles.postMeta}>
-                <View style={styles.usernameRow}>
-                  <Text style={[styles.username, { color: colors.primary, textShadowColor: colors.primary + '66' }]}>{displayName}</Text>
-                  {post.sponsored && (
-                    <LinearGradient
-                      colors={gradients.primary}
-                      style={[styles.sponsoredBadge, { shadowColor: colors.primary }]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    >
-                      <Text style={[styles.sponsoredText, { color: isDarkMode ? '#000' : '#fff' }]}>SPONSORED</Text>
-                    </LinearGradient>
-                  )}
-                </View>
-                <View style={styles.metaRow}>
-                  <Text style={[styles.time, { color: colors.textTertiary }]}>{post.time}</Text>
-                  <Text style={[styles.subcategoryDot, { color: colors.textTertiary }]}>•</Text>
-                  <Text style={[styles.subcategory, { color: colors.primary + 'CC' }]}>{post.subcategory}</Text>
+                  <LinearGradient
+                    colors={gradients.primary}
+                    style={[
+                      styles.avatar, 
+                      { 
+                        shadowColor: colors.shadowColor,
+                        borderWidth: 3,
+                        borderColor: post.userTheme || '#43e97b'
+                      }
+                    ]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    {post.wallet === currentUserWallet && currentUserNFTAvatar ? (
+                      <Image 
+                        source={{ uri: currentUserNFTAvatar.image || currentUserNFTAvatar.uri }}
+                        style={styles.nftAvatar}
+                      />
+                    ) : post.wallet === currentUserWallet && currentUserAvatar ? (
+                      <Text style={styles.avatarEmoji}>{currentUserAvatar}</Text>
+                    ) : (
+                      <Text style={[styles.avatarText, { color: isDarkMode ? '#000' : '#fff' }]}>
+                        {post.wallet.slice(0, 2)}
+                      </Text>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+                <View style={styles.postMeta}>
+                  <View style={styles.usernameRow}>
+                    <Text style={[styles.username, { color: colors.primary, textShadowColor: colors.primary + '66' }]}>{displayName}</Text>
+                    {post.isPremium && (
+                      <View style={[styles.verifiedBadge, { backgroundColor: '#FFD700' }]}>
+                        <Ionicons name="checkmark" size={10} color="#000" />
+                      </View>
+                    )}
+                    {post.sponsored && (
+                      <LinearGradient
+                        colors={['#FFD700', '#FFA500']}
+                        style={[styles.sponsoredBadge, { shadowColor: '#FFD700' }]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                      >
+                        <Text style={[styles.sponsoredText, { color: '#000' }]}>SPONSORED</Text>
+                      </LinearGradient>
+                    )}
+                  </View>
+                  <View style={styles.metaRow}>
+                    <Text style={[styles.time, { color: colors.textTertiary }]}>{post.time}</Text>
+                    <Text style={[styles.subcategoryDot, { color: colors.textTertiary }]}>•</Text>
+                    <Text style={[styles.subcategory, { color: colors.primary + 'CC' }]}>{post.subcategory}</Text>
+                  </View>
                 </View>
               </View>
-            </View>
 
-            <TouchableOpacity
-              onPress={handleDoubleTap}
-              activeOpacity={1}
-              style={styles.postContentContainer}
-            >
-              <Text style={[styles.postContent, { color: colors.textSecondary }]}>{post.content}</Text>
+              <TouchableOpacity
+                onPress={handleDoubleTap}
+                activeOpacity={1}
+                style={styles.postContentContainer}
+              >
+                <Text style={[styles.postContent, { color: colors.textSecondary }]}>{post.content}</Text>
+              </TouchableOpacity>
+              
+              {/* Display image if present */}
+              {post.imageUrl && (
+                <View style={styles.imageContainer}>
+                  <Image 
+                    source={{ uri: post.imageUrl }} 
+                    style={styles.postImage}
+                    resizeMode="cover"
+                  />
+                </View>
+              )}
             </TouchableOpacity>
             
-            {/* Display image if present */}
-            {post.imageUrl && (
-              <View style={styles.imageContainer}>
-                <Image 
-                  source={{ uri: post.imageUrl }} 
-                  style={styles.postImage}
-                  resizeMode="cover"
-                />
-              </View>
+            {/* Display video if present - outside clickable area */}
+            {post.videoUrl && (
+              <VideoPlayerWrapper videoUrl={post.videoUrl} colors={colors} />
             )}
 
-
-            <View style={[styles.postActions, { borderTopColor: colors.borderLight }]}>
-              <Pressable
+          <View style={[styles.postActions, { borderTopColor: colors.borderLight }]}>
+            <Pressable
                 style={({ pressed }) => [
                   styles.actionBtn,
                   post.liked && [styles.likedBtn, { shadowColor: colors.error }],
@@ -325,7 +406,7 @@ export default function Post({
                 onPress={(e) => handleLike(e)}
                 android_disableSound={true}
               >
-                <BlurView intensity={25} style={styles.actionBlur}>
+                <View style={[styles.actionBlur, { backgroundColor: colors.surface + '30' }]}>
                   <LinearGradient
                     colors={gradients.button}
                     style={[
@@ -351,45 +432,45 @@ export default function Post({
                       </Text>
                     </View>
                   </LinearGradient>
-                </BlurView>
+                </View>
               </Pressable>
 
               <Pressable
                 style={({ pressed }) => [
                   styles.actionBtn,
-                  flatReplies.length > 0 && [styles.activeBtn, { shadowColor: colors.shadowColor }],
+                  hasUserReplied && [styles.activeBtn, { shadowColor: colors.shadowColor }],
                   pressed && styles.pressedBtn
                 ]}
-                onPress={(e) => flatReplies.length > 0 ? onToggleReplies(post.id) : handleReply(post.id, undefined, undefined, e)}
+                onPress={(e) => handleReply(post.id, undefined, undefined, e)}
                 android_disableSound={true}
               >
-                <BlurView intensity={25} style={styles.actionBlur}>
+                <View style={[styles.actionBlur, { backgroundColor: colors.surface + '30' }]}>
                   <LinearGradient
                     colors={gradients.button}
                     style={[
                       styles.actionBtnGradient,
                       { borderColor: colors.borderLight },
-                      flatReplies.length > 0 && [styles.activeBtnGradient, { borderColor: colors.primary }]
+                      hasUserReplied && [styles.activeBtnGradient, { borderColor: colors.primary }]
                     ]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   >
                     <View style={styles.actionContent}>
                       <Ionicons 
-                        name="chatbubble-outline" 
+                        name={hasUserReplied ? "chatbubble" : "chatbubble-outline"} 
                         size={16} 
-                        color={flatReplies.length > 0 ? colors.primary : colors.textSecondary} 
+                        color={hasUserReplied ? colors.primary : colors.textSecondary} 
                       />
                       <Text style={[
                         styles.actionText,
                         { color: colors.textSecondary },
-                        flatReplies.length > 0 && [styles.activeText, { color: colors.primary, textShadowColor: colors.primary + '66' }]
+                        hasUserReplied && [styles.activeText, { color: colors.primary, textShadowColor: colors.primary + '66' }]
                       ]}>
                         {flatReplies.length}
                       </Text>
                     </View>
                   </LinearGradient>
-                </BlurView>
+                </View>
               </Pressable>
 
               <View style={[styles.actionBtn, currentlyBumped && [styles.activeBtn, { shadowColor: colors.shadowColor }]]}>
@@ -401,7 +482,7 @@ export default function Post({
                   onPress={(e) => handleBump(e)}
                   android_disableSound={true}
                 >
-                  <BlurView intensity={25} style={styles.actionBlur}>
+                  <View style={[styles.actionBlur, { backgroundColor: colors.surface + '30' }]}>
                     <LinearGradient
                       colors={gradients.button}
                       style={[
@@ -420,7 +501,7 @@ export default function Post({
                         Bump
                       </Text>
                     </LinearGradient>
-                  </BlurView>
+                  </View>
                 </Pressable>
               </View>
 
@@ -433,7 +514,7 @@ export default function Post({
                 onPress={handleShowTipModal}
                 android_disableSound={true}
               >
-                <BlurView intensity={25} style={styles.actionBlur}>
+                <View style={[styles.actionBlur, { backgroundColor: colors.surface + '30' }]}>
                   <LinearGradient
                     colors={gradients.button}
                     style={[
@@ -459,47 +540,12 @@ export default function Post({
                       </Text>
                     </View>
                   </LinearGradient>
-                </BlurView>
+                </View>
               </Pressable>
             </View>
 
-            {/* Replies Section */}
-            {flatReplies.length > 0 && !expandedPosts.has(post.id) && (
-              <View style={[styles.showRepliesSection, { borderTopColor: colors.borderLight }]}>
-                <TouchableOpacity
-                  style={styles.showRepliesBtn}
-                  onPress={() => onToggleReplies(post.id)}
-                  activeOpacity={0.8}
-                >
-                  <BlurView intensity={25} style={styles.showRepliesBlur}>
-                    <LinearGradient
-                      colors={gradients.button}
-                      style={[styles.showRepliesBtnGradient, { borderColor: colors.borderLight }]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    >
-                      <View style={styles.showRepliesContent}>
-                        <Ionicons 
-                          name="chatbubbles-outline" 
-                          size={16} 
-                          color={colors.primary} 
-                        />
-                        <Text style={[styles.showRepliesText, { color: colors.primary }]}>
-                          View {flatReplies.length} {flatReplies.length === 1 ? 'reply' : 'replies'}
-                        </Text>
-                        <Ionicons 
-                          name="chevron-down" 
-                          size={14} 
-                          color={colors.primary} 
-                        />
-                      </View>
-                    </LinearGradient>
-                  </BlurView>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {expandedPosts.has(post.id) && flatReplies.length > 0 && (
+            {/* Replies Section - Removed "View replies" button, only show expanded replies */}
+            {!showAsDetail && expandedPosts.has(post.id) && flatReplies.length > 0 && (
               <View style={styles.repliesContainer}>
                 {/* Hide Replies + Sort Controls Row */}
                 <View style={styles.repliesControlsRow}>
@@ -508,7 +554,7 @@ export default function Post({
                     onPress={() => onToggleReplies(post.id)}
                     activeOpacity={0.8}
                   >
-                    <BlurView intensity={20} style={styles.hideRepliesBlur}>
+                    <View style={[styles.hideRepliesBlur, { backgroundColor: colors.surface + '30' }]}>
                       <LinearGradient
                         colors={gradients.button}
                         style={[styles.hideRepliesBtnGradient, { borderColor: colors.border }]}
@@ -526,7 +572,7 @@ export default function Post({
                           </Text>
                         </View>
                       </LinearGradient>
-                    </BlurView>
+                    </View>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -534,7 +580,7 @@ export default function Post({
                     onPress={() => onToggleReplySorting(post.id)}
                     activeOpacity={0.8}
                   >
-                    <BlurView intensity={20} style={styles.sortBlur}>
+                    <View style={[styles.sortBlur, { backgroundColor: colors.surface + '30' }]}>
                       <LinearGradient
                         colors={gradients.button}
                         style={[styles.sortToggleGradient, { borderColor: colors.border }]}
@@ -552,11 +598,11 @@ export default function Post({
                           </Text>
                         </View>
                       </LinearGradient>
-                    </BlurView>
+                    </View>
                   </TouchableOpacity>
                 </View>
 
-                {flatReplies.map((reply, index) =>
+                {flatReplies.map((reply, index) => (
                   <View key={reply.id} style={styles.flatReplyContainer}>
                     {/* Top reply badge - only show for "best" sort and when there's a clear winner */}
                     {index === 0 && 
@@ -588,14 +634,21 @@ export default function Post({
                       onReply={handleReply}
                       onBump={onBumpReply}
                       onTip={onTipReply}
+                      depth={reply.depth || 0}
+                      isLastInThread={index === flatReplies.length - 1 || 
+                        (index < flatReplies.length - 1 && flatReplies[index + 1].depth < reply.depth)}
+                      hasMoreSiblings={index < flatReplies.length - 1 && 
+                        flatReplies[index + 1].depth >= reply.depth}
+                      parentUsername={reply.parentId ? flatReplies.find(r => r.id === reply.parentId)?.wallet : post.wallet}
+                      post={post}
                     />
                   </View>
-                )}
+                ))}
               </View>
             )}
-          </TouchableOpacity>
+          </View>
         </LinearGradient>
-      </BlurView>
+      </View>
     </View>
   );
 }
@@ -606,17 +659,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 24,
   },
+  clickableContent: {
+    flex: 1,
+  },
   blurContainer: {
     borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: 'rgba(67, 233, 123, 0.4)',
   },
   sponsoredBlurContainer: {
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3,
   },
   postGradient: {
     borderRadius: 24,
@@ -646,10 +701,10 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
     shadowColor: '#43e97b',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   tipText: {
     fontSize: FontSizes.xs,
@@ -659,16 +714,29 @@ const styles = StyleSheet.create({
   usernameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 60,
+    gap: 2,
+  },
+  verifiedBadge: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 0,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 2,
   },
   sponsoredBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 2,
+    marginLeft: 2,
   },
   sponsoredText: {
     fontSize: FontSizes.xs,
@@ -689,10 +757,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 15,
     shadowColor: '#43e97b',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   avatarText: {
     fontSize: FontSizes.lg,
@@ -759,6 +827,15 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 16,
   },
+  videoContainer: {
+    marginTop: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  postVideo: {
+    width: '100%',
+    height: 200,
+  },
   postActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -772,10 +849,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
   actionBtnInner: {
     flex: 1,
@@ -877,10 +954,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
   showRepliesBlur: {
     borderRadius: 16,
@@ -996,4 +1073,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+});
+
+// Memoize Post component with custom comparison
+export default React.memo(Post, (prevProps, nextProps) => {
+  // Check if post data changed
+  if (prevProps.post.id !== nextProps.post.id ||
+      prevProps.post.likes !== nextProps.post.likes ||
+      prevProps.post.liked !== nextProps.post.liked ||
+      prevProps.post.bumped !== nextProps.post.bumped ||
+      prevProps.post.tips !== nextProps.post.tips ||
+      prevProps.post.replies.length !== nextProps.post.replies.length) {
+    return false;
+  }
+  
+  // Check if expansion state changed for this post
+  if (prevProps.expandedPosts.has(prevProps.post.id) !== nextProps.expandedPosts.has(nextProps.post.id)) {
+    return false;
+  }
+  
+  // Check if sorting changed
+  if (prevProps.replySortType !== nextProps.replySortType) {
+    return false;
+  }
+  
+  // Check if detail view state changed
+  if (prevProps.showAsDetail !== nextProps.showAsDetail) {
+    return false;
+  }
+  
+  return true;
 });

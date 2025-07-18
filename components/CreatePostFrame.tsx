@@ -10,7 +10,7 @@ interface CreatePostFrameProps {
 }
 
 export default function CreatePostFrame({ onPress }: CreatePostFrameProps) {
-  const { colors } = useTheme();
+  const { colors, isDarkMode, gradients } = useTheme();
 
   return (
     <TouchableOpacity 
@@ -23,26 +23,22 @@ export default function CreatePostFrame({ onPress }: CreatePostFrameProps) {
     >
       <BlurView intensity={40} style={styles.blurWrapper}>
         <LinearGradient
-          colors={[
-            'rgba(25, 25, 25, 0.95)',
-            'rgba(20, 20, 20, 0.98)',
-            'rgba(15, 15, 15, 0.99)',
-          ]}
+          colors={gradients.surface}
           style={styles.gradientContainer}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
           <View style={styles.createPostContent}>
-            <Text style={styles.createPostText}>
+            <Text style={[styles.createPostText, { color: colors.text }]}>
               Create a new post
             </Text>
             <LinearGradient
-              colors={['#43e97b', '#38f9d7']}
+              colors={gradients.primary}
               style={styles.createPostButton}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <Text style={styles.createPostButtonText}>
+              <Text style={[styles.createPostButtonText, { color: isDarkMode ? '#000' : '#fff' }]}>
                 ✨
               </Text>
             </LinearGradient>

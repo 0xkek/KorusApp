@@ -19,7 +19,7 @@ interface HeaderProps {
 
 export default function Header({ onCategoryChange, isCollapsed = false, onProfileClick, onSubcategoriesVisibilityChange }: HeaderProps) {
   const { colors, isDarkMode, gradients, theme } = useTheme();
-  const { walletAddress, selectedAvatar, selectedNFTAvatar, snsDomain } = useWallet();
+  const { walletAddress, selectedAvatar, selectedNFTAvatar, snsDomain, isPremium } = useWallet();
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
@@ -199,7 +199,13 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
                   >
                     <LinearGradient
                       colors={gradients.primary}
-                      style={styles.profileIcon}
+                      style={[
+                        styles.profileIcon,
+                        {
+                          borderWidth: 3,
+                          borderColor: colors.primary
+                        }
+                      ]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                     >
@@ -226,7 +232,7 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
                     activeOpacity={0.8}
                     onPress={() => {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      setShowSettings(true);
+                      router.push('/settings');
                     }}
                   >
                     <LinearGradient
@@ -379,7 +385,7 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    paddingTop: 35,
+    paddingTop: 50,
     paddingHorizontal: 15,
     paddingBottom: 8,
     zIndex: 1000,

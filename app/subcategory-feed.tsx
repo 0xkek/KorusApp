@@ -37,7 +37,7 @@ export default function SubcategoryFeedScreen() {
   const [newPostContent, setNewPostContent] = useState('');
   
   // Current user wallet from context
-  const { walletAddress } = useWallet();
+  const { walletAddress, isPremium } = useWallet();
   const currentUserWallet = walletAddress || 'loading...';
 
   // Load posts for this specific subcategory
@@ -125,6 +125,8 @@ export default function SubcategoryFeedScreen() {
         category: categoryParam,
         subcategory: subcategoryParam,
         imageUrl: imageUrl,
+        isPremium: isPremium,
+        userTheme: colors.primary,
       };
       setPosts([newPost, ...posts]);
       setNewPostContent('');

@@ -21,7 +21,7 @@ export default function MyProfileModal({
   onClose,
   allPosts = [],
 }: MyProfileModalProps) {
-  const { walletAddress, balance, selectedAvatar, setSelectedAvatar, selectedNFTAvatar, setSelectedNFTAvatar, snsDomain, allSNSDomains, setFavoriteSNSDomain } = useWallet();
+  const { walletAddress, balance, selectedAvatar, setSelectedAvatar, selectedNFTAvatar, setSelectedNFTAvatar, snsDomain, allSNSDomains, setFavoriteSNSDomain, isPremium } = useWallet();
   const { colors, isDarkMode, gradients } = useTheme();
   const styles = createStyles(colors, isDarkMode);
   const [showAvatarSelection, setShowAvatarSelection] = useState(false);
@@ -160,7 +160,13 @@ export default function MyProfileModal({
                   >
                     <LinearGradient
                       colors={gradients.primary}
-                      style={styles.avatar}
+                      style={[
+                        styles.avatar,
+                        {
+                          borderWidth: 4,
+                          borderColor: colors.primary
+                        }
+                      ]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                     >
@@ -225,14 +231,34 @@ export default function MyProfileModal({
                   <View style={styles.snsSection}>
                     <Text style={styles.sectionTitle}>Display Name</Text>
                     
+                    {!isPremium && (
+                      <View style={styles.premiumNotice}>
+                        <LinearGradient
+                          colors={['#FFD700', '#FFA500']}
+                          style={styles.premiumNoticeGradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        >
+                          <Ionicons name="star" size={16} color="#000" />
+                          <Text style={styles.premiumNoticeText}>
+                            Upgrade to Premium to use your SNS domain as display name
+                          </Text>
+                        </LinearGradient>
+                      </View>
+                    )}
+                    
                     {/* Dropdown Button */}
                     <TouchableOpacity
-                      style={styles.snsDropdownButton}
+                      style={[styles.snsDropdownButton, !isPremium && styles.snsDropdownButtonDisabled]}
                       onPress={() => {
+                        if (!isPremium) {
+                          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                          return;
+                        }
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                         setShowSNSDropdown(!showSNSDropdown);
                       }}
-                      activeOpacity={0.8}
+                      activeOpacity={isPremium ? 0.8 : 1}
                     >
                       <BlurView intensity={25} style={styles.snsDropdownBlur}>
                         <LinearGradient
@@ -729,6 +755,25 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     position: 'relative',
     zIndex: 100,
   },
+  premiumNotice: {
+    marginTop: 8,
+    marginBottom: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  premiumNoticeGradient: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  premiumNoticeText: {
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.semiBold,
+    color: '#000',
+    flex: 1,
+  },
   snsDropdownButton: {
     marginTop: 6,
     borderRadius: 12,
@@ -738,6 +783,9 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 4,
+  },
+  snsDropdownButtonDisabled: {
+    opacity: 0.6,
   },
   snsDropdownBlur: {
     borderRadius: 12,

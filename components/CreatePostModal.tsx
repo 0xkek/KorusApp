@@ -1,7 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert, TouchableWithoutFeedback } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { Ionicons } from '@expo/vector-icons';
@@ -104,8 +104,10 @@ export default function CreatePostModal({
       transparent={true}
       onRequestClose={onClose}
     >
-      <View style={[styles.modalOverlay, { backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.9)' : 'rgba(0, 0, 0, 0.8)' }]}>
-        <View style={[styles.modalContent, { borderColor: colors.primary, shadowColor: colors.shadowColor }]}>
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View style={[styles.modalOverlay, { backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.9)' : 'rgba(0, 0, 0, 0.8)' }]}>
+          <TouchableWithoutFeedback>
+            <View style={[styles.modalContent, { borderColor: colors.primary, shadowColor: colors.shadowColor }]}>
           <BlurView intensity={40} style={styles.blurWrapper}>
             <LinearGradient
               colors={gradients.surface}
@@ -257,18 +259,24 @@ export default function CreatePostModal({
 
               {/* Image picker button */}
               <TouchableOpacity 
-                style={styles.imagePickerButton}
+                style={[styles.imagePickerButton, { 
+                  shadowColor: colors.primary,
+                  shadowOpacity: 0.2
+                }]}
                 onPress={pickImage}
               >
                 <LinearGradient
-                  colors={[colors.primary + '15', colors.primary + '08']}
-                  style={[styles.imagePickerGradient, { borderColor: colors.primary + '50' }]}
+                  colors={gradients.surface}
+                  style={[styles.imagePickerGradient, { 
+                    borderColor: colors.primary + '60',
+                    borderWidth: 1.5
+                  }]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
                   <Ionicons name="image-outline" size={20} color={colors.primary} />
                   <Text style={[styles.imagePickerText, { color: colors.primary }]}>
-                    {selectedImage ? 'Change Image' : 'Add Image'}
+                    {selectedImage ? 'Change Media' : 'Add Media'}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -320,8 +328,10 @@ export default function CreatePostModal({
               </View>
             </LinearGradient>
           </BlurView>
+            </View>
+          </TouchableWithoutFeedback>
         </View>
-      </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 }
@@ -520,11 +530,9 @@ const styles = StyleSheet.create({
   imagePickerButton: {
     borderRadius: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+    elevation: 1,
     overflow: 'hidden',
   },
   imagePickerGradient: {
@@ -534,7 +542,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderRadius: 16,
-    borderWidth: 2,
+    borderWidth: 1.5,
   },
   imagePickerText: {
     fontSize: FontSizes.base,

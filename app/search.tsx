@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useKorusAlert } from '../components/KorusAlertProvider';
 import { useWallet } from '../context/WalletContext';
+import { useTheme } from '../context/ThemeContext';
 import { initialPosts } from '../data/mockData';
 import { Post as PostType } from '../types';
 import Post from '../components/Post';
@@ -23,6 +24,7 @@ export default function SearchScreen() {
   const params = useLocalSearchParams();
   const { showAlert } = useKorusAlert();
   const { walletAddress } = useWallet();
+  const { isDarkMode } = useTheme();
   const currentUserWallet = walletAddress || 'loading...';
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -234,11 +236,16 @@ export default function SearchScreen() {
     <View style={styles.container}>
       {/* Background */}
       <LinearGradient
-        colors={[
+        colors={isDarkMode ? [
           'rgba(30, 30, 30, 0.95)',
           'rgba(20, 20, 20, 0.98)',
           'rgba(15, 15, 15, 0.99)',
           'rgba(10, 10, 10, 1)',
+        ] : [
+          'rgba(248, 250, 249, 0.95)',
+          'rgba(242, 246, 243, 0.98)',
+          'rgba(235, 242, 237, 0.99)',
+          'rgba(225, 235, 228, 1)',
         ]}
         style={styles.background}
       />

@@ -41,10 +41,11 @@ export function useSNSDomain(walletAddress: string | null) {
 }
 
 // Helper to format display name with SNS fallback
-export function useDisplayName(walletAddress: string) {
+export function useDisplayName(walletAddress: string, isPremium: boolean = false) {
   const { domain } = useSNSDomain(walletAddress);
   
-  if (domain) return domain;
+  // Only show SNS domains for premium users
+  if (domain && isPremium) return domain;
   
   // For truncated addresses, return as is
   if (walletAddress.includes('...')) return walletAddress;

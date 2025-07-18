@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import * as SecureStore from 'expo-secure-store';
 import { Theme, getTheme } from '../constants/Themes';
 
-type ColorScheme = 'mint' | 'purple' | 'blue' | 'gold';
+type ColorScheme = 'mint' | 'purple' | 'blue' | 'gold' | 'cherry' | 'cyber';
 
 interface ThemeContextType {
   theme: Theme;
@@ -11,9 +11,10 @@ interface ThemeContextType {
   isDarkMode: boolean;
   colors: Theme['colors'];
   gradients: Theme['gradients'];
-  setColorScheme: (scheme: ColorScheme) => void;
+  setColorScheme: (scheme: ColorScheme, isPremium?: boolean) => void;
   toggleDarkMode: () => void;
   toggleTheme: () => void; // For backward compatibility
+  isColorSchemeLocked: (scheme: ColorScheme) => boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -51,13 +52,25 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const setColorScheme = async (scheme: ColorScheme) => {
+  const setColorScheme = async (scheme: ColorScheme, isPremium: boolean = false) => {
     try {
+      // Check if the scheme is premium-only
+      if (!isPremium && (scheme === 'purple' || scheme === 'blue' || scheme === 'gold' || scheme === 'cherry' || scheme === 'cyber')) {
+        console.warn('Premium subscription required for this color scheme');
+        return;
+      }
+      
       setColorSchemeState(scheme);
       await SecureStore.setItemAsync(THEME_STORAGE_KEY, scheme);
     } catch (error) {
       console.error('Error saving color scheme:', error);
     }
+  };
+  
+  const isColorSchemeLocked = (scheme: ColorScheme): boolean => {
+    // Mint (green) is available to all users
+    // Purple, blue, gold, cherry, and cyber are premium-only
+    return scheme === 'purple' || scheme === 'blue' || scheme === 'gold' || scheme === 'cherry' || scheme === 'cyber';
   };
 
   const toggleDarkMode = async () => {
@@ -82,6 +95,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setColorScheme,
     toggleDarkMode,
     toggleTheme: toggleDarkMode, // For backward compatibility
+    isColorSchemeLocked,
   };
 
   // Don't render until preferences are loaded to avoid flash

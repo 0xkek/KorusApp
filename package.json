@@ -13,7 +13,7 @@
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
     "@metaplex-foundation/js": "^0.20.1",
-    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-native-async-storage/async-storage": "2.1.2",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.6",
@@ -37,6 +37,7 @@
     "expo-status-bar": "~2.2.3",
     "expo-symbols": "~0.4.5",
     "expo-system-ui": "~5.0.10",
+    "expo-video": "^2.2.2",
     "expo-web-browser": "~14.2.0",
     "process": "^0.11.10",
     "react": "19.0.0",

@@ -1,7 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View, TouchableWithoutFeedback } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,8 +35,10 @@ export default function ReplyModal({
       transparent={true}
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View style={styles.modalOverlay}>
+          <TouchableWithoutFeedback>
+            <View style={styles.modalContent}>
           <BlurView intensity={40} style={styles.blurWrapper}>
             <LinearGradient
               colors={gradients.surface}
@@ -134,8 +136,10 @@ export default function ReplyModal({
               </View>
             </LinearGradient>
           </BlurView>
+            </View>
+          </TouchableWithoutFeedback>
         </View>
-      </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 }
@@ -157,7 +161,7 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     shadowOpacity: 0.8,
     shadowRadius: 35,
     elevation: 15,
-    maxHeight: '80%',
+    maxHeight: '90%',
     overflow: 'hidden',
   },
   blurWrapper: {
@@ -169,7 +173,8 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: 24,
-    paddingBottom: 30,
+    paddingTop: 32,
+    paddingBottom: 36,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -250,7 +255,8 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: colors.text,
-    minHeight: 100,
+    minHeight: 180,
+    maxHeight: 300,
     textAlignVertical: 'top',
     lineHeight: 24,
     shadowColor: colors.shadowColor,

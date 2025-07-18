@@ -13,6 +13,7 @@ interface WalletContextType {
   selectedNFTAvatar: any | null;
   snsDomain: string | null;
   allSNSDomains: SNSDomain[];
+  isPremium: boolean;
   createNewWallet: () => Promise<void>;
   importFromSeedVault: () => Promise<boolean>;
   getPrivateKey: () => Promise<string | null>;
@@ -22,6 +23,7 @@ interface WalletContextType {
   setSelectedNFTAvatar: (nft: any | null) => void;
   refreshSNSDomain: () => Promise<void>;
   setFavoriteSNSDomain: (domain: string) => Promise<void>;
+  setPremiumStatus: (status: boolean) => void;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -43,11 +45,13 @@ const WALLET_ADDRESS_KEY = 'korus_wallet_address';
 const AVATAR_KEY = 'korus_user_avatar';
 const NFT_AVATAR_KEY = 'korus_user_nft_avatar';
 const FAVORITE_SNS_KEY = 'korus_favorite_sns_domain';
+const PREMIUM_STATUS_KEY = 'korus_premium_status';
 
 export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPremium, setIsPremium] = useState(false);
   const [hasWallet, setHasWallet] = useState(false);
   const [selectedAvatar, setSelectedAvatarState] = useState<string | null>(null);
   const [selectedNFTAvatar, setSelectedNFTAvatarState] = useState<any | null>(null);
@@ -68,6 +72,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       const storedAvatar = await SecureStore.getItemAsync(AVATAR_KEY);
       const storedNFTAvatar = await SecureStore.getItemAsync(NFT_AVATAR_KEY);
       const storedFavoriteSNS = await SecureStore.getItemAsync(FAVORITE_SNS_KEY);
+      const storedPremiumStatus = await SecureStore.getItemAsync(PREMIUM_STATUS_KEY);
       
       if (storedAddress) {
         setWalletAddress(storedAddress);
@@ -75,13 +80,26 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         // In real app, fetch balance from blockchain
         setBalance(150.75); // Mock balance for demo
         
+        // Load premium status
+        const isPremiumUser = storedPremiumStatus === 'true';
+        if (isPremiumUser) {
+          setIsPremium(true);
+        }
+        
         // Fetch all SNS domains
         const domains = await fetchSNSDomains(storedAddress);
         setAllSNSDomains(domains);
         
-        // Use stored favorite or get default favorite
-        const favoriteDomain = storedFavoriteSNS || await getFavoriteSNSDomain(storedAddress);
-        setSnsDomain(favoriteDomain);
+        // Only set SNS domain if user is premium
+        if (isPremiumUser) {
+          // Use stored favorite or get default favorite
+          const favoriteDomain = storedFavoriteSNS || await getFavoriteSNSDomain(storedAddress);
+          setSnsDomain(favoriteDomain);
+        } else {
+          // Clear any stored SNS domain for non-premium users
+          await SecureStore.deleteItemAsync(FAVORITE_SNS_KEY);
+          setSnsDomain(null);
+        }
       }
       
       if (storedAvatar) {
@@ -199,6 +217,12 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
 
   const setFavoriteSNSDomain = async (domain: string) => {
     try {
+      // Only allow premium users to set SNS domains
+      if (!isPremium) {
+        console.warn('Premium subscription required to set SNS domain as display name');
+        return;
+      }
+      
       await SecureStore.setItemAsync(FAVORITE_SNS_KEY, domain);
       setSnsDomain(domain);
       
@@ -243,6 +267,21 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     }
   };
 
+  const setPremiumStatus = async (status: boolean) => {
+    try {
+      setIsPremium(status);
+      await SecureStore.setItemAsync(PREMIUM_STATUS_KEY, status.toString());
+      
+      // If premium is disabled, clear SNS domain
+      if (!status) {
+        await SecureStore.deleteItemAsync(FAVORITE_SNS_KEY);
+        setSnsDomain(null);
+      }
+    } catch (error) {
+      console.error('Error saving premium status:', error);
+    }
+  };
+
   return (
     <WalletContext.Provider
       value={{
@@ -254,6 +293,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         selectedNFTAvatar,
         snsDomain,
         allSNSDomains,
+        isPremium,
         createNewWallet,
         importFromSeedVault,
         getPrivateKey,
@@ -263,6 +303,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         setSelectedNFTAvatar,
         refreshSNSDomain,
         setFavoriteSNSDomain,
+        setPremiumStatus,
       }}
     >
       {children}

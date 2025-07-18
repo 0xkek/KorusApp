@@ -26,6 +26,11 @@ export default function ProfileModal({
   const { colors, isDarkMode, gradients } = useTheme();
   const [snsDomain, setSnsDomain] = useState<string | null>(null);
   
+  // Check if this user is premium based on their posts and get their theme
+  const userPost = allPosts.find(post => post.wallet === wallet && post.isPremium);
+  const isUserPremium = !!userPost;
+  const userTheme = userPost?.userTheme;
+  
   useEffect(() => {
     if (visible && wallet && !wallet.includes('...')) {
       // Fetch SNS domain for full wallet addresses
@@ -148,7 +153,14 @@ export default function ProfileModal({
                 <View style={styles.profileHeader}>
                   <LinearGradient
                     colors={gradients.primary}
-                    style={[styles.avatar, { shadowColor: colors.shadowColor }]}
+                    style={[
+                      styles.avatar, 
+                      { 
+                        shadowColor: colors.shadowColor,
+                        borderWidth: 4,
+                        borderColor: userTheme || '#43e97b'
+                      }
+                    ]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   >

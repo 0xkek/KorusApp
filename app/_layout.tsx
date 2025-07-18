@@ -4,9 +4,32 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
-import { ThemeProvider } from '../context/ThemeContext';
+import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { KorusAlertProvider } from '../components/KorusAlertProvider';
 import { WalletProvider } from '../context/WalletContext';
+
+function RootLayoutNav() {
+  const { isDarkMode } = useTheme();
+
+  return (
+    <>
+      <Stack
+        screenOptions={{
+          gestureEnabled: true,
+          gestureDirection: 'horizontal',
+          animation: 'slide_from_right'
+        }}
+      >
+        <Stack.Screen name="welcome" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="subcategory-feed" options={{ headerShown: false }} />
+        <Stack.Screen name="search" options={{ headerShown: false }} />
+        <Stack.Screen name="+not-found" />
+      </Stack>
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
+    </>
+  );
+}
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -19,7 +42,6 @@ export default function RootLayout() {
   });
 
   if (!loaded) {
-    // Async font loading only occurs in development.
     return null;
   }
 
@@ -27,14 +49,7 @@ export default function RootLayout() {
     <ThemeProvider>
       <WalletProvider>
         <KorusAlertProvider>
-          <Stack>
-            <Stack.Screen name="welcome" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="subcategory-feed" options={{ headerShown: false }} />
-            <Stack.Screen name="search" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="light" />
+          <RootLayoutNav />
         </KorusAlertProvider>
       </WalletProvider>
     </ThemeProvider>

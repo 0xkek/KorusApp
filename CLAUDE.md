@@ -104,3 +104,4 @@ Uses Expo Router file-based routing:
    - API endpoints
 3. **Blockchain integration** requires Solana wallet libraries
 4. **Mock data** available in `/data` for development without backend
+5. **Push notifications** - expo-notifications requires a development build instead of Expo Go for SDK 53+. Currently using local notifications only.
