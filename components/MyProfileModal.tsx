@@ -2,7 +2,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
-import { Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View, Clipboard } from 'react-native';
+import { Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View, Clipboard, TextInput, Linking } from 'react-native';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { useWallet } from '../context/WalletContext';
 import { useTheme } from '../context/ThemeContext';
@@ -21,13 +21,15 @@ export default function MyProfileModal({
   onClose,
   allPosts = [],
 }: MyProfileModalProps) {
-  const { walletAddress, balance, selectedAvatar, setSelectedAvatar, selectedNFTAvatar, setSelectedNFTAvatar, snsDomain, allSNSDomains, setFavoriteSNSDomain, isPremium } = useWallet();
+  const { walletAddress, balance, selectedAvatar, setSelectedAvatar, selectedNFTAvatar, setSelectedNFTAvatar, snsDomain, allSNSDomains, setFavoriteSNSDomain, isPremium, timeFunUsername, setTimeFunUsername } = useWallet();
   const { colors, isDarkMode, gradients } = useTheme();
   const styles = createStyles(colors, isDarkMode);
   const [showAvatarSelection, setShowAvatarSelection] = useState(false);
   const [showNFTSelection, setShowNFTSelection] = useState(false);
   const [showSNSDropdown, setShowSNSDropdown] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [editingTimeFun, setEditingTimeFun] = useState(false);
+  const [tempTimeFunUsername, setTempTimeFunUsername] = useState(timeFunUsername || '');
   
   // Calculate actual profile data
   const getProfileData = () => {
@@ -325,6 +327,122 @@ export default function MyProfileModal({
                     )}
                   </View>
                 )}
+
+                {/* Time.fun Profile Link */}
+                <View style={styles.timeFunSection}>
+                  <Text style={styles.sectionTitle}>time.fun Profile</Text>
+                  
+                  {!editingTimeFun ? (
+                    <TouchableOpacity
+                      style={styles.timeFunDisplay}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setEditingTimeFun(true);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <BlurView intensity={25} style={styles.timeFunBlur}>
+                        <LinearGradient
+                          colors={gradients.surface}
+                          style={styles.timeFunGradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        >
+                          <View style={styles.timeFunContent}>
+                            <Ionicons 
+                              name="time-outline" 
+                              size={20} 
+                              color={colors.primary}
+                            />
+                            {timeFunUsername ? (
+                              <Text style={styles.timeFunUsername}>
+                                @{timeFunUsername}
+                              </Text>
+                            ) : (
+                              <Text style={styles.timeFunPlaceholder}>
+                                Add your time.fun username
+                              </Text>
+                            )}
+                            <Ionicons 
+                              name="create-outline" 
+                              size={16} 
+                              color={colors.textSecondary}
+                            />
+                          </View>
+                        </LinearGradient>
+                      </BlurView>
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={styles.timeFunEditContainer}>
+                      <BlurView intensity={25} style={styles.timeFunEditBlur}>
+                        <LinearGradient
+                          colors={gradients.surface}
+                          style={styles.timeFunEditGradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        >
+                          <TextInput
+                            style={styles.timeFunInput}
+                            value={tempTimeFunUsername}
+                            onChangeText={setTempTimeFunUsername}
+                            placeholder="Enter time.fun username"
+                            placeholderTextColor={colors.textTertiary}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                          />
+                          <View style={styles.timeFunEditButtons}>
+                            <TouchableOpacity
+                              style={styles.timeFunCancelButton}
+                              onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                setTempTimeFunUsername(timeFunUsername || '');
+                                setEditingTimeFun(false);
+                              }}
+                            >
+                              <Text style={styles.timeFunCancelText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={styles.timeFunSaveButton}
+                              onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                setTimeFunUsername(tempTimeFunUsername || null);
+                                setEditingTimeFun(false);
+                              }}
+                            >
+                              <LinearGradient
+                                colors={gradients.primary}
+                                style={styles.timeFunSaveGradient}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                              >
+                                <Text style={styles.timeFunSaveText}>Save</Text>
+                              </LinearGradient>
+                            </TouchableOpacity>
+                          </View>
+                        </LinearGradient>
+                      </BlurView>
+                    </View>
+                  )}
+                  
+                  {timeFunUsername && !editingTimeFun && (
+                    <TouchableOpacity
+                      style={styles.timeFunLinkButton}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        Linking.openURL(`https://time.fun/@${timeFunUsername}`);
+                      }}
+                    >
+                      <Text style={styles.timeFunLinkText}>
+                        View on time.fun
+                      </Text>
+                      <Ionicons 
+                        name="open-outline" 
+                        size={16} 
+                        color={colors.primary}
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
 
                 {/* Stats Grid */}
                 <View style={styles.statsGrid}>
@@ -773,6 +891,115 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     fontFamily: Fonts.semiBold,
     color: '#000',
     flex: 1,
+  },
+  timeFunSection: {
+    marginTop: 16,
+    marginBottom: 20,
+  },
+  timeFunDisplay: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: colors.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  timeFunBlur: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  timeFunGradient: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  timeFunContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 12,
+  },
+  timeFunUsername: {
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.semiBold,
+    color: colors.primary,
+    flex: 1,
+  },
+  timeFunPlaceholder: {
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.regular,
+    color: colors.textTertiary,
+    flex: 1,
+  },
+  timeFunEditContainer: {
+    marginTop: 8,
+  },
+  timeFunEditBlur: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  timeFunEditGradient: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    padding: 16,
+  },
+  timeFunInput: {
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.regular,
+    color: colors.text,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    marginBottom: 12,
+  },
+  timeFunEditButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  timeFunCancelButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    alignItems: 'center',
+  },
+  timeFunCancelText: {
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.medium,
+    color: colors.textSecondary,
+  },
+  timeFunSaveButton: {
+    flex: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  timeFunSaveGradient: {
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  timeFunSaveText: {
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.semiBold,
+    color: isDarkMode ? '#000' : '#fff',
+  },
+  timeFunLinkButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 8,
+  },
+  timeFunLinkText: {
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.medium,
+    color: colors.primary,
   },
   snsDropdownButton: {
     marginTop: 6,

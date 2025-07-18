@@ -14,6 +14,7 @@ interface WalletContextType {
   snsDomain: string | null;
   allSNSDomains: SNSDomain[];
   isPremium: boolean;
+  timeFunUsername: string | null;
   createNewWallet: () => Promise<void>;
   importFromSeedVault: () => Promise<boolean>;
   getPrivateKey: () => Promise<string | null>;
@@ -24,6 +25,7 @@ interface WalletContextType {
   refreshSNSDomain: () => Promise<void>;
   setFavoriteSNSDomain: (domain: string) => Promise<void>;
   setPremiumStatus: (status: boolean) => void;
+  setTimeFunUsername: (username: string | null) => Promise<void>;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -46,6 +48,7 @@ const AVATAR_KEY = 'korus_user_avatar';
 const NFT_AVATAR_KEY = 'korus_user_nft_avatar';
 const FAVORITE_SNS_KEY = 'korus_favorite_sns_domain';
 const PREMIUM_STATUS_KEY = 'korus_premium_status';
+const TIMEFUN_USERNAME_KEY = 'korus_timefun_username';
 
 export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
@@ -57,6 +60,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   const [selectedNFTAvatar, setSelectedNFTAvatarState] = useState<any | null>(null);
   const [snsDomain, setSnsDomain] = useState<string | null>(null);
   const [allSNSDomains, setAllSNSDomains] = useState<SNSDomain[]>([]);
+  const [timeFunUsername, setTimeFunUsernameState] = useState<string | null>(null);
 
   // Check for existing wallet on mount
   useEffect(() => {
@@ -73,6 +77,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       const storedNFTAvatar = await SecureStore.getItemAsync(NFT_AVATAR_KEY);
       const storedFavoriteSNS = await SecureStore.getItemAsync(FAVORITE_SNS_KEY);
       const storedPremiumStatus = await SecureStore.getItemAsync(PREMIUM_STATUS_KEY);
+      const storedTimeFunUsername = await SecureStore.getItemAsync(TIMEFUN_USERNAME_KEY);
       
       if (storedAddress) {
         setWalletAddress(storedAddress);
@@ -112,6 +117,10 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         } catch (error) {
           console.error('Error parsing NFT avatar:', error);
         }
+      }
+      
+      if (storedTimeFunUsername) {
+        setTimeFunUsernameState(storedTimeFunUsername);
       }
       
       // TODO: Check for Seed Vault wallet
@@ -282,6 +291,19 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     }
   };
 
+  const setTimeFunUsername = async (username: string | null) => {
+    try {
+      setTimeFunUsernameState(username);
+      if (username) {
+        await SecureStore.setItemAsync(TIMEFUN_USERNAME_KEY, username);
+      } else {
+        await SecureStore.deleteItemAsync(TIMEFUN_USERNAME_KEY);
+      }
+    } catch (error) {
+      console.error('Error saving time.fun username:', error);
+    }
+  };
+
   return (
     <WalletContext.Provider
       value={{
@@ -294,6 +316,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         snsDomain,
         allSNSDomains,
         isPremium,
+        timeFunUsername,
         createNewWallet,
         importFromSeedVault,
         getPrivateKey,
@@ -304,6 +327,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         refreshSNSDomain,
         setFavoriteSNSDomain,
         setPremiumStatus,
+        setTimeFunUsername,
       }}
     >
       {children}

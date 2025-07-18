@@ -2,7 +2,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import React, { useRef, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, TouchableOpacity, View, Linking } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useWallet } from '../context/WalletContext';
 import { Post as PostType } from '../types';
@@ -13,6 +13,7 @@ import { useDisplayName } from '../hooks/useSNSDomain';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import LinkPreview from './LinkPreview';
 
 interface PostProps {
   post: PostType;
@@ -36,6 +37,38 @@ interface PostProps {
   onShowReportModal?: (postId: number) => void;
   showAsDetail?: boolean;
 }
+
+// Function to detect and render hyperlinks
+const renderTextWithLinks = (text: string, textStyle: any, linkColor: string) => {
+  // Regex to match URLs
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  
+  return parts.map((part, index) => {
+    if (part.match(urlRegex)) {
+      return (
+        <Text
+          key={index}
+          style={[textStyle, { color: linkColor, textDecorationLine: 'underline' }]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            Linking.openURL(part);
+          }}
+        >
+          {part}
+        </Text>
+      );
+    }
+    return <Text key={index} style={textStyle}>{part}</Text>;
+  });
+};
+
+// Function to extract URLs from text
+const extractUrls = (text: string): string[] => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const matches = text.match(urlRegex);
+  return matches || [];
+};
 
 function Post({
   post,
@@ -376,8 +409,18 @@ function Post({
                 activeOpacity={1}
                 style={styles.postContentContainer}
               >
-                <Text style={[styles.postContent, { color: colors.textSecondary }]}>{post.content}</Text>
+                <Text style={[styles.postContent, { color: colors.textSecondary }]}>
+                  {renderTextWithLinks(post.content, [styles.postContent, { color: colors.textSecondary }], colors.primary)}
+                </Text>
               </TouchableOpacity>
+              
+              {/* Display link previews */}
+              {(() => {
+                const urls = extractUrls(post.content);
+                // Only show first URL preview to avoid clutter
+                const firstUrl = urls[0];
+                return firstUrl ? <LinkPreview url={firstUrl} /> : null;
+              })()}
               
               {/* Display image if present */}
               {post.imageUrl && (

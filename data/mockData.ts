@@ -10,6 +10,48 @@ export const subtopicData: { [key: string]: string[] } = {
 
 export const initialPosts: Post[] = [
   {
+    id: 10,
+    wallet: 'BKJRSuAqF8tpGpNcB3dQkUDddt5p5uTwYdM2qygYzRBe',
+    time: 'Just now',
+    content: "Check out this amazing article about Solana development: https://solana.com/docs and also this tutorial https://github.com/solana-labs/solana-program-library - great resources for builders! 🚀",
+    likes: 0,
+    replies: [
+      {
+        id: 1001,
+        wallet: 'mH5t...rK8j',
+        time: '1m ago',
+        content: "Thanks for sharing! Here's another great resource: https://book.anchor-lang.com/ - The Anchor framework docs are super helpful.",
+        likes: 2,
+        liked: false,
+        tips: 0,
+        bumped: false,
+        replies: []
+      }
+    ],
+    tips: 0,
+    liked: false,
+    bumped: false,
+    category: 'Tech',
+    subcategory: 'Development',
+    isPremium: true,
+    userTheme: '#14F195' // Solana green
+  },
+  {
+    id: 11,
+    wallet: 'CKdR8mBvH9tgLpQeN4eSkVHgfr6k6pVxZfO3syhZaSDt',
+    time: '5m ago',
+    content: "Just watched this incredible Solana tutorial! Perfect for beginners: https://www.youtube.com/watch?v=1jzROE6EhxM - Anatoly explains the architecture so well! 🎥",
+    likes: 15,
+    replies: [],
+    tips: 2,
+    liked: false,
+    bumped: false,
+    category: 'Tech',
+    subcategory: 'Development',
+    isPremium: true,
+    userTheme: '#9945FF' // Purple theme
+  },
+  {
     id: 1,
     wallet: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU', // has shadowy.sol
     time: '2h ago',

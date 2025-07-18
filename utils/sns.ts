@@ -27,14 +27,22 @@ const MOCK_SNS_DOMAINS: { [walletAddress: string]: SNSDomain[] } = {
   ],
   '5p5uUYqGKJRSuAZFatpGpNcmAKwYE7r8B9r3dQkTDddt': [
     { domain: 'wagmi.sol', owner: '5p5uUYqGKJRSuAZFatpGpNcmAKwYE7r8B9r3dQkTDddt', favorite: true }
+  ],
+  'BKJRSuAqF8tpGpNcB3dQkUDddt5p5uTwYdM2qygYzRBe': [
+    { domain: 'korus.sol', owner: 'BKJRSuAqF8tpGpNcB3dQkUDddt5p5uTwYdM2qygYzRBe', favorite: true },
+    { domain: 'builder.sol', owner: 'BKJRSuAqF8tpGpNcB3dQkUDddt5p5uTwYdM2qygYzRBe' }
+  ],
+  'CKdR8mBvH9tgLpQeN4eSkVHgfr6k6pVxZfO3syhZaSDt': [
+    { domain: 'solana.sol', owner: 'CKdR8mBvH9tgLpQeN4eSkVHgfr6k6pVxZfO3syhZaSDt', favorite: true },
+    { domain: 'tutorial.sol', owner: 'CKdR8mBvH9tgLpQeN4eSkVHgfr6k6pVxZfO3syhZaSDt' }
   ]
 };
 
 // Default domains for any wallet not in the mock data
 const DEFAULT_USER_DOMAINS: SNSDomain[] = [
-  { domain: 'korus.sol', owner: '', favorite: true },
-  { domain: 'anonymous.sol', owner: '' },
-  { domain: 'user.sol', owner: '' }
+  { domain: 'anonymous.sol', owner: '', favorite: true },
+  { domain: 'user.sol', owner: '' },
+  { domain: 'newbie.sol', owner: '' }
 ];
 
 // Cache for resolved domains

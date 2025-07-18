@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Linking } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Reply as ReplyType } from '../types';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +22,30 @@ interface ReplyProps {
   post?: any; // To check if reply author is OP
   isDetailView?: boolean; // New prop to distinguish between homepage and detail view
 }
+
+// Function to detect and render hyperlinks
+const renderTextWithLinks = (text: string, textStyle: any, linkColor: string) => {
+  // Regex to match URLs
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  
+  return parts.map((part, index) => {
+    if (part.match(urlRegex)) {
+      return (
+        <Text
+          key={index}
+          style={[textStyle, { color: linkColor, textDecorationLine: 'underline' }]}
+          onPress={() => {
+            Linking.openURL(part);
+          }}
+        >
+          {part}
+        </Text>
+      );
+    }
+    return <Text key={index} style={textStyle}>{part}</Text>;
+  });
+};
 
 function Reply({
   reply,
@@ -198,7 +222,7 @@ function Reply({
           )}
 
           <Text style={[styles.replyContent, { color: colors.textSecondary }]}>
-            {replyText}
+            {renderTextWithLinks(replyText, [styles.replyContent, { color: colors.textSecondary }], colors.primary)}
           </Text>
 
           <View style={[styles.replyActions, { borderTopColor: colors.borderLight }]}>
