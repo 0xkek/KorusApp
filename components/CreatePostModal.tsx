@@ -6,6 +6,10 @@ import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import GameSelectionModal from './GameSelectionModal';
+import { useWallet } from '../context/WalletContext';
+
+type GameType = 'tictactoe' | 'connect4' | 'rps' | 'coinflip';
 
 interface CreatePostModalProps {
   visible: boolean;
@@ -14,7 +18,7 @@ interface CreatePostModalProps {
   activeSubtopic: string;
   onClose: () => void;
   onContentChange: (text: string) => void;
-  onSubmit: (category: string, subcategory: string, imageUrl?: string) => void;
+  onSubmit: (category: string, subcategory: string, imageUrl?: string, gameData?: { type: GameType; wager: number }) => void;
 }
 
 export default function CreatePostModal({
@@ -27,6 +31,7 @@ export default function CreatePostModal({
   onSubmit,
 }: CreatePostModalProps) {
   const { colors, isDarkMode, gradients } = useTheme();
+  const { balance } = useWallet();
   
   // Local state for category selection
   const [selectedCategory, setSelectedCategory] = useState(activeTab.toUpperCase());
@@ -34,6 +39,8 @@ export default function CreatePostModal({
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showSubcategoryDropdown, setShowSubcategoryDropdown] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [showGameSelection, setShowGameSelection] = useState(false);
+  const [selectedGame, setSelectedGame] = useState<{ type: GameType; wager: number } | null>(null);
 
   // Categories and subcategories (matching Header component)
   const categories = [
@@ -69,8 +76,18 @@ export default function CreatePostModal({
   };
 
   const handleSubmit = () => {
-    onSubmit(selectedCategory, selectedSubcategory, selectedImage || undefined);
+    onSubmit(selectedCategory, selectedSubcategory, selectedImage || undefined, selectedGame || undefined);
     setSelectedImage(null); // Reset image after submission
+    setSelectedGame(null); // Reset game after submission
+  };
+
+  const handleGameSelect = (gameType: GameType, wager: number) => {
+    setSelectedGame({ type: gameType, wager });
+    setShowGameSelection(false);
+  };
+
+  const removeGame = () => {
+    setSelectedGame(null);
   };
 
   const pickImage = async () => {
@@ -257,29 +274,86 @@ export default function CreatePostModal({
                 </View>
               )}
 
-              {/* Image picker button */}
-              <TouchableOpacity 
-                style={[styles.imagePickerButton, { 
-                  shadowColor: colors.primary,
-                  shadowOpacity: 0.2
-                }]}
-                onPress={pickImage}
-              >
-                <LinearGradient
-                  colors={gradients.surface}
-                  style={[styles.imagePickerGradient, { 
-                    borderColor: colors.primary + '60',
-                    borderWidth: 1.5
+              {/* Media and Game buttons */}
+              <View style={styles.actionButtonsContainer}>
+                {/* Image picker button */}
+                <TouchableOpacity 
+                  style={[styles.actionButton, { 
+                    shadowColor: colors.primary,
+                    shadowOpacity: 0.2
                   }]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
+                  onPress={pickImage}
                 >
-                  <Ionicons name="image-outline" size={20} color={colors.primary} />
-                  <Text style={[styles.imagePickerText, { color: colors.primary }]}>
-                    {selectedImage ? 'Change Media' : 'Add Media'}
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
+                  <LinearGradient
+                    colors={gradients.surface}
+                    style={[styles.actionButtonGradient, { 
+                      borderColor: colors.primary + '60',
+                      borderWidth: 1.5
+                    }]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <Ionicons name="image-outline" size={20} color={colors.primary} />
+                    <Text style={[styles.actionButtonText, { color: colors.primary }]}>
+                      {selectedImage ? 'Change Media' : 'Add Media'}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                {/* Game picker button */}
+                <TouchableOpacity 
+                  style={[styles.actionButton, { 
+                    shadowColor: colors.primary,
+                    shadowOpacity: 0.2
+                  }]}
+                  onPress={() => setShowGameSelection(true)}
+                  disabled={!!selectedImage} // Disable if image is selected
+                >
+                  <LinearGradient
+                    colors={gradients.surface}
+                    style={[styles.actionButtonGradient, { 
+                      borderColor: colors.primary + '60',
+                      borderWidth: 1.5,
+                      opacity: selectedImage ? 0.5 : 1
+                    }]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <Ionicons name="game-controller-outline" size={20} color={colors.primary} />
+                    <Text style={[styles.actionButtonText, { color: colors.primary }]}>
+                      {selectedGame ? 'Change Game' : 'Add Game'}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+
+              {/* Game preview */}
+              {selectedGame && (
+                <View style={[styles.gamePreviewContainer, { backgroundColor: colors.surface }]}>
+                  <View style={styles.gamePreviewContent}>
+                    <Ionicons 
+                      name={selectedGame.type === 'tictactoe' ? 'grid-outline' : 
+                            selectedGame.type === 'rps' ? 'hand-left-outline' :
+                            selectedGame.type === 'coinflip' ? 'disc-outline' : 'apps-outline'} 
+                      size={24} 
+                      color={colors.primary} 
+                    />
+                    <View style={styles.gamePreviewInfo}>
+                      <Text style={[styles.gamePreviewTitle, { color: colors.text }]}>
+                        {selectedGame.type === 'tictactoe' ? 'Tic Tac Toe' :
+                         selectedGame.type === 'rps' ? 'Rock Paper Scissors' :
+                         selectedGame.type === 'coinflip' ? 'Coin Flip' : 'Connect 4'}
+                      </Text>
+                      <Text style={[styles.gamePreviewWager, { color: colors.textSecondary }]}>
+                        Wager: {selectedGame.wager} ALLY
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity onPress={removeGame}>
+                    <Ionicons name="close-circle" size={24} color={colors.error} />
+                  </TouchableOpacity>
+                </View>
+              )}
 
               <View style={styles.modalActions}>
                 <TouchableOpacity 
@@ -303,12 +377,12 @@ export default function CreatePostModal({
                     !content.trim() && styles.postButtonDisabled
                   ]}
                   onPress={handleSubmit}
-                  disabled={!content.trim()}
+                  disabled={!content.trim() && !selectedGame}
                   activeOpacity={0.8}
                 >
                   <LinearGradient
                     colors={
-                      !content.trim() 
+                      (!content.trim() && !selectedGame)
                         ? gradients.surface
                         : gradients.button
                     }
@@ -318,8 +392,8 @@ export default function CreatePostModal({
                   >
                     <Text style={[
                       styles.postButtonText,
-                      { color: !content.trim() ? colors.textSecondary : (isDarkMode ? '#000000' : '#000000') },
-                      !content.trim() && styles.postButtonTextDisabled
+                      { color: (!content.trim() && !selectedGame) ? colors.textSecondary : (isDarkMode ? '#000000' : '#000000') },
+                      (!content.trim() && !selectedGame) && styles.postButtonTextDisabled
                     ]}>
                       Share
                     </Text>
@@ -332,6 +406,14 @@ export default function CreatePostModal({
           </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
+
+      {/* Game Selection Modal */}
+      <GameSelectionModal
+        visible={showGameSelection}
+        onClose={() => setShowGameSelection(false)}
+        onSelectGame={handleGameSelect}
+        balance={balance}
+      />
     </Modal>
   );
 }
@@ -527,25 +609,56 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 4,
   },
-  imagePickerButton: {
-    borderRadius: 16,
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    gap: 12,
     marginBottom: 16,
+  },
+  actionButton: {
+    flex: 1,
+    borderRadius: 16,
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 2,
     elevation: 1,
     overflow: 'hidden',
   },
-  imagePickerGradient: {
+  actionButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    justifyContent: 'center',
+    gap: 8,
     paddingVertical: 14,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     borderRadius: 16,
     borderWidth: 1.5,
   },
-  imagePickerText: {
+  actionButtonText: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.medium,
+  },
+  gamePreviewContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+  },
+  gamePreviewContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  gamePreviewInfo: {
+    gap: 4,
+  },
+  gamePreviewTitle: {
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.semiBold,
+  },
+  gamePreviewWager: {
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.regular,
   },
 });

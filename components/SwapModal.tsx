@@ -1,7 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View, TextInput, ActivityIndicator } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
@@ -41,7 +41,7 @@ export default function SwapModal({ visible, onClose, selectedToken, tokens }: S
   }, [selectedToken, tokens]);
 
   // Mock exchange rate calculation
-  const calculateExchangeRate = () => {
+  const calculateExchangeRate = useCallback(() => {
     if (!fromToken || !toToken || !fromAmount || fromAmount === '0') return;
     
     // Mock exchange rates based on USD values
@@ -49,11 +49,11 @@ export default function SwapModal({ visible, onClose, selectedToken, tokens }: S
     const toUsd = toToken.usdValue || 1;
     const calculatedAmount = (fromUsd / toUsd).toFixed(6);
     setToAmount(calculatedAmount);
-  };
+  }, [fromToken, toToken, fromAmount]);
 
   useEffect(() => {
     calculateExchangeRate();
-  }, [fromAmount, fromToken, toToken]);
+  }, [calculateExchangeRate]);
 
   const handleSwap = async () => {
     if (!fromToken || !toToken || !fromAmount || parseFloat(fromAmount) === 0) return;

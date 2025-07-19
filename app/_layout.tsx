@@ -3,10 +3,12 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { KorusAlertProvider } from '../components/KorusAlertProvider';
 import { WalletProvider } from '../context/WalletContext';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 function RootLayoutNav() {
   const { isDarkMode } = useTheme();
@@ -46,12 +48,16 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider>
-      <WalletProvider>
-        <KorusAlertProvider>
-          <RootLayoutNav />
-        </KorusAlertProvider>
-      </WalletProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <WalletProvider>
+            <KorusAlertProvider>
+              <RootLayoutNav />
+            </KorusAlertProvider>
+          </WalletProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }

@@ -5,7 +5,6 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../../context/ThemeContext';
 import { Fonts, FontSizes } from '../../constants/Fonts';
-import Header from '../../components/Header';
 import ParticleSystem from '../../components/ParticleSystem';
 
 interface Notification {
@@ -181,7 +180,7 @@ export default function NotificationsScreen() {
                 No notifications yet
               </Text>
               <Text style={[styles.emptySubtext, { color: colors.textTertiary }]}>
-                When someone interacts with your posts, you'll see it here
+                When someone interacts with your posts, you&apos;ll see it here
               </Text>
             </View>
           ) : (
@@ -243,7 +242,7 @@ export default function NotificationsScreen() {
                           style={[styles.postPreview, { color: colors.textTertiary }]} 
                           numberOfLines={1}
                         >
-                          "{notification.postPreview}"
+                          &quot;{notification.postPreview}&quot;
                         </Text>
                       )}
                     </View>

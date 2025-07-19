@@ -35,6 +35,14 @@ const MOCK_SNS_DOMAINS: { [walletAddress: string]: SNSDomain[] } = {
   'CKdR8mBvH9tgLpQeN4eSkVHgfr6k6pVxZfO3syhZaSDt': [
     { domain: 'solana.sol', owner: 'CKdR8mBvH9tgLpQeN4eSkVHgfr6k6pVxZfO3syhZaSDt', favorite: true },
     { domain: 'tutorial.sol', owner: 'CKdR8mBvH9tgLpQeN4eSkVHgfr6k6pVxZfO3syhZaSDt' }
+  ],
+  'RPS5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhGamer': [
+    { domain: 'rockstar.sol', owner: 'RPS5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhGamer', favorite: true },
+    { domain: 'gamer.sol', owner: 'RPS5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhGamer' }
+  ],
+  'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip': [
+    { domain: 'lucky.sol', owner: 'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip', favorite: true },
+    { domain: 'flipper.sol', owner: 'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip' }
   ]
 };
 

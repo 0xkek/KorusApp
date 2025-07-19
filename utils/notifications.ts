@@ -27,11 +27,18 @@ export async function registerForPushNotificationsAsync() {
     }
     
     try {
+      // Skip push token in Expo Go for SDK 53+
+      if (__DEV__) {
+        console.log('Push notifications require a development build with SDK 53+');
+        return;
+      }
+      
       const projectId = 'your-expo-project-id'; // Replace with your actual project ID
       token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
       console.log(token);
     } catch (error) {
-      console.log('Error getting push token:', error);
+      console.log('Push notifications not available in Expo Go with SDK 53+');
+      // Silently fail in development - push notifications will work in production builds
     }
   } else {
     alert('Must use physical device for Push Notifications');

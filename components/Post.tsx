@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import LinkPreview from './LinkPreview';
+import GamePost from './GamePost';
 
 interface PostProps {
   post: PostType;
@@ -35,6 +36,8 @@ interface PostProps {
   onReport?: (postId: number) => void;
   onShowProfile?: (wallet: string) => void;
   onShowReportModal?: (postId: number) => void;
+  onJoinGame?: (postId: number) => void;
+  onGameMove?: (postId: number, moveData: any, moveType?: string) => void;
   showAsDetail?: boolean;
 }
 
@@ -90,6 +93,8 @@ function Post({
   onReport,
   onShowProfile,
   onShowReportModal,
+  onJoinGame,
+  onGameMove,
   showAsDetail = false,
 }: PostProps) {
   const router = useRouter();
@@ -341,6 +346,10 @@ function Post({
                 }
               }}
               style={styles.clickableContent}
+              accessible={true}
+              accessibilityLabel={`Post by ${displayName}, ${post.time}. ${post.content}`}
+              accessibilityHint={showAsDetail ? undefined : "Double tap to view post details"}
+              accessibilityRole="button"
             >
               <View style={styles.postHeader}>
                 <TouchableOpacity 
@@ -349,6 +358,9 @@ function Post({
                     handleShowProfile();
                   }} 
                   activeOpacity={0.8}
+                  accessible={true}
+                  accessibilityLabel={`View ${displayName}'s profile`}
+                  accessibilityRole="button"
                 >
                   <LinearGradient
                     colors={gradients.primary}
@@ -433,6 +445,16 @@ function Post({
                 </View>
               )}
             </TouchableOpacity>
+
+            {/* Display game if present - OUTSIDE the clickable area */}
+            {post.gameData && onJoinGame && onGameMove && (
+              <GamePost
+                gameData={post.gameData}
+                postId={post.id}
+                onJoinGame={onJoinGame}
+                onMakeMove={onGameMove}
+              />
+            )}
             
             {/* Display video if present - outside clickable area */}
             {post.videoUrl && (
@@ -448,6 +470,9 @@ function Post({
                 ]}
                 onPress={(e) => handleLike(e)}
                 android_disableSound={true}
+                accessible={true}
+                accessibilityLabel={`${post.liked ? 'Unlike' : 'Like'} post. ${post.likes} likes`}
+                accessibilityRole="button"
               >
                 <View style={[styles.actionBlur, { backgroundColor: colors.surface + '30' }]}>
                   <LinearGradient
@@ -486,6 +511,9 @@ function Post({
                 ]}
                 onPress={(e) => handleReply(post.id, undefined, undefined, e)}
                 android_disableSound={true}
+                accessible={true}
+                accessibilityLabel={`Reply to post. ${flatReplies.length} replies`}
+                accessibilityRole="button"
               >
                 <View style={[styles.actionBlur, { backgroundColor: colors.surface + '30' }]}>
                   <LinearGradient

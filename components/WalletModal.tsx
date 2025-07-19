@@ -2,12 +2,13 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
-import { Alert, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View, Clipboard, ScrollView } from 'react-native';
+import { Alert, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View, Clipboard, ScrollView, Dimensions } from 'react-native';
 import { useWallet } from '../context/WalletContext';
 import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { Ionicons } from '@expo/vector-icons';
 import SwapModal from './SwapModal';
+import { scale, verticalScale, moderateScale, responsiveDimensions, isSmallDevice, scaleFontSize } from '../utils/responsive';
 
 interface WalletModalProps {
   visible: boolean;
@@ -115,12 +116,17 @@ export default function WalletModal({ visible, onClose }: WalletModalProps) {
         <Pressable style={styles.backdrop} onPress={onClose} />
         
         <BlurView intensity={60} style={styles.modalContainer}>
-          <LinearGradient
-            colors={gradients.surface}
-            style={styles.modalGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+          <ScrollView 
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+            contentContainerStyle={styles.scrollContent}
           >
+            <LinearGradient
+              colors={gradients.surface}
+              style={styles.modalGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
             {/* Header */}
             <View style={styles.header}>
               <View style={styles.titleContainer}>
@@ -348,7 +354,8 @@ export default function WalletModal({ visible, onClose }: WalletModalProps) {
             <Text style={styles.infoText}>
               This is a demo wallet. In production, $ALLY would be a real SPL token on Solana.
             </Text>
-          </LinearGradient>
+            </LinearGradient>
+          </ScrollView>
         </BlurView>
       </View>
     </Modal>
@@ -370,7 +377,11 @@ export default function WalletModal({ visible, onClose }: WalletModalProps) {
   );
 }
 
-const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
+const createStyles = (colors: any, isDarkMode: boolean) => {
+  const { height: screenHeight } = Dimensions.get('window');
+  const maxModalHeight = screenHeight * 0.85; // Use 85% of screen height max
+  
+  return StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'center',
@@ -385,9 +396,10 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     bottom: 0,
   },
   modalContainer: {
-    width: '90%',
-    maxWidth: 400,
-    borderRadius: 24,
+    width: responsiveDimensions.modalWidth,
+    maxWidth: responsiveDimensions.modalMaxWidth,
+    maxHeight: maxModalHeight,
+    borderRadius: moderateScale(24),
     overflow: 'hidden',
     borderWidth: 2,
     borderColor: colors.primary + '66',
@@ -398,7 +410,10 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     elevation: 15,
   },
   modalGradient: {
-    padding: 24,
+    padding: responsiveDimensions.modalPadding,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   header: {
     flexDirection: 'row',
@@ -412,7 +427,7 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     gap: 12,
   },
   title: {
-    fontSize: FontSizes['2xl'],
+    fontSize: scaleFontSize(FontSizes['2xl']),
     fontFamily: Fonts.bold,
     color: colors.primary,
     textShadowColor: colors.primary + '66',
@@ -420,9 +435,9 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     textShadowRadius: 12,
   },
   closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: scale(32),
+    height: scale(32),
+    borderRadius: scale(16),
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.borderLight,
@@ -738,4 +753,5 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     textAlign: 'center',
     lineHeight: 16,
   },
-});
+  });
+};

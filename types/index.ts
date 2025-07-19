@@ -1,3 +1,26 @@
+export type GameType = 'tictactoe' | 'connect4' | 'rps' | 'coinflip';
+export type GameStatus = 'waiting' | 'active' | 'completed' | 'expired';
+
+export interface GameData {
+  type: GameType;
+  wager: number;
+  player1: string;
+  player2?: string;
+  status: GameStatus;
+  winner?: string;
+  board?: any; // TicTacToe board state
+  currentPlayer?: string;
+  createdAt: number;
+  expiresAt: number;
+  // Rock Paper Scissors specific
+  rounds?: any[];
+  currentRound?: number;
+  // Coin Flip specific
+  player1Choice?: 'heads' | 'tails';
+  player2Choice?: 'heads' | 'tails';
+  result?: 'heads' | 'tails';
+}
+
 export interface Reply {
   id: number;
   wallet: string;
@@ -35,6 +58,7 @@ export interface Post {
   videoUrl?: string;     // Optional video URL
   isPremium?: boolean;   // Premium user status
   userTheme?: string;    // User's selected theme color
+  gameData?: GameData;   // Optional game data for game posts
 }
 
 export interface User {

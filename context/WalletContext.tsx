@@ -3,6 +3,8 @@ import { Keypair } from '@solana/web3.js';
 import * as SecureStore from 'expo-secure-store';
 import { generateWalletAddress } from '../utils/wallet';
 import { getFavoriteSNSDomain, fetchSNSDomains, SNSDomain } from '../utils/sns';
+import { NFTAvatar } from '../types/theme';
+import { logger } from '../utils/logger';
 
 interface WalletContextType {
   walletAddress: string | null;
@@ -10,7 +12,7 @@ interface WalletContextType {
   isLoading: boolean;
   hasWallet: boolean;
   selectedAvatar: string | null;
-  selectedNFTAvatar: any | null;
+  selectedNFTAvatar: NFTAvatar | null;
   snsDomain: string | null;
   allSNSDomains: SNSDomain[];
   isPremium: boolean;
@@ -21,7 +23,7 @@ interface WalletContextType {
   refreshBalance: () => Promise<void>;
   deductBalance: (amount: number) => void;
   setSelectedAvatar: (avatar: string) => void;
-  setSelectedNFTAvatar: (nft: any | null) => void;
+  setSelectedNFTAvatar: (nft: NFTAvatar | null) => void;
   refreshSNSDomain: () => Promise<void>;
   setFavoriteSNSDomain: (domain: string) => Promise<void>;
   setPremiumStatus: (status: boolean) => void;
@@ -57,7 +59,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   const [isPremium, setIsPremium] = useState(false);
   const [hasWallet, setHasWallet] = useState(false);
   const [selectedAvatar, setSelectedAvatarState] = useState<string | null>(null);
-  const [selectedNFTAvatar, setSelectedNFTAvatarState] = useState<any | null>(null);
+  const [selectedNFTAvatar, setSelectedNFTAvatarState] = useState<NFTAvatar | null>(null);
   const [snsDomain, setSnsDomain] = useState<string | null>(null);
   const [allSNSDomains, setAllSNSDomains] = useState<SNSDomain[]>([]);
   const [timeFunUsername, setTimeFunUsernameState] = useState<string | null>(null);
@@ -83,7 +85,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         setWalletAddress(storedAddress);
         setHasWallet(true);
         // In real app, fetch balance from blockchain
-        setBalance(150.75); // Mock balance for demo
+        setBalance(5000); // Increased balance for testing games
         
         // Load premium status
         const isPremiumUser = storedPremiumStatus === 'true';
@@ -115,7 +117,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         try {
           setSelectedNFTAvatarState(JSON.parse(storedNFTAvatar));
         } catch (error) {
-          console.error('Error parsing NFT avatar:', error);
+          logger.error('Error parsing NFT avatar:', error);
         }
       }
       
@@ -128,7 +130,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       // and requesting access to their wallet
       
     } catch (error) {
-      console.error('Error checking wallet:', error);
+      logger.error('Error checking wallet:', error);
     } finally {
       setIsLoading(false);
     }
@@ -149,7 +151,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       
       setWalletAddress(mockPublicKey);
       setHasWallet(true);
-      setBalance(150.75); // Start with demo balance
+      setBalance(5000); // Increased balance for testing games
       
       // Fetch SNS domains for new wallet
       const domains = await fetchSNSDomains(mockPublicKey);
@@ -158,7 +160,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       setSnsDomain(domain);
       
     } catch (error) {
-      console.error('Error creating wallet:', error);
+      logger.error('Error creating wallet:', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -180,7 +182,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       return false;
       
     } catch (error) {
-      console.error('Error importing from Seed Vault:', error);
+      logger.error('Error importing from Seed Vault:', error);
       return false;
     } finally {
       setIsLoading(false);
@@ -192,7 +194,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       const privateKey = await SecureStore.getItemAsync(WALLET_KEY);
       return privateKey || 'mock-private-key';
     } catch (error) {
-      console.error('Error getting private key:', error);
+      logger.error('Error getting private key:', error);
       return null;
     }
   };
@@ -201,9 +203,9 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     try {
       // TODO: Fetch real balance from Solana blockchain
       // For demo, just update with mock balance
-      setBalance(prev => prev + Math.random() * 10);
+      setBalance(5000); // Reset to high balance for testing
     } catch (error) {
-      console.error('Error refreshing balance:', error);
+      logger.error('Error refreshing balance:', error);
     }
   };
 
@@ -220,7 +222,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       const domain = await getFavoriteSNSDomain(walletAddress);
       setSnsDomain(domain);
     } catch (error) {
-      console.error('Error refreshing SNS domain:', error);
+      logger.error('Error refreshing SNS domain:', error);
     }
   };
 
@@ -228,7 +230,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     try {
       // Only allow premium users to set SNS domains
       if (!isPremium) {
-        console.warn('Premium subscription required to set SNS domain as display name');
+        logger.warn('Premium subscription required to set SNS domain as display name');
         return;
       }
       
@@ -243,7 +245,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         }))
       );
     } catch (error) {
-      console.error('Error setting favorite SNS domain:', error);
+      logger.error('Error setting favorite SNS domain:', error);
     }
   };
 
@@ -255,11 +257,11 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       await SecureStore.deleteItemAsync(NFT_AVATAR_KEY);
       setSelectedNFTAvatarState(null);
     } catch (error) {
-      console.error('Error saving avatar:', error);
+      logger.error('Error saving avatar:', error);
     }
   };
 
-  const setSelectedNFTAvatar = async (nft: any | null) => {
+  const setSelectedNFTAvatar = async (nft: NFTAvatar | null) => {
     try {
       if (nft) {
         await SecureStore.setItemAsync(NFT_AVATAR_KEY, JSON.stringify(nft));
@@ -272,7 +274,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         setSelectedNFTAvatarState(null);
       }
     } catch (error) {
-      console.error('Error saving NFT avatar:', error);
+      logger.error('Error saving NFT avatar:', error);
     }
   };
 
@@ -287,7 +289,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         setSnsDomain(null);
       }
     } catch (error) {
-      console.error('Error saving premium status:', error);
+      logger.error('Error saving premium status:', error);
     }
   };
 
@@ -300,7 +302,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         await SecureStore.deleteItemAsync(TIMEFUN_USERNAME_KEY);
       }
     } catch (error) {
-      console.error('Error saving time.fun username:', error);
+      logger.error('Error saving time.fun username:', error);
     }
   };
 

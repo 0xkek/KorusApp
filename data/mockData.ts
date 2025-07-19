@@ -1,4 +1,4 @@
-import { Post } from '../types';
+import { Post, GameData } from '../types';
 
 export const subtopicData: { [key: string]: string[] } = {
   career: ['Job Search', 'Interviews', 'Networking', 'Salary Negotiation', 'Leadership', 'Career Change'],
@@ -9,6 +9,102 @@ export const subtopicData: { [key: string]: string[] } = {
 };
 
 export const initialPosts: Post[] = [
+  {
+    id: 15,
+    wallet: 'RPS5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhGamer',
+    time: '2m ago',
+    content: "Who wants to play Tic Tac Toe? Let's wager some ALLY tokens! 🎮",
+    likes: 3,
+    replies: [],
+    tips: 0,
+    liked: false,
+    bumped: false,
+    category: 'ENTERTAINMENT',
+    subcategory: 'Gaming',
+    isPremium: true,
+    userTheme: '#9945FF',
+    gameData: {
+      type: 'tictactoe',
+      wager: 50,
+      player1: 'RPS5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhGamer',
+      status: 'waiting',
+      createdAt: Date.now() - 120000, // 2 minutes ago
+      expiresAt: Date.now() + 1680000, // 28 minutes from now
+      board: [[null, null, null], [null, null, null], [null, null, null]]
+    }
+  },
+  {
+    id: 16,
+    wallet: 'BKJRSuAqF8tpGpNcB3dQkUDddt5p5uTwYdM2qygYzRBe',
+    time: '5m ago',
+    content: "Active Tic Tac Toe game in progress! Come watch 👀",
+    likes: 5,
+    replies: [],
+    tips: 0,
+    liked: false,
+    bumped: false,
+    category: 'ENTERTAINMENT',
+    subcategory: 'Gaming',
+    isPremium: true,
+    userTheme: '#00D18C',
+    gameData: {
+      type: 'tictactoe',
+      wager: 100,
+      player1: 'BKJRSuAqF8tpGpNcB3dQkUDddt5p5uTwYdM2qygYzRBe',
+      player2: 'DeMo2K8tQpVHgLpQeN4eSkVHgfr6k6pVxZfO3syhUser',
+      status: 'active',
+      currentPlayer: 'BKJRSuAqF8tpGpNcB3dQkUDddt5p5uTwYdM2qygYzRBe',
+      createdAt: Date.now() - 300000, // 5 minutes ago
+      expiresAt: Date.now() + 1500000, // 25 minutes from now
+      board: [['X', null, 'O'], [null, 'X', null], [null, null, null]]
+    }
+  },
+  {
+    id: 17,
+    wallet: 'RPS5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhGamer',
+    time: '10m ago',
+    content: "Rock Paper Scissors anyone? Best of 3 rounds! 🎯",
+    likes: 2,
+    replies: [],
+    tips: 0,
+    liked: false,
+    bumped: false,
+    category: 'ENTERTAINMENT',
+    subcategory: 'Gaming',
+    isPremium: true,
+    userTheme: '#FF6B6B',
+    gameData: {
+      type: 'rps',
+      wager: 25,
+      player1: 'RPS5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhGamer',
+      status: 'waiting',
+      createdAt: Date.now() - 600000, // 10 minutes ago
+      expiresAt: Date.now() + 1200000, // 20 minutes from now
+    }
+  },
+  {
+    id: 18,
+    wallet: 'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip',
+    time: '15m ago',
+    content: "Feeling lucky? Let's flip a coin! 🪙",
+    likes: 1,
+    replies: [],
+    tips: 0,
+    liked: false,
+    bumped: false,
+    category: 'ENTERTAINMENT',
+    subcategory: 'Gaming',
+    isPremium: true,
+    userTheme: '#4ECDC4',
+    gameData: {
+      type: 'coinflip',
+      wager: 10,
+      player1: 'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip',
+      status: 'waiting',
+      createdAt: Date.now() - 900000, // 15 minutes ago
+      expiresAt: Date.now() + 900000, // 15 minutes from now
+    }
+  },
   {
     id: 10,
     wallet: 'BKJRSuAqF8tpGpNcB3dQkUDddt5p5uTwYdM2qygYzRBe',
@@ -31,7 +127,7 @@ export const initialPosts: Post[] = [
     tips: 0,
     liked: false,
     bumped: false,
-    category: 'Tech',
+    category: 'TECH',
     subcategory: 'Development',
     isPremium: true,
     userTheme: '#14F195' // Solana green
@@ -46,7 +142,7 @@ export const initialPosts: Post[] = [
     tips: 2,
     liked: false,
     bumped: false,
-    category: 'Tech',
+    category: 'TECH',
     subcategory: 'Development',
     isPremium: true,
     userTheme: '#9945FF' // Purple theme
@@ -157,10 +253,10 @@ export const initialPosts: Post[] = [
     subcategory: 'Career Change'
   },
   {
-    id: 4,
+    id: 12,
     wallet: '5pL6...qX9j',
-    time: '8h ago',
-    content: "Pro tip: Before every difficult conversation, I write down 3 things I want to achieve. Keeps me focused and less emotional. Game changer for performance reviews. ⚡",
+    time: '30m ago',
+    content: "💰 SPONSORED: Pro tip: Before every difficult conversation, I write down 3 things I want to achieve. Keeps me focused and less emotional. Game changer for performance reviews. ⚡",
     likes: 64,
     imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&q=80',
     replies: [],

@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { useWallet } from '../context/WalletContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
@@ -20,6 +21,7 @@ interface HeaderProps {
 export default function Header({ onCategoryChange, isCollapsed = false, onProfileClick, onSubcategoriesVisibilityChange }: HeaderProps) {
   const { colors, isDarkMode, gradients, theme } = useTheme();
   const { walletAddress, selectedAvatar, selectedNFTAvatar, snsDomain, isPremium } = useWallet();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
@@ -32,8 +34,8 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
   // Header slide-up animation
   const headerTranslateY = useRef(new Animated.Value(0)).current;
   
-  // Create dynamic styles based on theme
-  const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
+  // Create dynamic styles based on theme and safe area
+  const styles = React.useMemo(() => createStyles(colors, isDarkMode, insets), [colors, isDarkMode, insets]);
   
   useEffect(() => {
     // Slide the entire header up/down
@@ -42,12 +44,12 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
       duration: 300,
       useNativeDriver: true,
     }).start();
-  }, [isCollapsed]);
+  }, [isCollapsed, headerTranslateY]);
 
   // Notify parent when subcategories visibility changes
   useEffect(() => {
     onSubcategoriesVisibilityChange?.(!!selectedCategory);
-  }, [selectedCategory]);
+  }, [selectedCategory, onSubcategoriesVisibilityChange]);
   
   const categories = [
     'CAREER', 'HEALTH', 'RELATIONSHIPS', 'FINANCE', 'TECHNOLOGY', 
@@ -379,13 +381,13 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
   );
 }
 
-const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
+const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleSheet.create({
   container: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    paddingTop: 50,
+    paddingTop: Math.max(insets.top, 20) + 30, // Safe area + additional padding
     paddingHorizontal: 15,
     paddingBottom: 8,
     zIndex: 1000,

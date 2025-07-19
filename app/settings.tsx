@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Switch, Modal, TouchableWithoutFeedback } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,14 +9,17 @@ import { useTheme } from '../context/ThemeContext';
 import { useWallet } from '../context/WalletContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import * as SecureStore from 'expo-secure-store';
+import { logger } from '../utils/logger';
 
 const HIDE_SPONSORED_KEY = 'korus_hide_sponsored_posts';
+const HIDE_GAME_POSTS_KEY = 'korus_hide_game_posts';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { colors, isDarkMode, gradients, colorScheme, setColorScheme, isColorSchemeLocked, toggleDarkMode } = useTheme();
   const { isPremium, setPremiumStatus } = useWallet();
   const [hideSponsoredPosts, setHideSponsoredPosts] = useState(false);
+  const [hideGamePosts, setHideGamePosts] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showThemeDropdown, setShowThemeDropdown] = useState(false);
   const [showFAQModal, setShowFAQModal] = useState(false);
@@ -34,8 +37,13 @@ export default function SettingsScreen() {
       if (savedHideSponsored === 'true') {
         setHideSponsoredPosts(true);
       }
+      
+      const savedHideGamePosts = await SecureStore.getItemAsync(HIDE_GAME_POSTS_KEY);
+      if (savedHideGamePosts === 'true') {
+        setHideGamePosts(true);
+      }
     } catch (error) {
-      console.error('Error loading preferences:', error);
+      logger.error('Error loading preferences:', error);
     }
   };
 
@@ -49,6 +57,13 @@ export default function SettingsScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setHideSponsoredPosts(value);
     await SecureStore.setItemAsync(HIDE_SPONSORED_KEY, value.toString());
+  };
+  
+  const handleToggleGamePosts = async (value: boolean) => {
+    // Available to all users
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setHideGamePosts(value);
+    await SecureStore.setItemAsync(HIDE_GAME_POSTS_KEY, value.toString());
   };
 
   const handleThemeSelect = (theme: 'mint' | 'purple' | 'blue' | 'gold' | 'cherry' | 'cyber') => {
@@ -374,6 +389,44 @@ export default function SettingsScreen() {
                 />
               </View>
             </View>
+              </LinearGradient>
+            </BlurView>
+          </View>
+
+          {/* Content Preferences */}
+          <View style={[styles.sectionWrapper, {
+            shadowColor: colors.primary,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 12,
+            elevation: 6,
+          }]}>
+            <BlurView intensity={25} style={styles.sectionBlur}>
+              <LinearGradient
+                colors={gradients.surface}
+                style={[styles.sectionGradient, { borderColor: colors.primary + '4D' }]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Content Preferences</Text>
+                
+                {/* Hide Game Posts */}
+                <View style={[styles.settingRow, { borderBottomWidth: 0 }]}>
+                  <View style={styles.settingInfo}>
+                    <Text style={[styles.settingLabel, { color: colors.text }]}>Hide Game Posts</Text>
+                    <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
+                      Remove mini game posts from your feed
+                    </Text>
+                  </View>
+                  <View style={styles.switchContainer}>
+                    <Switch
+                      value={hideGamePosts}
+                      onValueChange={handleToggleGamePosts}
+                      trackColor={{ false: colors.borderLight, true: colors.primary }}
+                      thumbColor={isDarkMode ? '#fff' : '#f4f3f4'}
+                    />
+                  </View>
+                </View>
               </LinearGradient>
             </BlurView>
           </View>
