@@ -6,14 +6,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 
 import { useTheme } from '../../context/ThemeContext';
-import WalletModal from '../../components/WalletModal';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function TabLayout() {
   const { colors, isDarkMode, gradients } = useTheme();
   const lastTapTime = useRef(0);
   const DOUBLE_TAP_DELAY = 300; // 300ms for double tap
-  const [showWalletModal, setShowWalletModal] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(2); // Mock unread count
 
   // Global scroll to top function - we'll use event emitter pattern
@@ -26,6 +24,9 @@ export default function TabLayout() {
       global.scrollToTop && global.scrollToTop();
     }
     lastTapTime.current = now;
+    
+    // Always reset to general category when home is tapped
+    global.resetToGeneral && global.resetToGeneral();
   };
 
   const TabBarIcon = ({ name, color, focused, size = 24 }: { name: any, color: string, focused: boolean, size?: number }) => (
@@ -200,15 +201,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="events"
-        options={{
-          title: 'Events',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? "calendar" : "calendar-outline"} color={color} focused={focused} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="wallet"
         options={{
           title: 'Wallet',
@@ -216,19 +208,8 @@ export default function TabLayout() {
             <TabBarIcon name={focused ? "wallet" : "wallet-outline"} color={color} focused={focused} />
           ),
         }}
-        listeners={{
-          tabPress: (e) => {
-            e.preventDefault();
-            setShowWalletModal(true);
-          },
-        }}
       />
     </Tabs>
-    
-    <WalletModal 
-      visible={showWalletModal} 
-      onClose={() => setShowWalletModal(false)} 
-    />
   </>
   );
 }

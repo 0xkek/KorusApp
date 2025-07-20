@@ -4,9 +4,10 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { FlatList, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-// Global type declaration for scroll to top function
+// Global type declaration for scroll to top and reset functions
 declare global {
   var scrollToTop: (() => void) | undefined;
+  var resetToGeneral: (() => void) | undefined;
 }
 import { useKorusAlert } from '../../components/KorusAlertProvider';
 import { useTheme } from '../../context/ThemeContext';
@@ -23,15 +24,16 @@ import { logger } from '../../utils/logger';
 import CreatePostModal from '../../components/CreatePostModal';
 import Header from '../../components/Header';
 import MyProfileModal from '../../components/MyProfileModal';
-import ParticleSystem from '../../components/ParticleSystem';
 import Post from '../../components/Post';
 import ProfileModal from '../../components/ProfileModal';
 import ReplyModal from '../../components/ReplyModal';
 import ReportModal from '../../components/ReportModal';
 import TipModal from '../../components/TipModal';
+import TipSuccessModal from '../../components/TipSuccessModal';
+import GamesView from '../../components/GamesView';
+import EventsView from '../../components/EventsView';
 
 const HIDE_SPONSORED_KEY = 'korus_hide_sponsored_posts';
-const HIDE_GAME_POSTS_KEY = 'korus_hide_game_posts';
 
 // Reply sorting types
 type ReplySortType = 'best' | 'recent';
@@ -44,11 +46,13 @@ export default function HomeScreen() {
   const router = useRouter();
   
   // State
-  const [activeTab, setActiveTab] = useState('career');
-  const [activeSubtopic, setActiveSubtopic] = useState('Job Search');
+  const [activeTab, setActiveTab] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [showReplyModal, setShowReplyModal] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
+  const [showTipSuccessModal, setShowTipSuccessModal] = useState(false);
+  const [tipSuccessData, setTipSuccessData] = useState<{ amount: number; username: string } | null>(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -64,7 +68,6 @@ export default function HomeScreen() {
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
   const [showingSubcategories, setShowingSubcategories] = useState(false);
   const [hideSponsoredPosts, setHideSponsoredPosts] = useState(false);
-  const [hideGamePosts, setHideGamePosts] = useState(false);
   const [updateCounter, setUpdateCounter] = useState(0); // Force re-renders
   
   // Reply sorting state - track sorting preference per post
@@ -96,13 +99,21 @@ export default function HomeScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     };
     
+    // Setup global reset to general function
+    global.resetToGeneral = () => {
+      setActiveTab('all');
+      setSelectedCategory(null);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    };
+    
     return () => {
       cleanupListeners();
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
-      // Cleanup global function
+      // Cleanup global functions
       global.scrollToTop = undefined;
+      global.resetToGeneral = undefined;
     };
   }, []);
 
@@ -115,12 +126,6 @@ export default function HomeScreen() {
         setHideSponsoredPosts(false);
       }
       
-      const savedHideGamePosts = await SecureStore.getItemAsync(HIDE_GAME_POSTS_KEY);
-      if (savedHideGamePosts === 'true') {
-        setHideGamePosts(true);
-      } else {
-        setHideGamePosts(false);
-      }
     } catch (error) {
       logger.error('Error loading preferences:', error);
     }
@@ -225,33 +230,14 @@ export default function HomeScreen() {
   };
 
   // Handlers
-  const handleTabPress = (topic: string) => {
-    setActiveTab(topic);
-    setActiveSubtopic(subtopicData[topic][0]);
-  };
-
-  const handleSubtopicPress = (subtopic: string) => {
-    setActiveSubtopic(subtopic);
-  };
 
   // Navigation to subcategory feeds
-  const handleCategoryChange = (category: string | null, subcategory: string | null) => {
-    if (subcategory && category) {
-      // Navigate to subcategory feed
-      router.push({
-        pathname: '/subcategory-feed' as any,
-        params: {
-          category,
-          subcategory
-        }
-      });
-    } else {
-      // Handle category selection (show subcategories) - keep existing logic
-      if (category) {
-        setActiveTab(category.toLowerCase());
-        setActiveSubtopic(''); // Reset subcategory when changing categories
-      }
-    }
+  const handleCategoryChange = (category: string | null) => {
+    // Filter posts by category
+    setActiveTab(category ? category.toLowerCase() : 'all');
+    setSelectedCategory(category);
+    // Reset scroll position
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
   };
 
   // Pull to refresh handler
@@ -276,8 +262,8 @@ export default function HomeScreen() {
     }
   };
 
-  const handleCreatePost = (category: string, subcategory: string, imageUrl?: string, gameData?: { type: GameType; wager: number }) => {
-    if (newPostContent.trim() || gameData) {
+  const handleCreatePost = (category: string, imageUrl?: string) => {
+    if (newPostContent.trim()) {
       const newPost: PostType = {
         id: posts.length + 1,
         wallet: currentUserWallet,
@@ -291,19 +277,10 @@ export default function HomeScreen() {
         bumpedAt: undefined,
         bumpExpiresAt: undefined,
         category: category,
-        subcategory: subcategory,
         imageUrl: imageUrl,
         isPremium: isPremium,
         userTheme: colors.primary,
-        gameData: gameData ? {
-          type: gameData.type,
-          wager: gameData.wager,
-          player1: currentUserWallet,
-          status: 'waiting',
-          createdAt: Date.now(),
-          expiresAt: Date.now() + (30 * 60 * 1000), // 30 minutes
-          board: gameData.type === 'tictactoe' ? [[null, null, null], [null, null, null], [null, null, null]] : null
-        } : undefined
+        gameData: undefined
       };
 
       setPosts([newPost, ...posts]);
@@ -311,10 +288,69 @@ export default function HomeScreen() {
       setShowCreatePost(false);
       showAlert({
         title: 'Success',
-        message: gameData ? 'Game created! Waiting for an opponent...' : 'Your post has been shared with the community!',
+        message: 'Your post has been shared with the community!',
         type: 'success'
       });
     }
+  };
+
+  const handleCreateGame = (gameData: { type: GameType; wager: number }) => {
+    // Check if user has sufficient balance for the wager
+    if (gameData.wager > balance) {
+      showAlert({
+        title: 'Insufficient Funds',
+        message: `You need ${gameData.wager} $ALLY to create this game. Your balance is ${balance.toFixed(2)} $ALLY.`,
+        type: 'error'
+      });
+      return;
+    }
+
+    const gameContent = gameData.type === 'tictactoe' 
+      ? `Let's play Tic Tac Toe! Wager: ${gameData.wager} $ALLY`
+      : gameData.type === 'rps'
+      ? `Rock Paper Scissors challenge! Wager: ${gameData.wager} $ALLY`
+      : gameData.type === 'connect4'
+      ? `Connect Four challenge - get 4 in a row! Wager: ${gameData.wager} $ALLY`
+      : `Coin Flip game! Wager: ${gameData.wager} $ALLY`;
+
+    const newPost: PostType = {
+      id: posts.length + 1,
+      wallet: currentUserWallet,
+      time: 'now',
+      content: gameContent,
+      likes: 0,
+      replies: [],
+      tips: 0,
+      liked: false,
+      bumped: false,
+      bumpedAt: undefined,
+      bumpExpiresAt: undefined,
+      category: 'GAMES',
+      isPremium: isPremium,
+      userTheme: colors.primary,
+      gameData: {
+        type: gameData.type,
+        wager: gameData.wager,
+        player1: currentUserWallet,
+        player2: null,
+        status: 'waiting',
+        board: gameData.type === 'tictactoe' ? [
+          [null, null, null],
+          [null, null, null],
+          [null, null, null]
+        ] : gameData.type === 'connect4' ? Array(6).fill(null).map(() => Array(7).fill(null)) : undefined,
+        currentPlayer: currentUserWallet,
+        winner: null
+      }
+    };
+
+    setPosts([newPost, ...posts]);
+    deductBalance(gameData.wager);
+    showAlert({
+      title: 'Game Created!',
+      message: 'Your game has been created. Waiting for an opponent to join!',
+      type: 'success'
+    });
   };
 
   const handleCreateReply = () => {
@@ -364,7 +400,7 @@ export default function HomeScreen() {
 
   const handleLike = (postId: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setPosts(posts.map(post =>
+    setPosts(prevPosts => prevPosts.map(post =>
       post.id === postId
         ? {
             ...post,
@@ -377,7 +413,7 @@ export default function HomeScreen() {
 
   const handleLikeReply = (postId: number, replyId: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setPosts(posts.map(post =>
+    setPosts(prevPosts => prevPosts.map(post =>
       post.id === postId
         ? {
             ...post,
@@ -424,7 +460,7 @@ export default function HomeScreen() {
 
   const handleTipReply = (postId: number, replyId: number) => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setPosts(posts.map(post =>
+    setPosts(prevPosts => prevPosts.map(post =>
       post.id === postId
         ? {
             ...post,
@@ -451,15 +487,6 @@ export default function HomeScreen() {
     });
   };
 
-  // Remove reply bumping functionality based on research
-  const handleBumpReply = (replyId: number) => {
-    // No longer needed - removed based on UX research
-    showAlert({
-      title: 'Note',
-      message: 'Reply interactions use likes and tips instead of bumping for better conversation flow!',
-      type: 'info'
-    });
-  };
 
   const toggleReplies = (postId: number) => {
     setExpandedPosts(prev => {
@@ -473,37 +500,6 @@ export default function HomeScreen() {
     });
   };
 
-  // Check if bump is still active (5-minute duration)
-  const isBumpActive = (post: PostType): boolean => {
-    if (!post.bumped || !post.bumpedAt || !post.bumpExpiresAt) return false;
-    return Date.now() < post.bumpExpiresAt;
-  };
-
-  const handleBump = (postId: number) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    const targetPost = posts.find(p => p.id === postId);
-    const isCurrentlyBumped = targetPost && isBumpActive(targetPost);
-    
-    if (!isCurrentlyBumped) {
-      setPosts(posts.map(post => {
-        if (post.id === postId) {
-          return { 
-            ...post, 
-            bumped: true, 
-            bumpedAt: Date.now(),
-            bumpExpiresAt: Date.now() + (5 * 60 * 1000) // 5 minutes
-          };
-        }
-        return post;
-      }));
-      
-      showAlert({
-        title: 'Bump',
-        message: 'Post bumped for 5 minutes! ⬆️',
-        type: 'bump'
-      });
-    }
-  };
 
   const handleShowTipModal = (postId: number) => {
     setSelectedPostId(postId);
@@ -551,312 +547,47 @@ export default function HomeScreen() {
     deductBalance(amount);
     
     // Update post tips
-    setPosts(posts.map(post =>
+    setPosts(prevPosts => prevPosts.map(post =>
       post.id === postId
         ? { ...post, tips: post.tips + amount }
         : post
     ));
-  };
 
-  const handleJoinGame = (postId: number) => {
-    setPosts(prevPosts => {
-      const post = prevPosts.find(p => p.id === postId);
-      if (!post || !post.gameData) {
-        return prevPosts;
-      }
-
-      // Check if user has sufficient balance
-      if (post.gameData.wager > balance) {
-        showAlert({
-          title: 'Insufficient Funds',
-          message: `You need ${post.gameData.wager} $ALLY to join this game. Your balance is ${balance.toFixed(2)} $ALLY.`,
-          type: 'error'
-        });
-        return prevPosts;
-      }
-
-      // Update game data
-      const updatedPosts = prevPosts.map(p => {
-        if (p.id === postId && p.gameData) {
-          // Create a completely new gameData object
-          const updatedGameData = {
-            ...p.gameData,
-            player2: currentUserWallet,
-            status: 'active' as const,
-            currentPlayer: currentUserWallet // For testing, let player2 go first since player1 is mock
-          };
-          
-          // Initialize game-specific data
-          if (p.gameData.type === 'rps') {
-            updatedGameData.rounds = [];
-            updatedGameData.currentRound = 1;
-          } else if (p.gameData.type === 'coinflip') {
-            updatedGameData.player1Choice = null;
-            updatedGameData.player2Choice = null;
-            updatedGameData.result = null;
-          }
-          
-          // Return a new post object with updated gameData
-          return {
-            ...p,
-            gameData: updatedGameData
-          };
-        }
-        return p;
-      });
-
-      showAlert({
-        title: 'Game Joined!',
-        message: 'You have successfully joined the game. Good luck!',
-        type: 'success'
-      });
-      
-      return updatedPosts;
-    });
-    
-    // Deduct wager from wallet balance AFTER updating posts
+    // Show tip success modal
     const post = posts.find(p => p.id === postId);
-    if (post?.gameData) {
-      deductBalance(post.gameData.wager);
+    if (post) {
+      setTipSuccessData({ amount, username: post.wallet });
+      setShowTipSuccessModal(true);
+      setShowTipModal(false); // Close the tip modal
     }
-    
-    // Force a re-render
-    setUpdateCounter(prev => prev + 1);
   };
 
-  const handleGameMove = (postId: number, moveData: any, moveType?: string) => {
-    // Handle TicTacToe moves (row, col as separate params)
-    if (typeof moveData === 'number' && typeof moveType === 'number') {
-      const row = moveData;
-      const col = moveType;
-      return handleTicTacToeMove(postId, row, col);
-    }
-    
-    // Handle new game moves
 
-    setPosts(prevPosts => {
-      const updatedPosts = prevPosts.map(p => {
-        if (p.id === postId && p.gameData) {
-          // Handle Rock Paper Scissors
-          if (p.gameData.type === 'rps' && moveType === 'rps') {
-            const isPlayer1 = currentUserWallet?.toLowerCase() === p.gameData.player1?.toLowerCase();
-            const currentRound = p.gameData.currentRound || 1;
-            const rounds = p.gameData.rounds || [];
-            
-            // Create the current round if it doesn't exist
-            if (!rounds[currentRound - 1]) {
-              rounds[currentRound - 1] = {};
-            }
-            
-            // Record the move
-            if (isPlayer1) {
-              rounds[currentRound - 1].player1Choice = moveData;
-            } else {
-              rounds[currentRound - 1].player2Choice = moveData;
-            }
-            
-            // If both players have chosen, determine the round winner
-            if (rounds[currentRound - 1].player1Choice && rounds[currentRound - 1].player2Choice) {
-              const p1Choice = rounds[currentRound - 1].player1Choice;
-              const p2Choice = rounds[currentRound - 1].player2Choice;
-              
-              // Determine round winner
-              let roundWinner = null;
-              if (p1Choice === p2Choice) {
-                roundWinner = 'draw';
-              } else if (
-                (p1Choice === 'rock' && p2Choice === 'scissors') ||
-                (p1Choice === 'paper' && p2Choice === 'rock') ||
-                (p1Choice === 'scissors' && p2Choice === 'paper')
-              ) {
-                roundWinner = p.gameData.player1;
-              } else {
-                roundWinner = p.gameData.player2;
-              }
-              
-              rounds[currentRound - 1].winner = roundWinner;
-              
-              // Count wins
-              const p1Wins = rounds.filter(r => r.winner === p.gameData.player1).length;
-              const p2Wins = rounds.filter(r => r.winner === p.gameData.player2).length;
-              
-              // Check if game is over (best of 3)
-              if (p1Wins >= 2 || p2Wins >= 2 || currentRound >= 3) {
-                const gameWinner = p1Wins > p2Wins ? p.gameData.player1 : p2Wins > p1Wins ? p.gameData.player2 : 'draw';
-                return {
-                  ...p,
-                  gameData: {
-                    ...p.gameData,
-                    rounds,
-                    currentRound,
-                    winner: gameWinner,
-                    status: 'completed' as const
-                  }
-                };
-              } else {
-                // Continue to next round
-                return {
-                  ...p,
-                  gameData: {
-                    ...p.gameData,
-                    rounds,
-                    currentRound: currentRound + 1,
-                    currentPlayer: p.gameData.player1
-                  }
-                };
-              }
-            } else {
-              // Waiting for other player's choice
-              return {
-                ...p,
-                gameData: {
-                  ...p.gameData,
-                  rounds,
-                  currentPlayer: isPlayer1 ? p.gameData.player2 : p.gameData.player1
-                }
-              };
-            }
-          }
-          
-          // Handle Coin Flip
-          if (p.gameData.type === 'coinflip' && moveType === 'coinflip') {
-            const isPlayer2 = currentUserWallet?.toLowerCase() === p.gameData.player2?.toLowerCase();
-            
-            // Only player 2 can make a choice
-            if (isPlayer2 && !p.gameData.player2Choice) {
-              // Player 2 chooses, player 1 gets the opposite
-              const player1Choice = moveData === 'heads' ? 'tails' : 'heads';
-              
-              // Flip the coin
-              const result = Math.random() < 0.5 ? 'heads' : 'tails';
-              const winner = player1Choice === result ? p.gameData.player1 : p.gameData.player2;
-              
-              return {
-                ...p,
-                gameData: {
-                  ...p.gameData,
-                  player1Choice,
-                  player2Choice: moveData,
-                  result,
-                  winner,
-                  status: 'completed' as const
-                }
-              };
-            }
-          }
-        }
-        return p;
-      });
-      return updatedPosts;
-    });
-    // Force a re-render
-    setUpdateCounter(prev => prev + 1);
-  };
-  
-  const handleTicTacToeMove = (postId: number, row: number, col: number) => {
-    setPosts(prevPosts => {
-      const updatedPosts = prevPosts.map(p => {
-        if (p.id === postId && p.gameData && p.gameData.type === 'tictactoe') {
-          // Deep clone the board
-          const board = p.gameData.board.map(boardRow => [...boardRow]);
-          const currentSymbol = p.gameData.currentPlayer?.toLowerCase() === p.gameData.player1?.toLowerCase() ? 'X' : 'O';
-          
-          // Make the move
-          board[row][col] = currentSymbol;
-          
-          // Check for winner
-          const winner = checkTicTacToeWinner(board);
-          
-          // Switch player if no winner
-          const nextPlayer = p.gameData.currentPlayer?.toLowerCase() === p.gameData.player1?.toLowerCase() ? p.gameData.player2 : p.gameData.player1;
-          
-          return {
-            ...p,
-            gameData: {
-              ...p.gameData,
-              board,
-              currentPlayer: winner ? p.gameData.currentPlayer : nextPlayer,
-              status: winner ? 'completed' as const : 'active' as const,
-              winner: winner === 'X' ? p.gameData.player1 : winner === 'O' ? p.gameData.player2 : winner === 'draw' ? 'draw' : undefined
-            }
-          };
-        }
-        return p;
-      });
-      return updatedPosts;
-    });
-    
-    // Force a re-render
-    setUpdateCounter(prev => prev + 1);
-  };
 
-  // Check for Tic Tac Toe winner
-  const checkTicTacToeWinner = (board: any[][]): string | null => {
-    // Check rows
-    for (let i = 0; i < 3; i++) {
-      if (board[i][0] && board[i][0] === board[i][1] && board[i][1] === board[i][2]) {
-        return board[i][0];
-      }
-    }
-    
-    // Check columns
-    for (let i = 0; i < 3; i++) {
-      if (board[0][i] && board[0][i] === board[1][i] && board[1][i] === board[2][i]) {
-        return board[0][i];
-      }
-    }
-    
-    // Check diagonals
-    if (board[0][0] && board[0][0] === board[1][1] && board[1][1] === board[2][2]) {
-      return board[0][0];
-    }
-    if (board[0][2] && board[0][2] === board[1][1] && board[1][1] === board[2][0]) {
-      return board[0][2];
-    }
-    
-    // Check for draw
-    const isDraw = board.every(row => row.every(cell => cell !== null));
-    if (isDraw) return 'draw';
-    
-    return null;
-  };
-
-  // Filter posts based on user preferences
+  // Filter posts based on user preferences and category
   const filteredPosts = posts.filter(post => {
+    // Filter by category if one is selected
+    if (activeTab !== 'all' && post.category?.toLowerCase() !== activeTab) {
+      return false;
+    }
     // If user has premium and wants to hide sponsored posts, filter them out
     if (isPremium && hideSponsoredPosts && post.sponsored) {
       return false;
     }
-    // If user wants to hide game posts, filter them out
-    if (hideGamePosts && post.gameData) {
+    // Always hide game posts from the feed - they're now in the gaming tab
+    if (post.gameData) {
       return false;
     }
     return true;
   });
 
-  // Enhanced post sorting with bump expiration
+  // Sort posts by newest first
   const sortedPosts = React.useMemo(() => {
-    return [...filteredPosts].sort((a, b) => {
-      const aActive = isBumpActive(a);
-      const bActive = isBumpActive(b);
-      
-      // Active bumps go first
-      if (aActive && !bActive) return -1;
-      if (!aActive && bActive) return 1;
-      
-      // If both bumped, sort by most recent bump
-      if (aActive && bActive) {
-        return (b.bumpedAt || 0) - (a.bumpedAt || 0);
-      }
-      
-      // For non-bumped posts, maintain chronological order (newest first)
-      return b.id - a.id;
-    });
-  }, [filteredPosts, posts]); // Add posts as dependency to force recalculation
+    return [...filteredPosts].sort((a, b) => b.id - a.id);
+  }, [filteredPosts]);
 
   return (
-    <ParticleSystem>
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* SolMint-Level Phone Background System (NO external particles) */}
         
         {/* Base dark gradient layer (matches SolMint phone background) */}
@@ -904,107 +635,122 @@ export default function HomeScreen() {
           onCategoryChange={handleCategoryChange} 
           isCollapsed={headerCollapsed} 
           onProfileClick={() => setShowMyProfileModal(true)}
-          onSubcategoriesVisibilityChange={setShowingSubcategories}
+          selectedCategory={selectedCategory}
         />
         
-        <FlatList 
-          ref={flatListRef}
-          style={styles.content} 
-          contentContainerStyle={[
-            styles.scrollContent, 
-            { 
-              paddingTop: headerCollapsed ? insets.top + 16 : (showingSubcategories ? insets.top + 287 : insets.top + 207),
-            }
-          ]}
-          showsVerticalScrollIndicator={false}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor="#00ff88"
-              colors={["#00ff88"]}
-              progressBackgroundColor="rgba(0, 0, 0, 0.8)"
-              progressViewOffset={headerCollapsed ? 60 : 160}
-              enabled={scrollY < 30 && !isScrolling}
-            />
-          }
-          data={sortedPosts}
-          keyExtractor={(item) => {
-            // Include game state in key for game posts to force re-render
-            if (item.gameData) {
-              if (item.gameData.type === 'tictactoe' && item.gameData.board) {
-                const boardState = item.gameData.board.flat().map(cell => cell || '_').join('');
-                return `${item.id}-ttt-${item.gameData.status}-${item.gameData.player2 || 'none'}-${boardState}`;
-              }
-              return `${item.id}-${item.gameData.type}-${item.gameData.status}-${item.gameData.player2 || 'none'}`;
-            }
-            return item.id.toString();
-          }}
-          extraData={[posts, expandedPosts, updateCounter]}
-          renderItem={({ item: post }) => (
-            <Post
-              post={{
-                ...post,
-                replies: sortReplies(post.replies, getReplySortType(post.id))
-              }}
-              expandedPosts={expandedPosts}
+        {activeTab === 'games' ? (
+          <View style={[styles.gamesViewContainer, { 
+            paddingTop: headerCollapsed ? insets.top + 16 : (showingSubcategories ? insets.top + 287 : insets.top + 207),
+          }]}>
+            <GamesView
+              posts={posts}
               currentUserWallet={currentUserWallet}
-              currentUserAvatar={selectedAvatar}
-              currentUserNFTAvatar={selectedNFTAvatar}
-              replySortType={getReplySortType(post.id)}
-              onLike={handleLike}
-              onReply={handleReply}
-              onBump={handleBump}
-              onTip={handleTip}
-              onShowTipModal={handleShowTipModal}
-              onLikeReply={handleLikeReply}
-              onTipReply={handleTipReply}
-              onBumpReply={handleBumpReply}
-              onToggleReplies={toggleReplies}
-              onToggleReplySorting={toggleReplySorting}
-              onReport={handleReport}
-              onShowProfile={handleShowProfile}
-              onShowReportModal={handleShowReportModal}
-              onJoinGame={handleJoinGame}
-              onGameMove={handleGameMove}
+              onCreateGame={handleCreateGame}
             />
-          )}
-          initialNumToRender={10}
-          maxToRenderPerBatch={5}
-          windowSize={10}
-          removeClippedSubviews={true}
-        />
+          </View>
+        ) : activeTab === 'events' ? (
+          <View style={[styles.eventsViewContainer, { 
+            paddingTop: headerCollapsed ? insets.top + 16 : (showingSubcategories ? insets.top + 287 : insets.top + 207),
+          }]}>
+            <EventsView />
+          </View>
+        ) : (
+          <FlatList 
+            ref={flatListRef}
+            style={styles.content} 
+            contentContainerStyle={[
+              styles.scrollContent, 
+              { 
+                paddingTop: headerCollapsed ? insets.top + 16 : (showingSubcategories ? insets.top + 287 : insets.top + 207),
+              }
+            ]}
+            showsVerticalScrollIndicator={false}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor="#00ff88"
+                colors={["#00ff88"]}
+                progressBackgroundColor="rgba(0, 0, 0, 0.8)"
+                progressViewOffset={headerCollapsed ? 60 : 160}
+                enabled={scrollY < 30 && !isScrolling}
+              />
+            }
+            data={sortedPosts}
+            keyExtractor={(item) => {
+              // Include game state in key for game posts to force re-render
+              if (item.gameData) {
+                if (item.gameData.type === 'tictactoe' && item.gameData.board) {
+                  const boardState = item.gameData.board.flat().map(cell => cell || '_').join('');
+                  return `${item.id}-ttt-${item.gameData.status}-${item.gameData.player2 || 'none'}-${boardState}`;
+                }
+                return `${item.id}-${item.gameData.type}-${item.gameData.status}-${item.gameData.player2 || 'none'}`;
+              }
+              return item.id.toString();
+            }}
+            extraData={[posts, expandedPosts, updateCounter]}
+            renderItem={({ item: post }) => (
+              <Post
+                post={{
+                  ...post,
+                  replies: sortReplies(post.replies, getReplySortType(post.id))
+                }}
+                expandedPosts={expandedPosts}
+                currentUserWallet={currentUserWallet}
+                currentUserAvatar={selectedAvatar}
+                currentUserNFTAvatar={selectedNFTAvatar}
+                replySortType={getReplySortType(post.id)}
+                onLike={handleLike}
+                onReply={handleReply}
+                onTip={handleTip}
+                onShowTipModal={handleShowTipModal}
+                onLikeReply={handleLikeReply}
+                onTipReply={handleTipReply}
+                onToggleReplies={toggleReplies}
+                onToggleReplySorting={toggleReplySorting}
+                onReport={handleReport}
+                onShowProfile={handleShowProfile}
+                onShowReportModal={handleShowReportModal}
+              />
+            )}
+            initialNumToRender={10}
+            maxToRenderPerBatch={5}
+            windowSize={10}
+            removeClippedSubviews={true}
+          />
+        )}
 
-        {/* Floating Action Button */}
-        <TouchableOpacity
-          style={[styles.fab, { shadowColor: colors.shadowColor }]}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            setShowCreatePost(true);
-          }}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            colors={gradients.primary}
-            style={styles.fabGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+        {/* Floating Action Button - Only show on non-game tabs */}
+        {activeTab !== 'games' && activeTab !== 'events' && (
+          <TouchableOpacity
+            style={[styles.fab, { shadowColor: colors.shadowColor }]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              setShowCreatePost(true);
+            }}
+            activeOpacity={0.8}
           >
-            <Ionicons 
-              name="create-outline" 
-              size={24} 
-              color={isDarkMode ? '#000' : '#fff'} 
-            />
-          </LinearGradient>
-        </TouchableOpacity>
+            <LinearGradient
+              colors={gradients.primary}
+              style={styles.fabGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Ionicons 
+                name="create-outline" 
+                size={24} 
+                color={isDarkMode ? '#000' : '#fff'} 
+              />
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
 
         <CreatePostModal
           visible={showCreatePost}
           content={newPostContent}
           activeTab={activeTab}
-          activeSubtopic={activeSubtopic}
           onClose={() => setShowCreatePost(false)}
           onContentChange={setNewPostContent}
           onSubmit={handleCreatePost}
@@ -1066,9 +812,18 @@ export default function HomeScreen() {
             setShowMyProfileModal(false);
           }}
         />
+
+        <TipSuccessModal
+          visible={showTipSuccessModal}
+          onClose={() => {
+            setShowTipSuccessModal(false);
+            setTipSuccessData(null);
+          }}
+          amount={tipSuccessData?.amount || 0}
+          username={tipSuccessData?.username || ''}
+        />
         </View>
       </View>
-    </ParticleSystem>
   );
 }
 
@@ -1110,6 +865,12 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 100, // Extra padding for tab bar and FAB
+  },
+  gamesViewContainer: {
+    flex: 1,
+  },
+  eventsViewContainer: {
+    flex: 1,
   },
   // Floating Action Button
   fab: {

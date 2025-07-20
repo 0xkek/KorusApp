@@ -1,4 +1,4 @@
-import { BlurView } from 'expo-blur';
+// import { BlurView } from 'expo-blur'; // Removed for performance
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -12,24 +12,20 @@ import SettingsModal from './SettingsModal';
 import { Ionicons } from '@expo/vector-icons';
 
 interface HeaderProps {
-  onCategoryChange?: (category: string | null, subcategory: string | null) => void;
+  onCategoryChange?: (category: string | null) => void;
   isCollapsed?: boolean; // New prop to control collapsed state
   onProfileClick?: () => void; // New prop for profile click
-  onSubcategoriesVisibilityChange?: (visible: boolean) => void; // New prop for subcategory visibility
+  selectedCategory?: string | null; // New prop to receive selected category from parent
 }
 
-export default function Header({ onCategoryChange, isCollapsed = false, onProfileClick, onSubcategoriesVisibilityChange }: HeaderProps) {
+export default function Header({ onCategoryChange, isCollapsed = false, onProfileClick, selectedCategory: parentSelectedCategory }: HeaderProps) {
   const { colors, isDarkMode, gradients, theme } = useTheme();
   const { walletAddress, selectedAvatar, selectedNFTAvatar, snsDomain, isPremium } = useWallet();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(parentSelectedCategory || null);
   const [showSettings, setShowSettings] = useState(false);
   
-  // ScrollView refs for programmatic scrolling
-  const categoryScrollRef = useRef<ScrollView>(null);
-  const subScrollRef = useRef<ScrollView>(null);
   
   // Header slide-up animation
   const headerTranslateY = useRef(new Animated.Value(0)).current;
@@ -46,74 +42,29 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
     }).start();
   }, [isCollapsed, headerTranslateY]);
 
-  // Notify parent when subcategories visibility changes
+  // Sync with parent selected category
   useEffect(() => {
-    onSubcategoriesVisibilityChange?.(!!selectedCategory);
-  }, [selectedCategory, onSubcategoriesVisibilityChange]);
+    if (parentSelectedCategory !== undefined) {
+      setSelectedCategory(parentSelectedCategory);
+    }
+  }, [parentSelectedCategory]);
+
   
   const categories = [
-    'CAREER', 'HEALTH', 'RELATIONSHIPS', 'FINANCE', 'TECHNOLOGY', 
-    'LIFESTYLE', 'EDUCATION', 'ENTERTAINMENT', 'SPORTS', 'TRAVEL', 
-    'BUSINESS', 'POLITICS'
+    'GENERAL', 'GAMES', 'EVENTS'
   ];
-  
-  const subcategories: { [key: string]: string[] } = {
-    CAREER: ['Job Search', 'Interviews', 'Networking', 'Salary Negotiations'],
-    HEALTH: ['Mental Health', 'Fitness', 'Nutrition', 'Medical'],
-    RELATIONSHIPS: ['Dating', 'Marriage', 'Family', 'Friendship'],
-    FINANCE: ['Investing', 'Budgeting', 'Crypto', 'Real Estate'],
-    TECHNOLOGY: ['AI/ML', 'Web Dev', 'Mobile Apps', 'Blockchain'],
-    LIFESTYLE: ['Fashion', 'Home', 'Food', 'Travel'],
-    EDUCATION: ['College', 'Online Learning', 'Certifications', 'Skills'],
-    ENTERTAINMENT: ['Movies', 'Music', 'Gaming', 'Books'],
-    SPORTS: ['Football', 'Basketball', 'Soccer', 'Fitness'],
-    TRAVEL: ['Destinations', 'Tips', 'Budget Travel', 'Solo Travel'],
-    BUSINESS: ['Startups', 'Marketing', 'Leadership', 'Strategy'],
-    POLITICS: ['Elections', 'Policy', 'Local Gov', 'International']
-  };
 
   const handleCategoryPress = (category: string) => {
     if (selectedCategory === category) {
       setSelectedCategory(null);
-      setSelectedSubcategory(null);
-      onCategoryChange?.(null, null);
+      onCategoryChange?.(null);
     } else {
       setSelectedCategory(category);
-      setSelectedSubcategory(null);
-      onCategoryChange?.(category, null);
-      // Reset subcategory scroll to the left when changing categories
-      setSubScrollX(0);
-      setTimeout(() => {
-        subScrollRef.current?.scrollTo({ x: 0, animated: true });
-      }, 100);
+      onCategoryChange?.(category);
     }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
-  const handleSubcategoryPress = (subcategory: string) => {
-    setSelectedSubcategory(subcategory);
-    onCategoryChange?.(selectedCategory, subcategory);
-    // Collapse subcategories after selection
-    setTimeout(() => {
-      setSelectedCategory(null);
-      setSelectedSubcategory(null);
-    }, 100); // Small delay to allow navigation to happen first
-  };
-
-  // Scroll functions with dynamic positioning
-  const [categoryScrollX, setCategoryScrollX] = useState(0);
-  const [subScrollX, setSubScrollX] = useState(0);
-
-  const scrollCategoriesRight = () => {
-    const newX = categoryScrollX + 250;
-    setCategoryScrollX(newX);
-    categoryScrollRef.current?.scrollTo({ x: newX, animated: true });
-  };
-
-  const scrollSubcategoriesRight = () => {
-    const newX = subScrollX + 250;
-    setSubScrollX(newX);
-    subScrollRef.current?.scrollTo({ x: newX, animated: true });
-  };
 
 
   // Dynamic styles based on theme
@@ -146,22 +97,9 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
       ...styles.categoryBtnTxtSelected,
       color: isDarkMode ? '#000000' : '#ffffff',
     },
-    arrowContainer: {
-      ...styles.arrowContainer,
-      backgroundColor: colors.primary,
-      shadowColor: colors.shadowColor,
-    },
-    scrollArrow: {
-      ...styles.scrollArrow,
-      color: isDarkMode ? '#000000' : '#ffffff',
-    },
     categoriesArea: {
       ...styles.categoriesArea,
       borderTopColor: colors.borderLight,
-    },
-    subBtnTxt: {
-      ...styles.subBtnTxt,
-      color: colors.text,
     },
   });
 
@@ -180,7 +118,7 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
 
         {/* Combined Header + Categories Frame */}
         <View style={dynamicStyles.mainFrame}>
-          <BlurView intensity={40} style={styles.blurWrapper}>
+          <View style={styles.blurWrapper}>
             <LinearGradient
               colors={gradients.surface}
               style={styles.gradientWrapper}
@@ -204,7 +142,7 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
                       style={[
                         styles.profileIcon,
                         {
-                          borderWidth: 3,
+                          borderWidth: 1,
                           borderColor: colors.primary
                         }
                       ]}
@@ -255,121 +193,41 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
 
               {/* Categories Section - Always visible */}
               <View style={[styles.categoriesArea, { borderTopColor: colors.borderLight }, isCollapsed && styles.categoriesAreaCollapsed]}>
-                <View style={styles.categoryScrollContainer}>
-                  <ScrollView 
-                    ref={categoryScrollRef}
-                    horizontal 
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.categoryScroll}
-                    contentContainerStyle={styles.categoryScrollContent}
-                  >
-                    {categories.map((category) => (
-                      <TouchableOpacity
-                        key={category}
-                        style={[
-                          styles.categoryBtn,
-                          selectedCategory === category && styles.categoryBtnSelected
-                        ]}
-                        onPress={() => handleCategoryPress(category)}
-                        activeOpacity={0.8}
+                <View style={styles.categoriesContainer}>
+                  {categories.map((category) => (
+                    <TouchableOpacity
+                      key={category}
+                      style={[
+                        styles.categoryBtn,
+                        selectedCategory === category && styles.categoryBtnSelected
+                      ]}
+                      onPress={() => handleCategoryPress(category)}
+                      activeOpacity={0.8}
+                    >
+                      <LinearGradient
+                        colors={
+                          selectedCategory === category
+                            ? gradients.primary
+                            : gradients.button
+                        }
+                        style={styles.categoryBtnGrad}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
                       >
-                        <LinearGradient
-                          colors={
-                            selectedCategory === category
-                              ? gradients.primary
-                              : gradients.button
-                          }
-                          style={styles.categoryBtnGrad}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
-                        >
-                          <View style={styles.categoryBtnContent}>
-                            <Text style={[
-                              dynamicStyles.categoryBtnTxt,
-                              selectedCategory === category && dynamicStyles.categoryBtnTxtSelected
-                            ]}>
-                              {category}
-                            </Text>
-                            <Ionicons 
-                              name={selectedCategory === category ? "chevron-down" : "chevron-down-outline"} 
-                              size={14} 
-                              color={selectedCategory === category ? (isDarkMode ? '#000' : '#fff') : colors.text}
-                              style={{ marginLeft: 4 }}
-                            />
-                          </View>
-                        </LinearGradient>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                  
-                  {/* Clickable scroll indicator arrow for categories */}
-                  <TouchableOpacity 
-                    style={styles.categoryScrollIndicator}
-                    onPress={scrollCategoriesRight}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.arrowContainer}>
-                      <Text style={styles.scrollArrow}>{'>'}</Text>
-                    </View>
-                  </TouchableOpacity>
+                        <Text style={[
+                          dynamicStyles.categoryBtnTxt,
+                          selectedCategory === category && dynamicStyles.categoryBtnTxtSelected
+                        ]}>
+                          {category}
+                        </Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  ))}
                 </View>
               </View>
 
-              {/* Subcategories Section - Inside main frame */}
-              {selectedCategory && (
-                <View style={[styles.subcategoriesArea, { borderTopColor: colors.borderLight }]}>
-                  <View style={styles.subScrollContainer}>
-                    <ScrollView 
-                      ref={subScrollRef}
-                      horizontal 
-                      showsHorizontalScrollIndicator={false}
-                      style={styles.subScroll}
-                      contentContainerStyle={styles.subScrollContent}
-                    >
-                      {subcategories[selectedCategory]?.map((subcategory) => (
-                        <TouchableOpacity
-                          key={subcategory}
-                          style={styles.subBtn}
-                          onPress={() => handleSubcategoryPress(subcategory)}
-                          activeOpacity={0.8}
-                        >
-                          <BlurView intensity={20} style={styles.subBtnBlur}>
-                            <LinearGradient
-                              colors={selectedSubcategory === subcategory ? gradients.primary : gradients.button}
-                              style={[
-                                styles.subBtnGrad,
-                                selectedSubcategory === subcategory && styles.subBtnGradSelected
-                              ]}
-                              start={{ x: 0, y: 0 }}
-                              end={{ x: 1, y: 1 }}
-                            >
-                              <Text style={[
-                                dynamicStyles.subBtnTxt,
-                                { color: selectedSubcategory === subcategory ? (isDarkMode ? '#000' : '#fff') : colors.text }
-                              ]}>
-                                {subcategory}
-                              </Text>
-                            </LinearGradient>
-                          </BlurView>
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
-                    
-                    {/* Clickable scroll indicator arrow */}
-                    <TouchableOpacity 
-                      style={styles.scrollIndicator}
-                      onPress={scrollSubcategoriesRight}
-                      activeOpacity={0.7}
-                    >
-                      <View style={styles.arrowContainer}>
-                        <Text style={styles.scrollArrow}>{'>'}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
             </LinearGradient>
-          </BlurView>
+          </View>
         </View>
       </Animated.View>
       
@@ -387,7 +245,7 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     top: 0,
     left: 0,
     right: 0,
-    paddingTop: Math.max(insets.top, 20) + 30, // Safe area + additional padding
+    paddingTop: Math.max(insets.top, 20) + 10, // Reduced extra padding to use more space
     paddingHorizontal: 15,
     paddingBottom: 8,
     zIndex: 1000,
@@ -399,11 +257,11 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     borderRadius: 24,
     borderWidth: 2,
     borderColor: colors.primary + '99' || 'rgba(67, 233, 123, 0.6)',
-    shadowColor: colors.shadowColor || '#43e97b',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.8,
-    shadowRadius: 35,
-    elevation: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
     marginBottom: 10,
     zIndex: 2,
   },
@@ -412,14 +270,14 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     overflow: 'hidden',
   },
   gradientWrapper: {
-    padding: 15,
+    padding: 20,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
-    height: 40, // Fixed height, no animation
+    marginBottom: 15,
+    height: 50, // Increased height
     paddingHorizontal: 15,
   },
   mainTitle: {
@@ -429,21 +287,21 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     letterSpacing: -1,
   },
   profileIconContainer: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
     marginLeft: -20,
   },
   profileIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#43e97b',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   profileIconText: {
     fontSize: FontSizes.lg,
@@ -454,9 +312,9 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     fontSize: 20,
   },
   profileIconNFT: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   settingsIconContainer: {
     width: 40,
@@ -469,11 +327,11 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#43e97b',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   settingsIconText: {
     fontSize: 24,
@@ -489,32 +347,22 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     paddingTop: 0,
     borderTopWidth: 0,
   },
-  subcategoriesArea: {
-    paddingTop: 12,
-    paddingBottom: 10,
-    marginTop: 4,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(67, 233, 123, 0.1)',
-  },
-  categoryScrollContainer: {
-    position: 'relative',
-  },
-  categoryScroll: {
-    flexGrow: 0,
-  },
-  categoryScrollContent: {
-    paddingRight: 50,
+  categoriesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
   },
   categoryBtn: {
-    marginRight: 12,
+    flex: 1,
+    marginHorizontal: 6,
     borderRadius: 16,
   },
   categoryBtnSelected: {
     shadowColor: '#43e97b',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1.0,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 3,
   },
   categoryBtnGrad: {
     paddingHorizontal: 16,
@@ -524,11 +372,11 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     borderWidth: 1.5,
     borderColor: colors.border || 'rgba(67, 233, 123, 0.4)',
     minWidth: 100,
-    shadowColor: colors.shadowColor || '#43e97b',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   categoryBtnTxt: {
     fontSize: FontSizes.sm,
@@ -540,122 +388,5 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
   },
   categoryBtnTxtSelected: {
     color: '#000000',
-  },
-  categoryBtnContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  categoryScrollIndicator: {
-    position: 'absolute',
-    right: -15,
-    top: 0,
-    bottom: 0,
-    width: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-  subContainer: {
-    marginBottom: 10,
-    zIndex: 2,
-  },
-  subFrame: {
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.borderLight || 'rgba(67, 233, 123, 0.15)',
-    shadowColor: colors.shadowColor || '#43e97b',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  subBlur: {
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  subGradient: {
-    padding: 15,
-  },
-  subScrollContainer: {
-    position: 'relative',
-  },
-  subScroll: {
-    flexGrow: 0,
-  },
-  subScrollContent: {
-    paddingRight: 30,
-  },
-  subBtn: {
-    borderRadius: 16,
-    marginRight: 12,
-    overflow: 'hidden',
-  },
-  subBtnBlur: {
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  subBtnGrad: {
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: colors.border || 'rgba(67, 233, 123, 0.4)',
-    minWidth: 100,
-    alignItems: 'center',
-    shadowColor: colors.shadowColor || '#43e97b',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  subBtnGradSelected: {
-    borderColor: colors.primary || 'rgba(67, 233, 123, 0.9)',
-    borderWidth: 2,
-    shadowColor: colors.shadowColor || '#43e97b',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  subBtnTxt: {
-    fontSize: FontSizes.sm,
-    fontFamily: Fonts.semiBold,
-    textAlign: 'center',
-    letterSpacing: 0.3,
-  },
-  scrollIndicator: {
-    position: 'absolute',
-    right: -15,
-    top: 0,
-    bottom: 0,
-    width: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-  scrollIndicatorGradient: {
-    width: 40,
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  arrowContainer: {
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.primary || '#43e97b',
-    borderRadius: 12,
-    shadowColor: colors.shadowColor || '#43e97b',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
-    elevation: 5,
-  },
-  scrollArrow: {
-    fontSize: 14,
-    color: isDarkMode ? '#000000' : '#ffffff',
-    fontWeight: 'bold',
   },
 });
