@@ -1,10 +1,11 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { Keypair } from '@solana/web3.js';
 import * as SecureStore from 'expo-secure-store';
 import { generateWalletAddress } from '../utils/wallet';
 import { getFavoriteSNSDomain, fetchSNSDomains, SNSDomain } from '../utils/sns';
 import { NFTAvatar } from '../types/theme';
 import { logger } from '../utils/logger';
+import { withErrorHandling, handleError } from '../utils/errorHandler';
 
 interface WalletContextType {
   walletAddress: string | null;
@@ -70,7 +71,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   }, []);
 
   const checkExistingWallet = async () => {
-    try {
+    await withErrorHandling(async () => {
       setIsLoading(true);
       
       // First check if user has a stored wallet
@@ -128,16 +129,15 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       // TODO: Check for Seed Vault wallet
       // This would involve checking if user has Seed Vault app installed
       // and requesting access to their wallet
-      
-    } catch (error) {
-      logger.error('Error checking wallet:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    }, 'checkExistingWallet', {
+      onError: () => setIsLoading(false)
+    });
+    
+    setIsLoading(false);
   };
 
   const createNewWallet = async () => {
-    try {
+    await withErrorHandling(async () => {
       setIsLoading(true);
       
       // For now, use a mock wallet to test the app
@@ -159,12 +159,11 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       const domain = await getFavoriteSNSDomain(mockPublicKey);
       setSnsDomain(domain);
       
-    } catch (error) {
-      logger.error('Error creating wallet:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
+    }, 'createNewWallet', {
+      onError: () => setIsLoading(false)
+    });
+    
+    setIsLoading(false);
   };
 
   const importFromSeedVault = async (): Promise<boolean> => {
@@ -306,32 +305,46 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     }
   };
 
+  const contextValue = useMemo(
+    () => ({
+      walletAddress,
+      balance,
+      isLoading,
+      hasWallet,
+      selectedAvatar,
+      selectedNFTAvatar,
+      snsDomain,
+      allSNSDomains,
+      isPremium,
+      timeFunUsername,
+      createNewWallet,
+      importFromSeedVault,
+      getPrivateKey,
+      refreshBalance,
+      deductBalance,
+      setSelectedAvatar,
+      setSelectedNFTAvatar,
+      refreshSNSDomain,
+      setFavoriteSNSDomain,
+      setPremiumStatus,
+      setTimeFunUsername,
+    }),
+    [
+      walletAddress,
+      balance,
+      isLoading,
+      hasWallet,
+      selectedAvatar,
+      selectedNFTAvatar,
+      snsDomain,
+      allSNSDomains,
+      isPremium,
+      timeFunUsername,
+    ]
+  );
+
   return (
-    <WalletContext.Provider
-      value={{
-        walletAddress,
-        balance,
-        isLoading,
-        hasWallet,
-        selectedAvatar,
-        selectedNFTAvatar,
-        snsDomain,
-        allSNSDomains,
-        isPremium,
-        timeFunUsername,
-        createNewWallet,
-        importFromSeedVault,
-        getPrivateKey,
-        refreshBalance,
-        deductBalance,
-        setSelectedAvatar,
-        setSelectedNFTAvatar,
-        refreshSNSDomain,
-        setFavoriteSNSDomain,
-        setPremiumStatus,
-        setTimeFunUsername,
-      }}
-    >
+    <WalletContext.Provider value={contextValue}>
       {children}
     </WalletContext.Provider>
   );

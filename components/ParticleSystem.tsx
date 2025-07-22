@@ -7,8 +7,8 @@ interface ParticleSystemProps {
 }
 
 interface ActiveParticle extends Particle {
-  animatedX: Animated.Value;
-  animatedY: Animated.Value;
+  animatedTranslateX: Animated.Value;
+  animatedTranslateY: Animated.Value;
   animatedScale: Animated.Value;
   animatedOpacity: Animated.Value;
   animatedRotation: Animated.Value;
@@ -33,8 +33,8 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ children }) => {
     createParticleExplosion(type, x, y, (particle) => {
       const activeParticle: ActiveParticle = {
         ...particle,
-        animatedX: new Animated.Value(particle.x),
-        animatedY: new Animated.Value(particle.y),
+        animatedTranslateX: new Animated.Value(0),
+        animatedTranslateY: new Animated.Value(0),
         animatedScale: new Animated.Value(0.3),
         animatedOpacity: new Animated.Value(1),
         animatedRotation: new Animated.Value(0),
@@ -49,37 +49,37 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ children }) => {
     newParticles.forEach((particle, index) => {
       setTimeout(() => {
         Animated.parallel([
-          Animated.timing(particle.animatedX, {
-            toValue: particle.endX,
+          Animated.timing(particle.animatedTranslateX, {
+            toValue: particle.endX - particle.x,
             duration: particle.duration,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
-          Animated.timing(particle.animatedY, {
-            toValue: particle.endY,
+          Animated.timing(particle.animatedTranslateY, {
+            toValue: particle.endY - particle.y,
             duration: particle.duration,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
           Animated.sequence([
             Animated.timing(particle.animatedScale, {
               toValue: 1.4,
               duration: particle.duration * 0.3,
-              useNativeDriver: false,
+              useNativeDriver: true,
             }),
             Animated.timing(particle.animatedScale, {
               toValue: 0.1,
               duration: particle.duration * 0.7,
-              useNativeDriver: false,
+              useNativeDriver: true,
             }),
           ]),
           Animated.timing(particle.animatedOpacity, {
             toValue: 0,
             duration: particle.duration,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
           Animated.timing(particle.animatedRotation, {
             toValue: particle.rotation + 180,
             duration: particle.duration,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
         ]).start();
       }, particle.delay);
@@ -111,9 +111,11 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ children }) => {
             style={[
               styles.particle,
               {
-                left: particle.animatedX,
-                top: particle.animatedY,
+                left: particle.x,
+                top: particle.y,
                 transform: [
+                  { translateX: particle.animatedTranslateX },
+                  { translateY: particle.animatedTranslateY },
                   { scale: particle.animatedScale },
                   {
                     rotate: particle.animatedRotation.interpolate({

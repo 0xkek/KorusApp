@@ -2,7 +2,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import React, { useRef, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, TouchableOpacity, View, Linking } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, TouchableOpacity, View, Linking, Alert } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useWallet } from '../context/WalletContext';
 import { Post as PostType } from '../types';
@@ -25,12 +25,10 @@ interface PostProps {
   replySortType?: 'best' | 'recent';
   onLike: (postId: number) => void;
   onReply: (postId: number, quotedText?: string, quotedUsername?: string) => void;
-  onBump: (postId: number) => void;
   onTip: (postId: number, amount: number) => void;
   onShowTipModal: (postId: number) => void;
   onLikeReply: (postId: number, replyId: number) => void;
   onTipReply: (postId: number, replyId: number) => void;
-  onBumpReply: (replyId: number) => void;
   onToggleReplies: (postId: number) => void;
   onToggleReplySorting?: (postId: number) => void;
   onReport?: (postId: number) => void;
@@ -82,12 +80,10 @@ function Post({
   replySortType = 'best',
   onLike,
   onReply,
-  onBump,
   onTip,
   onShowTipModal,
   onLikeReply,
   onTipReply,
-  onBumpReply,
   onToggleReplies,
   onToggleReplySorting,
   onReport,
@@ -100,7 +96,7 @@ function Post({
   const router = useRouter();
   const { colors, isDarkMode, gradients } = useTheme();
   const { isPremium: currentUserIsPremium } = useWallet();
-  const displayName = useDisplayName(post.wallet, currentUserIsPremium || false);
+  const displayName = useDisplayName(post.wallet, post.isPremium || false);
   
   // Video player wrapper component
   const VideoPlayerWrapper = ({ videoUrl, colors }: { videoUrl: string; colors: any }) => {
@@ -175,11 +171,6 @@ function Post({
     return (reply.likes * 3) + (reply.tips * 5) + timeBonus;
   };
 
-  // Check if bump is still active (5-minute duration)
-  const isBumpActive = (): boolean => {
-    if (!post.bumped || !post.bumpedAt || !post.bumpExpiresAt) return false;
-    return Date.now() < post.bumpExpiresAt;
-  };
 
   const handleLike = (event?: any) => {
     // Only trigger particle explosion when adding a like, not removing it
@@ -208,11 +199,17 @@ function Post({
     if (!showAsDetail && !quotedText) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       
-      // If replies are already expanded, open the reply modal instead of hiding
+      // If there are no replies, directly open the reply modal
+      if (flatReplies.length === 0) {
+        onReply(postId, quotedText, quotedUsername);
+        return;
+      }
+      
+      // If there are replies and they're already expanded, open the reply modal
       if (expandedPosts.has(post.id)) {
         onReply(postId, quotedText, quotedUsername);
       } else {
-        // First click: expand replies
+        // First click: expand replies (only if there are replies to show)
         onToggleReplies(post.id);
       }
       return;
@@ -236,24 +233,6 @@ function Post({
     }
   };
 
-  const handleBump = (event?: any) => {
-    onBump(post.id);
-    
-    // Trigger particle explosion
-    if (event && global.createParticleExplosion) {
-      const touch = event.nativeEvent;
-      global.createParticleExplosion('bump', touch.pageX || 200, touch.pageY || 300);
-    }
-    
-    // Send notification if not bumping own post
-    if (post.wallet !== currentUserWallet) {
-      // sendLocalNotification({
-      //   type: 'bump',
-      //   fromUser: currentUserWallet,
-      //   postId: post.id,
-      // });
-    }
-  };
 
   const handleTip = (amount: number, event?: any) => {
     onTip(post.id, amount);
@@ -283,7 +262,6 @@ function Post({
     onShowProfile?.(post.wallet);
   };
 
-  const currentlyBumped = isBumpActive();
 
   return (
     <View style={styles.postContainer}>
@@ -292,7 +270,6 @@ function Post({
         style={[
           styles.blurContainer,
           { borderColor: colors.border, backgroundColor: colors.surface + '20' },
-          currentlyBumped && [styles.bumpedBlurContainer, { borderColor: colors.border }],
           post.sponsored && [styles.sponsoredBlurContainer, { borderColor: colors.primary + '99', shadowColor: colors.primary }]
         ]}
       >
@@ -324,16 +301,6 @@ function Post({
                 </TouchableOpacity>
               )}
               
-              {post.tips > 0 && (
-                <LinearGradient
-                  colors={gradients.primary}
-                  style={[styles.tipBadge, { shadowColor: colors.shadowColor }]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                >
-                  <Text style={[styles.tipText, { color: isDarkMode ? '#000' : '#fff' }]}>+{post.tips} $ALLY</Text>
-                </LinearGradient>
-              )}
             </View>
 
             {/* Clickable content area */}
@@ -368,7 +335,7 @@ function Post({
                       styles.avatar, 
                       { 
                         shadowColor: colors.shadowColor,
-                        borderWidth: 3,
+                        borderWidth: 2,
                         borderColor: post.userTheme || '#43e97b'
                       }
                     ]}
@@ -410,8 +377,6 @@ function Post({
                   </View>
                   <View style={styles.metaRow}>
                     <Text style={[styles.time, { color: colors.textTertiary }]}>{post.time}</Text>
-                    <Text style={[styles.subcategoryDot, { color: colors.textTertiary }]}>•</Text>
-                    <Text style={[styles.subcategory, { color: colors.primary + 'CC' }]}>{post.subcategory}</Text>
                   </View>
                 </View>
               </View>
@@ -434,26 +399,56 @@ function Post({
                 return firstUrl ? <LinkPreview url={firstUrl} /> : null;
               })()}
               
-              {/* Display image if present */}
-              {post.imageUrl && (
+              {/* Display media if present */}
+              {(post.imageUrl || post.videoUrl) && (
                 <View style={styles.imageContainer}>
-                  <Image 
-                    source={{ uri: post.imageUrl }} 
-                    style={styles.postImage}
-                    resizeMode="cover"
-                  />
+                  {post.videoUrl ? (
+                    <TouchableOpacity 
+                      style={styles.videoContainer}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        // TODO: Implement video player
+                        Alert.alert('Video Player', 'Video playback coming soon!');
+                      }}
+                      activeOpacity={0.9}
+                    >
+                      <Image 
+                        source={{ uri: post.videoUrl }} 
+                        style={styles.postImage}
+                        resizeMode="cover"
+                      />
+                      <View style={styles.videoPlayButton}>
+                        <Ionicons name="play-circle" size={64} color="rgba(255, 255, 255, 0.9)" />
+                      </View>
+                    </TouchableOpacity>
+                  ) : (
+                    <Image 
+                      source={{ uri: post.imageUrl }} 
+                      style={styles.postImage}
+                      resizeMode="cover"
+                    />
+                  )}
                 </View>
               )}
             </TouchableOpacity>
 
             {/* Display game if present - OUTSIDE the clickable area */}
             {post.gameData && onJoinGame && onGameMove && (
-              <GamePost
-                gameData={post.gameData}
-                postId={post.id}
-                onJoinGame={onJoinGame}
-                onMakeMove={onGameMove}
-              />
+              <TouchableOpacity
+                activeOpacity={0.95}
+                onPress={() => {
+                  // Navigate to full-screen game view
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push(`/game/${post.id}`);
+                }}
+              >
+                <GamePost
+                  gameData={post.gameData}
+                  postId={post.id}
+                  onJoinGame={onJoinGame}
+                  onMakeMove={onGameMove}
+                />
+              </TouchableOpacity>
             )}
             
             {/* Display video if present - outside clickable area */}
@@ -543,38 +538,6 @@ function Post({
                   </LinearGradient>
                 </View>
               </Pressable>
-
-              <View style={[styles.actionBtn, currentlyBumped && [styles.activeBtn, { shadowColor: colors.shadowColor }]]}>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.actionBtnInner,
-                    pressed && styles.pressedBtn
-                  ]}
-                  onPress={(e) => handleBump(e)}
-                  android_disableSound={true}
-                >
-                  <View style={[styles.actionBlur, { backgroundColor: colors.surface + '30' }]}>
-                    <LinearGradient
-                      colors={gradients.button}
-                      style={[
-                        styles.actionBtnGradient,
-                        { borderColor: colors.borderLight },
-                        currentlyBumped && [styles.activeBtnGradient, { borderColor: colors.primary }]
-                      ]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    >
-                      <Text style={[
-                        styles.actionText,
-                        { color: colors.textSecondary },
-                        currentlyBumped && [styles.activeText, { color: colors.primary, textShadowColor: colors.primary + '66' }]
-                      ]}>
-                        Bump
-                      </Text>
-                    </LinearGradient>
-                  </View>
-                </Pressable>
-              </View>
 
               <Pressable
                 style={({ pressed }) => [
@@ -675,27 +638,6 @@ function Post({
 
                 {flatReplies.map((reply, index) => (
                   <View key={reply.id} style={styles.flatReplyContainer}>
-                    {/* Top reply badge - only show for "best" sort and when there's a clear winner */}
-                    {index === 0 && 
-                     replySortType === 'best' && 
-                     flatReplies.length > 1 && 
-                     calculateInteractionScore(reply) > 0 && (
-                      <LinearGradient
-                        colors={gradients.primary}
-                        style={[styles.topReplyBadge, { shadowColor: colors.shadowColor }]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                      >
-                        <View style={styles.topReplyContent}>
-                          <Ionicons 
-                            name="star" 
-                            size={14} 
-                            color={isDarkMode ? '#000' : '#fff'} 
-                          />
-                          <Text style={[styles.topReplyText, { color: isDarkMode ? '#000' : '#fff' }]}>Top Reply</Text>
-                        </View>
-                      </LinearGradient>
-                    )}
 
                     <Reply
                       reply={reply}
@@ -703,7 +645,6 @@ function Post({
                       currentUserWallet={currentUserWallet}
                       onLike={onLikeReply}
                       onReply={handleReply}
-                      onBump={onBumpReply}
                       onTip={onTipReply}
                       depth={reply.depth || 0}
                       isLastInThread={index === flatReplies.length - 1 || 
@@ -736,13 +677,13 @@ const styles = StyleSheet.create({
   blurContainer: {
     borderRadius: 24,
     overflow: 'hidden',
-    borderWidth: 2,
+    borderWidth: 2, // Restored color border
   },
   sponsoredBlurContainer: {
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   postGradient: {
     borderRadius: 24,
@@ -755,9 +696,6 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
-  bumpedBlurContainer: {
-    borderColor: 'rgba(67, 233, 123, 0.6)',
-  },
   topRightBadges: {
     position: 'absolute',
     top: 15,
@@ -766,21 +704,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     zIndex: 3,
-  },
-  tipBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    shadowColor: '#43e97b',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  tipText: {
-    fontSize: FontSizes.xs,
-    fontFamily: Fonts.bold,
-    color: '#000',
   },
   usernameRow: {
     flexDirection: 'row',
@@ -795,18 +718,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: 0,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 1,
   },
   sponsoredBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
     marginLeft: 2,
   },
   sponsoredText: {
@@ -828,10 +751,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 15,
     shadowColor: '#43e97b',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
   avatarText: {
     fontSize: FontSizes.lg,
@@ -854,9 +777,9 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.mono,
     color: '#43e97b',
     letterSpacing: -0.5,
-    textShadowColor: 'rgba(67, 233, 123, 0.4)',
+    textShadowColor: 'rgba(67, 233, 123, 0.2)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 15,
+    textShadowRadius: 4,
   },
   metaRow: {
     flexDirection: 'row',
@@ -867,16 +790,6 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.sm,
     fontFamily: Fonts.medium,
     color: 'rgba(255, 255, 255, 0.6)',
-  },
-  subcategoryDot: {
-    fontSize: FontSizes.sm,
-    color: 'rgba(255, 255, 255, 0.4)',
-    marginHorizontal: 6,
-  },
-  subcategory: {
-    fontSize: FontSizes.sm,
-    fontFamily: Fonts.medium,
-    color: 'rgba(67, 233, 123, 0.8)',
   },
   postContentContainer: {
     position: 'relative',
@@ -899,6 +812,13 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   videoContainer: {
+    position: 'relative',
+  },
+  videoPlayButton: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -32 }, { translateY: -32 }],
     marginTop: 12,
     borderRadius: 16,
     overflow: 'hidden',
@@ -919,9 +839,9 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000000',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
   },
@@ -932,16 +852,16 @@ const styles = StyleSheet.create({
   likedBtn: {
     shadowColor: '#43e97b',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
   activeBtn: {
     shadowColor: '#43e97b',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 2,
   },
   pressedBtn: {
     transform: [{ scale: 0.98 }],
@@ -983,17 +903,17 @@ const styles = StyleSheet.create({
   likedText: {
     color: '#ff4444',
     fontFamily: Fonts.bold,
-    textShadowColor: 'rgba(255, 68, 68, 0.4)',
+    textShadowColor: 'rgba(255, 68, 68, 0.2)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    textShadowRadius: 3,
     letterSpacing: 0.2,
   },
   activeText: {
     color: '#43e97b',
     fontFamily: Fonts.bold,
-    textShadowColor: 'rgba(67, 233, 123, 0.4)',
+    textShadowColor: 'rgba(67, 233, 123, 0.2)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    textShadowRadius: 3,
     letterSpacing: 0.2,
   },
   reportBadge: {
@@ -1024,9 +944,9 @@ const styles = StyleSheet.create({
   showRepliesBtn: {
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000000',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
   },
@@ -1088,11 +1008,11 @@ const styles = StyleSheet.create({
   },
   sortToggle: {
     borderRadius: 16,
-    shadowColor: '#000000',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
   },
   sortBlur: {
     borderRadius: 16,
@@ -1119,31 +1039,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     position: 'relative',
   },
-  topReplyBadge: {
-    position: 'absolute',
-    top: -5,
-    right: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    zIndex: 3,
-    shadowColor: '#43e97b',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  topReplyText: {
-    fontSize: FontSizes.xs,
-    fontFamily: Fonts.bold,
-    color: '#000',
-    marginLeft: 4,
-  },
-  topReplyContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 });
 
 // Memoize Post component with custom comparison
@@ -1152,7 +1047,6 @@ export default React.memo(Post, (prevProps, nextProps) => {
   if (prevProps.post.id !== nextProps.post.id ||
       prevProps.post.likes !== nextProps.post.likes ||
       prevProps.post.liked !== nextProps.post.liked ||
-      prevProps.post.bumped !== nextProps.post.bumped ||
       prevProps.post.tips !== nextProps.post.tips ||
       prevProps.post.replies.length !== nextProps.post.replies.length) {
     return false;

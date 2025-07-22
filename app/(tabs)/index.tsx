@@ -1,18 +1,15 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { useRouter, useFocusEffect } from 'expo-router';
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { FlatList, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native';
 
-// Global type declaration for scroll to top and reset functions
-declare global {
-  var scrollToTop: (() => void) | undefined;
-  var resetToGeneral: (() => void) | undefined;
-}
+// Create AnimatedFlatList to support native driver
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 import { useKorusAlert } from '../../components/KorusAlertProvider';
 import { useTheme } from '../../context/ThemeContext';
 import { useWallet } from '../../context/WalletContext';
-import { initialPosts, subtopicData } from '../../data/mockData';
+import { initialPosts } from '../../data/mockData';
 import { Post as PostType, Reply, GameType } from '../../types';
 import { registerForPushNotificationsAsync, setupNotificationListeners } from '../../utils/notifications';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,12 +17,16 @@ import * as SecureStore from 'expo-secure-store';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { logger } from '../../utils/logger';
 
+// Global type declaration for scroll to top and reset functions
+declare global {
+  var scrollToTop: (() => void) | undefined;
+  var resetToGeneral: (() => void) | undefined;
+}
+
 // Components
 import CreatePostModal from '../../components/CreatePostModal';
 import Header from '../../components/Header';
-import MyProfileModal from '../../components/MyProfileModal';
 import Post from '../../components/Post';
-import ProfileModal from '../../components/ProfileModal';
 import ReplyModal from '../../components/ReplyModal';
 import ReportModal from '../../components/ReportModal';
 import TipModal from '../../components/TipModal';
@@ -55,9 +56,6 @@ export default function HomeScreen() {
   const [tipSuccessData, setTipSuccessData] = useState<{ amount: number; username: string } | null>(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showMyProfileModal, setShowMyProfileModal] = useState(false);
-  const [selectedWallet, setSelectedWallet] = useState<string>('');
   const [quotedText, setQuotedText] = useState<string>('');
   const [quotedUsername, setQuotedUsername] = useState<string>('');
   const [newPostContent, setNewPostContent] = useState('');
@@ -148,10 +146,10 @@ export default function HomeScreen() {
     }, [])
   );
 
-  // Handle header collapse with hysteresis to prevent flicker
+  // Update collapse state for other UI elements
   useEffect(() => {
     const shouldCollapse = scrollY > HEADER_COLLAPSE_THRESHOLD;
-    const shouldExpand = scrollY < HEADER_COLLAPSE_THRESHOLD - 20; // 20px hysteresis
+    const shouldExpand = scrollY < HEADER_COLLAPSE_THRESHOLD - 20;
     
     if (shouldCollapse && !headerCollapsed) {
       setHeaderCollapsed(true);
@@ -160,7 +158,7 @@ export default function HomeScreen() {
     }
   }, [scrollY, headerCollapsed]);
 
-  // Handle scroll events with debouncing
+  // Handle scroll events
   const handleScroll = (event: any) => {
     const currentScrollY = event.nativeEvent.contentOffset.y;
     setScrollY(currentScrollY);
@@ -262,8 +260,16 @@ export default function HomeScreen() {
     }
   };
 
-  const handleCreatePost = (category: string, imageUrl?: string) => {
+  const handleCreatePost = (category: string, mediaUrl?: string) => {
     if (newPostContent.trim()) {
+      // Determine if the media is a video based on file extension
+      const isVideo = mediaUrl && (
+        mediaUrl.toLowerCase().endsWith('.mp4') || 
+        mediaUrl.toLowerCase().endsWith('.mov') ||
+        mediaUrl.toLowerCase().endsWith('.avi') ||
+        mediaUrl.toLowerCase().includes('video')
+      );
+      
       const newPost: PostType = {
         id: posts.length + 1,
         wallet: currentUserWallet,
@@ -277,7 +283,8 @@ export default function HomeScreen() {
         bumpedAt: undefined,
         bumpExpiresAt: undefined,
         category: category,
-        imageUrl: imageUrl,
+        imageUrl: isVideo ? undefined : mediaUrl,
+        videoUrl: isVideo ? mediaUrl : undefined,
         isPremium: isPremium,
         userTheme: colors.primary,
         gameData: undefined
@@ -515,8 +522,10 @@ export default function HomeScreen() {
   };
 
   const handleShowProfile = (wallet: string) => {
-    setSelectedWallet(wallet);
-    setShowProfileModal(true);
+    router.push({
+      pathname: '/profile',
+      params: { wallet }
+    });
   };
 
   const handleShowReportModal = (postId: number) => {
@@ -585,6 +594,7 @@ export default function HomeScreen() {
   const sortedPosts = React.useMemo(() => {
     return [...filteredPosts].sort((a, b) => b.id - a.id);
   }, [filteredPosts]);
+  
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -631,95 +641,129 @@ export default function HomeScreen() {
           end={{ x: 0, y: 1 }}
         />
         
-        <Header 
-          onCategoryChange={handleCategoryChange} 
-          isCollapsed={headerCollapsed} 
-          onProfileClick={() => setShowMyProfileModal(true)}
-          selectedCategory={selectedCategory}
-        />
         
         {activeTab === 'games' ? (
-          <View style={[styles.gamesViewContainer, { 
-            paddingTop: headerCollapsed ? insets.top + 16 : (showingSubcategories ? insets.top + 287 : insets.top + 207),
-          }]}>
-            <GamesView
-              posts={posts}
-              currentUserWallet={currentUserWallet}
-              onCreateGame={handleCreateGame}
-            />
-          </View>
-        ) : activeTab === 'events' ? (
-          <View style={[styles.eventsViewContainer, { 
-            paddingTop: headerCollapsed ? insets.top + 16 : (showingSubcategories ? insets.top + 287 : insets.top + 207),
-          }]}>
-            <EventsView />
-          </View>
-        ) : (
-          <FlatList 
+            <View style={styles.gamesViewContainer}>
+              <Header 
+                onCategoryChange={handleCategoryChange} 
+                isCollapsed={false} 
+                onProfileClick={() => {
+                  if (walletAddress) {
+                    router.push({
+                      pathname: '/profile',
+                      params: { wallet: walletAddress }
+                    });
+                  }
+                }}
+                selectedCategory={selectedCategory}
+              />
+              <GamesView
+                posts={posts}
+                currentUserWallet={currentUserWallet}
+                onCreateGame={handleCreateGame}
+              />
+            </View>
+          ) : activeTab === 'events' ? (
+            <View style={styles.eventsViewContainer}>
+              <Header 
+                onCategoryChange={handleCategoryChange} 
+                isCollapsed={false} 
+                onProfileClick={() => {
+                  if (walletAddress) {
+                    router.push({
+                      pathname: '/profile',
+                      params: { wallet: walletAddress }
+                    });
+                  }
+                }}
+                selectedCategory={selectedCategory}
+              />
+              <EventsView />
+            </View>
+          ) : (
+          <AnimatedFlatList 
             ref={flatListRef}
             style={styles.content} 
             contentContainerStyle={[
-              styles.scrollContent, 
-              { 
-                paddingTop: headerCollapsed ? insets.top + 16 : (showingSubcategories ? insets.top + 287 : insets.top + 207),
-              }
+              styles.scrollContent,
             ]}
             showsVerticalScrollIndicator={false}
             onScroll={handleScroll}
             scrollEventThrottle={16}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                tintColor="#00ff88"
-                colors={["#00ff88"]}
-                progressBackgroundColor="rgba(0, 0, 0, 0.8)"
-                progressViewOffset={headerCollapsed ? 60 : 160}
-                enabled={scrollY < 30 && !isScrolling}
-              />
-            }
-            data={sortedPosts}
-            keyExtractor={(item) => {
-              // Include game state in key for game posts to force re-render
-              if (item.gameData) {
-                if (item.gameData.type === 'tictactoe' && item.gameData.board) {
-                  const boardState = item.gameData.board.flat().map(cell => cell || '_').join('');
-                  return `${item.id}-ttt-${item.gameData.status}-${item.gameData.player2 || 'none'}-${boardState}`;
-                }
-                return `${item.id}-${item.gameData.type}-${item.gameData.status}-${item.gameData.player2 || 'none'}`;
-              }
-              return item.id.toString();
-            }}
-            extraData={[posts, expandedPosts, updateCounter]}
-            renderItem={({ item: post }) => (
-              <Post
-                post={{
-                  ...post,
-                  replies: sortReplies(post.replies, getReplySortType(post.id))
+            ListHeaderComponent={() => (
+              <Header 
+                onCategoryChange={handleCategoryChange} 
+                isCollapsed={false} 
+                onProfileClick={() => {
+                  if (walletAddress) {
+                    router.push({
+                      pathname: '/profile',
+                      params: { wallet: walletAddress }
+                    });
+                  }
                 }}
-                expandedPosts={expandedPosts}
-                currentUserWallet={currentUserWallet}
-                currentUserAvatar={selectedAvatar}
-                currentUserNFTAvatar={selectedNFTAvatar}
-                replySortType={getReplySortType(post.id)}
-                onLike={handleLike}
-                onReply={handleReply}
-                onTip={handleTip}
-                onShowTipModal={handleShowTipModal}
-                onLikeReply={handleLikeReply}
-                onTipReply={handleTipReply}
-                onToggleReplies={toggleReplies}
-                onToggleReplySorting={toggleReplySorting}
-                onReport={handleReport}
-                onShowProfile={handleShowProfile}
-                onShowReportModal={handleShowReportModal}
+                selectedCategory={selectedCategory}
               />
             )}
-            initialNumToRender={10}
-            maxToRenderPerBatch={5}
-            windowSize={10}
-            removeClippedSubviews={true}
-          />
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  tintColor={colors.primary}
+                  colors={[colors.primary]}
+                  progressBackgroundColor={isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)'}
+                  progressViewOffset={headerCollapsed ? 60 : 160}
+                  enabled={scrollY < 30 && !isScrolling}
+                />
+              }
+              data={sortedPosts}
+              keyExtractor={(item) => {
+                // Include game state in key for game posts to force re-render
+                if (item.gameData) {
+                  if (item.gameData.type === 'tictactoe' && item.gameData.board) {
+                    const boardState = item.gameData.board.flat().map(cell => cell || '_').join('');
+                    return `${item.id}-ttt-${item.gameData.status}-${item.gameData.player2 || 'none'}-${boardState}`;
+                  }
+                  return `${item.id}-${item.gameData.type}-${item.gameData.status}-${item.gameData.player2 || 'none'}`;
+                }
+                return item.id.toString();
+              }}
+              extraData={[posts, expandedPosts, updateCounter]}
+              renderItem={({ item: post }) => (
+                <Post
+                  post={{
+                    ...post,
+                    replies: sortReplies(post.replies, getReplySortType(post.id))
+                  }}
+                  expandedPosts={expandedPosts}
+                  currentUserWallet={currentUserWallet}
+                  currentUserAvatar={selectedAvatar}
+                  currentUserNFTAvatar={selectedNFTAvatar}
+                  replySortType={getReplySortType(post.id)}
+                  onLike={handleLike}
+                  onReply={handleReply}
+                  onTip={handleTip}
+                  onShowTipModal={handleShowTipModal}
+                  onLikeReply={handleLikeReply}
+                  onTipReply={handleTipReply}
+                  onToggleReplies={toggleReplies}
+                  onToggleReplySorting={toggleReplySorting}
+                  onReport={handleReport}
+                  onShowProfile={handleShowProfile}
+                  onShowReportModal={handleShowReportModal}
+                />
+              )}
+              initialNumToRender={10}
+              maxToRenderPerBatch={10}
+              windowSize={10}
+              removeClippedSubviews={true}
+              updateCellsBatchingPeriod={50}
+              getItemLayout={(data, index) => ({
+                length: 200, // Estimated height of post
+                offset: 200 * index,
+                index,
+              })}
+            />
         )}
 
         {/* Floating Action Button - Only show on non-game tabs */}
@@ -750,7 +794,6 @@ export default function HomeScreen() {
         <CreatePostModal
           visible={showCreatePost}
           content={newPostContent}
-          activeTab={activeTab}
           onClose={() => setShowCreatePost(false)}
           onContentChange={setNewPostContent}
           onSubmit={handleCreatePost}
@@ -785,15 +828,6 @@ export default function HomeScreen() {
           }}
         />
 
-        <ProfileModal
-          visible={showProfileModal}
-          wallet={selectedWallet}
-          allPosts={posts}
-          onClose={() => {
-            setShowProfileModal(false);
-            setSelectedWallet('');
-          }}
-        />
 
         <ReportModal
           visible={showReportModal}
@@ -805,13 +839,6 @@ export default function HomeScreen() {
           postId={selectedPostId || undefined}
         />
 
-        <MyProfileModal
-          visible={showMyProfileModal}
-          allPosts={posts}
-          onClose={() => {
-            setShowMyProfileModal(false);
-          }}
-        />
 
         <TipSuccessModal
           visible={showTipSuccessModal}
@@ -870,6 +897,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   eventsViewContainer: {
+    flex: 1,
+  },
+  feedContainer: {
     flex: 1,
   },
   // Floating Action Button

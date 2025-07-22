@@ -16,7 +16,8 @@ export function useSNSDomain(walletAddress: string | null) {
 
     // Check cache first
     if (domainCache.has(walletAddress)) {
-      setDomain(domainCache.get(walletAddress) || null);
+      const cachedDomain = domainCache.get(walletAddress) || null;
+      setDomain(cachedDomain);
       return;
     }
 
@@ -28,7 +29,6 @@ export function useSNSDomain(walletAddress: string | null) {
         setDomain(snsDomain);
       })
       .catch(error => {
-        console.error('Error fetching SNS domain:', error);
         domainCache.set(walletAddress, null);
         setDomain(null);
       })

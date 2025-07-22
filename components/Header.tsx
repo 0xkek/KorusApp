@@ -18,7 +18,7 @@ interface HeaderProps {
   selectedCategory?: string | null; // New prop to receive selected category from parent
 }
 
-export default function Header({ onCategoryChange, isCollapsed = false, onProfileClick, selectedCategory: parentSelectedCategory }: HeaderProps) {
+function Header({ onCategoryChange, isCollapsed = false, onProfileClick, selectedCategory: parentSelectedCategory }: HeaderProps) {
   const { colors, isDarkMode, gradients, theme } = useTheme();
   const { walletAddress, selectedAvatar, selectedNFTAvatar, snsDomain, isPremium } = useWallet();
   const insets = useSafeAreaInsets();
@@ -26,21 +26,10 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
   const [selectedCategory, setSelectedCategory] = useState<string | null>(parentSelectedCategory || null);
   const [showSettings, setShowSettings] = useState(false);
   
-  
-  // Header slide-up animation
-  const headerTranslateY = useRef(new Animated.Value(0)).current;
-  
   // Create dynamic styles based on theme and safe area
   const styles = React.useMemo(() => createStyles(colors, isDarkMode, insets), [colors, isDarkMode, insets]);
   
-  useEffect(() => {
-    // Slide the entire header up/down
-    Animated.timing(headerTranslateY, {
-      toValue: isCollapsed ? -200 : 0, // Slide up 200px when collapsed
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  }, [isCollapsed, headerTranslateY]);
+  // Header animation is now controlled by parent component
 
   // Sync with parent selected category
   useEffect(() => {
@@ -106,13 +95,10 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
   return (
     <>
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={colors.background} />
-      <Animated.View 
+      <View 
         style={[
           dynamicStyles.container, 
           isCollapsed && styles.containerCollapsed,
-          {
-            transform: [{ translateY: headerTranslateY }],
-          }
         ]}
       >
 
@@ -167,27 +153,29 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
                   <Text style={dynamicStyles.mainTitle}>KORUS</Text>
                   
                   {/* Settings Icon */}
-                  <TouchableOpacity 
-                    style={styles.settingsIconContainer}
-                    activeOpacity={0.8}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      router.push('/settings');
-                    }}
-                  >
-                    <LinearGradient
-                      colors={gradients.primary}
-                      style={styles.settingsIcon}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
+                  <View style={styles.rightIcons}>
+                    <TouchableOpacity 
+                      style={styles.settingsIconContainer}
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        router.push('/settings');
+                      }}
                     >
-                      <Ionicons 
-                        name="settings-outline" 
-                        size={20} 
-                        color={isDarkMode ? '#000' : '#fff'} 
-                      />
-                    </LinearGradient>
-                  </TouchableOpacity>
+                      <LinearGradient
+                        colors={gradients.primary}
+                        style={styles.settingsIcon}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                      >
+                        <Ionicons 
+                          name="settings-outline" 
+                          size={28} 
+                          color={isDarkMode ? '#000' : '#fff'} 
+                        />
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               )}
 
@@ -229,7 +217,7 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
             </LinearGradient>
           </View>
         </View>
-      </Animated.View>
+      </View>
       
       <SettingsModal
         visible={showSettings}
@@ -241,20 +229,15 @@ export default function Header({ onCategoryChange, isCollapsed = false, onProfil
 
 const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleSheet.create({
   container: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    paddingTop: Math.max(insets.top, 20) + 10, // Reduced extra padding to use more space
+    paddingTop: Math.max(insets.top, 20), // Just safe area padding
     paddingHorizontal: 15,
-    paddingBottom: 8,
-    zIndex: 1000,
+    paddingBottom: 10, // Standard bottom padding
   },
   containerCollapsed: {
     paddingBottom: 4,
   },
   mainFrame: {
-    borderRadius: 24,
+    borderRadius: 28, // Slightly larger
     borderWidth: 2,
     borderColor: colors.primary + '99' || 'rgba(67, 233, 123, 0.6)',
     shadowColor: '#000',
@@ -262,39 +245,38 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 3,
-    marginBottom: 10,
-    zIndex: 2,
+    marginBottom: 10, // Standard margin
   },
   blurWrapper: {
-    borderRadius: 24,
+    borderRadius: 28, // Match mainFrame radius
     overflow: 'hidden',
   },
   gradientWrapper: {
-    padding: 20,
+    padding: 24, // Increased padding for bigger header
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 15,
-    height: 50, // Increased height
+    marginBottom: 20, // Increased margin
+    height: 56, // Bigger height
     paddingHorizontal: 15,
   },
   mainTitle: {
-    fontSize: FontSizes['4xl'],
+    fontSize: FontSizes['5xl'], // Bigger font
     fontFamily: Fonts.extraBold,
     color: '#ffffff',
     letterSpacing: -1,
   },
   profileIconContainer: {
-    width: 48,
-    height: 48,
+    width: 52, // Bigger
+    height: 52,
     marginLeft: -20,
   },
   profileIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -309,22 +291,27 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     color: '#000000',
   },
   profileIconEmoji: {
-    fontSize: 20,
+    fontSize: 24, // Bigger to match larger icon
   },
   profileIconNFT: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48, // Adjusted to fit new container
+    height: 48,
+    borderRadius: 24,
   },
-  settingsIconContainer: {
-    width: 40,
-    height: 40,
+  rightIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     marginRight: -20,
   },
+  settingsIconContainer: {
+    width: 52, // Same size as profile icon
+    height: 52,
+  },
   settingsIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -390,3 +377,5 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     color: '#000000',
   },
 });
+
+export default React.memo(Header);

@@ -10,20 +10,13 @@ import { Ionicons } from '@expo/vector-icons';
 
 export default function TabLayout() {
   const { colors, isDarkMode, gradients } = useTheme();
-  const lastTapTime = useRef(0);
-  const DOUBLE_TAP_DELAY = 300; // 300ms for double tap
   const [unreadNotifications, setUnreadNotifications] = useState(2); // Mock unread count
 
   // Global scroll to top function - we'll use event emitter pattern
   const handleHomeTabPress = () => {
-    const now = Date.now();
-    if (now - lastTapTime.current < DOUBLE_TAP_DELAY) {
-      // Double tap detected - trigger scroll to top
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      // Emit custom event for home screen to listen to
-      global.scrollToTop && global.scrollToTop();
-    }
-    lastTapTime.current = now;
+    // Always trigger scroll to top when home is tapped
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    global.scrollToTop && global.scrollToTop();
     
     // Always reset to general category when home is tapped
     global.resetToGeneral && global.resetToGeneral();
