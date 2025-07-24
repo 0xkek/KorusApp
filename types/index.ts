@@ -30,9 +30,6 @@ export interface Reply {
   liked: boolean;
   replies: Reply[];
   tips: number;
-  bumped: boolean;
-  bumpedAt?: number;
-  bumpExpiresAt?: number; // When the bump expires
   depth?: number; // Track nesting depth for visual threading
   parentId?: number; // Track parent reply for threading
   isPremium?: boolean; // Premium user status
@@ -40,7 +37,7 @@ export interface Reply {
 }
 
 export interface Post {
-  id: number;
+  id: number | string;  // Backend returns string IDs
   wallet: string;
   time: string;
   content: string;
@@ -48,9 +45,6 @@ export interface Post {
   replies: Reply[];
   tips: number;
   liked: boolean;
-  bumped: boolean;
-  bumpedAt?: number;
-  bumpExpiresAt?: number; // When the bump expires
   category: string;      // Category field
   sponsored?: boolean;   // Sponsored/paid post flag
   imageUrl?: string;     // Optional image URL

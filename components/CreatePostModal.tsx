@@ -214,9 +214,9 @@ export default function CreatePostModal({
                 >
                   <LinearGradient
                     colors={
-                      !content.trim()
-                        ? gradients.surface
-                        : gradients.button
+                      !content.trim() || isUploading
+                        ? [colors.surface, colors.surface] // Use theme surface color when disabled
+                        : gradients.primary // Use primary gradient for vibrant enabled state
                     }
                     style={styles.postButtonGradient}
                     start={{ x: 0, y: 0 }}
@@ -224,7 +224,7 @@ export default function CreatePostModal({
                   >
                     <Text style={[
                       styles.postButtonText,
-                      { color: (!content.trim() || isUploading) ? colors.textSecondary : (isDarkMode ? '#000000' : '#000000') },
+                      { color: (!content.trim() || isUploading) ? colors.textTertiary : '#000000' }, // Always black text on bright gradient
                       (!content.trim() || isUploading) && styles.postButtonTextDisabled
                     ]}>
                       {isUploading ? 'Uploading...' : 'Share'}
@@ -402,7 +402,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   postButtonDisabled: {
-    opacity: 0.6,
+    opacity: 0.7,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   postButtonGradient: {
     borderRadius: 20,

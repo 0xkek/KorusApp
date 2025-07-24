@@ -30,6 +30,7 @@ interface WalletContextType {
   setFavoriteSNSDomain: (domain: string) => Promise<void>;
   setPremiumStatus: (status: boolean) => void;
   setTimeFunUsername: (username: string | null) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -156,9 +157,13 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         // Import the auth API
         const { authAPI } = await import('../utils/api');
         
+        logger.log('Attempting to authenticate with backend...');
+        logger.log('Wallet address:', mockPublicKey);
+        
         // Authenticate with backend
         const authResult = await authAPI.connectWallet(mockPublicKey, mockSignature, mockMessage);
         logger.log('Authentication successful:', authResult);
+        logger.log('Token received:', authResult.token ? 'Yes' : 'No');
         
         // Store wallet info
         await SecureStore.setItemAsync(WALLET_KEY, mockSecretKey);
@@ -167,14 +172,19 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         // Update state with backend data
         setWalletAddress(mockPublicKey);
         setHasWallet(true);
-        setBalance(authResult.user?.allyBalance || 5000);
+        // Parse balance as number since backend returns it as string
+        const backendBalance = parseFloat(authResult.user?.allyBalance || '5000');
+        setBalance(isNaN(backendBalance) ? 5000 : backendBalance);
         setIsPremium(authResult.user?.tier === 'premium');
+        
+        logger.log('Wallet created successfully with backend authentication');
       } catch (error) {
         logger.error('Backend authentication failed, using offline mode:', error);
         
         // Fallback to offline mode
         await SecureStore.setItemAsync(WALLET_KEY, mockSecretKey);
         await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, mockPublicKey);
+        await SecureStore.setItemAsync(OFFLINE_MODE_KEY, 'true');
         
         setWalletAddress(mockPublicKey);
         setHasWallet(true);
@@ -334,6 +344,38 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     }
   };
 
+  const logout = async () => {
+    try {
+      logger.log('Logging out and clearing all wallet data');
+      
+      // Clear all secure storage
+      await SecureStore.deleteItemAsync(WALLET_KEY);
+      await SecureStore.deleteItemAsync(WALLET_ADDRESS_KEY);
+      await SecureStore.deleteItemAsync(AVATAR_KEY);
+      await SecureStore.deleteItemAsync(NFT_AVATAR_KEY);
+      await SecureStore.deleteItemAsync(FAVORITE_SNS_KEY);
+      await SecureStore.deleteItemAsync(PREMIUM_STATUS_KEY);
+      await SecureStore.deleteItemAsync(TIMEFUN_USERNAME_KEY);
+      await SecureStore.deleteItemAsync(OFFLINE_MODE_KEY);
+      
+      // Reset all state
+      setWalletAddress(null);
+      setBalance(0);
+      setHasWallet(false);
+      setSelectedAvatarState(null);
+      setSelectedNFTAvatarState(null);
+      setSnsDomain(null);
+      setAllSNSDomains([]);
+      setIsPremium(false);
+      setTimeFunUsernameState(null);
+      
+      logger.log('Logout complete');
+    } catch (error) {
+      logger.error('Error during logout:', error);
+      throw error;
+    }
+  };
+
   const contextValue = useMemo(
     () => ({
       walletAddress,
@@ -357,6 +399,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       setFavoriteSNSDomain,
       setPremiumStatus,
       setTimeFunUsername,
+      logout,
     }),
     [
       walletAddress,

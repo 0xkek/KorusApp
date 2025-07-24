@@ -69,7 +69,7 @@ interface PostProps {
   currentUserAvatar?: string | null;
   currentUserNFTAvatar?: any | null;
   replySortType?: 'best' | 'recent';
-  onLike: (postId: number) => void;
+  onLike: (postId: number | string) => void;
   onReply: (postId: number, quotedText?: string, quotedUsername?: string) => void;
   onTip: (postId: number, amount: number) => void;
   onShowTipModal: (postId: number) => void;
@@ -176,17 +176,14 @@ function Post({
   const handleDoubleTap = (event?: any) => {
     const now = Date.now();
     if (now - lastTapTime.current < DOUBLE_TAP_DELAY) {
-      // Double tap detected - trigger like only if not already liked
-      if (!post.liked) {
-        onLike(post.id);
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        
-        // Trigger particle explosion for double-tap like
-        if (event && global.createParticleExplosion) {
-          const touch = event.nativeEvent;
-          global.createParticleExplosion('like', touch.pageX || 200, touch.pageY || 300);
-        }
+      // Double tap detected - prevent if already processing a like
+      if (isLiking.current) {
+        return;
       }
+      
+      // Allow both like and unlike via double-tap
+      handleLike(event);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     lastTapTime.current = now;
   };
@@ -218,7 +215,17 @@ function Post({
   };
 
 
+  // Add a ref to track if like is in progress
+  const isLiking = useRef(false);
+
   const handleLike = (event?: any) => {
+    // Prevent multiple rapid clicks
+    if (isLiking.current) {
+      return;
+    }
+    
+    isLiking.current = true;
+    
     // Only trigger particle explosion when adding a like, not removing it
     const isAddingLike = !post.liked;
     
@@ -229,6 +236,11 @@ function Post({
       const touch = event.nativeEvent;
       global.createParticleExplosion('like', touch.pageX || 200, touch.pageY || 300);
     }
+    
+    // Reset the flag after a delay
+    setTimeout(() => {
+      isLiking.current = false;
+    }, 100);
     
     // Send notification if not liking own post
     if (post.wallet !== currentUserWallet) {

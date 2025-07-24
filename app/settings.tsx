@@ -17,7 +17,7 @@ const HIDE_GAME_POSTS_KEY = 'korus_hide_game_posts';
 export default function SettingsScreen() {
   const router = useRouter();
   const { colors, isDarkMode, gradients, colorScheme, setColorScheme, isColorSchemeLocked, toggleDarkMode } = useTheme();
-  const { isPremium, setPremiumStatus } = useWallet();
+  const { isPremium, setPremiumStatus, logout } = useWallet();
   const [hideSponsoredPosts, setHideSponsoredPosts] = useState(false);
   const [hideGamePosts, setHideGamePosts] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -25,6 +25,7 @@ export default function SettingsScreen() {
   const [showFAQModal, setShowFAQModal] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [showAdsModal, setShowAdsModal] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Load saved preferences
   React.useEffect(() => {
@@ -469,6 +470,42 @@ export default function SettingsScreen() {
             </BlurView>
           </View>
 
+          {/* Account */}
+          <View style={[styles.sectionWrapper, {
+            shadowColor: colors.primary,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 12,
+            elevation: 6,
+          }]}>
+            <BlurView intensity={25} style={styles.sectionBlur}>
+              <LinearGradient
+                colors={gradients.surface}
+                style={[styles.sectionGradient, { borderColor: colors.primary + '4D' }]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Account</Text>
+                
+                {/* Logout */}
+                <TouchableOpacity
+                  style={[styles.supportRow, { borderBottomWidth: 0 }]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setShowLogoutConfirm(true);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.supportInfo}>
+                    <Ionicons name="log-out-outline" size={24} color={colors.error || '#FF4444'} />
+                    <Text style={[styles.supportLabel, { color: colors.error || '#FF4444' }]}>Logout</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+                </TouchableOpacity>
+              </LinearGradient>
+            </BlurView>
+          </View>
+
           {/* Support & Information */}
           <View style={[styles.sectionWrapper, {
             shadowColor: colors.primary,
@@ -847,6 +884,67 @@ export default function SettingsScreen() {
                           <Text style={[styles.contactDescription, { color: colors.textSecondary }]}>Contact our advertising team to discuss your campaign goals and pricing.</Text>
                         </View>
                       </ScrollView>
+                    </LinearGradient>
+                  </BlurView>
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+
+        {/* Logout Confirmation Modal */}
+        <Modal
+          visible={showLogoutConfirm}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowLogoutConfirm(false)}
+        >
+          <TouchableWithoutFeedback onPress={() => setShowLogoutConfirm(false)}>
+            <View style={styles.modalOverlay}>
+              <TouchableWithoutFeedback>
+                <View style={styles.modalContent}>
+                  <BlurView intensity={60} style={styles.modalBlur}>
+                    <LinearGradient
+                      colors={gradients.surface}
+                      style={styles.modalGradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <View style={styles.modalBody}>
+                        <Ionicons name="log-out-outline" size={48} color={colors.error || '#FF4444'} style={{ alignSelf: 'center', marginBottom: 16 }} />
+                        
+                        <Text style={[styles.modalTitle, { color: colors.text, textAlign: 'center', fontSize: FontSizes.xl }]}>
+                          Logout from Korus?
+                        </Text>
+                        
+                        <Text style={[styles.modalSubtitle, { color: colors.textSecondary, marginBottom: 32 }]}>
+                          This will clear your wallet data and you'll need to create a new wallet to use the app again.
+                        </Text>
+                        
+                        <TouchableOpacity
+                          style={[styles.subscribeButton, { marginBottom: 12 }]}
+                          onPress={async () => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                            setShowLogoutConfirm(false);
+                            await logout();
+                            router.replace('/');
+                          }}
+                          activeOpacity={0.8}
+                        >
+                          <View style={[styles.subscribeButtonGradient, { backgroundColor: colors.error || '#FF4444' }]}>
+                            <Text style={[styles.subscribeButtonText, { color: '#fff' }]}>Logout</Text>
+                          </View>
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity
+                          style={styles.cancelButton}
+                          onPress={() => setShowLogoutConfirm(false)}
+                        >
+                          <Text style={[styles.cancelButtonText, { color: colors.textSecondary }]}>
+                            Cancel
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
                     </LinearGradient>
                   </BlurView>
                 </View>

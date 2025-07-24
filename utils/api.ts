@@ -14,34 +14,62 @@ const api: AxiosInstance = axios.create({
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
+  // Add withCredentials for CORS
+  withCredentials: false, // Set to false for cross-origin requests without cookies
 });
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
   async (config) => {
     try {
-      const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      // Skip auth header for GET requests to /posts
+      const isPostsGet = config.method?.toLowerCase() === 'get' && config.url?.includes('/posts');
+      
+      if (!isPostsGet) {
+        const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
+        
+        // Only add Authorization header if we have a valid token
+        if (token && token !== 'null' && token !== 'undefined') {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
       }
+      
+      // Log the request for debugging
+      logger.log('API Request:', {
+        url: config.url,
+        method: config.method,
+        baseURL: config.baseURL,
+        headers: config.headers,
+        skippedAuth: isPostsGet,
+      });
     } catch (error) {
       logger.error('Error retrieving auth token:', error);
     }
     return config;
   },
   (error) => {
+    logger.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
 // Response interceptor for error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    logger.log('API Response:', {
+      url: response.config.url,
+      status: response.status,
+      data: response.data,
+    });
+    return response;
+  },
   async (error: AxiosError) => {
     if (error.response?.status === 401) {
       // Token expired or invalid - clear it
       await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
+      logger.warn('401 Unauthorized - Token cleared');
       // TODO: Redirect to login or trigger re-authentication
     }
     
@@ -50,7 +78,9 @@ api.interceptors.response.use(
       url: error.config?.url,
       method: error.config?.method,
       status: error.response?.status,
+      statusText: error.response?.statusText,
       data: error.response?.data,
+      message: error.message,
     });
     
     return Promise.reject(error);
@@ -111,11 +141,6 @@ export const postsAPI = {
     const response = await api.post('/posts', data);
     return response.data;
   },
-  
-  async bumpPost(id: string) {
-    const response = await api.put(`/posts/${id}/bump`);
-    return response.data;
-  },
 };
 
 // Replies API
@@ -153,6 +178,13 @@ export const interactionsAPI = {
   
   async getPostInteractions(postId: string) {
     const response = await api.get(`/interactions/posts/${postId}`);
+    return response.data;
+  },
+  
+  async getUserInteractions(postIds: (string | number)[]) {
+    const response = await api.post('/interactions/user', { 
+      postIds: postIds.map(id => String(id)) 
+    });
     return response.data;
   },
 };

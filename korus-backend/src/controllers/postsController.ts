@@ -89,47 +89,14 @@ export const getPosts = async (req: Request, res: Response) => {
           }
         }
       },
-      orderBy: [
-        // First, prioritize bumped posts that are still active
-        {
-          bumpExpiresAt: {
-            sort: 'desc',
-            nulls: 'last'
-          }
-        },
-        // Then chronological order
-        { createdAt: 'desc' }
-      ],
+      orderBy: { createdAt: 'desc' },
       take: Number(limit),
       skip: Number(offset)
     })
 
-    // Process posts to check if bumps are still active
-    const processedPosts = posts.map(post => {
-      const isBumpActive = post.bumpExpiresAt && now < post.bumpExpiresAt
-      
-      return {
-        ...post,
-        isBumpActive,
-        bumpTimeRemaining: isBumpActive 
-          ? Math.max(0, Math.floor((post.bumpExpiresAt!.getTime() - now.getTime()) / 1000))
-          : 0
-      }
-    })
-
-    // Sort again to ensure bumped posts are truly at the top
-    processedPosts.sort((a, b) => {
-      if (a.isBumpActive && !b.isBumpActive) return -1
-      if (!a.isBumpActive && b.isBumpActive) return 1
-      if (a.isBumpActive && b.isBumpActive) {
-        return b.bumpedAt!.getTime() - a.bumpedAt!.getTime()
-      }
-      return b.createdAt.getTime() - a.createdAt.getTime()
-    })
-
     res.json({
       success: true,
-      posts: processedPosts,
+      posts: posts,
       pagination: {
         limit: Number(limit),
         offset: Number(offset),
@@ -142,84 +109,6 @@ export const getPosts = async (req: Request, res: Response) => {
   }
 }
 
-export const bumpPost = async (req: AuthRequest, res: Response) => {
-  try {
-    const { id } = req.params
-    const walletAddress = req.userWallet!
-    const now = new Date()
-    const bumpExpiresAt = new Date(now.getTime() + 5 * 60 * 1000) // 5 minutes
-
-    // Check if post exists
-    const post = await prisma.post.findUnique({
-      where: { id }
-    })
-
-    if (!post) {
-      return res.status(404).json({ error: 'Post not found' })
-    }
-
-    // Check if post is already bumped and still active
-    if (post.bumpExpiresAt && now < post.bumpExpiresAt) {
-      const timeRemaining = Math.floor((post.bumpExpiresAt.getTime() - now.getTime()) / 1000)
-      return res.status(400).json({
-        error: 'Post is already bumped',
-        timeRemaining
-      })
-    }
-
-    // Update post with new bump
-    const updatedPost = await prisma.post.update({
-      where: { id },
-      data: {
-        bumped: true,
-        bumpedAt: now,
-        bumpExpiresAt,
-        bumpCount: { increment: 1 }
-      },
-      include: {
-        author: {
-          select: {
-            walletAddress: true,
-            tier: true,
-            genesisVerified: true
-          }
-        }
-      }
-    })
-
-    // Record the bump interaction
-    await prisma.interaction.upsert({
-      where: {
-        userWallet_targetId_interactionType: {
-          userWallet: walletAddress,
-          targetId: id,
-          interactionType: 'bump'
-        }
-      },
-      update: {
-        createdAt: now
-      },
-      create: {
-        userWallet: walletAddress,
-        targetType: 'post',
-        targetId: id,
-        interactionType: 'bump'
-      }
-    })
-
-    console.log(`Post ${id} bumped by ${walletAddress} for 5 minutes`)
-
-    res.json({
-      success: true,
-      post: updatedPost,
-      bumpExpiresAt,
-      message: 'Post bumped to top for 5 minutes'
-    })
-  } catch (error) {
-    console.error('Bump post error:', error)
-    res.status(500).json({ error: 'Failed to bump post' })
-  }
-}
 
 export const getSinglePost = async (req: Request, res: Response) => {
   try {
@@ -254,20 +143,9 @@ export const getSinglePost = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Post not found' })
     }
 
-    // Check if bump is still active
-    const now = new Date()
-    const isBumpActive = post.bumpExpiresAt && now < post.bumpExpiresAt
-    const bumpTimeRemaining = isBumpActive 
-      ? Math.max(0, Math.floor((post.bumpExpiresAt!.getTime() - now.getTime()) / 1000))
-      : 0
-
     res.json({
       success: true,
-      post: {
-        ...post,
-        isBumpActive,
-        bumpTimeRemaining
-      }
+      post: post
     })
   } catch (error) {
     console.error('Get single post error:', error)

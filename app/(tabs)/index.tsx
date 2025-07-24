@@ -19,7 +19,7 @@ import { logger } from '../../utils/logger';
 import { reputationService } from '../../services/reputation';
 import { Fonts, FontSizes } from '../../constants/Fonts';
 import { useLoadPosts } from '../../hooks/useLoadPosts';
-import { postsAPI, authAPI } from '../../utils/api';
+import { postsAPI, authAPI, interactionsAPI, repliesAPI } from '../../utils/api';
 import { testBackendConnection } from '../../utils/testApi';
 
 // Global type declaration for scroll to top and reset functions
@@ -73,6 +73,8 @@ export default function HomeScreen() {
   const [showingSubcategories, setShowingSubcategories] = useState(false);
   const [hideSponsoredPosts, setHideSponsoredPosts] = useState(false);
   const [updateCounter, setUpdateCounter] = useState(0); // Force re-renders
+  const [likingPosts, setLikingPosts] = useState<Set<string | number>>(new Set());
+  const [isCreatingPost, setIsCreatingPost] = useState(false); // Track posts being liked
   
   // Reply sorting state - track sorting preference per post
   const [replySortPreferences, setReplySortPreferences] = useState<Record<number, ReplySortType>>({});
@@ -275,8 +277,11 @@ export default function HomeScreen() {
   };
 
   const handleCreatePost = async (category: string, mediaUrl?: string) => {
-    if (newPostContent.trim()) {
+    if (newPostContent.trim() && !isCreatingPost) {
       try {
+        // Prevent multiple submissions
+        setIsCreatingPost(true);
+        
         // Check if user is authenticated first
         if (!walletAddress) {
           showAlert({
@@ -284,6 +289,7 @@ export default function HomeScreen() {
             message: 'Please connect your wallet first',
             type: 'error'
           });
+          setIsCreatingPost(false);
           return;
         }
 
@@ -304,23 +310,21 @@ export default function HomeScreen() {
           videoUrl: isVideo ? mediaUrl : undefined,
         });
 
-        // Add the new post to the local state
+        // Transform backend post to app format
+        const backendPost = response.post;
         const newPost: PostType = {
-          id: response.id,
-          wallet: currentUserWallet,
-          time: 'now',
-          content: newPostContent,
-          likes: 0,
+          id: backendPost.id,
+          wallet: backendPost.authorWallet || backendPost.author?.walletAddress || currentUserWallet,
+          time: new Date(backendPost.createdAt).toLocaleDateString(),
+          content: backendPost.content,
+          likes: backendPost.likeCount || 0,
           replies: [],
-          tips: 0,
+          tips: backendPost.tipCount || 0,
           liked: false,
-          bumped: false,
-          bumpedAt: undefined,
-          bumpExpiresAt: undefined,
-          category: category,
-          imageUrl: isVideo ? undefined : mediaUrl,
-          videoUrl: isVideo ? mediaUrl : undefined,
-          isPremium: isPremium,
+          category: backendPost.subtopic || category,
+          imageUrl: backendPost.imageUrl || (isVideo ? undefined : mediaUrl),
+          videoUrl: backendPost.videoUrl || (isVideo ? mediaUrl : undefined),
+          isPremium: backendPost.author?.tier === 'premium' || isPremium,
           userTheme: colors.primary,
           gameData: undefined
         };
@@ -346,6 +350,8 @@ export default function HomeScreen() {
           message: 'Failed to create post. Please try again.',
           type: 'error'
         });
+      } finally {
+        setIsCreatingPost(false);
       }
     }
   };
@@ -378,9 +384,6 @@ export default function HomeScreen() {
       replies: [],
       tips: 0,
       liked: false,
-      bumped: false,
-      bumpedAt: undefined,
-      bumpExpiresAt: undefined,
       category: 'GAMES',
       isPremium: isPremium,
       userTheme: colors.primary,
@@ -411,89 +414,180 @@ export default function HomeScreen() {
 
   const handleCreateReply = async () => {
     if (newReplyContent.trim() && selectedPostId) {
-      let replyContent = newReplyContent;
+      try {
+        let replyContent = newReplyContent;
 
-      // Add quote if replying to a specific comment
-      if (quotedText && quotedUsername) {
-        replyContent = `> "${quotedText}"\n\n${newReplyContent}`;
+        // Add quote if replying to a specific comment
+        if (quotedText && quotedUsername) {
+          replyContent = `> "${quotedText}"\n\n${newReplyContent}`;
+        }
+
+        // Call the API to create the reply
+        const response = await repliesAPI.createReply(String(selectedPostId), {
+          content: replyContent
+        });
+
+        // Transform the backend reply to match frontend format
+        const newReply: Reply = {
+          id: response.reply.id,
+          wallet: response.reply.authorWallet || walletAddress || '',
+          time: new Date(response.reply.createdAt).toLocaleDateString(),
+          content: response.reply.content,
+          likes: 0,
+          liked: false,
+          tips: 0,
+          replies: [],
+          isPremium: response.reply.author?.tier === 'premium',
+          userTheme: colors.primary
+        };
+        
+        const post = posts.find(p => p.id === selectedPostId);
+
+        setPosts(posts.map(post =>
+          post.id === selectedPostId
+            ? { ...post, replies: [...post.replies, newReply] }
+            : post
+        ));
+
+        setExpandedPosts(prev => new Set([...prev, selectedPostId]));
+        setNewReplyContent('');
+        setQuotedText('');
+        setQuotedUsername('');
+        setShowReplyModal(false);
+        
+        // Track reputation for comments
+        if (walletAddress) {
+          await reputationService.onCommentMade(walletAddress);
+          if (post && post.wallet !== walletAddress) {
+            await reputationService.onCommentReceived(post.wallet);
+          }
+        }
+        
+        // Keep selectedPostId so user can reply multiple times to the same post
+        showAlert({
+          title: 'Success',
+          message: 'Your reply has been posted!',
+          type: 'success'
+        });
+      } catch (error: any) {
+        logger.error('Failed to create reply:', error);
+        showAlert({
+          title: 'Error',
+          message: error.response?.data?.error || 'Failed to post reply',
+          type: 'error'
+        });
       }
+    }
+  };
 
-      const newReply: Reply = {
-        id: Date.now(),
-        wallet: currentUserWallet,
-        time: 'now',
-        content: replyContent,
-        likes: 0,
-        liked: false,
-        tips: 0,
-        replies: [],
-        bumped: false,
-        bumpedAt: undefined,
-        bumpExpiresAt: undefined,
-        isPremium: isPremium,
-        userTheme: colors.primary
-      };
+  const handleLike = async (postId: number | string) => {
+    // Prevent multiple clicks
+    if (likingPosts.has(postId)) {
+      return;
+    }
+    
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    // Mark this post as being liked FIRST
+    setLikingPosts(prev => {
+      const newSet = new Set(prev);
+      newSet.add(postId);
+      logger.log('Added to likingPosts:', postId, 'Set size:', newSet.size);
+      return newSet;
+    });
+    
+    const post = posts.find(p => String(p.id) === String(postId));
+    if (!post) {
+      logger.error('Post not found:', postId, 'Available posts:', posts.map(p => p.id));
+      // Remove from liking set if post not found
+      setLikingPosts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(postId);
+        return newSet;
+      });
+      return;
+    }
+    
+    const wasLiked = post.liked;
+    const originalLikes = post.likes;
+    logger.log('Like action started - Post:', postId, 'Was liked:', wasLiked, 'Original likes:', originalLikes, 'Current posts:', posts.map(p => ({ id: p.id, liked: p.liked })));
+    
+    // Optimistically update UI
+    setPosts(prevPosts => {
+      const updatedPosts = prevPosts.map(p =>
+        String(p.id) === String(postId)
+          ? {
+              ...p,
+              liked: !wasLiked,
+              likes: wasLiked ? originalLikes - 1 : originalLikes + 1
+            }
+          : p
+      );
+      logger.log('Optimistic update - Post:', postId, 'New liked state:', !wasLiked, 'New likes:', wasLiked ? originalLikes - 1 : originalLikes + 1);
+      return updatedPosts;
+    });
+    
+    try {
+      // Call the API
+      const response = await interactionsAPI.likePost(String(postId));
+      logger.log('Like response:', response);
       
-      const post = posts.find(p => p.id === selectedPostId);
-
-      setPosts(posts.map(post =>
-        post.id === selectedPostId
-          ? { ...post, replies: [...post.replies, newReply] }
-          : post
-      ));
-
-      setExpandedPosts(prev => new Set([...prev, selectedPostId]));
-      setNewReplyContent('');
-      setQuotedText('');
-      setQuotedUsername('');
-      setShowReplyModal(false);
-      
-      // Track reputation for comments
-      if (walletAddress) {
-        await reputationService.onCommentMade(walletAddress);
-        if (post && post.wallet !== walletAddress) {
-          await reputationService.onCommentReceived(post.wallet);
+      // Track reputation if someone liked a post
+      if (walletAddress && !wasLiked && response.liked) {
+        await reputationService.onLikeGiven(walletAddress);
+        if (post.wallet !== walletAddress) {
+          await reputationService.onLikeReceived(post.wallet);
         }
       }
       
-      // Keep selectedPostId so user can reply multiple times to the same post
+      // Update state based on server response
+      logger.log('Like completed successfully. Server says liked:', response.liked);
+      
+      // Always trust the server response for liked status
+      setPosts(prevPosts => prevPosts.map(p =>
+        String(p.id) === String(postId)
+          ? {
+              ...p,
+              liked: response.liked
+            }
+          : p
+      ));
+    } catch (error) {
+      logger.error('Failed to like post:', error);
+      
+      // Revert to original state on error
+      setPosts(prevPosts => prevPosts.map(p =>
+        String(p.id) === String(postId)
+          ? {
+              ...p,
+              liked: wasLiked,
+              likes: originalLikes
+            }
+          : p
+      ));
+      
       showAlert({
-        title: 'Success',
-        message: 'Your reply has been posted!',
-        type: 'success'
+        title: 'Error',
+        message: 'Failed to like post. Please try again.',
+        type: 'error'
       });
+    } finally {
+      // Remove from liking set with a small delay to prevent rapid re-clicks
+      setTimeout(() => {
+        setLikingPosts(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(postId);
+          logger.log('Removed from likingPosts:', postId, 'Set size after removal:', newSet.size - 1);
+          return newSet;
+        });
+      }, 100); // Reduced delay for better responsiveness
     }
   };
 
-  const handleLike = async (postId: number) => {
+  const handleLikeReply = async (postId: number, replyId: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
-    const post = posts.find(p => p.id === postId);
-    if (!post) return;
-    
-    const wasLiked = post.liked;
-    
-    setPosts(prevPosts => prevPosts.map(post =>
-      post.id === postId
-        ? {
-            ...post,
-            liked: !post.liked,
-            likes: post.liked ? post.likes - 1 : post.likes + 1
-          }
-        : post
-    ));
-    
-    // Track reputation for likes
-    if (walletAddress && !wasLiked) {
-      await reputationService.onLikeGiven(walletAddress);
-      if (post.wallet !== walletAddress) {
-        await reputationService.onLikeReceived(post.wallet);
-      }
-    }
-  };
-
-  const handleLikeReply = (postId: number, replyId: number) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Optimistically update UI
     setPosts(prevPosts => prevPosts.map(post =>
       post.id === postId
         ? {
@@ -502,6 +596,37 @@ export default function HomeScreen() {
           }
         : post
     ));
+
+    try {
+      // Call the API to like/unlike the reply
+      const response = await repliesAPI.likeReply(String(replyId));
+      
+      // Update the reply's liked status based on API response
+      setPosts(prevPosts => prevPosts.map(post =>
+        post.id === postId
+          ? {
+              ...post,
+              replies: updateReplyLikedStatus(post.replies, replyId, response.liked)
+            }
+          : post
+      ));
+    } catch (error: any) {
+      logger.error('Failed to like reply:', error);
+      // Revert optimistic update on error
+      setPosts(prevPosts => prevPosts.map(post =>
+        post.id === postId
+          ? {
+              ...post,
+              replies: updateReplyLikes(post.replies, replyId)
+            }
+          : post
+      ));
+      showAlert({
+        title: 'Error',
+        message: 'Failed to like reply',
+        type: 'error'
+      });
+    }
   };
 
   const updateReplyLikes = (replies: Reply[], targetId: number): Reply[] => {
@@ -515,6 +640,21 @@ export default function HomeScreen() {
       }
       if (reply.replies.length > 0) {
         return { ...reply, replies: updateReplyLikes(reply.replies, targetId) };
+      }
+      return reply;
+    });
+  };
+
+  const updateReplyLikedStatus = (replies: Reply[], targetId: number, liked: boolean): Reply[] => {
+    return replies.map(reply => {
+      if (reply.id === targetId) {
+        return {
+          ...reply,
+          liked: liked
+        };
+      }
+      if (reply.replies.length > 0) {
+        return { ...reply, replies: updateReplyLikedStatus(reply.replies, targetId, liked) };
       }
       return reply;
     });
@@ -569,16 +709,55 @@ export default function HomeScreen() {
   };
 
 
-  const toggleReplies = (postId: number) => {
+  const toggleReplies = async (postId: number) => {
     setExpandedPosts(prev => {
       const newSet = new Set(prev);
       if (newSet.has(postId)) {
         newSet.delete(postId);
       } else {
         newSet.add(postId);
+        
+        // Fetch all replies for this post when expanding
+        fetchAllReplies(postId);
       }
       return newSet;
     });
+  };
+
+  const fetchAllReplies = async (postId: number) => {
+    try {
+      const response = await repliesAPI.getReplies(String(postId));
+      
+      if (response.replies && response.replies.length > 0) {
+        // Transform backend replies to frontend format
+        const transformedReplies = response.replies.map((reply: any) => ({
+          id: reply.id,
+          wallet: reply.authorWallet || reply.author?.walletAddress || 'Unknown',
+          time: new Date(reply.createdAt).toLocaleDateString(),
+          content: reply.content,
+          likes: reply.likeCount || 0,
+          liked: false, // TODO: Check if user liked this reply
+          tips: reply.tipCount || 0,
+          replies: [], // Nested replies not supported yet
+          isPremium: reply.author?.tier === 'premium',
+          userTheme: undefined
+        }));
+        
+        // Update the post with all replies
+        setPosts(prevPosts => prevPosts.map(post =>
+          post.id === postId
+            ? { ...post, replies: transformedReplies }
+            : post
+        ));
+      }
+    } catch (error: any) {
+      logger.error('Failed to fetch replies:', error);
+      showAlert({
+        title: 'Error',
+        message: 'Failed to load replies',
+        type: 'error'
+      });
+    }
   };
 
 
@@ -820,7 +999,7 @@ export default function HomeScreen() {
                   }
                   return `${item.id}-${item.gameData.type}-${item.gameData.status}-${item.gameData.player2 || 'none'}`;
                 }
-                return item.id.toString();
+                return String(item.id);
               }}
               extraData={[posts, expandedPosts, updateCounter]}
               renderItem={({ item: post }) => (

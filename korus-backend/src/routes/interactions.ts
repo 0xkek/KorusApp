@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { getPostInteractions, likePost, tipPost } from '../controllers/interactionsController'
+import { getPostInteractions, likePost, tipPost, getUserInteractions } from '../controllers/interactionsController'
 import { authenticate } from '../middleware/auth'
 
 const router = Router()
@@ -12,5 +12,8 @@ router.post('/posts/:id/tip', authenticate, tipPost)
 
 // GET /api/interactions/posts/:id - Get all interactions for a post
 router.get('/posts/:id', getPostInteractions)
+
+// POST /api/interactions/user - Get user's interactions for multiple posts
+router.post('/user', authenticate, getUserInteractions)
 
 export default router

@@ -19,9 +19,12 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
   const { colors, isDarkMode, gradients } = useTheme();
   const [tipAmount, setTipAmount] = useState('');
 
+  // Ensure walletBalance is a valid number
+  const safeBalance = typeof walletBalance === 'number' ? walletBalance : 0;
+
   // Check if entered amount exceeds balance
   const enteredAmount = parseFloat(tipAmount) || 0;
-  const isInsufficient = enteredAmount > walletBalance;
+  const isInsufficient = enteredAmount > safeBalance;
   const isValidAmount = enteredAmount > 0 && !isInsufficient;
 
   const handleAmountChange = (text: string) => {
@@ -91,7 +94,7 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
               </View>
               <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Enter amount in $ALLY tokens</Text>
               <Text style={[styles.balanceText, { color: colors.primary, textShadowColor: `${colors.primary}66` }]}>
-                Balance: {walletBalance.toFixed(2)} $ALLY
+                Balance: {safeBalance.toFixed(2)} $ALLY
               </Text>
             </View>
 
@@ -131,7 +134,7 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
             {isInsufficient && tipAmount && (
               <View style={[styles.warningContainer, { backgroundColor: `${colors.error}1A`, borderColor: `${colors.error}4D` }]}>
                 <Text style={[styles.warningText, { color: colors.error }]}>
-                  ⚠️ Insufficient funds. You can tip up to {walletBalance.toFixed(2)} $ALLY
+                  ⚠️ Insufficient funds. You can tip up to {safeBalance.toFixed(2)} $ALLY
                 </Text>
               </View>
             )}

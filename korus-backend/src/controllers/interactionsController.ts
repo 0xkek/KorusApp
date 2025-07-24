@@ -130,8 +130,7 @@ export const getPostInteractions = async (req: Request, res: Response) => {
     // Group by type
     const grouped = {
       likes: interactions.filter(i => i.interactionType === 'like'),
-      tips: interactions.filter(i => i.interactionType === 'tip'),
-      bumps: interactions.filter(i => i.interactionType === 'bump')
+      tips: interactions.filter(i => i.interactionType === 'tip')
     }
 
     res.json({
@@ -140,12 +139,75 @@ export const getPostInteractions = async (req: Request, res: Response) => {
       summary: {
         totalLikes: grouped.likes.length,
         totalTips: grouped.tips.length,
-        totalBumps: grouped.bumps.length,
         totalTipAmount: grouped.tips.reduce((sum, tip) => sum + Number(tip.amount || 0), 0)
       }
     })
   } catch (error) {
     console.error('Get interactions error:', error)
     res.status(500).json({ error: 'Failed to get interactions' })
+  }
+}
+
+export const getUserInteractions = async (req: AuthRequest, res: Response) => {
+  try {
+    const walletAddress = req.userWallet!
+    const { postIds } = req.body
+
+    if (!postIds || !Array.isArray(postIds)) {
+      return res.status(400).json({ error: 'postIds array is required' })
+    }
+
+    // Get all user's interactions for the specified posts
+    const interactions = await prisma.interaction.findMany({
+      where: {
+        userWallet: walletAddress,
+        targetId: {
+          in: postIds.map(id => String(id))
+        },
+        targetType: 'post'
+      },
+      select: {
+        targetId: true,
+        interactionType: true
+      }
+    })
+
+    // Create a map of postId -> interaction types
+    const interactionMap: Record<string, { liked: boolean; tipped: boolean }> = {}
+    
+    // Initialize all posts as not interacted
+    postIds.forEach(id => {
+      interactionMap[String(id)] = {
+        liked: false,
+        tipped: false
+      }
+    })
+
+    // Update with actual interactions
+    interactions.forEach(interaction => {
+      if (!interactionMap[interaction.targetId]) {
+        interactionMap[interaction.targetId] = {
+          liked: false,
+          tipped: false
+        }
+      }
+      
+      switch (interaction.interactionType) {
+        case 'like':
+          interactionMap[interaction.targetId].liked = true
+          break
+        case 'tip':
+          interactionMap[interaction.targetId].tipped = true
+          break
+      }
+    })
+
+    res.json({
+      success: true,
+      interactions: interactionMap
+    })
+  } catch (error) {
+    console.error('Get user interactions error:', error)
+    res.status(500).json({ error: 'Failed to get user interactions' })
   }
 }
