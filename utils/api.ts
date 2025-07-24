@@ -3,8 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import { logger } from './logger';
 
 // API base URL - use environment variable or default to Railway URL
-// Replace this with your actual Railway URL when you get it
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://your-app.railway.app/api';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://korusapp-production.up.railway.app/api';
 
 // Token storage key
 const AUTH_TOKEN_KEY = 'korus_auth_token';
@@ -162,7 +161,7 @@ export const interactionsAPI = {
 export const healthAPI = {
   async check() {
     // Health endpoint is at root level, not under /api
-    const response = await axios.get('http://10.157.43.59:3000/health');
+    const response = await axios.get('https://korusapp-production.up.railway.app/health');
     return response.data;
   },
 };
