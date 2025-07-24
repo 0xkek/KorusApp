@@ -13,7 +13,8 @@ class Logger {
 
   private formatMessage(level: string, message: string, ...args: any[]): string {
     const timestamp = new Date().toISOString();
-    return `[${timestamp}] [${level}] ${message}`;
+    const safeMessage = message || '';
+    return `[${timestamp}] [${level}] ${safeMessage}`;
   }
 
   log(message: string, ...args: any[]) {
@@ -40,12 +41,13 @@ class Logger {
     }
   }
 
-  error(message: string, error?: Error | unknown, ...args: any[]) {
+  error(message: string | any, error?: Error | unknown, ...args: any[]) {
     if (this.logLevel <= LogLevel.ERROR) {
       // In production, this would send to an error reporting service
       // For now, we'll only log in development
       if (this.isDevelopment) {
-        console.error(this.formatMessage('ERROR', message), error, ...args);
+        const errorMessage = typeof message === 'string' ? message : String(message);
+        console.error(this.formatMessage('ERROR', errorMessage), error, ...args);
       }
       
       // In production, send to error reporting service

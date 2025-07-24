@@ -20,6 +20,7 @@ import { reputationService } from '../../services/reputation';
 import { Fonts, FontSizes } from '../../constants/Fonts';
 import { useLoadPosts } from '../../hooks/useLoadPosts';
 import { postsAPI, authAPI } from '../../utils/api';
+import { testBackendConnection } from '../../utils/testApi';
 
 // Global type declaration for scroll to top and reset functions
 declare global {
@@ -95,6 +96,9 @@ export default function HomeScreen() {
     
     // Load sponsored posts preference
     loadHideSponsoredPreference();
+    
+    // Test backend connection
+    testBackendConnection();
     
     // Setup global scroll to top function
     global.scrollToTop = () => {

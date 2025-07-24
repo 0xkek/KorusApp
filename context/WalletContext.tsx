@@ -149,18 +149,38 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       const mockMessage = `Sign this message to authenticate with Korus\nTimestamp: ${Date.now()}`;
       const mockSignature = 'mock-signature-' + Date.now();
       
-      // OFFLINE MODE - Skip backend authentication
-      logger.log('Creating wallet in offline mode');
+      // Authenticate with backend
+      logger.log('Creating wallet and authenticating with backend');
       
-      // Store wallet info
-      await SecureStore.setItemAsync(WALLET_KEY, mockSecretKey);
-      await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, mockPublicKey);
-      
-      // Update state
-      setWalletAddress(mockPublicKey);
-      setHasWallet(true);
-      setBalance(5000);
-      setIsPremium(false); // Default to standard tier
+      try {
+        // Import the auth API
+        const { authAPI } = await import('../utils/api');
+        
+        // Authenticate with backend
+        const authResult = await authAPI.connectWallet(mockPublicKey, mockSignature, mockMessage);
+        logger.log('Authentication successful:', authResult);
+        
+        // Store wallet info
+        await SecureStore.setItemAsync(WALLET_KEY, mockSecretKey);
+        await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, mockPublicKey);
+        
+        // Update state with backend data
+        setWalletAddress(mockPublicKey);
+        setHasWallet(true);
+        setBalance(authResult.user?.allyBalance || 5000);
+        setIsPremium(authResult.user?.tier === 'premium');
+      } catch (error) {
+        logger.error('Backend authentication failed, using offline mode:', error);
+        
+        // Fallback to offline mode
+        await SecureStore.setItemAsync(WALLET_KEY, mockSecretKey);
+        await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, mockPublicKey);
+        
+        setWalletAddress(mockPublicKey);
+        setHasWallet(true);
+        setBalance(5000);
+        setIsPremium(false);
+      }
       
       // Fetch SNS domains
       const domains = await fetchSNSDomains(mockPublicKey);
