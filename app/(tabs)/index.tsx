@@ -18,6 +18,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { logger } from '../../utils/logger';
 import { reputationService } from '../../services/reputation';
 import { Fonts, FontSizes } from '../../constants/Fonts';
+import { useLoadPosts } from '../../hooks/useLoadPosts';
+import { postsAPI, authAPI } from '../../utils/api';
 
 // Global type declaration for scroll to top and reset functions
 declare global {
@@ -64,7 +66,7 @@ export default function HomeScreen() {
   const [newPostContent, setNewPostContent] = useState('');
   const [newReplyContent, setNewReplyContent] = useState('');
   const [expandedPosts, setExpandedPosts] = useState<Set<number>>(new Set());
-  const [posts, setPosts] = useState<PostType[]>(initialPosts);
+  const { posts, setPosts, loading: postsLoading, refetch } = useLoadPosts();
   const [refreshing, setRefreshing] = useState(false);
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
   const [showingSubcategories, setShowingSubcategories] = useState(false);
@@ -247,66 +249,100 @@ export default function HomeScreen() {
     if (scrollY < 20 && !isScrolling) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setRefreshing(true);
-      // Simulate network delay
-      setTimeout(() => {
-        // In a real app, you'd fetch new posts from the server
-        // For now, we'll just reset to initial posts to simulate refresh
-        setPosts([...initialPosts]);
-        setRefreshing(false);
+      
+      try {
+        await refetch(); // Use the API to fetch posts
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         showAlert({
           title: 'Refreshed',
           message: 'Feed updated!',
           type: 'success'
         });
-      }, 1000);
+      } catch (error) {
+        showAlert({
+          title: 'Error',
+          message: 'Failed to refresh feed',
+          type: 'error'
+        });
+      } finally {
+        setRefreshing(false);
+      }
     }
   };
 
   const handleCreatePost = async (category: string, mediaUrl?: string) => {
     if (newPostContent.trim()) {
-      // Determine if the media is a video based on file extension
-      const isVideo = mediaUrl && (
-        mediaUrl.toLowerCase().endsWith('.mp4') || 
-        mediaUrl.toLowerCase().endsWith('.mov') ||
-        mediaUrl.toLowerCase().endsWith('.avi') ||
-        mediaUrl.toLowerCase().includes('video')
-      );
-      
-      const newPost: PostType = {
-        id: posts.length + 1,
-        wallet: currentUserWallet,
-        time: 'now',
-        content: newPostContent,
-        likes: 0,
-        replies: [],
-        tips: 0,
-        liked: false,
-        bumped: false,
-        bumpedAt: undefined,
-        bumpExpiresAt: undefined,
-        category: category,
-        imageUrl: isVideo ? undefined : mediaUrl,
-        videoUrl: isVideo ? mediaUrl : undefined,
-        isPremium: isPremium,
-        userTheme: colors.primary,
-        gameData: undefined
-      };
+      try {
+        // Check if user is authenticated first
+        if (!walletAddress) {
+          showAlert({
+            title: 'Not Connected',
+            message: 'Please connect your wallet first',
+            type: 'error'
+          });
+          return;
+        }
 
-      setPosts([newPost, ...posts]);
-      setNewPostContent('');
-      setShowCreatePost(false);
-      
-      // Track reputation for post creation
-      if (walletAddress) {
-        await reputationService.onPostCreated(walletAddress, !!mediaUrl);
+        // Determine if the media is a video based on file extension
+        const isVideo = mediaUrl && (
+          mediaUrl.toLowerCase().endsWith('.mp4') || 
+          mediaUrl.toLowerCase().endsWith('.mov') ||
+          mediaUrl.toLowerCase().endsWith('.avi') ||
+          mediaUrl.toLowerCase().includes('video')
+        );
+        
+        // Create post via API
+        const response = await postsAPI.createPost({
+          content: newPostContent,
+          topic: category.toUpperCase(),
+          subtopic: category,
+          imageUrl: isVideo ? undefined : mediaUrl,
+          videoUrl: isVideo ? mediaUrl : undefined,
+        });
+
+        // Add the new post to the local state
+        const newPost: PostType = {
+          id: response.id,
+          wallet: currentUserWallet,
+          time: 'now',
+          content: newPostContent,
+          likes: 0,
+          replies: [],
+          tips: 0,
+          liked: false,
+          bumped: false,
+          bumpedAt: undefined,
+          bumpExpiresAt: undefined,
+          category: category,
+          imageUrl: isVideo ? undefined : mediaUrl,
+          videoUrl: isVideo ? mediaUrl : undefined,
+          isPremium: isPremium,
+          userTheme: colors.primary,
+          gameData: undefined
+        };
+
+        setPosts([newPost, ...posts]);
+        setNewPostContent('');
+        setShowCreatePost(false);
+        
+        // Track reputation for post creation
+        if (walletAddress) {
+          await reputationService.onPostCreated(walletAddress, !!mediaUrl);
+        }
+        
+        showAlert({
+          title: 'Success',
+          message: 'Your post has been shared with the community!',
+          type: 'success'
+        });
+      } catch (error) {
+        logger.error('Failed to create post:', error);
+        showAlert({
+          title: 'Error',
+          message: 'Failed to create post. Please try again.',
+          type: 'error'
+        });
       }
-      
-      showAlert({
-        title: 'Success',
-        message: 'Your post has been shared with the community!',
-        type: 'success'
-      });
     }
   };
 
