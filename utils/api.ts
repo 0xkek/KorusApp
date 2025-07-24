@@ -2,9 +2,9 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { logger } from './logger';
 
-// API base URL - use environment variable or default to local IP
-// For Expo, we need to use the machine's IP address, not localhost
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.157.43.59:3000/api';
+// API base URL - use environment variable or default to Railway URL
+// Replace this with your actual Railway URL when you get it
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://your-app.railway.app/api';
 
 // Token storage key
 const AUTH_TOKEN_KEY = 'korus_auth_token';
