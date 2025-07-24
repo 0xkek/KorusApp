@@ -1,0 +1,14 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "cd korus-backend && npm install && npm run build"
+watchPatterns = ["korus-backend/**"]
+
+[deploy]
+startCommand = "cd korus-backend && npx prisma migrate deploy && npm start"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+[environments.production]
+rootDirectory = "korus-backend"
