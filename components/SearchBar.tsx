@@ -51,8 +51,15 @@ export default function SearchBar({
   let searchTimeout: NodeJS.Timeout | number;
 
   const handleSubmit = () => {
+    console.log('[SearchBar] handleSubmit called with query:', query);
     if (query.trim()) {
-      onSearch(query.trim());
+      console.log('[SearchBar] Calling onSearch with:', query.trim());
+      try {
+        onSearch(query.trim());
+        console.log('[SearchBar] onSearch called successfully');
+      } catch (error) {
+        console.error('[SearchBar] Error calling onSearch:', error);
+      }
       Keyboard.dismiss();
       setShowHistory(false);
     }

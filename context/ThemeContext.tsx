@@ -17,7 +17,7 @@ interface ThemeContextType {
   isColorSchemeLocked: (scheme: ColorScheme) => boolean;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const THEME_STORAGE_KEY = 'korus_theme_preference';
 const DARK_MODE_STORAGE_KEY = 'korus_dark_mode';

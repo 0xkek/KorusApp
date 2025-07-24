@@ -1,4 +1,4 @@
-import { BlurView } from 'expo-blur';
+// import { BlurView } from 'expo-blur'; // Removed for performance
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
@@ -76,7 +76,7 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
       <View style={[styles.overlay, { backgroundColor: 'rgba(0, 0, 0, 0.7)' }]}>
         <Pressable style={styles.backdrop} onPress={handleClose} />
         
-        <BlurView intensity={60} style={[styles.modalContainer, { borderColor: `${colors.primary}66` }]}>
+        <View style={[styles.modalContainer, { borderColor: `${colors.primary}66`, backgroundColor: colors.surface + '95' }]}>
           <LinearGradient
             colors={gradients.surface}
             style={styles.modalGradient}
@@ -97,7 +97,7 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
 
             {/* Tip Amount Input */}
             <View style={styles.inputContainer}>
-              <BlurView intensity={25} style={styles.inputBlur}>
+              <View style={styles.inputBlur}>
                 <LinearGradient
                   colors={gradients.surface}
                   style={[styles.inputGradient, { borderColor: colors.borderLight }]}
@@ -124,7 +124,7 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
                     maxLength={10}
                   />
                 </LinearGradient>
-              </BlurView>
+              </View>
             </View>
 
             {/* Warning Message */}
@@ -143,14 +143,14 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
                 onPress={handleClose}
                 activeOpacity={0.8}
               >
-                <BlurView intensity={25} style={styles.actionBlur}>
+                <View style={styles.actionBlur}>
                   <LinearGradient
                     colors={gradients.surface}
                     style={[styles.actionGradient, { borderColor: colors.borderLight }]}
                   >
                     <Text style={[styles.actionText, { color: colors.textSecondary }]}>Cancel</Text>
                   </LinearGradient>
-                </BlurView>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -163,7 +163,7 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
                 activeOpacity={0.8}
                 disabled={!isValidAmount}
               >
-                <BlurView intensity={25} style={styles.actionBlur}>
+                <View style={styles.actionBlur}>
                   <LinearGradient
                     colors={
                       isValidAmount
@@ -180,11 +180,11 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
                       Send Tip
                     </Text>
                   </LinearGradient>
-                </BlurView>
+                </View>
               </TouchableOpacity>
             </View>
           </LinearGradient>
-        </BlurView>
+        </View>
       </View>
     </Modal>
   );
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 8,
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 12,
+    textShadowRadius: 3,
   },
   subtitle: {
     fontSize: FontSizes.base,
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.semiBold,
     textAlign: 'center',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    textShadowRadius: 2,
   },
   inputContainer: {
     marginBottom: 24,
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
     marginRight: 12,
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    textShadowRadius: 2,
   },
   amountInput: {
     flex: 1,
@@ -292,19 +292,19 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 16,
     overflow: 'hidden',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
   },
   tipButton: {
     flex: 1,
     borderRadius: 16,
     overflow: 'hidden',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
   },
   disabledButton: {
     opacity: 0.5,

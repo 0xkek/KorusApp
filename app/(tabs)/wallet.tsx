@@ -1,30 +1,19 @@
-import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
-import { Alert, Image, StyleSheet, Text, TouchableOpacity, View, Clipboard, ScrollView, Dimensions } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useWallet } from '../../context/WalletContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Fonts, FontSizes } from '../../constants/Fonts';
 import { Ionicons } from '@expo/vector-icons';
-import SwapModal from '../../components/SwapModal';
-import { scale, verticalScale, moderateScale, responsiveDimensions, isSmallDevice, scaleFontSize } from '../../utils/responsive';
-
-interface Token {
-  symbol: string;
-  balance: number;
-  usdValue?: number;
-  icon?: string;
-}
 
 export default function WalletScreen() {
-  const { walletAddress, balance, refreshBalance, getPrivateKey, selectedAvatar, selectedNFTAvatar, snsDomain } = useWallet();
+  const { walletAddress, balance, refreshBalance } = useWallet();
   const { colors, isDarkMode, gradients } = useTheme();
   const insets = useSafeAreaInsets();
   const styles = React.useMemo(() => createStyles(colors, isDarkMode, insets), [colors, isDarkMode, insets]);
   const [activeTab, setActiveTab] = useState<'all' | 'tips' | 'games' | 'events'>('all');
-  const [showDepositModal, setShowDepositModal] = useState(false);
   
   // Mock activity data
   const activities = [
@@ -87,17 +76,6 @@ export default function WalletScreen() {
     if (activeTab === 'events') return activity.type === 'event_joined';
     return false;
   });
-  const joinDate = 'Oct 2024'; // Mock
-
-  const handleCopyAddress = () => {
-    if (walletAddress) {
-      Clipboard.setString(walletAddress);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      Alert.alert('Copied!', 'Wallet address copied to clipboard');
-    }
-  };
-  
-  const displayName = snsDomain || `${walletAddress?.slice(0, 4)}...${walletAddress?.slice(-4)}`;
 
   return (
     <>
@@ -130,44 +108,6 @@ export default function WalletScreen() {
           bounces={true}
           contentContainerStyle={styles.scrollContent}
         >
-          {/* Profile Header */}
-          <View style={styles.profileSection}>
-            {/* Avatar */}
-            <View style={styles.avatarContainer}>
-              <LinearGradient
-                colors={gradients?.primary || ['#43e97b', '#38f9d7']}
-                style={styles.avatarGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                {selectedNFTAvatar ? (
-                  <Image 
-                    source={{ uri: selectedNFTAvatar.image || selectedNFTAvatar.uri }}
-                    style={styles.avatarImage}
-                  />
-                ) : selectedAvatar ? (
-                  <Text style={styles.avatarEmoji}>{selectedAvatar}</Text>
-                ) : (
-                  <Text style={styles.avatarText}>
-                    {walletAddress ? walletAddress.slice(0, 2).toUpperCase() : '??'}
-                  </Text>
-                )}
-              </LinearGradient>
-            </View>
-            
-            {/* Identity */}
-            <TouchableOpacity onPress={handleCopyAddress} activeOpacity={0.8}>
-              <Text style={styles.displayName}>{displayName}</Text>
-              <Text style={styles.fullAddress} numberOfLines={1}>
-                {walletAddress}
-              </Text>
-            </TouchableOpacity>
-            
-            {/* Stats */}
-            <View style={styles.statsRow}>
-              <Text style={styles.memberSince}>Member since {joinDate}</Text>
-            </View>
-          </View>
 
           {/* Balance Card */}
           <View style={styles.balanceCard}>
@@ -362,74 +302,6 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => {
       paddingTop: insets.top + 20,
       paddingHorizontal: 20,
       paddingBottom: 100, // Normal padding since no fixed buttons
-    },
-    
-    // Profile Section
-    profileSection: {
-      alignItems: 'center',
-      marginBottom: 24,
-    },
-    avatarContainer: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      marginBottom: 16,
-      shadowColor: colors.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 8,
-    },
-    avatarGradient: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 2,
-      borderColor: colors.primary,
-    },
-    avatarImage: {
-      width: 76,
-      height: 76,
-      borderRadius: 38,
-    },
-    avatarEmoji: {
-      fontSize: 36,
-    },
-    avatarText: {
-      fontSize: FontSizes['2xl'],
-      fontFamily: Fonts.bold,
-      color: isDarkMode ? '#000' : '#fff',
-    },
-    displayName: {
-      fontSize: FontSizes.xl,
-      fontFamily: Fonts.bold,
-      color: colors.text,
-      marginBottom: 4,
-      textAlign: 'center',
-    },
-    fullAddress: {
-      fontSize: FontSizes.xs,
-      fontFamily: Fonts.mono,
-      color: colors.textSecondary,
-      marginBottom: 12,
-      textAlign: 'center',
-    },
-    statsRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-    memberSince: {
-      fontSize: FontSizes.sm,
-      fontFamily: Fonts.regular,
-      color: colors.textSecondary,
-    },
-    badge: {
-      fontSize: FontSizes.sm,
-      fontFamily: Fonts.medium,
-      color: colors.primary,
     },
     
     // Balance Card

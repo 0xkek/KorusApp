@@ -41,7 +41,8 @@ const MOCK_SNS_DOMAINS: { [walletAddress: string]: SNSDomain[] } = {
     { domain: 'gamer.sol', owner: 'RPS5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhGamer' }
   ],
   'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip': [
-    { domain: 'lucky.sol', owner: 'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip', favorite: true },
+    { domain: 'coinflip.sol', owner: 'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip', favorite: true },
+    { domain: 'lucky.sol', owner: 'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip' },
     { domain: 'flipper.sol', owner: 'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip' }
   ]
 };
@@ -127,7 +128,7 @@ export async function resolveSNSDomain(domain: string): Promise<string | null> {
 
     // For development, reverse lookup from our mock data
     for (const [wallet, domains] of Object.entries(MOCK_SNS_DOMAINS)) {
-      if (domains.some(d => d.domain === domain)) {
+      if (domains.some(d => d.domain.toLowerCase() === domain.toLowerCase())) {
         return wallet;
       }
     }

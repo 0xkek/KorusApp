@@ -96,8 +96,19 @@ export default function WelcomeScreen() {
       <View style={styles.content}>
         {/* Logo/Title */}
         <View style={styles.header}>
+          {/* Logo */}
+          <View style={styles.logoContainer}>
+            <LinearGradient
+              colors={gradients.primary}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.logoGradient}
+            >
+              <Text style={styles.logoText}>K</Text>
+            </LinearGradient>
+          </View>
           <Text style={styles.title}>Korus</Text>
-          <Text style={styles.subtitle}>Decentralized Social on Solana</Text>
+          <Text style={styles.subtitle}>Radical Authenticity</Text>
         </View>
 
         {/* Wallet Setup Card */}
@@ -212,19 +223,46 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     marginBottom: 40,
   },
   title: {
-    fontSize: FontSizes['6xl'],
+    fontSize: 56,
     fontFamily: Fonts.extraBold,
     color: colors.primary,
     textShadowColor: colors.primary + '66',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 20,
     letterSpacing: -2,
+    marginTop: -10,
   },
   subtitle: {
     fontSize: FontSizes.lg,
     fontFamily: Fonts.medium,
     color: colors.textSecondary,
     marginTop: 8,
+  },
+  logoContainer: {
+    marginBottom: 30,
+    marginTop: -40,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  logoGradient: {
+    width: 120,
+    height: 120,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoText: {
+    fontSize: 100,
+    fontFamily: Fonts.extraBold,
+    color: '#000000',
+    letterSpacing: -4,
+    textAlign: 'center',
+    lineHeight: 120,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   cardContainer: {
     borderRadius: 24,

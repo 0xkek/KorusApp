@@ -16,6 +16,12 @@ class Logger {
     return `[${timestamp}] [${level}] ${message}`;
   }
 
+  log(message: string, ...args: any[]) {
+    if (this.isDevelopment) {
+      console.log(this.formatMessage('LOG', message), ...args);
+    }
+  }
+
   debug(message: string, ...args: any[]) {
     if (this.logLevel <= LogLevel.DEBUG && this.isDevelopment) {
       console.log(this.formatMessage('DEBUG', message), ...args);

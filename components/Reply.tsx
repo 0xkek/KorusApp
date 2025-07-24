@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { Reply as ReplyType } from '../types';
 import { Ionicons } from '@expo/vector-icons';
 import { Fonts, FontSizes } from '../constants/Fonts';
+import { useDisplayName } from '../hooks/useSNSDomain';
 // import { sendLocalNotification } from '../utils/notifications';
 
 interface ReplyProps {
@@ -13,7 +14,6 @@ interface ReplyProps {
   currentUserWallet: string;
   onLike: (postId: number, replyId: number) => void;
   onReply: (postId: number, quotedText?: string, quotedUsername?: string) => void;
-  onBump: (replyId: number) => void;
   onTip: (postId: number, replyId: number) => void;
   depth?: number;
   isLastInThread?: boolean;
@@ -53,7 +53,6 @@ function Reply({
   currentUserWallet,
   onLike,
   onReply,
-  onBump,
   onTip,
   depth = 0,
   isLastInThread = false,
@@ -86,6 +85,7 @@ function Reply({
 
   const { quotedText, replyText } = parseContent(reply.content);
   const bumpActive = isBumpActive(reply);
+  const displayName = useDisplayName(reply.wallet, reply.isPremium || false);
 
   const handleLike = () => {
     onLike(postId, reply.id);
@@ -114,17 +114,6 @@ function Reply({
     }
   };
 
-  const handleBump = () => {
-    onBump(reply.id);
-    // Send notification if not bumping own reply
-    if (reply.wallet !== currentUserWallet) {
-      // sendLocalNotification({
-      //   type: 'bump',
-      //   fromUser: currentUserWallet,
-      //   replyId: reply.id,
-      // });
-    }
-  };
 
   const handleTip = () => {
     onTip(postId, reply.id);
@@ -182,11 +171,11 @@ function Reply({
             <View style={styles.replyMeta}>
               <View style={styles.usernameRow}>
                 <Text style={[styles.replyUsername, { color: colors.primary, textShadowColor: colors.primary + '33' }]}>
-                  {reply.wallet}
+                  {displayName}
                 </Text>
                 {reply.isPremium && (
                   <View style={[styles.verifiedBadge, { backgroundColor: '#FFD700' }]}>
-                    <Ionicons name="checkmark" size={8} color="#000" />
+                    <Ionicons name="star" size={8} color="#000" />
                   </View>
                 )}
               </View>

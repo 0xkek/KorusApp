@@ -3,8 +3,14 @@ import jwt from 'jsonwebtoken'
 import prisma from '../config/database'
 import { verifyWalletSignature, checkGenesisTokenOwnership } from '../utils/solana'
 import { AuthRequest } from '../middleware/auth'
+import { isMockMode, mockAuthController } from '../middleware/mockMode'
 
 export const connectWallet = async (req: Request, res: Response) => {
+  // Use mock mode if database is not available
+  if (isMockMode()) {
+    return mockAuthController.connectWallet(req, res);
+  }
+  
   try {
     const { walletAddress, signature, message } = req.body
 
@@ -64,6 +70,11 @@ export const connectWallet = async (req: Request, res: Response) => {
 }
 
 export const getProfile = async (req: AuthRequest, res: Response) => {
+  // Use mock mode if database is not available
+  if (isMockMode()) {
+    return mockAuthController.getProfile(req, res);
+  }
+  
   try {
     const walletAddress = req.userWallet!
 

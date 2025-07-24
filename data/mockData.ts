@@ -1,109 +1,61 @@
 import { Post, GameData } from '../types';
 
-export const subtopicData: { [key: string]: string[] } = {
-  career: ['Job Search', 'Interviews', 'Networking', 'Salary Negotiation', 'Leadership', 'Career Change'],
-  health: ['Mental Health', 'Fitness', 'Nutrition', 'Sleep', 'Addiction', 'Medical'],
-  relationships: ['Dating', 'Marriage', 'Parenting', 'Family', 'Friendship', 'Breakups'],
-  finance: ['Investing', 'Budgeting', 'Debt', 'Real Estate', 'Retirement', 'Side Hustle'],
-  growth: ['Goals', 'Productivity', 'Learning', 'Habits', 'Confidence', 'Purpose']
-};
-
 export const initialPosts: Post[] = [
   {
     id: 15,
     wallet: 'RPS5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhGamer',
     time: '2m ago',
-    content: "Who wants to play Tic Tac Toe? Let's wager some ALLY tokens! 🎮",
+    content: "Just discovered the gaming tab! The mini-games are so much fun! 🎮",
     likes: 3,
     replies: [],
     tips: 0,
     liked: false,
     bumped: false,
-    category: 'ENTERTAINMENT',
-    subcategory: 'Gaming',
+    category: 'GENERAL',
     isPremium: true,
-    userTheme: '#9945FF',
-    gameData: {
-      type: 'tictactoe',
-      wager: 50,
-      player1: 'RPS5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhGamer',
-      status: 'waiting',
-      createdAt: Date.now() - 120000, // 2 minutes ago
-      expiresAt: Date.now() + 1680000, // 28 minutes from now
-      board: [[null, null, null], [null, null, null], [null, null, null]]
-    }
+    userTheme: '#9945FF'
   },
   {
     id: 16,
     wallet: 'BKJRSuAqF8tpGpNcB3dQkUDddt5p5uTwYdM2qygYzRBe',
     time: '5m ago',
-    content: "Active Tic Tac Toe game in progress! Come watch 👀",
+    content: "The new game room feature is amazing! Just won my first match 👀",
     likes: 5,
     replies: [],
     tips: 0,
     liked: false,
     bumped: false,
-    category: 'ENTERTAINMENT',
-    subcategory: 'Gaming',
+    category: 'GENERAL',
     isPremium: true,
-    userTheme: '#00D18C',
-    gameData: {
-      type: 'tictactoe',
-      wager: 100,
-      player1: 'BKJRSuAqF8tpGpNcB3dQkUDddt5p5uTwYdM2qygYzRBe',
-      player2: 'DeMo2K8tQpVHgLpQeN4eSkVHgfr6k6pVxZfO3syhUser',
-      status: 'active',
-      currentPlayer: 'BKJRSuAqF8tpGpNcB3dQkUDddt5p5uTwYdM2qygYzRBe',
-      createdAt: Date.now() - 300000, // 5 minutes ago
-      expiresAt: Date.now() + 1500000, // 25 minutes from now
-      board: [['X', null, 'O'], [null, 'X', null], [null, null, null]]
-    }
+    userTheme: '#00D18C'
   },
   {
     id: 17,
     wallet: 'RPS5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhGamer',
     time: '10m ago',
-    content: "Rock Paper Scissors anyone? Best of 3 rounds! 🎯",
+    content: "Love how the gaming tab is separate now! Much better experience 🎯",
     likes: 2,
     replies: [],
     tips: 0,
     liked: false,
     bumped: false,
-    category: 'ENTERTAINMENT',
-    subcategory: 'Gaming',
+    category: 'GENERAL',
     isPremium: true,
-    userTheme: '#FF6B6B',
-    gameData: {
-      type: 'rps',
-      wager: 25,
-      player1: 'RPS5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhGamer',
-      status: 'waiting',
-      createdAt: Date.now() - 600000, // 10 minutes ago
-      expiresAt: Date.now() + 1200000, // 20 minutes from now
-    }
+    userTheme: '#FF6B6B'
   },
   {
     id: 18,
     wallet: 'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip',
     time: '15m ago',
-    content: "Feeling lucky? Let's flip a coin! 🪙",
+    content: "The coin flip game is my favorite! So simple yet thrilling 🪙",
     likes: 1,
     replies: [],
     tips: 0,
     liked: false,
     bumped: false,
-    category: 'ENTERTAINMENT',
-    subcategory: 'Gaming',
+    category: 'GENERAL',
     isPremium: true,
-    userTheme: '#4ECDC4',
-    gameData: {
-      type: 'coinflip',
-      wager: 10,
-      player1: 'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip',
-      status: 'waiting',
-      createdAt: Date.now() - 900000, // 15 minutes ago
-      expiresAt: Date.now() + 900000, // 15 minutes from now
-    }
+    userTheme: '#4ECDC4'
   },
   {
     id: 10,
@@ -127,8 +79,7 @@ export const initialPosts: Post[] = [
     tips: 0,
     liked: false,
     bumped: false,
-    category: 'TECH',
-    subcategory: 'Development',
+    category: 'GENERAL',
     isPremium: true,
     userTheme: '#14F195' // Solana green
   },
@@ -142,8 +93,7 @@ export const initialPosts: Post[] = [
     tips: 2,
     liked: false,
     bumped: false,
-    category: 'TECH',
-    subcategory: 'Development',
+    category: 'GENERAL',
     isPremium: true,
     userTheme: '#9945FF' // Purple theme
   },
@@ -205,8 +155,7 @@ export const initialPosts: Post[] = [
     bumped: false,
     bumpedAt: undefined,
     bumpExpiresAt: undefined,
-    category: 'CAREER',
-    subcategory: 'Leadership'
+    category: 'GENERAL',
   },
   {
     id: 2,
@@ -234,8 +183,7 @@ export const initialPosts: Post[] = [
     bumped: false,
     bumpedAt: undefined,
     bumpExpiresAt: undefined,
-    category: 'CAREER',
-    subcategory: 'Leadership'
+    category: 'GENERAL',
   },
   {
     id: 3,
@@ -249,8 +197,7 @@ export const initialPosts: Post[] = [
     bumped: false,
     bumpedAt: undefined,
     bumpExpiresAt: undefined,
-    category: 'CAREER',
-    subcategory: 'Career Change'
+    category: 'GENERAL',
   },
   {
     id: 12,
@@ -265,8 +212,7 @@ export const initialPosts: Post[] = [
     bumped: false,
     bumpedAt: undefined,
     bumpExpiresAt: undefined,
-    category: 'CAREER',
-    subcategory: 'Leadership',
+    category: 'GENERAL',
     sponsored: true,
     isPremium: true
   },
@@ -282,8 +228,7 @@ export const initialPosts: Post[] = [
     bumped: false,
     bumpedAt: undefined,
     bumpExpiresAt: undefined,
-    category: 'CAREER',
-    subcategory: 'Networking',
+    category: 'GENERAL',
     isPremium: false
   },
   {
@@ -315,8 +260,7 @@ export const initialPosts: Post[] = [
     bumped: false,
     bumpedAt: undefined,
     bumpExpiresAt: undefined,
-    category: 'FINANCE',
-    subcategory: 'Investing'
+    category: 'GENERAL',
   },
   {
     id: 7,
@@ -331,8 +275,7 @@ export const initialPosts: Post[] = [
     bumped: false,
     bumpedAt: undefined,
     bumpExpiresAt: undefined,
-    category: 'FINANCE',
-    subcategory: 'Side Hustle'
+    category: 'GENERAL',
   },
   {
     id: 8,
@@ -361,7 +304,6 @@ export const initialPosts: Post[] = [
     bumped: false,
     bumpedAt: undefined,
     bumpExpiresAt: undefined,
-    category: 'GROWTH',
-    subcategory: 'Learning'
+    category: 'GENERAL',
   }
 ];

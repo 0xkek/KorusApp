@@ -16,6 +16,8 @@ import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { logger } from '../../utils/logger';
+import { reputationService } from '../../services/reputation';
+import { Fonts, FontSizes } from '../../constants/Fonts';
 
 // Global type declaration for scroll to top and reset functions
 declare global {
@@ -49,6 +51,7 @@ export default function HomeScreen() {
   // State
   const [activeTab, setActiveTab] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [isOffline] = useState(true); // Offline mode for mock data
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [showReplyModal, setShowReplyModal] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
@@ -260,7 +263,7 @@ export default function HomeScreen() {
     }
   };
 
-  const handleCreatePost = (category: string, mediaUrl?: string) => {
+  const handleCreatePost = async (category: string, mediaUrl?: string) => {
     if (newPostContent.trim()) {
       // Determine if the media is a video based on file extension
       const isVideo = mediaUrl && (
@@ -293,6 +296,12 @@ export default function HomeScreen() {
       setPosts([newPost, ...posts]);
       setNewPostContent('');
       setShowCreatePost(false);
+      
+      // Track reputation for post creation
+      if (walletAddress) {
+        await reputationService.onPostCreated(walletAddress, !!mediaUrl);
+      }
+      
       showAlert({
         title: 'Success',
         message: 'Your post has been shared with the community!',
@@ -360,7 +369,7 @@ export default function HomeScreen() {
     });
   };
 
-  const handleCreateReply = () => {
+  const handleCreateReply = async () => {
     if (newReplyContent.trim() && selectedPostId) {
       let replyContent = newReplyContent;
 
@@ -384,6 +393,8 @@ export default function HomeScreen() {
         isPremium: isPremium,
         userTheme: colors.primary
       };
+      
+      const post = posts.find(p => p.id === selectedPostId);
 
       setPosts(posts.map(post =>
         post.id === selectedPostId
@@ -396,6 +407,15 @@ export default function HomeScreen() {
       setQuotedText('');
       setQuotedUsername('');
       setShowReplyModal(false);
+      
+      // Track reputation for comments
+      if (walletAddress) {
+        await reputationService.onCommentMade(walletAddress);
+        if (post && post.wallet !== walletAddress) {
+          await reputationService.onCommentReceived(post.wallet);
+        }
+      }
+      
       // Keep selectedPostId so user can reply multiple times to the same post
       showAlert({
         title: 'Success',
@@ -405,8 +425,14 @@ export default function HomeScreen() {
     }
   };
 
-  const handleLike = (postId: number) => {
+  const handleLike = async (postId: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    
+    const wasLiked = post.liked;
+    
     setPosts(prevPosts => prevPosts.map(post =>
       post.id === postId
         ? {
@@ -416,6 +442,14 @@ export default function HomeScreen() {
           }
         : post
     ));
+    
+    // Track reputation for likes
+    if (walletAddress && !wasLiked) {
+      await reputationService.onLikeGiven(walletAddress);
+      if (post.wallet !== walletAddress) {
+        await reputationService.onLikeReceived(post.wallet);
+      }
+    }
   };
 
   const handleLikeReply = (postId: number, replyId: number) => {
@@ -539,7 +573,7 @@ export default function HomeScreen() {
     }
   };
 
-  const handleTip = (postId: number, amount: number) => {
+  const handleTip = async (postId: number, amount: number) => {
     // Check if user has sufficient balance
     if (amount > balance) {
       showAlert({
@@ -568,6 +602,14 @@ export default function HomeScreen() {
       setTipSuccessData({ amount, username: post.wallet });
       setShowTipSuccessModal(true);
       setShowTipModal(false); // Close the tip modal
+      
+      // Track reputation for tips
+      if (walletAddress) {
+        await reputationService.onTipSent(walletAddress, amount);
+        if (post.wallet !== walletAddress) {
+          await reputationService.onTipReceived(post.wallet, amount);
+        }
+      }
     }
   };
 
@@ -648,12 +690,12 @@ export default function HomeScreen() {
                 onCategoryChange={handleCategoryChange} 
                 isCollapsed={false} 
                 onProfileClick={() => {
-                  if (walletAddress) {
-                    router.push({
-                      pathname: '/profile',
-                      params: { wallet: walletAddress }
-                    });
-                  }
+                  // In offline mode, use a mock wallet address
+                  const wallet = walletAddress || 'mockWallet1234567890';
+                  router.push({
+                    pathname: '/profile',
+                    params: { wallet: wallet }
+                  });
                 }}
                 selectedCategory={selectedCategory}
               />
@@ -669,12 +711,12 @@ export default function HomeScreen() {
                 onCategoryChange={handleCategoryChange} 
                 isCollapsed={false} 
                 onProfileClick={() => {
-                  if (walletAddress) {
-                    router.push({
-                      pathname: '/profile',
-                      params: { wallet: walletAddress }
-                    });
-                  }
+                  // In offline mode, use a mock wallet address
+                  const wallet = walletAddress || 'mockWallet1234567890';
+                  router.push({
+                    pathname: '/profile',
+                    params: { wallet: wallet }
+                  });
                 }}
                 selectedCategory={selectedCategory}
               />
@@ -695,12 +737,12 @@ export default function HomeScreen() {
                 onCategoryChange={handleCategoryChange} 
                 isCollapsed={false} 
                 onProfileClick={() => {
-                  if (walletAddress) {
-                    router.push({
-                      pathname: '/profile',
-                      params: { wallet: walletAddress }
-                    });
-                  }
+                  // In offline mode, use a mock wallet address
+                  const wallet = walletAddress || 'mockWallet1234567890';
+                  router.push({
+                    pathname: '/profile',
+                    params: { wallet: wallet }
+                  });
                 }}
                 selectedCategory={selectedCategory}
               />
@@ -717,6 +759,18 @@ export default function HomeScreen() {
                 />
               }
               data={sortedPosts}
+              ListEmptyComponent={() => (
+                <View style={styles.emptyContainer}>
+                  <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                    {activeTab === 'all' ? 'No posts yet' : `No ${activeTab} posts yet`}
+                  </Text>
+                  <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+                    {activeTab === 'all' 
+                      ? 'Be the first to share something!' 
+                      : `Be the first to post in ${activeTab}!`}
+                  </Text>
+                </View>
+              )}
               keyExtractor={(item) => {
                 // Include game state in key for game posts to force re-render
                 if (item.gameData) {
@@ -895,6 +949,23 @@ const styles = StyleSheet.create({
   },
   gamesViewContainer: {
     flex: 1,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 40,
+  },
+  emptyTitle: {
+    fontSize: FontSizes.xl,
+    fontFamily: Fonts.semiBold,
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.regular,
+    textAlign: 'center',
   },
   eventsViewContainer: {
     flex: 1,

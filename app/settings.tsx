@@ -192,6 +192,7 @@ export default function SettingsScreen() {
             </BlurView>
           </View>
 
+
           {/* Appearance Settings */}
           <View style={[styles.sectionWrapper, {
             shadowColor: colors.primary,

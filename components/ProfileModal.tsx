@@ -59,8 +59,7 @@ export default function ProfileModal({
         joinDate: 'November 2024',
         postsCount,
         tipsReceived,
-        tipsGiven,
-        favoriteCategories: ['CAREER', 'TECHNOLOGY', 'FINANCE'].slice(0, 1 + (seed % 3))
+        tipsGiven
       };
     }
     
@@ -74,19 +73,6 @@ export default function ProfileModal({
     // Calculate approximate tips given (based on their activity level)
     // Users who post more tend to tip more - this is a reasonable approximation
     const tipsGiven = Math.max(1, Math.floor(postsCount * 2.5) + Math.floor(Math.random() * 10));
-    
-    // Get most used categories by this user
-    const categoryCount: { [key: string]: number } = {};
-    userPosts.forEach(post => {
-      if (post.category) {
-        categoryCount[post.category] = (categoryCount[post.category] || 0) + 1;
-      }
-    });
-    
-    const favoriteCategories = Object.entries(categoryCount)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 3)
-      .map(([category]) => category);
 
     return {
       avatar: wallet.slice(0, 2).toUpperCase(),
@@ -95,8 +81,7 @@ export default function ProfileModal({
       joinDate: 'November 2024', // Would come from user registration data
       postsCount: postsCount,
       tipsReceived: tipsReceived,
-      tipsGiven: tipsGiven,
-      favoriteCategories: favoriteCategories.length > 0 ? favoriteCategories : ['CAREER', 'TECHNOLOGY']
+      tipsGiven: tipsGiven
     };
   };
 
@@ -172,14 +157,28 @@ export default function ProfileModal({
                   <View style={styles.userInfo}>
                     {snsDomain ? (
                       <>
-                        <Text style={[styles.snsDomain, { 
-                          color: colors.primary,
-                          textShadowColor: colors.primary + '66',
-                        }]}>{snsDomain}</Text>
+                        <View style={styles.snsDomainRow}>
+                          <Text style={[styles.snsDomain, { 
+                            color: colors.primary,
+                            textShadowColor: colors.primary + '66',
+                          }]}>{snsDomain}</Text>
+                          {isUserPremium && (
+                            <View style={[styles.verifiedBadge, { backgroundColor: '#FFD700' }]}>
+                              <Ionicons name="star" size={10} color="#000" />
+                            </View>
+                          )}
+                        </View>
                         <Text style={[styles.username, { color: colors.text }]}>@{profileData.shortWallet}</Text>
                       </>
                     ) : (
-                      <Text style={styles.username}>@{profileData.shortWallet}</Text>
+                      <View style={styles.usernameRow}>
+                        <Text style={styles.username}>@{profileData.shortWallet}</Text>
+                        {isUserPremium && (
+                          <View style={[styles.verifiedBadge, { backgroundColor: '#FFD700' }]}>
+                            <Ionicons name="star" size={10} color="#000" />
+                          </View>
+                        )}
+                      </View>
                     )}
                     <Text style={[styles.walletAddress, {
                       color: colors.primary,
@@ -234,28 +233,8 @@ export default function ProfileModal({
                   </View>
                 </View>
 
-                {/* Categories and Tip Button Row */}
-                <View style={styles.categoriesAndTipRow}>
-                  {/* Favorite Categories */}
-                  <View style={styles.categoriesSection}>
-                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Favorite Categories</Text>
-                    <View style={styles.categoriesList}>
-                      {profileData.favoriteCategories.map((category, index) => (
-                        <View key={index} style={[styles.categoryTag, { borderColor: colors.primary + '4D' }]}>
-                          <LinearGradient
-                            colors={gradients.button}
-                            style={styles.categoryTagGradient}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                          >
-                            <Text style={[styles.categoryText, { color: colors.primary }]}>{category}</Text>
-                          </LinearGradient>
-                        </View>
-                      ))}
-                    </View>
-                  </View>
-
-                  {/* Send Tip Button */}
+                {/* Send Tip Button */}
+                <View style={styles.tipButtonContainer}>
                   <TouchableOpacity style={[styles.tipButton, { shadowColor: colors.shadowColor }]} activeOpacity={0.8}>
                     <BlurView intensity={25} style={styles.actionBlur}>
                       <LinearGradient
@@ -373,6 +352,26 @@ const styles = StyleSheet.create({
   userInfo: {
     alignItems: 'center',
   },
+  snsDomainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  usernameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  verifiedBadge: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFD700',
+  },
   username: {
     fontSize: FontSizes.xl,
     fontFamily: Fonts.bold,
@@ -448,41 +447,9 @@ const styles = StyleSheet.create({
     // color is set dynamically in the component
     textAlign: 'center',
   },
-  categoriesAndTipRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+  tipButtonContainer: {
+    alignItems: 'center',
     marginTop: 20,
-  },
-  categoriesSection: {
-    flex: 1,
-    marginRight: 12,
-  },
-  sectionTitle: {
-    fontSize: FontSizes.lg,
-    fontFamily: Fonts.bold,
-    // color is set dynamically in the component
-    marginBottom: 12,
-  },
-  categoriesList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  categoryTag: {
-    borderRadius: 12,
-    overflow: 'hidden',
-    borderWidth: 1,
-    // borderColor is set dynamically in the component
-  },
-  categoryTagGradient: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  categoryText: {
-    fontSize: FontSizes.sm,
-    fontFamily: Fonts.semiBold,
-    // color is set dynamically in the component
   },
   tipButton: {
     borderRadius: 16,

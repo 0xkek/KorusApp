@@ -10,6 +10,7 @@ import { GameData } from '../types';
 import TicTacToeGame from './games/TicTacToeGame';
 import RockPaperScissorsGame from './games/RockPaperScissorsGame';
 import CoinFlipGame from './games/CoinFlipGameCompact';
+import ConnectFourGame from './games/ConnectFourGame';
 
 interface GamePostProps {
   gameData: GameData;
@@ -161,11 +162,18 @@ export default function GamePost({ gameData, postId, onJoinGame, onMakeMove }: G
         )}
         
         {gameData.type === 'connect4' && (
-          <View style={styles.comingSoon}>
-            <Text style={[styles.comingSoonText, { color: colors.textSecondary }]}>
-              Connect 4 coming soon!
-            </Text>
-          </View>
+          <ConnectFourGame
+            gameId={postId.toString()}
+            player1={gameData.player1}
+            player2={gameData.player2 || null}
+            currentPlayer={gameData.currentTurn}
+            isMyTurn={isMyTurn}
+            wager={gameData.wager}
+            onMove={(column) => handleMove(column, 'connect4')}
+            board={gameData.board || Array(6).fill(null).map(() => Array(7).fill(null))}
+            winner={gameData.winner || null}
+            expiresAt={gameData.expiresAt}
+          />
         )}
       </View>
 

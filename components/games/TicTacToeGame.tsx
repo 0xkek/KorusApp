@@ -39,6 +39,9 @@ export default function TicTacToeGame({
   const [pendingMove, setPendingMove] = useState<{ row: number; col: number } | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   
+  // Ensure board is always defined
+  const gameBoard = board || [[null, null, null], [null, null, null], [null, null, null]];
+  
   // Track which cells have been animated
   const [animatedCells, setAnimatedCells] = useState<Set<string>>(new Set());
   
@@ -47,7 +50,11 @@ export default function TicTacToeGame({
   
   // Initialize animated values for cells that have values
   React.useEffect(() => {
-    board.forEach((row, rowIndex) => {
+    if (!gameBoard || !Array.isArray(gameBoard)) return;
+    
+    gameBoard.forEach((row, rowIndex) => {
+      if (!row || !Array.isArray(row)) return;
+      
       row.forEach((cell, colIndex) => {
         const key = `${rowIndex}-${colIndex}`;
         if (cell && !animatedCells.has(key)) {
@@ -65,7 +72,7 @@ export default function TicTacToeGame({
         }
       });
     });
-  }, [board, animatedCells, animatedValues]);
+  }, [gameBoard, animatedCells, animatedValues]);
 
   // Timer countdown
   useEffect(() => {
@@ -87,9 +94,9 @@ export default function TicTacToeGame({
   }, [expiresAt]);
 
   const handleCellPress = (row: number, col: number) => {
-    if (!isMyTurn || board[row][col] || winner || !player2) {
+    if (!gameBoard || !gameBoard[row] || !isMyTurn || gameBoard[row][col] || winner || !player2) {
       // Play error haptic if move is invalid
-      if (!board[row][col] && !winner && player2) {
+      if (gameBoard && gameBoard[row] && !gameBoard[row][col] && !winner && player2) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       }
       return;
@@ -117,7 +124,7 @@ export default function TicTacToeGame({
   };
 
   const getCellContent = (row: number, col: number) => {
-    const value = board[row][col];
+    const value = gameBoard[row][col];
     const key = `${row}-${col}`;
     
     if (!value) return null;
@@ -160,25 +167,30 @@ export default function TicTacToeGame({
   };
 
   const getWinningLine = () => {
+    if (!gameBoard || !Array.isArray(gameBoard)) return null;
+    
     // Check rows
     for (let i = 0; i < 3; i++) {
-      if (board[i][0] && board[i][0] === board[i][1] && board[i][1] === board[i][2]) {
+      if (gameBoard[i] && gameBoard[i][0] && gameBoard[i][0] === gameBoard[i][1] && gameBoard[i][1] === gameBoard[i][2]) {
         return { type: 'row', index: i };
       }
     }
     
     // Check columns
     for (let i = 0; i < 3; i++) {
-      if (board[0][i] && board[0][i] === board[1][i] && board[1][i] === board[2][i]) {
+      if (gameBoard[0] && gameBoard[1] && gameBoard[2] && 
+          gameBoard[0][i] && gameBoard[0][i] === gameBoard[1][i] && gameBoard[1][i] === gameBoard[2][i]) {
         return { type: 'col', index: i };
       }
     }
     
     // Check diagonals
-    if (board[0][0] && board[0][0] === board[1][1] && board[1][1] === board[2][2]) {
+    if (gameBoard[0] && gameBoard[1] && gameBoard[2] &&
+        gameBoard[0][0] && gameBoard[0][0] === gameBoard[1][1] && gameBoard[1][1] === gameBoard[2][2]) {
       return { type: 'diag', index: 0 };
     }
-    if (board[0][2] && board[0][2] === board[1][1] && board[1][1] === board[2][0]) {
+    if (gameBoard[0] && gameBoard[1] && gameBoard[2] &&
+        gameBoard[0][2] && gameBoard[0][2] === gameBoard[1][1] && gameBoard[1][1] === gameBoard[2][0]) {
       return { type: 'diag', index: 1 };
     }
     
@@ -302,16 +314,16 @@ export default function TicTacToeGame({
       >
         {renderWinningLine()}
         
-        {board.map((row, rowIndex) => (
+        {gameBoard && Array.isArray(gameBoard) && gameBoard.map((row, rowIndex) => (
           <View key={`row-${rowIndex}`} style={styles.row}>
-            {row.map((cell, colIndex) => (
+            {row && Array.isArray(row) && row.map((cell, colIndex) => (
               <TouchableOpacity
                 key={`cell-${rowIndex}-${colIndex}-${cell || 'empty'}`}
                 style={[
                   styles.cell,
                   { 
                     backgroundColor: cell ? colors.surface : colors.cardBackground,
-                    borderColor: cell ? (board[rowIndex][colIndex] === 'X' ? colors.primary : colors.secondary) : colors.borderLight,
+                    borderColor: cell ? (gameBoard[rowIndex][colIndex] === 'X' ? colors.primary : colors.secondary) : colors.borderLight,
                     borderWidth: cell ? 3 : 2,
                   },
                   isMyTurn && !cell && !winner && player2 && styles.cellHoverable,
@@ -335,14 +347,6 @@ export default function TicTacToeGame({
         ))}
       </LinearGradient>
 
-      {/* Game Actions */}
-      {!player2 && currentPlayer === player1 && (
-        <TouchableOpacity style={styles.cancelButton}>
-          <Text style={[styles.cancelText, { color: colors.error }]}>
-            Cancel Game
-          </Text>
-        </TouchableOpacity>
-      )}
       
       {/* Confirmation Modal */}
       <Modal
@@ -524,14 +528,6 @@ const styles = StyleSheet.create({
     fontSize: 48,
     fontFamily: Fonts.bold,
     fontWeight: '900',
-  },
-  cancelButton: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  cancelText: {
-    fontSize: FontSizes.sm,
-    fontFamily: Fonts.medium,
   },
   modalOverlay: {
     flex: 1,

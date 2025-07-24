@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -322,7 +322,9 @@ export default function PostDetailScreen() {
               </LinearGradient>
             </TouchableOpacity>
             
-            <Text style={[styles.title, { color: colors.text }]}>Reply Threads</Text>
+            <Text style={[styles.title, { color: colors.text }]}>
+              {post?.gameData ? 'Game Arena' : 'Reply Threads'}
+            </Text>
             
             {/* Empty view for spacing */}
             <View style={{ width: 40 }} />
@@ -337,7 +339,7 @@ export default function PostDetailScreen() {
             <View style={styles.postContainer}>
               <Post
                 post={post}
-                expandedPosts={new Set()}
+                expandedPosts={new Set([post.id])} // Always expand games in detail view
                 currentUserWallet={currentUserWallet}
                 onLike={(postId) => {
                   // Update post likes
@@ -382,21 +384,91 @@ export default function PostDetailScreen() {
                 onToggleReplies={() => {}}
                 onToggleReplySorting={() => {}}
                 onReport={() => {}}
-                onShowProfile={() => {}}
+                onShowProfile={(wallet) => {
+                  router.push({
+                    pathname: '/profile',
+                    params: { wallet }
+                  });
+                }}
                 onShowReportModal={() => {}}
+                onJoinGame={(postId) => {
+                  // Handle game join in detail view
+                  showAlert({
+                    title: 'Game Already Joined',
+                    message: 'You are viewing this game.',
+                    type: 'info'
+                  });
+                }}
+                onGameMove={(postId, moveData, moveType) => {
+                  // Update game state for moves
+                  if (post && post.gameData) {
+                    // Handle TicTacToe moves
+                    if (post.gameData.type === 'tictactoe' && typeof moveData === 'number' && typeof moveType === 'number') {
+                      const row = moveData;
+                      const col = moveType;
+                      const board = [...post.gameData.board];
+                      const currentSymbol = post.gameData.currentPlayer?.toLowerCase() === post.gameData.player1?.toLowerCase() ? 'X' : 'O';
+                      
+                      board[row][col] = currentSymbol;
+                      
+                      // Check for winner
+                      const checkWinner = (board: any[][]) => {
+                        // Check rows, columns, and diagonals
+                        for (let i = 0; i < 3; i++) {
+                          if (board[i][0] && board[i][0] === board[i][1] && board[i][1] === board[i][2]) {
+                            return board[i][0] === 'X' ? post.gameData!.player1 : post.gameData!.player2;
+                          }
+                          if (board[0][i] && board[0][i] === board[1][i] && board[1][i] === board[2][i]) {
+                            return board[0][i] === 'X' ? post.gameData!.player1 : post.gameData!.player2;
+                          }
+                        }
+                        if (board[0][0] && board[0][0] === board[1][1] && board[1][1] === board[2][2]) {
+                          return board[0][0] === 'X' ? post.gameData!.player1 : post.gameData!.player2;
+                        }
+                        if (board[0][2] && board[0][2] === board[1][1] && board[1][1] === board[2][0]) {
+                          return board[0][2] === 'X' ? post.gameData!.player1 : post.gameData!.player2;
+                        }
+                        
+                        // Check for draw
+                        const isDraw = board.every(row => row.every(cell => cell !== null));
+                        if (isDraw) return 'draw';
+                        
+                        return null;
+                      };
+                      
+                      const winner = checkWinner(board);
+                      
+                      setPost({
+                        ...post,
+                        gameData: {
+                          ...post.gameData,
+                          board,
+                          currentPlayer: winner ? post.gameData.currentPlayer : 
+                            (post.gameData.currentPlayer?.toLowerCase() === post.gameData.player1?.toLowerCase() 
+                              ? post.gameData.player2 
+                              : post.gameData.player1),
+                          winner,
+                          status: winner ? 'completed' : 'active'
+                        }
+                      });
+                    }
+                    
+                    // Handle other game types similarly...
+                  }
+                }}
                 showAsDetail={true}
               />
             </View>
             
-            {/* Thread connector line */}
-            {threads.length > 0 && (
+            {/* Thread connector line - only show for non-game posts */}
+            {!post?.gameData && threads.length > 0 && (
               <View style={styles.threadConnectorContainer}>
                 <View style={[styles.threadConnectorLine, { backgroundColor: colors.primary + '80' }]} />
               </View>
             )}
             
-            {/* Replies */}
-            {threads.length > 0 && (
+            {/* Replies - only show for non-game posts */}
+            {!post?.gameData && threads.length > 0 && (
               <View style={styles.threadsContainer}>
                 {threads.map((thread, index) => (
                   <View key={`thread-${index}`}>
@@ -406,7 +478,7 @@ export default function PostDetailScreen() {
               </View>
             )}
             
-            {threads.length === 0 && (
+            {!post?.gameData && threads.length === 0 && (
               <View style={styles.noRepliesContainer}>
                 <Text style={[styles.noRepliesText, { color: colors.textTertiary }]}>
                   No replies yet. Be the first to reply!

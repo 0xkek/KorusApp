@@ -16,6 +16,52 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import LinkPreview from './LinkPreview';
 import GamePost from './GamePost';
 
+// Video Player Component
+const VideoPlayer = ({ videoUrl }: { videoUrl: string }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const player = useVideoPlayer(videoUrl, (player) => {
+    player.loop = false;
+    player.volume = 1.0;
+  });
+
+  return (
+    <View style={{ width: '100%', aspectRatio: 16 / 9, borderRadius: 12, overflow: 'hidden' }}>
+      <VideoView
+        player={player}
+        style={{ width: '100%', height: '100%' }}
+        contentFit="cover"
+        allowsFullscreen
+        allowsPictureInPicture
+      />
+      <TouchableOpacity
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: isPlaying ? 'transparent' : 'rgba(0, 0, 0, 0.3)',
+        }}
+        onPress={() => {
+          if (isPlaying) {
+            player.pause();
+          } else {
+            player.play();
+          }
+          setIsPlaying(!isPlaying);
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }}
+      >
+        {!isPlaying && (
+          <Ionicons name="play-circle" size={64} color="rgba(255, 255, 255, 0.9)" />
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+};
+
 interface PostProps {
   post: PostType;
   expandedPosts: Set<number>;
@@ -269,8 +315,16 @@ function Post({
       <View 
         style={[
           styles.blurContainer,
-          { borderColor: colors.border, backgroundColor: colors.surface + '20' },
-          post.sponsored && [styles.sponsoredBlurContainer, { borderColor: colors.primary + '99', shadowColor: colors.primary }]
+          { 
+            borderColor: colors.border + '60', 
+            backgroundColor: colors.surface + '20',
+            shadowColor: post.sponsored ? colors.primary : colors.shadowColor,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: isDarkMode ? 0.1 : 0.05,
+            shadowRadius: 8,
+            elevation: 3,
+          },
+          post.sponsored && [styles.sponsoredBlurContainer, { borderColor: colors.primary + '99' }]
         ]}
       >
         <LinearGradient
@@ -361,7 +415,7 @@ function Post({
                     <Text style={[styles.username, { color: colors.primary, textShadowColor: colors.primary + '66' }]}>{displayName}</Text>
                     {post.isPremium && (
                       <View style={[styles.verifiedBadge, { backgroundColor: '#FFD700' }]}>
-                        <Ionicons name="checkmark" size={10} color="#000" />
+                        <Ionicons name="star" size={10} color="#000" />
                       </View>
                     )}
                     {post.sponsored && (
@@ -403,24 +457,7 @@ function Post({
               {(post.imageUrl || post.videoUrl) && (
                 <View style={styles.imageContainer}>
                   {post.videoUrl ? (
-                    <TouchableOpacity 
-                      style={styles.videoContainer}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        // TODO: Implement video player
-                        Alert.alert('Video Player', 'Video playback coming soon!');
-                      }}
-                      activeOpacity={0.9}
-                    >
-                      <Image 
-                        source={{ uri: post.videoUrl }} 
-                        style={styles.postImage}
-                        resizeMode="cover"
-                      />
-                      <View style={styles.videoPlayButton}>
-                        <Ionicons name="play-circle" size={64} color="rgba(255, 255, 255, 0.9)" />
-                      </View>
-                    </TouchableOpacity>
+                    <VideoPlayer videoUrl={post.videoUrl} />
                   ) : (
                     <Image 
                       source={{ uri: post.imageUrl }} 

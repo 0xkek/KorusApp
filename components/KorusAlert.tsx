@@ -1,4 +1,4 @@
-import { BlurView } from 'expo-blur';
+// import { BlurView } from 'expo-blur'; // Removed for performance
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -46,7 +46,7 @@ export default function KorusAlert({
     >
       <View style={styles.modalOverlay}>
         <View style={styles.alertContainer}>
-          <BlurView intensity={40} style={styles.blurWrapper}>
+          <View style={[styles.blurWrapper, { backgroundColor: colors.surface + '95' }]}>
             <LinearGradient
               colors={gradients.surface}
               style={styles.contentContainer}
@@ -73,7 +73,7 @@ export default function KorusAlert({
                 </TouchableOpacity>
               )}
             </LinearGradient>
-          </BlurView>
+          </View>
         </View>
       </View>
     </Modal>
@@ -95,11 +95,11 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     minHeight: 200,
     borderWidth: 2,
     borderColor: colors.primary + '99',
-    shadowColor: colors.shadowColor,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.8,
-    shadowRadius: 35,
-    elevation: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
     overflow: 'hidden',
   },
   blurWrapper: {
@@ -138,11 +138,11 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 14,
     alignItems: 'center',
-    shadowColor: colors.shadowColor,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   okButtonText: {
     fontSize: 16,

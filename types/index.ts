@@ -8,7 +8,7 @@ export interface GameData {
   player2?: string;
   status: GameStatus;
   winner?: string;
-  board?: any; // TicTacToe board state
+  board?: any; // TicTacToe and Connect4 board state
   currentPlayer?: string;
   createdAt: number;
   expiresAt: number;
@@ -52,7 +52,6 @@ export interface Post {
   bumpedAt?: number;
   bumpExpiresAt?: number; // When the bump expires
   category: string;      // Category field
-  subcategory: string;   // Subcategory field
   sponsored?: boolean;   // Sponsored/paid post flag
   imageUrl?: string;     // Optional image URL
   videoUrl?: string;     // Optional video URL
@@ -81,3 +80,43 @@ export type RootStackParamList = {
   Profile: { userId: string };
   Post: { postId: string };
 };
+
+// Reputation System Types
+export type ReputationTier = 'seedling' | 'sprout' | 'tree' | 'forest' | 'mountain' | 'celestial';
+
+export interface ReputationScore {
+  total: number;
+  breakdown: {
+    content: number;
+    engagement: number;
+    community: number;
+    loyalty: number;
+  };
+  tier: ReputationTier;
+  tierName: string;
+  multiplier: number;
+  achievements: Achievement[];
+  history: ReputationEvent[];
+  lastUpdated: Date;
+  rank?: number;
+}
+
+export interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  points: number;
+  unlockedAt?: Date;
+  progress?: number;
+  maxProgress?: number;
+}
+
+export interface ReputationEvent {
+  id: string;
+  type: 'post' | 'like' | 'comment' | 'tip' | 'game' | 'referral' | 'achievement' | 'daily' | 'streak';
+  points: number;
+  description: string;
+  timestamp: Date;
+  metadata?: any;
+}

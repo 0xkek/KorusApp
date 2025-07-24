@@ -18,13 +18,21 @@ import { Post as PostType } from '../types';
 import Post from '../components/Post';
 import SearchBar from '../components/SearchBar';
 import { Fonts, FontSizes } from '../constants/Fonts';
+import { getFavoriteSNSDomain } from '../utils/sns';
 
 export default function SearchScreen() {
+  console.log('[SEARCH SCREEN] Component rendering');
+  
+  // Test function to verify component is working
+  React.useEffect(() => {
+    console.log('[SEARCH SCREEN] Component mounted');
+  }, []);
+  
   const router = useRouter();
   const params = useLocalSearchParams();
   const { showAlert } = useKorusAlert();
   const { walletAddress } = useWallet();
-  const { isDarkMode } = useTheme();
+  const { isDarkMode, colors } = useTheme();
   const currentUserWallet = walletAddress || 'loading...';
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,41 +63,101 @@ export default function SearchScreen() {
     }
   }, [params]);
 
-  // Search function
-  const performSearch = (query: string) => {
-    // Prevent multiple simultaneous searches
-    if (isLoading) return;
+  // Search function - Simple Twitter-like search
+  const performSearch = React.useCallback(async (query: string) => {
+    console.log('[SEARCH] performSearch called with query:', query);
+    
+    if (isLoading) {
+      console.log('[SEARCH] Search already in progress, returning');
+      return;
+    }
     
     setSearchQuery(query);
     setIsLoading(true);
     setHasSearched(true);
     
-    // Add to search history if not empty
+    // Add to search history
     if (query.trim() && !searchHistory.includes(query.trim())) {
-      setSearchHistory(prev => [query.trim(), ...prev.slice(0, 9)]); // Keep last 10
+      setSearchHistory(prev => [query.trim(), ...prev.slice(0, 9)]);
     }
 
-    // Simulate API delay
-    const searchTimeout = setTimeout(() => {
+    try {
+      // Get all unique wallet addresses from posts and replies
+      const allWallets = new Set<string>();
+      initialPosts.forEach(post => {
+        allWallets.add(post.wallet);
+        post.replies.forEach(reply => allWallets.add(reply.wallet));
+      });
+
+      // Fetch SNS domains for all wallets in parallel
+      const walletDomainMap = new Map<string, string>();
+      console.log('[SEARCH] Fetching domains for', allWallets.size, 'wallets');
+      await Promise.all(
+        Array.from(allWallets).map(async (wallet) => {
+          try {
+            const domain = await getFavoriteSNSDomain(wallet);
+            if (domain) {
+              walletDomainMap.set(wallet, domain);
+              if (wallet === 'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip') {
+                console.log('[SEARCH] COIN wallet domain:', domain);
+              }
+            }
+          } catch (error) {
+            // Ignore errors for individual lookups
+          }
+        })
+      );
+      console.log('[SEARCH] Domain map size:', walletDomainMap.size);
+
       let results = initialPosts;
 
-      // Filter by search query
       if (query.trim()) {
         const lowerQuery = query.toLowerCase();
-        results = results.filter(post => 
+        
+        // Filter posts that match the query
+        results = results.filter(post => {
           // Search in post content
-          post.content.toLowerCase().includes(lowerQuery) ||
-          // Search in categories
-          post.category.toLowerCase().includes(lowerQuery) ||
-          post.subcategory.toLowerCase().includes(lowerQuery) ||
-          // Search in wallet address (truncated)
-          post.wallet.toLowerCase().includes(lowerQuery) ||
+          if (post.content.toLowerCase().includes(lowerQuery)) {
+            return true;
+          }
+          
+          // Search in category
+          if (post.category && post.category.toLowerCase().includes(lowerQuery)) {
+            return true;
+          }
+          
+          // Search in wallet address (full and truncated)
+          if (post.wallet.toLowerCase().includes(lowerQuery)) {
+            return true;
+          }
+          
+          // Search in SNS domain (regardless of premium status for search)
+          const postDomain = walletDomainMap.get(post.wallet);
+          if (post.wallet === 'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip') {
+            console.log('[SEARCH] Checking COIN wallet domain:', postDomain, 'against query:', lowerQuery);
+          }
+          if (postDomain && postDomain.toLowerCase().includes(lowerQuery)) {
+            return true;
+          }
+          
           // Search in replies
-          post.replies.some(reply => 
-            reply.content.toLowerCase().includes(lowerQuery) ||
-            reply.wallet.toLowerCase().includes(lowerQuery)
-          )
-        );
+          const replyMatch = post.replies.some(reply => {
+            if (reply.content.toLowerCase().includes(lowerQuery)) {
+              return true;
+            }
+            if (reply.wallet.toLowerCase().includes(lowerQuery)) {
+              return true;
+            }
+            const replyDomain = walletDomainMap.get(reply.wallet);
+            return replyDomain && replyDomain.toLowerCase().includes(lowerQuery);
+          });
+          
+          if (replyMatch) {
+            return true;
+          }
+          
+          return false;
+        });
       }
 
       // Filter by category
@@ -107,12 +175,13 @@ export default function SearchScreen() {
       });
 
       setSearchResults(results);
+    } catch (error) {
+      console.error('Search error:', error);
+      setSearchResults([]);
+    } finally {
       setIsLoading(false);
-    }, 300);
-
-    // Cleanup function to prevent stale searches
-    return () => clearTimeout(searchTimeout);
-  };
+    }
+  }, [isLoading, searchHistory]);
 
   // Calculate relevance score for sorting
   const calculateRelevanceScore = (post: PostType, query: string): number => {
@@ -157,10 +226,10 @@ export default function SearchScreen() {
     return score;
   };
 
-  const handleCategoryFilter = (category: string | null) => {
+  const handleCategoryFilter = async (category: string | null) => {
     setSelectedCategory(category);
     if (searchQuery.trim()) {
-      performSearch(searchQuery);
+      await performSearch(searchQuery);
     }
   };
 
@@ -228,12 +297,17 @@ export default function SearchScreen() {
     });
   };
 
-  const onRefresh = () => {
-    performSearch(searchQuery);
+  const onRefresh = async () => {
+    await performSearch(searchQuery);
   };
 
+  console.log('[SEARCH SCREEN] About to render, hasSearched:', hasSearched, 'searchResults:', searchResults.length);
+  
   return (
     <View style={styles.container}>
+      <Text style={{ position: 'absolute', top: 100, left: 20, zIndex: 9999, backgroundColor: 'yellow', padding: 10 }}>
+        SEARCH SCREEN LOADED
+      </Text>
       {/* Background */}
       <LinearGradient
         colors={isDarkMode ? [
@@ -273,11 +347,25 @@ export default function SearchScreen() {
 
         {/* Search Bar */}
         <SearchBar
-          onSearch={performSearch}
+          onSearch={(query) => {
+            console.log('[SEARCH] SearchBar onSearch called with:', query);
+            performSearch(query);
+          }}
           onCategoryFilter={handleCategoryFilter}
           searchHistory={searchHistory}
           onClearHistory={clearSearchHistory}
         />
+        
+        {/* Debug button */}
+        <TouchableOpacity 
+          onPress={() => {
+            console.log('[DEBUG] Test button pressed');
+            performSearch('test');
+          }}
+          style={{ padding: 10, backgroundColor: 'red', margin: 10 }}
+        >
+          <Text style={{ color: 'white' }}>Test Search</Text>
+        </TouchableOpacity>
 
         {/* Search Results */}
         <ScrollView
@@ -287,8 +375,9 @@ export default function SearchScreen() {
             <RefreshControl
               refreshing={isLoading}
               onRefresh={onRefresh}
-              tintColor="#43e97b"
-              colors={["#43e97b"]}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+              progressBackgroundColor={isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)'}
             />
           }
           showsVerticalScrollIndicator={false}

@@ -16,9 +16,18 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT || 3000
 
+// CORS configuration
+const corsOptions = {
+  origin: true, // Allow all origins in development
+  credentials: true,
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}
+
 // Middleware
 app.use(helmet())
-app.use(cors())
+app.use(cors(corsOptions))
 app.use(morgan('combined'))
 app.use(express.json())
 
@@ -57,11 +66,19 @@ app.get('/test-db', async (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Korus Backend running on http://localhost:3000`)
+  const isMockMode = !process.env.DATABASE_URL || process.env.MOCK_MODE === 'true';
+  
+  console.log(`🚀 Korus Backend running on http://localhost:${PORT}`)
   console.log(`📊 Health: http://localhost:${PORT}/health`)
-  console.log(`🗄️ Database: http://localhost:3000/test-db`)
-  console.log(`🔐 Auth: http://localhost:3000/api/auth/*`)
-  console.log(`📝 Posts: http://localhost:3000/api/posts/*`)
-  console.log(`💫 Interactions: http://localhost:3000/api/interactions/*`)
-  console.log(`💬 Replies: http://localhost:3000/api/posts/*/replies`)
+  console.log(`🗄️ Database: http://localhost:${PORT}/test-db`)
+  console.log(`🔐 Auth: http://localhost:${PORT}/api/auth/*`)
+  console.log(`📝 Posts: http://localhost:${PORT}/api/posts/*`)
+  console.log(`💫 Interactions: http://localhost:${PORT}/api/interactions/*`)
+  console.log(`💬 Replies: http://localhost:${PORT}/api/posts/*/replies`)
+  console.log(`\n🔧 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:8081'}`)
+  
+  if (isMockMode) {
+    console.log(`\n⚠️  Running in MOCK MODE - No database connection required`)
+    console.log(`📝 Data is stored in memory and will be lost on restart`)
+  }
 })

@@ -5,7 +5,6 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../../context/ThemeContext';
 import { Fonts, FontSizes } from '../../constants/Fonts';
-import ParticleSystem from '../../components/ParticleSystem';
 
 interface Notification {
   id: string;
@@ -129,8 +128,7 @@ export default function NotificationsScreen() {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <ParticleSystem>
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Background gradients */}
         <LinearGradient
           colors={gradients.surface}
@@ -257,7 +255,6 @@ export default function NotificationsScreen() {
           )}
         </ScrollView>
       </View>
-    </ParticleSystem>
   );
 }
 

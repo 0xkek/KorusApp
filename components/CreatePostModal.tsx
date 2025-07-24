@@ -1,4 +1,4 @@
-import { BlurView } from 'expo-blur';
+// import { BlurView } from 'expo-blur'; // Removed for performance
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert, TouchableWithoutFeedback } from 'react-native';
@@ -6,112 +6,85 @@ import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import GameSelectionModal from './GameSelectionModal';
-import { useWallet } from '../context/WalletContext';
 
-type GameType = 'tictactoe' | 'connect4' | 'rps' | 'coinflip';
 
 interface CreatePostModalProps {
   visible: boolean;
   content: string;
-  activeTab: string;
-  activeSubtopic: string;
   onClose: () => void;
   onContentChange: (text: string) => void;
-  onSubmit: (category: string, subcategory: string, imageUrl?: string, gameData?: { type: GameType; wager: number }) => void;
+  onSubmit: (category: string, imageUrl?: string) => void;
 }
 
 export default function CreatePostModal({
   visible,
   content,
-  activeTab,
-  activeSubtopic,
   onClose,
   onContentChange,
   onSubmit,
 }: CreatePostModalProps) {
   const { colors, isDarkMode, gradients } = useTheme();
-  const { balance } = useWallet();
   
-  // Local state for category selection
-  const [selectedCategory, setSelectedCategory] = useState(activeTab.toUpperCase());
-  const [selectedSubcategory, setSelectedSubcategory] = useState(activeSubtopic);
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-  const [showSubcategoryDropdown, setShowSubcategoryDropdown] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [showGameSelection, setShowGameSelection] = useState(false);
-  const [selectedGame, setSelectedGame] = useState<{ type: GameType; wager: number } | null>(null);
+  // Local state
+  const [selectedMedia, setSelectedMedia] = useState<{ uri: string; type: 'image' | 'video' } | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Categories and subcategories (matching Header component)
-  const categories = [
-    'CAREER', 'HEALTH', 'RELATIONSHIPS', 'FINANCE', 'TECHNOLOGY', 
-    'LIFESTYLE', 'EDUCATION', 'ENTERTAINMENT', 'SPORTS', 'TRAVEL', 
-    'BUSINESS', 'POLITICS'
-  ];
-  
-  const subcategories: { [key: string]: string[] } = {
-    CAREER: ['Job Search', 'Interviews', 'Networking', 'Salary Negotiations'],
-    HEALTH: ['Mental Health', 'Fitness', 'Nutrition', 'Medical'],
-    RELATIONSHIPS: ['Dating', 'Marriage', 'Family', 'Friendship'],
-    FINANCE: ['Investing', 'Budgeting', 'Crypto', 'Real Estate'],
-    TECHNOLOGY: ['AI/ML', 'Web Dev', 'Mobile Apps', 'Blockchain'],
-    LIFESTYLE: ['Fashion', 'Home', 'Food', 'Travel'],
-    EDUCATION: ['College', 'Online Learning', 'Certifications', 'Skills'],
-    ENTERTAINMENT: ['Movies', 'Music', 'Gaming', 'Books'],
-    SPORTS: ['Football', 'Basketball', 'Soccer', 'Fitness'],
-    TRAVEL: ['Destinations', 'Tips', 'Budget Travel', 'Solo Travel'],
-    BUSINESS: ['Startups', 'Marketing', 'Leadership', 'Strategy'],
-    POLITICS: ['Elections', 'Policy', 'Local Gov', 'International']
+  const handleSubmit = async () => {
+    if (selectedMedia && !isUploading) {
+      // Simulate upload
+      setIsUploading(true);
+      setUploadProgress(0);
+      
+      // Simulate upload progress
+      const interval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            return 100;
+          }
+          return prev + 10;
+        });
+      }, 200);
+      
+      // Wait for "upload" to complete
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
+    
+    onSubmit('GENERAL', selectedMedia?.uri);
+    setSelectedMedia(null); // Reset media after submission
   };
 
-  const handleCategorySelect = (category: string) => {
-    setSelectedCategory(category);
-    setSelectedSubcategory(subcategories[category][0]); // Default to first subcategory
-    setShowCategoryDropdown(false);
-  };
-
-  const handleSubcategorySelect = (subcategory: string) => {
-    setSelectedSubcategory(subcategory);
-    setShowSubcategoryDropdown(false);
-  };
-
-  const handleSubmit = () => {
-    onSubmit(selectedCategory, selectedSubcategory, selectedImage || undefined, selectedGame || undefined);
-    setSelectedImage(null); // Reset image after submission
-    setSelectedGame(null); // Reset game after submission
-  };
-
-  const handleGameSelect = (gameType: GameType, wager: number) => {
-    setSelectedGame({ type: gameType, wager });
-    setShowGameSelection(false);
-  };
-
-  const removeGame = () => {
-    setSelectedGame(null);
-  };
-
-  const pickImage = async () => {
+  const pickMedia = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'We need camera roll permissions to upload images.');
+      Alert.alert('Permission Denied', 'We need camera roll permissions to upload media.');
       return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.8,
+      videoMaxDuration: 60, // 60 seconds max for videos
     });
 
     if (!result.canceled) {
-      setSelectedImage(result.assets[0].uri);
+      const asset = result.assets[0];
+      const isVideo = asset.type === 'video' || asset.uri.toLowerCase().includes('.mp4') || asset.uri.toLowerCase().includes('.mov');
+      setSelectedMedia({ uri: asset.uri, type: isVideo ? 'video' : 'image' });
     }
   };
 
-  const removeImage = () => {
-    setSelectedImage(null);
+
+  const removeMedia = () => {
+    setSelectedMedia(null);
+    setUploadProgress(0);
   };
 
   return (
@@ -125,7 +98,7 @@ export default function CreatePostModal({
         <View style={[styles.modalOverlay, { backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.9)' : 'rgba(0, 0, 0, 0.8)' }]}>
           <TouchableWithoutFeedback>
             <View style={[styles.modalContent, { borderColor: colors.primary, shadowColor: colors.shadowColor }]}>
-          <BlurView intensity={40} style={styles.blurWrapper}>
+          <View style={styles.blurWrapper}>
             <LinearGradient
               colors={gradients.surface}
               style={styles.contentContainer}
@@ -141,113 +114,7 @@ export default function CreatePostModal({
                 </TouchableOpacity>
               </View>
 
-              {/* Category Selection */}
-              <View style={styles.categorySelection}>
-                <Text style={[styles.selectionLabel, { color: colors.primary }]}>Category:</Text>
-                <TouchableOpacity 
-                  style={[styles.dropdown, { borderColor: colors.primary + '40', backgroundColor: colors.surface }]}
-                  onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                >
-                  <LinearGradient
-                    colors={gradients.surface}
-                    style={styles.dropdownGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  >
-                    <Text style={[styles.dropdownText, { color: colors.text }]}>
-                      {selectedCategory}
-                    </Text>
-                    <Text style={[styles.dropdownArrow, { color: colors.primary }]}>
-                      {showCategoryDropdown ? '▲' : '▼'}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-                
-                {showCategoryDropdown && (
-                  <ScrollView style={[styles.dropdownList, { borderColor: colors.primary + '40', backgroundColor: colors.surface }]} nestedScrollEnabled>
-                    {categories.map((category) => (
-                      <TouchableOpacity
-                        key={category}
-                        style={styles.dropdownItem}
-                        onPress={() => handleCategorySelect(category)}
-                      >
-                        <LinearGradient
-                          colors={
-                            selectedCategory === category
-                              ? gradients.primary
-                              : gradients.surface
-                          }
-                          style={styles.dropdownItemGradient}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
-                        >
-                          <Text style={[
-                            styles.dropdownItemText,
-                            { color: selectedCategory === category ? colors.primary : colors.textSecondary },
-                            selectedCategory === category && styles.dropdownItemTextSelected
-                          ]}>
-                            {category}
-                          </Text>
-                        </LinearGradient>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                )}
-              </View>
 
-              {/* Subcategory Selection */}
-              <View style={styles.categorySelection}>
-                <Text style={[styles.selectionLabel, { color: colors.primary }]}>Subcategory:</Text>
-                <TouchableOpacity 
-                  style={[styles.dropdown, { borderColor: colors.primary + '40', backgroundColor: colors.surface }]}
-                  onPress={() => setShowSubcategoryDropdown(!showSubcategoryDropdown)}
-                >
-                  <LinearGradient
-                    colors={gradients.surface}
-                    style={styles.dropdownGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  >
-                    <Text style={[styles.dropdownText, { color: colors.text }]}>
-                      {selectedSubcategory}
-                    </Text>
-                    <Text style={[styles.dropdownArrow, { color: colors.primary }]}>
-                      {showSubcategoryDropdown ? '▲' : '▼'}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-                
-                {showSubcategoryDropdown && (
-                  <ScrollView style={[styles.dropdownList, { borderColor: colors.primary + '40', backgroundColor: colors.surface }]} nestedScrollEnabled>
-                    {subcategories[selectedCategory]?.map((subcategory) => (
-                      <TouchableOpacity
-                        key={subcategory}
-                        style={styles.dropdownItem}
-                        onPress={() => handleSubcategorySelect(subcategory)}
-                      >
-                        <LinearGradient
-                          colors={
-                            selectedSubcategory === subcategory
-                              ? gradients.primary
-                              : gradients.surface
-                          }
-                          style={styles.dropdownItemGradient}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
-                        >
-                          <Text style={[
-                            styles.dropdownItemText,
-                            { color: selectedSubcategory === subcategory ? colors.primary : colors.textSecondary },
-                            selectedSubcategory === subcategory && styles.dropdownItemTextSelected
-                          ]}>
-                            {subcategory}
-                          </Text>
-                        </LinearGradient>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                )}
-              </View>
 
               <View style={styles.textInputContainer}>
                 <TextInput
@@ -261,28 +128,46 @@ export default function CreatePostModal({
                 />
               </View>
 
-              {/* Image preview */}
-              {selectedImage && (
+              {/* Media preview */}
+              {selectedMedia && (
                 <View style={styles.imagePreviewContainer}>
-                  <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+                  {selectedMedia.type === 'image' ? (
+                    <Image source={{ uri: selectedMedia.uri }} style={styles.imagePreview} />
+                  ) : (
+                    <View style={styles.videoPreviewContainer}>
+                      <Image 
+                        source={{ uri: selectedMedia.uri }} 
+                        style={styles.imagePreview} 
+                      />
+                      <View style={styles.videoPlayIcon}>
+                        <Ionicons name="play-circle" size={48} color="rgba(255, 255, 255, 0.9)" />
+                      </View>
+                    </View>
+                  )}
+                  {isUploading && (
+                    <View style={styles.uploadProgressContainer}>
+                      <View style={[styles.uploadProgressBar, { width: `${uploadProgress}%` }]} />
+                      <Text style={styles.uploadProgressText}>{uploadProgress}%</Text>
+                    </View>
+                  )}
                   <TouchableOpacity 
                     style={[styles.removeImageButton, { backgroundColor: colors.surface }]}
-                    onPress={removeImage}
+                    onPress={removeMedia}
+                    disabled={isUploading}
                   >
                     <Ionicons name="close-circle" size={24} color={colors.error} />
                   </TouchableOpacity>
                 </View>
               )}
 
-              {/* Media and Game buttons */}
+              {/* Media button */}
               <View style={styles.actionButtonsContainer}>
-                {/* Image picker button */}
                 <TouchableOpacity 
-                  style={[styles.actionButton, { 
+                  style={[styles.singleActionButton, { 
                     shadowColor: colors.primary,
-                    shadowOpacity: 0.2
+                    shadowOpacity: 0.1
                   }]}
-                  onPress={pickImage}
+                  onPress={pickMedia}
                 >
                   <LinearGradient
                     colors={gradients.surface}
@@ -293,67 +178,14 @@ export default function CreatePostModal({
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   >
-                    <Ionicons name="image-outline" size={20} color={colors.primary} />
+                    <Ionicons name="images-outline" size={20} color={colors.primary} />
                     <Text style={[styles.actionButtonText, { color: colors.primary }]}>
-                      {selectedImage ? 'Change Media' : 'Add Media'}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-
-                {/* Game picker button */}
-                <TouchableOpacity 
-                  style={[styles.actionButton, { 
-                    shadowColor: colors.primary,
-                    shadowOpacity: 0.2
-                  }]}
-                  onPress={() => setShowGameSelection(true)}
-                  disabled={!!selectedImage} // Disable if image is selected
-                >
-                  <LinearGradient
-                    colors={gradients.surface}
-                    style={[styles.actionButtonGradient, { 
-                      borderColor: colors.primary + '60',
-                      borderWidth: 1.5,
-                      opacity: selectedImage ? 0.5 : 1
-                    }]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  >
-                    <Ionicons name="game-controller-outline" size={20} color={colors.primary} />
-                    <Text style={[styles.actionButtonText, { color: colors.primary }]}>
-                      {selectedGame ? 'Change Game' : 'Add Game'}
+                      Add Photo or Video
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
 
-              {/* Game preview */}
-              {selectedGame && (
-                <View style={[styles.gamePreviewContainer, { backgroundColor: colors.surface }]}>
-                  <View style={styles.gamePreviewContent}>
-                    <Ionicons 
-                      name={selectedGame.type === 'tictactoe' ? 'grid-outline' : 
-                            selectedGame.type === 'rps' ? 'hand-left-outline' :
-                            selectedGame.type === 'coinflip' ? 'disc-outline' : 'apps-outline'} 
-                      size={24} 
-                      color={colors.primary} 
-                    />
-                    <View style={styles.gamePreviewInfo}>
-                      <Text style={[styles.gamePreviewTitle, { color: colors.text }]}>
-                        {selectedGame.type === 'tictactoe' ? 'Tic Tac Toe' :
-                         selectedGame.type === 'rps' ? 'Rock Paper Scissors' :
-                         selectedGame.type === 'coinflip' ? 'Coin Flip' : 'Connect 4'}
-                      </Text>
-                      <Text style={[styles.gamePreviewWager, { color: colors.textSecondary }]}>
-                        Wager: {selectedGame.wager} ALLY
-                      </Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity onPress={removeGame}>
-                    <Ionicons name="close-circle" size={24} color={colors.error} />
-                  </TouchableOpacity>
-                </View>
-              )}
 
               <View style={styles.modalActions}>
                 <TouchableOpacity 
@@ -374,15 +206,15 @@ export default function CreatePostModal({
                 <TouchableOpacity
                   style={[
                     styles.postButton,
-                    !content.trim() && styles.postButtonDisabled
+                    (!content.trim() || isUploading) && styles.postButtonDisabled
                   ]}
                   onPress={handleSubmit}
-                  disabled={!content.trim() && !selectedGame}
+                  disabled={!content.trim() || isUploading}
                   activeOpacity={0.8}
                 >
                   <LinearGradient
                     colors={
-                      (!content.trim() && !selectedGame)
+                      !content.trim()
                         ? gradients.surface
                         : gradients.button
                     }
@@ -392,28 +224,21 @@ export default function CreatePostModal({
                   >
                     <Text style={[
                       styles.postButtonText,
-                      { color: (!content.trim() && !selectedGame) ? colors.textSecondary : (isDarkMode ? '#000000' : '#000000') },
-                      (!content.trim() && !selectedGame) && styles.postButtonTextDisabled
+                      { color: (!content.trim() || isUploading) ? colors.textSecondary : (isDarkMode ? '#000000' : '#000000') },
+                      (!content.trim() || isUploading) && styles.postButtonTextDisabled
                     ]}>
-                      Share
+                      {isUploading ? 'Uploading...' : 'Share'}
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
             </LinearGradient>
-          </BlurView>
+          </View>
             </View>
           </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
 
-      {/* Game Selection Modal */}
-      <GameSelectionModal
-        visible={showGameSelection}
-        onClose={() => setShowGameSelection(false)}
-        onSelectGame={handleGameSelect}
-        balance={balance}
-      />
     </Modal>
   );
 }
@@ -428,11 +253,12 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     borderWidth: 2,
     borderBottomWidth: 0,
-    shadowOffset: { width: 0, height: -8 },
-    shadowOpacity: 0.8,
-    shadowRadius: 35,
-    elevation: 15,
-    maxHeight: '80%',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+    maxHeight: '85%',
+    minHeight: '65%',
     overflow: 'hidden',
   },
   blurWrapper: {
@@ -443,17 +269,17 @@ const styles = StyleSheet.create({
   contentContainer: {
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    padding: 24,
-    paddingBottom: 30,
+    padding: 32,
+    paddingBottom: 24,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 24,
   },
   modalTitle: {
-    fontSize: FontSizes.xl,
+    fontSize: FontSizes['2xl'],
     fontFamily: Fonts.bold,
     letterSpacing: -0.02,
   },
@@ -482,10 +308,10 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   dropdownGradient: {
     flexDirection: 'row',
@@ -508,10 +334,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   dropdownItem: {
     borderRadius: 8,
@@ -531,21 +357,21 @@ const styles = StyleSheet.create({
   },
   textInputContainer: {
     borderRadius: 20,
-    marginBottom: 24,
+    marginBottom: 32,
   },
   textInput: {
     borderWidth: 1.5,
     borderRadius: 20,
-    padding: 18,
+    padding: 24,
     fontSize: FontSizes.lg,
     fontFamily: Fonts.medium,
-    minHeight: 140,
+    minHeight: 225,
     textAlignVertical: 'top',
-    lineHeight: 24,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
+    lineHeight: 28,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 1,
   },
   modalActions: {
     flexDirection: 'row',
@@ -562,9 +388,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1.5,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
   cancelButtonText: {
     fontSize: FontSizes.lg,
@@ -591,16 +417,16 @@ const styles = StyleSheet.create({
   postButtonTextDisabled: {
   },
   imagePreviewContainer: {
-    marginTop: 12,
-    marginBottom: 8,
+    marginTop: 16,
+    marginBottom: 16,
     position: 'relative',
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: 'hidden',
   },
   imagePreview: {
     width: '100%',
-    height: 200,
-    borderRadius: 12,
+    height: 240,
+    borderRadius: 16,
   },
   removeImageButton: {
     position: 'absolute',
@@ -609,16 +435,49 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 4,
   },
+  videoPreviewContainer: {
+    position: 'relative',
+    width: '100%',
+    height: 240,
+  },
+  videoPlayIcon: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -24 }, { translateY: -24 }],
+  },
+  uploadProgressContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 40,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  uploadProgressBar: {
+    position: 'absolute',
+    left: 0,
+    bottom: 0,
+    height: 4,
+    backgroundColor: '#43e97b',
+  },
+  uploadProgressText: {
+    color: '#fff',
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.semiBold,
+  },
   actionButtonsContainer: {
     flexDirection: 'row',
     gap: 12,
-    marginBottom: 16,
+    marginBottom: 24,
   },
   actionButton: {
     flex: 1,
     borderRadius: 16,
     shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 2,
+    shadowRadius: 1,
     elevation: 1,
     overflow: 'hidden',
   },
@@ -636,29 +495,12 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.base,
     fontFamily: Fonts.medium,
   },
-  gamePreviewContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-  },
-  gamePreviewContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  gamePreviewInfo: {
-    gap: 4,
-  },
-  gamePreviewTitle: {
-    fontSize: FontSizes.base,
-    fontFamily: Fonts.semiBold,
-  },
-  gamePreviewWager: {
-    fontSize: FontSizes.sm,
-    fontFamily: Fonts.regular,
+  singleActionButton: {
+    width: '100%',
+    borderRadius: 16,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 1,
+    elevation: 1,
+    overflow: 'hidden',
   },
 });

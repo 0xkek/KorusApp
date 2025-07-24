@@ -9,6 +9,7 @@ import { useTheme } from '../context/ThemeContext';
 import AvatarSelectionModal from './AvatarSelectionModal';
 import NFTAvatarModal from './NFTAvatarModal';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 interface MyProfileModalProps {
   visible: boolean;
@@ -23,6 +24,7 @@ export default function MyProfileModal({
 }: MyProfileModalProps) {
   const { walletAddress, balance, selectedAvatar, setSelectedAvatar, selectedNFTAvatar, setSelectedNFTAvatar, snsDomain, allSNSDomains, setFavoriteSNSDomain, isPremium, timeFunUsername, setTimeFunUsername } = useWallet();
   const { colors, isDarkMode, gradients } = useTheme();
+  const router = useRouter();
   const styles = createStyles(colors, isDarkMode);
   const [showAvatarSelection, setShowAvatarSelection] = useState(false);
   const [showNFTSelection, setShowNFTSelection] = useState(false);
@@ -65,7 +67,7 @@ export default function MyProfileModal({
       tipsReceived,
       tipsGiven,
       balance: balance.toFixed(2),
-      favoriteCategories: favoriteCategories.length > 0 ? favoriteCategories : ['CAREER', 'TECHNOLOGY']
+      favoriteCategories: favoriteCategories.length > 0 ? favoriteCategories : ['GENERAL', 'GAMES']
     };
   };
 
@@ -195,11 +197,25 @@ export default function MyProfileModal({
                   <View style={styles.userInfo}>
                     {snsDomain ? (
                       <>
-                        <Text style={styles.snsDomain}>{snsDomain}</Text>
+                        <View style={styles.snsDomainRow}>
+                          <Text style={styles.snsDomain}>{snsDomain}</Text>
+                          {isPremium && (
+                            <View style={[styles.verifiedBadge, { backgroundColor: '#FFD700' }]}>
+                              <Ionicons name="star" size={10} color="#000" />
+                            </View>
+                          )}
+                        </View>
                         <Text style={styles.username}>@{profileData.shortWallet}</Text>
                       </>
                     ) : (
-                      <Text style={styles.username}>@{profileData.shortWallet}</Text>
+                      <View style={styles.usernameRow}>
+                        <Text style={styles.username}>@{profileData.shortWallet}</Text>
+                        {isPremium && (
+                          <View style={[styles.verifiedBadge, { backgroundColor: '#FFD700' }]}>
+                            <Ionicons name="star" size={10} color="#000" />
+                          </View>
+                        )}
+                      </View>
                     )}
                     <View style={styles.walletRow}>
                       <Text style={styles.walletAddress} numberOfLines={1} adjustsFontSizeToFit>{profileData.fullWallet}</Text>
@@ -689,6 +705,24 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   userInfo: {
     alignItems: 'center',
   },
+  snsDomainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  usernameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  verifiedBadge: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFD700',
+  },
   walletRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -866,6 +900,38 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     fontSize: FontSizes.sm,
     fontFamily: Fonts.semiBold,
     color: colors.primary,
+  },
+  reputationSection: {
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  reputationButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  reputationBlur: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  reputationGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  reputationButtonText: {
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.semibold,
+    color: isDarkMode ? '#000' : '#fff',
+    flex: 1,
+    textAlign: 'center',
   },
   snsSection: {
     marginTop: 6,

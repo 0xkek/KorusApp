@@ -6,6 +6,7 @@ import { getFavoriteSNSDomain, fetchSNSDomains, SNSDomain } from '../utils/sns';
 import { NFTAvatar } from '../types/theme';
 import { logger } from '../utils/logger';
 import { withErrorHandling, handleError } from '../utils/errorHandler';
+import { authAPI } from '../utils/api';
 
 interface WalletContextType {
   walletAddress: string | null;
@@ -52,6 +53,7 @@ const NFT_AVATAR_KEY = 'korus_user_nft_avatar';
 const FAVORITE_SNS_KEY = 'korus_favorite_sns_domain';
 const PREMIUM_STATUS_KEY = 'korus_premium_status';
 const TIMEFUN_USERNAME_KEY = 'korus_timefun_username';
+const OFFLINE_MODE_KEY = 'korus_offline_mode';
 
 export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
@@ -83,30 +85,28 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       const storedTimeFunUsername = await SecureStore.getItemAsync(TIMEFUN_USERNAME_KEY);
       
       if (storedAddress) {
+        // OFFLINE MODE - Skip API calls
+        logger.log('Loading wallet in offline mode');
+        
         setWalletAddress(storedAddress);
         setHasWallet(true);
-        // In real app, fetch balance from blockchain
-        setBalance(5000); // Increased balance for testing games
+        setBalance(5000);
         
-        // Load premium status
-        const isPremiumUser = storedPremiumStatus === 'true';
+        // Mock premium status for offline mode
+        const isPremiumUser = true; // Always premium in offline mode for testing
+        setIsPremium(isPremiumUser);
+        
+        // Mock SNS domains for offline mode
+        const mockDomains: SNSDomain[] = [
+          { domain: 'korususer.sol', favorite: true },
+          { domain: 'coolname.sol', favorite: false },
+          { domain: 'web3master.sol', favorite: false }
+        ];
+        setAllSNSDomains(mockDomains);
+        
         if (isPremiumUser) {
-          setIsPremium(true);
-        }
-        
-        // Fetch all SNS domains
-        const domains = await fetchSNSDomains(storedAddress);
-        setAllSNSDomains(domains);
-        
-        // Only set SNS domain if user is premium
-        if (isPremiumUser) {
-          // Use stored favorite or get default favorite
-          const favoriteDomain = storedFavoriteSNS || await getFavoriteSNSDomain(storedAddress);
+          const favoriteDomain = storedFavoriteSNS || 'korususer.sol';
           setSnsDomain(favoriteDomain);
-        } else {
-          // Clear any stored SNS domain for non-premium users
-          await SecureStore.deleteItemAsync(FAVORITE_SNS_KEY);
-          setSnsDomain(null);
         }
       }
       
@@ -145,19 +145,28 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       const mockPublicKey = generateWalletAddress();
       const mockSecretKey = 'mock-secret-key-' + Date.now();
       
-      // Store securely
+      // Create a mock signature for authentication
+      const mockMessage = `Sign this message to authenticate with Korus\nTimestamp: ${Date.now()}`;
+      const mockSignature = 'mock-signature-' + Date.now();
+      
+      // OFFLINE MODE - Skip backend authentication
+      logger.log('Creating wallet in offline mode');
+      
+      // Store wallet info
       await SecureStore.setItemAsync(WALLET_KEY, mockSecretKey);
       await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, mockPublicKey);
       
+      // Update state
       setWalletAddress(mockPublicKey);
       setHasWallet(true);
-      setBalance(5000); // Increased balance for testing games
+      setBalance(5000);
+      setIsPremium(false); // Default to standard tier
       
-      // Fetch SNS domains for new wallet
+      // Fetch SNS domains
       const domains = await fetchSNSDomains(mockPublicKey);
       setAllSNSDomains(domains);
-      const domain = await getFavoriteSNSDomain(mockPublicKey);
-      setSnsDomain(domain);
+      
+      logger.log('Wallet created successfully (offline mode)');
       
     }, 'createNewWallet', {
       onError: () => setIsLoading(false)

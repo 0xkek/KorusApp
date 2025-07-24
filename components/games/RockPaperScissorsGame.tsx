@@ -54,6 +54,7 @@ export default function RockPaperScissorsGame({
   const { colors, gradients, isDarkMode } = useTheme();
   const { walletAddress } = useWallet();
   const [timeLeft, setTimeLeft] = useState<string>('');
+  
   const animatedValues = useRef(CHOICES.map(() => new Animated.Value(1))).current;
   
   const isPlayer1 = walletAddress === player1;
@@ -61,7 +62,8 @@ export default function RockPaperScissorsGame({
   const isParticipant = isPlayer1 || isPlayer2;
   
   // Check if current player has already made a choice for this round
-  const currentRoundData = rounds[currentRound - 1] || {};
+  const safeRounds = rounds || [];
+  const currentRoundData = safeRounds[currentRound - 1] || {};
   const myCurrentChoice = isPlayer1 ? currentRoundData.player1Choice : currentRoundData.player2Choice;
   const hasPlayerChosen = !!myCurrentChoice;
   const canMakeChoice = isParticipant && !hasPlayerChosen && gameStatus === 'active' && !winner;
@@ -142,7 +144,7 @@ export default function RockPaperScissorsGame({
     let p1Score = 0;
     let p2Score = 0;
     
-    rounds.forEach(round => {
+    safeRounds.forEach(round => {
       if (round.winner === player1) p1Score++;
       else if (round.winner === player2) p2Score++;
     });
@@ -154,8 +156,10 @@ export default function RockPaperScissorsGame({
 
   return (
     <View style={styles.container}>
-      {/* Compact Header */}
-      <View style={styles.header}>
+      {/* Game Content */}
+      <View style={styles.topContent}>
+        {/* Compact Header */}
+        <View style={styles.header}>
         <View style={styles.playerInfo}>
           <Text style={[styles.score, { color: colors.primary }]}>{p1Score}</Text>
           <Text style={[styles.vs, { color: colors.textSecondary }]}>-</Text>
@@ -220,52 +224,95 @@ export default function RockPaperScissorsGame({
       )}
 
       {/* Choice Selection */}
-      <View style={styles.choicesContainer}>
-        {CHOICES.map((choice, index) => (
-          <TouchableOpacity
-            key={choice.id}
-            onPress={() => handleChoicePress(choice.id, index)}
-            disabled={!canMakeChoice}
-            activeOpacity={0.8}
-          >
-            <Animated.View style={{ transform: [{ scale: animatedValues[index] }] }}>
-              <LinearGradient
-                colors={
-                  myCurrentChoice === choice.id 
-                    ? gradients.primary
-                    : selectedChoice === choice.id && canMakeChoice
-                    ? [colors.primary + '40', colors.primary + '20']
-                    : gradients.surface
-                }
-                style={[
-                  styles.choiceButton,
-                  { 
-                    borderColor: myCurrentChoice === choice.id ? colors.primary : 
-                                selectedChoice === choice.id && canMakeChoice ? colors.primary + '80' : 
-                                colors.borderLight,
-                    borderWidth: myCurrentChoice === choice.id ? 3 : 
-                                selectedChoice === choice.id && canMakeChoice ? 2 : 1,
-                    opacity: !canMakeChoice && !hasPlayerChosen ? 0.5 : 1
+      <View style={styles.choicesWrapper}>
+        <View style={styles.topChoicesRow}>
+          {CHOICES.slice(0, 2).map((choice, index) => (
+            <TouchableOpacity
+              key={choice.id}
+              onPress={() => handleChoicePress(choice.id, index)}
+              disabled={!canMakeChoice}
+              activeOpacity={0.8}
+            >
+              <Animated.View style={{ transform: [{ scale: animatedValues[index] }] }}>
+                <LinearGradient
+                  colors={
+                    myCurrentChoice === choice.id 
+                      ? gradients.primary
+                      : selectedChoice === choice.id && canMakeChoice
+                      ? [colors.primary + '40', colors.primary + '20']
+                      : gradients.surface
                   }
-                ]}
-              >
-                <Text style={styles.choiceEmoji}>{choice.icon}</Text>
-                <Text style={[styles.choiceName, { color: colors.text }]}>
-                  {choice.name}
-                </Text>
-              </LinearGradient>
-            </Animated.View>
-          </TouchableOpacity>
-        ))}
+                  style={[
+                    styles.choiceButton,
+                    { 
+                      borderColor: myCurrentChoice === choice.id ? colors.primary : 
+                                  selectedChoice === choice.id && canMakeChoice ? colors.primary + '80' : 
+                                  colors.border,
+                      borderWidth: myCurrentChoice === choice.id ? 4 : 
+                                  selectedChoice === choice.id && canMakeChoice ? 3 : 2,
+                      opacity: !canMakeChoice && !hasPlayerChosen ? 0.5 : 1
+                    }
+                  ]}
+                >
+                  <Text style={styles.choiceEmoji}>{choice.icon}</Text>
+                  <Text style={[styles.choiceName, { color: colors.text }]}>
+                    {choice.name}
+                  </Text>
+                </LinearGradient>
+              </Animated.View>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <View style={styles.bottomChoiceRow}>
+          {CHOICES.slice(2, 3).map((choice, index) => (
+            <TouchableOpacity
+              key={choice.id}
+              onPress={() => handleChoicePress(choice.id, 2)}
+              disabled={!canMakeChoice}
+              activeOpacity={0.8}
+            >
+              <Animated.View style={{ transform: [{ scale: animatedValues[2] }] }}>
+                <LinearGradient
+                  colors={
+                    myCurrentChoice === choice.id 
+                      ? gradients.primary
+                      : selectedChoice === choice.id && canMakeChoice
+                      ? [colors.primary + '40', colors.primary + '20']
+                      : gradients.surface
+                  }
+                  style={[
+                    styles.choiceButton,
+                    { 
+                      borderColor: myCurrentChoice === choice.id ? colors.primary : 
+                                  selectedChoice === choice.id && canMakeChoice ? colors.primary + '80' : 
+                                  colors.border,
+                      borderWidth: myCurrentChoice === choice.id ? 4 : 
+                                  selectedChoice === choice.id && canMakeChoice ? 3 : 2,
+                      opacity: !canMakeChoice && !hasPlayerChosen ? 0.5 : 1
+                    }
+                  ]}
+                >
+                  <Text style={styles.choiceEmoji}>{choice.icon}</Text>
+                  <Text style={[styles.choiceName, { color: colors.text }]}>
+                    {choice.name}
+                  </Text>
+                </LinearGradient>
+              </Animated.View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
       </View>
 
-      {/* Round History */}
-      {rounds.length > 0 && (
+      {/* Bottom Content */}
+      <View style={styles.bottomContent}>
+        {/* Round History */}
+        {safeRounds.length > 0 && (
         <View style={styles.historyContainer}>
           <Text style={[styles.historyTitle, { color: colors.textSecondary }]}>
             Round History
           </Text>
-          {rounds.map((round, index) => (
+          {safeRounds.map((round, index) => (
             <View key={index} style={[styles.roundResult, { backgroundColor: colors.surface }]}>
               <Text style={[styles.roundNumber, { color: colors.textTertiary }]}>
                 Round {index + 1}
@@ -295,6 +342,7 @@ export default function RockPaperScissorsGame({
           ))}
         </View>
       )}
+      </View>
     </View>
   );
 }
@@ -302,30 +350,40 @@ export default function RockPaperScissorsGame({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  topContent: {
+    flex: 1,
+  },
+  bottomContent: {
+    paddingBottom: 20,
   },
   header: {
-    marginBottom: 8,
+    marginBottom: 20,
+    paddingVertical: 10,
   },
   playerInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
-    gap: 6,
+    marginBottom: 16,
+    gap: 12,
   },
   playerName: {
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.base,
     fontFamily: Fonts.medium,
   },
   score: {
-    fontSize: FontSizes.lg,
+    fontSize: 48,
     fontFamily: Fonts.bold,
-    marginHorizontal: 2,
+    marginHorizontal: 8,
+    lineHeight: 50,
   },
   vs: {
-    fontSize: FontSizes.xs,
-    fontFamily: Fonts.regular,
-    marginHorizontal: 6,
+    fontSize: FontSizes.lg,
+    fontFamily: Fonts.bold,
+    marginHorizontal: 12,
   },
   gameInfo: {
     flexDirection: 'row',
@@ -333,78 +391,102 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   roundBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
   },
   roundText: {
-    fontSize: FontSizes.xs,
-    fontFamily: Fonts.medium,
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.bold,
+    letterSpacing: 0.5,
   },
   wagerBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
   },
   wagerText: {
-    fontSize: FontSizes.xs,
-    fontFamily: Fonts.semiBold,
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.bold,
   },
   timerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
   },
   timerText: {
-    fontSize: FontSizes.xs,
-    fontFamily: Fonts.medium,
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.semiBold,
   },
   statusBar: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    marginBottom: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    marginBottom: 20,
     alignItems: 'center',
   },
   statusText: {
-    fontSize: FontSizes.xs,
-    fontFamily: Fonts.medium,
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.semiBold,
+    letterSpacing: 0.5,
   },
   winnerBar: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    marginBottom: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 20,
+    marginBottom: 20,
     alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
   },
   winnerText: {
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.lg,
     fontFamily: Fonts.bold,
     color: '#000',
+    letterSpacing: 0.5,
   },
-  choicesContainer: {
+  choicesWrapper: {
+    marginBottom: 30,
+    alignItems: 'center',
+  },
+  topChoicesRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 10,
+    justifyContent: 'center',
+    gap: 20,
+    marginBottom: 20,
+  },
+  bottomChoiceRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   choiceButton: {
-    width: 75,
-    height: 75,
-    borderRadius: 16,
+    width: 150,
+    height: 150,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
   },
   choiceEmoji: {
-    fontSize: 28,
-    marginBottom: 2,
+    fontSize: 60,
+    marginBottom: 8,
   },
   choiceName: {
-    fontSize: FontSizes.xs,
-    fontFamily: Fonts.semiBold,
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.bold,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
   historyContainer: {
     marginTop: 8,
