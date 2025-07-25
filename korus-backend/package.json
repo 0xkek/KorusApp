@@ -14,6 +14,9 @@
     "db:push": "prisma db push"
   },
   "keywords": [],
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "author": "",
   "license": "ISC",
   "type": "commonjs",
