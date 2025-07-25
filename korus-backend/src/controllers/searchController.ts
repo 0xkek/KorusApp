@@ -151,15 +151,9 @@ export const searchPosts = async (req: Request, res: Response) => {
               in: matchingWallets
             }
           },
-          // Search in topic/subtopic
+          // Search in topic
           {
             topic: {
-              contains: searchQuery,
-              mode: 'insensitive'
-            }
-          },
-          {
-            subtopic: {
               contains: searchQuery,
               mode: 'insensitive'
             }

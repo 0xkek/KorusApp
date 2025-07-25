@@ -19,7 +19,6 @@ export interface Post {
   authorWallet: string;
   content: string;
   topic: string;
-  subtopic: string;
   imageUrl?: string;
   videoUrl?: string;
   likeCount: number;
@@ -102,7 +101,6 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
 export interface CreatePostRequest {
   content: string;
   topic?: string;
-  subtopic?: string;
   imageUrl?: string;
   videoUrl?: string;
 }

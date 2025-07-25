@@ -175,10 +175,6 @@ export default function SearchScreen() {
       score += 5;
     }
 
-    // Subcategory matches
-    if (post.subcategory.toLowerCase().includes(lowerQuery)) {
-      score += 3;
-    }
 
     // Reply matches
     post.replies.forEach(reply => {

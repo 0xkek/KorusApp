@@ -59,7 +59,6 @@ export interface Post {
   tipped?: boolean;
   category: string;      // Category field
   topic?: string;
-  subtopic?: string;
   sponsored?: boolean;   // Sponsored/paid post flag
   imageUrl?: string;     // Optional image URL
   videoUrl?: string;     // Optional video URL
