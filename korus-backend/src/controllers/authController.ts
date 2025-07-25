@@ -25,24 +25,36 @@ export const connectWallet = async (req: Request, res: Response) => {
     console.log('Wallet connection attempt:', walletAddress)
 
     // Check if user exists, create if not
-    let user = await prisma.user.findUnique({
-      where: { walletAddress }
-    })
+    let user
+    try {
+      user = await prisma.user.findUnique({
+        where: { walletAddress }
+      })
+      console.log('User lookup successful:', user ? 'found' : 'not found')
+    } catch (findError) {
+      console.error('Database find error:', findError)
+      throw new Error(`Database find failed: ${findError.message}`)
+    }
 
     if (!user) {
-      // Check for Genesis Token (Seeker verification)
-      const hasGenesisToken = await checkGenesisTokenOwnership(walletAddress)
-      
-      user = await prisma.user.create({
-        data: {
-          walletAddress,
-          tier: hasGenesisToken ? 'premium' : 'standard',
-          walletSource: hasGenesisToken ? 'seeker' : 'app',
-          genesisVerified: hasGenesisToken
-        }
-      })
+      try {
+        // Check for Genesis Token (Seeker verification)
+        const hasGenesisToken = await checkGenesisTokenOwnership(walletAddress)
+        
+        user = await prisma.user.create({
+          data: {
+            walletAddress,
+            tier: hasGenesisToken ? 'premium' : 'standard',
+            walletSource: hasGenesisToken ? 'seeker' : 'app',
+            genesisVerified: hasGenesisToken
+          }
+        })
 
-      console.log(`New user created: ${walletAddress} (${user.tier})`)
+        console.log(`New user created: ${walletAddress} (${user.tier})`)
+      } catch (createError) {
+        console.error('Database create error:', createError)
+        throw new Error(`Database create failed: ${createError.message}`)
+      }
     }
 
     // Generate JWT
