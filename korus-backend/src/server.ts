@@ -4,12 +4,15 @@ import express from 'express'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import prisma from './config/database'
+import { apiLimiter } from './middleware/rateLimiter'
 
 // Import routes
 import authRoutes from './routes/auth'
 import interactionsRoutes from './routes/interactions'
 import postsRoutes from './routes/posts'
 import repliesRoutes from './routes/replies'
+import gamesRoutes from './routes/games'
+import searchRoutes from './routes/search'
 
 dotenv.config()
 
@@ -31,12 +34,17 @@ app.use(cors(corsOptions))
 app.use(morgan('combined'))
 app.use(express.json())
 
+// Apply rate limiting to all API routes
+app.use('/api', apiLimiter)
+
 // Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/posts', postsRoutes)
 app.use('/api/posts', repliesRoutes)  // For /api/posts/:id/replies endpoints
 app.use('/api/interactions', interactionsRoutes)
 app.use('/api/replies', repliesRoutes)  // For /api/replies/:id/like endpoints
+app.use('/api/games', gamesRoutes)
+app.use('/api/search', searchRoutes)
 
 // Test routes
 app.get('/health', (req, res) => {
@@ -53,7 +61,7 @@ app.get('/test-db', async (req, res) => {
     res.json({ 
       message: 'Database connected successfully!', 
       userCount,
-      tables: 'users, posts, replies, interactions'
+      tables: 'users, posts, replies, interactions, games'
     })
   } catch (error) {
     console.error('Database error:', error)
@@ -75,6 +83,8 @@ app.listen(PORT, () => {
   console.log(`📝 Posts: http://localhost:${PORT}/api/posts/*`)
   console.log(`💫 Interactions: http://localhost:${PORT}/api/interactions/*`)
   console.log(`💬 Replies: http://localhost:${PORT}/api/posts/*/replies`)
+  console.log(`🎮 Games: http://localhost:${PORT}/api/games/*`)
+  console.log(`🔍 Search: http://localhost:${PORT}/api/search`)
   console.log(`\n🔧 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:8081'}`)
   
   if (isMockMode) {

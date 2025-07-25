@@ -21,6 +21,9 @@ model User {
   posts           Post[]
   replies         Reply[]
   interactions    Interaction[]
+  gamesAsPlayer1  Game[]   @relation("Player1Games")
+  gamesAsPlayer2  Game[]   @relation("Player2Games")
+  gamesWon        Game[]   @relation("WonGames")
   
   @@map("users")
 }
@@ -32,16 +35,10 @@ model Post {
   topic           String   @db.VarChar(50)
   subtopic        String   @db.VarChar(100)
   
-  // Bump system
-  bumped          Boolean  @default(false)
-  bumpedAt        DateTime?
-  bumpExpiresAt   DateTime?
-  
   // Interaction counts (for quick display)
   likeCount       Int      @default(0)
   replyCount      Int      @default(0)
   tipCount        Int      @default(0)
-  bumpCount       Int      @default(0)
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -49,6 +46,7 @@ model Post {
   // Relations
   author          User     @relation(fields: [authorWallet], references: [walletAddress])
   replies         Reply[]
+  game            Game?
   
   @@map("posts")
 }
@@ -80,7 +78,7 @@ model Interaction {
   userWallet      String   @db.VarChar(44)
   targetType      String   @db.VarChar(10) // "post" or "reply"
   targetId        String   // ID of post or reply
-  interactionType String   @db.VarChar(10) // "like", "tip", "bump"
+  interactionType String   @db.VarChar(10) // "like", "tip"
   amount          Decimal? @db.Decimal(18, 6) // For tips
   
   createdAt       DateTime @default(now())
@@ -91,4 +89,28 @@ model Interaction {
   // Prevent duplicate interactions
   @@unique([userWallet, targetId, interactionType])
   @@map("interactions")
+}
+
+model Game {
+  id              String   @id @default(cuid())
+  postId          String   @unique
+  gameType        String   @db.VarChar(20) // "tictactoe", "rps", "coinflip", "connectfour"
+  player1         String   @db.VarChar(44)
+  player2         String?  @db.VarChar(44)
+  currentTurn     String?  @db.VarChar(44)
+  gameState       Json     // Board state, moves, etc.
+  wager           Decimal  @db.Decimal(18, 6)
+  winner          String?  @db.VarChar(44)
+  status          String   @db.VarChar(20) // "waiting", "active", "completed", "cancelled"
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  post            Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  player1User     User     @relation("Player1Games", fields: [player1], references: [walletAddress])
+  player2User     User?    @relation("Player2Games", fields: [player2], references: [walletAddress])
+  winnerUser      User?    @relation("WonGames", fields: [winner], references: [walletAddress])
+  
+  @@map("games")
 }
