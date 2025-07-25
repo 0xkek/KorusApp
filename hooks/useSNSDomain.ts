@@ -44,8 +44,8 @@ export function useSNSDomain(walletAddress: string | null) {
 export function useDisplayName(walletAddress: string, isPremium: boolean = false) {
   const { domain } = useSNSDomain(walletAddress);
   
-  // Only show SNS domains for premium users
-  if (domain && isPremium) return domain;
+  // Show SNS domains for all users (not just premium)
+  if (domain) return domain;
   
   // For truncated addresses, return as is
   if (walletAddress.includes('...')) return walletAddress;

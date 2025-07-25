@@ -48,12 +48,14 @@ export function useLoadPosts() {
             const interactionsResponse = await interactionsAPI.getUserInteractions(postIds);
             
             if (interactionsResponse.success && interactionsResponse.interactions) {
+              logger.log('User interactions loaded:', interactionsResponse.interactions);
               // Update posts with user interaction data
               const finalPosts = transformedPosts.map(post => ({
                 ...post,
                 liked: interactionsResponse.interactions[String(post.id)]?.liked || false,
                 // We could also use tipped status in the future
               }));
+              logger.log('Posts with interactions:', finalPosts.map(p => ({ id: p.id, liked: p.liked })));
               setPosts(finalPosts);
             } else {
               setPosts(transformedPosts);

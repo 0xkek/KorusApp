@@ -23,35 +23,56 @@ export interface GameData {
 
 export interface Reply {
   id: number;
+  postId: number;
   wallet: string;
+  username?: string;
+  avatar?: string;
   time: string;
+  timestamp: string;
   content: string;
   likes: number;
   liked: boolean;
   replies: Reply[];
   tips: number;
+  tipped?: boolean;
   depth?: number; // Track nesting depth for visual threading
   parentId?: number; // Track parent reply for threading
   isPremium?: boolean; // Premium user status
+  tier?: 'standard' | 'premium';
   userTheme?: string; // User's selected theme color
+  bumped?: boolean;
+  bumpExpiresAt?: number;
 }
 
 export interface Post {
   id: number | string;  // Backend returns string IDs
   wallet: string;
+  username?: string;
+  avatar?: string;
   time: string;
+  timestamp: string;
   content: string;
   likes: number;
   replies: Reply[];
   tips: number;
   liked: boolean;
+  tipped?: boolean;
   category: string;      // Category field
+  topic?: string;
+  subtopic?: string;
   sponsored?: boolean;   // Sponsored/paid post flag
   imageUrl?: string;     // Optional image URL
   videoUrl?: string;     // Optional video URL
   isPremium?: boolean;   // Premium user status
+  tier?: 'standard' | 'premium';
   userTheme?: string;    // User's selected theme color
   gameData?: GameData;   // Optional game data for game posts
+  isGame?: boolean;
+  gameType?: GameType;
+  gameStatus?: GameStatus;
+  gameWager?: number;
+  reportCount?: number;  // Number of times reported
+  reportedBy?: string[]; // Wallets that reported this post
 }
 
 export interface User {

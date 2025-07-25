@@ -1,10 +1,11 @@
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import React from 'react';
-import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View, TouchableWithoutFeedback } from 'react-native';
+import React, { useState } from 'react';
+import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View, TouchableWithoutFeedback, Alert } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { Ionicons } from '@expo/vector-icons';
+import { validateReplyContent, sanitizeInput, getCharacterCount } from '../utils/validation';
 
 interface ReplyModalProps {
   visible: boolean;
@@ -27,6 +28,7 @@ export default function ReplyModal({
 }: ReplyModalProps) {
   const { colors, isDarkMode, gradients } = useTheme();
   const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   return (
     <Modal
@@ -104,8 +106,16 @@ export default function ReplyModal({
                     styles.postButton,
                     !content.trim() && styles.postButtonDisabled
                   ]}
-                  onPress={onSubmit}
-                  disabled={!content.trim()}
+                  onPress={async () => {
+                    if (isSubmitting) return;
+                    setIsSubmitting(true);
+                    try {
+                      await onSubmit();
+                    } finally {
+                      setIsSubmitting(false);
+                    }
+                  }}
+                  disabled={!content.trim() || isSubmitting}
                   activeOpacity={0.8}
                 >
                   <LinearGradient
@@ -126,9 +136,9 @@ export default function ReplyModal({
                       />
                       <Text style={[
                         styles.postButtonText,
-                        !content.trim() && styles.postButtonTextDisabled
+                        (!content.trim() || isSubmitting) && styles.postButtonTextDisabled
                       ]}>
-                        Reply
+                        {isSubmitting ? 'Replying...' : 'Reply'}
                       </Text>
                     </View>
                   </LinearGradient>
@@ -245,6 +255,7 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   textInputContainer: {
     borderRadius: 20,
     marginBottom: 24,
+    position: 'relative',
   },
   textInput: {
     backgroundColor: colors.surface,
@@ -318,5 +329,13 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+  },
+  characterCount: {
+    position: 'absolute',
+    bottom: 8,
+    right: 12,
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.medium,
+    color: 'rgba(255, 255, 255, 0.4)',
   },
 });

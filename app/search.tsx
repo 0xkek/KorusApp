@@ -13,12 +13,12 @@ import {
 import { useKorusAlert } from '../components/KorusAlertProvider';
 import { useWallet } from '../context/WalletContext';
 import { useTheme } from '../context/ThemeContext';
-import { initialPosts } from '../data/mockData';
 import { Post as PostType } from '../types';
 import Post from '../components/Post';
 import SearchBar from '../components/SearchBar';
 import { Fonts, FontSizes } from '../constants/Fonts';
-import { getFavoriteSNSDomain } from '../utils/sns';
+import { searchAPI } from '../utils/api';
+import { logger } from '../utils/logger';
 
 export default function SearchScreen() {
   console.log('[SEARCH SCREEN] Component rendering');
@@ -82,99 +82,69 @@ export default function SearchScreen() {
     }
 
     try {
-      // Get all unique wallet addresses from posts and replies
-      const allWallets = new Set<string>();
-      initialPosts.forEach(post => {
-        allWallets.add(post.wallet);
-        post.replies.forEach(reply => allWallets.add(reply.wallet));
-      });
+      // Use the backend search API
+      logger.log('[SEARCH] Calling API with query:', query.trim());
+      const response = await searchAPI.search(query.trim() || '');
+      logger.log('[SEARCH] API response:', response);
+      logger.log('[SEARCH] Response posts:', response.posts?.length);
 
-      // Fetch SNS domains for all wallets in parallel
-      const walletDomainMap = new Map<string, string>();
-      console.log('[SEARCH] Fetching domains for', allWallets.size, 'wallets');
-      await Promise.all(
-        Array.from(allWallets).map(async (wallet) => {
-          try {
-            const domain = await getFavoriteSNSDomain(wallet);
-            if (domain) {
-              walletDomainMap.set(wallet, domain);
-              if (wallet === 'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip') {
-                console.log('[SEARCH] COIN wallet domain:', domain);
-              }
-            }
-          } catch (error) {
-            // Ignore errors for individual lookups
-          }
-        })
-      );
-      console.log('[SEARCH] Domain map size:', walletDomainMap.size);
+      if (response.success && response.posts) {
+        let results = response.posts;
 
-      let results = initialPosts;
+        // Transform backend posts to app format
+        const transformedResults = results.map((post: any) => ({
+          id: post.id,
+          wallet: post.authorWallet || post.author?.walletAddress || 'Unknown',
+          time: new Date(post.createdAt).toLocaleDateString(),
+          content: post.content,
+          likes: post.likeCount || 0,
+          replies: post.replies?.map((reply: any) => ({
+            id: reply.id,
+            wallet: reply.author?.walletAddress || 'Unknown',
+            time: new Date(reply.createdAt).toLocaleDateString(),
+            content: reply.content,
+            likes: reply.likeCount || 0,
+            liked: false,
+            tips: 0,
+            replies: [],
+            parentId: post.id,
+            isPremium: reply.author?.tier === 'premium',
+            userTheme: undefined
+          })) || [],
+          tips: post.tipCount || 0,
+          liked: post.liked || false,
+          category: post.subtopic || post.topic || 'general',
+          imageUrl: post.imageUrl,
+          videoUrl: post.videoUrl,
+          isPremium: post.author?.tier === 'premium',
+          userTheme: undefined,
+          gameData: undefined,
+          // Include SNS domain from backend
+          authorSnsDomain: post.author?.snsDomain
+        }));
 
-      if (query.trim()) {
-        const lowerQuery = query.toLowerCase();
-        
-        // Filter posts that match the query
-        results = results.filter(post => {
-          // Search in post content
-          if (post.content.toLowerCase().includes(lowerQuery)) {
-            return true;
-          }
-          
-          // Search in category
-          if (post.category && post.category.toLowerCase().includes(lowerQuery)) {
-            return true;
-          }
-          
-          // Search in wallet address (full and truncated)
-          if (post.wallet.toLowerCase().includes(lowerQuery)) {
-            return true;
-          }
-          
-          // Search in SNS domain (regardless of premium status for search)
-          const postDomain = walletDomainMap.get(post.wallet);
-          if (post.wallet === 'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip') {
-            console.log('[SEARCH] Checking COIN wallet domain:', postDomain, 'against query:', lowerQuery);
-          }
-          if (postDomain && postDomain.toLowerCase().includes(lowerQuery)) {
-            return true;
-          }
-          
-          // Search in replies
-          const replyMatch = post.replies.some(reply => {
-            if (reply.content.toLowerCase().includes(lowerQuery)) {
-              return true;
-            }
-            if (reply.wallet.toLowerCase().includes(lowerQuery)) {
-              return true;
-            }
-            const replyDomain = walletDomainMap.get(reply.wallet);
-            return replyDomain && replyDomain.toLowerCase().includes(lowerQuery);
-          });
-          
-          if (replyMatch) {
-            return true;
-          }
-          
-          return false;
+        // Filter by category if selected
+        if (selectedCategory) {
+          results = transformedResults.filter((post: PostType) => 
+            post.category.toLowerCase() === selectedCategory.toLowerCase()
+          );
+        } else {
+          results = transformedResults;
+        }
+
+        // Sort by relevance (mock scoring)
+        results.sort((a, b) => {
+          const aScore = calculateRelevanceScore(a, query);
+          const bScore = calculateRelevanceScore(b, query);
+          return bScore - aScore;
         });
+
+        console.log('[SEARCH] Results count:', results.length);
+        setSearchResults(results);
+      } else {
+        logger.error('[SEARCH] Search failed:', response);
+        setSearchResults([]);
       }
-
-      // Filter by category
-      if (selectedCategory) {
-        results = results.filter(post => 
-          post.category.toLowerCase() === selectedCategory.toLowerCase()
-        );
-      }
-
-      // Sort by relevance (mock scoring)
-      results.sort((a, b) => {
-        const aScore = calculateRelevanceScore(a, query);
-        const bScore = calculateRelevanceScore(b, query);
-        return bScore - aScore;
-      });
-
-      setSearchResults(results);
     } catch (error) {
       console.error('Search error:', error);
       setSearchResults([]);

@@ -21,10 +21,14 @@ import { Fonts, FontSizes } from '../../constants/Fonts';
 import { useLoadPosts } from '../../hooks/useLoadPosts';
 import { postsAPI, authAPI, interactionsAPI, repliesAPI } from '../../utils/api';
 import { testBackendConnection } from '../../utils/testApi';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import { FeedSkeleton } from '../../components/SkeletonLoader';
+import { getErrorMessage } from '../../utils/errorHandler';
 
 // Global type declaration for scroll to top and reset functions
 declare global {
   var scrollToTop: (() => void) | undefined;
+  var refreshFeed: (() => void) | undefined;
   var resetToGeneral: (() => void) | undefined;
 }
 
@@ -75,6 +79,8 @@ export default function HomeScreen() {
   const [updateCounter, setUpdateCounter] = useState(0); // Force re-renders
   const [likingPosts, setLikingPosts] = useState<Set<string | number>>(new Set());
   const [isCreatingPost, setIsCreatingPost] = useState(false); // Track posts being liked
+  const [isLoadingFeed, setIsLoadingFeed] = useState(true);
+  const [feedError, setFeedError] = useState<string | null>(null);
   
   // Reply sorting state - track sorting preference per post
   const [replySortPreferences, setReplySortPreferences] = useState<Record<number, ReplySortType>>({});
@@ -125,6 +131,19 @@ export default function HomeScreen() {
       global.resetToGeneral = undefined;
     };
   }, []);
+  
+  // Setup global refresh feed function in a separate effect
+  useEffect(() => {
+    global.refreshFeed = () => {
+      refetch();
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    };
+    
+    return () => {
+      global.refreshFeed = undefined;
+    };
+  }, [refetch]);
 
   const loadHideSponsoredPreference = async () => {
     try {
@@ -215,8 +234,8 @@ export default function HomeScreen() {
     
     // "Best" sort: confidence score based on likes, tips, and engagement
     return [...replies].sort((a, b) => {
-      const scoreA = calculateConfidenceScore(a.likes, a.tips, a.replies.length);
-      const scoreB = calculateConfidenceScore(b.likes, b.tips, b.replies.length);
+      const scoreA = calculateConfidenceScore(a.likes, a.tips, a.replies?.length || 0);
+      const scoreB = calculateConfidenceScore(b.likes, b.tips, b.replies?.length || 0);
       
       if (scoreB === scoreA) {
         // If scores are equal, prefer more recent
@@ -265,9 +284,10 @@ export default function HomeScreen() {
           type: 'success'
         });
       } catch (error) {
+        const errorMessage = getErrorMessage(error);
         showAlert({
           title: 'Error',
-          message: 'Failed to refresh feed',
+          message: errorMessage,
           type: 'error'
         });
       } finally {
@@ -277,10 +297,17 @@ export default function HomeScreen() {
   };
 
   const handleCreatePost = async (category: string, mediaUrl?: string) => {
+    logger.info('handleCreatePost called', { 
+      hasContent: !!newPostContent.trim(), 
+      isCreatingPost, 
+      contentLength: newPostContent.length 
+    });
+    
     if (newPostContent.trim() && !isCreatingPost) {
       try {
         // Prevent multiple submissions
         setIsCreatingPost(true);
+        logger.info('Creating post...', { content: newPostContent.substring(0, 50) });
         
         // Check if user is authenticated first
         if (!walletAddress) {
@@ -302,6 +329,7 @@ export default function HomeScreen() {
         );
         
         // Create post via API
+        logger.info('Calling API to create post');
         const response = await postsAPI.createPost({
           content: newPostContent,
           topic: category.toUpperCase(),
@@ -312,10 +340,19 @@ export default function HomeScreen() {
 
         // Transform backend post to app format
         const backendPost = response.post;
+        
+        // Debug log premium status
+        logger.info('Creating new post with premium status:', {
+          walletIsPremium: isPremium,
+          backendTier: backendPost.author?.tier,
+          finalIsPremium: isPremium
+        });
+        
         const newPost: PostType = {
           id: backendPost.id,
           wallet: backendPost.authorWallet || backendPost.author?.walletAddress || currentUserWallet,
-          time: new Date(backendPost.createdAt).toLocaleDateString(),
+          time: 'Just now',
+          timestamp: new Date().toISOString(),
           content: backendPost.content,
           likes: backendPost.likeCount || 0,
           replies: [],
@@ -324,7 +361,7 @@ export default function HomeScreen() {
           category: backendPost.subtopic || category,
           imageUrl: backendPost.imageUrl || (isVideo ? undefined : mediaUrl),
           videoUrl: backendPost.videoUrl || (isVideo ? mediaUrl : undefined),
-          isPremium: backendPost.author?.tier === 'premium' || isPremium,
+          isPremium: isPremium, // Always use the wallet's premium status
           userTheme: colors.primary,
           gameData: undefined
         };
@@ -345,14 +382,21 @@ export default function HomeScreen() {
         });
       } catch (error) {
         logger.error('Failed to create post:', error);
+        const errorMessage = getErrorMessage(error);
         showAlert({
           title: 'Error',
-          message: 'Failed to create post. Please try again.',
+          message: errorMessage,
           type: 'error'
         });
       } finally {
         setIsCreatingPost(false);
+        logger.info('Post creation complete');
       }
+    } else {
+      logger.warn('Skipping post creation', { 
+        hasContent: !!newPostContent.trim(), 
+        isCreatingPost 
+      });
     }
   };
 
@@ -437,7 +481,7 @@ export default function HomeScreen() {
           liked: false,
           tips: 0,
           replies: [],
-          isPremium: response.reply.author?.tier === 'premium',
+          isPremium: currentUserIsPremium, // Use current user's premium status for their own replies
           userTheme: colors.primary
         };
         
@@ -471,9 +515,10 @@ export default function HomeScreen() {
         });
       } catch (error: any) {
         logger.error('Failed to create reply:', error);
+        const errorMessage = getErrorMessage(error);
         showAlert({
           title: 'Error',
-          message: error.response?.data?.error || 'Failed to post reply',
+          message: errorMessage,
           type: 'error'
         });
       }
@@ -481,113 +526,74 @@ export default function HomeScreen() {
   };
 
   const handleLike = async (postId: number | string) => {
-    // Prevent multiple clicks
-    if (likingPosts.has(postId)) {
-      return;
-    }
-    
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    
-    // Mark this post as being liked FIRST
-    setLikingPosts(prev => {
-      const newSet = new Set(prev);
-      newSet.add(postId);
-      logger.log('Added to likingPosts:', postId, 'Set size:', newSet.size);
-      return newSet;
-    });
     
     const post = posts.find(p => String(p.id) === String(postId));
     if (!post) {
-      logger.error('Post not found:', postId, 'Available posts:', posts.map(p => p.id));
-      // Remove from liking set if post not found
-      setLikingPosts(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(postId);
-        return newSet;
-      });
+      logger.error('Post not found:', postId);
       return;
     }
     
     const wasLiked = post.liked;
     const originalLikes = post.likes;
-    logger.log('Like action started - Post:', postId, 'Was liked:', wasLiked, 'Original likes:', originalLikes, 'Current posts:', posts.map(p => ({ id: p.id, liked: p.liked })));
+    logger.log('Like action - Post:', postId, 'Currently liked:', wasLiked, 'Likes:', originalLikes);
     
-    // Optimistically update UI
-    setPosts(prevPosts => {
-      const updatedPosts = prevPosts.map(p =>
-        String(p.id) === String(postId)
-          ? {
-              ...p,
-              liked: !wasLiked,
-              likes: wasLiked ? originalLikes - 1 : originalLikes + 1
-            }
-          : p
-      );
-      logger.log('Optimistic update - Post:', postId, 'New liked state:', !wasLiked, 'New likes:', wasLiked ? originalLikes - 1 : originalLikes + 1);
-      return updatedPosts;
-    });
-    
-    try {
-      // Call the API
-      const response = await interactionsAPI.likePost(String(postId));
-      logger.log('Like response:', response);
-      
-      // Track reputation if someone liked a post
-      if (walletAddress && !wasLiked && response.liked) {
-        await reputationService.onLikeGiven(walletAddress);
-        if (post.wallet !== walletAddress) {
-          await reputationService.onLikeReceived(post.wallet);
-        }
+    // Immediately update UI (Twitter-style optimistic update)
+    setPosts(prevPosts => prevPosts.map(p => {
+      if (String(p.id) === String(postId)) {
+        return {
+          ...p,
+          liked: !p.liked,
+          likes: p.liked ? p.likes - 1 : p.likes + 1
+        };
       }
-      
-      // Update state based on server response
-      logger.log('Like completed successfully. Server says liked:', response.liked);
-      
-      // Always trust the server response for liked status
-      setPosts(prevPosts => prevPosts.map(p =>
-        String(p.id) === String(postId)
-          ? {
-              ...p,
-              liked: response.liked
-            }
-          : p
-      ));
-    } catch (error) {
-      logger.error('Failed to like post:', error);
-      
-      // Revert to original state on error
-      setPosts(prevPosts => prevPosts.map(p =>
-        String(p.id) === String(postId)
-          ? {
-              ...p,
-              liked: wasLiked,
-              likes: originalLikes
-            }
-          : p
-      ));
-      
-      showAlert({
-        title: 'Error',
-        message: 'Failed to like post. Please try again.',
-        type: 'error'
-      });
-    } finally {
-      // Remove from liking set with a small delay to prevent rapid re-clicks
-      setTimeout(() => {
-        setLikingPosts(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(postId);
-          logger.log('Removed from likingPosts:', postId, 'Set size after removal:', newSet.size - 1);
-          return newSet;
+      return p;
+    }));
+    
+    // Fire and forget - send API request in background
+    interactionsAPI.likePost(String(postId))
+      .then(response => {
+        logger.log('Like API response:', response);
+        
+        // Only update if server response differs from optimistic update
+        if (response.liked !== !wasLiked) {
+          setPosts(prevPosts => prevPosts.map(p =>
+            String(p.id) === String(postId)
+              ? { ...p, liked: response.liked }
+              : p
+          ));
+        }
+        
+        // Track reputation
+        if (walletAddress && !wasLiked && response.liked) {
+          reputationService.onLikeGiven(walletAddress);
+          if (post.wallet !== walletAddress) {
+            reputationService.onLikeReceived(post.wallet);
+          }
+        }
+      })
+      .catch(error => {
+        logger.error('Like API failed:', error);
+        
+        // Revert optimistic update on error
+        setPosts(prevPosts => prevPosts.map(p =>
+          String(p.id) === String(postId)
+            ? { ...p, liked: wasLiked, likes: originalLikes }
+            : p
+        ));
+        
+        showAlert({
+          title: 'Error',
+          message: 'Failed to update like. Please try again.',
+          type: 'error'
         });
-      }, 100); // Reduced delay for better responsiveness
-    }
+      });
   };
 
   const handleLikeReply = async (postId: number, replyId: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
-    // Optimistically update UI
+    // Optimistically update UI immediately
     setPosts(prevPosts => prevPosts.map(post =>
       post.id === postId
         ? {
@@ -597,36 +603,11 @@ export default function HomeScreen() {
         : post
     ));
 
-    try {
-      // Call the API to like/unlike the reply
-      const response = await repliesAPI.likeReply(String(replyId));
-      
-      // Update the reply's liked status based on API response
-      setPosts(prevPosts => prevPosts.map(post =>
-        post.id === postId
-          ? {
-              ...post,
-              replies: updateReplyLikedStatus(post.replies, replyId, response.liked)
-            }
-          : post
-      ));
-    } catch (error: any) {
+    // Fire and forget the API call - no awaiting, no reverting
+    repliesAPI.likeReply(String(replyId)).catch(error => {
       logger.error('Failed to like reply:', error);
-      // Revert optimistic update on error
-      setPosts(prevPosts => prevPosts.map(post =>
-        post.id === postId
-          ? {
-              ...post,
-              replies: updateReplyLikes(post.replies, replyId)
-            }
-          : post
-      ));
-      showAlert({
-        title: 'Error',
-        message: 'Failed to like reply',
-        type: 'error'
-      });
-    }
+      // Don't revert the UI - keep the optimistic update
+    });
   };
 
   const updateReplyLikes = (replies: Reply[], targetId: number): Reply[] => {
@@ -638,23 +619,8 @@ export default function HomeScreen() {
           likes: reply.liked ? reply.likes - 1 : reply.likes + 1
         };
       }
-      if (reply.replies.length > 0) {
+      if (reply.replies && reply.replies.length > 0) {
         return { ...reply, replies: updateReplyLikes(reply.replies, targetId) };
-      }
-      return reply;
-    });
-  };
-
-  const updateReplyLikedStatus = (replies: Reply[], targetId: number, liked: boolean): Reply[] => {
-    return replies.map(reply => {
-      if (reply.id === targetId) {
-        return {
-          ...reply,
-          liked: liked
-        };
-      }
-      if (reply.replies.length > 0) {
-        return { ...reply, replies: updateReplyLikedStatus(reply.replies, targetId, liked) };
       }
       return reply;
     });
@@ -701,7 +667,7 @@ export default function HomeScreen() {
       if (reply.id === targetId) {
         return { ...reply, tips: reply.tips + 1 };
       }
-      if (reply.replies.length > 0) {
+      if (reply.replies && reply.replies.length > 0) {
         return { ...reply, replies: updateReplyTips(reply.replies, targetId) };
       }
       return reply;
@@ -766,12 +732,44 @@ export default function HomeScreen() {
     setShowTipModal(true);
   };
 
-  const handleReport = (postId: number) => {
-    showAlert({
-      title: 'Post Reported',
-      message: 'Thank you for reporting this post. Our moderation team will review it.',
-      type: 'success'
-    });
+  const handleReport = async (postId: number) => {
+    try {
+      // Optimistically update UI - mark post as reported by current user
+      setPosts(prevPosts => prevPosts.map(post =>
+        post.id === postId
+          ? { 
+              ...post, 
+              reportedBy: [...(post.reportedBy || []), currentUserWallet],
+              reportCount: (post.reportCount || 0) + 1
+            }
+          : post
+      ));
+
+      showAlert({
+        title: 'Post Reported',
+        message: 'Thank you for reporting this post. Our moderation team will review it.',
+        type: 'success'
+      });
+
+      // TODO: Call backend API to report post
+      // await postsAPI.reportPost(String(postId));
+      
+      // If a post has 3+ reports, it should be hidden
+      const updatedPost = posts.find(p => p.id === postId);
+      if (updatedPost && (updatedPost.reportCount || 0) >= 2) {
+        // Hide the post after 3 reports (including this one)
+        setTimeout(() => {
+          setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
+        }, 1000);
+      }
+    } catch (error) {
+      logger.error('Failed to report post:', error);
+      showAlert({
+        title: 'Report Failed',
+        message: 'Unable to report this post. Please try again.',
+        type: 'error'
+      });
+    }
   };
 
   const handleShowProfile = (wallet: string) => {
@@ -803,32 +801,61 @@ export default function HomeScreen() {
       return;
     }
 
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    
-    // Deduct from wallet balance
-    deductBalance(amount);
-    
-    // Update post tips
-    setPosts(prevPosts => prevPosts.map(post =>
-      post.id === postId
-        ? { ...post, tips: post.tips + amount }
-        : post
-    ));
+    try {
+      // Optimistically update UI
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      
+      // Deduct from wallet balance
+      deductBalance(amount);
+      
+      // Update post tips optimistically
+      setPosts(prevPosts => prevPosts.map(post =>
+        post.id === postId
+          ? { ...post, tips: post.tips + amount }
+          : post
+      ));
 
-    // Show tip success modal
-    const post = posts.find(p => p.id === postId);
-    if (post) {
-      setTipSuccessData({ amount, username: post.wallet });
-      setShowTipSuccessModal(true);
-      setShowTipModal(false); // Close the tip modal
+      // Show tip success modal
+      const post = posts.find(p => p.id === postId);
+      if (post) {
+        setTipSuccessData({ amount, username: post.wallet });
+        setShowTipSuccessModal(true);
+        setShowTipModal(false); // Close the tip modal
+      }
+
+      // Call API in background
+      const response = await interactionsAPI.tipPost(String(postId), amount);
+      
+      // If API call fails, revert the changes
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to process tip');
+      }
       
       // Track reputation for tips
       if (walletAddress) {
         await reputationService.onTipSent(walletAddress, amount);
-        if (post.wallet !== walletAddress) {
+        if (post && post.wallet !== walletAddress) {
           await reputationService.onTipReceived(post.wallet, amount);
         }
       }
+    } catch (error) {
+      logger.error('Failed to tip post:', error);
+      
+      // Revert the optimistic updates
+      setPosts(prevPosts => prevPosts.map(post =>
+        post.id === postId
+          ? { ...post, tips: post.tips - amount }
+          : post
+      ));
+      
+      // Refund the balance
+      deductBalance(-amount); // This adds the amount back
+      
+      showAlert({
+        title: 'Tip Failed',
+        message: 'Unable to process your tip. Please try again.',
+        type: 'error'
+      });
     }
   };
 
@@ -856,6 +883,39 @@ export default function HomeScreen() {
     return [...filteredPosts].sort((a, b) => b.id - a.id);
   }, [filteredPosts]);
   
+  // Memoized callbacks for FlatList - must be defined before conditional rendering
+  const keyExtractor = useCallback((item: PostType) => String(item.id), []);
+  
+  const renderItem = useCallback(({ item: post }: { item: PostType }) => (
+    <Post
+      post={{
+        ...post,
+        replies: sortReplies(post.replies, getReplySortType(post.id))
+      }}
+      expandedPosts={expandedPosts}
+      currentUserWallet={currentUserWallet}
+      currentUserAvatar={selectedAvatar}
+      currentUserNFTAvatar={selectedNFTAvatar}
+      replySortType={getReplySortType(post.id)}
+      onLike={handleLike}
+      onReply={handleReply}
+      onTip={handleTip}
+      onShowTipModal={handleShowTipModal}
+      onLikeReply={handleLikeReply}
+      onTipReply={handleTipReply}
+      onToggleReplies={toggleReplies}
+      onToggleReplySorting={toggleReplySorting}
+      onReport={handleReport}
+      onShowProfile={handleShowProfile}
+      onShowReportModal={handleShowReportModal}
+    />
+  ), [expandedPosts, currentUserWallet, selectedAvatar, selectedNFTAvatar, handleLike, handleReply, handleTip, handleShowTipModal, handleLikeReply, handleTipReply, toggleReplies, toggleReplySorting, handleReport, handleShowProfile, handleShowReportModal, getReplySortType, sortReplies]);
+  
+  const getItemLayout = useCallback((data: any, index: number) => ({
+    length: 200, // Estimated height of post
+    offset: 200 * index,
+    index,
+  }), []);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -978,64 +1038,46 @@ export default function HomeScreen() {
                 />
               }
               data={sortedPosts}
-              ListEmptyComponent={() => (
-                <View style={styles.emptyContainer}>
-                  <Text style={[styles.emptyTitle, { color: colors.text }]}>
-                    {activeTab === 'all' ? 'No posts yet' : `No ${activeTab} posts yet`}
-                  </Text>
-                  <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-                    {activeTab === 'all' 
-                      ? 'Be the first to share something!' 
-                      : `Be the first to post in ${activeTab}!`}
-                  </Text>
-                </View>
-              )}
-              keyExtractor={(item) => {
-                // Include game state in key for game posts to force re-render
-                if (item.gameData) {
-                  if (item.gameData.type === 'tictactoe' && item.gameData.board) {
-                    const boardState = item.gameData.board.flat().map(cell => cell || '_').join('');
-                    return `${item.id}-ttt-${item.gameData.status}-${item.gameData.player2 || 'none'}-${boardState}`;
-                  }
-                  return `${item.id}-${item.gameData.type}-${item.gameData.status}-${item.gameData.player2 || 'none'}`;
+              ListEmptyComponent={() => {
+                if (postsLoading && posts.length === 0) {
+                  return <FeedSkeleton count={5} />;
                 }
-                return String(item.id);
+                
+                if (feedError) {
+                  return (
+                    <View style={styles.errorContainer}>
+                      <Ionicons name="cloud-offline-outline" size={64} color={colors.textSecondary} />
+                      <Text style={[styles.errorTitle, { color: colors.text }]}>Unable to load posts</Text>
+                      <Text style={[styles.errorMessage, { color: colors.textSecondary }]}>{feedError}</Text>
+                      <TouchableOpacity style={[styles.retryButton, { backgroundColor: colors.primary }]} onPress={refetch}>
+                        <Text style={styles.retryButtonText}>Try Again</Text>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                }
+                
+                return (
+                  <View style={styles.emptyContainer}>
+                    <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                      {activeTab === 'all' ? 'No posts yet' : `No ${activeTab} posts yet`}
+                    </Text>
+                    <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+                      {activeTab === 'all' 
+                        ? 'Be the first to share something!' 
+                        : `Be the first to post in ${activeTab}!`}
+                    </Text>
+                  </View>
+                );
               }}
-              extraData={[posts, expandedPosts, updateCounter]}
-              renderItem={({ item: post }) => (
-                <Post
-                  post={{
-                    ...post,
-                    replies: sortReplies(post.replies, getReplySortType(post.id))
-                  }}
-                  expandedPosts={expandedPosts}
-                  currentUserWallet={currentUserWallet}
-                  currentUserAvatar={selectedAvatar}
-                  currentUserNFTAvatar={selectedNFTAvatar}
-                  replySortType={getReplySortType(post.id)}
-                  onLike={handleLike}
-                  onReply={handleReply}
-                  onTip={handleTip}
-                  onShowTipModal={handleShowTipModal}
-                  onLikeReply={handleLikeReply}
-                  onTipReply={handleTipReply}
-                  onToggleReplies={toggleReplies}
-                  onToggleReplySorting={toggleReplySorting}
-                  onReport={handleReport}
-                  onShowProfile={handleShowProfile}
-                  onShowReportModal={handleShowReportModal}
-                />
-              )}
+              keyExtractor={keyExtractor}
+              extraData={posts}
+              renderItem={renderItem}
               initialNumToRender={10}
               maxToRenderPerBatch={10}
               windowSize={10}
               removeClippedSubviews={true}
               updateCellsBatchingPeriod={50}
-              getItemLayout={(data, index) => ({
-                length: 200, // Estimated height of post
-                offset: 200 * index,
-                index,
-              })}
+              getItemLayout={getItemLayout}
             />
         )}
 
@@ -1067,7 +1109,10 @@ export default function HomeScreen() {
         <CreatePostModal
           visible={showCreatePost}
           content={newPostContent}
-          onClose={() => setShowCreatePost(false)}
+          onClose={() => {
+            setShowCreatePost(false);
+            setNewPostContent(''); // Clear content when closing
+          }}
           onContentChange={setNewPostContent}
           onSubmit={handleCreatePost}
         />
@@ -1185,6 +1230,35 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.base,
     fontFamily: Fonts.regular,
     textAlign: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 40,
+  },
+  errorTitle: {
+    fontSize: FontSizes.xl,
+    fontFamily: Fonts.semiBold,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  errorMessage: {
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.regular,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  retryButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 20,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.semiBold,
   },
   eventsViewContainer: {
     flex: 1,

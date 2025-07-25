@@ -125,31 +125,13 @@ export default function ConnectFourGame({
 
   return (
     <View style={styles.container}>
-      {/* Game Header */}
+      {/* Game Timer */}
       <View style={styles.header}>
-        <View style={styles.playerInfo}>
-          <Text style={[styles.playerName, { color: colors.text }]}>
-            {player1.slice(0, 8)}... (🔴)
+        <View style={[styles.timerBadge, { backgroundColor: colors.surface }]}>
+          <Ionicons name="timer-outline" size={16} color={colors.textSecondary} />
+          <Text style={[styles.timerText, { color: colors.textSecondary }]}>
+            {timeLeft}
           </Text>
-          <Text style={[styles.vs, { color: colors.textSecondary }]}>VS</Text>
-          <Text style={[styles.playerName, { color: colors.text }]}>
-            {player2 ? `${player2.slice(0, 8)}... (🟡)` : 'Waiting...'}
-          </Text>
-        </View>
-        
-        <View style={styles.gameInfo}>
-          <View style={[styles.wagerBadge, { backgroundColor: colors.primary + '20' }]}>
-            <Text style={[styles.wagerText, { color: colors.primary }]}>
-              💰 {wager} ALLY
-            </Text>
-          </View>
-          
-          <View style={[styles.timerBadge, { backgroundColor: colors.surface }]}>
-            <Ionicons name="timer-outline" size={16} color={colors.textSecondary} />
-            <Text style={[styles.timerText, { color: colors.textSecondary }]}>
-              {timeLeft}
-            </Text>
-          </View>
         </View>
       </View>
 
@@ -257,6 +239,8 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   playerInfo: {
     flexDirection: 'row',
@@ -368,9 +352,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
     alignItems: 'center',
+    marginTop: 20,
   },
   instructionsText: {
-    fontSize: FontSizes.xs,
+    fontSize: FontSizes.base,
     fontFamily: Fonts.medium,
     textAlign: 'center',
   },

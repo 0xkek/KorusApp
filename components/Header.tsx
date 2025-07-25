@@ -44,12 +44,18 @@ function Header({ onCategoryChange, isCollapsed = false, onProfileClick, selecte
   ];
 
   const handleCategoryPress = (category: string) => {
-    if (selectedCategory === category) {
-      setSelectedCategory(null);
-      onCategoryChange?.(null);
+    if (selectedCategory === category || (category === 'GENERAL' && !selectedCategory)) {
+      // If clicking on already selected category, refresh the feed
+      global.refreshFeed?.();
     } else {
-      setSelectedCategory(category);
-      onCategoryChange?.(category);
+      // Switch to the new category
+      if (category === 'GENERAL') {
+        setSelectedCategory(null);
+        onCategoryChange?.(null);
+      } else {
+        setSelectedCategory(category);
+        onCategoryChange?.(category);
+      }
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
@@ -187,14 +193,14 @@ function Header({ onCategoryChange, isCollapsed = false, onProfileClick, selecte
                       key={category}
                       style={[
                         styles.categoryBtn,
-                        selectedCategory === category && styles.categoryBtnSelected
+                        ((selectedCategory === category) || (category === 'GENERAL' && !selectedCategory)) && styles.categoryBtnSelected
                       ]}
                       onPress={() => handleCategoryPress(category)}
                       activeOpacity={0.8}
                     >
                       <LinearGradient
                         colors={
-                          selectedCategory === category
+                          ((selectedCategory === category) || (category === 'GENERAL' && !selectedCategory))
                             ? gradients.primary
                             : gradients.button
                         }
@@ -204,7 +210,7 @@ function Header({ onCategoryChange, isCollapsed = false, onProfileClick, selecte
                       >
                         <Text style={[
                           dynamicStyles.categoryBtnTxt,
-                          selectedCategory === category && dynamicStyles.categoryBtnTxtSelected
+                          ((selectedCategory === category) || (category === 'GENERAL' && !selectedCategory)) && dynamicStyles.categoryBtnTxtSelected
                         ]}>
                           {category}
                         </Text>

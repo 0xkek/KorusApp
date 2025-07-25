@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import React, { useEffect, useState, useCallback } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, ScrollView, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,7 +9,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
 import { useWallet } from '../../context/WalletContext';
 import { Post as PostType, Reply as ReplyType } from '../../types';
-import { initialPosts } from '../../data/mockData';
+import { postsAPI } from '../../utils/api';
+import { logger } from '../../utils/logger';
 
 import Post from '../../components/Post';
 import Reply from '../../components/Reply';
@@ -31,21 +32,97 @@ export default function PostDetailScreen() {
   const [quotedText, setQuotedText] = useState<string>('');
   const [quotedUsername, setQuotedUsername] = useState<string>('');
   const [selectedReplyId, setSelectedReplyId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
   
   const currentUserWallet = walletAddress || 'loading...';
   
   useEffect(() => {
-    // Find the post by id
-    const foundPost = initialPosts.find(p => p.id === Number(id));
-    if (foundPost) {
-      setPost(foundPost);
-    }
+    // Load the post from API
+    const loadPost = async () => {
+      try {
+        setLoading(true);
+        const response = await postsAPI.getPost(String(id));
+        
+        if (response.success && response.post) {
+          // Transform backend post to app format
+          const transformedPost: PostType = {
+            id: response.post.id,
+            wallet: response.post.authorWallet || response.post.author?.walletAddress || 'Unknown',
+            time: new Date(response.post.createdAt).toLocaleDateString(),
+            content: response.post.content,
+            likes: response.post.likeCount || 0,
+            replies: response.post.replies?.map((reply: any) => ({
+              id: reply.id,
+              wallet: reply.author?.walletAddress || 'Unknown',
+              time: new Date(reply.createdAt).toLocaleDateString(),
+              content: reply.content,
+              likes: reply.likeCount || 0,
+              liked: false,
+              tips: 0,
+              replies: [],
+              parentId: response.post.id,
+              isPremium: reply.author?.walletAddress === walletAddress ? isPremium : reply.author?.tier === 'premium',
+              userTheme: undefined
+            })) || [],
+            tips: response.post.tipCount || 0,
+            liked: response.post.liked || false,
+            category: response.post.subtopic || 'general',
+            imageUrl: response.post.imageUrl,
+            videoUrl: response.post.videoUrl,
+            isPremium: response.post.author?.tier === 'premium',
+            userTheme: undefined,
+            gameData: undefined
+          };
+          
+          setPost(transformedPost);
+        } else {
+          logger.error('Failed to load post');
+          showAlert({
+            title: 'Error',
+            message: 'Failed to load post',
+            type: 'error'
+          });
+          router.back();
+        }
+      } catch (error) {
+        logger.error('Error loading post:', error);
+        showAlert({
+          title: 'Error',
+          message: 'Failed to load post',
+          type: 'error'
+        });
+        router.back();
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadPost();
   }, [id]);
   
-  if (!post) {
+  if (loading || !post) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[styles.loadingText, { color: colors.text }]}>Loading...</Text>
+        <LinearGradient
+          colors={gradients.surface}
+          style={styles.baseBackground}
+        />
+        <LinearGradient
+          colors={[
+            colors.primary + '14',
+            colors.secondary + '0C',
+            'transparent',
+            colors.primary + '0F',
+            colors.secondary + '1A',
+          ]}
+          style={styles.greenOverlay}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.text }]}>Loading post...</Text>
+        </View>
       </View>
     );
   }
@@ -600,10 +677,16 @@ const styles = StyleSheet.create({
     height: 3,
     borderRadius: 2,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
   loadingText: {
     fontSize: 16,
     textAlign: 'center',
-    marginTop: 100,
+    marginTop: 16,
   },
   scrollView: {
     flex: 1,

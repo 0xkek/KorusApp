@@ -8,6 +8,9 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://korusapp-produc
 // Token storage key
 const AUTH_TOKEN_KEY = 'korus_auth_token';
 
+// Request deduplication map
+const pendingRequests = new Map<string, Promise<any>>();
+
 // Create axios instance
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -19,6 +22,20 @@ const api: AxiosInstance = axios.create({
   // Add withCredentials for CORS
   withCredentials: false, // Set to false for cross-origin requests without cookies
 });
+
+// Retry configuration
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000;
+
+// Helper to determine if request should be retried
+const shouldRetry = (error: AxiosError) => {
+  // Don't retry client errors (4xx) except for 429 (rate limit)
+  if (error.response?.status && error.response.status >= 400 && error.response.status < 500) {
+    return error.response.status === 429;
+  }
+  // Retry network errors and 5xx errors
+  return !error.response || error.response.status >= 500;
+};
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
@@ -34,6 +51,11 @@ api.interceptors.request.use(
         if (token && token !== 'null' && token !== 'undefined') {
           config.headers.Authorization = `Bearer ${token}`;
         }
+      }
+      
+      // Add retry count to config
+      if (!config.headers['X-Retry-Count']) {
+        config.headers['X-Retry-Count'] = '0';
       }
       
       // Log the request for debugging
@@ -55,7 +77,7 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling
+// Response interceptor for error handling and retries
 api.interceptors.response.use(
   (response) => {
     logger.log('API Response:', {
@@ -66,11 +88,37 @@ api.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
+    const config = error.config;
+    
     if (error.response?.status === 401) {
       // Token expired or invalid - clear it
       await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
       logger.warn('401 Unauthorized - Token cleared');
       // TODO: Redirect to login or trigger re-authentication
+    }
+    
+    // Retry logic
+    if (config && shouldRetry(error)) {
+      const retryCount = parseInt(config.headers['X-Retry-Count'] as string || '0');
+      
+      if (retryCount < MAX_RETRIES) {
+        config.headers['X-Retry-Count'] = String(retryCount + 1);
+        
+        // Calculate delay with exponential backoff
+        const delay = RETRY_DELAY * Math.pow(2, retryCount);
+        
+        logger.warn(`Retrying request (${retryCount + 1}/${MAX_RETRIES}) after ${delay}ms:`, {
+          url: config.url,
+          method: config.method,
+          status: error.response?.status,
+        });
+        
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        // Retry the request
+        return api.request(config);
+      }
     }
     
     // Log error details
@@ -81,6 +129,7 @@ api.interceptors.response.use(
       statusText: error.response?.statusText,
       data: error.response?.data,
       message: error.message,
+      retryCount: config?.headers?.['X-Retry-Count'] || '0',
     });
     
     return Promise.reject(error);
@@ -138,8 +187,34 @@ export const postsAPI = {
     imageUrl?: string;
     videoUrl?: string;
   }) {
-    const response = await api.post('/posts', data);
-    return response.data;
+    // Twitter-style deduplication: prevent duplicate posts
+    const requestKey = `createPost:${data.content}:${Date.now()}`;
+    
+    // Check if identical request is already pending
+    if (pendingRequests.has(requestKey)) {
+      logger.warn('Duplicate post request detected, returning existing promise');
+      return pendingRequests.get(requestKey);
+    }
+    
+    // Create the promise and store it
+    const promise = api.post('/posts', data)
+      .then(response => {
+        pendingRequests.delete(requestKey);
+        return response.data;
+      })
+      .catch(error => {
+        pendingRequests.delete(requestKey);
+        throw error;
+      });
+    
+    pendingRequests.set(requestKey, promise);
+    
+    // Auto-cleanup after 5 seconds
+    setTimeout(() => {
+      pendingRequests.delete(requestKey);
+    }, 5000);
+    
+    return promise;
   },
 };
 
@@ -184,6 +259,55 @@ export const interactionsAPI = {
   async getUserInteractions(postIds: (string | number)[]) {
     const response = await api.post('/interactions/user', { 
       postIds: postIds.map(id => String(id)) 
+    });
+    return response.data;
+  },
+};
+
+// Games API
+export const gamesAPI = {
+  async createGame(data: {
+    postId: string;
+    gameType: string;
+    wager: number;
+  }) {
+    const response = await api.post('/games', data);
+    return response.data;
+  },
+  
+  async joinGame(gameId: string) {
+    const response = await api.post(`/games/${gameId}/join`);
+    return response.data;
+  },
+  
+  async makeMove(gameId: string, move: any) {
+    const response = await api.post(`/games/${gameId}/move`, { move });
+    return response.data;
+  },
+  
+  async getGame(gameId: string) {
+    const response = await api.get(`/games/${gameId}`);
+    return response.data;
+  },
+  
+  async getGameByPostId(postId: string) {
+    const response = await api.get(`/games/post/${postId}`);
+    return response.data;
+  },
+};
+
+// Search API
+export const searchAPI = {
+  async search(query: string, limit: number = 20, offset: number = 0) {
+    const response = await api.get('/search', {
+      params: { query, limit, offset }
+    });
+    return response.data;
+  },
+  
+  async searchUsers(query: string, limit: number = 10) {
+    const response = await api.get('/search/users', {
+      params: { query, limit }
     });
     return response.data;
   },

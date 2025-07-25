@@ -8,21 +8,26 @@ import { useWallet } from '../context/WalletContext';
 import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../hooks/useAuth';
+import { useKorusAlert } from '../components/KorusAlertProvider';
+import { getErrorMessage } from '../utils/errorHandler';
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const { hasWallet, isLoading, createNewWallet, importFromSeedVault, walletAddress } = useWallet();
+  const { hasWallet, isLoading, createNewWallet, importFromSeedVault, walletAddress, connectWallet } = useWallet();
   const { colors, isDarkMode, gradients } = useTheme();
   const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
   const [checkingSeedVault, setCheckingSeedVault] = useState(false);
   const [creatingWallet, setCreatingWallet] = useState(false);
+  const { signIn, isAuthenticated } = useAuth();
+  const { showAlert } = useKorusAlert();
 
-  // Auto-redirect if user already has wallet
+  // Auto-redirect if user is authenticated
   useEffect(() => {
-    if (hasWallet && walletAddress && !isLoading) {
+    if (isAuthenticated && !isLoading) {
       router.replace('/(tabs)');
     }
-  }, [hasWallet, walletAddress, isLoading]);
+  }, [isAuthenticated, isLoading]);
 
   // Auto-check for Seed Vault on mount
   useEffect(() => {
@@ -33,15 +38,41 @@ export default function WelcomeScreen() {
     setCheckingSeedVault(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
-    const hasSeedVault = await importFromSeedVault();
-    
-    if (hasSeedVault) {
-      // Seed Vault found and imported
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/(tabs)');
-    } else {
-      // No Seed Vault found
+    try {
+      const hasSeedVault = await importFromSeedVault();
+      
+      if (hasSeedVault) {
+        // Seed Vault found and imported, now authenticate
+        try {
+          // In mock mode, use dummy signature
+          const message = `Sign in to Korus\n\nTimestamp: ${Date.now()}`;
+          const signature = 'mock_signature_' + Date.now();
+          
+          await signIn(signature, message);
+          
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          router.replace('/(tabs)');
+        } catch (authError) {
+          const errorMessage = getErrorMessage(authError);
+          showAlert({
+            title: 'Authentication Failed',
+            message: errorMessage,
+            type: 'error'
+          });
+          setCheckingSeedVault(false);
+        }
+      } else {
+        // No Seed Vault found
+        setCheckingSeedVault(false);
+      }
+    } catch (error) {
       setCheckingSeedVault(false);
+      const errorMessage = getErrorMessage(error);
+      showAlert({
+        title: 'Error',
+        message: errorMessage,
+        type: 'error'
+      });
     }
   };
 
@@ -50,12 +81,39 @@ export default function WelcomeScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     
     try {
-      await createNewWallet();
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/(tabs)');
+      const created = await createNewWallet();
+      
+      if (created) {
+        // Wallet created, now authenticate
+        try {
+          // In mock mode, use dummy signature
+          const message = `Sign in to Korus\n\nTimestamp: ${Date.now()}`;
+          const signature = 'mock_signature_' + Date.now();
+          
+          await signIn(signature, message);
+          
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          router.replace('/(tabs)');
+        } catch (authError) {
+          const errorMessage = getErrorMessage(authError);
+          showAlert({
+            title: 'Authentication Failed',
+            message: errorMessage,
+            type: 'error'
+          });
+          setCreatingWallet(false);
+        }
+      } else {
+        setCreatingWallet(false);
+      }
     } catch (error) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setCreatingWallet(false);
+      const errorMessage = getErrorMessage(error);
+      showAlert({
+        title: 'Error',
+        message: errorMessage,
+        type: 'error'
+      });
     }
   };
 

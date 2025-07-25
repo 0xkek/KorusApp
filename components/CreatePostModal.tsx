@@ -6,6 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { validatePostContent, sanitizeInput, getCharacterCount } from '../utils/validation';
 
 
 interface CreatePostModalProps {
@@ -29,8 +30,32 @@ export default function CreatePostModal({
   const [selectedMedia, setSelectedMedia] = useState<{ uri: string; type: 'image' | 'video' } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Twitter-style submission guard
+
+  // Reset state when modal closes
+  React.useEffect(() => {
+    if (!visible) {
+      setIsSubmitting(false);
+      setIsUploading(false);
+      setUploadProgress(0);
+      setSelectedMedia(null);
+    }
+  }, [visible]);
 
   const handleSubmit = async () => {
+    // Validate content
+    const validation = validatePostContent(content);
+    if (!validation.valid) {
+      Alert.alert('Invalid Post', validation.error);
+      return;
+    }
+    
+    // Twitter-style: Prevent multiple submissions
+    if (isSubmitting) {
+      return;
+    }
+    
+    setIsSubmitting(true);
     if (selectedMedia && !isUploading) {
       // Simulate upload
       setIsUploading(true);
@@ -54,8 +79,17 @@ export default function CreatePostModal({
       setUploadProgress(0);
     }
     
-    onSubmit('GENERAL', selectedMedia?.uri);
-    setSelectedMedia(null); // Reset media after submission
+    try {
+      await onSubmit('GENERAL', selectedMedia?.uri);
+      setSelectedMedia(null); // Reset media after submission
+      onContentChange(''); // Clear content
+      onClose(); // Close modal on success
+    } catch (error) {
+      // Re-enable submission on error
+      console.error('Failed to create post:', error);
+    } finally {
+      setIsSubmitting(false); // Always re-enable after completion
+    }
   };
 
   const pickMedia = async () => {
@@ -123,9 +157,12 @@ export default function CreatePostModal({
                   placeholderTextColor={colors.textSecondary}
                   multiline
                   value={content}
-                  onChangeText={onContentChange}
+                  onChangeText={(text) => onContentChange(sanitizeInput(text))}
                   maxLength={500}
                 />
+                <Text style={[styles.characterCount, { color: colors.textTertiary }]}>
+                  {getCharacterCount(content).current}/{getCharacterCount(content).max}
+                </Text>
               </View>
 
               {/* Media preview */}
@@ -206,15 +243,15 @@ export default function CreatePostModal({
                 <TouchableOpacity
                   style={[
                     styles.postButton,
-                    (!content.trim() || isUploading) && styles.postButtonDisabled
+                    (!content.trim() || isUploading || isSubmitting) && styles.postButtonDisabled
                   ]}
                   onPress={handleSubmit}
-                  disabled={!content.trim() || isUploading}
+                  disabled={!content.trim() || isUploading || isSubmitting}
                   activeOpacity={0.8}
                 >
                   <LinearGradient
                     colors={
-                      !content.trim() || isUploading
+                      !content.trim() || isUploading || isSubmitting
                         ? [colors.surface, colors.surface] // Use theme surface color when disabled
                         : gradients.primary // Use primary gradient for vibrant enabled state
                     }
@@ -224,10 +261,10 @@ export default function CreatePostModal({
                   >
                     <Text style={[
                       styles.postButtonText,
-                      { color: (!content.trim() || isUploading) ? colors.textTertiary : '#000000' }, // Always black text on bright gradient
-                      (!content.trim() || isUploading) && styles.postButtonTextDisabled
+                      { color: (!content.trim() || isUploading || isSubmitting) ? colors.textTertiary : '#000000' }, // Always black text on bright gradient
+                      (!content.trim() || isUploading || isSubmitting) && styles.postButtonTextDisabled
                     ]}>
-                      {isUploading ? 'Uploading...' : 'Share'}
+                      {isSubmitting ? 'Posting...' : isUploading ? 'Uploading...' : 'Share'}
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -358,6 +395,7 @@ const styles = StyleSheet.create({
   textInputContainer: {
     borderRadius: 20,
     marginBottom: 32,
+    position: 'relative',
   },
   textInput: {
     borderWidth: 1.5,
@@ -504,5 +542,12 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
     elevation: 1,
     overflow: 'hidden',
+  },
+  characterCount: {
+    position: 'absolute',
+    bottom: 8,
+    right: 12,
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.medium,
   },
 });

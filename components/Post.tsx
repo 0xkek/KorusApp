@@ -1,7 +1,7 @@
 // import { BlurView } from 'expo-blur'; // Removed for performance
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, memo, useCallback, useMemo } from 'react';
 import { Image, Pressable, StyleSheet, Text, TouchableOpacity, View, Linking, Alert } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useWallet } from '../context/WalletContext';
@@ -117,7 +117,7 @@ const extractUrls = (text: string): string[] => {
   return matches || [];
 };
 
-function Post({
+const Post = memo<PostProps>(function Post({
   post,
   expandedPosts,
   currentUserWallet,
@@ -138,11 +138,42 @@ function Post({
   onJoinGame,
   onGameMove,
   showAsDetail = false,
-}: PostProps) {
+}) {
   const router = useRouter();
   const { colors, isDarkMode, gradients } = useTheme();
   const { isPremium: currentUserIsPremium } = useWallet();
-  const displayName = useDisplayName(post.wallet, post.isPremium || false);
+  
+  // If this is the current user's post, use their premium status
+  const postIsPremium = post.wallet === currentUserWallet ? currentUserIsPremium : post.isPremium;
+  const displayName = useDisplayName(post.wallet, postIsPremium || false);
+  
+  // Memoize expensive computations
+  const isExpanded = useMemo(() => expandedPosts.has(post.id), [expandedPosts, post.id]);
+  const urls = useMemo(() => extractUrls(post.content), [post.content]);
+  
+  // Memoize callbacks
+  const handleLike = useCallback(() => {
+    onLike(post.id);
+  }, [onLike, post.id]);
+  
+  const handleReply = useCallback(() => {
+    onReply(post.id);
+  }, [onReply, post.id]);
+  
+  const handleToggleReplies = useCallback(() => {
+    onToggleReplies(post.id);
+  }, [onToggleReplies, post.id]);
+  
+  const handleShowProfile = useCallback(() => {
+    if (onShowProfile) {
+      onShowProfile(post.wallet);
+    } else {
+      router.push({
+        pathname: '/profile',
+        params: { wallet: post.wallet }
+      });
+    }
+  }, [onShowProfile, post.wallet, router]);
   
   // Video player wrapper component
   const VideoPlayerWrapper = ({ videoUrl, colors }: { videoUrl: string; colors: any }) => {
@@ -176,11 +207,7 @@ function Post({
   const handleDoubleTap = (event?: any) => {
     const now = Date.now();
     if (now - lastTapTime.current < DOUBLE_TAP_DELAY) {
-      // Double tap detected - prevent if already processing a like
-      if (isLiking.current) {
-        return;
-      }
-      
+      // Double tap detected
       // Allow both like and unlike via double-tap
       handleLike(event);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -215,32 +242,17 @@ function Post({
   };
 
 
-  // Add a ref to track if like is in progress
-  const isLiking = useRef(false);
-
-  const handleLike = (event?: any) => {
-    // Prevent multiple rapid clicks
-    if (isLiking.current) {
-      return;
-    }
-    
-    isLiking.current = true;
-    
+  const handleLikeWithEvent = (event?: any) => {
     // Only trigger particle explosion when adding a like, not removing it
     const isAddingLike = !post.liked;
     
-    onLike(post.id);
+    handleLike();
     
     // Trigger particle explosion only when giving a like
     if (isAddingLike && event && global.createParticleExplosion) {
       const touch = event.nativeEvent;
       global.createParticleExplosion('like', touch.pageX || 200, touch.pageY || 300);
     }
-    
-    // Reset the flag after a delay
-    setTimeout(() => {
-      isLiking.current = false;
-    }, 100);
     
     // Send notification if not liking own post
     if (post.wallet !== currentUserWallet) {
@@ -252,7 +264,7 @@ function Post({
     }
   };
 
-  const handleReply = (postId: number, quotedText?: string, quotedUsername?: string, event?: any) => {
+  const handleReplyWithQuote = (postId: number, quotedText?: string, quotedUsername?: string, event?: any) => {
     // If not in detail view and clicking reply button (not quoting)
     if (!showAsDetail && !quotedText) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -315,7 +327,7 @@ function Post({
     onShowReportModal?.(post.id);
   };
 
-  const handleShowProfile = () => {
+  const handleShowProfileModal = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onShowProfile?.(post.wallet);
   };
@@ -352,17 +364,38 @@ function Post({
               {/* Report Button - 3 dots to the left of tip badge */}
               {post.wallet !== currentUserWallet && onShowReportModal && (
                 <TouchableOpacity
-                  style={[styles.reportBadge, { borderColor: colors.error + '66' }]}
+                  style={[
+                    styles.reportBadge, 
+                    { 
+                      borderColor: post.reportedBy?.includes(currentUserWallet) 
+                        ? colors.error 
+                        : colors.error + '66',
+                      opacity: post.reportedBy?.includes(currentUserWallet) ? 0.5 : 1
+                    }
+                  ]}
                   onPress={handleReport}
                   activeOpacity={0.7}
+                  disabled={post.reportedBy?.includes(currentUserWallet)}
                 >
                   <LinearGradient
-                    colors={gradients.button}
+                    colors={post.reportedBy?.includes(currentUserWallet) 
+                      ? [colors.error + '40', colors.error + '20']
+                      : gradients.button
+                    }
                     style={styles.reportBadgeGradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   >
-                    <Text style={[styles.reportBadgeText, { color: colors.textTertiary }]}>⋮</Text>
+                    <Text style={[
+                      styles.reportBadgeText, 
+                      { 
+                        color: post.reportedBy?.includes(currentUserWallet) 
+                          ? colors.error 
+                          : colors.textTertiary 
+                      }
+                    ]}>
+                      {post.reportedBy?.includes(currentUserWallet) ? '✓' : '⋮'}
+                    </Text>
                   </LinearGradient>
                 </TouchableOpacity>
               )}
@@ -425,7 +458,7 @@ function Post({
                 <View style={styles.postMeta}>
                   <View style={styles.usernameRow}>
                     <Text style={[styles.username, { color: colors.primary, textShadowColor: colors.primary + '66' }]}>{displayName}</Text>
-                    {post.isPremium && (
+                    {postIsPremium && (
                       <View style={[styles.verifiedBadge, { backgroundColor: '#FFD700' }]}>
                         <Ionicons name="star" size={10} color="#000" />
                       </View>
@@ -512,7 +545,7 @@ function Post({
                   post.liked && [styles.likedBtn, { shadowColor: colors.error }],
                   pressed && styles.pressedBtn
                 ]}
-                onPress={(e) => handleLike(e)}
+                onPress={(e) => handleLikeWithEvent(e)}
                 android_disableSound={true}
                 accessible={true}
                 accessibilityLabel={`${post.liked ? 'Unlike' : 'Like'} post. ${post.likes} likes`}
@@ -553,7 +586,7 @@ function Post({
                   hasUserReplied && [styles.activeBtn, { shadowColor: colors.shadowColor }],
                   pressed && styles.pressedBtn
                 ]}
-                onPress={(e) => handleReply(post.id, undefined, undefined, e)}
+                onPress={(e) => handleReplyWithQuote(post.id, undefined, undefined, e)}
                 android_disableSound={true}
                 accessible={true}
                 accessibilityLabel={`Reply to post. ${flatReplies.length} replies`}
@@ -693,8 +726,9 @@ function Post({
                       postId={post.id}
                       currentUserWallet={currentUserWallet}
                       onLike={onLikeReply}
-                      onReply={handleReply}
+                      onReply={handleReplyWithQuote}
                       onTip={onTipReply}
+                      onShowProfile={onShowProfile}
                       depth={reply.depth || 0}
                       isLastInThread={index === flatReplies.length - 1 || 
                         (index < flatReplies.length - 1 && flatReplies[index + 1].depth < reply.depth)}
@@ -712,7 +746,7 @@ function Post({
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   postContainer: {
@@ -1090,31 +1124,4 @@ const styles = StyleSheet.create({
   },
 });
 
-// Memoize Post component with custom comparison
-export default React.memo(Post, (prevProps, nextProps) => {
-  // Check if post data changed
-  if (prevProps.post.id !== nextProps.post.id ||
-      prevProps.post.likes !== nextProps.post.likes ||
-      prevProps.post.liked !== nextProps.post.liked ||
-      prevProps.post.tips !== nextProps.post.tips ||
-      prevProps.post.replies.length !== nextProps.post.replies.length) {
-    return false;
-  }
-  
-  // Check if expansion state changed for this post
-  if (prevProps.expandedPosts.has(prevProps.post.id) !== nextProps.expandedPosts.has(nextProps.post.id)) {
-    return false;
-  }
-  
-  // Check if sorting changed
-  if (prevProps.replySortType !== nextProps.replySortType) {
-    return false;
-  }
-  
-  // Check if detail view state changed
-  if (prevProps.showAsDetail !== nextProps.showAsDetail) {
-    return false;
-  }
-  
-  return true;
-});
+export default Post;

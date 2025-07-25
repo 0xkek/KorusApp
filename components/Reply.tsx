@@ -1,12 +1,32 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React from 'react';
+import React, { memo, useMemo, useCallback } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, Linking } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Reply as ReplyType } from '../types';
 import { Ionicons } from '@expo/vector-icons';
 import { Fonts, FontSizes } from '../constants/Fonts';
-import { useDisplayName } from '../hooks/useSNSDomain';
+import { useDisplayName, useSNSDomain } from '../hooks/useSNSDomain';
 // import { sendLocalNotification } from '../utils/notifications';
+
+// Subcomponent for replying to section
+const ReplyingToSection = memo(({ parentUsername }: { parentUsername: string }) => {
+  const { colors } = useTheme();
+  const { domain } = useSNSDomain(parentUsername);
+  
+  // Use SNS domain if available, otherwise show truncated address
+  const displayName = domain ? `@${domain}` : `@${parentUsername.slice(0, 8)}...`;
+  
+  return (
+    <Text style={[{ 
+      fontSize: FontSizes.xs,
+      fontFamily: Fonts.regular,
+      marginBottom: 6,
+      color: colors.textTertiary 
+    }]}>
+      Replying to <Text style={{ color: colors.primary }}>{displayName}</Text>
+    </Text>
+  );
+});
 
 interface ReplyProps {
   reply: ReplyType;
@@ -15,6 +35,7 @@ interface ReplyProps {
   onLike: (postId: number, replyId: number) => void;
   onReply: (postId: number, quotedText?: string, quotedUsername?: string) => void;
   onTip: (postId: number, replyId: number) => void;
+  onShowProfile?: (wallet: string) => void;
   depth?: number;
   isLastInThread?: boolean;
   hasMoreSiblings?: boolean;
@@ -47,34 +68,68 @@ const renderTextWithLinks = (text: string, textStyle: any, linkColor: string) =>
   });
 };
 
-function Reply({
+const Reply = memo<ReplyProps>(function Reply({
   reply,
   postId,
   currentUserWallet,
   onLike,
   onReply,
   onTip,
+  onShowProfile,
   depth = 0,
   isLastInThread = false,
   hasMoreSiblings = false,
   parentUsername,
   post,
   isDetailView = false,
-}: ReplyProps) {
+}) {
   const { colors, isDarkMode, gradients } = useTheme();
+  
+  // Guard against invalid reply
+  if (!reply || !reply.id) {
+    return null;
+  }
+  
+  // Safe defaults for reply properties
+  const replyWallet = reply.wallet || '';
+  const replyContent = reply.content || '';
+  const replyLikes = reply.likes || 0;
+  const replyTips = reply.tips || 0;
+  const replyLiked = reply.liked || false;
+  const replyTime = reply.time || '';
+  const replyIsPremium = reply.isPremium || false;
+  const replyUsername = reply.username || '';
+  const replyUserTheme = reply.userTheme || '#43e97b';
+  
+  // Memoize callbacks
+  const handleLike = useCallback(() => {
+    onLike(postId, reply.id);
+  }, [onLike, postId, reply.id]);
+  
+  const handleReply = useCallback(() => {
+    const displayName = replyIsPremium ? replyWallet.slice(0, 6) + '...' : replyUsername || replyWallet.slice(0, 6) + '...';
+    onReply(postId, replyContent.substring(0, 100), displayName);
+  }, [onReply, postId, replyContent, replyWallet, replyUsername, replyIsPremium]);
+  
+  const handleTip = useCallback(() => {
+    onTip(postId, reply.id);
+  }, [onTip, postId, reply.id]);
 
   // Helper function to check if reply's bump is still active
   const isBumpActive = (reply: ReplyType) => {
-    if (!reply.bumped || !reply.bumpExpiresAt) return false;
+    if (!reply?.bumped || !reply?.bumpExpiresAt) return false;
     return Date.now() < reply.bumpExpiresAt;
   };
 
   // Check if this reply contains a quote
   const parseContent = (content: string) => {
+    if (!content) {
+      return { quotedText: '', replyText: '' };
+    }
     if (content.includes('> "')) {
       const parts = content.split('\n\n');
-      const quotePart = parts.find(part => part.startsWith('> "'));
-      const replyPart = parts.find(part => !part.startsWith('> "'));
+      const quotePart = parts.find(part => part && part.startsWith('> "'));
+      const replyPart = parts.find(part => part && !part.startsWith('> "'));
       if (quotePart && replyPart) {
         const quotedText = quotePart.replace('> "', '').replace('"', '');
         return { quotedText, replyText: replyPart };
@@ -83,50 +138,9 @@ function Reply({
     return { quotedText: null, replyText: content };
   };
 
-  const { quotedText, replyText } = parseContent(reply.content);
+  const { quotedText, replyText } = parseContent(replyContent);
   const bumpActive = isBumpActive(reply);
-  const displayName = useDisplayName(reply.wallet, reply.isPremium || false);
-
-  const handleLike = () => {
-    onLike(postId, reply.id);
-    // Send notification if not liking own reply
-    if (reply.wallet !== currentUserWallet) {
-      // sendLocalNotification({
-      //   type: 'like',
-      //   fromUser: currentUserWallet,
-      //   postId: postId,
-      //   replyId: reply.id,
-      // });
-    }
-  };
-
-  const handleReply = () => {
-    onReply(postId, reply.content, reply.wallet);
-    // Send notification if not replying to own reply
-    if (reply.wallet !== currentUserWallet) {
-      // sendLocalNotification({
-      //   type: 'quote',
-      //   fromUser: currentUserWallet,
-      //   postId: postId,
-      //   replyId: reply.id,
-      //   content: reply.content,
-      // });
-    }
-  };
-
-
-  const handleTip = () => {
-    onTip(postId, reply.id);
-    // Send notification if not tipping own reply
-    if (reply.wallet !== currentUserWallet) {
-      // sendLocalNotification({
-      //   type: 'tip',
-      //   fromUser: currentUserWallet,
-      //   postId: postId,
-      //   replyId: reply.id,
-      // });
-    }
-  };
+  const displayName = useDisplayName(replyWallet, replyIsPremium);
 
   return (
     <View style={[styles.replyContainer, { marginHorizontal: isDetailView ? 15 : 0 }]}>
@@ -139,57 +153,65 @@ function Reply({
         >
           <View style={styles.reply}>
           
-          {reply.tips > 0 && (
+          {replyTips > 0 && (
             <LinearGradient
               colors={gradients.primary}
               style={[styles.replyTipBadge, { shadowColor: colors.shadowColor }]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <Text style={[styles.replyTipText, { color: isDarkMode ? '#000' : '#fff' }]}>+{reply.tips} $ALLY</Text>
+              <Text style={[styles.replyTipText, { color: isDarkMode ? '#000' : '#fff' }]}>+{replyTips} $ALLY</Text>
             </LinearGradient>
           )}
 
           <View style={styles.replyHeader}>
-            <LinearGradient
-              colors={gradients.primary}
-              style={[
-                styles.replyAvatar, 
-                { 
-                  shadowColor: colors.shadowColor,
-                  borderWidth: 3,
-                  borderColor: reply.userTheme || '#43e97b'
-                }
-              ]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+            <TouchableOpacity
+              onPress={() => onShowProfile?.(replyWallet)}
+              activeOpacity={0.8}
             >
-              <Text style={[styles.replyAvatarText, { color: isDarkMode ? '#000' : '#fff' }]}>
-                {reply.wallet.slice(0, 2)}
-              </Text>
-            </LinearGradient>
-            <View style={styles.replyMeta}>
-              <View style={styles.usernameRow}>
-                <Text style={[styles.replyUsername, { color: colors.primary, textShadowColor: colors.primary + '33' }]}>
-                  {displayName}
+              <LinearGradient
+                colors={gradients.primary}
+                style={[
+                  styles.replyAvatar, 
+                  { 
+                    shadowColor: colors.shadowColor,
+                    borderWidth: 3,
+                    borderColor: replyUserTheme || '#43e97b'
+                  }
+                ]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Text style={[styles.replyAvatarText, { color: isDarkMode ? '#000' : '#fff' }]}>
+                  {replyWallet.slice(0, 2)}
                 </Text>
-                {reply.isPremium && (
-                  <View style={[styles.verifiedBadge, { backgroundColor: '#FFD700' }]}>
-                    <Ionicons name="star" size={8} color="#000" />
-                  </View>
-                )}
-              </View>
+              </LinearGradient>
+            </TouchableOpacity>
+            <View style={styles.replyMeta}>
+              <TouchableOpacity
+                onPress={() => onShowProfile?.(replyWallet)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.usernameRow}>
+                  <Text style={[styles.replyUsername, { color: colors.primary, textShadowColor: colors.primary + '33' }]}>
+                    {displayName}
+                  </Text>
+                  {replyIsPremium && (
+                    <View style={[styles.verifiedBadge, { backgroundColor: '#FFD700' }]}>
+                      <Ionicons name="star" size={8} color="#000" />
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
               <Text style={[styles.replyTime, { color: colors.textTertiary }]}>
-                {reply.time}
+                {replyTime}
               </Text>
             </View>
           </View>
 
           {/* Twitter-style replying to indicator */}
           {parentUsername && (
-            <Text style={[styles.replyingTo, { color: colors.textTertiary }]}>
-              Replying to <Text style={{ color: colors.primary }}>@{parentUsername.slice(0, 8)}...</Text>
-            </Text>
+            <ReplyingToSection parentUsername={parentUsername} />
           )}
 
           {/* Show quoted content if exists */}
@@ -218,7 +240,7 @@ function Reply({
             <TouchableOpacity
               style={[
                 styles.replyActionBtn,
-                reply.liked && [styles.replyLikedBtn, { shadowColor: colors.primary }]
+                replyLiked && [styles.replyLikedBtn, { shadowColor: colors.primary }]
               ]}
               onPress={handleLike}
               activeOpacity={0.8}
@@ -228,23 +250,23 @@ function Reply({
                 style={[
                   styles.replyActionBtnGradient,
                   { borderColor: colors.primary + '50' },
-                  reply.liked && [styles.replyLikedBtnGradient, { borderColor: colors.primary }]
+                  replyLiked && [styles.replyLikedBtnGradient, { borderColor: colors.primary }]
                 ]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
                 <View style={styles.replyActionContent}>
                   <Ionicons 
-                    name={reply.liked ? "heart" : "heart-outline"} 
+                    name={replyLiked ? "heart" : "heart-outline"} 
                     size={14} 
-                    color={reply.liked ? colors.primary : colors.textSecondary} 
+                    color={replyLiked ? colors.primary : colors.textSecondary} 
                   />
                   <Text style={[
                     styles.replyActionText,
                     { color: colors.textSecondary },
-                    reply.liked && [styles.replyLikedText, { color: colors.primary }]
+                    replyLiked && [styles.replyLikedText, { color: colors.primary }]
                   ]}>
-                    {reply.likes}
+                    {replyLikes}
                   </Text>
                 </View>
               </LinearGradient>
@@ -277,7 +299,7 @@ function Reply({
             <TouchableOpacity
               style={[
                 styles.replyActionBtn,
-                reply.tips > 0 && [styles.replyActiveBtn, { shadowColor: colors.shadowColor }]
+                replyTips > 0 && [styles.replyActiveBtn, { shadowColor: colors.shadowColor }]
               ]}
               onPress={handleTip}
               activeOpacity={0.8}
@@ -287,7 +309,7 @@ function Reply({
                 style={[
                   styles.replyActionBtnGradient,
                   { borderColor: colors.primary + '50' },
-                  reply.tips > 0 && [styles.replyActiveBtnGradient, { borderColor: colors.primary }]
+                  replyTips > 0 && [styles.replyActiveBtnGradient, { borderColor: colors.primary }]
                 ]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -296,12 +318,12 @@ function Reply({
                   <Ionicons 
                     name="cash-outline" 
                     size={12} 
-                    color={reply.tips > 0 ? colors.primary : colors.textSecondary} 
+                    color={replyTips > 0 ? colors.primary : colors.textSecondary} 
                   />
                   <Text style={[
                     styles.replyActionText,
                     { color: colors.textSecondary },
-                    reply.tips > 0 && [styles.replyActiveText, { color: colors.primary }]
+                    replyTips > 0 && [styles.replyActiveText, { color: colors.primary }]
                   ]}>
                     Tip
                   </Text>
@@ -314,7 +336,7 @@ function Reply({
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   replyContainer: {
@@ -520,16 +542,4 @@ const styles = StyleSheet.create({
   },
 });
 
-// Memoize Reply component
-export default React.memo(Reply, (prevProps, nextProps) => {
-  // Check if reply data changed
-  if (prevProps.reply.id !== nextProps.reply.id ||
-      prevProps.reply.likes !== nextProps.reply.likes ||
-      prevProps.reply.liked !== nextProps.reply.liked ||
-      prevProps.reply.bumped !== nextProps.reply.bumped ||
-      prevProps.reply.tips !== nextProps.reply.tips) {
-    return false;
-  }
-  
-  return true;
-});
+export default Reply;

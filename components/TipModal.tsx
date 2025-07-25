@@ -2,10 +2,24 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { Ionicons } from '@expo/vector-icons';
+
+// Validate tip amount
+const validateTipAmount = (amount: number, balance: number) => {
+  if (amount <= 0) {
+    return { valid: false, error: 'Please enter an amount greater than 0' };
+  }
+  if (amount > balance) {
+    return { valid: false, error: `Insufficient balance. You have ${balance.toFixed(2)} $ALLY` };
+  }
+  if (amount > 10000) {
+    return { valid: false, error: 'Maximum tip amount is 10,000 $ALLY' };
+  }
+  return { valid: true, error: '' };
+};
 
 interface TipModalProps {
   visible: boolean;
@@ -47,6 +61,12 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
   };
 
   const handleTip = (event?: any) => {
+    const validation = validateTipAmount(enteredAmount, safeBalance);
+    if (!validation.valid) {
+      Alert.alert('Invalid Tip', validation.error);
+      return;
+    }
+    
     if (isValidAmount) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       

@@ -427,15 +427,16 @@ export default function GameScreen() {
                 <LinearGradient
                   colors={isPlayer1 ? [colors.primary + '20', colors.primary + '10'] : [colors.surface + '40', colors.surface + '20']}
                   style={[styles.playerCardGradient, {
-                    borderColor: isPlayer1 ? colors.primary : colors.border + '40',
-                    borderWidth: 2,
+                    borderColor: gameData.type === 'connect4' ? '#FF0000' : (isPlayer1 ? colors.primary : colors.border + '40'),
+                    borderWidth: gameData.type === 'connect4' ? 3 : 2,
                   }]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
-                  <View style={[styles.playerIndicator, { backgroundColor: colors.primary }]} />
                   <View style={styles.playerInfo}>
-                    <Text style={[styles.playerLabel, { color: colors.textSecondary }]}>PLAYER 1</Text>
+                    <Text style={[styles.playerLabel, { color: colors.textSecondary }]}>
+                      PLAYER 1 {gameData.type === 'connect4' ? '🔴' : ''}
+                    </Text>
                     <Text style={[styles.playerAddress, { color: colors.text }]}>
                       {gameData.player1.slice(0, 6)}...{gameData.player1.slice(-4)}
                     </Text>
@@ -470,15 +471,16 @@ export default function GameScreen() {
                 <LinearGradient
                   colors={isPlayer2 ? [colors.secondary + '20', colors.secondary + '10'] : [colors.surface + '40', colors.surface + '20']}
                   style={[styles.playerCardGradient, {
-                    borderColor: isPlayer2 ? colors.secondary : colors.border + '40',
-                    borderWidth: 2,
+                    borderColor: gameData.type === 'connect4' ? '#FFD700' : (isPlayer2 ? colors.secondary : colors.border + '40'),
+                    borderWidth: gameData.type === 'connect4' ? 3 : 2,
                   }]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
-                  <View style={[styles.playerIndicator, { backgroundColor: colors.secondary }]} />
                   <View style={styles.playerInfo}>
-                    <Text style={[styles.playerLabel, { color: colors.textSecondary }]}>PLAYER 2</Text>
+                    <Text style={[styles.playerLabel, { color: colors.textSecondary }]}>
+                      PLAYER 2 {gameData.type === 'connect4' ? '🟡' : ''}
+                    </Text>
                     {gameData.player2 ? (
                       <Text style={[styles.playerAddress, { color: colors.text }]}>
                         {gameData.player2.slice(0, 6)}...{gameData.player2.slice(-4)}
@@ -743,7 +745,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 0,
-    paddingBottom: 120, // Increased to make frame shorter
+    paddingBottom: 110, // Compact game frame
   },
   gameGradient: {
     borderRadius: 32,
