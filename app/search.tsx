@@ -173,7 +173,7 @@ export default function SearchScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, searchHistory]);
+  }, [searchHistory, selectedCategory]);
 
   // Calculate relevance score for sorting
   const calculateRelevanceScore = (post: PostType, query: string): number => {
@@ -334,7 +334,14 @@ export default function SearchScreen() {
         <SearchBar
           onSearch={(query) => {
             console.log('[SEARCH] SearchBar onSearch called with:', query);
-            performSearch(query);
+            console.log('[SEARCH] isLoading state:', isLoading);
+            console.log('[SEARCH] About to call performSearch');
+            try {
+              performSearch(query);
+              console.log('[SEARCH] performSearch called');
+            } catch (error) {
+              console.error('[SEARCH] Error calling performSearch:', error);
+            }
           }}
           onCategoryFilter={handleCategoryFilter}
           searchHistory={searchHistory}
