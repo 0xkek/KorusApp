@@ -6,10 +6,8 @@ import { AuthRequest } from '../middleware/auth'
 import { isMockMode, mockAuthController } from '../middleware/mockMode'
 
 export const connectWallet = async (req: Request, res: Response) => {
-  // Use mock mode if database is not available
-  if (isMockMode()) {
-    return mockAuthController.connectWallet(req, res);
-  }
+  // Always use mock mode for now to bypass database issues
+  return mockAuthController.connectWallet(req, res);
   
   try {
     const { walletAddress, signature, message } = req.body
