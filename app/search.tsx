@@ -42,11 +42,21 @@ export default function SearchScreen() {
   const [hasSearched, setHasSearched] = useState(false);
   const [expandedPosts, setExpandedPosts] = useState<Set<number>>(new Set());
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  
+  // Use AbortController to cancel previous searches
+  const abortControllerRef = React.useRef<AbortController | null>(null);
 
   // Load search history from storage (mock for now)
   useEffect(() => {
     // In real app, load from AsyncStorage
     setSearchHistory(['career tips', 'mental health', 'solana', 'productivity']);
+    
+    // Cleanup function to cancel any pending search on unmount
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
 
   // Handle URL parameters from navigation
@@ -67,23 +77,19 @@ export default function SearchScreen() {
   const performSearch = React.useCallback(async (query: string) => {
     console.log('[SEARCH] performSearch called with query:', query);
     
-    if (isLoading) {
-      console.log('[SEARCH] Search already in progress, returning');
-      return;
+    // Cancel any previous search request
+    if (abortControllerRef.current) {
+      console.log('[SEARCH] Cancelling previous search request');
+      abortControllerRef.current.abort();
     }
+    
+    // Create new AbortController for this search
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
     
     setSearchQuery(query);
     setIsLoading(true);
     setHasSearched(true);
-    
-    // Test if API is reachable
-    try {
-      const healthCheck = await fetch('https://korusapp-production.up.railway.app/health');
-      const healthData = await healthCheck.json();
-      console.log('[SEARCH] Health check:', healthData);
-    } catch (e) {
-      console.error('[SEARCH] Health check failed:', e);
-    }
     
     // Add to search history
     if (query.trim() && !searchHistory.includes(query.trim())) {
@@ -95,7 +101,13 @@ export default function SearchScreen() {
       logger.log('[SEARCH] Calling API with query:', query.trim());
       console.log('[SEARCH] About to call searchAPI.search with:', query.trim());
       
-      const response = await searchAPI.search(query.trim() || '');
+      const response = await searchAPI.search(query.trim() || '', 20, 0, abortController.signal);
+      
+      // Check if request was aborted
+      if (abortController.signal.aborted) {
+        console.log('[SEARCH] Request was aborted, ignoring response');
+        return;
+      }
       
       console.log('[SEARCH] Full API response:', JSON.stringify(response, null, 2));
       logger.log('[SEARCH] API response:', response);
@@ -164,14 +176,20 @@ export default function SearchScreen() {
         setSearchResults([]);
       }
     } catch (error: any) {
-      console.error('Search error:', error);
-      console.error('Error details:', error.response?.data || error.message);
-      console.error('Error status:', error.response?.status);
-      console.error('Error headers:', error.response?.headers);
-      logger.error('[SEARCH] Error occurred:', error);
-      setSearchResults([]);
+      // Don't log abort errors
+      if (error.name !== 'AbortError') {
+        console.error('Search error:', error);
+        console.error('Error details:', error.response?.data || error.message);
+        console.error('Error status:', error.response?.status);
+        console.error('Error headers:', error.response?.headers);
+        logger.error('[SEARCH] Error occurred:', error);
+        setSearchResults([]);
+      }
     } finally {
-      setIsLoading(false);
+      // Only reset loading state if this is the current search
+      if (!abortController.signal.aborted) {
+        setIsLoading(false);
+      }
     }
   }, [searchHistory, selectedCategory]);
 
@@ -332,17 +350,7 @@ export default function SearchScreen() {
 
         {/* Search Bar */}
         <SearchBar
-          onSearch={(query) => {
-            console.log('[SEARCH] SearchBar onSearch called with:', query);
-            console.log('[SEARCH] isLoading state:', isLoading);
-            console.log('[SEARCH] About to call performSearch');
-            try {
-              performSearch(query);
-              console.log('[SEARCH] performSearch called');
-            } catch (error) {
-              console.error('[SEARCH] Error calling performSearch:', error);
-            }
-          }}
+          onSearch={performSearch}
           onCategoryFilter={handleCategoryFilter}
           searchHistory={searchHistory}
           onClearHistory={clearSearchHistory}

@@ -9,10 +9,11 @@ import SearchBar from '../../components/SearchBar';
 import Post from '../../components/Post';
 import { useWallet } from '../../context/WalletContext';
 import { useTheme } from '../../context/ThemeContext';
-import { initialPosts } from '../../data/mockData';
 import { Post as PostType } from '../../types';
 import { Fonts, FontSizes } from '../../constants/Fonts';
 import { resolveSNSDomain, isValidSNSDomain } from '../../utils/sns';
+import { searchAPI } from '../../utils/api';
+import { logger } from '../../utils/logger';
 
 export default function ExploreScreen() {
   const router = useRouter();
@@ -38,7 +39,7 @@ export default function ExploreScreen() {
   const currentUserWallet = walletAddress || 'loading...';
 
   const handleSearch = async (query: string) => {
-    if (isLoading || !query.trim()) return;
+    if (!query.trim()) return;
     
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSearchQuery(query);
@@ -51,83 +52,62 @@ export default function ExploreScreen() {
     }
 
     try {
-      const lowerQuery = query.toLowerCase();
-      let resolvedWalletAddress: string | null = null;
-      
-      // Check if the query is a .sol domain
-      // Try both with and without .sol extension
-      if (isValidSNSDomain(lowerQuery)) {
-        resolvedWalletAddress = await resolveSNSDomain(lowerQuery);
-      } else if (!lowerQuery.includes('.')) {
-        // If no dot, try adding .sol
-        const domainWithSol = lowerQuery + '.sol';
-        if (isValidSNSDomain(domainWithSol)) {
-          resolvedWalletAddress = await resolveSNSDomain(domainWithSol);
-        }
+      // Use the backend search API
+      logger.log('[EXPLORE] Calling search API with query:', query.trim());
+      const response = await searchAPI.search(query.trim());
+      logger.log('[EXPLORE] Search API response:', response);
+
+      if (response && response.posts) {
+        // Transform backend posts to app format
+        const transformedPosts = response.posts.map((post: any) => ({
+          id: post.id,
+          wallet: post.authorWallet || post.author?.walletAddress || 'Unknown',
+          time: new Date(post.createdAt).toLocaleDateString(),
+          timestamp: post.createdAt,
+          content: post.content,
+          likes: post.likeCount || 0,
+          replies: post.replies?.map((reply: any) => ({
+            id: reply.id,
+            wallet: reply.authorWallet || reply.author?.walletAddress || 'Unknown',
+            time: new Date(reply.createdAt).toLocaleDateString(),
+            timestamp: reply.createdAt,
+            content: reply.content,
+            likes: reply.likeCount || 0,
+            liked: false,
+            tips: reply.tipCount || 0,
+            replies: [],
+            postId: post.id,
+            parentId: reply.parentReplyId,
+            isPremium: reply.author?.tier === 'premium',
+            userTheme: undefined
+          })) || [],
+          tips: post.tipCount || 0,
+          liked: post.liked || false,
+          category: post.topic || 'general',
+          imageUrl: post.imageUrl,
+          videoUrl: post.videoUrl,
+          isPremium: post.author?.tier === 'premium',
+          userTheme: undefined,
+          gameData: undefined,
+        }));
+
+        // Transform users
+        const transformedUsers = response.users?.map((user: any) => ({
+          wallet: user.walletAddress,
+          username: user.username,
+          postCount: user._count?.posts || 0,
+          avatar: undefined,
+          nftAvatar: undefined
+        })) || [];
+
+        setSearchResults({ posts: transformedPosts, users: transformedUsers });
+      } else {
+        setSearchResults({ posts: [], users: [] });
       }
-      
-      // Search posts
-      const postResults = initialPosts.filter(post => {
-        const matchesContent = post.content.toLowerCase().includes(lowerQuery);
-        const matchesCategory = post.category?.toLowerCase().includes(lowerQuery);
-        const matchesSubcategory = post.subcategory?.toLowerCase().includes(lowerQuery);
-        const matchesWallet = post.wallet.toLowerCase().includes(lowerQuery);
-        const matchesResolvedWallet = resolvedWalletAddress && post.wallet === resolvedWalletAddress;
-        
-        const matchesReply = post.replies.some(reply => 
-          reply.content.toLowerCase().includes(lowerQuery) ||
-          reply.wallet.toLowerCase().includes(lowerQuery) ||
-          (resolvedWalletAddress && reply.wallet === resolvedWalletAddress)
-        );
-        
-        return matchesContent || matchesCategory || matchesSubcategory || matchesWallet || matchesResolvedWallet || matchesReply;
-      });
-
-      // Search users (extract unique users from posts)
-      const userMap = new Map<string, { wallet: string; username?: string; postCount: number; avatar?: string; nftAvatar?: any }>();
-      
-      // Add users from posts
-      initialPosts.forEach(post => {
-        const matchesQuery = post.wallet.toLowerCase().includes(lowerQuery) || 
-                           post.username?.toLowerCase().includes(lowerQuery) ||
-                           (resolvedWalletAddress && post.wallet === resolvedWalletAddress);
-                           
-        if (matchesQuery) {
-          const existing = userMap.get(post.wallet) || { 
-            wallet: post.wallet, 
-            username: post.username,
-            postCount: 0,
-            avatar: post.avatar,
-            nftAvatar: post.nftAvatar
-          };
-          existing.postCount++;
-          userMap.set(post.wallet, existing);
-        }
-        
-        // Also check reply authors
-        post.replies.forEach(reply => {
-          const replyMatchesQuery = reply.wallet.toLowerCase().includes(lowerQuery) ||
-                                  (resolvedWalletAddress && reply.wallet === resolvedWalletAddress);
-                                  
-          if (replyMatchesQuery) {
-            const existing = userMap.get(reply.wallet) || { 
-              wallet: reply.wallet,
-              postCount: 0,
-              avatar: reply.avatar,
-              nftAvatar: reply.nftAvatar
-            };
-            existing.postCount++;
-            userMap.set(reply.wallet, existing);
-          }
-        });
-      });
-
-      const userResults = Array.from(userMap.values()).sort((a, b) => b.postCount - a.postCount);
-
-      setSearchResults({ posts: postResults, users: userResults });
-      setIsLoading(false);
     } catch (error) {
       console.error('Search error:', error);
+      setSearchResults({ posts: [], users: [] });
+    } finally {
       setIsLoading(false);
     }
   };

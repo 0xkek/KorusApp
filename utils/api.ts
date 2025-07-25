@@ -298,9 +298,10 @@ export const gamesAPI = {
 
 // Search API
 export const searchAPI = {
-  async search(query: string, limit: number = 20, offset: number = 0) {
+  async search(query: string, limit: number = 20, offset: number = 0, signal?: AbortSignal) {
     const response = await api.get('/search', {
-      params: { query, limit, offset }
+      params: { query, limit, offset },
+      signal
     });
     return response.data;
   },
