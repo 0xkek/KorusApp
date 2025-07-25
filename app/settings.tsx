@@ -555,6 +555,24 @@ export default function SettingsScreen() {
                   <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
                 </TouchableOpacity>
 
+                {/* Moderation Dashboard */}
+                {isPremium && (
+                  <TouchableOpacity
+                    style={[styles.supportRow, { borderBottomColor: colors.borderLight }]}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      router.push('/moderation');
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.supportInfo}>
+                      <Ionicons name="construct-outline" size={24} color={colors.primary} />
+                      <Text style={[styles.supportLabel, { color: colors.text }]}>Moderation</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+                  </TouchableOpacity>
+                )}
+
                 {/* Ads Service Contact */}
                 <TouchableOpacity
                   style={[styles.supportRow, { borderBottomWidth: 0 }]}

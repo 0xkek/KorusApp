@@ -3,6 +3,7 @@ import { createPost, getPosts, getSinglePost } from '../controllers/postsControl
 import { authenticate } from '../middleware/auth'
 import { createPostLimiter } from '../middleware/rateLimiter'
 import { validateCreatePost, validateGetPosts } from '../middleware/validation'
+import { checkSuspension, checkWarnings } from '../middleware/moderationCheck'
 
 const router = Router()
 
@@ -12,7 +13,7 @@ router.get('/', validateGetPosts, getPosts)
 // GET /api/posts/:id - Get single post with replies
 router.get('/:id', getSinglePost)
 
-// POST /api/posts - Create new post (requires auth + rate limiting + validation)
-router.post('/', authenticate, createPostLimiter, validateCreatePost, createPost)
+// POST /api/posts - Create new post (requires auth + moderation check + rate limiting + validation)
+router.post('/', authenticate, checkSuspension, checkWarnings, createPostLimiter, validateCreatePost, createPost)
 
 export default router

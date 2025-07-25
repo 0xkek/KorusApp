@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import prisma from '../config/database'
 import { AuthRequest } from '../middleware/auth'
+import { autoModerate } from './moderationController'
 
 export const createReply = async (req: AuthRequest, res: Response) => {
   try {
@@ -56,6 +57,9 @@ export const createReply = async (req: AuthRequest, res: Response) => {
       data: { replyCount: { increment: 1 } }
     })
 
+    // Run auto-moderation on the new reply
+    await autoModerate('reply', reply.id, content)
+
     // Record interaction for $ALLY calculation (fixed with upsert)
     // Each reply to a post gives the post author 3 points
     await prisma.interaction.upsert({
@@ -100,9 +104,12 @@ export const getReplies = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Post not found' })
     }
 
-    // Get all replies for this post
+    // Get all replies for this post (excluding hidden ones)
     const replies = await prisma.reply.findMany({
-      where: { postId },
+      where: { 
+        postId,
+        isHidden: false // Filter out hidden replies
+      },
       include: {
         author: {
           select: {

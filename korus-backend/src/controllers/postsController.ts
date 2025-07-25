@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import prisma from '../config/database'
 import { AuthRequest } from '../middleware/auth'
 import { CreatePostRequest, ApiResponse, PaginatedResponse, Post } from '../types'
+import { autoModerate } from './moderationController'
 
 export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Post>>) => {
   try {
@@ -44,6 +45,9 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
 
     console.log(`New post created by ${walletAddress}: ${content.substring(0, 50)}...`)
 
+    // Run auto-moderation on the new post
+    await autoModerate('post', post.id, content)
+
     res.status(201).json({
       success: true,
       post: {
@@ -63,7 +67,7 @@ export const getPosts = async (req: Request, res: Response<PaginatedResponse<Pos
     const now = new Date()
 
     // Build filter conditions
-    const where: any = {}
+    const where: any = { isHidden: false } // Filter out hidden posts
     if (topic) where.topic = topic.toString().toLowerCase()
     if (subtopic) where.subtopic = subtopic.toString().toLowerCase()
 
