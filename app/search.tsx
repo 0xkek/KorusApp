@@ -76,6 +76,15 @@ export default function SearchScreen() {
     setIsLoading(true);
     setHasSearched(true);
     
+    // Test if API is reachable
+    try {
+      const healthCheck = await fetch('https://korusapp-production.up.railway.app/health');
+      const healthData = await healthCheck.json();
+      console.log('[SEARCH] Health check:', healthData);
+    } catch (e) {
+      console.error('[SEARCH] Health check failed:', e);
+    }
+    
     // Add to search history
     if (query.trim() && !searchHistory.includes(query.trim())) {
       setSearchHistory(prev => [query.trim(), ...prev.slice(0, 9)]);
@@ -84,11 +93,17 @@ export default function SearchScreen() {
     try {
       // Use the backend search API
       logger.log('[SEARCH] Calling API with query:', query.trim());
+      console.log('[SEARCH] About to call searchAPI.search with:', query.trim());
+      
       const response = await searchAPI.search(query.trim() || '');
+      
+      console.log('[SEARCH] Full API response:', JSON.stringify(response, null, 2));
       logger.log('[SEARCH] API response:', response);
       logger.log('[SEARCH] Response posts:', response.posts?.length);
+      logger.log('[SEARCH] Response success:', response.success);
 
-      if (response.success && response.posts) {
+      if (response && response.posts) {
+        console.log('[SEARCH] Processing', response.posts.length, 'posts');
         let results = response.posts;
 
         // Transform backend posts to app format
@@ -148,8 +163,12 @@ export default function SearchScreen() {
         logger.error('[SEARCH] Search failed:', response);
         setSearchResults([]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Search error:', error);
+      console.error('Error details:', error.response?.data || error.message);
+      console.error('Error status:', error.response?.status);
+      console.error('Error headers:', error.response?.headers);
+      logger.error('[SEARCH] Error occurred:', error);
       setSearchResults([]);
     } finally {
       setIsLoading(false);
@@ -274,9 +293,6 @@ export default function SearchScreen() {
   
   return (
     <View style={styles.container}>
-      <Text style={{ position: 'absolute', top: 100, left: 20, zIndex: 9999, backgroundColor: 'yellow', padding: 10 }}>
-        SEARCH SCREEN LOADED
-      </Text>
       {/* Background */}
       <LinearGradient
         colors={isDarkMode ? [
@@ -324,17 +340,6 @@ export default function SearchScreen() {
           searchHistory={searchHistory}
           onClearHistory={clearSearchHistory}
         />
-        
-        {/* Debug button */}
-        <TouchableOpacity 
-          onPress={() => {
-            console.log('[DEBUG] Test button pressed');
-            performSearch('test');
-          }}
-          style={{ padding: 10, backgroundColor: 'red', margin: 10 }}
-        >
-          <Text style={{ color: 'white' }}>Test Search</Text>
-        </TouchableOpacity>
 
         {/* Search Results */}
         <ScrollView
