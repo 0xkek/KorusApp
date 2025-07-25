@@ -6,7 +6,7 @@ import { logger } from '../utils/logger';
 import { useKorusAlert } from '../components/KorusAlertProvider';
 
 export function useAuth() {
-  const { walletAddress, isConnecting, connectWallet, disconnect } = useWallet();
+  const { walletAddress, isLoading: walletLoading, logout } = useWallet();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -84,7 +84,7 @@ export function useAuth() {
   const signOut = async () => {
     try {
       await authAPI.logout();
-      await disconnect();
+      await logout();
       setIsAuthenticated(false);
       setUser(null);
       
@@ -113,7 +113,7 @@ export function useAuth() {
   return {
     isAuthenticated,
     isCheckingAuth,
-    isLoading: isConnecting || isCheckingAuth,
+    isLoading: walletLoading || isCheckingAuth,
     user,
     walletAddress,
     signIn,

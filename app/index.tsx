@@ -30,11 +30,13 @@ export default function SplashScreen() {
           setTimeout(() => {
             logger.log('Auth check complete - isAuthenticated:', isAuthenticated, 'walletAddress:', walletAddress);
             
-            if (isAuthenticated && walletAddress) {
-              // User is authenticated, go to main app
+            if (walletAddress) {
+              // User has wallet (offline mode), go to main app
+              logger.log('User has wallet, going to main app');
               router.replace('/(tabs)');
             } else {
-              // User needs to authenticate, go to welcome
+              // User needs to create wallet, go to welcome
+              logger.log('No wallet found, going to welcome');
               router.replace('/welcome');
             }
           }, remainingTime);

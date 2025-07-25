@@ -11,10 +11,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../hooks/useAuth';
 import { useKorusAlert } from '../components/KorusAlertProvider';
 import { getErrorMessage } from '../utils/errorHandler';
+import { logger } from '../utils/logger';
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const { hasWallet, isLoading, createNewWallet, importFromSeedVault, walletAddress, connectWallet } = useWallet();
+  const { hasWallet, isLoading, createNewWallet, importFromSeedVault, walletAddress } = useWallet();
   const { colors, isDarkMode, gradients } = useTheme();
   const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
   const [checkingSeedVault, setCheckingSeedVault] = useState(false);
@@ -22,12 +23,13 @@ export default function WelcomeScreen() {
   const { signIn, isAuthenticated } = useAuth();
   const { showAlert } = useKorusAlert();
 
-  // Auto-redirect if user is authenticated
+  // Auto-redirect if user has wallet
   useEffect(() => {
-    if (isAuthenticated && !isLoading) {
+    if (walletAddress && !isLoading) {
+      logger.log('User has wallet, redirecting to tabs');
       router.replace('/(tabs)');
     }
-  }, [isAuthenticated, isLoading]);
+  }, [walletAddress, isLoading]);
 
   // Auto-check for Seed Vault on mount
   useEffect(() => {
@@ -81,31 +83,16 @@ export default function WelcomeScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     
     try {
-      const created = await createNewWallet();
+      await createNewWallet();
       
-      if (created) {
-        // Wallet created, now authenticate
-        try {
-          // In mock mode, use dummy signature
-          const message = `Sign in to Korus\n\nTimestamp: ${Date.now()}`;
-          const signature = 'mock_signature_' + Date.now();
-          
-          await signIn(signature, message);
-          
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          router.replace('/(tabs)');
-        } catch (authError) {
-          const errorMessage = getErrorMessage(authError);
-          showAlert({
-            title: 'Authentication Failed',
-            message: errorMessage,
-            type: 'error'
-          });
-          setCreatingWallet(false);
-        }
-      } else {
-        setCreatingWallet(false);
-      }
+      // Skip auth and go directly to tabs in offline mode
+      logger.log('Created wallet in offline mode, navigating to app');
+      logger.log('Current wallet address:', walletAddress);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      
+      // Force navigation regardless of state
+      setCreatingWallet(false);
+      router.replace('/(tabs)');
     } catch (error) {
       setCreatingWallet(false);
       const errorMessage = getErrorMessage(error);

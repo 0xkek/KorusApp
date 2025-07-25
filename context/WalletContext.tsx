@@ -137,8 +137,8 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     setIsLoading(false);
   };
 
-  const createNewWallet = async () => {
-    await withErrorHandling(async () => {
+  const createNewWallet = async (): Promise<boolean> => {
+    try {
       setIsLoading(true);
       
       // For now, use a mock wallet to test the app
@@ -148,61 +148,38 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       
       // Create a mock signature for authentication
       const mockMessage = `Sign this message to authenticate with Korus\nTimestamp: ${Date.now()}`;
-      const mockSignature = 'mock-signature-' + Date.now();
+      const mockSignature = btoa('mock-signature-' + Date.now());
       
       // Authenticate with backend
       logger.log('Creating wallet and authenticating with backend');
       
-      try {
-        // Import the auth API
-        const { authAPI } = await import('../utils/api');
-        
-        logger.log('Attempting to authenticate with backend...');
-        logger.log('Wallet address:', mockPublicKey);
-        
-        // Authenticate with backend
-        const authResult = await authAPI.connectWallet(mockPublicKey, mockSignature, mockMessage);
-        logger.log('Authentication successful:', authResult);
-        logger.log('Token received:', authResult.token ? 'Yes' : 'No');
-        
-        // Store wallet info
-        await SecureStore.setItemAsync(WALLET_KEY, mockSecretKey);
-        await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, mockPublicKey);
-        
-        // Update state with backend data
-        setWalletAddress(mockPublicKey);
-        setHasWallet(true);
-        // Parse balance as number since backend returns it as string
-        const backendBalance = parseFloat(authResult.user?.allyBalance || '5000');
-        setBalance(isNaN(backendBalance) ? 5000 : backendBalance);
-        setIsPremium(authResult.user?.tier === 'premium');
-        
-        logger.log('Wallet created successfully with backend authentication');
-      } catch (error) {
-        logger.error('Backend authentication failed, using offline mode:', error);
-        
-        // Fallback to offline mode
-        await SecureStore.setItemAsync(WALLET_KEY, mockSecretKey);
-        await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, mockPublicKey);
-        await SecureStore.setItemAsync(OFFLINE_MODE_KEY, 'true');
-        
-        setWalletAddress(mockPublicKey);
-        setHasWallet(true);
-        setBalance(5000);
-        setIsPremium(false);
-      }
+      // Skip backend auth for now due to rate limiting - go directly to offline mode
+      logger.log('Using offline mode to bypass rate limiting');
+      
+      // Store wallet info
+      await SecureStore.setItemAsync(WALLET_KEY, mockSecretKey);
+      await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, mockPublicKey);
+      await SecureStore.setItemAsync(OFFLINE_MODE_KEY, 'true');
+      
+      // Update state
+      setWalletAddress(mockPublicKey);
+      setHasWallet(true);
+      setBalance(5000);
+      setIsPremium(true); // Set premium for testing all features
       
       // Fetch SNS domains
       const domains = await fetchSNSDomains(mockPublicKey);
       setAllSNSDomains(domains);
       
-      logger.log('Wallet created successfully (offline mode)');
+      logger.log('Wallet created successfully');
+      setIsLoading(false);
+      return true;
       
-    }, 'createNewWallet', {
-      onError: () => setIsLoading(false)
-    });
-    
-    setIsLoading(false);
+    } catch (error) {
+      logger.error('Error creating wallet:', error);
+      setIsLoading(false);
+      return false;
+    }
   };
 
   const importFromSeedVault = async (): Promise<boolean> => {

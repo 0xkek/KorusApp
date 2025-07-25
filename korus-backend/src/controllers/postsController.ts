@@ -110,9 +110,28 @@ export const getPosts = async (req: Request, res: Response<PaginatedResponse<Pos
         hasMore: posts.length === Number(limit)
       }
     } as any)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get posts error:', error)
-    res.status(500).json({ success: false, error: 'Failed to get posts' } as any)
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta
+    })
+    
+    // Check for common database errors
+    if (error?.code === 'P2002') {
+      res.status(500).json({ success: false, error: 'Database constraint error' } as any)
+    } else if (error?.code === 'P2021') {
+      res.status(500).json({ success: false, error: 'Database table not found' } as any)
+    } else if (error?.code === 'P2025') {
+      res.status(500).json({ success: false, error: 'Database record not found' } as any)
+    } else {
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to get posts',
+        details: process.env.NODE_ENV === 'development' ? error?.message : undefined
+      } as any)
+    }
   }
 }
 

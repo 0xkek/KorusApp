@@ -29,9 +29,9 @@ export const connectWallet = async (req: Request, res: Response) => {
         where: { walletAddress }
       })
       console.log('User lookup successful:', user ? 'found' : 'not found')
-    } catch (findError) {
+    } catch (findError: any) {
       console.error('Database find error:', findError)
-      throw new Error(`Database find failed: ${findError.message}`)
+      throw new Error(`Database find failed: ${findError?.message || String(findError)}`)
     }
 
     if (!user) {
@@ -49,9 +49,9 @@ export const connectWallet = async (req: Request, res: Response) => {
         })
 
         console.log(`New user created: ${walletAddress} (${user.tier})`)
-      } catch (createError) {
+      } catch (createError: any) {
         console.error('Database create error:', createError)
-        throw new Error(`Database create failed: ${createError.message}`)
+        throw new Error(`Database create failed: ${createError?.message || String(createError)}`)
       }
     }
 
