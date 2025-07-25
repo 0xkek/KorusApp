@@ -1,6 +1,15 @@
 import { Request, Response } from 'express'
-import { prisma } from '../config/database'
-import { ApiResponse } from '../types'
+import prisma from '../config/database'
+
+// ApiResponse type
+interface ApiResponse {
+  success: boolean
+  error?: string
+  posts?: any[]
+  users?: any[]
+  totalPosts?: number
+  hasMore?: boolean
+}
 
 // SNS domain mapping (this would be from a real SNS resolver in production)
 const SNS_DOMAINS: { [wallet: string]: string } = {
@@ -22,7 +31,7 @@ function getWalletDomain(wallet: string): string {
   return SNS_DOMAINS[wallet] || DEFAULT_DOMAIN
 }
 
-export const searchPosts = async (req: Request, res: Response<ApiResponse>) => {
+export const searchPosts = async (req: Request, res: Response) => {
   try {
     const { query, limit = 20, offset = 0 } = req.query
     
@@ -247,7 +256,7 @@ export const searchPosts = async (req: Request, res: Response<ApiResponse>) => {
 }
 
 // Search users specifically
-export const searchUsers = async (req: Request, res: Response<ApiResponse>) => {
+export const searchUsers = async (req: Request, res: Response) => {
   try {
     const { query, limit = 10 } = req.query
     

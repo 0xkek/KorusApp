@@ -1,8 +1,9 @@
 import { Request, Response } from 'express'
 import prisma from '../config/database'
 import { AuthRequest } from '../middleware/auth'
+import { CreatePostRequest, ApiResponse, PaginatedResponse, Post } from '../types'
 
-export const createPost = async (req: AuthRequest, res: Response) => {
+export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Post>>) => {
   try {
     const walletAddress = req.userWallet!
     const { content, topic, subtopic } = req.body
@@ -10,14 +11,16 @@ export const createPost = async (req: AuthRequest, res: Response) => {
     // Validate input
     if (!content || !topic || !subtopic) {
       return res.status(400).json({
+        success: false,
         error: 'Missing required fields: content, topic, subtopic'
-      })
+      } as any)
     }
 
     if (content.length > 500) {
       return res.status(400).json({
+        success: false,
         error: 'Content must be 500 characters or less'
-      })
+      } as any)
     }
 
     // Create post
@@ -47,14 +50,14 @@ export const createPost = async (req: AuthRequest, res: Response) => {
         ...post,
         author: post.author
       }
-    })
+    } as any)
   } catch (error) {
     console.error('Create post error:', error)
-    res.status(500).json({ error: 'Failed to create post' })
+    res.status(500).json({ success: false, error: 'Failed to create post' })
   }
 }
 
-export const getPosts = async (req: Request, res: Response) => {
+export const getPosts = async (req: Request, res: Response<PaginatedResponse<Post>>) => {
   try {
     const { topic, subtopic, limit = 20, offset = 0 } = req.query
     const now = new Date()
@@ -64,7 +67,7 @@ export const getPosts = async (req: Request, res: Response) => {
     if (topic) where.topic = topic.toString().toLowerCase()
     if (subtopic) where.subtopic = subtopic.toString().toLowerCase()
 
-    // Get posts with chronological + bump ordering
+    // Get posts with chronological ordering
     const posts = await prisma.post.findMany({
       where,
       include: {
@@ -102,15 +105,15 @@ export const getPosts = async (req: Request, res: Response) => {
         offset: Number(offset),
         hasMore: posts.length === Number(limit)
       }
-    })
+    } as any)
   } catch (error) {
     console.error('Get posts error:', error)
-    res.status(500).json({ error: 'Failed to get posts' })
+    res.status(500).json({ success: false, error: 'Failed to get posts' } as any)
   }
 }
 
 
-export const getSinglePost = async (req: Request, res: Response) => {
+export const getSinglePost = async (req: Request, res: Response<ApiResponse<Post>>) => {
   try {
     const { id } = req.params
 
@@ -140,15 +143,15 @@ export const getSinglePost = async (req: Request, res: Response) => {
     })
 
     if (!post) {
-      return res.status(404).json({ error: 'Post not found' })
+      return res.status(404).json({ success: false, error: 'Post not found' })
     }
 
     res.json({
       success: true,
       post: post
-    })
+    } as any)
   } catch (error) {
     console.error('Get single post error:', error)
-    res.status(500).json({ error: 'Failed to get post' })
+    res.status(500).json({ success: false, error: 'Failed to get post' })
   }
 }

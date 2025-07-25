@@ -10,8 +10,7 @@ export const initialPosts: Post[] = [
     replies: [],
     tips: 0,
     liked: false,
-    bumped: false,
-    category: 'GENERAL',
+        category: 'GENERAL',
     isPremium: true,
     userTheme: '#9945FF'
   },
@@ -24,8 +23,7 @@ export const initialPosts: Post[] = [
     replies: [],
     tips: 0,
     liked: false,
-    bumped: false,
-    category: 'GENERAL',
+        category: 'GENERAL',
     isPremium: true,
     userTheme: '#00D18C'
   },
@@ -38,8 +36,7 @@ export const initialPosts: Post[] = [
     replies: [],
     tips: 0,
     liked: false,
-    bumped: false,
-    category: 'GENERAL',
+        category: 'GENERAL',
     isPremium: true,
     userTheme: '#FF6B6B'
   },
@@ -52,8 +49,7 @@ export const initialPosts: Post[] = [
     replies: [],
     tips: 0,
     liked: false,
-    bumped: false,
-    category: 'GENERAL',
+        category: 'GENERAL',
     isPremium: true,
     userTheme: '#4ECDC4'
   },
@@ -72,14 +68,12 @@ export const initialPosts: Post[] = [
         likes: 2,
         liked: false,
         tips: 0,
-        bumped: false,
-        replies: []
+                replies: []
       }
     ],
     tips: 0,
     liked: false,
-    bumped: false,
-    category: 'GENERAL',
+        category: 'GENERAL',
     isPremium: true,
     userTheme: '#14F195' // Solana green
   },
@@ -92,8 +86,7 @@ export const initialPosts: Post[] = [
     replies: [],
     tips: 2,
     liked: false,
-    bumped: false,
-    category: 'GENERAL',
+        category: 'GENERAL',
     isPremium: true,
     userTheme: '#9945FF' // Purple theme
   },
@@ -115,10 +108,7 @@ export const initialPosts: Post[] = [
         likes: 8,
         liked: false,
         tips: 2,
-        bumped: false,
-        bumpedAt: undefined,
-        bumpExpiresAt: undefined,
-        isPremium: true,
+                    isPremium: true,
         userTheme: '#9945FF', // Purple theme
         replies: [
           {
@@ -129,10 +119,7 @@ export const initialPosts: Post[] = [
             likes: 3,
             liked: false,
             tips: 0,
-            bumped: false,
-            bumpedAt: undefined,
-            bumpExpiresAt: undefined,
-            replies: []
+                                    replies: []
           }
         ]
       },
@@ -144,17 +131,11 @@ export const initialPosts: Post[] = [
         likes: 12,
         liked: true,
         tips: 0,
-        bumped: false,
-        bumpedAt: undefined,
-        bumpExpiresAt: undefined,
-        replies: []
+                    replies: []
       }
     ],
     tips: 12,
     liked: false,
-    bumped: false,
-    bumpedAt: undefined,
-    bumpExpiresAt: undefined,
     category: 'GENERAL',
   },
   {
@@ -172,17 +153,11 @@ export const initialPosts: Post[] = [
         likes: 15,
         liked: false,
         tips: 1,
-        bumped: false,
-        bumpedAt: undefined,
-        bumpExpiresAt: undefined,
-        replies: []
+                    replies: []
       }
     ],
     tips: 0,
     liked: true,
-    bumped: false,
-    bumpedAt: undefined,
-    bumpExpiresAt: undefined,
     category: 'GENERAL',
   },
   {
@@ -194,9 +169,6 @@ export const initialPosts: Post[] = [
     replies: [],
     tips: 0,
     liked: false,
-    bumped: false,
-    bumpedAt: undefined,
-    bumpExpiresAt: undefined,
     category: 'GENERAL',
   },
   {
@@ -209,9 +181,6 @@ export const initialPosts: Post[] = [
     replies: [],
     tips: 0,
     liked: false,
-    bumped: false,
-    bumpedAt: undefined,
-    bumpExpiresAt: undefined,
     category: 'GENERAL',
     sponsored: true,
     isPremium: true
@@ -225,9 +194,6 @@ export const initialPosts: Post[] = [
     replies: [],
     tips: 5,
     liked: false,
-    bumped: false,
-    bumpedAt: undefined,
-    bumpExpiresAt: undefined,
     category: 'GENERAL',
     isPremium: false
   },
@@ -248,18 +214,12 @@ export const initialPosts: Post[] = [
         likes: 23,
         liked: false,
         tips: 3,
-        bumped: false,
-        bumpedAt: undefined,
-        bumpExpiresAt: undefined,
-        isPremium: true,
+                    isPremium: true,
         replies: []
       }
     ],
     tips: 8,
     liked: false,
-    bumped: false,
-    bumpedAt: undefined,
-    bumpExpiresAt: undefined,
     category: 'GENERAL',
   },
   {
@@ -272,9 +232,6 @@ export const initialPosts: Post[] = [
     replies: [],
     tips: 15,
     liked: false,
-    bumped: false,
-    bumpedAt: undefined,
-    bumpExpiresAt: undefined,
     category: 'GENERAL',
   },
   {
@@ -293,17 +250,11 @@ export const initialPosts: Post[] = [
         likes: 34,
         liked: true,
         tips: 2,
-        bumped: false,
-        bumpedAt: undefined,
-        bumpExpiresAt: undefined,
-        replies: []
+                    replies: []
       }
     ],
     tips: 4,
     liked: false,
-    bumped: false,
-    bumpedAt: undefined,
-    bumpExpiresAt: undefined,
     category: 'GENERAL',
   }
 ];

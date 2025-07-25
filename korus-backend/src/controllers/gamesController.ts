@@ -1,6 +1,18 @@
 import { Request, Response } from 'express'
-import { prisma } from '../config/database'
-import { ApiResponse, AuthRequest } from '../types'
+import prisma from '../config/database'
+
+// AuthRequest type
+interface AuthRequest extends Request {
+  user?: { walletAddress: string }
+}
+
+// ApiResponse type
+interface ApiResponse {
+  success: boolean
+  error?: string
+  game?: any
+  message?: string
+}
 
 // Game type definitions
 type GameType = 'tictactoe' | 'rps' | 'coinflip' | 'connectfour'
@@ -12,10 +24,11 @@ interface GameState {
   player2Choice?: string
   round?: number // For RPS (best of 3)
   score?: { player1: number; player2: number }
+  [key: string]: any // Allow additional properties for JSON compatibility
 }
 
 // Create a new game
-export const createGame = async (req: AuthRequest, res: Response<ApiResponse>) => {
+export const createGame = async (req: AuthRequest, res: Response) => {
   try {
     const { postId, gameType, wager } = req.body
     const player1 = req.user!.walletAddress
@@ -68,8 +81,8 @@ export const createGame = async (req: AuthRequest, res: Response<ApiResponse>) =
         break
       case 'coinflip':
         initialState = {
-          player1Choice: null,
-          player2Choice: null
+          player1Choice: undefined,
+          player2Choice: undefined
         }
         break
     }
@@ -83,7 +96,7 @@ export const createGame = async (req: AuthRequest, res: Response<ApiResponse>) =
         wager: wager || 0,
         status: 'waiting',
         gameState: initialState,
-        currentTurn: gameType === 'coinflip' || gameType === 'rps' ? null : player1
+        currentTurn: gameType === 'coinflip' || gameType === 'rps' ? undefined : player1
       },
       include: {
         post: {
@@ -106,7 +119,7 @@ export const createGame = async (req: AuthRequest, res: Response<ApiResponse>) =
 }
 
 // Join an existing game
-export const joinGame = async (req: AuthRequest, res: Response<ApiResponse>) => {
+export const joinGame = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params
     const player2 = req.user!.walletAddress
@@ -133,7 +146,7 @@ export const joinGame = async (req: AuthRequest, res: Response<ApiResponse>) => 
       data: {
         player2,
         status: 'active',
-        currentTurn: game.gameType === 'coinflip' || game.gameType === 'rps' ? null : game.player1
+        currentTurn: game.gameType === 'coinflip' || game.gameType === 'rps' ? undefined : game.player1
       },
       include: {
         player1User: true,
@@ -152,7 +165,7 @@ export const joinGame = async (req: AuthRequest, res: Response<ApiResponse>) => 
 }
 
 // Make a move in the game
-export const makeMove = async (req: AuthRequest, res: Response<ApiResponse>) => {
+export const makeMove = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params
     const { move } = req.body
@@ -226,7 +239,7 @@ export const makeMove = async (req: AuthRequest, res: Response<ApiResponse>) => 
 }
 
 // Get game by ID
-export const getGame = async (req: Request, res: Response<ApiResponse>) => {
+export const getGame = async (req: Request, res: Response) => {
   try {
     const { id } = req.params
 
@@ -259,7 +272,7 @@ export const getGame = async (req: Request, res: Response<ApiResponse>) => {
 }
 
 // Get game by post ID
-export const getGameByPostId = async (req: Request, res: Response<ApiResponse>) => {
+export const getGameByPostId = async (req: Request, res: Response) => {
   try {
     const { postId } = req.params
 
@@ -368,8 +381,8 @@ function processRPSMove(game: any, gameState: GameState, move: any, playerWallet
     })
 
     // Reset choices for next round
-    gameState.player1Choice = null
-    gameState.player2Choice = null
+    gameState.player1Choice = undefined
+    gameState.player2Choice = undefined
     gameState.round!++
 
     // Check if someone won (best of 3)

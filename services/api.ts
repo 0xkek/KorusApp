@@ -145,10 +145,6 @@ export class ApiService {
         body: JSON.stringify({ amount }),
       });
     },
-
-    bump: async (id: string) => {
-      return ApiService.request(`/posts/${id}/bump`, { method: 'POST' });
-    },
   };
 
   // Replies endpoints

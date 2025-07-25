@@ -102,12 +102,8 @@ export const mockPostsController = {
       filteredPosts = filteredPosts.filter(p => p.subtopic === subtopic);
     }
 
-    // Sort by bump status and creation time
+    // Sort by creation time
     filteredPosts.sort((a, b) => {
-      // Active bumps first
-      if (a.bumped && !b.bumped) return -1;
-      if (!a.bumped && b.bumped) return 1;
-      // Then by creation time
       return b.createdAt.getTime() - a.createdAt.getTime();
     });
 
@@ -151,10 +147,6 @@ export const mockPostsController = {
       likeCount: 0,
       replyCount: 0,
       tipCount: 0,
-      bumpCount: 0,
-      bumped: false,
-      bumpedAt: null,
-      bumpExpiresAt: null,
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -223,5 +215,43 @@ export const mockInteractionsController = {
         }
       });
     }
+  },
+
+  tipPost: async (req: any, res: any) => {
+    const { id: postId } = req.params;
+    const { amount = 1 } = req.body;
+    const userWallet = req.userWallet;
+    
+    const post = mockPosts.find(p => p.id === postId);
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    // Can't tip your own post
+    if (post.authorWallet === userWallet) {
+      return res.status(400).json({ error: 'Cannot tip your own post' });
+    }
+
+    // Check user balance
+    const user = mockUsers.get(userWallet);
+    if (!user || user.allyBalance < amount) {
+      return res.status(400).json({ error: 'Insufficient balance' });
+    }
+
+    // Update balances
+    user.allyBalance -= amount;
+    const author = mockUsers.get(post.authorWallet);
+    if (author) {
+      author.allyBalance += amount;
+    }
+
+    // Update post tip count
+    post.tipCount += 1;
+
+    res.json({
+      success: true,
+      message: `Tipped ${amount} $ALLY`,
+      amount
+    });
   }
 };
