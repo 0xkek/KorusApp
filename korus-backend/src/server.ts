@@ -62,9 +62,11 @@ app.get('/health', (req, res) => {
 app.get('/test-db', async (req, res) => {
   try {
     const userCount = await prisma.user.count()
+    const postCount = await prisma.post.count()
     res.json({ 
       message: 'Database connected successfully!', 
       userCount,
+      postCount,
       tables: 'users, posts, replies, interactions, games'
     })
   } catch (error) {
