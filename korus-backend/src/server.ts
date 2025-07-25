@@ -13,6 +13,7 @@ import postsRoutes from './routes/posts'
 import repliesRoutes from './routes/replies'
 import gamesRoutes from './routes/games'
 import searchRoutes from './routes/search'
+import reportsRoutes from './routes/reports'
 
 dotenv.config()
 
@@ -45,6 +46,7 @@ app.use('/api/interactions', interactionsRoutes)
 app.use('/api/replies', repliesRoutes)  // For /api/replies/:id/like endpoints
 app.use('/api/games', gamesRoutes)
 app.use('/api/search', searchRoutes)
+app.use('/api/reports', reportsRoutes)
 
 // Test routes
 app.get('/health', (req, res) => {
@@ -85,6 +87,7 @@ app.listen(PORT, () => {
   console.log(`💬 Replies: http://localhost:${PORT}/api/posts/*/replies`)
   console.log(`🎮 Games: http://localhost:${PORT}/api/games/*`)
   console.log(`🔍 Search: http://localhost:${PORT}/api/search`)
+  console.log(`🚨 Reports: http://localhost:${PORT}/api/reports`)
   console.log(`\n🔧 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:8081'}`)
   
   if (isMockMode) {

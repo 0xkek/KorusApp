@@ -24,6 +24,7 @@ model User {
   gamesAsPlayer1  Game[]   @relation("Player1Games")
   gamesAsPlayer2  Game[]   @relation("Player2Games")
   gamesWon        Game[]   @relation("WonGames")
+  reports         Report[]
   
   @@map("users")
 }
@@ -113,4 +114,26 @@ model Game {
   winnerUser      User?    @relation("WonGames", fields: [winner], references: [walletAddress])
   
   @@map("games")
+}
+
+model Report {
+  id              String   @id @default(cuid())
+  reporterWallet  String   @db.VarChar(44)
+  targetType      String   @db.VarChar(10) // "post" or "reply"
+  targetId        String   // ID of post or reply
+  reason          String   @db.VarChar(50) // "spam", "harassment", "inappropriate", "misinformation", "other"
+  description     String?  @db.Text // Optional detailed description
+  status          String   @default("pending") @db.VarChar(20) // "pending", "reviewed", "resolved", "dismissed"
+  moderatorNotes  String?  @db.Text // Notes from moderator
+  resolvedAt      DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  reporter        User     @relation(fields: [reporterWallet], references: [walletAddress])
+  
+  // Prevent duplicate reports from same user for same content
+  @@unique([reporterWallet, targetId])
+  @@map("reports")
 }
