@@ -7,7 +7,7 @@ import { authLimiter } from '../middleware/rateLimiter'
 const router = Router()
 
 // POST /api/auth/connect - Connect wallet and get JWT
-router.post('/connect', connectWallet)
+router.post('/connect', validateWalletConnect, connectWallet)
 
 // GET /api/auth/profile - Get user profile (requires auth)
 router.get('/profile', authenticate, getProfile)

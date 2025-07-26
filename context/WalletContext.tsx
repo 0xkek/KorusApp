@@ -153,19 +153,74 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       // Authenticate with backend
       logger.log('Creating wallet and authenticating with backend');
       
-      // Skip backend auth for now due to rate limiting - go directly to offline mode
-      logger.log('Using offline mode to bypass rate limiting');
-      
-      // Store wallet info
-      await SecureStore.setItemAsync(WALLET_KEY, mockSecretKey);
-      await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, mockPublicKey);
-      await SecureStore.setItemAsync(OFFLINE_MODE_KEY, 'true');
-      
-      // Update state
-      setWalletAddress(mockPublicKey);
-      setHasWallet(true);
-      setBalance(5000);
-      setIsPremium(true); // Set premium for testing all features
+      // Try to authenticate with backend
+      try {
+        const { authAPI } = await import('../utils/api');
+        
+        logger.log('Attempting to authenticate with backend...');
+        logger.log('Wallet address:', mockPublicKey);
+        
+        // Authenticate with backend
+        const authResult = await authAPI.connectWallet(mockPublicKey, mockSignature, mockMessage);
+        logger.log('Authentication successful:', authResult);
+        logger.log('Token received:', authResult.token ? 'Yes' : 'No');
+        
+        // Store wallet info
+        await SecureStore.setItemAsync(WALLET_KEY, mockSecretKey);
+        await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, mockPublicKey);
+        
+        // Update state with backend data
+        setWalletAddress(mockPublicKey);
+        setHasWallet(true);
+        const backendBalance = parseFloat(authResult.user?.allyBalance || '5000');
+        setBalance(isNaN(backendBalance) ? 5000 : backendBalance);
+        setIsPremium(authResult.user?.tier === 'premium');
+        
+        logger.log('Wallet created successfully with backend authentication');
+      } catch (error: any) {
+        // If rate limited, wait and try again
+        if (error?.response?.status === 429) {
+          logger.log('Rate limited, waiting 5 seconds...');
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          
+          try {
+            const { authAPI } = await import('../utils/api');
+            const authResult = await authAPI.connectWallet(mockPublicKey, mockSignature, mockMessage);
+            
+            await SecureStore.setItemAsync(WALLET_KEY, mockSecretKey);
+            await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, mockPublicKey);
+            
+            setWalletAddress(mockPublicKey);
+            setHasWallet(true);
+            setBalance(5000);
+            setIsPremium(authResult.user?.tier === 'premium');
+            
+            logger.log('Authentication successful after retry');
+          } catch (retryError) {
+            logger.error('Retry failed, using offline mode:', retryError);
+            // Fallback to offline
+            await SecureStore.setItemAsync(WALLET_KEY, mockSecretKey);
+            await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, mockPublicKey);
+            await SecureStore.setItemAsync(OFFLINE_MODE_KEY, 'true');
+            
+            setWalletAddress(mockPublicKey);
+            setHasWallet(true);
+            setBalance(5000);
+            setIsPremium(false);
+          }
+        } else {
+          logger.error('Backend authentication failed:', error);
+          // Fallback to offline mode
+          await SecureStore.setItemAsync(WALLET_KEY, mockSecretKey);
+          await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, mockPublicKey);
+          await SecureStore.setItemAsync(OFFLINE_MODE_KEY, 'true');
+          
+          setWalletAddress(mockPublicKey);
+          setHasWallet(true);
+          setBalance(5000);
+          setIsPremium(false);
+        }
+      }
       
       // Fetch SNS domains
       const domains = await fetchSNSDomains(mockPublicKey);

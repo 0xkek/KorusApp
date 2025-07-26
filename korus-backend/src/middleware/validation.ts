@@ -138,7 +138,14 @@ export const validateWalletConnect = [
   body('signature')
     .trim()
     .notEmpty().withMessage('Signature is required')
-    .isBase64().withMessage('Invalid signature format'),
+    .custom((value) => {
+      // Allow mock signatures in development
+      if (process.env.NODE_ENV === 'development' && value.startsWith('mock_signature')) {
+        return true;
+      }
+      // Otherwise must be base64
+      return /^[A-Za-z0-9+/]+=*$/.test(value);
+    }).withMessage('Invalid signature format'),
   
   body('message')
     .trim()
