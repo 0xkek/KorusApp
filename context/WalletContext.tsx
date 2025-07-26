@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
-import { Keypair } from '@solana/web3.js';
+import { Connection, PublicKey, clusterApiUrl, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import * as SecureStore from 'expo-secure-store';
 import { generateWalletAddress } from '../utils/wallet';
 import { getFavoriteSNSDomain, fetchSNSDomains, SNSDomain } from '../utils/sns';
@@ -7,10 +7,12 @@ import { NFTAvatar } from '../types/theme';
 import { logger } from '../utils/logger';
 import { withErrorHandling, handleError } from '../utils/errorHandler';
 import { authAPI } from '../utils/api';
+import { secureWallet } from '../utils/secureWallet';
 
 interface WalletContextType {
   walletAddress: string | null;
   balance: number;
+  solBalance: number; // Real SOL balance
   isLoading: boolean;
   hasWallet: boolean;
   selectedAvatar: string | null;
@@ -31,6 +33,7 @@ interface WalletContextType {
   setPremiumStatus: (status: boolean) => void;
   setTimeFunUsername: (username: string | null) => Promise<void>;
   logout: () => Promise<void>;
+  signMessage: (message: string) => Promise<string | null>;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -56,9 +59,14 @@ const PREMIUM_STATUS_KEY = 'korus_premium_status';
 const TIMEFUN_USERNAME_KEY = 'korus_timefun_username';
 const OFFLINE_MODE_KEY = 'korus_offline_mode';
 
+// Solana connection - using devnet for hackathon, switch to mainnet-beta for production
+const SOLANA_NETWORK = 'devnet'; // 'mainnet-beta' for production
+const connection = new Connection(clusterApiUrl(SOLANA_NETWORK), 'confirmed');
+
 export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState(0);
+  const [solBalance, setSolBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isPremium, setIsPremium] = useState(false);
   const [hasWallet, setHasWallet] = useState(false);
@@ -77,7 +85,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     await withErrorHandling(async () => {
       setIsLoading(true);
       
-      // First check if user has a stored wallet
+      // First check if user has a stored wallet address
       const storedAddress = await SecureStore.getItemAsync(WALLET_ADDRESS_KEY);
       const storedAvatar = await SecureStore.getItemAsync(AVATAR_KEY);
       const storedNFTAvatar = await SecureStore.getItemAsync(NFT_AVATAR_KEY);
@@ -86,28 +94,42 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       const storedTimeFunUsername = await SecureStore.getItemAsync(TIMEFUN_USERNAME_KEY);
       
       if (storedAddress) {
-        // OFFLINE MODE - Skip API calls
-        logger.log('Loading wallet in offline mode');
-        
-        setWalletAddress(storedAddress);
-        setHasWallet(true);
-        setBalance(5000);
-        
-        // Mock premium status for offline mode
-        const isPremiumUser = true; // Always premium in offline mode for testing
-        setIsPremium(isPremiumUser);
-        
-        // Mock SNS domains for offline mode
-        const mockDomains: SNSDomain[] = [
-          { domain: 'korususer.sol', favorite: true },
-          { domain: 'coolname.sol', favorite: false },
-          { domain: 'web3master.sol', favorite: false }
-        ];
-        setAllSNSDomains(mockDomains);
-        
-        if (isPremiumUser) {
-          const favoriteDomain = storedFavoriteSNS || 'korususer.sol';
-          setSnsDomain(favoriteDomain);
+        // Check if we have a secure wallet for this address
+        try {
+          const wallet = await secureWallet.getWallet(false); // Don't require auth on app start
+          if (wallet && wallet.publicKey === storedAddress) {
+            logger.log('Found existing secure wallet');
+            
+            setWalletAddress(storedAddress);
+            setHasWallet(true);
+            setBalance(5000); // Default ALLY balance
+            
+            // Try to fetch real SOL balance
+            await updateSolBalance(storedAddress);
+            
+            // Set premium status
+            const isPremiumUser = storedPremiumStatus === 'true';
+            setIsPremium(isPremiumUser);
+            
+            // Fetch SNS domains
+            const domains = await fetchSNSDomains(storedAddress);
+            setAllSNSDomains(domains);
+            
+            if (isPremiumUser && storedFavoriteSNS) {
+              setSnsDomain(storedFavoriteSNS);
+            }
+          } else {
+            // Wallet mismatch or not found, clear stored address
+            logger.warn('Stored wallet address does not match secure wallet');
+            await SecureStore.deleteItemAsync(WALLET_ADDRESS_KEY);
+          }
+        } catch (error) {
+          logger.error('Error loading secure wallet:', error);
+          // Continue with offline mode
+          setWalletAddress(storedAddress);
+          setHasWallet(true);
+          setBalance(5000);
+          setSolBalance(0);
         }
       }
       
@@ -141,42 +163,64 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       
-      // For now, use a mock wallet to test the app
-      // TODO: Replace with real Solana keypair generation
-      const mockPublicKey = generateWalletAddress();
-      const mockSecretKey = 'mock-secret-key-' + Date.now();
+      // Check if biometric is available
+      const biometricStatus = await secureWallet.isBiometricAvailable();
+      if (!biometricStatus.available) {
+        logger.warn('Biometric not available:', biometricStatus.error);
+        // Continue anyway - wallet will work without biometric
+      }
       
-      // Create a mock signature for authentication
-      const mockMessage = `Sign this message to authenticate with Korus\nTimestamp: ${Date.now()}`;
-      const mockSignature = btoa('mock_signature_' + Date.now());
+      // Generate real Solana wallet
+      logger.log('Generating secure Solana wallet...');
+      const walletResult = await secureWallet.generateWallet();
+      
+      if (!walletResult.success) {
+        throw new Error('Failed to generate wallet');
+      }
+      
+      const { publicKey, mnemonic } = walletResult;
+      
+      // Create a signature for backend authentication
+      const authMessage = `Sign this message to authenticate with Korus\nTimestamp: ${Date.now()}`;
+      const signature = await secureWallet.signMessage(authMessage);
+      
+      if (!signature) {
+        throw new Error('Failed to sign authentication message');
+      }
       
       // Authenticate with backend
       logger.log('Creating wallet and authenticating with backend');
       
-      // Try to authenticate with backend
       try {
         const { authAPI } = await import('../utils/api');
         
         logger.log('Attempting to authenticate with backend...');
-        logger.log('Wallet address:', mockPublicKey);
+        logger.log('Wallet address:', publicKey);
         
         // Authenticate with backend
-        const authResult = await authAPI.connectWallet(mockPublicKey, mockSignature, mockMessage);
+        const authResult = await authAPI.connectWallet(publicKey, signature, authMessage);
         logger.log('Authentication successful:', authResult);
         logger.log('Token received:', authResult.token ? 'Yes' : 'No');
         
-        // Store wallet info
-        await SecureStore.setItemAsync(WALLET_KEY, mockSecretKey);
-        await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, mockPublicKey);
+        // Store wallet address for quick access
+        await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, publicKey);
         
         // Update state with backend data
-        setWalletAddress(mockPublicKey);
+        setWalletAddress(publicKey);
         setHasWallet(true);
         const backendBalance = parseFloat(authResult.user?.allyBalance || '5000');
         setBalance(isNaN(backendBalance) ? 5000 : backendBalance);
         setIsPremium(authResult.user?.tier === 'premium');
         
+        // Fetch real SOL balance
+        await updateSolBalance(publicKey);
+        
         logger.log('Wallet created successfully with backend authentication');
+        logger.log('IMPORTANT: Save your recovery phrase:', mnemonic);
+        
+        // Show mnemonic to user (you should create a modal for this)
+        alert(`⚠️ SAVE YOUR RECOVERY PHRASE:\n\n${mnemonic}\n\nWrite this down and store it safely. You'll need it to recover your wallet.`);
+        
       } catch (error: any) {
         // If rate limited, wait and try again
         if (error?.response?.status === 429) {
@@ -185,45 +229,46 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
           
           try {
             const { authAPI } = await import('../utils/api');
-            const authResult = await authAPI.connectWallet(mockPublicKey, mockSignature, mockMessage);
+            const authResult = await authAPI.connectWallet(publicKey, signature, authMessage);
             
-            await SecureStore.setItemAsync(WALLET_KEY, mockSecretKey);
-            await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, mockPublicKey);
+            await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, publicKey);
             
-            setWalletAddress(mockPublicKey);
+            setWalletAddress(publicKey);
             setHasWallet(true);
             setBalance(5000);
             setIsPremium(authResult.user?.tier === 'premium');
+            
+            await updateSolBalance(publicKey);
             
             logger.log('Authentication successful after retry');
           } catch (retryError) {
             logger.error('Retry failed, using offline mode:', retryError);
             // Fallback to offline
-            await SecureStore.setItemAsync(WALLET_KEY, mockSecretKey);
-            await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, mockPublicKey);
+            await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, publicKey);
             await SecureStore.setItemAsync(OFFLINE_MODE_KEY, 'true');
             
-            setWalletAddress(mockPublicKey);
+            setWalletAddress(publicKey);
             setHasWallet(true);
             setBalance(5000);
             setIsPremium(false);
+            setSolBalance(0);
           }
         } else {
           logger.error('Backend authentication failed:', error);
           // Fallback to offline mode
-          await SecureStore.setItemAsync(WALLET_KEY, mockSecretKey);
-          await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, mockPublicKey);
+          await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, publicKey);
           await SecureStore.setItemAsync(OFFLINE_MODE_KEY, 'true');
           
-          setWalletAddress(mockPublicKey);
+          setWalletAddress(publicKey);
           setHasWallet(true);
           setBalance(5000);
           setIsPremium(false);
+          setSolBalance(0);
         }
       }
       
       // Fetch SNS domains
-      const domains = await fetchSNSDomains(mockPublicKey);
+      const domains = await fetchSNSDomains(publicKey);
       setAllSNSDomains(domains);
       
       logger.log('Wallet created successfully');
@@ -259,10 +304,25 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     }
   };
 
+  const updateSolBalance = async (address: string) => {
+    try {
+      const pubkey = new PublicKey(address);
+      const lamports = await connection.getBalance(pubkey);
+      const sol = lamports / LAMPORTS_PER_SOL;
+      setSolBalance(sol);
+      logger.log(`SOL Balance: ${sol} SOL`);
+    } catch (error) {
+      logger.error('Error fetching SOL balance:', error);
+      setSolBalance(0);
+    }
+  };
+
   const getPrivateKey = async (): Promise<string | null> => {
     try {
-      const privateKey = await SecureStore.getItemAsync(WALLET_KEY);
-      return privateKey || 'mock-private-key';
+      // For security, we don't expose the private key directly
+      // Instead, use signMessage for any signing needs
+      logger.warn('Private key access requested - use signMessage instead');
+      return null;
     } catch (error) {
       logger.error('Error getting private key:', error);
       return null;
@@ -271,9 +331,13 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
 
   const refreshBalance = async () => {
     try {
-      // TODO: Fetch real balance from Solana blockchain
-      // For demo, just update with mock balance
-      setBalance(5000); // Reset to high balance for testing
+      if (walletAddress) {
+        // Update SOL balance
+        await updateSolBalance(walletAddress);
+        
+        // Also refresh ALLY balance from backend if needed
+        // For now keeping the existing balance
+      }
     } catch (error) {
       logger.error('Error refreshing balance:', error);
     }
@@ -376,9 +440,26 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     }
   };
 
+  const signMessage = async (message: string): Promise<string | null> => {
+    try {
+      if (!walletAddress) {
+        throw new Error('No wallet connected');
+      }
+      
+      const signature = await secureWallet.signMessage(message);
+      return signature;
+    } catch (error) {
+      logger.error('Error signing message:', error);
+      return null;
+    }
+  };
+
   const logout = async () => {
     try {
       logger.log('Logging out and clearing all wallet data');
+      
+      // Delete the secure wallet
+      await secureWallet.deleteWallet();
       
       // Clear all secure storage
       await SecureStore.deleteItemAsync(WALLET_KEY);
@@ -393,6 +474,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       // Reset all state
       setWalletAddress(null);
       setBalance(0);
+      setSolBalance(0);
       setHasWallet(false);
       setSelectedAvatarState(null);
       setSelectedNFTAvatarState(null);
@@ -412,6 +494,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     () => ({
       walletAddress,
       balance,
+      solBalance,
       isLoading,
       hasWallet,
       selectedAvatar,
@@ -432,10 +515,12 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       setPremiumStatus,
       setTimeFunUsername,
       logout,
+      signMessage,
     }),
     [
       walletAddress,
       balance,
+      solBalance,
       isLoading,
       hasWallet,
       selectedAvatar,
