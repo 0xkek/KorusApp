@@ -148,7 +148,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       
       // Create a mock signature for authentication
       const mockMessage = `Sign this message to authenticate with Korus\nTimestamp: ${Date.now()}`;
-      const mockSignature = btoa('mock-signature-' + Date.now());
+      const mockSignature = btoa('mock_signature_' + Date.now());
       
       // Authenticate with backend
       logger.log('Creating wallet and authenticating with backend');

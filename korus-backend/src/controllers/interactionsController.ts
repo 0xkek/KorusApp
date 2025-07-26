@@ -50,9 +50,20 @@ export const likePost = async (req: AuthRequest, res: Response) => {
       })
       res.json({ success: true, liked: true, message: 'Post liked' })
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Like post error:', error)
-    res.status(500).json({ error: 'Failed to like post' })
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta
+    })
+    
+    // Check for specific Prisma errors
+    if (error?.code === 'P2003') {
+      res.status(400).json({ error: 'User not found. Please reconnect your wallet.' })
+    } else {
+      res.status(500).json({ error: 'Failed to like post' })
+    }
   }
 }
 
