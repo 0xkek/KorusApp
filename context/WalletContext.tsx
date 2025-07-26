@@ -8,7 +8,7 @@ import { logger } from '../utils/logger';
 import { withErrorHandling, handleError } from '../utils/errorHandler';
 import { authAPI } from '../utils/api';
 import { secureWallet } from '../utils/secureWallet';
-import { seedVaultService } from '../utils/seedVault';
+import { solanaMobileService } from '../utils/solanaMobile';
 
 interface WalletContextType {
   walletAddress: string | null;
@@ -282,35 +282,28 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       
-      // Seed Vault requires ejecting from Expo to use native modules
-      logger.log('Seed Vault import is not available in Expo managed workflow');
-      logger.log('To use Seed Vault, you need to eject to bare workflow');
-      setIsLoading(false);
-      return false;
-      
-      /* Uncomment after ejecting from Expo:
-      // Check if Seed Vault is available (only on Solana Saga phones)
-      const isAvailable = await seedVaultService.isAvailable();
-      if (!isAvailable) {
-        logger.log('Seed Vault not available - this feature requires a Solana Mobile device');
+      // Check if Solana Mobile is available (Android only)
+      if (!solanaMobileService.isAvailable()) {
+        logger.log('Solana Mobile wallet not available on this platform');
+        setIsLoading(false);
         return false;
       }
       
-      // Try to import from Seed Vault
-      const seedVaultWallet = await seedVaultService.importFromSeedVault();
-      if (!seedVaultWallet) {
-        logger.log('User cancelled Seed Vault authorization');
+      // Connect to Solana Mobile wallet (Seed Vault or others)
+      const mobileWallet = await solanaMobileService.connect();
+      if (!mobileWallet) {
+        logger.log('User cancelled wallet connection');
+        setIsLoading(false);
         return false;
       }
       
-      logger.log('Connected to Seed Vault:', seedVaultWallet.address);
-      */
+      logger.log('Connected to Solana Mobile wallet:', mobileWallet.address);
       
       // Create authentication message
       const authMessage = `Sign this message to authenticate with Korus\nTimestamp: ${Date.now()}`;
       
-      // Sign message with Seed Vault
-      const signature = await seedVaultService.signMessage(authMessage);
+      // Sign message with mobile wallet
+      const signature = await solanaMobileService.signMessage(authMessage);
       if (!signature) {
         throw new Error('Failed to sign authentication message');
       }
@@ -318,37 +311,37 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       // Authenticate with backend
       try {
         const authResult = await authAPI.connectWallet(
-          seedVaultWallet.address, 
+          mobileWallet.address, 
           signature, 
           authMessage
         );
         
         // Store wallet address
-        await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, seedVaultWallet.address);
-        await SecureStore.setItemAsync('WALLET_TYPE', 'seed_vault'); // Mark as Seed Vault wallet
+        await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, mobileWallet.address);
+        await SecureStore.setItemAsync('WALLET_TYPE', 'solana_mobile'); // Mark as Solana Mobile wallet
         
         // Update state
-        setWalletAddress(seedVaultWallet.address);
+        setWalletAddress(mobileWallet.address);
         setHasWallet(true);
         const backendBalance = parseFloat(authResult.user?.allyBalance || '5000');
         setBalance(isNaN(backendBalance) ? 5000 : backendBalance);
         setIsPremium(authResult.user?.tier === 'premium');
         
         // Fetch real SOL balance
-        await updateSolBalance(seedVaultWallet.address);
+        await updateSolBalance(mobileWallet.address);
         
         // Fetch SNS domains
-        const domains = await fetchSNSDomains(seedVaultWallet.address);
+        const domains = await fetchSNSDomains(mobileWallet.address);
         setAllSNSDomains(domains);
         
-        logger.log('Successfully imported wallet from Seed Vault');
+        logger.log('Successfully imported wallet from Solana Mobile');
         return true;
         
       } catch (error: any) {
         logger.error('Backend authentication failed:', error);
         
         // Disconnect on failure
-        await seedVaultService.disconnect();
+        solanaMobileService.disconnect();
         
         // If rate limited, show appropriate message
         if (error?.response?.status === 429) {
@@ -359,7 +352,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       }
       
     } catch (error) {
-      logger.error('Error importing from Seed Vault:', error);
+      logger.error('Error importing from Solana Mobile:', error);
       return false;
     } finally {
       setIsLoading(false);
@@ -520,17 +513,18 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       // Check if this is a Seed Vault wallet
       const walletType = await SecureStore.getItemAsync('WALLET_TYPE');
       
-      if (walletType === 'seed_vault') {
-        // Use Seed Vault for signing
-        if (!seedVaultService.isConnected()) {
+      if (walletType === 'solana_mobile') {
+        // Use Solana Mobile wallet for signing
+        const currentWallet = solanaMobileService.getWallet();
+        if (!currentWallet) {
           // Try to reconnect
-          const connected = await seedVaultService.importFromSeedVault();
+          const connected = await solanaMobileService.connect();
           if (!connected) {
-            throw new Error('Failed to reconnect to Seed Vault');
+            throw new Error('Failed to reconnect to Solana Mobile wallet');
           }
         }
         
-        const signature = await seedVaultService.signMessage(message);
+        const signature = await solanaMobileService.signMessage(message);
         return signature;
       } else {
         // Use secure wallet for internal wallets
@@ -550,9 +544,9 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       // Check if this is a Seed Vault wallet
       const walletType = await SecureStore.getItemAsync('WALLET_TYPE');
       
-      if (walletType === 'seed_vault') {
-        // Disconnect Seed Vault
-        await seedVaultService.disconnect();
+      if (walletType === 'solana_mobile') {
+        // Disconnect Solana Mobile wallet
+        solanaMobileService.disconnect();
       } else {
         // Delete the secure wallet
         await secureWallet.deleteWallet();
