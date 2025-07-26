@@ -63,10 +63,16 @@ app.get('/test-db', async (req, res) => {
   try {
     const userCount = await prisma.user.count()
     const postCount = await prisma.post.count()
+    const recentUsers = await prisma.user.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      select: { walletAddress: true, createdAt: true }
+    })
     res.json({ 
       message: 'Database connected successfully!', 
       userCount,
       postCount,
+      recentUsers,
       tables: 'users, posts, replies, interactions, games'
     })
   } catch (error) {

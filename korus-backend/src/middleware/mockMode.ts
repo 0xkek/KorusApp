@@ -8,9 +8,7 @@ export const mockInteractions = new Map();
 
 // Check if we're in mock mode (no database)
 export const isMockMode = () => {
-  // Temporarily force mock mode due to database schema issues
-  return true;
-  // return process.env.MOCK_MODE === 'true' || !process.env.DATABASE_URL;
+  return process.env.MOCK_MODE === 'true' || !process.env.DATABASE_URL;
 };
 
 // Mock auth controller

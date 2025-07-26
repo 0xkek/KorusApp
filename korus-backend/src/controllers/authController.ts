@@ -6,9 +6,6 @@ import { AuthRequest } from '../middleware/auth'
 import { isMockMode, mockAuthController } from '../middleware/mockMode'
 
 export const connectWallet = async (req: Request, res: Response) => {
-  // Always use mock mode for now to bypass database issues
-  return mockAuthController.connectWallet(req, res);
-  
   try {
     const { walletAddress, signature, message } = req.body
 
@@ -20,47 +17,123 @@ export const connectWallet = async (req: Request, res: Response) => {
     }
 
     // For now, skip signature verification for testing
-    console.log('Wallet connection attempt:', walletAddress)
+    console.log('=== WALLET CONNECTION ATTEMPT ===')
+    console.log('Wallet address:', walletAddress)
+    console.log('Timestamp:', new Date().toISOString())
 
     // Check if user exists, create if not
     let user
     try {
+      console.log('Checking if user exists in database...')
       user = await prisma.user.findUnique({
         where: { walletAddress }
       })
-      console.log('User lookup successful:', user ? 'found' : 'not found')
+      console.log('User lookup result:', user ? 'USER FOUND' : 'USER NOT FOUND')
+      if (user) {
+        console.log('Existing user details:', {
+          wallet: user.walletAddress,
+          tier: user.tier,
+          createdAt: user.createdAt
+        })
+      }
     } catch (findError: any) {
-      console.error('Database find error:', findError)
-      throw new Error(`Database find failed: ${findError?.message || String(findError)}`)
+      console.error('DATABASE FIND ERROR:', findError)
+      console.error('Error details:', {
+        message: findError?.message,
+        code: findError?.code,
+        meta: findError?.meta
+      })
+      
+      // If database connection fails, try to recover
+      if (findError?.code === 'P2021' || findError?.message?.includes('connection')) {
+        console.log('Database connection issue detected, attempting to reconnect...')
+        // Give database a moment to recover
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // Retry once
+        try {
+          user = await prisma.user.findUnique({
+            where: { walletAddress }
+          })
+          console.log('Retry successful')
+        } catch (retryError) {
+          console.error('Retry failed:', retryError)
+          throw new Error(`Database connection failed: ${findError?.message || String(findError)}`)
+        }
+      } else {
+        throw new Error(`Database find failed: ${findError?.message || String(findError)}`)
+      }
     }
 
     if (!user) {
       try {
-        // Check for Genesis Token (Seeker verification)
-        const hasGenesisToken = await checkGenesisTokenOwnership(walletAddress)
+        console.log('Creating new user...')
+        
+        // For development, skip Genesis Token check
+        const hasGenesisToken = false
+        
+        const userData = {
+          walletAddress,
+          tier: hasGenesisToken ? 'premium' : 'standard',
+          walletSource: hasGenesisToken ? 'seeker' : 'app',
+          genesisVerified: hasGenesisToken,
+          allyBalance: 5000, // Start with 5000 ALLY for testing
+          totalInteractionScore: 0
+        }
+        
+        console.log('User data to create:', userData)
         
         user = await prisma.user.create({
-          data: {
-            walletAddress,
-            tier: hasGenesisToken ? 'premium' : 'standard',
-            walletSource: hasGenesisToken ? 'seeker' : 'app',
-            genesisVerified: hasGenesisToken
-          }
+          data: userData
         })
 
-        console.log(`New user created: ${walletAddress} (${user.tier})`)
+        console.log('=== NEW USER CREATED SUCCESSFULLY ===')
+        console.log('User details:', {
+          wallet: user.walletAddress,
+          tier: user.tier,
+          balance: user.allyBalance.toString(),
+          createdAt: user.createdAt
+        })
       } catch (createError: any) {
-        console.error('Database create error:', createError)
-        throw new Error(`Database create failed: ${createError?.message || String(createError)}`)
+        console.error('DATABASE CREATE ERROR:', createError)
+        console.error('Error details:', {
+          message: createError?.message,
+          code: createError?.code,
+          meta: createError?.meta,
+          stack: createError?.stack
+        })
+        
+        // Check if it's a unique constraint violation (user already exists)
+        if (createError?.code === 'P2002') {
+          console.log('User already exists, attempting to fetch again...')
+          try {
+            user = await prisma.user.findUnique({
+              where: { walletAddress }
+            })
+            if (user) {
+              console.log('Found existing user on second attempt')
+            } else {
+              throw new Error('User exists but cannot be fetched')
+            }
+          } catch (fetchError) {
+            console.error('Failed to fetch existing user:', fetchError)
+            throw createError
+          }
+        } else {
+          throw new Error(`Database create failed: ${createError?.message || String(createError)}`)
+        }
       }
     }
 
     // Generate JWT
     const token = jwt.sign(
       { walletAddress },
-      process.env.JWT_SECRET!,
+      process.env.JWT_SECRET || 'dev-secret-key',
       { expiresIn: '7d' }
     )
+
+    console.log('JWT token generated successfully')
+    console.log('=== AUTHENTICATION SUCCESSFUL ===')
 
     res.json({
       success: true,
@@ -73,28 +146,39 @@ export const connectWallet = async (req: Request, res: Response) => {
         createdAt: user.createdAt
       }
     })
-  } catch (error) {
-    console.error('Connect wallet error:', error)
-    res.status(500).json({ error: 'Failed to connect wallet' })
+  } catch (error: any) {
+    console.error('=== CONNECT WALLET ERROR ===')
+    console.error('Error:', error)
+    console.error('Stack:', error?.stack)
+    
+    // Send more detailed error for debugging
+    res.status(500).json({ 
+      error: 'Failed to connect wallet',
+      details: process.env.NODE_ENV === 'development' ? error?.message : undefined
+    })
   }
 }
 
 export const getProfile = async (req: AuthRequest, res: Response) => {
-  // Use mock mode if database is not available
-  if (isMockMode()) {
-    return mockAuthController.getProfile(req, res);
-  }
-  
   try {
     const walletAddress = req.userWallet!
+    
+    console.log('Getting profile for:', walletAddress)
 
     const user = await prisma.user.findUnique({
       where: { walletAddress }
     })
 
     if (!user) {
+      console.error('User not found in database:', walletAddress)
       return res.status(404).json({ error: 'User not found' })
     }
+
+    console.log('Profile found:', {
+      wallet: user.walletAddress,
+      tier: user.tier,
+      balance: user.allyBalance.toString()
+    })
 
     res.json({
       user: {
