@@ -481,7 +481,7 @@ export default function HomeScreen() {
           liked: false,
           tips: 0,
           replies: [],
-          isPremium: currentUserIsPremium, // Use current user's premium status for their own replies
+          isPremium: isPremium, // Use current user's premium status for their own replies
           userTheme: colors.primary
         };
         
