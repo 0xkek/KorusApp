@@ -15,6 +15,17 @@ model User {
   allyBalance           Decimal  @default(0) @db.Decimal(18, 6)
   totalInteractionScore Int      @default(0)
   
+  // Reputation fields
+  reputationScore       Int      @default(0)
+  contentScore          Int      @default(0)
+  engagementScore       Int      @default(0)
+  communityScore        Int      @default(0)
+  loyaltyScore          Int      @default(0)
+  dailyRepEarned        Int      @default(0)
+  lastRepUpdate         DateTime @default(now())
+  loginStreak           Int      @default(0)
+  lastLoginDate         DateTime?
+  
   // Moderation fields
   isSuspended           Boolean  @default(false)
   suspensionReason      String?  @db.Text
@@ -34,10 +45,14 @@ model User {
   reports        Report[]
   moderationActions ModerationAction[] @relation("ModeratedUser")
   moderatorActions  ModerationAction[] @relation("Moderator")
+  repEvents      RepEvent[]
+  tokenDistributions TokenDistribution[]
 
   // Performance indexes
   @@index([tier, createdAt(sort: Desc)]) // For premium user queries 
   @@index([totalInteractionScore(sort: Desc)]) // For leaderboards
+  @@index([reputationScore(sort: Desc)]) // For reputation leaderboards
+  @@index([dailyRepEarned(sort: Desc), lastRepUpdate]) // For daily distribution
   @@index([createdAt(sort: Desc)]) // For newest users
   @@index([isSuspended, suspendedUntil]) // For moderation queries
   @@map("users")
@@ -212,4 +227,60 @@ model ModerationAction {
   @@index([actionType, createdAt(sort: Desc)]) // For action analytics
   @@index([reportId]) // For linking to reports
   @@map("moderation_actions")
+}
+
+model RepEvent {
+  id          String   @id @default(cuid())
+  userWallet  String   @db.VarChar(44)
+  eventType   String   @db.VarChar(50) // post, like, comment, tip, game_win, etc.
+  category    String   @db.VarChar(20) // content, engagement, community, loyalty
+  points      Int
+  multiplier  Decimal  @default(1.0) @db.Decimal(3, 2)
+  description String?  @db.Text
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userWallet], references: [walletAddress], onDelete: Cascade)
+
+  // Performance indexes
+  @@index([userWallet, createdAt(sort: Desc)])
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("rep_events")
+}
+
+model DailyRepPool {
+  id                String    @id @default(cuid())
+  date              DateTime  @unique @db.Date
+  totalPoolSize     Decimal   @default(10000) @db.Decimal(18, 6) // 10k ALLY daily
+  totalRepGenerated Int       @default(0)
+  participantCount  Int       @default(0)
+  distributed       Boolean   @default(false)
+  distributedAt     DateTime?
+  createdAt         DateTime  @default(now())
+
+  @@map("daily_rep_pools")
+}
+
+model TokenDistribution {
+  id              String    @id @default(cuid())
+  userWallet      String    @db.VarChar(44)
+  date            DateTime  @db.Date
+  repEarned       Int
+  sharePercentage Decimal   @db.Decimal(6, 4) // e.g., 5.25%
+  tokensEarned    Decimal   @db.Decimal(18, 6)
+  claimed         Boolean   @default(false)
+  claimedAt       DateTime?
+  createdAt       DateTime  @default(now())
+
+  // Relations
+  user User @relation(fields: [userWallet], references: [walletAddress], onDelete: Cascade)
+
+  // Prevent duplicate distributions
+  @@unique([userWallet, date])
+  // Performance indexes
+  @@index([userWallet, date(sort: Desc)])
+  @@index([claimed, userWallet])
+  @@map("token_distributions")
 }

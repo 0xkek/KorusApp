@@ -9,7 +9,7 @@ import { Fonts, FontSizes } from '../../constants/Fonts';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function WalletScreen() {
-  const { walletAddress, balance, refreshBalance } = useWallet();
+  const { walletAddress, balance, refreshBalance, getRecoveryPhrase } = useWallet();
   const { colors, isDarkMode, gradients } = useTheme();
   const insets = useSafeAreaInsets();
   const styles = React.useMemo(() => createStyles(colors, isDarkMode, insets), [colors, isDarkMode, insets]);
@@ -76,6 +76,38 @@ export default function WalletScreen() {
     if (activeTab === 'events') return activity.type === 'event_joined';
     return false;
   });
+
+  const handleViewSeedPhrase = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    
+    Alert.alert(
+      '⚠️ Warning',
+      'Never share your recovery phrase with anyone. Anyone with your recovery phrase can access your wallet.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Show Recovery Phrase', 
+          style: 'destructive',
+          onPress: async () => {
+            const phrase = await getRecoveryPhrase();
+            if (phrase) {
+              Alert.alert(
+                '🔐 Recovery Phrase',
+                `Write this down and store it safely:\n\n${phrase}\n\nThis is the only way to recover your wallet if you lose access to your device.`,
+                [{ text: 'I have saved it', style: 'default' }]
+              );
+            } else {
+              Alert.alert(
+                'Error',
+                'Could not retrieve recovery phrase. Please try again.',
+                [{ text: 'OK', style: 'default' }]
+              );
+            }
+          }
+        }
+      ]
+    );
+  };
 
   return (
     <>
@@ -268,6 +300,36 @@ export default function WalletScreen() {
               </TouchableOpacity>
             ))}
           </View>
+
+          {/* View Seed Phrase Button */}
+          <TouchableOpacity
+            style={styles.seedPhraseButton}
+            onPress={handleViewSeedPhrase}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={gradients.surface}
+              style={styles.seedPhraseGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={styles.seedPhraseIconContainer}>
+                <LinearGradient
+                  colors={gradients.primary}
+                  style={styles.seedPhraseIconGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Ionicons name="key-outline" size={22} color={isDarkMode ? '#000' : '#fff'} />
+                </LinearGradient>
+              </View>
+              <View style={styles.seedPhraseTextContainer}>
+                <Text style={styles.seedPhraseTitle}>View Your Seed Phrase</Text>
+                <Text style={styles.seedPhraseSubtitle}>12 words recovery phrase</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color={colors.primary} />
+            </LinearGradient>
+          </TouchableOpacity>
         </ScrollView>
       </View>
     </>
@@ -301,7 +363,7 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => {
     scrollContent: {
       paddingTop: insets.top + 20,
       paddingHorizontal: 20,
-      paddingBottom: 100, // Normal padding since no fixed buttons
+      paddingBottom: 100, // Reset back to original
     },
     
     // Balance Card
@@ -394,7 +456,7 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => {
     
     // Activity Section
     activitySection: {
-      marginBottom: 24,
+      marginBottom: 16, // Reduced to bring button closer
     },
     activityItem: {
       flexDirection: 'row',
@@ -452,6 +514,59 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => {
     },
     amountNegative: {
       color: colors.error,
+    },
+    
+    // Seed Phrase Button
+    seedPhraseButton: {
+      marginTop: 0, // No top margin - directly under activity
+      marginBottom: 24,
+      borderRadius: 16,
+      overflow: 'hidden',
+      shadowColor: colors.shadowColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    seedPhraseGradient: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.borderLight,
+    },
+    seedPhraseIconContainer: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      overflow: 'hidden',
+      marginRight: 16,
+      shadowColor: colors.error,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+      elevation: 4,
+    },
+    seedPhraseIconGradient: {
+      width: 48,
+      height: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    seedPhraseTextContainer: {
+      flex: 1,
+    },
+    seedPhraseTitle: {
+      fontSize: FontSizes.lg,
+      fontFamily: Fonts.bold,
+      color: colors.text,
+      marginBottom: 4,
+    },
+    seedPhraseSubtitle: {
+      fontSize: FontSizes.sm,
+      fontFamily: Fonts.regular,
+      color: colors.textSecondary,
     },
   });
 };

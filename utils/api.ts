@@ -58,14 +58,14 @@ api.interceptors.request.use(
         config.headers['X-Retry-Count'] = '0';
       }
       
-      // Log the request for debugging
-      logger.log('API Request:', {
-        url: config.url,
-        method: config.method,
-        baseURL: config.baseURL,
-        headers: config.headers,
-        skippedAuth: isPostsGet,
-      });
+      // Log the request for debugging (commented out to reduce noise)
+      // logger.log('API Request:', {
+      //   url: config.url,
+      //   method: config.method,
+      //   baseURL: config.baseURL,
+      //   headers: config.headers,
+      //   skippedAuth: isPostsGet,
+      // });
     } catch (error) {
       logger.error('Error retrieving auth token:', error);
     }
@@ -80,11 +80,12 @@ api.interceptors.request.use(
 // Response interceptor for error handling and retries
 api.interceptors.response.use(
   (response) => {
-    logger.log('API Response:', {
-      url: response.config.url,
-      status: response.status,
-      data: response.data,
-    });
+    // Log successful responses (commented out to reduce noise)
+    // logger.log('API Response:', {
+    //   url: response.config.url,
+    //   status: response.status,
+    //   data: response.data,
+    // });
     return response;
   },
   async (error: AxiosError) => {

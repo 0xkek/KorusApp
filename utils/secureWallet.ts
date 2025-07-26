@@ -60,6 +60,7 @@ export class SecureWallet {
    */
   async authenticateBiometric(reason: string): Promise<boolean> {
     try {
+      logger.log('Starting biometric authentication...');
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage: reason,
         cancelLabel: 'Cancel',
@@ -67,6 +68,7 @@ export class SecureWallet {
         disableDeviceFallback: false, // Allow passcode as fallback
       });
 
+      logger.log('Biometric result:', result);
       return result.success;
     } catch (error) {
       logger.error('Biometric authentication failed:', error);
@@ -146,8 +148,15 @@ export class SecureWallet {
       await SecureStore.setItemAsync(WALLET_SALT, Buffer.from(salt).toString('base64'));
       await SecureStore.setItemAsync(WALLET_CREATED_AT, new Date().toISOString());
       
-      // Enable biometric protection by default
-      await SecureStore.setItemAsync(AUTH_REQUIRED, 'true');
+      // Only enable biometric if available
+      const biometricStatus = await this.isBiometricAvailable();
+      if (biometricStatus.available) {
+        await SecureStore.setItemAsync(AUTH_REQUIRED, 'true');
+        logger.log('Biometric protection enabled');
+      } else {
+        await SecureStore.setItemAsync(AUTH_REQUIRED, 'false');
+        logger.log('Biometric not available, using password-only protection');
+      }
       
       logger.log('Wallet stored securely');
     } catch (error) {
@@ -251,34 +260,48 @@ export class SecureWallet {
    * Simple encryption (not as secure as Android Keystore but works with Expo)
    */
   private async encrypt(data: string, key: string): Promise<string> {
-    // For Expo, we'll use a simple XOR cipher with the key
-    // This is NOT cryptographically secure but better than plaintext
-    // For production, consider using expo-crypto when it supports encryption
-    
-    const keyBytes = Buffer.from(key, 'hex');
-    const dataBytes = Buffer.from(data, 'utf8');
-    const encrypted = Buffer.alloc(dataBytes.length);
-    
-    for (let i = 0; i < dataBytes.length; i++) {
-      encrypted[i] = dataBytes[i] ^ keyBytes[i % keyBytes.length];
+    try {
+      // For Expo, we'll use base64 encoding with a simple transformation
+      // This is NOT cryptographically secure but prevents casual viewing
+      // For production, you should use a development build with native crypto
+      
+      // First, encode the data as base64
+      const base64Data = Buffer.from(data, 'utf8').toString('base64');
+      
+      // Then reverse it and add some padding for obfuscation
+      const reversed = base64Data.split('').reverse().join('');
+      const padded = `KRS${reversed}KRS`;
+      
+      // Finally encode again
+      return Buffer.from(padded, 'utf8').toString('base64');
+    } catch (error) {
+      logger.error('Encryption error:', error);
+      throw error;
     }
-    
-    return encrypted.toString('base64');
   }
 
   /**
    * Simple decryption
    */
   private async decrypt(encryptedData: string, key: string): Promise<string> {
-    const keyBytes = Buffer.from(key, 'hex');
-    const encrypted = Buffer.from(encryptedData, 'base64');
-    const decrypted = Buffer.alloc(encrypted.length);
-    
-    for (let i = 0; i < encrypted.length; i++) {
-      decrypted[i] = encrypted[i] ^ keyBytes[i % keyBytes.length];
+    try {
+      // Reverse the encryption process
+      const padded = Buffer.from(encryptedData, 'base64').toString('utf8');
+      
+      // Remove padding
+      const reversed = padded.replace(/^KRS/, '').replace(/KRS$/, '');
+      
+      // Reverse back
+      const base64Data = reversed.split('').reverse().join('');
+      
+      // Decode from base64
+      const data = Buffer.from(base64Data, 'base64').toString('utf8');
+      
+      return data;
+    } catch (error) {
+      logger.error('Decryption error:', error);
+      throw error;
     }
-    
-    return decrypted.toString('utf8');
   }
 
   /**
@@ -291,12 +314,53 @@ export class SecureWallet {
         throw new Error('No wallet found');
       }
 
+      // Import tweetnacl at the top of the function to ensure it's available
+      const nacl = require('tweetnacl');
+      
+      // Use nacl for signing since that's what Solana uses under the hood
       const messageBytes = Buffer.from(message, 'utf8');
-      const signature = wallet.keypair.sign(messageBytes);
+      const signature = nacl.sign.detached(
+        messageBytes,
+        wallet.keypair.secretKey
+      );
       
       return Buffer.from(signature).toString('base64');
     } catch (error) {
       logger.error('Failed to sign message:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get the recovery phrase (mnemonic) with authentication
+   */
+  async getRecoveryPhrase(): Promise<string | null> {
+    try {
+      // Check if biometric is available
+      const biometricStatus = await this.isBiometricAvailable();
+      
+      if (biometricStatus.available) {
+        // Try biometric authentication
+        const authenticated = await this.authenticateBiometric('Authenticate to view recovery phrase');
+        if (!authenticated) {
+          logger.warn('Biometric authentication cancelled or failed');
+          return null;
+        }
+      } else {
+        // Log why biometrics aren't available but continue
+        logger.warn('Biometrics not available:', biometricStatus.error);
+        // In production, you might want to require a PIN or password here
+      }
+
+      const wallet = await this.getWallet(false); // Skip auth since we already handled it
+      if (!wallet) {
+        throw new Error('No wallet found');
+      }
+
+      logger.log('Successfully retrieved recovery phrase');
+      return wallet.mnemonic;
+    } catch (error) {
+      logger.error('Failed to get recovery phrase:', error);
       return null;
     }
   }

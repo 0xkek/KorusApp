@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import prisma from '../config/database'
 import { AuthRequest } from '../middleware/auth'
 import { autoModerate } from './moderationController'
+import { reputationService } from '../services/reputationService'
 
 export const createReply = async (req: AuthRequest, res: Response) => {
   try {
@@ -82,6 +83,10 @@ export const createReply = async (req: AuthRequest, res: Response) => {
     })
 
     console.log(`Reply created by ${walletAddress} on post ${postId}`)
+
+    // Award reputation points
+    await reputationService.onCommentMade(walletAddress)
+    await reputationService.onCommentReceived(post.authorWallet)
 
     res.status(201).json({
       success: true,

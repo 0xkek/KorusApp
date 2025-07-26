@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import prisma from '../config/database'
 import { AuthRequest } from '../middleware/auth'
+import { reputationService } from '../services/reputationService'
 
 export const likePost = async (req: AuthRequest, res: Response) => {
   try {
@@ -48,6 +49,11 @@ export const likePost = async (req: AuthRequest, res: Response) => {
         where: { id },
         data: { likeCount: { increment: 1 } }
       })
+      
+      // Award reputation points
+      await reputationService.onLikeGiven(walletAddress, 'post')
+      await reputationService.onLikeReceived(post.authorWallet, 'post')
+      
       res.json({ success: true, liked: true, message: 'Post liked' })
     }
   } catch (error: any) {
@@ -108,6 +114,10 @@ export const tipPost = async (req: AuthRequest, res: Response) => {
     })
 
     console.log(`${walletAddress} tipped ${amount} $ALLY to post ${id}`)
+
+    // Award reputation points
+    await reputationService.onTipSent(walletAddress, Number(amount))
+    await reputationService.onTipReceived(post.authorWallet, Number(amount))
 
     res.json({
       success: true,

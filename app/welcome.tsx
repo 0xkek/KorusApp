@@ -83,16 +83,16 @@ export default function WelcomeScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     
     try {
-      await createNewWallet();
+      const success = await createNewWallet();
       
-      // Skip auth and go directly to tabs in offline mode
-      logger.log('Created wallet in offline mode, navigating to app');
-      logger.log('Current wallet address:', walletAddress);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      
-      // Force navigation regardless of state
-      setCreatingWallet(false);
-      router.replace('/(tabs)');
+      if (success) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        // Force navigation regardless of state
+        setCreatingWallet(false);
+        router.replace('/(tabs)');
+      } else {
+        throw new Error('Failed to create wallet');
+      }
     } catch (error) {
       setCreatingWallet(false);
       const errorMessage = getErrorMessage(error);
@@ -168,11 +168,11 @@ export default function WelcomeScreen() {
               {checkingSeedVault ? (
                 <>
                   <Ionicons 
-                    name="search" 
+                    name="wallet-outline" 
                     size={24} 
                     color={colors.primary}
                   />
-                  <Text style={styles.cardTitle}>Checking for Seed Vault...</Text>
+                  <Text style={styles.cardTitle}>Connecting to Seed Vault...</Text>
                 </>
               ) : (
                 <>
@@ -188,8 +188,8 @@ export default function WelcomeScreen() {
             
             <Text style={styles.cardDescription}>
               {checkingSeedVault 
-                ? 'Looking for your existing Solana wallet...'
-                : 'To get started, you need a Solana wallet. This will be your identity on Korus.'
+                ? 'Accessing your Solana Mobile Seed Vault...'
+                : 'Create a new wallet or use your Solana Mobile Seed Vault for secure, device-bound authentication.'
               }
             </Text>
 
@@ -216,20 +216,20 @@ export default function WelcomeScreen() {
                   </LinearGradient>
                 </TouchableOpacity>
 
-                {/* Check Seed Vault Again */}
+                {/* Connect Seed Vault */}
                 <TouchableOpacity
                   style={styles.secondaryButton}
                   onPress={checkForSeedVault}
                   activeOpacity={0.8}
                 >
                   <BlurView intensity={25} style={styles.secondaryButtonBlur}>
-                    <Text style={styles.secondaryButtonText}>Check Seed Vault Again</Text>
+                    <Text style={styles.secondaryButtonText}>Use Seed Vault</Text>
                   </BlurView>
                 </TouchableOpacity>
 
                 <Text style={styles.disclaimer}>
-                  Your wallet is stored securely on your device.{'\n'}
-                  Save your private key to recover your account.
+                  Seed Vault ensures one account per device.{'\n'}
+                  Available on Solana Mobile phones only.
                 </Text>
               </>
             )}

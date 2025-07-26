@@ -3,6 +3,7 @@ import prisma from '../config/database'
 import { AuthRequest } from '../middleware/auth'
 import { CreatePostRequest, ApiResponse, PaginatedResponse, Post } from '../types'
 import { autoModerate } from './moderationController'
+import { reputationService } from '../services/reputationService'
 
 export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Post>>) => {
   try {
@@ -47,6 +48,10 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
 
     // Run auto-moderation on the new post
     await autoModerate('post', post.id, content)
+
+    // Award reputation points for creating a post
+    const hasMedia = false; // TODO: Add media detection when implementing image/video uploads
+    await reputationService.onPostCreated(walletAddress, hasMedia)
 
     res.status(201).json({
       success: true,

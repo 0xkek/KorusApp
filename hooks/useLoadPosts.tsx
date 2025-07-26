@@ -16,11 +16,9 @@ export function useLoadPosts() {
       
       // Check if we have an auth token
       const hasToken = await hasAuthToken();
-      logger.log('Loading posts, hasAuthToken:', hasToken);
       
       // Try to load from API
       const response = await postsAPI.getPosts({ limit: 50 });
-      logger.log('Posts API response:', response);
       
       if (response.posts && response.posts.length > 0) {
         // Transform backend posts to app format
@@ -48,14 +46,12 @@ export function useLoadPosts() {
             const interactionsResponse = await interactionsAPI.getUserInteractions(postIds);
             
             if (interactionsResponse.success && interactionsResponse.interactions) {
-              logger.log('User interactions loaded:', interactionsResponse.interactions);
               // Update posts with user interaction data
               const finalPosts = transformedPosts.map(post => ({
                 ...post,
                 liked: interactionsResponse.interactions[String(post.id)]?.liked || false,
                 // We could also use tipped status in the future
               }));
-              logger.log('Posts with interactions:', finalPosts.map(p => ({ id: p.id, liked: p.liked })));
               setPosts(finalPosts);
             } else {
               setPosts(transformedPosts);

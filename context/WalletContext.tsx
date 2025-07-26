@@ -8,6 +8,7 @@ import { logger } from '../utils/logger';
 import { withErrorHandling, handleError } from '../utils/errorHandler';
 import { authAPI } from '../utils/api';
 import { secureWallet } from '../utils/secureWallet';
+import { seedVaultService } from '../utils/seedVault';
 
 interface WalletContextType {
   walletAddress: string | null;
@@ -21,9 +22,10 @@ interface WalletContextType {
   allSNSDomains: SNSDomain[];
   isPremium: boolean;
   timeFunUsername: string | null;
-  createNewWallet: () => Promise<void>;
+  createNewWallet: () => Promise<boolean>;
   importFromSeedVault: () => Promise<boolean>;
   getPrivateKey: () => Promise<string | null>;
+  getRecoveryPhrase: () => Promise<string | null>;
   refreshBalance: () => Promise<void>;
   deductBalance: (amount: number) => void;
   setSelectedAvatar: (avatar: string) => void;
@@ -98,8 +100,6 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         try {
           const wallet = await secureWallet.getWallet(false); // Don't require auth on app start
           if (wallet && wallet.publicKey === storedAddress) {
-            logger.log('Found existing secure wallet');
-            
             setWalletAddress(storedAddress);
             setHasWallet(true);
             setBalance(5000); // Default ALLY balance
@@ -216,10 +216,6 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         await updateSolBalance(publicKey);
         
         logger.log('Wallet created successfully with backend authentication');
-        logger.log('IMPORTANT: Save your recovery phrase:', mnemonic);
-        
-        // Show mnemonic to user (you should create a modal for this)
-        alert(`⚠️ SAVE YOUR RECOVERY PHRASE:\n\n${mnemonic}\n\nWrite this down and store it safely. You'll need it to recover your wallet.`);
         
       } catch (error: any) {
         // If rate limited, wait and try again
@@ -286,15 +282,81 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       
-      // TODO: Implement Seed Vault integration
-      // This would involve:
-      // 1. Check if Seed Vault app is installed
-      // 2. Request wallet access via deep link
-      // 3. Receive public key from Seed Vault
-      // 4. Store the public key (no private key access)
-      
-      // For now, return false to indicate no Seed Vault found
+      // Seed Vault requires ejecting from Expo to use native modules
+      logger.log('Seed Vault import is not available in Expo managed workflow');
+      logger.log('To use Seed Vault, you need to eject to bare workflow');
+      setIsLoading(false);
       return false;
+      
+      /* Uncomment after ejecting from Expo:
+      // Check if Seed Vault is available (only on Solana Saga phones)
+      const isAvailable = await seedVaultService.isAvailable();
+      if (!isAvailable) {
+        logger.log('Seed Vault not available - this feature requires a Solana Mobile device');
+        return false;
+      }
+      
+      // Try to import from Seed Vault
+      const seedVaultWallet = await seedVaultService.importFromSeedVault();
+      if (!seedVaultWallet) {
+        logger.log('User cancelled Seed Vault authorization');
+        return false;
+      }
+      
+      logger.log('Connected to Seed Vault:', seedVaultWallet.address);
+      */
+      
+      // Create authentication message
+      const authMessage = `Sign this message to authenticate with Korus\nTimestamp: ${Date.now()}`;
+      
+      // Sign message with Seed Vault
+      const signature = await seedVaultService.signMessage(authMessage);
+      if (!signature) {
+        throw new Error('Failed to sign authentication message');
+      }
+      
+      // Authenticate with backend
+      try {
+        const authResult = await authAPI.connectWallet(
+          seedVaultWallet.address, 
+          signature, 
+          authMessage
+        );
+        
+        // Store wallet address
+        await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, seedVaultWallet.address);
+        await SecureStore.setItemAsync('WALLET_TYPE', 'seed_vault'); // Mark as Seed Vault wallet
+        
+        // Update state
+        setWalletAddress(seedVaultWallet.address);
+        setHasWallet(true);
+        const backendBalance = parseFloat(authResult.user?.allyBalance || '5000');
+        setBalance(isNaN(backendBalance) ? 5000 : backendBalance);
+        setIsPremium(authResult.user?.tier === 'premium');
+        
+        // Fetch real SOL balance
+        await updateSolBalance(seedVaultWallet.address);
+        
+        // Fetch SNS domains
+        const domains = await fetchSNSDomains(seedVaultWallet.address);
+        setAllSNSDomains(domains);
+        
+        logger.log('Successfully imported wallet from Seed Vault');
+        return true;
+        
+      } catch (error: any) {
+        logger.error('Backend authentication failed:', error);
+        
+        // Disconnect on failure
+        await seedVaultService.disconnect();
+        
+        // If rate limited, show appropriate message
+        if (error?.response?.status === 429) {
+          throw new Error('Too many attempts. Please wait a moment and try again.');
+        }
+        
+        throw error;
+      }
       
     } catch (error) {
       logger.error('Error importing from Seed Vault:', error);
@@ -310,7 +372,6 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       const lamports = await connection.getBalance(pubkey);
       const sol = lamports / LAMPORTS_PER_SOL;
       setSolBalance(sol);
-      logger.log(`SOL Balance: ${sol} SOL`);
     } catch (error) {
       logger.error('Error fetching SOL balance:', error);
       setSolBalance(0);
@@ -325,6 +386,16 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       return null;
     } catch (error) {
       logger.error('Error getting private key:', error);
+      return null;
+    }
+  };
+
+  const getRecoveryPhrase = async (): Promise<string | null> => {
+    try {
+      const phrase = await secureWallet.getRecoveryPhrase();
+      return phrase;
+    } catch (error) {
+      logger.error('Error getting recovery phrase:', error);
       return null;
     }
   };
@@ -446,8 +517,26 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         throw new Error('No wallet connected');
       }
       
-      const signature = await secureWallet.signMessage(message);
-      return signature;
+      // Check if this is a Seed Vault wallet
+      const walletType = await SecureStore.getItemAsync('WALLET_TYPE');
+      
+      if (walletType === 'seed_vault') {
+        // Use Seed Vault for signing
+        if (!seedVaultService.isConnected()) {
+          // Try to reconnect
+          const connected = await seedVaultService.importFromSeedVault();
+          if (!connected) {
+            throw new Error('Failed to reconnect to Seed Vault');
+          }
+        }
+        
+        const signature = await seedVaultService.signMessage(message);
+        return signature;
+      } else {
+        // Use secure wallet for internal wallets
+        const signature = await secureWallet.signMessage(message);
+        return signature;
+      }
     } catch (error) {
       logger.error('Error signing message:', error);
       return null;
@@ -458,12 +547,21 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     try {
       logger.log('Logging out and clearing all wallet data');
       
-      // Delete the secure wallet
-      await secureWallet.deleteWallet();
+      // Check if this is a Seed Vault wallet
+      const walletType = await SecureStore.getItemAsync('WALLET_TYPE');
+      
+      if (walletType === 'seed_vault') {
+        // Disconnect Seed Vault
+        await seedVaultService.disconnect();
+      } else {
+        // Delete the secure wallet
+        await secureWallet.deleteWallet();
+      }
       
       // Clear all secure storage
       await SecureStore.deleteItemAsync(WALLET_KEY);
       await SecureStore.deleteItemAsync(WALLET_ADDRESS_KEY);
+      await SecureStore.deleteItemAsync('WALLET_TYPE');
       await SecureStore.deleteItemAsync(AVATAR_KEY);
       await SecureStore.deleteItemAsync(NFT_AVATAR_KEY);
       await SecureStore.deleteItemAsync(FAVORITE_SNS_KEY);
@@ -506,6 +604,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       createNewWallet,
       importFromSeedVault,
       getPrivateKey,
+      getRecoveryPhrase,
       refreshBalance,
       deductBalance,
       setSelectedAvatar,

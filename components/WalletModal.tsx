@@ -23,7 +23,7 @@ interface Token {
 }
 
 export default function WalletModal({ visible, onClose }: WalletModalProps) {
-  const { walletAddress, balance, refreshBalance, getPrivateKey } = useWallet();
+  const { walletAddress, balance, refreshBalance, getRecoveryPhrase } = useWallet();
   const { colors, isDarkMode, gradients } = useTheme();
   const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
   const [showPrivateKey, setShowPrivateKey] = useState(false);
@@ -54,24 +54,30 @@ export default function WalletModal({ visible, onClose }: WalletModalProps) {
     await refreshBalance();
   };
 
-  const handleShowPrivateKey = async () => {
+  const handleShowRecoveryPhrase = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     
     Alert.alert(
-      'Warning',
-      'Never share your private key with anyone. Anyone with your private key can access your wallet.',
+      '⚠️ Warning',
+      'Never share your recovery phrase with anyone. Anyone with your recovery phrase can access your wallet.',
       [
         { text: 'Cancel', style: 'cancel' },
         { 
-          text: 'Show Private Key', 
+          text: 'Show Recovery Phrase', 
           style: 'destructive',
           onPress: async () => {
-            const privateKey = await getPrivateKey();
-            if (privateKey) {
+            const phrase = await getRecoveryPhrase();
+            if (phrase) {
               Alert.alert(
-                'Private Key',
-                privateKey,
-                [{ text: 'Close', style: 'default' }]
+                '🔐 Recovery Phrase',
+                `Write this down and store it safely:\n\n${phrase}\n\nThis is the only way to recover your wallet if you lose access to your device.`,
+                [{ text: 'I have saved it', style: 'default' }]
+              );
+            } else {
+              Alert.alert(
+                'Error',
+                'Could not retrieve recovery phrase. Please try again.',
+                [{ text: 'OK', style: 'default' }]
               );
             }
           }
@@ -317,7 +323,7 @@ export default function WalletModal({ visible, onClose }: WalletModalProps) {
 
             {/* Actions */}
             <View style={styles.actions}>
-              <TouchableOpacity onPress={handleShowPrivateKey} style={styles.dangerButton}>
+              <TouchableOpacity onPress={handleShowRecoveryPhrase} style={styles.dangerButton}>
                 <BlurView intensity={25} style={styles.actionBlur}>
                   <LinearGradient
                     colors={gradients.surface}
@@ -341,8 +347,8 @@ export default function WalletModal({ visible, onClose }: WalletModalProps) {
                         </LinearGradient>
                       </View>
                       <View style={styles.dangerTextContainer}>
-                        <Text style={styles.dangerButtonText}>View Private Key</Text>
-                        <Text style={styles.dangerWarning}>Sensitive - Keep secure</Text>
+                        <Text style={styles.dangerButtonText}>View Recovery Phrase</Text>
+                        <Text style={styles.dangerWarning}>12 words - Keep secure</Text>
                       </View>
                     </View>
                   </LinearGradient>
@@ -352,7 +358,7 @@ export default function WalletModal({ visible, onClose }: WalletModalProps) {
 
             {/* Info */}
             <Text style={styles.infoText}>
-              This is a demo wallet. In production, $ALLY would be a real SPL token on Solana.
+              Your wallet is securely stored on your device using biometric encryption.
             </Text>
             </LinearGradient>
           </ScrollView>
