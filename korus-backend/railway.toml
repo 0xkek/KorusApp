@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm ci --production=false && npm run build"
+buildCommand = "rm -rf node_modules .cache && npm install && npm run build"
 
 [deploy]
 startCommand = "npm run start:prod"
