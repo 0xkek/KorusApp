@@ -1,41 +1,46 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { Connection, PublicKey, clusterApiUrl, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import * as SecureStore from 'expo-secure-store';
-import { generateWalletAddress } from '../utils/wallet';
 import { getFavoriteSNSDomain, fetchSNSDomains, SNSDomain } from '../utils/sns';
 import { NFTAvatar } from '../types/theme';
 import { logger } from '../utils/logger';
 import { withErrorHandling, handleError } from '../utils/errorHandler';
 import { authAPI } from '../utils/api';
-import { secureWallet } from '../utils/secureWallet';
-import { solanaMobileService } from '../utils/solanaMobile';
+import { 
+  WalletProvider as WalletProviderInterface, 
+  getAvailableWallets, 
+  createAuthMessage 
+} from '../utils/walletConnectors';
 
 interface WalletContextType {
   walletAddress: string | null;
   balance: number;
-  solBalance: number; // Real SOL balance
+  solBalance: number;
   isLoading: boolean;
-  hasWallet: boolean;
+  isConnected: boolean;
   selectedAvatar: string | null;
   selectedNFTAvatar: NFTAvatar | null;
   snsDomain: string | null;
   allSNSDomains: SNSDomain[];
   isPremium: boolean;
   timeFunUsername: string | null;
-  createNewWallet: () => Promise<boolean>;
-  importFromSeedVault: () => Promise<boolean>;
-  getPrivateKey: () => Promise<string | null>;
-  getRecoveryPhrase: () => Promise<string | null>;
+  currentProvider: WalletProviderInterface | null;
+  availableWallets: WalletProviderInterface[];
+  
+  // Wallet connection methods
+  connectWallet: (provider: WalletProviderInterface) => Promise<boolean>;
+  disconnectWallet: () => Promise<void>;
+  signMessage: (message: string) => Promise<string | null>;
+  
+  // App-specific methods
   refreshBalance: () => Promise<void>;
   deductBalance: (amount: number) => void;
-  setSelectedAvatar: (avatar: string) => void;
+  setSelectedAvatar: (avatar: string | null) => void;
   setSelectedNFTAvatar: (nft: NFTAvatar | null) => void;
   refreshSNSDomain: () => Promise<void>;
   setFavoriteSNSDomain: (domain: string) => Promise<void>;
   setPremiumStatus: (status: boolean) => void;
   setTimeFunUsername: (username: string | null) => Promise<void>;
-  logout: () => Promise<void>;
-  signMessage: (message: string) => Promise<string | null>;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -52,310 +57,271 @@ interface WalletProviderProps {
   children: React.ReactNode;
 }
 
-const WALLET_KEY = 'korus_wallet_private_key';
+// Storage keys
 const WALLET_ADDRESS_KEY = 'korus_wallet_address';
+const WALLET_PROVIDER_KEY = 'korus_wallet_provider';
+const AUTH_TOKEN_KEY = 'korus_auth_token';
 const AVATAR_KEY = 'korus_user_avatar';
 const NFT_AVATAR_KEY = 'korus_user_nft_avatar';
 const FAVORITE_SNS_KEY = 'korus_favorite_sns_domain';
 const PREMIUM_STATUS_KEY = 'korus_premium_status';
 const TIMEFUN_USERNAME_KEY = 'korus_timefun_username';
-const OFFLINE_MODE_KEY = 'korus_offline_mode';
 
-// Solana connection - using devnet for hackathon, switch to mainnet-beta for production
-const SOLANA_NETWORK = 'devnet'; // 'mainnet-beta' for production
-const connection = new Connection(clusterApiUrl(SOLANA_NETWORK), 'confirmed');
+// Solana connection
+const SOLANA_NETWORK = process.env.EXPO_PUBLIC_SOLANA_NETWORK || 'devnet';
+const connection = new Connection(clusterApiUrl(SOLANA_NETWORK as any), 'confirmed');
 
 export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState(0);
   const [solBalance, setSolBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
-  const [hasWallet, setHasWallet] = useState(false);
   const [selectedAvatar, setSelectedAvatarState] = useState<string | null>(null);
   const [selectedNFTAvatar, setSelectedNFTAvatarState] = useState<NFTAvatar | null>(null);
   const [snsDomain, setSnsDomain] = useState<string | null>(null);
   const [allSNSDomains, setAllSNSDomains] = useState<SNSDomain[]>([]);
   const [timeFunUsername, setTimeFunUsernameState] = useState<string | null>(null);
+  const [currentProvider, setCurrentProvider] = useState<WalletProviderInterface | null>(null);
+  const [availableWallets, setAvailableWallets] = useState<WalletProviderInterface[]>([]);
 
-  // Check for existing wallet on mount
+  // Check for existing session on mount
   useEffect(() => {
-    checkExistingWallet();
+    checkExistingSession();
+    loadAvailableWallets();
   }, []);
 
-  const checkExistingWallet = async () => {
+  const loadAvailableWallets = async () => {
+    const wallets = await getAvailableWallets();
+    setAvailableWallets(wallets);
+  };
+
+  const checkExistingSession = async () => {
     await withErrorHandling(async () => {
       setIsLoading(true);
       
-      // First check if user has a stored wallet address
+      // Check for stored session
       const storedAddress = await SecureStore.getItemAsync(WALLET_ADDRESS_KEY);
-      const storedAvatar = await SecureStore.getItemAsync(AVATAR_KEY);
-      const storedNFTAvatar = await SecureStore.getItemAsync(NFT_AVATAR_KEY);
-      const storedFavoriteSNS = await SecureStore.getItemAsync(FAVORITE_SNS_KEY);
-      const storedPremiumStatus = await SecureStore.getItemAsync(PREMIUM_STATUS_KEY);
-      const storedTimeFunUsername = await SecureStore.getItemAsync(TIMEFUN_USERNAME_KEY);
+      const storedToken = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
+      const storedProvider = await SecureStore.getItemAsync(WALLET_PROVIDER_KEY);
       
-      if (storedAddress) {
-        // Check if we have a secure wallet for this address
+      if (storedAddress && storedToken) {
+        // Verify token is still valid
         try {
-          const wallet = await secureWallet.getWallet(false); // Don't require auth on app start
-          if (wallet && wallet.publicKey === storedAddress) {
+          const profile = await authAPI.getProfile();
+          
+          if (profile.user?.walletAddress === storedAddress) {
+            // Session is valid
             setWalletAddress(storedAddress);
-            setHasWallet(true);
-            setBalance(5000); // Default ALLY balance
+            setIsConnected(true);
+            setBalance(parseFloat(profile.user.allyBalance || '0'));
+            setIsPremium(profile.user.tier === 'premium');
             
-            // Try to fetch real SOL balance
+            // Load user preferences
+            await loadUserPreferences();
+            
+            // Update SOL balance
             await updateSolBalance(storedAddress);
             
-            // Set premium status
-            const isPremiumUser = storedPremiumStatus === 'true';
-            setIsPremium(isPremiumUser);
-            
-            // Fetch SNS domains
+            // Load SNS domains
             const domains = await fetchSNSDomains(storedAddress);
             setAllSNSDomains(domains);
             
-            if (isPremiumUser && storedFavoriteSNS) {
-              setSnsDomain(storedFavoriteSNS);
-            }
+            logger.log('Restored valid session for wallet:', storedAddress);
           } else {
-            // Wallet mismatch or not found, clear stored address
-            logger.warn('Stored wallet address does not match secure wallet');
-            await SecureStore.deleteItemAsync(WALLET_ADDRESS_KEY);
+            // Invalid session, clear it
+            await clearSession();
           }
         } catch (error) {
-          logger.error('Error loading secure wallet:', error);
-          // Continue with offline mode
-          setWalletAddress(storedAddress);
-          setHasWallet(true);
-          setBalance(5000);
-          setSolBalance(0);
+          logger.error('Session validation failed:', error);
+          await clearSession();
         }
       }
-      
-      if (storedAvatar) {
-        setSelectedAvatarState(storedAvatar);
-      }
-      
-      if (storedNFTAvatar) {
-        try {
-          setSelectedNFTAvatarState(JSON.parse(storedNFTAvatar));
-        } catch (error) {
-          logger.error('Error parsing NFT avatar:', error);
-        }
-      }
-      
-      if (storedTimeFunUsername) {
-        setTimeFunUsernameState(storedTimeFunUsername);
-      }
-      
-      // TODO: Check for Seed Vault wallet
-      // This would involve checking if user has Seed Vault app installed
-      // and requesting access to their wallet
-    }, 'checkExistingWallet', {
+    }, 'checkExistingSession', {
       onError: () => setIsLoading(false)
     });
     
     setIsLoading(false);
   };
 
-  const createNewWallet = async (): Promise<boolean> => {
+  const connectWallet = async (provider: WalletProviderInterface): Promise<boolean> => {
     try {
       setIsLoading(true);
       
-      // Check if biometric is available
-      const biometricStatus = await secureWallet.isBiometricAvailable();
-      if (!biometricStatus.available) {
-        logger.warn('Biometric not available:', biometricStatus.error);
-        // Continue anyway - wallet will work without biometric
-      }
+      let publicKey: string;
+      let signature: string;
+      let authMessage: string;
       
-      // Generate real Solana wallet
-      logger.log('Generating secure Solana wallet...');
-      const walletResult = await secureWallet.generateWallet();
-      
-      if (!walletResult.success) {
-        throw new Error('Failed to generate wallet');
-      }
-      
-      const { publicKey, mnemonic } = walletResult;
-      
-      // Create a signature for backend authentication
-      const authMessage = `Sign this message to authenticate with Korus\nTimestamp: ${Date.now()}`;
-      const signature = await secureWallet.signMessage(authMessage);
-      
-      if (!signature) {
-        throw new Error('Failed to sign authentication message');
+      // Special handling for Solana Mobile (Seed Vault) to avoid double connection
+      if (provider.name === 'seedvault') {
+        logger.log('Using optimized MWA flow for Seed Vault...');
+        authMessage = createAuthMessage();
+        
+        // Use the combined connect and sign flow
+        const { connectAndSignWithMWA } = await import('../utils/walletConnectors');
+        const result = await connectAndSignWithMWA(authMessage);
+        publicKey = result.address;
+        signature = result.signature;
+        
+        logger.log('MWA flow completed, address:', publicKey);
+      } else {
+        // Standard flow for other wallets
+        logger.log(`Connecting to ${provider.name} wallet...`);
+        publicKey = await provider.connect();
+        logger.log('Connected wallet address:', publicKey);
+        
+        // Create and sign authentication message
+        authMessage = createAuthMessage();
+        signature = await provider.signMessage(authMessage);
+        
+        if (!signature) {
+          throw new Error('Failed to sign authentication message');
+        }
       }
       
       // Authenticate with backend
-      logger.log('Creating wallet and authenticating with backend');
+      logger.log('Authenticating with backend...');
       
+      let authResult;
       try {
-        const { authAPI } = await import('../utils/api');
-        
-        logger.log('Attempting to authenticate with backend...');
-        logger.log('Wallet address:', publicKey);
-        
-        // Authenticate with backend
-        const authResult = await authAPI.connectWallet(publicKey, signature, authMessage);
-        logger.log('Authentication successful:', authResult);
-        logger.log('Token received:', authResult.token ? 'Yes' : 'No');
-        
-        // Store wallet address for quick access
-        await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, publicKey);
-        
-        // Update state with backend data
-        setWalletAddress(publicKey);
-        setHasWallet(true);
-        const backendBalance = parseFloat(authResult.user?.allyBalance || '5000');
-        setBalance(isNaN(backendBalance) ? 5000 : backendBalance);
-        setIsPremium(authResult.user?.tier === 'premium');
-        
-        // Fetch real SOL balance
-        await updateSolBalance(publicKey);
-        
-        logger.log('Wallet created successfully with backend authentication');
-        
+        authResult = await authAPI.connectWallet(publicKey, signature, authMessage);
       } catch (error: any) {
-        // If rate limited, wait and try again
-        if (error?.response?.status === 429) {
-          logger.log('Rate limited, waiting 5 seconds...');
-          await new Promise(resolve => setTimeout(resolve, 5000));
+        // If backend is unavailable, use mock authentication for testing
+        if (error.response?.status === 500 || error.code === 'ECONNREFUSED') {
+          logger.warn('Backend unavailable, using mock authentication');
           
-          try {
-            const { authAPI } = await import('../utils/api');
-            const authResult = await authAPI.connectWallet(publicKey, signature, authMessage);
-            
-            await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, publicKey);
-            
-            setWalletAddress(publicKey);
-            setHasWallet(true);
-            setBalance(5000);
-            setIsPremium(authResult.user?.tier === 'premium');
-            
-            await updateSolBalance(publicKey);
-            
-            logger.log('Authentication successful after retry');
-          } catch (retryError) {
-            logger.error('Retry failed, using offline mode:', retryError);
-            // Fallback to offline
-            await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, publicKey);
-            await SecureStore.setItemAsync(OFFLINE_MODE_KEY, 'true');
-            
-            setWalletAddress(publicKey);
-            setHasWallet(true);
-            setBalance(5000);
-            setIsPremium(false);
-            setSolBalance(0);
-          }
+          // Generate a mock JWT token
+          const mockToken = btoa(JSON.stringify({ walletAddress: publicKey, exp: Date.now() + 86400000 }));
+          
+          authResult = {
+            token: mockToken,
+            user: {
+              walletAddress: publicKey,
+              tier: 'standard',
+              allyBalance: '5000',
+            }
+          };
         } else {
-          logger.error('Backend authentication failed:', error);
-          // Fallback to offline mode
-          await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, publicKey);
-          await SecureStore.setItemAsync(OFFLINE_MODE_KEY, 'true');
-          
-          setWalletAddress(publicKey);
-          setHasWallet(true);
-          setBalance(5000);
-          setIsPremium(false);
-          setSolBalance(0);
+          throw error;
         }
       }
+      
+      if (!authResult.token) {
+        throw new Error('Authentication failed');
+      }
+      
+      // Store session
+      await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, publicKey);
+      await SecureStore.setItemAsync(AUTH_TOKEN_KEY, authResult.token);
+      await SecureStore.setItemAsync(WALLET_PROVIDER_KEY, provider.name);
+      
+      // Update state
+      setWalletAddress(publicKey);
+      setIsConnected(true);
+      setCurrentProvider(provider);
+      const backendBalance = parseFloat(authResult.user?.allyBalance || '0');
+      setBalance(isNaN(backendBalance) ? 0 : backendBalance);
+      setIsPremium(authResult.user?.tier === 'premium');
+      
+      // Load user preferences
+      await loadUserPreferences();
+      
+      // Fetch real SOL balance
+      await updateSolBalance(publicKey);
       
       // Fetch SNS domains
       const domains = await fetchSNSDomains(publicKey);
       setAllSNSDomains(domains);
       
-      logger.log('Wallet created successfully');
+      logger.log('Wallet connected successfully');
       setIsLoading(false);
       return true;
       
     } catch (error) {
-      logger.error('Error creating wallet:', error);
+      logger.error('Error connecting wallet:', error);
       setIsLoading(false);
       return false;
     }
   };
 
-  const importFromSeedVault = async (): Promise<boolean> => {
+  const disconnectWallet = async () => {
     try {
-      setIsLoading(true);
+      logger.log('Disconnecting wallet...');
       
-      // Check if Solana Mobile is available (Android only)
-      if (!solanaMobileService.isAvailable()) {
-        logger.log('Solana Mobile wallet not available on this platform');
-        setIsLoading(false);
-        return false;
+      // Disconnect from current provider
+      if (currentProvider) {
+        currentProvider.disconnect();
       }
       
-      // Connect to Solana Mobile wallet (Seed Vault or others)
-      const mobileWallet = await solanaMobileService.connect();
-      if (!mobileWallet) {
-        logger.log('User cancelled wallet connection');
-        setIsLoading(false);
-        return false;
-      }
+      // Clear session
+      await clearSession();
       
-      logger.log('Connected to Solana Mobile wallet:', mobileWallet.address);
+      // Reset state
+      setWalletAddress(null);
+      setIsConnected(false);
+      setCurrentProvider(null);
+      setBalance(0);
+      setSolBalance(0);
+      setIsPremium(false);
+      setSelectedAvatarState(null);
+      setSelectedNFTAvatarState(null);
+      setSnsDomain(null);
+      setAllSNSDomains([]);
+      setTimeFunUsernameState(null);
       
-      // Create authentication message
-      const authMessage = `Sign this message to authenticate with Korus\nTimestamp: ${Date.now()}`;
-      
-      // Sign message with mobile wallet
-      const signature = await solanaMobileService.signMessage(authMessage);
-      if (!signature) {
-        throw new Error('Failed to sign authentication message');
-      }
-      
-      // Authenticate with backend
-      try {
-        const authResult = await authAPI.connectWallet(
-          mobileWallet.address, 
-          signature, 
-          authMessage
-        );
-        
-        // Store wallet address
-        await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, mobileWallet.address);
-        await SecureStore.setItemAsync('WALLET_TYPE', 'solana_mobile'); // Mark as Solana Mobile wallet
-        
-        // Update state
-        setWalletAddress(mobileWallet.address);
-        setHasWallet(true);
-        const backendBalance = parseFloat(authResult.user?.allyBalance || '5000');
-        setBalance(isNaN(backendBalance) ? 5000 : backendBalance);
-        setIsPremium(authResult.user?.tier === 'premium');
-        
-        // Fetch real SOL balance
-        await updateSolBalance(mobileWallet.address);
-        
-        // Fetch SNS domains
-        const domains = await fetchSNSDomains(mobileWallet.address);
-        setAllSNSDomains(domains);
-        
-        logger.log('Successfully imported wallet from Solana Mobile');
-        return true;
-        
-      } catch (error: any) {
-        logger.error('Backend authentication failed:', error);
-        
-        // Disconnect on failure
-        solanaMobileService.disconnect();
-        
-        // If rate limited, show appropriate message
-        if (error?.response?.status === 429) {
-          throw new Error('Too many attempts. Please wait a moment and try again.');
-        }
-        
-        throw error;
-      }
-      
+      logger.log('Wallet disconnected');
     } catch (error) {
-      logger.error('Error importing from Solana Mobile:', error);
-      return false;
-    } finally {
-      setIsLoading(false);
+      logger.error('Error during disconnect:', error);
+      throw error;
+    }
+  };
+
+  const signMessage = async (message: string): Promise<string | null> => {
+    try {
+      if (!currentProvider || !isConnected) {
+        throw new Error('No wallet connected');
+      }
+      
+      const signature = await currentProvider.signMessage(message);
+      return signature;
+    } catch (error) {
+      logger.error('Error signing message:', error);
+      return null;
+    }
+  };
+
+  const clearSession = async () => {
+    await SecureStore.deleteItemAsync(WALLET_ADDRESS_KEY);
+    await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
+    await SecureStore.deleteItemAsync(WALLET_PROVIDER_KEY);
+  };
+
+  const loadUserPreferences = async () => {
+    const storedAvatar = await SecureStore.getItemAsync(AVATAR_KEY);
+    const storedNFTAvatar = await SecureStore.getItemAsync(NFT_AVATAR_KEY);
+    const storedFavoriteSNS = await SecureStore.getItemAsync(FAVORITE_SNS_KEY);
+    const storedTimeFunUsername = await SecureStore.getItemAsync(TIMEFUN_USERNAME_KEY);
+    
+    if (storedAvatar) {
+      setSelectedAvatarState(storedAvatar);
+    }
+    
+    if (storedNFTAvatar) {
+      try {
+        const parsedNFT = JSON.parse(storedNFTAvatar);
+        setSelectedNFTAvatarState(parsedNFT);
+      } catch (error) {
+        logger.error('Error parsing NFT avatar:', error);
+      }
+    }
+    
+    if (storedFavoriteSNS && isPremium) {
+      setSnsDomain(storedFavoriteSNS);
+    }
+    
+    if (storedTimeFunUsername) {
+      setTimeFunUsernameState(storedTimeFunUsername);
     }
   };
 
@@ -371,36 +337,16 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     }
   };
 
-  const getPrivateKey = async (): Promise<string | null> => {
-    try {
-      // For security, we don't expose the private key directly
-      // Instead, use signMessage for any signing needs
-      logger.warn('Private key access requested - use signMessage instead');
-      return null;
-    } catch (error) {
-      logger.error('Error getting private key:', error);
-      return null;
-    }
-  };
-
-  const getRecoveryPhrase = async (): Promise<string | null> => {
-    try {
-      const phrase = await secureWallet.getRecoveryPhrase();
-      return phrase;
-    } catch (error) {
-      logger.error('Error getting recovery phrase:', error);
-      return null;
-    }
-  };
-
   const refreshBalance = async () => {
     try {
       if (walletAddress) {
-        // Update SOL balance
         await updateSolBalance(walletAddress);
         
-        // Also refresh ALLY balance from backend if needed
-        // For now keeping the existing balance
+        // Also refresh balance from backend
+        const profile = await authAPI.getProfile();
+        if (profile.user) {
+          setBalance(parseFloat(profile.user.allyBalance || '0'));
+        }
       }
     } catch (error) {
       logger.error('Error refreshing balance:', error);
@@ -426,7 +372,6 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
 
   const setFavoriteSNSDomain = async (domain: string) => {
     try {
-      // Only allow premium users to set SNS domains
       if (!isPremium) {
         logger.warn('Premium subscription required to set SNS domain as display name');
         return;
@@ -435,7 +380,6 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       await SecureStore.setItemAsync(FAVORITE_SNS_KEY, domain);
       setSnsDomain(domain);
       
-      // Update the favorite flag in allSNSDomains
       setAllSNSDomains(prevDomains => 
         prevDomains.map(d => ({
           ...d,
@@ -447,11 +391,15 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     }
   };
 
-  const setSelectedAvatar = async (avatar: string) => {
+  const setSelectedAvatar = async (avatar: string | null) => {
     try {
-      await SecureStore.setItemAsync(AVATAR_KEY, avatar);
-      setSelectedAvatarState(avatar);
-      // Clear NFT avatar when emoji is selected
+      if (avatar === null) {
+        await SecureStore.deleteItemAsync(AVATAR_KEY);
+        setSelectedAvatarState(null);
+      } else {
+        await SecureStore.setItemAsync(AVATAR_KEY, avatar);
+        setSelectedAvatarState(avatar);
+      }
       await SecureStore.deleteItemAsync(NFT_AVATAR_KEY);
       setSelectedNFTAvatarState(null);
     } catch (error) {
@@ -462,9 +410,10 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   const setSelectedNFTAvatar = async (nft: NFTAvatar | null) => {
     try {
       if (nft) {
-        await SecureStore.setItemAsync(NFT_AVATAR_KEY, JSON.stringify(nft));
+        const nftString = JSON.stringify(nft);
+        await SecureStore.setItemAsync(NFT_AVATAR_KEY, nftString);
         setSelectedNFTAvatarState(nft);
-        // Clear emoji avatar when NFT is selected
+        
         await SecureStore.deleteItemAsync(AVATAR_KEY);
         setSelectedAvatarState(null);
       } else {
@@ -481,7 +430,6 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       setIsPremium(status);
       await SecureStore.setItemAsync(PREMIUM_STATUS_KEY, status.toString());
       
-      // If premium is disabled, clear SNS domain
       if (!status) {
         await SecureStore.deleteItemAsync(FAVORITE_SNS_KEY);
         setSnsDomain(null);
@@ -504,101 +452,24 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     }
   };
 
-  const signMessage = async (message: string): Promise<string | null> => {
-    try {
-      if (!walletAddress) {
-        throw new Error('No wallet connected');
-      }
-      
-      // Check if this is a Seed Vault wallet
-      const walletType = await SecureStore.getItemAsync('WALLET_TYPE');
-      
-      if (walletType === 'solana_mobile') {
-        // Use Solana Mobile wallet for signing
-        const currentWallet = solanaMobileService.getWallet();
-        if (!currentWallet) {
-          // Try to reconnect
-          const connected = await solanaMobileService.connect();
-          if (!connected) {
-            throw new Error('Failed to reconnect to Solana Mobile wallet');
-          }
-        }
-        
-        const signature = await solanaMobileService.signMessage(message);
-        return signature;
-      } else {
-        // Use secure wallet for internal wallets
-        const signature = await secureWallet.signMessage(message);
-        return signature;
-      }
-    } catch (error) {
-      logger.error('Error signing message:', error);
-      return null;
-    }
-  };
-
-  const logout = async () => {
-    try {
-      logger.log('Logging out and clearing all wallet data');
-      
-      // Check if this is a Seed Vault wallet
-      const walletType = await SecureStore.getItemAsync('WALLET_TYPE');
-      
-      if (walletType === 'solana_mobile') {
-        // Disconnect Solana Mobile wallet
-        solanaMobileService.disconnect();
-      } else {
-        // Delete the secure wallet
-        await secureWallet.deleteWallet();
-      }
-      
-      // Clear all secure storage
-      await SecureStore.deleteItemAsync(WALLET_KEY);
-      await SecureStore.deleteItemAsync(WALLET_ADDRESS_KEY);
-      await SecureStore.deleteItemAsync('WALLET_TYPE');
-      await SecureStore.deleteItemAsync(AVATAR_KEY);
-      await SecureStore.deleteItemAsync(NFT_AVATAR_KEY);
-      await SecureStore.deleteItemAsync(FAVORITE_SNS_KEY);
-      await SecureStore.deleteItemAsync(PREMIUM_STATUS_KEY);
-      await SecureStore.deleteItemAsync(TIMEFUN_USERNAME_KEY);
-      await SecureStore.deleteItemAsync(OFFLINE_MODE_KEY);
-      
-      // Reset all state
-      setWalletAddress(null);
-      setBalance(0);
-      setSolBalance(0);
-      setHasWallet(false);
-      setSelectedAvatarState(null);
-      setSelectedNFTAvatarState(null);
-      setSnsDomain(null);
-      setAllSNSDomains([]);
-      setIsPremium(false);
-      setTimeFunUsernameState(null);
-      
-      logger.log('Logout complete');
-    } catch (error) {
-      logger.error('Error during logout:', error);
-      throw error;
-    }
-  };
-
   const contextValue = useMemo(
     () => ({
       walletAddress,
       balance,
       solBalance,
       isLoading,
-      hasWallet,
+      isConnected,
       selectedAvatar,
       selectedNFTAvatar,
       snsDomain,
       allSNSDomains,
       isPremium,
       timeFunUsername,
-      createNewWallet,
-      importFromSeedVault,
-      getPrivateKey,
-      getRecoveryPhrase,
+      currentProvider,
+      availableWallets,
+      connectWallet,
+      disconnectWallet,
+      signMessage,
       refreshBalance,
       deductBalance,
       setSelectedAvatar,
@@ -607,21 +478,21 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       setFavoriteSNSDomain,
       setPremiumStatus,
       setTimeFunUsername,
-      logout,
-      signMessage,
     }),
     [
       walletAddress,
       balance,
       solBalance,
       isLoading,
-      hasWallet,
+      isConnected,
       selectedAvatar,
       selectedNFTAvatar,
       snsDomain,
       allSNSDomains,
       isPremium,
       timeFunUsername,
+      currentProvider,
+      availableWallets,
     ]
   );
 

@@ -6,6 +6,11 @@ import { AuthRequest } from '../middleware/auth'
 import { isMockMode, mockAuthController } from '../middleware/mockMode'
 
 export const connectWallet = async (req: Request, res: Response) => {
+  // Use mock mode if database is not available
+  if (isMockMode()) {
+    return mockAuthController.connectWallet(req, res)
+  }
+  
   try {
     const { walletAddress, signature, message } = req.body
 
@@ -16,10 +21,32 @@ export const connectWallet = async (req: Request, res: Response) => {
       })
     }
 
-    // For now, skip signature verification for testing
+    // Verify signature
     console.log('=== WALLET CONNECTION ATTEMPT ===')
     console.log('Wallet address:', walletAddress)
     console.log('Timestamp:', new Date().toISOString())
+    
+    // Verify the signature
+    const isValid = await verifyWalletSignature(walletAddress, signature, message)
+    if (!isValid) {
+      console.log('Invalid signature for wallet:', walletAddress)
+      return res.status(401).json({ error: 'Invalid signature' })
+    }
+    
+    // Check message freshness (prevent replay attacks)
+    try {
+      const messageData = JSON.parse(message)
+      const timestamp = messageData.timestamp
+      const ageInMinutes = (Date.now() - timestamp) / 1000 / 60
+      
+      if (ageInMinutes > 5) {
+        console.log('Message too old:', ageInMinutes, 'minutes')
+        return res.status(401).json({ error: 'Authentication message expired' })
+      }
+    } catch (parseError) {
+      console.error('Error parsing message:', parseError)
+      return res.status(400).json({ error: 'Invalid message format' })
+    }
 
     // Check if user exists, create if not
     let user
@@ -144,7 +171,8 @@ export const connectWallet = async (req: Request, res: Response) => {
         genesisVerified: user.genesisVerified,
         allyBalance: user.allyBalance.toString(),
         createdAt: user.createdAt
-      }
+      },
+      expiresIn: '7d'
     })
   } catch (error: any) {
     console.error('=== CONNECT WALLET ERROR ===')
@@ -160,6 +188,11 @@ export const connectWallet = async (req: Request, res: Response) => {
 }
 
 export const getProfile = async (req: AuthRequest, res: Response) => {
+  // Use mock mode if database is not available
+  if (isMockMode()) {
+    return mockAuthController.getProfile(req, res)
+  }
+  
   try {
     const walletAddress = req.userWallet!
     

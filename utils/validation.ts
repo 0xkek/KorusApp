@@ -5,20 +5,20 @@ export const sanitizeInput = (input: string): string => {
   return input
     .replace(/[<>]/g, '') // Remove < and >
     .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/on\w+\s*=/gi, '') // Remove event handlers
-    .trim();
+    .replace(/on\w+\s*=/gi, ''); // Remove event handlers
+    // Don't trim() here - it removes spaces while typing
 };
 
 // Validate post content
 export const validatePostContent = (content: string): { valid: boolean; error?: string } => {
-  const sanitized = sanitizeInput(content);
+  const sanitized = sanitizeInput(content).trim();
   
   if (!sanitized || sanitized.length === 0) {
     return { valid: false, error: 'Post content cannot be empty' };
   }
   
-  if (sanitized.length > 500) {
-    return { valid: false, error: 'Post content must be 500 characters or less' };
+  if (sanitized.length > 300) {
+    return { valid: false, error: 'Post content must be 300 characters or less' };
   }
   
   return { valid: true };
@@ -26,14 +26,14 @@ export const validatePostContent = (content: string): { valid: boolean; error?: 
 
 // Validate reply content
 export const validateReplyContent = (content: string): { valid: boolean; error?: string } => {
-  const sanitized = sanitizeInput(content);
+  const sanitized = sanitizeInput(content).trim();
   
   if (!sanitized || sanitized.length === 0) {
     return { valid: false, error: 'Reply content cannot be empty' };
   }
   
-  if (sanitized.length > 500) {
-    return { valid: false, error: 'Reply content must be 500 characters or less' };
+  if (sanitized.length > 300) {
+    return { valid: false, error: 'Reply content must be 300 characters or less' };
   }
   
   return { valid: true };
@@ -101,7 +101,7 @@ export const validateUrl = (url: string): boolean => {
 // Character counter helper
 export const getCharacterCount = (text: string): { current: number; max: number; remaining: number } => {
   const current = text.length;
-  const max = 500;
+  const max = 300;
   const remaining = max - current;
   
   return { current, max, remaining };

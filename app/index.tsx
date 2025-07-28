@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Text, StatusBar } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../hooks/useAuth';
 import { useWallet } from '../context/WalletContext';
@@ -52,6 +52,7 @@ export default function SplashScreen() {
   
   return (
     <View style={styles.container}>
+      <StatusBar backgroundColor="#0a0a0a" barStyle="light-content" />
       <LinearGradient
         colors={['#0a0a0a', '#0f0f0f', '#141414']}
         style={styles.background}

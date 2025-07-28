@@ -12,96 +12,33 @@ import { useAuth } from '../hooks/useAuth';
 import { useKorusAlert } from '../components/KorusAlertProvider';
 import { getErrorMessage } from '../utils/errorHandler';
 import { logger } from '../utils/logger';
+import { WalletConnectionModal } from '../components/WalletConnectionModal';
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const { hasWallet, isLoading, createNewWallet, importFromSeedVault, walletAddress } = useWallet();
+  const { isConnected, isLoading, walletAddress } = useWallet();
   const { colors, isDarkMode, gradients } = useTheme();
   const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
-  const [checkingSeedVault, setCheckingSeedVault] = useState(false);
-  const [creatingWallet, setCreatingWallet] = useState(false);
+  const [showWalletModal, setShowWalletModal] = useState(false);
   const { signIn, isAuthenticated } = useAuth();
   const { showAlert } = useKorusAlert();
 
-  // Auto-redirect if user has wallet
+  // Auto-redirect if user is connected
   useEffect(() => {
-    if (walletAddress && !isLoading) {
-      logger.log('User has wallet, redirecting to tabs');
+    if (isConnected && !isLoading) {
+      logger.log('User is connected, redirecting to tabs');
       router.replace('/(tabs)');
     }
-  }, [walletAddress, isLoading]);
+  }, [isConnected, isLoading]);
 
-  // Auto-check for Seed Vault on mount
-  useEffect(() => {
-    checkForSeedVault();
-  }, []);
-
-  const checkForSeedVault = async () => {
-    setCheckingSeedVault(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    
-    try {
-      const hasSeedVault = await importFromSeedVault();
-      
-      if (hasSeedVault) {
-        // Seed Vault found and imported, now authenticate
-        try {
-          // In mock mode, use dummy signature
-          const message = `Sign in to Korus\n\nTimestamp: ${Date.now()}`;
-          const signature = 'mock_signature_' + Date.now();
-          
-          await signIn(signature, message);
-          
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          router.replace('/(tabs)');
-        } catch (authError) {
-          const errorMessage = getErrorMessage(authError);
-          showAlert({
-            title: 'Authentication Failed',
-            message: errorMessage,
-            type: 'error'
-          });
-          setCheckingSeedVault(false);
-        }
-      } else {
-        // No Seed Vault found
-        setCheckingSeedVault(false);
-      }
-    } catch (error) {
-      setCheckingSeedVault(false);
-      const errorMessage = getErrorMessage(error);
-      showAlert({
-        title: 'Error',
-        message: errorMessage,
-        type: 'error'
-      });
-    }
+  const handleConnectWallet = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setShowWalletModal(true);
   };
 
-  const handleCreateWallet = async () => {
-    setCreatingWallet(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    
-    try {
-      const success = await createNewWallet();
-      
-      if (success) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        // Force navigation regardless of state
-        setCreatingWallet(false);
-        router.replace('/(tabs)');
-      } else {
-        throw new Error('Failed to create wallet');
-      }
-    } catch (error) {
-      setCreatingWallet(false);
-      const errorMessage = getErrorMessage(error);
-      showAlert({
-        title: 'Error',
-        message: errorMessage,
-        type: 'error'
-      });
-    }
+  const handleWalletConnected = () => {
+    setShowWalletModal(false);
+    router.replace('/(tabs)');
   };
 
   if (isLoading) {
@@ -118,20 +55,20 @@ export default function WelcomeScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Background gradient */}
+      {/* Background gradient - hardcoded dark */}
       <LinearGradient
-        colors={gradients.surface}
+        colors={['#1a1a1a', '#0f0f0f', '#1a1a1a']}
         style={styles.background}
       />
       
-      {/* Green overlay */}
+      {/* Green overlay - hardcoded */}
       <LinearGradient
         colors={[
-          colors.primary + '14',
-          colors.secondary + '0C',
+          '#43e97b14',
+          '#38f9d70C',
           'transparent',
-          colors.primary + '0F',
-          colors.secondary + '1A',
+          '#43e97b0F',
+          '#38f9d71A',
         ]}
         style={styles.greenOverlay}
         start={{ x: 0, y: 0 }}
@@ -144,7 +81,7 @@ export default function WelcomeScreen() {
           {/* Logo */}
           <View style={styles.logoContainer}>
             <LinearGradient
-              colors={gradients.primary}
+              colors={['#43e97b', '#38f9d7']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.logoGradient}
@@ -157,85 +94,56 @@ export default function WelcomeScreen() {
         </View>
 
         {/* Wallet Setup Card */}
-        <BlurView intensity={40} style={styles.cardContainer}>
+        <View style={styles.cardContainer}>
           <LinearGradient
-            colors={gradients.surface}
+            colors={['#1a1a1a', '#0f0f0f', '#1a1a1a']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.card}
           >
             <View style={styles.cardTitleContainer}>
-              {checkingSeedVault ? (
-                <>
-                  <Ionicons 
-                    name="wallet-outline" 
-                    size={24} 
-                    color={colors.primary}
-                  />
-                  <Text style={styles.cardTitle}>Connecting to Seed Vault...</Text>
-                </>
-              ) : (
-                <>
-                  <Ionicons 
-                    name="hand-left-outline" 
-                    size={24} 
-                    color={colors.primary}
-                  />
-                  <Text style={styles.cardTitle}>Welcome to Korus</Text>
-                </>
-              )}
+              <Ionicons 
+                name="wallet-outline" 
+                size={24} 
+                color="#43e97b"
+              />
+              <Text style={styles.cardTitle}>Welcome to Korus</Text>
             </View>
             
             <Text style={styles.cardDescription}>
-              {checkingSeedVault 
-                ? 'Accessing your Solana Mobile Seed Vault...'
-                : 'Create a new wallet or use your Solana Mobile Seed Vault for secure, device-bound authentication.'
-              }
+              Connect your Solana wallet to join Korus. Your wallet remains in your control - we never store your private keys.
             </Text>
 
-            {!checkingSeedVault && (
-              <>
-                {/* Create New Wallet Button */}
-                <TouchableOpacity
-                  style={styles.primaryButton}
-                  onPress={handleCreateWallet}
-                  disabled={creatingWallet}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient
-                    colors={gradients.primary}
-                    style={styles.buttonGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  >
-                    {creatingWallet ? (
-                      <ActivityIndicator color={isDarkMode ? '#000' : '#fff'} />
-                    ) : (
-                      <Text style={styles.primaryButtonText}>Create New Wallet</Text>
-                    )}
-                  </LinearGradient>
-                </TouchableOpacity>
+            {/* Connect Wallet Button */}
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={handleConnectWallet}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#43e97b', '#38f9d7']}
+                style={styles.buttonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Text style={styles.primaryButtonText}>Connect Wallet</Text>
+              </LinearGradient>
+            </TouchableOpacity>
 
-                {/* Connect Seed Vault */}
-                <TouchableOpacity
-                  style={styles.secondaryButton}
-                  onPress={checkForSeedVault}
-                  activeOpacity={0.8}
-                >
-                  <BlurView intensity={25} style={styles.secondaryButtonBlur}>
-                    <Text style={styles.secondaryButtonText}>Use Seed Vault</Text>
-                  </BlurView>
-                </TouchableOpacity>
-
-                <Text style={styles.disclaimer}>
-                  Seed Vault ensures one account per device.{'\n'}
-                  Available on Solana Mobile phones only.
-                </Text>
-              </>
-            )}
+            <Text style={styles.disclaimer}>
+              One account per wallet address.{'\n'}
+              Secure, decentralized authentication.
+            </Text>
           </LinearGradient>
-        </BlurView>
+        </View>
       </View>
+
+      {/* Wallet Connection Modal */}
+      <WalletConnectionModal
+        isVisible={showWalletModal}
+        onClose={() => setShowWalletModal(false)}
+        onSuccess={handleWalletConnected}
+      />
     </View>
   );
 }
@@ -270,8 +178,8 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   title: {
     fontSize: 56,
     fontFamily: Fonts.extraBold,
-    color: colors.primary,
-    textShadowColor: colors.primary + '66',
+    color: '#43e97b',
+    textShadowColor: '#43e97b66',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 20,
     letterSpacing: -2,
@@ -286,7 +194,7 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   logoContainer: {
     marginBottom: 30,
     marginTop: -40,
-    shadowColor: colors.primary,
+    shadowColor: '#43e97b',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -313,8 +221,9 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: colors.primary + '66',
-    shadowColor: colors.shadowColor,
+    borderColor: '#43e97b66',
+    backgroundColor: '#0f0f0f',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.8,
     shadowRadius: 35,

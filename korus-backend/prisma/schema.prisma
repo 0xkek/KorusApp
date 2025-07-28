@@ -21,7 +21,8 @@ model User {
   engagementScore       Int      @default(0)
   communityScore        Int      @default(0)
   loyaltyScore          Int      @default(0)
-  dailyRepEarned        Int      @default(0)
+  weeklyRepEarned       Int      @default(0)
+  weekStartDate         DateTime? // Monday when current week started
   lastRepUpdate         DateTime @default(now())
   loginStreak           Int      @default(0)
   lastLoginDate         DateTime?
@@ -52,7 +53,7 @@ model User {
   @@index([tier, createdAt(sort: Desc)]) // For premium user queries 
   @@index([totalInteractionScore(sort: Desc)]) // For leaderboards
   @@index([reputationScore(sort: Desc)]) // For reputation leaderboards
-  @@index([dailyRepEarned(sort: Desc), lastRepUpdate]) // For daily distribution
+  @@index([weeklyRepEarned(sort: Desc), weekStartDate]) // For weekly distribution
   @@index([createdAt(sort: Desc)]) // For newest users
   @@index([isSuspended, suspendedUntil]) // For moderation queries
   @@map("users")
@@ -82,6 +83,7 @@ model Post {
   author  User    @relation(fields: [authorWallet], references: [walletAddress])
   replies Reply[]
   game    Game?
+  sponsoredPost SponsoredPost?
 
   // Performance indexes
   @@index([createdAt(sort: Desc)]) // For chronological post feeds
@@ -250,26 +252,76 @@ model RepEvent {
   @@map("rep_events")
 }
 
-model DailyRepPool {
+model WeeklyRepPool {
   id                String    @id @default(cuid())
-  date              DateTime  @unique @db.Date
-  totalPoolSize     Decimal   @default(10000) @db.Decimal(18, 6) // 10k ALLY daily
-  totalRepGenerated Int       @default(0)
-  participantCount  Int       @default(0)
+  weekStartDate     DateTime  @unique @db.Date // Monday of the week
+  weekEndDate       DateTime  @db.Date // Sunday of the week
+  distributionDate  DateTime  @db.Date // Friday of the week
+  
+  // Revenue sources
+  sponsoredPostRevenue Decimal @default(0) @db.Decimal(18, 6) // Total sponsored post revenue
+  gameFeesCollected    Decimal @default(0) @db.Decimal(18, 6) // 2% from game wagers
+  eventFeesCollected   Decimal @default(0) @db.Decimal(18, 6) // 5% from event tickets
+  
+  // Distribution calculations
+  platformFeePercent   Int      @default(50) // Platform keeps 50%
+  totalPoolSize        Decimal  @default(0) @db.Decimal(18, 6) // Calculated: (revenues * 50%)
+  totalRepGenerated    Int      @default(0)
+  participantCount     Int      @default(0)
+  
   distributed       Boolean   @default(false)
   distributedAt     DateTime?
   createdAt         DateTime  @default(now())
 
-  @@map("daily_rep_pools")
+  @@map("weekly_rep_pools")
+}
+
+model SponsoredPost {
+  id              String    @id @default(cuid())
+  postId          String    @unique
+  sponsorWallet   String    @db.VarChar(44)
+  campaignName    String    @db.VarChar(100)
+  
+  // Pricing and performance
+  pricePaid       Decimal   @db.Decimal(18, 6) // Amount paid in ALLY
+  startDate       DateTime
+  endDate         DateTime
+  targetViews     Int       @default(0)
+  actualViews     Int       @default(0)
+  clickCount      Int       @default(0)
+  
+  // Revenue tracking
+  weekNumber      Int       // ISO week number for easy grouping
+  yearNumber      Int       // Year for the week
+  revenueShared   Boolean   @default(false) // Has this been included in weekly pool
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  post            Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  // Performance indexes
+  @@index([weekNumber, yearNumber, revenueShared]) // For weekly revenue calculations
+  @@index([startDate, endDate]) // For active campaigns
+  @@map("sponsored_posts")
 }
 
 model TokenDistribution {
   id              String    @id @default(cuid())
   userWallet      String    @db.VarChar(44)
-  date            DateTime  @db.Date
-  repEarned       Int
+  weekStartDate   DateTime  @db.Date // Monday of the distribution week
+  weekEndDate     DateTime  @db.Date // Sunday of the distribution week
+  distributionDate DateTime @db.Date // Friday when distributed
+  
+  repEarned       Int       // Total rep earned this week
   sharePercentage Decimal   @db.Decimal(6, 4) // e.g., 5.25%
-  tokensEarned    Decimal   @db.Decimal(18, 6)
+  tokensEarned    Decimal   @db.Decimal(18, 6) // Actual ALLY tokens earned
+  
+  // Pool info for transparency
+  weeklyPoolSize  Decimal   @db.Decimal(18, 6) // Total pool for this week
+  totalParticipants Int     // Number of users in distribution
+  
   claimed         Boolean   @default(false)
   claimedAt       DateTime?
   createdAt       DateTime  @default(now())
@@ -278,9 +330,10 @@ model TokenDistribution {
   user User @relation(fields: [userWallet], references: [walletAddress], onDelete: Cascade)
 
   // Prevent duplicate distributions
-  @@unique([userWallet, date])
+  @@unique([userWallet, weekStartDate])
   // Performance indexes
-  @@index([userWallet, date(sort: Desc)])
+  @@index([userWallet, distributionDate(sort: Desc)])
   @@index([claimed, userWallet])
+  @@index([weekStartDate, weekEndDate])
   @@map("token_distributions")
 }

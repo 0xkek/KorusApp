@@ -1,12 +1,13 @@
 // import { BlurView } from 'expo-blur'; // Removed for performance
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert, TouchableWithoutFeedback } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert, TouchableWithoutFeedback, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { validatePostContent, sanitizeInput, getCharacterCount } from '../utils/validation';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 interface CreatePostModalProps {
@@ -25,6 +26,7 @@ export default function CreatePostModal({
   onSubmit,
 }: CreatePostModalProps) {
   const { colors, isDarkMode, gradients } = useTheme();
+  const insets = useSafeAreaInsets();
   
   // Local state
   const [selectedMedia, setSelectedMedia] = useState<{ uri: string; type: 'image' | 'video' } | null>(null);
@@ -128,154 +130,159 @@ export default function CreatePostModal({
       transparent={true}
       onRequestClose={onClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={[styles.modalOverlay, { backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.9)' : 'rgba(0, 0, 0, 0.8)' }]}>
-          <TouchableWithoutFeedback>
-            <View style={[styles.modalContent, { borderColor: colors.primary, shadowColor: colors.shadowColor }]}>
-          <View style={styles.blurWrapper}>
-            <LinearGradient
-              colors={gradients.surface}
-              style={styles.contentContainer}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <View style={styles.modalHeader}>
-                <Text style={[styles.modalTitle, { color: colors.text }]}>
-                  Share with the community
-                </Text>
-                <TouchableOpacity onPress={onClose} style={[styles.closeButtonContainer, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
-                  <Ionicons name="close" size={18} color={colors.textSecondary} />
-                </TouchableOpacity>
-              </View>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={[styles.modalOverlay, { backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.9)' : 'rgba(0, 0, 0, 0.8)' }]}>
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={[styles.modalContent, { borderColor: colors.primary, shadowColor: colors.shadowColor }]}>
+                <LinearGradient
+                  colors={gradients.surface}
+                  style={styles.contentContainer}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <ScrollView 
+                    contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                  >
+                    <View style={styles.modalHeader}>
+                      <Text style={[styles.modalTitle, { color: colors.text }]}>
+                        Share with the community
+                      </Text>
+                      <TouchableOpacity onPress={onClose} style={[styles.closeButtonContainer, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
+                        <Ionicons name="close" size={18} color={colors.textSecondary} />
+                      </TouchableOpacity>
+                    </View>
 
-
-
-              <View style={styles.textInputContainer}>
-                <TextInput
-                  style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.borderLight, color: colors.text, shadowColor: colors.shadowColor }]}
-                  placeholder="What's on your mind? Share your experience, ask for advice, or offer support..."
-                  placeholderTextColor={colors.textSecondary}
-                  multiline
-                  value={content}
-                  onChangeText={(text) => onContentChange(sanitizeInput(text))}
-                  maxLength={500}
-                />
-                <Text style={[styles.characterCount, { color: colors.textTertiary }]}>
-                  {getCharacterCount(content).current}/{getCharacterCount(content).max}
-                </Text>
-              </View>
-
-              {/* Media preview */}
-              {selectedMedia && (
-                <View style={styles.imagePreviewContainer}>
-                  {selectedMedia.type === 'image' ? (
-                    <Image source={{ uri: selectedMedia.uri }} style={styles.imagePreview} />
-                  ) : (
-                    <View style={styles.videoPreviewContainer}>
-                      <Image 
-                        source={{ uri: selectedMedia.uri }} 
-                        style={styles.imagePreview} 
+                    <View style={styles.textInputContainer}>
+                      <TextInput
+                        style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.borderLight, color: colors.text, shadowColor: colors.shadowColor }]}
+                        placeholder="What's on your mind? Share your experience, ask for advice, or offer support..."
+                        placeholderTextColor={colors.textSecondary}
+                        multiline
+                        value={content}
+                        onChangeText={(text) => onContentChange(sanitizeInput(text))}
+                        maxLength={300}
                       />
-                      <View style={styles.videoPlayIcon}>
-                        <Ionicons name="play-circle" size={48} color="rgba(255, 255, 255, 0.9)" />
+                      <Text style={[styles.characterCount, { color: colors.textTertiary }]}>
+                        {getCharacterCount(content).current}/{getCharacterCount(content).max}
+                      </Text>
+                    </View>
+
+                    {/* Media preview */}
+                    {selectedMedia && (
+                      <View style={styles.imagePreviewContainer}>
+                        {selectedMedia.type === 'image' ? (
+                          <Image source={{ uri: selectedMedia.uri }} style={styles.imagePreview} />
+                        ) : (
+                          <View style={styles.videoPreviewContainer}>
+                            <Image 
+                              source={{ uri: selectedMedia.uri }} 
+                              style={styles.imagePreview} 
+                            />
+                            <View style={styles.videoPlayIcon}>
+                              <Ionicons name="play-circle" size={48} color="rgba(255, 255, 255, 0.9)" />
+                            </View>
+                          </View>
+                        )}
+                        {isUploading && (
+                          <View style={styles.uploadProgressContainer}>
+                            <View style={[styles.uploadProgressBar, { width: `${uploadProgress}%` }]} />
+                            <Text style={styles.uploadProgressText}>{uploadProgress}%</Text>
+                          </View>
+                        )}
+                        <TouchableOpacity 
+                          style={[styles.removeImageButton, { backgroundColor: colors.surface }]}
+                          onPress={removeMedia}
+                          disabled={isUploading}
+                        >
+                          <Ionicons name="close-circle" size={24} color={colors.error} />
+                        </TouchableOpacity>
                       </View>
+                    )}
+
+                    {/* Media button */}
+                    <View style={styles.actionButtonsContainer}>
+                      <TouchableOpacity 
+                        style={[styles.singleActionButton, { 
+                          shadowColor: colors.primary,
+                          shadowOpacity: 0.1
+                        }]}
+                        onPress={pickMedia}
+                      >
+                        <LinearGradient
+                          colors={gradients.surface}
+                          style={[styles.actionButtonGradient, { 
+                            borderColor: colors.primary + '60',
+                            borderWidth: 1.5
+                          }]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        >
+                          <Ionicons name="images-outline" size={20} color={colors.primary} />
+                          <Text style={[styles.actionButtonText, { color: colors.primary }]}>
+                            Add Photo or Video
+                          </Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
                     </View>
-                  )}
-                  {isUploading && (
-                    <View style={styles.uploadProgressContainer}>
-                      <View style={[styles.uploadProgressBar, { width: `${uploadProgress}%` }]} />
-                      <Text style={styles.uploadProgressText}>{uploadProgress}%</Text>
+
+                    <View style={styles.modalActions}>
+                      <TouchableOpacity 
+                        style={styles.cancelButton} 
+                        onPress={onClose}
+                        activeOpacity={0.8}
+                      >
+                        <LinearGradient
+                          colors={gradients.surface}
+                          style={[styles.cancelButtonGradient, { borderColor: colors.borderLight, shadowColor: colors.shadowColor }]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        >
+                          <Text style={[styles.cancelButtonText, { color: colors.text }]}>Cancel</Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.postButton,
+                          (!content.trim() || isUploading || isSubmitting) && styles.postButtonDisabled
+                        ]}
+                        onPress={handleSubmit}
+                        disabled={!content.trim() || isUploading || isSubmitting}
+                        activeOpacity={0.8}
+                      >
+                        <LinearGradient
+                          colors={
+                            !content.trim() || isUploading || isSubmitting
+                              ? [colors.surface, colors.surface] // Use theme surface color when disabled
+                              : gradients.primary // Use primary gradient for vibrant enabled state
+                          }
+                          style={styles.postButtonGradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        >
+                          <Text style={[
+                            styles.postButtonText,
+                            { color: (!content.trim() || isUploading || isSubmitting) ? colors.textTertiary : '#000000' }, // Always black text on bright gradient
+                            (!content.trim() || isUploading || isSubmitting) && styles.postButtonTextDisabled
+                          ]}>
+                            {isSubmitting ? 'Posting...' : isUploading ? 'Uploading...' : 'Share'}
+                          </Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
                     </View>
-                  )}
-                  <TouchableOpacity 
-                    style={[styles.removeImageButton, { backgroundColor: colors.surface }]}
-                    onPress={removeMedia}
-                    disabled={isUploading}
-                  >
-                    <Ionicons name="close-circle" size={24} color={colors.error} />
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {/* Media button */}
-              <View style={styles.actionButtonsContainer}>
-                <TouchableOpacity 
-                  style={[styles.singleActionButton, { 
-                    shadowColor: colors.primary,
-                    shadowOpacity: 0.1
-                  }]}
-                  onPress={pickMedia}
-                >
-                  <LinearGradient
-                    colors={gradients.surface}
-                    style={[styles.actionButtonGradient, { 
-                      borderColor: colors.primary + '60',
-                      borderWidth: 1.5
-                    }]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  >
-                    <Ionicons name="images-outline" size={20} color={colors.primary} />
-                    <Text style={[styles.actionButtonText, { color: colors.primary }]}>
-                      Add Photo or Video
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
+                  </ScrollView>
+                </LinearGradient>
               </View>
-
-
-              <View style={styles.modalActions}>
-                <TouchableOpacity 
-                  style={styles.cancelButton} 
-                  onPress={onClose}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient
-                    colors={gradients.surface}
-                    style={[styles.cancelButtonGradient, { borderColor: colors.borderLight, shadowColor: colors.shadowColor }]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  >
-                    <Text style={[styles.cancelButtonText, { color: colors.text }]}>Cancel</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.postButton,
-                    (!content.trim() || isUploading || isSubmitting) && styles.postButtonDisabled
-                  ]}
-                  onPress={handleSubmit}
-                  disabled={!content.trim() || isUploading || isSubmitting}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient
-                    colors={
-                      !content.trim() || isUploading || isSubmitting
-                        ? [colors.surface, colors.surface] // Use theme surface color when disabled
-                        : gradients.primary // Use primary gradient for vibrant enabled state
-                    }
-                    style={styles.postButtonGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  >
-                    <Text style={[
-                      styles.postButtonText,
-                      { color: (!content.trim() || isUploading || isSubmitting) ? colors.textTertiary : '#000000' }, // Always black text on bright gradient
-                      (!content.trim() || isUploading || isSubmitting) && styles.postButtonTextDisabled
-                    ]}>
-                      {isSubmitting ? 'Posting...' : isUploading ? 'Uploading...' : 'Share'}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            </LinearGradient>
+            </TouchableWithoutFeedback>
           </View>
-            </View>
-          </TouchableWithoutFeedback>
-        </View>
-      </TouchableWithoutFeedback>
-
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -295,12 +302,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
     maxHeight: '85%',
-    minHeight: '65%',
-    overflow: 'hidden',
-  },
-  blurWrapper: {
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    minHeight: 400,
     overflow: 'hidden',
   },
   contentContainer: {
@@ -328,70 +330,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  closeButton: {
-    fontSize: FontSizes.lg,
-    fontFamily: Fonts.bold,
-  },
-  categorySelection: {
-    marginBottom: 16,
-  },
-  selectionLabel: {
-    fontSize: FontSizes.sm,
-    fontFamily: Fonts.semiBold,
-    marginBottom: 8,
-  },
-  dropdown: {
-    borderRadius: 12,
-    borderWidth: 1.5,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  dropdownGradient: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  dropdownText: {
-    fontSize: FontSizes.base,
-    fontFamily: Fonts.medium,
-  },
-  dropdownArrow: {
-    fontSize: FontSizes.sm,
-    fontWeight: 'bold',
-  },
-  dropdownList: {
-    maxHeight: 150,
-    borderWidth: 1.5,
-    borderRadius: 12,
-    marginTop: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  dropdownItem: {
-    borderRadius: 8,
-    overflow: 'hidden',
-    marginVertical: 1,
-  },
-  dropdownItemGradient: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  dropdownItemText: {
-    fontSize: FontSizes.sm,
-    fontFamily: Fonts.medium,
-  },
-  dropdownItemTextSelected: {
-    fontFamily: Fonts.bold,
-  },
   textInputContainer: {
     borderRadius: 20,
     marginBottom: 32,
@@ -403,7 +341,7 @@ const styles = StyleSheet.create({
     padding: 24,
     fontSize: FontSizes.lg,
     fontFamily: Fonts.medium,
-    minHeight: 225,
+    minHeight: 150,
     textAlignVertical: 'top',
     lineHeight: 28,
     shadowOffset: { width: 0, height: 1 },
@@ -512,14 +450,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     marginBottom: 24,
-  },
-  actionButton: {
-    flex: 1,
-    borderRadius: 16,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 1,
-    elevation: 1,
-    overflow: 'hidden',
   },
   actionButtonGradient: {
     flexDirection: 'row',

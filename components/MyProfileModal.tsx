@@ -541,7 +541,13 @@ export default function MyProfileModal({
       visible={showNFTSelection}
       onClose={() => setShowNFTSelection(false)}
       onSelectNFT={(nft) => {
-        setSelectedNFTAvatar(nft);
+        setSelectedNFTAvatar({
+          id: nft.mint,
+          name: nft.name,
+          image: nft.image,
+          uri: nft.uri,
+          collection: nft.collection?.name
+        });
       }}
       onSelectEmoji={() => {
         setShowAvatarSelection(true);

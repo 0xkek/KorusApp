@@ -1,5 +1,6 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { logger } from '../utils/logger';
+import { getWeekDates } from '../utils/dateHelpers';
 
 const prisma = new PrismaClient();
 
@@ -85,10 +86,18 @@ class ReputationService {
         },
       });
 
+      // Get current week dates
+      const { weekStart } = getWeekDates(new Date());
+      
+      // Check if we need to reset weekly counter
+      const needsReset = !user.weekStartDate || 
+        user.weekStartDate.getTime() < weekStart.getTime();
+      
       // Update user's reputation scores
       const updates: any = {
         reputationScore: { increment: finalPoints },
-        dailyRepEarned: { increment: finalPoints },
+        weeklyRepEarned: needsReset ? finalPoints : { increment: finalPoints },
+        weekStartDate: needsReset ? weekStart : undefined,
         lastRepUpdate: new Date(),
       };
 
@@ -382,26 +391,26 @@ class ReputationService {
 
     const users = await prisma.user.findMany({
       where: {
-        dailyRepEarned: { gt: 0 },
+        weeklyRepEarned: { gt: 0 },
         lastRepUpdate: {
           gte: targetDate,
         },
       },
       orderBy: {
-        dailyRepEarned: 'desc',
+        weeklyRepEarned: 'desc',
       },
       select: {
         walletAddress: true,
-        dailyRepEarned: true,
+        weeklyRepEarned: true,
         tier: true,
       },
     });
 
-    const totalDailyRep = users.reduce((sum, user) => sum + user.dailyRepEarned, 0);
+    const totalDailyRep = users.reduce((sum, user) => sum + user.weeklyRepEarned, 0);
 
     return users.map((user) => ({
       ...user,
-      sharePercentage: totalDailyRep > 0 ? (user.dailyRepEarned / totalDailyRep) * 100 : 0,
+      sharePercentage: totalDailyRep > 0 ? (user.weeklyRepEarned / totalDailyRep) * 100 : 0,
     }));
   }
 
@@ -411,10 +420,10 @@ class ReputationService {
   async resetDailyReputation(): Promise<void> {
     await prisma.user.updateMany({
       where: {
-        dailyRepEarned: { gt: 0 },
+        weeklyRepEarned: { gt: 0 },
       },
       data: {
-        dailyRepEarned: 0,
+        weeklyRepEarned: 0,
       },
     });
 

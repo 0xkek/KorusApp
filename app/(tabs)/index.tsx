@@ -3,6 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter, useFocusEffect } from 'expo-router';
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Create AnimatedFlatList to support native driver
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
@@ -14,7 +15,6 @@ import { Post as PostType, Reply, GameType } from '../../types';
 import { registerForPushNotificationsAsync, setupNotificationListeners } from '../../utils/notifications';
 import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { logger } from '../../utils/logger';
 import { reputationService } from '../../services/reputation';
 import { Fonts, FontSizes } from '../../constants/Fonts';
@@ -58,7 +58,7 @@ export default function HomeScreen() {
   // State
   const [activeTab, setActiveTab] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [isOffline] = useState(true); // Offline mode for mock data
+  const [isOffline] = useState(false); // Use real API
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [showReplyModal, setShowReplyModal] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
@@ -314,6 +314,22 @@ export default function HomeScreen() {
           showAlert({
             title: 'Not Connected',
             message: 'Please connect your wallet first',
+            type: 'error'
+          });
+          setIsCreatingPost(false);
+          return;
+        }
+        
+        // Check if we have an auth token
+        const { hasAuthToken, getAuthToken } = await import('../../utils/api');
+        const hasToken = await hasAuthToken();
+        const token = await getAuthToken();
+        logger.info('Auth token check:', { hasToken, tokenLength: token?.length });
+        
+        if (!hasToken) {
+          showAlert({
+            title: 'Authentication Required',
+            message: 'Please reconnect your wallet to continue',
             type: 'error'
           });
           setIsCreatingPost(false);
@@ -944,25 +960,6 @@ export default function HomeScreen() {
         />
           
         <View style={styles.contentContainer}>
-        {/* Status bar background overlay */}
-        <LinearGradient
-          colors={isDarkMode ? [
-            'rgba(20, 20, 20, 0.98)',
-            'rgba(25, 25, 25, 0.95)',
-            'rgba(30, 30, 30, 0.85)',
-            'transparent'
-          ] : [
-            'rgba(253, 255, 254, 0.98)',
-            'rgba(248, 250, 249, 0.95)',
-            'rgba(242, 246, 243, 0.85)',
-            'transparent'
-          ]}
-          style={styles.statusBarOverlay}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-        />
-        
-        
         {activeTab === 'games' ? (
             <View style={styles.gamesViewContainer}>
               <Header 
@@ -1007,6 +1004,7 @@ export default function HomeScreen() {
             style={styles.content} 
             contentContainerStyle={[
               styles.scrollContent,
+              { paddingBottom: 60 + insets.bottom + 20 } // Tab bar height + device bottom + extra padding
             ]}
             showsVerticalScrollIndicator={false}
             onScroll={handleScroll}
@@ -1202,14 +1200,14 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 50,
+    height: 25,
     zIndex: 2000,
   },
   content: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100, // Extra padding for tab bar and FAB
+    paddingBottom: 120, // Extra padding for tab bar and FAB
   },
   gamesViewContainer: {
     flex: 1,

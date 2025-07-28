@@ -4,12 +4,14 @@ import React, { useRef, useState } from 'react';
 import { Platform, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '../../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function TabLayout() {
   const { colors, isDarkMode, gradients } = useTheme();
+  const insets = useSafeAreaInsets();
   const [unreadNotifications, setUnreadNotifications] = useState(2); // Mock unread count
 
   // Global scroll to top function - we'll use event emitter pattern
@@ -62,8 +64,8 @@ export default function TabLayout() {
           tabBarStyle: {
             backgroundColor: 'transparent',
             borderTopWidth: 0,
-            height: 80,
-            paddingBottom: 20,
+            height: 60 + insets.bottom,
+            paddingBottom: insets.bottom,
             paddingTop: 10,
             shadowColor: colors.shadowColor,
             shadowOffset: { width: 0, height: -2 },

@@ -10,11 +10,11 @@ const connection = new Connection(
 // Mock Genesis Token mint for now (we'll update this later)
 const SEEKER_GENESIS_MINT = new PublicKey('11111111111111111111111111111111')
 
-export const verifyWalletSignature = (
-  message: string,
+export const verifyWalletSignature = async (
+  publicKey: string,
   signature: string,
-  publicKey: string
-): boolean => {
+  message: string
+): Promise<boolean> => {
   try {
     const messageBytes = new TextEncoder().encode(message)
     const signatureBytes = bs58.decode(signature)

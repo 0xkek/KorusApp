@@ -235,7 +235,7 @@ function Header({ onCategoryChange, isCollapsed = false, onProfileClick, selecte
 
 const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleSheet.create({
   container: {
-    paddingTop: Math.max(insets.top, 20), // Just safe area padding
+    paddingTop: Math.max(insets.top + 10, 30), // Safe area + extra 10px padding
     paddingHorizontal: 15,
     paddingBottom: 10, // Standard bottom padding
   },
@@ -332,7 +332,8 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     fontWeight: 'bold',
   },
   categoriesArea: {
-    paddingTop: 10,
+    paddingTop: 8,
+    paddingBottom: 2,
     borderTopWidth: 1,
     borderTopColor: 'rgba(67, 233, 123, 0.1)',
   },
@@ -342,13 +343,14 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
   },
   categoriesContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 4,
   },
   categoryBtn: {
     flex: 1,
-    marginHorizontal: 6,
-    borderRadius: 16,
+    marginHorizontal: 5,
+    borderRadius: 14,
   },
   categoryBtnSelected: {
     shadowColor: '#43e97b',
@@ -358,13 +360,13 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     elevation: 3,
   },
   categoryBtnGrad: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    borderRadius: 14,
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: colors.border || 'rgba(67, 233, 123, 0.4)',
-    minWidth: 100,
+    minWidth: 75,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.05,
@@ -372,11 +374,11 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     elevation: 1,
   },
   categoryBtnTxt: {
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.xs,
     fontFamily: Fonts.bold,
     color: '#ffffff',
     textAlign: 'center',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
     textTransform: 'uppercase',
   },
   categoryBtnTxtSelected: {

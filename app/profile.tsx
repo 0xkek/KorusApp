@@ -734,13 +734,16 @@ export default function ProfileScreen() {
             visible={showNFTSelection}
             onClose={() => {
               setShowNFTSelection(false);
-              // If no NFT selected, show emoji picker
-              if (!selectedNFTAvatar) {
-                setShowAvatarSelection(true);
-              }
+              // Don't automatically open emoji picker
             }}
             onSelectNFT={(nft) => {
-              setSelectedNFTAvatar(nft);
+              setSelectedNFTAvatar({
+                id: nft.mint,
+                name: nft.name,
+                image: nft.image,
+                uri: nft.uri,
+                collection: nft.collection?.name
+              });
               setSelectedAvatar(null);
               setShowNFTSelection(false);
             }}

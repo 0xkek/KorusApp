@@ -5,6 +5,7 @@ import helmet from 'helmet'
 import morgan from 'morgan'
 import prisma from './config/database'
 import { apiLimiter } from './middleware/rateLimiter'
+// import { scheduleWeeklyDistribution } from './jobs/weeklyDistribution'
 
 // Import routes
 import authRoutes from './routes/auth'
@@ -16,6 +17,8 @@ import searchRoutes from './routes/search'
 import reportsRoutes from './routes/reports'
 import moderationRoutes from './routes/moderation'
 import reputationRoutes from './routes/reputation'
+import sponsoredRoutes from './routes/sponsored'
+// import distributionRoutes from './routes/distribution'
 
 dotenv.config()
 
@@ -51,6 +54,8 @@ app.use('/api/search', searchRoutes)
 app.use('/api/reports', reportsRoutes)
 app.use('/api/moderation', moderationRoutes)
 app.use('/api/reputation', reputationRoutes)
+app.use('/api/sponsored', sponsoredRoutes)
+// app.use('/api/distribution', distributionRoutes)
 
 // Test routes
 app.get('/health', (req, res) => {
@@ -102,10 +107,16 @@ app.listen(PORT, () => {
   console.log(`🚨 Reports: http://localhost:${PORT}/api/reports`)
   console.log(`🛡️ Moderation: http://localhost:${PORT}/api/moderation`)
   console.log(`🏆 Reputation: http://localhost:${PORT}/api/reputation/*`)
+  console.log(`💰 Sponsored: http://localhost:${PORT}/api/sponsored/*`)
+  console.log(`🎁 Distribution: http://localhost:${PORT}/api/distribution/*`)
   console.log(`\n🔧 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:8081'}`)
   
   if (isMockMode) {
     console.log(`\n⚠️  Running in MOCK MODE - No database connection required`)
     console.log(`📝 Data is stored in memory and will be lost on restart`)
+  } else {
+    // Schedule weekly distribution cron job
+    // scheduleWeeklyDistribution()
+    // console.log(`\n⏰ Weekly distribution scheduled for Fridays at 8:00 PM UTC`)
   }
 })

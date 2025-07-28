@@ -4,6 +4,7 @@ import { logger } from './logger';
 
 // API base URL - use environment variable or default to Railway URL
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://korusapp-production.up.railway.app/api';
+logger.log('API Base URL:', API_BASE_URL);
 
 // Token storage key
 const AUTH_TOKEN_KEY = 'korus_auth_token';
@@ -47,9 +48,19 @@ api.interceptors.request.use(
       if (!isPostsGet) {
         const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
         
+        logger.info('Auth interceptor:', {
+          url: config.url,
+          method: config.method,
+          hasToken: !!token,
+          tokenLength: token?.length
+        });
+        
         // Only add Authorization header if we have a valid token
         if (token && token !== 'null' && token !== 'undefined') {
           config.headers.Authorization = `Bearer ${token}`;
+          logger.info('Added auth header');
+        } else {
+          logger.warn('No valid token found for request');
         }
       }
       
@@ -89,6 +100,15 @@ api.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
+    // Log detailed error info
+    logger.error('Axios error details:', {
+      message: error.message,
+      code: error.code,
+      url: error.config?.url,
+      baseURL: error.config?.baseURL,
+      fullURL: error.config?.baseURL + error.config?.url,
+    });
+    
     const config = error.config;
     
     if (error.response?.status === 401) {

@@ -7,13 +7,15 @@ import { useWallet } from '../../context/WalletContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Fonts, FontSizes } from '../../constants/Fonts';
 import { Ionicons } from '@expo/vector-icons';
+import { WalletConnectionModal } from '../../components/WalletConnectionModal';
 
 export default function WalletScreen() {
-  const { walletAddress, balance, refreshBalance, getRecoveryPhrase } = useWallet();
+  const { walletAddress, balance, refreshBalance, isConnected } = useWallet();
   const { colors, isDarkMode, gradients } = useTheme();
   const insets = useSafeAreaInsets();
   const styles = React.useMemo(() => createStyles(colors, isDarkMode, insets), [colors, isDarkMode, insets]);
   const [activeTab, setActiveTab] = useState<'all' | 'tips' | 'games' | 'events'>('all');
+  const [showWalletModal, setShowWalletModal] = useState(false);
   
   // Mock activity data
   const activities = [
@@ -77,36 +79,9 @@ export default function WalletScreen() {
     return false;
   });
 
-  const handleViewSeedPhrase = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    
-    Alert.alert(
-      '⚠️ Warning',
-      'Never share your recovery phrase with anyone. Anyone with your recovery phrase can access your wallet.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Show Recovery Phrase', 
-          style: 'destructive',
-          onPress: async () => {
-            const phrase = await getRecoveryPhrase();
-            if (phrase) {
-              Alert.alert(
-                '🔐 Recovery Phrase',
-                `Write this down and store it safely:\n\n${phrase}\n\nThis is the only way to recover your wallet if you lose access to your device.`,
-                [{ text: 'I have saved it', style: 'default' }]
-              );
-            } else {
-              Alert.alert(
-                'Error',
-                'Could not retrieve recovery phrase. Please try again.',
-                [{ text: 'OK', style: 'default' }]
-              );
-            }
-          }
-        }
-      ]
-    );
+  const handleWalletSettings = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowWalletModal(true);
   };
 
   return (
@@ -301,10 +276,10 @@ export default function WalletScreen() {
             ))}
           </View>
 
-          {/* View Seed Phrase Button */}
+          {/* Wallet Settings Button */}
           <TouchableOpacity
             style={styles.seedPhraseButton}
-            onPress={handleViewSeedPhrase}
+            onPress={handleWalletSettings}
             activeOpacity={0.8}
           >
             <LinearGradient
@@ -320,18 +295,26 @@ export default function WalletScreen() {
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
-                  <Ionicons name="key-outline" size={22} color={isDarkMode ? '#000' : '#fff'} />
+                  <Ionicons name="wallet-outline" size={22} color={isDarkMode ? '#000' : '#fff'} />
                 </LinearGradient>
               </View>
               <View style={styles.seedPhraseTextContainer}>
-                <Text style={styles.seedPhraseTitle}>View Your Seed Phrase</Text>
-                <Text style={styles.seedPhraseSubtitle}>12 words recovery phrase</Text>
+                <Text style={styles.seedPhraseTitle}>Wallet Settings</Text>
+                <Text style={styles.seedPhraseSubtitle}>
+                  {isConnected ? `Connected: ${walletAddress?.slice(0, 6)}...${walletAddress?.slice(-4)}` : 'Not connected'}
+                </Text>
               </View>
               <Ionicons name="chevron-forward" size={24} color={colors.primary} />
             </LinearGradient>
           </TouchableOpacity>
         </ScrollView>
       </View>
+
+      {/* Wallet Connection Modal */}
+      <WalletConnectionModal
+        isVisible={showWalletModal}
+        onClose={() => setShowWalletModal(false)}
+      />
     </>
   );
 }

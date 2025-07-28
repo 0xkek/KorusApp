@@ -52,8 +52,11 @@ export default function NFTAvatarModal({
   };
 
   const handleSelect = (nft: NFT) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSelectedNFT(nft);
+    // Immediately select the NFT
+    onSelectNFT(nft);
+    onClose();
   };
 
   const handleConfirm = () => {
