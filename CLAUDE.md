@@ -57,14 +57,14 @@ This is a social media platform called "Korus" with blockchain integration, cons
   - Middleware for JWT authentication
 - **Database**: PostgreSQL with Prisma ORM
   - Schema defined in `/korus-backend/prisma/schema.prisma`
-  - Models: User, Post, Reply, Like, Tip, Bump, Notification
+  - Models: User, Post, Reply, Like, Tip, Notification
 - **Authentication**: Dual system
   - Traditional: JWT with bcrypt password hashing
   - Web3: Solana wallet signature verification
 
 ### Key Features
 1. **Wallet Authentication**: Users can sign in with Solana wallets
-2. **Content System**: Posts, replies, likes, tips (crypto), and bumps
+2. **Content System**: Posts, replies, likes, tips (crypto)
 3. **Categorization**: Posts organized by categories and subcategories
 4. **Notifications**: Real-time notification system
 5. **Theme Support**: Light/dark mode via ThemeContext
@@ -76,7 +76,7 @@ All backend routes follow RESTful conventions:
 - `/api/auth/*` - Authentication endpoints
 - `/api/posts/*` - Post CRUD operations
 - `/api/replies/*` - Reply operations
-- `/api/interactions/*` - Likes, tips, bumps
+- `/api/interactions/*` - Likes, tips
 
 ### Frontend Routing
 Uses Expo Router file-based routing:
