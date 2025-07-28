@@ -7,14 +7,14 @@ RUN apk add --no-cache python3 make g++
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
-COPY prisma ./prisma/
+COPY korus-backend/package*.json ./
+COPY korus-backend/prisma ./prisma/
 
 # Install ALL dependencies (including dev)
 RUN npm ci
 
 # Copy source code
-COPY . .
+COPY korus-backend/ .
 
 # Generate Prisma Client and build TypeScript
 RUN npm run build
@@ -25,7 +25,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy package files and install production dependencies only
-COPY package*.json ./
+COPY korus-backend/package*.json ./
 RUN npm ci --only=production
 
 # Copy built application and Prisma files
