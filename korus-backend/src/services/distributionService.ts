@@ -81,6 +81,13 @@ export class DistributionService {
         return;
       }
       
+      // Get platform keypair for sending transactions
+      const platformKeypair = getPlatformKeypair();
+      if (!platformKeypair) {
+        logger.error('Platform keypair not configured');
+        return;
+      }
+
       // Send team share first
       try {
         const teamTxSignature = await this.sendTokensToTeam(teamShare, platformKeypair);
@@ -110,13 +117,6 @@ export class DistributionService {
         (sum, user) => sum + user.weeklyRepEarned, 
         0
       );
-
-      // Get platform keypair for sending transactions
-      const platformKeypair = getPlatformKeypair();
-      if (!platformKeypair) {
-        logger.error('Platform keypair not configured');
-        return;
-      }
 
       // Create distribution records and send tokens
       const distributions = [];
