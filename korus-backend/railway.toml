@@ -1,9 +1,11 @@
 [build]
-builder = "nixpacks"
-buildCommand = "rm -rf node_modules .cache && npm install && npm run build"
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "npm run start:prod"
+healthcheckPath = "/health"
+healthcheckTimeout = 60
+restartPolicyType = "always"
 
 [variables]
 NODE_ENV = "production"
