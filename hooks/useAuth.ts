@@ -26,17 +26,30 @@ export function useAuth() {
       const hasToken = await hasAuthToken();
       
       if (hasToken && walletAddress) {
-        // Verify token is still valid
+        // Verify token is still valid with timeout
         try {
-          const profile = await authAPI.getProfile();
+          // Add timeout to prevent hanging
+          const profilePromise = authAPI.getProfile();
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Backend timeout')), 5000)
+          );
+          
+          const profile = await Promise.race([profilePromise, timeoutPromise]);
           setUser(profile.user);
           setIsAuthenticated(true);
-        } catch (error) {
-          // Token is invalid, clear it
-          logger.warn('Auth token invalid, clearing');
-          await authAPI.logout();
-          setIsAuthenticated(false);
-          setUser(null);
+        } catch (error: any) {
+          if (error.message === 'Backend timeout') {
+            // Backend is not responding, but we have a wallet so continue
+            logger.warn('Backend timeout, continuing with wallet auth only');
+            setIsAuthenticated(true); // Allow user to continue
+            setUser({ walletAddress });
+          } else {
+            // Token is invalid, clear it
+            logger.warn('Auth token invalid, clearing');
+            await authAPI.logout();
+            setIsAuthenticated(false);
+            setUser(null);
+          }
         }
       } else {
         setIsAuthenticated(false);
