@@ -23,16 +23,37 @@ export const verifyWalletSignature = async (
       messagePreview: message.substring(0, 100)
     })
     
+    // Decode everything properly
     const messageBytes = new TextEncoder().encode(message)
-    const signatureBytes = bs58.decode(signature)
-    const publicKeyBytes = new PublicKey(publicKey).toBytes()
+    let signatureBytes: Uint8Array
+    let publicKeyBytes: Uint8Array
     
+    try {
+      // Try to decode signature as base58
+      signatureBytes = bs58.decode(signature)
+      console.log('Signature decoded as base58, length:', signatureBytes.length)
+    } catch (e) {
+      console.error('Failed to decode signature as base58:', e)
+      throw new Error('Invalid signature format')
+    }
+    
+    try {
+      // Decode public key
+      publicKeyBytes = new PublicKey(publicKey).toBytes()
+      console.log('Public key decoded, length:', publicKeyBytes.length)
+    } catch (e) {
+      console.error('Failed to decode public key:', e)
+      throw new Error('Invalid public key format')
+    }
+    
+    // Verify signature
     const isValid = nacl.sign.detached.verify(messageBytes, signatureBytes, publicKeyBytes)
     console.log('Signature verification result:', isValid)
     
     return isValid
-  } catch (error) {
-    console.error('Signature verification error:', error)
+  } catch (error: any) {
+    console.error('Signature verification error:', error.message)
+    console.error('Full error:', error)
     return false
   }
 }

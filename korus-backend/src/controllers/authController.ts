@@ -176,9 +176,12 @@ export const connectWallet = async (req: Request, res: Response) => {
 
     // Generate JWT
     console.log('Generating JWT token...')
+    const jwtSecret = process.env.JWT_SECRET || 'dev-secret-key'
+    console.log('JWT_SECRET is', jwtSecret === 'dev-secret-key' ? 'using default (not set)' : 'set from environment')
+    
     const token = jwt.sign(
       { walletAddress },
-      process.env.JWT_SECRET || 'dev-secret-key',
+      jwtSecret,
       { expiresIn: '7d' }
     )
 
