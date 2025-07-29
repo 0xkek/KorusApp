@@ -13,6 +13,7 @@ import { useKorusAlert } from '../components/KorusAlertProvider';
 import { getErrorMessage } from '../utils/errorHandler';
 import { logger } from '../utils/logger';
 import { WalletConnectionModal } from '../components/WalletConnectionModal';
+import { TestWalletButton } from '../components/TestWalletButton';
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -134,6 +135,9 @@ export default function WelcomeScreen() {
               One account per wallet address.{'\n'}
               Secure, decentralized authentication.
             </Text>
+            
+            {/* Test button for debugging */}
+            <TestWalletButton />
           </LinearGradient>
         </View>
       </View>

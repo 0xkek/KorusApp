@@ -68,6 +68,7 @@ export const connectAndSignWithMWA = async (message: string): Promise<{ address:
     // Race between the transaction and timeout
     const result = await Promise.race([
       transact(async (wallet: Web3MobileWallet) => {
+        logger.log('Inside transact callback, wallet object:', wallet ? 'exists' : 'null');
       // Authorize in the same session
       logger.log('Authorizing wallet...');
       const authResult = await wallet.authorize({
