@@ -346,7 +346,7 @@ export const searchAPI = {
 export const healthAPI = {
   async check() {
     // Health endpoint is at root level, not under /api
-    const response = await axios.get('https://korusapp-production.up.railway.app/health');
+    const response = await axios.get('https://korus-backend.onrender.com/health');
     return response.data;
   },
 };
