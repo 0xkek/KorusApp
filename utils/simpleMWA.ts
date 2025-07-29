@@ -33,7 +33,13 @@ export async function connectWalletDirect() {
       logger.log('[SimpleMWA] Wallet address:', walletAddress);
       
       // Step 3: Sign authentication message
-      const authMessage = `Sign this message to authenticate with Korus\n\nTimestamp: ${Date.now()}`;
+      const messageData = {
+        domain: 'korus.app',
+        statement: 'Sign this message to authenticate with Korus',
+        timestamp: Date.now(),
+        nonce: Math.random().toString(36).substring(2, 15),
+      };
+      const authMessage = JSON.stringify(messageData);
       const messageBytes = Buffer.from(authMessage, 'utf8');
       
       const signedMessages = await wallet.signMessages({

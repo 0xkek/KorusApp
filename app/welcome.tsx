@@ -14,6 +14,7 @@ import { getErrorMessage } from '../utils/errorHandler';
 import { logger } from '../utils/logger';
 import { WalletConnectionModal } from '../components/WalletConnectionModal';
 import { TestWalletButton } from '../components/TestWalletButton';
+import { ClearWalletButton } from '../components/ClearWalletButton';
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -138,6 +139,9 @@ export default function WelcomeScreen() {
             
             {/* Test button for debugging */}
             <TestWalletButton />
+            
+            {/* Clear wallet data */}
+            <ClearWalletButton />
             
             {/* Simple direct connection button */}
             <TouchableOpacity

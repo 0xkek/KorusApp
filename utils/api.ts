@@ -2,9 +2,12 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { logger } from './logger';
 
-// API base URL - use environment variable or default to Railway URL
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://korusapp-production.up.railway.app/api';
+// API base URL - use environment variable or default to Render URL
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://korus-backend.onrender.com/api';
 logger.log('API Base URL:', API_BASE_URL);
+
+// Hackathon mode flag
+const HACKATHON_MODE = false;
 
 // Token storage key
 const AUTH_TOKEN_KEY = 'korus_auth_token';
@@ -160,6 +163,27 @@ api.interceptors.response.use(
 // Auth functions
 export const authAPI = {
   async connectWallet(walletAddress: string, signature: string, message: string) {
+    // Hackathon mode: bypass slow backend for demo
+    if (HACKATHON_MODE) {
+      logger.log('[HACKATHON MODE] Simulating successful authentication');
+      const mockToken = 'hackathon_demo_token_' + Date.now();
+      const mockUser = {
+        id: 'demo_' + walletAddress.slice(0, 8),
+        walletAddress,
+        createdAt: new Date().toISOString(),
+      };
+      
+      // Store the mock token
+      await SecureStore.setItemAsync(AUTH_TOKEN_KEY, mockToken);
+      await SecureStore.setItemAsync('korus_wallet_address', walletAddress);
+      
+      return {
+        token: mockToken,
+        user: mockUser,
+        message: 'Demo mode for hackathon'
+      };
+    }
+    
     const response = await api.post('/auth/connect', {
       walletAddress,
       signature,
