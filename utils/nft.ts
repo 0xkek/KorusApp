@@ -54,34 +54,61 @@ const MOCK_NFTS: NFT[] = [
 export async function fetchNFTsFromWallet(walletAddress: string): Promise<NFT[]> {
   try {
     // Use Helius API for fetching NFTs (works great with React Native)
-    const HELIUS_API_KEY = 'a4e2356e-088e-49c1-8c02-a65621fd3e8e'; // Free tier key
+    // Use your own API key by setting EXPO_PUBLIC_HELIUS_API_KEY in .env
+    const HELIUS_API_KEY = process.env.EXPO_PUBLIC_HELIUS_API_KEY || 'a4e2356e-088e-49c1-8c02-a65621fd3e8e';
     const url = `https://api.helius.xyz/v0/addresses/${walletAddress}/nfts?api-key=${HELIUS_API_KEY}`;
     
     console.log('Fetching NFTs for wallet:', walletAddress);
+    console.log('Using Helius API key:', HELIUS_API_KEY.substring(0, 8) + '...');
     
     const response = await fetch(url);
     const data = await response.json();
     
     if (!response.ok) {
       console.error('Helius API error:', data);
-      throw new Error('Failed to fetch NFTs');
+      console.error('Response status:', response.status);
+      throw new Error(`Failed to fetch NFTs: ${data.error || response.statusText}`);
     }
     
-    // Transform Helius response to our NFT format
-    const nfts: NFT[] = data.map((item: any) => ({
-      name: item.name || 'Unknown NFT',
-      symbol: item.symbol || 'NFT',
-      uri: item.uri || '',
-      image: item.imageUrl || item.image || '',
-      mint: item.mintAddress || item.mint || '',
-      updateAuthority: item.updateAuthority,
-      collection: item.collection ? {
-        name: item.collection.name || item.collectionName || 'Unknown Collection',
-        family: item.collection.family
-      } : undefined
-    }));
+    console.log(`Helius API returned ${data.length} items`);
     
-    console.log(`Found ${nfts.length} NFTs`);
+    // Transform Helius response to our NFT format
+    const nfts: NFT[] = data
+      .filter((item: any) => {
+        // Filter out items without images
+        return item.content?.links?.image || item.content?.files?.[0]?.uri || item.imageUrl || item.image;
+      })
+      .map((item: any) => {
+        // Handle different image URL formats from Helius
+        let imageUrl = '';
+        if (item.content?.links?.image) {
+          imageUrl = item.content.links.image;
+        } else if (item.content?.files?.[0]?.uri) {
+          imageUrl = item.content.files[0].uri;
+        } else if (item.imageUrl) {
+          imageUrl = item.imageUrl;
+        } else if (item.image) {
+          imageUrl = item.image;
+        }
+        
+        return {
+          name: item.content?.metadata?.name || item.name || 'Unknown NFT',
+          symbol: item.content?.metadata?.symbol || item.symbol || 'NFT',
+          uri: item.content?.json_uri || item.uri || '',
+          image: imageUrl,
+          mint: item.id || item.mintAddress || item.mint || '',
+          updateAuthority: item.authorities?.[0]?.address || item.updateAuthority,
+          collection: item.grouping?.[0] ? {
+            name: item.grouping[0].collection_metadata?.name || 'Unknown Collection',
+            family: item.grouping[0].collection_metadata?.family
+          } : item.collection ? {
+            name: item.collection.name || 'Unknown Collection',
+            family: item.collection.family
+          } : undefined
+        };
+      });
+    
+    console.log(`Found ${nfts.length} NFTs with images`);
     return nfts;
   } catch (error) {
     console.error('Error fetching NFTs:', error);
