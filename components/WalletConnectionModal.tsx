@@ -45,7 +45,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
       const success = await connectWallet(provider);
       
       if (success) {
-        showAlert('Success', 'Wallet connected successfully!', 'success');
+        // Success alert is already shown by the auth hook
         onSuccess?.();
         onClose();
       } else {
