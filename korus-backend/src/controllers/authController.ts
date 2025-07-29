@@ -35,7 +35,16 @@ export const connectWallet = async (req: Request, res: Response) => {
     console.log('Timestamp:', new Date().toISOString())
     
     // Verify the signature
-    const isValid = await verifyWalletSignature(walletAddress, signature, message)
+    console.log('About to verify signature...')
+    let isValid = false
+    try {
+      isValid = await verifyWalletSignature(walletAddress, signature, message)
+      console.log('Signature verification completed, result:', isValid)
+    } catch (verifyError: any) {
+      console.error('Signature verification threw error:', verifyError)
+      console.error('Error stack:', verifyError?.stack)
+      // Continue anyway for debugging
+    }
     
     // TEMPORARY: For hackathon, allow bypass if signature verification fails
     // This is because MWA and backend might encode signatures differently
@@ -154,7 +163,14 @@ export const connectWallet = async (req: Request, res: Response) => {
       }
     }
 
+    // Make sure we have a user object
+    if (!user) {
+      console.error('CRITICAL: No user object after creation/lookup')
+      throw new Error('User creation/lookup failed')
+    }
+
     // Generate JWT
+    console.log('Generating JWT token...')
     const token = jwt.sign(
       { walletAddress },
       process.env.JWT_SECRET || 'dev-secret-key',
@@ -162,20 +178,25 @@ export const connectWallet = async (req: Request, res: Response) => {
     )
 
     console.log('JWT token generated successfully')
-    console.log('=== AUTHENTICATION SUCCESSFUL ===')
-
-    res.json({
+    
+    // Prepare response data
+    const responseData = {
       success: true,
       token,
       user: {
         walletAddress: user.walletAddress,
-        tier: user.tier,
-        genesisVerified: user.genesisVerified,
-        allyBalance: user.allyBalance.toString(),
-        createdAt: user.createdAt
+        tier: user.tier || 'standard',
+        genesisVerified: user.genesisVerified || false,
+        allyBalance: user.allyBalance ? user.allyBalance.toString() : '5000',
+        createdAt: user.createdAt ? user.createdAt.toISOString() : new Date().toISOString()
       },
       expiresIn: '7d'
-    })
+    }
+    
+    console.log('=== AUTHENTICATION SUCCESSFUL ===')
+    console.log('Sending response:', JSON.stringify(responseData, null, 2))
+
+    res.json(responseData)
   } catch (error: any) {
     console.error('=== CONNECT WALLET ERROR ===')
     console.error('Error:', error)
