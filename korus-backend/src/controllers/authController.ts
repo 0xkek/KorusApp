@@ -7,10 +7,15 @@ import { isMockMode, mockAuthController } from '../middleware/mockMode'
 
 
 export const connectWallet = async (req: Request, res: Response) => {
+  console.log('connectWallet function called')
+  
   // Use mock mode if database is not available
   if (isMockMode()) {
+    console.log('Using mock mode')
     return mockAuthController.connectWallet(req, res)
   }
+  
+  console.log('Using real authentication')
   
   try {
     const { walletAddress, signature, message } = req.body
