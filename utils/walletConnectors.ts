@@ -43,22 +43,25 @@ export const seedVaultProvider: WalletProvider = {
 };
 
 // Alternative: Connect and sign in one transaction (recommended for MWA)
+export const APP_IDENTITY = {
+  name: 'Korus',
+  uri: 'https://korus-backend.onrender.com',
+  icon: 'favicon.ico', // MWA will handle this properly
+};
+
 export const connectAndSignWithMWA = async (message: string): Promise<{ address: string; signature: string }> => {
-  const { transact } = await import('@solana-mobile/mobile-wallet-adapter-protocol-web3js');
+  const { transact, Web3MobileWallet } = await import('@solana-mobile/mobile-wallet-adapter-protocol-web3js');
   
   logger.log('Starting MWA transaction...');
   
-  return await transact(async (wallet: any) => {
-    // Authorize in the same session
-    logger.log('Authorizing wallet...');
-    const authResult = await wallet.authorize({
-      cluster: 'solana:devnet',
-      identity: {
-        name: 'Korus',
-        uri: 'https://korus.app',
-        icon: 'favicon.ico',
-      },
-    });
+  try {
+    return await transact(async (wallet: Web3MobileWallet) => {
+      // Authorize in the same session
+      logger.log('Authorizing wallet...');
+      const authResult = await wallet.authorize({
+        cluster: 'devnet', // Use 'devnet' not 'solana:devnet'
+        identity: APP_IDENTITY,
+      });
     
     logger.log('Authorization successful:', authResult);
     const base64Address = authResult.accounts[0].address;
@@ -102,7 +105,17 @@ export const connectAndSignWithMWA = async (message: string): Promise<{ address:
       logger.error('Error signing message:', error);
       throw error;
     }
-  });
+    });
+  } catch (error: any) {
+    logger.error('MWA transaction error:', error);
+    // Better error handling
+    if (error.message?.includes('cancelled')) {
+      throw new Error('Wallet connection cancelled by user');
+    } else if (error.message?.includes('websocket')) {
+      throw new Error('Unable to connect to wallet. Please make sure a Solana wallet app is installed and try again.');
+    }
+    throw error;
+  }
 };
 
 // Phantom Provider (Browser/Mobile)

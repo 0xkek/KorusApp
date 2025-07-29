@@ -82,5 +82,13 @@
     "jest-expo": "^53.0.9",
     "typescript": "~5.8.3"
   },
-  "private": true
+  "private": true,
+  "workspaces": {
+    "nohoist": [
+      "**/react-native",
+      "**/react-native/**",
+      "**/@solana-mobile/mobile-wallet-adapter-protocol",
+      "**/@solana-mobile/mobile-wallet-adapter-protocol/**"
+    ]
+  }
 }

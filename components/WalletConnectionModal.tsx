@@ -44,21 +44,32 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
       
       // On mobile, all wallets use MWA (Mobile Wallet Adapter)
       // This ensures Phantom and other wallets work correctly
-      if (Platform.OS !== 'web') {
-        logger.log(`Connecting to ${provider.name} via MWA...`);
-        // Force MWA connection for all mobile wallets
-        const seedVault = availableWallets.find(w => w.name === 'seedvault');
-        if (seedVault) {
-          const success = await connectWallet(seedVault);
-          if (success) {
-            showAlert('Success', 'Wallet connected successfully!', 'success');
-            onSuccess?.();
-            onClose();
-          } else {
-            showAlert('Connection Failed', 'Failed to connect wallet. Please try again.', 'error');
+      if (Platform.OS !== 'web' && provider.name !== 'seedvault') {
+        logger.log(`Mobile detected: Using MWA for ${provider.name}...`);
+        // Create a custom MWA provider that will show all wallets
+        const mwaProvider: WalletProvider = {
+          ...provider,
+          connect: async () => {
+            const { connectAndSignWithMWA } = await import('../utils/walletConnectors');
+            const authMessage = 'Sign this message to connect to Korus\n\nTimestamp: ' + Date.now();
+            const result = await connectAndSignWithMWA(authMessage);
+            return result.address;
+          },
+          signMessage: async (message: string) => {
+            // This is handled in the connect flow for MWA
+            return 'already_signed';
           }
-          return;
+        };
+        
+        const success = await connectWallet(mwaProvider);
+        if (success) {
+          showAlert('Success', 'Wallet connected successfully!', 'success');
+          onSuccess?.();
+          onClose();
+        } else {
+          showAlert('Connection Failed', 'Failed to connect wallet. Please try again.', 'error');
         }
+        return;
       }
       
       // Web flow

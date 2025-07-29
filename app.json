@@ -36,6 +36,7 @@
     "plugins": [
       "expo-router",
       "expo-dev-client",
+      "./plugins/withAndroidMinSdk",
       [
         "expo-splash-screen",
         {
