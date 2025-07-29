@@ -42,6 +42,26 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
       setIsConnecting(true);
       setSelectedProvider(provider);
       
+      // On mobile, all wallets use MWA (Mobile Wallet Adapter)
+      // This ensures Phantom and other wallets work correctly
+      if (Platform.OS !== 'web') {
+        logger.log(`Connecting to ${provider.name} via MWA...`);
+        // Force MWA connection for all mobile wallets
+        const seedVault = availableWallets.find(w => w.name === 'seedvault');
+        if (seedVault) {
+          const success = await connectWallet(seedVault);
+          if (success) {
+            showAlert('Success', 'Wallet connected successfully!', 'success');
+            onSuccess?.();
+            onClose();
+          } else {
+            showAlert('Connection Failed', 'Failed to connect wallet. Please try again.', 'error');
+          }
+          return;
+        }
+      }
+      
+      // Web flow
       const success = await connectWallet(provider);
       
       if (success) {
