@@ -37,11 +37,33 @@ export const connectWallet = async (req: Request, res: Response) => {
     try {
       const messageData = JSON.parse(message)
       const timestamp = messageData.timestamp
-      const ageInMinutes = (Date.now() - timestamp) / 1000 / 60
+      const serverTime = Date.now()
+      const ageInMinutes = (serverTime - timestamp) / 1000 / 60
       
-      if (ageInMinutes > 5) {
-        console.log('Message too old:', ageInMinutes, 'minutes')
-        return res.status(401).json({ error: 'Authentication message expired' })
+      console.log('Timestamp validation:', {
+        clientTimestamp: timestamp,
+        serverTimestamp: serverTime,
+        differenceMs: serverTime - timestamp,
+        ageInMinutes: ageInMinutes,
+        clientTime: new Date(timestamp).toISOString(),
+        serverTime: new Date(serverTime).toISOString()
+      })
+      
+      // Allow for clock skew - temporarily increased to 30 minutes for debugging
+      if (ageInMinutes > 30 || ageInMinutes < -5) {
+        console.log('Message timing issue:', {
+          ageInMinutes,
+          tooOld: ageInMinutes > 5,
+          tooFuture: ageInMinutes < -2
+        })
+        return res.status(401).json({ 
+          error: 'Authentication message expired',
+          debug: {
+            clientTime: new Date(timestamp).toISOString(),
+            serverTime: new Date(serverTime).toISOString(),
+            ageMinutes: ageInMinutes
+          }
+        })
       }
     } catch (parseError) {
       console.error('Error parsing message:', parseError)
