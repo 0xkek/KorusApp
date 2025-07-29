@@ -163,6 +163,30 @@ export default function WelcomeScreen() {
               <Text style={styles.connectWalletText}>Simple Connect (Test)</Text>
             </TouchableOpacity>
             
+            {/* Test verification button */}
+            <TouchableOpacity
+              onPress={async () => {
+                try {
+                  const response = await fetch('https://korus-backend.onrender.com/api/auth/verify-test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      walletAddress: '9ocv93TeuRq5iMyP6qXVnm9UY9zfM5L1zUaDnXcRoHtW',
+                      signature: 'test',
+                      message: 'test'
+                    })
+                  })
+                  const result = await response.json()
+                  showAlert('Test Result', JSON.stringify(result), 'info')
+                } catch (error: any) {
+                  showAlert('Test Error', error.message, 'error')
+                }
+              }}
+              style={[styles.connectWalletButton, { marginTop: 10, backgroundColor: '#ff6b6b' }]}
+            >
+              <Text style={styles.connectWalletText}>Test Verify Endpoint</Text>
+            </TouchableOpacity>
+            
             {/* Demo mode button */}
             <TouchableOpacity
               onPress={async () => {

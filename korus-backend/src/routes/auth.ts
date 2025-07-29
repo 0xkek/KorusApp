@@ -24,4 +24,34 @@ router.post('/connect-test', asyncHandler(async (req: any, res: any) => {
   res.json({ success: true, message: 'Test endpoint reached' })
 }))
 
+// TEST: Minimal signature verification
+router.post('/verify-test', asyncHandler(async (req: any, res: any) => {
+  const { walletAddress, signature, message } = req.body
+  console.log('VERIFY TEST:', { walletAddress, signature, message })
+  
+  try {
+    const bs58 = require('bs58')
+    const nacl = require('tweetnacl')
+    const { PublicKey } = require('@solana/web3.js')
+    
+    // Test decoding
+    const messageBytes = new TextEncoder().encode(message)
+    console.log('Message bytes length:', messageBytes.length)
+    
+    const signatureBytes = bs58.decode(signature)
+    console.log('Signature bytes length:', signatureBytes.length)
+    
+    const publicKeyBytes = new PublicKey(walletAddress).toBytes()
+    console.log('Public key bytes length:', publicKeyBytes.length)
+    
+    const isValid = nacl.sign.detached.verify(messageBytes, signatureBytes, publicKeyBytes)
+    console.log('Verification result:', isValid)
+    
+    res.json({ success: true, isValid })
+  } catch (error: any) {
+    console.error('VERIFY TEST ERROR:', error.message)
+    res.json({ success: false, error: error.message })
+  }
+}))
+
 export default router
