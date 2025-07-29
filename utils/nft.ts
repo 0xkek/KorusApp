@@ -53,27 +53,44 @@ const MOCK_NFTS: NFT[] = [
 
 export async function fetchNFTsFromWallet(walletAddress: string): Promise<NFT[]> {
   try {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Use Helius API for fetching NFTs (works great with React Native)
+    const HELIUS_API_KEY = 'a4e2356e-088e-49c1-8c02-a65621fd3e8e'; // Free tier key
+    const url = `https://api.helius.xyz/v0/addresses/${walletAddress}/nfts?api-key=${HELIUS_API_KEY}`;
     
-    // For now, always return mock NFTs until we resolve the Solana dependency issues
-    // In production, this would make an API call to a backend service
-    // that handles the Solana blockchain interaction
+    console.log('Fetching NFTs for wallet:', walletAddress);
     
-    // Return a random subset of mock NFTs to simulate different wallets
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      console.error('Helius API error:', data);
+      throw new Error('Failed to fetch NFTs');
+    }
+    
+    // Transform Helius response to our NFT format
+    const nfts: NFT[] = data.map((item: any) => ({
+      name: item.name || 'Unknown NFT',
+      symbol: item.symbol || 'NFT',
+      uri: item.uri || '',
+      image: item.imageUrl || item.image || '',
+      mint: item.mintAddress || item.mint || '',
+      updateAuthority: item.updateAuthority,
+      collection: item.collection ? {
+        name: item.collection.name || item.collectionName || 'Unknown Collection',
+        family: item.collection.family
+      } : undefined
+    }));
+    
+    console.log(`Found ${nfts.length} NFTs`);
+    return nfts;
+  } catch (error) {
+    console.error('Error fetching NFTs:', error);
+    
+    // Fallback to mock NFTs if API fails
+    console.log('Using mock NFTs as fallback');
     const randomCount = Math.floor(Math.random() * MOCK_NFTS.length) + 1;
     const shuffled = [...MOCK_NFTS].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, randomCount);
-
-    /* Production code would look like:
-    const response = await fetch(`${API_URL}/nfts/${walletAddress}`);
-    const nfts = await response.json();
-    return nfts;
-    */
-  } catch (error) {
-    console.error('Error fetching NFTs:', error);
-    // Return empty array on error
-    return [];
   }
 }
 
