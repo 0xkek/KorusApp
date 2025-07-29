@@ -5,6 +5,36 @@ import { verifyWalletSignature, checkGenesisTokenOwnership } from '../utils/sola
 import { AuthRequest } from '../middleware/auth'
 import { isMockMode, mockAuthController } from '../middleware/mockMode'
 
+// Simple wallet authentication for hackathon
+export const connectWalletSimple = async (req: Request, res: Response) => {
+  try {
+    const { walletAddress } = req.body
+    
+    console.log('Simple wallet connect:', walletAddress)
+    
+    // Generate JWT token
+    const token = jwt.sign(
+      { walletAddress },
+      process.env.JWT_SECRET || 'korus-secret-key',
+      { expiresIn: '7d' }
+    )
+    
+    // Return user and token
+    return res.json({
+      token,
+      user: {
+        id: walletAddress,
+        walletAddress,
+        tier: 'standard',
+        createdAt: new Date().toISOString()
+      }
+    })
+  } catch (error: any) {
+    console.error('Simple connect error:', error)
+    return res.status(500).json({ error: 'Failed to connect wallet' })
+  }
+}
+
 export const connectWallet = async (req: Request, res: Response) => {
   // Use mock mode if database is not available
   if (isMockMode()) {

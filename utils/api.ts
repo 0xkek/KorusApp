@@ -166,39 +166,36 @@ api.interceptors.response.use(
 // Auth functions
 export const authAPI = {
   async connectWallet(walletAddress: string, signature: string, message: string) {
-    // Hackathon mode: bypass slow backend for demo
-    if (HACKATHON_MODE) {
-      logger.log('[HACKATHON MODE] Simulating successful authentication');
-      const mockToken = 'hackathon_demo_token_' + Date.now();
-      const mockUser = {
-        id: 'demo_' + walletAddress.slice(0, 8),
+    // TEMPORARY: Use simple endpoint for hackathon
+    try {
+      const response = await api.post('/auth/connect-simple', {
         walletAddress,
-        createdAt: new Date().toISOString(),
-      };
+      });
       
-      // Store the mock token
-      await SecureStore.setItemAsync(AUTH_TOKEN_KEY, mockToken);
-      await SecureStore.setItemAsync('korus_wallet_address', walletAddress);
+      // Store the token
+      if (response.data.token) {
+        await SecureStore.setItemAsync(AUTH_TOKEN_KEY, response.data.token);
+        await SecureStore.setItemAsync('korus_wallet_address', walletAddress);
+      }
       
-      return {
-        token: mockToken,
-        user: mockUser,
-        message: 'Demo mode for hackathon'
-      };
+      logger.log('Authentication successful');
+      return response.data;
+    } catch (error) {
+      logger.error('Using original endpoint due to error:', error);
+      // Fallback to original endpoint
+      const response = await api.post('/auth/connect', {
+        walletAddress,
+        signature,
+        message,
+      });
+      
+      // Store the token
+      if (response.data.token) {
+        await SecureStore.setItemAsync(AUTH_TOKEN_KEY, response.data.token);
+      }
+      
+      return response.data;
     }
-    
-    const response = await api.post('/auth/connect', {
-      walletAddress,
-      signature,
-      message,
-    });
-    
-    // Store the token
-    if (response.data.token) {
-      await SecureStore.setItemAsync(AUTH_TOKEN_KEY, response.data.token);
-    }
-    
-    return response.data;
   },
   
   async getProfile() {
