@@ -40,6 +40,17 @@ app.use(cors(corsOptions))
 app.use(morgan('combined'))
 app.use(express.json())
 
+// Debug logging for all requests
+app.use((req, res, next) => {
+  console.log('=== INCOMING REQUEST ===')
+  console.log('Method:', req.method)
+  console.log('URL:', req.url)
+  console.log('Body:', req.body)
+  console.log('Headers:', req.headers)
+  console.log('=======================')
+  next()
+})
+
 // Apply rate limiting to all API routes
 app.use('/api', apiLimiter)
 
@@ -89,6 +100,22 @@ app.get('/test-db', async (req, res) => {
       details: error 
     })
   }
+})
+
+// Global error handler (must be last)
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('=== UNHANDLED ERROR ===')
+  console.error('URL:', req.url)
+  console.error('Method:', req.method)
+  console.error('Body:', req.body)
+  console.error('Error:', err)
+  console.error('Stack:', err?.stack)
+  console.error('====================')
+  
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal server error',
+    details: process.env.NODE_ENV === 'development' ? err : undefined
+  })
 })
 
 // Start server

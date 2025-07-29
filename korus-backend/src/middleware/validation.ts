@@ -19,6 +19,11 @@ export const sanitizeHtml = (dirty: string): string => {
 export const handleValidationErrors = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.error('Validation failed:', {
+      url: req.url,
+      body: req.body,
+      errors: errors.array()
+    });
     return res.status(400).json({ 
       error: 'Validation failed',
       details: errors.array() 
