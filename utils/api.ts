@@ -45,10 +45,13 @@ const shouldRetry = (error: AxiosError) => {
 api.interceptors.request.use(
   async (config) => {
     try {
-      // Skip auth header for GET requests to /posts
-      const isPostsGet = config.method?.toLowerCase() === 'get' && config.url?.includes('/posts');
+      // Skip auth header for public endpoints
+      const isPublicEndpoint = 
+        (config.method?.toLowerCase() === 'get' && config.url?.includes('/posts')) ||
+        config.url?.includes('/auth/connect') ||
+        config.url?.includes('/health');
       
-      if (!isPostsGet) {
+      if (!isPublicEndpoint) {
         const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
         
         logger.info('Auth interceptor:', {

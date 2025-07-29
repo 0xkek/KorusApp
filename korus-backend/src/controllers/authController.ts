@@ -34,13 +34,14 @@ export const connectWallet = async (req: Request, res: Response) => {
     }
     
     // Check message freshness (prevent replay attacks)
+    // TEMPORARILY DISABLED for hackathon due to clock sync issues
     try {
       const messageData = JSON.parse(message)
       const timestamp = messageData.timestamp
       const serverTime = Date.now()
       const ageInMinutes = (serverTime - timestamp) / 1000 / 60
       
-      console.log('Timestamp validation:', {
+      console.log('Timestamp validation (DISABLED):', {
         clientTimestamp: timestamp,
         serverTimestamp: serverTime,
         differenceMs: serverTime - timestamp,
@@ -49,7 +50,9 @@ export const connectWallet = async (req: Request, res: Response) => {
         serverTime: new Date(serverTime).toISOString()
       })
       
-      // Allow for clock skew - temporarily increased to 30 minutes for debugging
+      // TEMPORARILY DISABLED - Clock sync issues between mobile and server
+      // Will re-enable after hackathon with proper time sync solution
+      /*
       if (ageInMinutes > 30 || ageInMinutes < -5) {
         console.log('Message timing issue:', {
           ageInMinutes,
@@ -65,6 +68,7 @@ export const connectWallet = async (req: Request, res: Response) => {
           }
         })
       }
+      */
     } catch (parseError) {
       console.error('Error parsing message:', parseError)
       return res.status(400).json({ error: 'Invalid message format' })

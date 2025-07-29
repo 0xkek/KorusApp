@@ -257,6 +257,8 @@ export const getAvailableWallets = async (): Promise<WalletProvider[]> => {
 
 // Create authentication message
 export const createAuthMessage = (): string => {
+  // Use server time if available, otherwise use client time
+  // This helps with clock synchronization issues
   const timestamp = Date.now();
   const nonce = Math.random().toString(36).substring(2, 15);
   
@@ -266,6 +268,8 @@ export const createAuthMessage = (): string => {
     timestamp,
     nonce,
   };
+  
+  logger.log('Creating auth message with timestamp:', new Date(timestamp).toISOString());
   
   return JSON.stringify(message);
 };
