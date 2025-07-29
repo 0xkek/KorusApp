@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { Connection, PublicKey, clusterApiUrl, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import { getFavoriteSNSDomain, fetchSNSDomains, SNSDomain } from '../utils/sns';
 import { NFTAvatar } from '../types/theme';
 import { logger } from '../utils/logger';
@@ -153,9 +154,9 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       let signature: string;
       let authMessage: string;
       
-      // Special handling for Solana Mobile (Seed Vault) to avoid double connection
-      if (provider.name === 'seedvault') {
-        logger.log('Using optimized MWA flow for Seed Vault...');
+      // On mobile, ALL wallets must use MWA
+      if (Platform.OS !== 'web') {
+        logger.log(`Using MWA flow for ${provider.name} on mobile...`);
         authMessage = createAuthMessage();
         
         // Use the combined connect and sign flow
@@ -166,8 +167,8 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         
         logger.log('MWA flow completed, address:', publicKey);
       } else {
-        // Standard flow for other wallets
-        logger.log(`Connecting to ${provider.name} wallet...`);
+        // Web browser flow
+        logger.log(`Connecting to ${provider.name} wallet on web...`);
         publicKey = await provider.connect();
         logger.log('Connected wallet address:', publicKey);
         

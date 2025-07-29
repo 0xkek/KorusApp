@@ -2,6 +2,7 @@ import { solanaMobileService } from './solanaMobile';
 import bs58 from 'bs58';
 import { logger } from './logger';
 import { PublicKey } from '@solana/web3.js';
+import { Platform } from 'react-native';
 
 export interface WalletProvider {
   name: 'seedvault' | 'phantom' | 'solflare' | 'backpack';
@@ -53,9 +54,20 @@ export const connectAndSignWithMWA = async (message: string): Promise<{ address:
   const { transact, Web3MobileWallet } = await import('@solana-mobile/mobile-wallet-adapter-protocol-web3js');
   
   logger.log('Starting MWA transaction...');
+  logger.log('Platform:', Platform.OS);
+  logger.log('App Identity:', APP_IDENTITY);
+  
+  // Create a timeout promise
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => {
+      reject(new Error('MWA connection timed out after 30 seconds. Please make sure a Solana wallet app is installed.'));
+    }, 30000);
+  });
   
   try {
-    return await transact(async (wallet: Web3MobileWallet) => {
+    // Race between the transaction and timeout
+    const result = await Promise.race([
+      transact(async (wallet: Web3MobileWallet) => {
       // Authorize in the same session
       logger.log('Authorizing wallet...');
       const authResult = await wallet.authorize({
@@ -105,7 +117,11 @@ export const connectAndSignWithMWA = async (message: string): Promise<{ address:
       logger.error('Error signing message:', error);
       throw error;
     }
-    });
+    }),
+      timeoutPromise
+    ]);
+    
+    return result as { address: string; signature: string };
   } catch (error: any) {
     logger.error('MWA transaction error:', error);
     // Better error handling

@@ -42,37 +42,6 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
       setIsConnecting(true);
       setSelectedProvider(provider);
       
-      // On mobile, all wallets use MWA (Mobile Wallet Adapter)
-      // This ensures Phantom and other wallets work correctly
-      if (Platform.OS !== 'web' && provider.name !== 'seedvault') {
-        logger.log(`Mobile detected: Using MWA for ${provider.name}...`);
-        // Create a custom MWA provider that will show all wallets
-        const mwaProvider: WalletProvider = {
-          ...provider,
-          connect: async () => {
-            const { connectAndSignWithMWA } = await import('../utils/walletConnectors');
-            const authMessage = 'Sign this message to connect to Korus\n\nTimestamp: ' + Date.now();
-            const result = await connectAndSignWithMWA(authMessage);
-            return result.address;
-          },
-          signMessage: async (message: string) => {
-            // This is handled in the connect flow for MWA
-            return 'already_signed';
-          }
-        };
-        
-        const success = await connectWallet(mwaProvider);
-        if (success) {
-          showAlert('Success', 'Wallet connected successfully!', 'success');
-          onSuccess?.();
-          onClose();
-        } else {
-          showAlert('Connection Failed', 'Failed to connect wallet. Please try again.', 'error');
-        }
-        return;
-      }
-      
-      // Web flow
       const success = await connectWallet(provider);
       
       if (success) {
