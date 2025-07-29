@@ -143,8 +143,11 @@ export const validateWalletConnect = [
       if (process.env.NODE_ENV === 'development' && value.startsWith('mock_signature')) {
         return true;
       }
-      // Otherwise must be base64
-      return /^[A-Za-z0-9+/]+=*$/.test(value);
+      // Allow base58 (Solana standard) or base64 signatures
+      // Base58 uses characters: 123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz
+      const isBase58 = /^[1-9A-HJ-NP-Za-km-z]+$/.test(value);
+      const isBase64 = /^[A-Za-z0-9+/]+=*$/.test(value);
+      return isBase58 || isBase64;
     }).withMessage('Invalid signature format'),
   
   body('message')

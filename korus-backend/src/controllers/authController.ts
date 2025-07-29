@@ -14,6 +14,13 @@ export const connectWallet = async (req: Request, res: Response) => {
   
   try {
     const { walletAddress, signature, message } = req.body
+    
+    console.log('Connect wallet request:', {
+      walletAddress,
+      signatureLength: signature?.length,
+      message,
+      messageType: typeof message
+    })
 
     // Validate input
     if (!walletAddress || !signature || !message) {
