@@ -16,11 +16,21 @@ export const verifyWalletSignature = async (
   message: string
 ): Promise<boolean> => {
   try {
+    console.log('Verifying signature:', {
+      publicKey,
+      signatureLength: signature.length,
+      messageLength: message.length,
+      messagePreview: message.substring(0, 100)
+    })
+    
     const messageBytes = new TextEncoder().encode(message)
     const signatureBytes = bs58.decode(signature)
     const publicKeyBytes = new PublicKey(publicKey).toBytes()
     
-    return nacl.sign.detached.verify(messageBytes, signatureBytes, publicKeyBytes)
+    const isValid = nacl.sign.detached.verify(messageBytes, signatureBytes, publicKeyBytes)
+    console.log('Signature verification result:', isValid)
+    
+    return isValid
   } catch (error) {
     console.error('Signature verification error:', error)
     return false
