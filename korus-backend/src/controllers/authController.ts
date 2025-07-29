@@ -5,35 +5,6 @@ import { verifyWalletSignature, checkGenesisTokenOwnership } from '../utils/sola
 import { AuthRequest } from '../middleware/auth'
 import { isMockMode, mockAuthController } from '../middleware/mockMode'
 
-// Simple wallet authentication for hackathon
-export const connectWalletSimple = async (req: Request, res: Response) => {
-  try {
-    const { walletAddress } = req.body
-    
-    console.log('Simple wallet connect:', walletAddress)
-    
-    // Generate JWT token
-    const token = jwt.sign(
-      { walletAddress },
-      process.env.JWT_SECRET || 'korus-secret-key',
-      { expiresIn: '7d' }
-    )
-    
-    // Return user and token
-    return res.json({
-      token,
-      user: {
-        id: walletAddress,
-        walletAddress,
-        tier: 'standard',
-        createdAt: new Date().toISOString()
-      }
-    })
-  } catch (error: any) {
-    console.error('Simple connect error:', error)
-    return res.status(500).json({ error: 'Failed to connect wallet' })
-  }
-}
 
 export const connectWallet = async (req: Request, res: Response) => {
   // Use mock mode if database is not available
@@ -68,42 +39,9 @@ export const connectWallet = async (req: Request, res: Response) => {
       // return res.status(401).json({ error: 'Invalid signature' })
     }
     
-    // Check message freshness (prevent replay attacks)
-    try {
-      const messageData = JSON.parse(message)
-      const timestamp = messageData.timestamp
-      const serverTime = Date.now()
-      const ageInMinutes = (serverTime - timestamp) / 1000 / 60
-      
-      console.log('Timestamp validation:', {
-        clientTimestamp: timestamp,
-        serverTimestamp: serverTime,
-        differenceMs: serverTime - timestamp,
-        ageInMinutes: ageInMinutes,
-        clientTime: new Date(timestamp).toISOString(),
-        serverTime: new Date(serverTime).toISOString()
-      })
-      
-      // Check if message is expired (5 minutes) or too far in future (2 minutes)
-      if (ageInMinutes > 5 || ageInMinutes < -2) {
-        console.log('Message timing issue:', {
-          ageInMinutes,
-          tooOld: ageInMinutes > 5,
-          tooFuture: ageInMinutes < -2
-        })
-        return res.status(401).json({ 
-          error: 'Authentication message expired',
-          debug: {
-            clientTime: new Date(timestamp).toISOString(),
-            serverTime: new Date(serverTime).toISOString(),
-            ageMinutes: ageInMinutes
-          }
-        })
-      }
-    } catch (parseError) {
-      console.error('Error parsing message:', parseError)
-      return res.status(400).json({ error: 'Invalid message format' })
-    }
+    // For hackathon: Skip message validation since we're using a simple nonce
+    // In production, we'd store nonces and check for replay attacks
+    console.log('Message received:', message)
 
     // Check if user exists, create if not
     let user

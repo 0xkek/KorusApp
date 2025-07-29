@@ -257,19 +257,12 @@ export const getAvailableWallets = async (): Promise<WalletProvider[]> => {
 
 // Create authentication message
 export const createAuthMessage = (): string => {
-  // Use server time if available, otherwise use client time
-  // This helps with clock synchronization issues
-  const timestamp = Date.now();
   const nonce = Math.random().toString(36).substring(2, 15);
   
-  const message = {
-    domain: 'korus.app',
-    statement: 'Sign this message to authenticate with Korus',
-    timestamp,
-    nonce,
-  };
+  // Simple message format that works with nacl signature verification
+  const message = `Sign this message to authenticate with Korus\n\nNonce: ${nonce}`;
   
-  logger.log('Creating auth message with timestamp:', new Date(timestamp).toISOString());
+  logger.log('Creating auth message:', message);
   
-  return JSON.stringify(message);
+  return message;
 };

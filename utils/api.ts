@@ -166,36 +166,19 @@ api.interceptors.response.use(
 // Auth functions
 export const authAPI = {
   async connectWallet(walletAddress: string, signature: string, message: string) {
-    // TEMPORARY: Use simple endpoint for hackathon
-    try {
-      const response = await api.post('/auth/connect-simple', {
-        walletAddress,
-      });
-      
-      // Store the token
-      if (response.data.token) {
-        await SecureStore.setItemAsync(AUTH_TOKEN_KEY, response.data.token);
-        await SecureStore.setItemAsync('korus_wallet_address', walletAddress);
-      }
-      
-      logger.log('Authentication successful');
-      return response.data;
-    } catch (error) {
-      logger.error('Using original endpoint due to error:', error);
-      // Fallback to original endpoint
-      const response = await api.post('/auth/connect', {
-        walletAddress,
-        signature,
-        message,
-      });
-      
-      // Store the token
-      if (response.data.token) {
-        await SecureStore.setItemAsync(AUTH_TOKEN_KEY, response.data.token);
-      }
-      
-      return response.data;
+    const response = await api.post('/auth/connect', {
+      walletAddress,
+      signature,
+      message,
+    });
+    
+    // Store the token
+    if (response.data.token) {
+      await SecureStore.setItemAsync(AUTH_TOKEN_KEY, response.data.token);
+      await SecureStore.setItemAsync('korus_wallet_address', walletAddress);
     }
+    
+    return response.data;
   },
   
   async getProfile() {
