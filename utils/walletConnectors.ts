@@ -57,22 +57,25 @@ export const connectAndSignWithMWA = async (message: string): Promise<{ address:
   logger.log('Platform:', Platform.OS);
   logger.log('App Identity:', APP_IDENTITY);
   
+  // Add a small delay to ensure wallet app is ready
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
   // Create a timeout promise
   const timeoutPromise = new Promise<never>((_, reject) => {
     setTimeout(() => {
-      reject(new Error('MWA connection timed out after 30 seconds. Please make sure a Solana wallet app is installed.'));
-    }, 30000);
+      reject(new Error('MWA connection timed out. Please make sure Phantom is updated to the latest version.'));
+    }, 20000); // Reduced to 20 seconds
   });
   
   try {
     // Race between the transaction and timeout
     const result = await Promise.race([
       transact(async (wallet: Web3MobileWallet) => {
-        logger.log('Inside transact callback, wallet object:', wallet ? 'exists' : 'null');
+        logger.log('MWA callback started - wallet object received');
       // Authorize in the same session
       logger.log('Authorizing wallet...');
       const authResult = await wallet.authorize({
-        cluster: 'devnet', // Use 'devnet' not 'solana:devnet'
+        cluster: 'solana:devnet', // Correct format per MWA spec
         identity: APP_IDENTITY,
       });
     

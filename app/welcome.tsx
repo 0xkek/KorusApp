@@ -138,6 +138,53 @@ export default function WelcomeScreen() {
             
             {/* Test button for debugging */}
             <TestWalletButton />
+            
+            {/* Simple direct connection button */}
+            <TouchableOpacity
+              onPress={async () => {
+                try {
+                  const { connectWalletDirect } = await import('../utils/simpleMWA');
+                  const result = await connectWalletDirect();
+                  if (result.token) {
+                    showAlert('Success', 'Wallet connected!', 'success');
+                    router.replace('/(tabs)');
+                  }
+                } catch (error: any) {
+                  logger.error('Simple connect error:', error);
+                  showAlert('Error', error.message, 'error');
+                }
+              }}
+              style={[styles.connectWalletButton, { marginTop: 10, backgroundColor: '#38f9d7' }]}
+            >
+              <Text style={styles.connectWalletText}>Simple Connect (Test)</Text>
+            </TouchableOpacity>
+            
+            {/* Demo mode button */}
+            <TouchableOpacity
+              onPress={async () => {
+                try {
+                  // Use a demo wallet for hackathon
+                  const demoAddress = 'Demo' + Math.random().toString(36).substring(7);
+                  const { authAPI } = await import('../utils/api');
+                  const result = await authAPI.connectWallet(
+                    demoAddress,
+                    'demo_signature',
+                    'demo_message'
+                  );
+                  if (result.token) {
+                    showAlert('Demo Mode', 'Connected with demo wallet for testing', 'success');
+                    setTimeout(() => {
+                      router.replace('/(tabs)');
+                    }, 1000);
+                  }
+                } catch (error: any) {
+                  showAlert('Error', error.message, 'error');
+                }
+              }}
+              style={[styles.connectWalletButton, { marginTop: 10, backgroundColor: '#666' }]}
+            >
+              <Text style={styles.connectWalletText}>Demo Mode (Hackathon)</Text>
+            </TouchableOpacity>
           </LinearGradient>
         </View>
       </View>

@@ -18,7 +18,7 @@ export const TestWalletButton = () => {
         
         // Step 1: Authorize
         const auth = await wallet.authorize({
-          cluster: 'devnet',
+          cluster: 'solana:devnet',
           identity: {
             name: 'Korus Test',
             uri: 'https://korus-backend.onrender.com',
