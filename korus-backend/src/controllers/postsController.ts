@@ -8,13 +8,13 @@ import { reputationService } from '../services/reputationService'
 export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Post>>) => {
   try {
     const walletAddress = req.userWallet!
-    const { content, topic, subtopic } = req.body
+    const { content } = req.body
 
     // Validate input
-    if (!content || !topic || !subtopic) {
+    if (!content) {
       return res.status(400).json({
         success: false,
-        error: 'Missing required fields: content, topic, subtopic'
+        error: 'Missing required field: content'
       } as any)
     }
 
@@ -30,8 +30,8 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
       data: {
         authorWallet: walletAddress,
         content: content.trim(),
-        topic: topic.toLowerCase(),
-        subtopic: subtopic.toLowerCase()
+        topic: 'general', // Default value until schema is updated
+        subtopic: 'general' // Default value until schema is updated
       },
       include: {
         author: {
@@ -57,10 +57,7 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
 
     res.status(201).json({
       success: true,
-      post: {
-        ...post,
-        author: post.author
-      }
+      post: post
     } as any)
   } catch (error) {
     console.error('Create post error:', error)
@@ -70,10 +67,20 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
 
 export const getPosts = async (req: Request, res: Response<PaginatedResponse<Post>>) => {
   try {
-    const { topic, subtopic, limit = 20, offset = 0 } = req.query
+    const { limit = 20, offset = 0 } = req.query
 
-    // SIMPLIFIED VERSION - just get posts without complex includes
+    // Simple query without topic/subtopic
     const posts = await prisma.post.findMany({
+      select: {
+        id: true,
+        authorWallet: true,
+        content: true,
+        likeCount: true,
+        replyCount: true,
+        tipCount: true,
+        createdAt: true,
+        updatedAt: true
+      },
       orderBy: { createdAt: 'desc' },
       take: Number(limit),
       skip: Number(offset)
@@ -95,6 +102,8 @@ export const getPosts = async (req: Request, res: Response<PaginatedResponse<Pos
     
     const postsWithAuthors = posts.map(post => ({
       ...post,
+      topic: 'general', // Default value for compatibility
+      subtopic: 'general', // Default value for compatibility
       author: authorMap.get(post.authorWallet) || {
         walletAddress: post.authorWallet,
         tier: 'free',
