@@ -7,6 +7,15 @@ import { checkSuspension, checkWarnings } from '../middleware/moderationCheck'
 
 const router = Router()
 
+// TEST endpoint - simple check
+router.get('/test', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'Posts route is working',
+    timestamp: new Date().toISOString()
+  })
+})
+
 // GET /api/posts - Get chronological feed
 router.get('/', validateGetPosts, getPosts)
 

@@ -71,46 +71,41 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
 export const getPosts = async (req: Request, res: Response<PaginatedResponse<Post>>) => {
   try {
     const { topic, subtopic, limit = 20, offset = 0 } = req.query
-    const now = new Date()
 
-    // Build filter conditions
-    const where: any = {}
-    if (topic) where.topic = topic.toString().toLowerCase()
-    if (subtopic) where.subtopic = subtopic.toString().toLowerCase()
-
-    // Get posts with chronological ordering
+    // SIMPLIFIED VERSION - just get posts without complex includes
     const posts = await prisma.post.findMany({
-      where,
-      include: {
-        author: {
-          select: {
-            walletAddress: true,
-            tier: true,
-            genesisVerified: true
-          }
-        },
-        replies: {
-          take: 3, // Just show first 3 replies
-          orderBy: { createdAt: 'asc' },
-          include: {
-            author: {
-              select: {
-                walletAddress: true,
-                tier: true,
-                genesisVerified: true
-              }
-            }
-          }
-        }
-      },
       orderBy: { createdAt: 'desc' },
       take: Number(limit),
       skip: Number(offset)
     })
 
+    // Get author data separately
+    const authorWallets = [...new Set(posts.map(p => p.authorWallet))]
+    const authors = await prisma.user.findMany({
+      where: { walletAddress: { in: authorWallets } },
+      select: {
+        walletAddress: true,
+        tier: true,
+        genesisVerified: true
+      }
+    })
+
+    // Map authors to posts
+    const authorMap = new Map(authors.map(a => [a.walletAddress, a]))
+    
+    const postsWithAuthors = posts.map(post => ({
+      ...post,
+      author: authorMap.get(post.authorWallet) || {
+        walletAddress: post.authorWallet,
+        tier: 'free',
+        genesisVerified: false
+      },
+      replies: [] // Empty replies for now
+    }))
+
     res.json({
       success: true,
-      posts: posts,
+      posts: postsWithAuthors,
       pagination: {
         limit: Number(limit),
         offset: Number(offset),
@@ -119,26 +114,12 @@ export const getPosts = async (req: Request, res: Response<PaginatedResponse<Pos
     } as any)
   } catch (error: any) {
     console.error('Get posts error:', error)
-    console.error('Error details:', {
-      message: error?.message,
-      code: error?.code,
-      meta: error?.meta
-    })
-    
-    // Check for common database errors
-    if (error?.code === 'P2002') {
-      res.status(500).json({ success: false, error: 'Database constraint error' } as any)
-    } else if (error?.code === 'P2021') {
-      res.status(500).json({ success: false, error: 'Database table not found' } as any)
-    } else if (error?.code === 'P2025') {
-      res.status(500).json({ success: false, error: 'Database record not found' } as any)
-    } else {
-      res.status(500).json({ 
-        success: false, 
-        error: 'Failed to get posts',
-        details: process.env.NODE_ENV === 'development' ? error?.message : undefined
-      } as any)
-    }
+    console.error('Error stack:', error?.stack)
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to get posts',
+      details: error?.message || 'Unknown error'
+    } as any)
   }
 }
 
