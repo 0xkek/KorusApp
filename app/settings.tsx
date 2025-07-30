@@ -729,11 +729,11 @@ export default function SettingsScreen() {
                         
                         <View style={styles.faqItem}>
                           <Text style={[styles.faqQuestion, { color: colors.primary }]}>What are bumps?</Text>
-                          <Text style={[styles.faqAnswer, { color: colors.textSecondary }]}>Bumps temporarily boost a post's visibility for 5 minutes, helping important content reach more people. Use bumps to highlight time-sensitive or valuable posts.</Text>
+                          <Text style={[styles.faqAnswer, { color: colors.textSecondary }]}>Bumps temporarily boost a post&apos;s visibility for 5 minutes, helping important content reach more people. Use bumps to highlight time-sensitive or valuable posts.</Text>
                         </View>
                         
                         <View style={styles.faqItem}>
-                          <Text style={[styles.faqQuestion, { color: colors.primary }]}>What's included in Premium?</Text>
+                          <Text style={[styles.faqQuestion, { color: colors.primary }]}>What&apos;s included in Premium?</Text>
                           <Text style={[styles.faqAnswer, { color: colors.textSecondary }]}>Premium members get exclusive color themes, gold verified badge, ability to use SNS domains as display names, and can hide sponsored posts for a cleaner feed.</Text>
                         </View>
                       </ScrollView>
@@ -813,7 +813,7 @@ export default function SettingsScreen() {
                           </View>
                           <View style={styles.ruleContent}>
                             <Text style={[styles.ruleTitle, { color: colors.text }]}>Protect Privacy</Text>
-                            <Text style={[styles.ruleDescription, { color: colors.textSecondary }]}>Never share personal information of others. Respect everyone's privacy and security.</Text>
+                            <Text style={[styles.ruleDescription, { color: colors.textSecondary }]}>Never share personal information of others. Respect everyone&apos;s privacy and security.</Text>
                           </View>
                         </View>
                         
@@ -936,7 +936,7 @@ export default function SettingsScreen() {
                         </Text>
                         
                         <Text style={[styles.modalSubtitle, { color: colors.textSecondary, marginBottom: 32 }]}>
-                          This will clear your wallet data and you'll need to create a new wallet to use the app again.
+                          This will clear your wallet data and you&apos;ll need to create a new wallet to use the app again.
                         </Text>
                         
                         <TouchableOpacity

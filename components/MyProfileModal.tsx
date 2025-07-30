@@ -1116,7 +1116,7 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     elevation: 8,
     zIndex: 200,
   },
-  snsDropdownBlur: {
+  snsDropdownBlurDup: {
     borderRadius: 16,
     overflow: 'hidden',
   },

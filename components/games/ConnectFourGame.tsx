@@ -71,13 +71,13 @@ export default function ConnectFourGame({
 
   const handleColumnPress = (col: number) => {
     if (!isMyTurn || winner || !player2) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackStyle.Warning);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       return;
     }
 
     // Check if column is full
     if (gameBoard[0][col] !== null) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackStyle.Warning);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       return;
     }
 

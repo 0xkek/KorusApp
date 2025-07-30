@@ -186,7 +186,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
                       end={{ x: 1, y: 1 }}
                     >
                       <Text style={styles.newToWalletsText}>
-                        I'm New to Wallets
+                        I&apos;m New to Wallets
                       </Text>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -254,7 +254,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
                     style={styles.getStartedLink}
                   >
                     <Text style={styles.getStartedText}>
-                      Don't have a wallet? Get started →
+                      Don&apos;t have a wallet? Get started →
                     </Text>
                   </TouchableOpacity>
                 </View>

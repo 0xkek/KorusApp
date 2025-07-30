@@ -36,6 +36,36 @@ export default function PostDetailScreen() {
   
   const currentUserWallet = walletAddress || 'loading...';
   
+  // Organize replies into threads
+  const organizeRepliesIntoThreads = (replies: ReplyType[]) => {
+    const threads: ReplyType[][] = [];
+    
+    // First pass: organize direct replies to the post
+    replies.forEach(reply => {
+      if (!reply.parentId || reply.parentId === post?.id) {
+        // This is a direct reply to the post
+        threads.push([reply]);
+        if (reply.replies && reply.replies.length > 0) {
+          // Add its replies to the same thread
+          threads[threads.length - 1].push(...flattenReplies(reply.replies));
+        }
+      }
+    });
+    
+    return threads;
+  };
+  
+  const flattenReplies = (replies: ReplyType[]): ReplyType[] => {
+    const flat: ReplyType[] = [];
+    replies.forEach(reply => {
+      flat.push(reply);
+      if (reply.replies && reply.replies.length > 0) {
+        flat.push(...flattenReplies(reply.replies));
+      }
+    });
+    return flat;
+  };
+  
   useEffect(() => {
     // Load the post from API
     const loadPost = async () => {
@@ -127,37 +157,7 @@ export default function PostDetailScreen() {
     );
   }
   
-  // Organize replies into threads
-  const organizeRepliesIntoThreads = (replies: ReplyType[]) => {
-    const threads: ReplyType[][] = [];
-    
-    // First pass: organize direct replies to the post
-    replies.forEach(reply => {
-      if (!reply.parentId || reply.parentId === post.id) {
-        // This is a direct reply to the post
-        threads.push([reply]);
-        if (reply.replies && reply.replies.length > 0) {
-          // Add its replies to the same thread
-          threads[threads.length - 1].push(...flattenReplies(reply.replies));
-        }
-      }
-    });
-    
-    return threads;
-  };
-  
-  const flattenReplies = (replies: ReplyType[]): ReplyType[] => {
-    const flat: ReplyType[] = [];
-    replies.forEach(reply => {
-      flat.push(reply);
-      if (reply.replies && reply.replies.length > 0) {
-        flat.push(...flattenReplies(reply.replies));
-      }
-    });
-    return flat;
-  };
-  
-  const threads = organizeRepliesIntoThreads(post.replies);
+  const threads = post ? organizeRepliesIntoThreads(post.replies) : [];
   
   const handleReply = (postId: number, quotedReplyText?: string, quotedReplyUsername?: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

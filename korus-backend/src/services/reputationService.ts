@@ -1,8 +1,7 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import prisma from '../config/database';
 import { logger } from '../utils/logger';
 import { getWeekDates } from '../utils/dateHelpers';
-
-const prisma = new PrismaClient();
 
 interface RepEventData {
   userWallet: string;

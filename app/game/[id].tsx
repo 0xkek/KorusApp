@@ -18,26 +18,16 @@ import CoinFlipGame from '../../components/games/CoinFlipGameCompact';
 import { Fonts, FontSizes } from '../../constants/Fonts';
 
 export default function GameScreen() {
-  try {
-    const params = useLocalSearchParams();
-    const id = params.id;
-    const router = useRouter();
-    const { colors, isDarkMode, gradients } = useTheme();
-    const { walletAddress, balance } = useWallet();
-    const { showAlert } = useKorusAlert();
-    const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams();
+  const id = params.id;
+  const router = useRouter();
+  const { colors, isDarkMode, gradients } = useTheme();
+  const { walletAddress, balance } = useWallet();
+  const { showAlert } = useKorusAlert();
+  const insets = useSafeAreaInsets();
   
   const [post, setPost] = useState<PostType | null>(null);
   const currentUserWallet = walletAddress || 'loading...';
-  
-  // Add error boundary
-  if (!id) {
-    return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[styles.loadingText, { color: colors.text }]}>Invalid game ID</Text>
-      </View>
-    );
-  }
   
   useEffect(() => {
     // Check regular posts first - ensure initialPosts is defined and is an array
@@ -129,6 +119,15 @@ export default function GameScreen() {
       router.back();
     }
   }, [id]);
+  
+  // Add error boundary
+  if (!id) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Text style={[styles.loadingText, { color: colors.text }]}>Invalid game ID</Text>
+      </View>
+    );
+  }
   
   if (!post || !post.gameData) {
     return (
@@ -512,7 +511,7 @@ export default function GameScreen() {
               {gameData.status === 'active' && !isMyTurn && isParticipant && (
                 <View style={[styles.turnIndicator, { backgroundColor: colors.surface }]}>
                   <View style={[styles.turnDot, { backgroundColor: colors.warning }]} />
-                  <Text style={[styles.turnText, { color: colors.warning }]}>Opponent's Turn</Text>
+                  <Text style={[styles.turnText, { color: colors.warning }]}>Opponent&apos;s Turn</Text>
                 </View>
               )}
             </View>
@@ -637,26 +636,6 @@ export default function GameScreen() {
       </View>
     </>
   );
-  
-  } catch (error) {
-    console.error('=== ERROR IN GAMESCREEN ===');
-    console.error('Error details:', error);
-    console.error('Error stack:', error.stack);
-    console.error('Error message:', error.message);
-    console.error('=== END ERROR ===');
-    
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}>
-        <Text style={{ color: '#fff', fontSize: 18, marginBottom: 10 }}>Debug Error Information</Text>
-        <Text style={{ color: '#ff0000', fontSize: 14, textAlign: 'center', padding: 20 }}>
-          {error.message || 'Unknown error'}
-        </Text>
-        <Text style={{ color: '#888', fontSize: 12, textAlign: 'center', padding: 10 }}>
-          Check console for full details
-        </Text>
-      </View>
-    );
-  }
 }
 
 const styles = StyleSheet.create({

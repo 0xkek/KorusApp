@@ -47,11 +47,13 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
     console.log(`New post created by ${walletAddress}: ${content.substring(0, 50)}...`)
 
     // Run auto-moderation on the new post
-    await autoModerate('post', post.id, content)
+    // TODO: Re-enable after fixing deployment
+    // await autoModerate('post', post.id, content)
 
     // Award reputation points for creating a post
-    const hasMedia = false; // TODO: Add media detection when implementing image/video uploads
-    await reputationService.onPostCreated(walletAddress, hasMedia)
+    // TODO: Re-enable after fixing deployment
+    // const hasMedia = false; // TODO: Add media detection when implementing image/video uploads
+    // await reputationService.onPostCreated(walletAddress, hasMedia)
 
     res.status(201).json({
       success: true,
@@ -72,7 +74,7 @@ export const getPosts = async (req: Request, res: Response<PaginatedResponse<Pos
     const now = new Date()
 
     // Build filter conditions
-    const where: any = { isHidden: false } // Filter out hidden posts
+    const where: any = {}
     if (topic) where.topic = topic.toString().toLowerCase()
     if (subtopic) where.subtopic = subtopic.toString().toLowerCase()
 

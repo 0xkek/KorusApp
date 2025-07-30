@@ -328,7 +328,7 @@ export default function ProfileScreen() {
               >
                 <LinearGradient
                   colors={gradients.surface}
-                  style={styles.timeFunGradient}
+                  style={styles.timeFunGradientSecondary}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
@@ -1298,13 +1298,13 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     padding: 16,
     alignItems: 'center',
   },
-  statNumber: {
+  statNumberDup: {
     fontSize: FontSizes.xl,
     fontFamily: Fonts.bold,
     color: colors.primary,
     marginBottom: 4,
   },
-  statLabel: {
+  statLabelDup: {
     fontSize: FontSizes.xs,
     fontFamily: Fonts.medium,
     color: colors.textSecondary,
@@ -1556,7 +1556,7 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     borderRadius: 16,
     overflow: 'hidden',
   },
-  statCard: {
+  statCardSecondary: {
     padding: 16,
     alignItems: 'center',
     borderRadius: 16,
@@ -1606,13 +1606,13 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     overflow: 'hidden',
     marginTop: 12,
   },
-  timeFunGradient: {
+  timeFunGradientSecondary: {
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.borderLight + '40',
   },
-  timeFunDisplay: {
+  timeFunDisplaySecondary: {
     flexDirection: 'row',
     alignItems: 'center',
   },

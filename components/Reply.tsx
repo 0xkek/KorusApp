@@ -9,7 +9,7 @@ import { useDisplayName, useSNSDomain } from '../hooks/useSNSDomain';
 // import { sendLocalNotification } from '../utils/notifications';
 
 // Subcomponent for replying to section
-const ReplyingToSection = memo(({ parentUsername }: { parentUsername: string }) => {
+const ReplyingToSection = memo(function ReplyingToSection({ parentUsername }: { parentUsername: string }) {
   const { colors } = useTheme();
   const { domain } = useSNSDomain(parentUsername);
   
@@ -85,21 +85,16 @@ const Reply = memo<ReplyProps>(function Reply({
 }) {
   const { colors, isDarkMode, gradients } = useTheme();
   
-  // Guard against invalid reply
-  if (!reply || !reply.id) {
-    return null;
-  }
-  
   // Safe defaults for reply properties
-  const replyWallet = reply.wallet || '';
-  const replyContent = reply.content || '';
-  const replyLikes = reply.likes || 0;
-  const replyTips = reply.tips || 0;
-  const replyLiked = reply.liked || false;
-  const replyTime = reply.time || '';
-  const replyIsPremium = reply.isPremium || false;
-  const replyUsername = reply.username || '';
-  const replyUserTheme = reply.userTheme || '#43e97b';
+  const replyWallet = reply?.wallet || '';
+  const replyContent = reply?.content || '';
+  const replyLikes = reply?.likes || 0;
+  const replyTips = reply?.tips || 0;
+  const replyLiked = reply?.liked || false;
+  const replyTime = reply?.time || '';
+  const replyIsPremium = reply?.isPremium || false;
+  const replyUsername = reply?.username || '';
+  const replyUserTheme = reply?.userTheme || '#43e97b';
   
   // Memoize callbacks
   const handleLike = useCallback(() => {
@@ -141,6 +136,11 @@ const Reply = memo<ReplyProps>(function Reply({
   const { quotedText, replyText } = parseContent(replyContent);
   const bumpActive = isBumpActive(reply);
   const displayName = useDisplayName(replyWallet, replyIsPremium);
+
+  // Guard against invalid reply
+  if (!reply || !reply.id) {
+    return null;
+  }
 
   return (
     <View style={[styles.replyContainer, { marginHorizontal: isDetailView ? 15 : 0 }]}>

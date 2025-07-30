@@ -215,7 +215,7 @@ export default function WalletScreen() {
                         Tipped <Text style={styles.activityUser}>@{activity.user}</Text>
                       </Text>
                       <Text style={styles.activityContext} numberOfLines={1}>
-                        "{activity.context}"
+                        &quot;{activity.context}&quot;
                       </Text>
                     </>
                   )}
@@ -226,7 +226,7 @@ export default function WalletScreen() {
                         Received tip from <Text style={styles.activityUser}>@{activity.user}</Text>
                       </Text>
                       <Text style={styles.activityContext} numberOfLines={1}>
-                        "{activity.context}"
+                        &quot;{activity.context}&quot;
                       </Text>
                     </>
                   )}
