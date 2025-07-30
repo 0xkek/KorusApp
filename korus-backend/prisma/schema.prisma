@@ -63,8 +63,8 @@ model Post {
   id           String @id @default(cuid())
   authorWallet String @db.VarChar(44)
   content      String @db.Text
-  topic        String @db.VarChar(50)
-  subtopic     String @db.VarChar(100)
+  topic        String? @db.VarChar(50)
+  subtopic     String? @db.VarChar(100)
 
   // Interaction counts (for quick display)
   likeCount  Int @default(0)

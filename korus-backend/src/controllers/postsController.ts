@@ -29,9 +29,8 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
     const post = await prisma.post.create({
       data: {
         authorWallet: walletAddress,
-        content: content.trim(),
-        topic: 'general', // Default value until schema is updated
-        subtopic: 'general' // Default value until schema is updated
+        content: content.trim()
+        // topic and subtopic are now optional
       },
       include: {
         author: {
@@ -69,52 +68,31 @@ export const getPosts = async (req: Request, res: Response<PaginatedResponse<Pos
   try {
     const { limit = 20, offset = 0 } = req.query
 
-    // Simple query without topic/subtopic
+    // Get posts with author info
     const posts = await prisma.post.findMany({
-      select: {
-        id: true,
-        authorWallet: true,
-        content: true,
-        likeCount: true,
-        replyCount: true,
-        tipCount: true,
-        createdAt: true,
-        updatedAt: true
+      include: {
+        author: {
+          select: {
+            walletAddress: true,
+            tier: true,
+            genesisVerified: true
+          }
+        }
       },
       orderBy: { createdAt: 'desc' },
       take: Number(limit),
       skip: Number(offset)
     })
 
-    // Get author data separately
-    const authorWallets = [...new Set(posts.map(p => p.authorWallet))]
-    const authors = await prisma.user.findMany({
-      where: { walletAddress: { in: authorWallets } },
-      select: {
-        walletAddress: true,
-        tier: true,
-        genesisVerified: true
-      }
-    })
-
-    // Map authors to posts
-    const authorMap = new Map(authors.map(a => [a.walletAddress, a]))
-    
-    const postsWithAuthors = posts.map(post => ({
+    // Add empty replies array for compatibility
+    const postsWithReplies = posts.map(post => ({
       ...post,
-      topic: 'general', // Default value for compatibility
-      subtopic: 'general', // Default value for compatibility
-      author: authorMap.get(post.authorWallet) || {
-        walletAddress: post.authorWallet,
-        tier: 'free',
-        genesisVerified: false
-      },
-      replies: [] // Empty replies for now
+      replies: []
     }))
 
     res.json({
       success: true,
-      posts: postsWithAuthors,
+      posts: postsWithReplies,
       pagination: {
         limit: Number(limit),
         offset: Number(offset),
