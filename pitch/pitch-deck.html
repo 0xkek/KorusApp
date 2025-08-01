@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Korus - Pitch Deck</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0a;
+      color: white;
+      overflow: hidden;
+    }
+
+    .slides {
+      display: flex;
+      transition: transform 0.5s ease;
+      height: 100vh;
+    }
+
+    .slide {
+      min-width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px;
+      position: relative;
+    }
+
+    .slide-number {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    h1 {
+      font-size: 80px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 60px;
+      font-weight: 800;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    h3 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #43e97b;
+      margin-bottom: 30px;
+    }
+
+    p {
+      font-size: 32px;
+      line-height: 1.6;
+      color: #ccc;
+      text-align: center;
+      max-width: 900px;
+    }
+
+    .tagline {
+      font-size: 28px;
+      color: #888;
+      margin-bottom: 40px;
+    }
+
+    .problem-list {
+      list-style: none;
+      font-size: 36px;
+      line-height: 2;
+    }
+
+    .problem-list li:before {
+      content: "❌ ";
+      color: #ff6b6b;
+      margin-right: 20px;
+    }
+
+    .solution-list {
+      list-style: none;
+      font-size: 36px;
+      line-height: 2;
+    }
+
+    .solution-list li:before {
+      content: "✓ ";
+      color: #43e97b;
+      margin-right: 20px;
+      font-weight: bold;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 40px;
+      max-width: 1000px;
+    }
+
+    .feature {
+      background: rgba(67, 233, 123, 0.1);
+      border: 2px solid rgba(67, 233, 123, 0.3);
+      padding: 30px;
+      border-radius: 20px;
+      text-align: center;
+    }
+
+    .feature h4 {
+      font-size: 28px;
+      color: #43e97b;
+      margin-bottom: 10px;
+    }
+
+    .feature p {
+      font-size: 20px;
+      color: #aaa;
+    }
+
+    .tech-stack {
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 40px;
+    }
+
+    .tech-item {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px 40px;
+      border-radius: 50px;
+      font-size: 24px;
+      border: 2px solid rgba(67, 233, 123, 0.5);
+    }
+
+    .demo-image {
+      max-width: 400px;
+      height: auto;
+      border-radius: 40px;
+      box-shadow: 0 20px 60px rgba(67, 233, 123, 0.3);
+      border: 10px solid #222;
+    }
+
+    .stats {
+      display: flex;
+      gap: 60px;
+      margin-top: 40px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 72px;
+      font-weight: 900;
+      color: #43e97b;
+    }
+
+    .stat-label {
+      font-size: 24px;
+      color: #888;
+    }
+
+    .navigation {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+      z-index: 100;
+    }
+
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(67, 233, 123, 0.5);
+      color: white;
+      padding: 15px 30px;
+      border-radius: 30px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .nav-btn:hover {
+      background: rgba(67, 233, 123, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .logo {
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 80px;
+      font-weight: 900;
+      color: #000;
+      margin-bottom: 40px;
+    }
+
+    .highlight {
+      color: #43e97b;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="slides" id="slides">
+    <!-- Slide 1: Title -->
+    <div class="slide">
+      <div class="logo">K</div>
+      <h1>Korus</h1>
+      <p class="tagline">The Bot-Free Social Platform on Solana</p>
+      <p style="margin-top: 60px; font-size: 24px; color: #666;">Solana Hackathon Submission</p>
+      <div class="slide-number">1 / 11</div>
+    </div>
+
+    <!-- Slide 2: Problem -->
+    <div class="slide">
+      <h2>The Problem</h2>
+      <ul class="problem-list">
+        <li>Twitter has 75% bots</li>
+        <li>Fake engagement everywhere</li>
+        <li>Can't verify real humans</li>
+        <li>Bot farms manipulate discussions</li>
+      </ul>
+      <div class="slide-number">2 / 11</div>
+    </div>
+
+    <!-- Slide 3: Solution -->
+    <div class="slide">
+      <h2>The Solution</h2>
+      <ul class="solution-list">
+        <li>Wallet = Identity</li>
+        <li>One wallet, one account</li>
+        <li>Cryptographic verification</li>
+        <li>Bots can't fake at scale</li>
+      </ul>
+      <p style="margin-top: 40px; font-size: 28px;">Real humans, real conversations, real value</p>
+      <div class="slide-number">3 / 11</div>
+    </div>
+
+    <!-- Slide 4: Product Demo -->
+    <div class="slide">
+      <h2>Live Demo</h2>
+      <p style="margin-bottom: 40px;">Try it now on your phone or computer</p>
+      <div style="background: rgba(67, 233, 123, 0.1); padding: 40px; border-radius: 20px; border: 2px solid #43e97b;">
+        <p style="font-size: 48px; font-weight: bold; color: #43e97b; margin-bottom: 20px;">🌐 [YOUR-VERCEL-URL]</p>
+        <p style="font-size: 24px;">Connect wallet → Get 5000 ALLY → Start posting!</p>
+      </div>
+      <div class="slide-number">4 / 11</div>
+    </div>
+
+    <!-- Slide 5: How It Works -->
+    <div class="slide">
+      <h2>How It Works</h2>
+      <div style="text-align: left; font-size: 32px; line-height: 2;">
+        <p>1️⃣ Connect Solana wallet (Phantom, Solflare)</p>
+        <p>2️⃣ Sign message to verify ownership</p>
+        <p>3️⃣ Receive 5000 ALLY tokens</p>
+        <p>4️⃣ Post, tip, play games - all bot-free!</p>
+      </div>
+      <div class="slide-number">5 / 11</div>
+    </div>
+
+    <!-- Slide 6: Key Features -->
+    <div class="slide">
+      <h2>Key Features</h2>
+      <div class="feature-grid">
+        <div class="feature">
+          <h4>Verified Accounts</h4>
+          <p>Every user is a real wallet owner</p>
+        </div>
+        <div class="feature">
+          <h4>Token Economy</h4>
+          <p>Tip creators with ALLY tokens</p>
+        </div>
+        <div class="feature">
+          <h4>On-Chain Gaming</h4>
+          <p>Wager tokens in games</p>
+        </div>
+        <div class="feature">
+          <h4>Weekly Rewards</h4>
+          <p>Earn from community treasury</p>
+        </div>
+      </div>
+      <div class="slide-number">6 / 11</div>
+    </div>
+
+    <!-- Slide 7: Gaming Innovation -->
+    <div class="slide">
+      <h2>Gaming Innovation</h2>
+      <h3 style="margin-bottom: 40px;">First social platform with integrated crypto gaming</h3>
+      <div style="display: flex; gap: 40px; justify-content: center; flex-wrap: wrap;">
+        <div style="font-size: 36px;">🎮 Tic-tac-toe</div>
+        <div style="font-size: 36px;">✂️ Rock Paper Scissors</div>
+        <div style="font-size: 36px;">🔴 Connect Four</div>
+        <div style="font-size: 36px;">🪙 Coin Flip</div>
+      </div>
+      <p style="margin-top: 40px;">Escrow system ensures fair play</p>
+      <div class="slide-number">7 / 11</div>
+    </div>
+
+    <!-- Slide 8: Tech Stack -->
+    <div class="slide">
+      <h2>Tech Stack</h2>
+      <div class="tech-stack">
+        <div class="tech-item">React Native</div>
+        <div class="tech-item">TypeScript</div>
+        <div class="tech-item">Solana Web3.js</div>
+        <div class="tech-item">PostgreSQL</div>
+        <div class="tech-item">Express.js</div>
+        <div class="tech-item">Prisma ORM</div>
+      </div>
+      <p style="margin-top: 40px; font-size: 24px;">Deployed on Vercel + Render</p>
+      <div class="slide-number">8 / 11</div>
+    </div>
+
+    <!-- Slide 9: Why Solana -->
+    <div class="slide">
+      <h2>Why Solana?</h2>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-number">65k</div>
+          <div class="stat-label">TPS</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">$0.00025</div>
+          <div class="stat-label">Per Transaction</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">400ms</div>
+          <div class="stat-label">Block Time</div>
+        </div>
+      </div>
+      <p style="margin-top: 40px;">Perfect for micro-tipping and real-time gaming</p>
+      <div class="slide-number">9 / 11</div>
+    </div>
+
+    <!-- Slide 10: Traction & Next Steps -->
+    <div class="slide">
+      <h2>Traction & Next Steps</h2>
+      <div style="text-align: left; font-size: 28px; line-height: 2;">
+        <p>✅ Live demo deployed</p>
+        <p>✅ Backend operational</p>
+        <p>✅ Wallet authentication working</p>
+        <p style="margin-top: 30px; color: #43e97b;">🚀 Next: Mainnet launch</p>
+        <p style="color: #43e97b;">🚀 Compressed NFTs for profiles</p>
+        <p style="color: #43e97b;">🚀 On-chain game contracts</p>
+      </div>
+      <div class="slide-number">10 / 11</div>
+    </div>
+
+    <!-- Slide 11: The Ask -->
+    <div class="slide">
+      <h2>The Ask</h2>
+      <div style="font-size: 36px; line-height: 2; text-align: left;">
+        <p>🎯 Feedback from Solana team</p>
+        <p>🤝 Support for mainnet launch</p>
+        <p>🎮 Intros to gaming projects</p>
+        <p>📈 Help with user acquisition</p>
+      </div>
+      <p style="margin-top: 60px; font-size: 48px; font-weight: bold;">
+        Let's make social media <span class="highlight">human again</span>
+      </p>
+      <div class="slide-number">11 / 11</div>
+    </div>
+  </div>
+
+  <div class="navigation">
+    <button class="nav-btn" onclick="previousSlide()">Previous</button>
+    <button class="nav-btn" onclick="nextSlide()">Next</button>
+  </div>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.getElementById('slides');
+    const totalSlides = 11;
+
+    function showSlide(n) {
+      currentSlide = Math.max(0, Math.min(n, totalSlides - 1));
+      slides.style.transform = `translateX(-${currentSlide * 100}vw)`;
+    }
+
+    function nextSlide() {
+      showSlide(currentSlide + 1);
+    }
+
+    function previousSlide() {
+      showSlide(currentSlide - 1);
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') nextSlide();
+      if (e.key === 'ArrowLeft') previousSlide();
+    });
+  </script>
+</body>
+</html>
