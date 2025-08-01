@@ -8,7 +8,6 @@ import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useWallet } from '../context/WalletContext';
-import { initialPosts } from '../data/mockData';
 import { Post as PostType } from '../types';
 import Post from '../components/Post';
 import { Fonts, FontSizes } from '../constants/Fonts';
@@ -59,33 +58,17 @@ export default function ProfileScreen() {
   const [showTipSuccessModal, setShowTipSuccessModal] = useState(false);
   const [tipSuccessData, setTipSuccessData] = useState<{ amount: number; username: string } | null>(null);
   
-  // Extract user info from posts
+  // Extract user info from current user if viewing own profile
   const userInfo = React.useMemo(() => {
-    const userPost = initialPosts.find(p => p.wallet === profileWallet);
-    if (userPost) {
+    if (profileWallet === currentUserWallet) {
       return {
         wallet: profileWallet,
-        username: userPost.username,
-        avatar: userPost.avatar,
-        nftAvatar: userPost.nftAvatar,
-        isPremium: userPost.isPremium,
-        userTheme: userPost.userTheme
+        username: snsDomain || timeFunUsername,
+        avatar: selectedAvatar,
+        nftAvatar: selectedNFTAvatar,
+        isPremium: isPremium,
+        userTheme: colors.primary
       };
-    }
-    
-    // Check in replies
-    for (const post of initialPosts) {
-      const reply = post.replies.find(r => r.wallet === profileWallet);
-      if (reply) {
-        return {
-          wallet: profileWallet,
-          username: undefined,
-          avatar: reply.avatar,
-          nftAvatar: reply.nftAvatar,
-          isPremium: reply.isPremium,
-          userTheme: reply.userTheme
-        };
-      }
     }
     
     return {
@@ -96,28 +79,27 @@ export default function ProfileScreen() {
       isPremium: false,
       userTheme: colors.primary
     };
-  }, [profileWallet, colors.primary]);
+  }, [profileWallet, currentUserWallet, snsDomain, timeFunUsername, selectedAvatar, selectedNFTAvatar, isPremium, colors.primary]);
   
   useEffect(() => {
-    // Filter posts by user
-    const posts = initialPosts.filter(p => p.wallet === profileWallet);
-    setUserPosts(posts);
+    // TODO: Fetch user posts from API
+    setUserPosts([]);
   }, [profileWallet]);
   
   
   const stats = React.useMemo(() => {
-    const posts = initialPosts.filter(p => p.wallet === profileWallet);
+    const posts = userPosts;
     const totalLikes = posts.reduce((sum, post) => sum + post.likes, 0);
     const totalTips = posts.reduce((sum, post) => sum + post.tips, 0);
     
     let replyCount = 0;
     let postsWithImages = 0;
     
-    initialPosts.forEach(post => {
-      replyCount += post.replies.filter(r => r.wallet === profileWallet).length;
+    posts.forEach(post => {
+      replyCount += post.replies?.length || 0;
       
       // Count posts with images
-      if (post.wallet === profileWallet && (post.imageUrl || post.videoUrl)) {
+      if (post.imageUrl || post.videoUrl) {
         postsWithImages++;
       }
     });
@@ -756,7 +738,7 @@ export default function ProfileScreen() {
           <AvatarSelectionModal
             visible={showAvatarSelection}
             onClose={() => setShowAvatarSelection(false)}
-            onSelectAvatar={(avatar) => {
+            onSelect={(avatar) => {
               setSelectedAvatar(avatar);
               setSelectedNFTAvatar(null);
               setShowAvatarSelection(false);

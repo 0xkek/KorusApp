@@ -15,64 +15,103 @@ export interface NFT {
   };
 }
 
-// Mock NFTs for development
-const MOCK_NFTS: NFT[] = [
-  {
-    name: "Cool Ape #1234",
-    symbol: "CAPE",
-    uri: "https://example.com/metadata/1",
-    image: "https://picsum.photos/200/200?random=1",
-    mint: "mockMint1",
-    collection: { name: "Cool Apes", family: "Apes" }
-  },
-  {
-    name: "Pixel Punk #5678",
-    symbol: "PUNK",
-    uri: "https://example.com/metadata/2",
-    image: "https://picsum.photos/200/200?random=2",
-    mint: "mockMint2",
-    collection: { name: "Pixel Punks" }
-  },
-  {
-    name: "Space Cat #9012",
-    symbol: "SCAT",
-    uri: "https://example.com/metadata/3",
-    image: "https://picsum.photos/200/200?random=3",
-    mint: "mockMint3",
-    collection: { name: "Space Cats", family: "Cats" }
-  },
-  {
-    name: "Degen Doge #3456",
-    symbol: "DOGE",
-    uri: "https://example.com/metadata/4",
-    image: "https://picsum.photos/200/200?random=4",
-    mint: "mockMint4",
-    collection: { name: "Degen Doges" }
-  }
-];
+// Simple in-memory cache
+const nftCache: { [walletAddress: string]: { nfts: NFT[], timestamp: number } } = {};
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export async function fetchNFTsFromWallet(walletAddress: string): Promise<NFT[]> {
-  try {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // For now, always return mock NFTs until we resolve the Solana dependency issues
-    // In production, this would make an API call to a backend service
-    // that handles the Solana blockchain interaction
-    
-    // Return a random subset of mock NFTs to simulate different wallets
-    const randomCount = Math.floor(Math.random() * MOCK_NFTS.length) + 1;
-    const shuffled = [...MOCK_NFTS].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, randomCount);
+  if (!walletAddress) {
+    console.error('No wallet address provided for NFT fetching');
+    return [];
+  }
 
-    /* Production code would look like:
-    const response = await fetch(`${API_URL}/nfts/${walletAddress}`);
-    const nfts = await response.json();
+  // Check cache first
+  const cached = nftCache[walletAddress];
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    console.log('Returning cached NFTs');
+    return cached.nfts;
+  }
+
+  try {
+    // Use Helius RPC endpoint with DAS API
+    const HELIUS_RPC_URL = 'https://mainnet.helius-rpc.com/?api-key=3d27295a-caf5-4a92-9fee-b52aa43e54bd';
+    
+    console.log('Fetching NFTs for wallet:', walletAddress);
+    
+    // Use the DAS API getAssetsByOwner method - reduced limit for faster response
+    const response = await fetch(HELIUS_RPC_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 'nft-fetch',
+        method: 'getAssetsByOwner',
+        params: {
+          ownerAddress: walletAddress,
+          page: 1,
+          limit: 50, // Reduced from 1000 to 50 for faster response
+          displayOptions: {
+            showFungible: false,
+            showNativeBalance: false,
+            showInscription: false,
+          },
+        },
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok || data.error) {
+      console.error('Helius RPC error:', data.error || data);
+      console.error('Response status:', response.status);
+      
+      // Return empty array instead of throwing
+      return [];
+    }
+    
+    const assets = data.result?.items || [];
+    console.log(`Helius DAS API returned ${assets.length} assets`);
+    
+    // Transform DAS API response to our NFT format - process in parallel
+    const nfts: NFT[] = assets
+      .filter((item: any) => {
+        // Quick filter - only check for basic image presence
+        return item.content?.links?.image || item.content?.files?.[0]?.uri;
+      })
+      .slice(0, 20) // Limit to first 20 NFTs for performance
+      .map((item: any) => {
+        // Handle different image URL formats from DAS API
+        const imageUrl = item.content?.links?.image || 
+                        item.content?.files?.[0]?.uri || 
+                        '';
+        
+        return {
+          name: item.content?.metadata?.name || 'Unknown NFT',
+          symbol: item.content?.metadata?.symbol || 'NFT',
+          uri: item.content?.json_uri || '',
+          image: imageUrl,
+          mint: item.id || '',
+          updateAuthority: item.authorities?.[0]?.address || '',
+          collection: item.grouping?.[0] ? {
+            name: item.grouping[0].collection_metadata?.name || 'Unknown Collection',
+            family: item.grouping[0].collection_metadata?.family
+          } : undefined
+        };
+      });
+    
+    console.log(`Processed ${nfts.length} NFTs with images`);
+    
+    // Cache the results
+    nftCache[walletAddress] = {
+      nfts,
+      timestamp: Date.now()
+    };
+    
     return nfts;
-    */
   } catch (error) {
     console.error('Error fetching NFTs:', error);
-    // Return empty array on error
     return [];
   }
 }

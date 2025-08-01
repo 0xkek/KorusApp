@@ -31,6 +31,7 @@ interface WalletContextType {
   // Wallet connection methods
   connectWallet: (provider: WalletProviderInterface) => Promise<boolean>;
   disconnectWallet: () => Promise<void>;
+  logout: () => Promise<void>;
   signMessage: (message: string) => Promise<string | null>;
   
   // App-specific methods
@@ -470,6 +471,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       availableWallets,
       connectWallet,
       disconnectWallet,
+      logout: disconnectWallet, // logout is an alias for disconnectWallet
       signMessage,
       refreshBalance,
       deductBalance,

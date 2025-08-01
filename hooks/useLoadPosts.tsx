@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { postsAPI, hasAuthToken, interactionsAPI } from '../utils/api';
 import { Post as PostType } from '../types';
 import { logger } from '../utils/logger';
-import { initialPosts } from '../data/mockData';
 
 export function useLoadPosts() {
   const [posts, setPosts] = useState<PostType[]>([]);
@@ -70,9 +69,9 @@ export function useLoadPosts() {
           setPosts(transformedPosts);
         }
       } else {
-        // If no posts from API, show some mock posts to get started
-        logger.log('No posts from API, using mock data');
-        setPosts(initialPosts.slice(0, 5));
+        // If no posts from API, show empty array
+        logger.log('No posts from API');
+        setPosts([]);
       }
     } catch (err: any) {
       logger.error('Failed to load posts:', err);
@@ -95,8 +94,8 @@ export function useLoadPosts() {
       setError(errorMsg);
       logger.error('Setting error message:', errorMsg);
       
-      // Fall back to mock data if API fails
-      setPosts(initialPosts);
+      // Show empty posts if API fails
+      setPosts([]);
     } finally {
       setLoading(false);
     }

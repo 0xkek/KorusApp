@@ -10,7 +10,6 @@ const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 import { useKorusAlert } from '../../components/KorusAlertProvider';
 import { useTheme } from '../../context/ThemeContext';
 import { useWallet } from '../../context/WalletContext';
-import { initialPosts } from '../../data/mockData';
 import { Post as PostType, Reply, GameType } from '../../types';
 import { registerForPushNotificationsAsync, setupNotificationListeners } from '../../utils/notifications';
 import { Ionicons } from '@expo/vector-icons';

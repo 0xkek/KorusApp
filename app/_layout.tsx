@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { KorusAlertProvider } from '../components/KorusAlertProvider';
 import { WalletProvider } from '../context/WalletContext';
+import { NotificationProvider } from '../context/NotificationContext';
 import ErrorBoundary from '../components/ErrorBoundary';
 
 function RootLayoutNav() {
@@ -58,9 +59,11 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <ThemeProvider>
           <WalletProvider>
-            <KorusAlertProvider>
-              <RootLayoutNav />
-            </KorusAlertProvider>
+            <NotificationProvider>
+              <KorusAlertProvider>
+                <RootLayoutNav />
+              </KorusAlertProvider>
+            </NotificationProvider>
           </WalletProvider>
         </ThemeProvider>
       </SafeAreaProvider>

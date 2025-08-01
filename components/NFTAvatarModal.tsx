@@ -37,14 +37,21 @@ export default function NFTAvatarModal({
   }, [visible, walletAddress]);
 
   const loadNFTs = async () => {
-    if (!walletAddress) return;
+    if (!walletAddress) {
+      console.error('NFTAvatarModal: No wallet address available');
+      setLoading(false);
+      return;
+    }
+    
+    console.log('NFTAvatarModal: Loading NFTs for wallet:', walletAddress);
     
     setLoading(true);
     try {
       const fetchedNFTs = await fetchNFTsFromWallet(walletAddress);
+      console.log('NFTAvatarModal: Received', fetchedNFTs.length, 'NFTs');
       setNfts(fetchedNFTs);
     } catch (error) {
-      console.error('Error loading NFTs:', error);
+      console.error('NFTAvatarModal: Error loading NFTs:', error);
       setNfts([]);
     } finally {
       setLoading(false);
@@ -161,7 +168,12 @@ export default function NFTAvatarModal({
                 </View>
               ) : nfts.length === 0 ? (
                 <View style={styles.emptyContainer}>
-                  <Text style={[styles.emptyText, { color: colors.textTertiary }]}>No NFTs found in your wallet</Text>
+                  <Text style={[styles.emptyText, { color: colors.textTertiary }]}>
+                    {walletAddress ? 'Unable to load NFTs at this time' : 'No wallet connected'}
+                  </Text>
+                  <Text style={[styles.emptySubtext, { color: colors.textTertiary, marginTop: 8 }]}>
+                    Please try again later or use an emoji avatar
+                  </Text>
                   <TouchableOpacity 
                     style={styles.emojiButton} 
                     onPress={() => {
@@ -371,6 +383,12 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     fontFamily: Fonts.medium,
     textAlign: 'center',
     marginBottom: 24,
+  },
+  emptySubtext: {
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.regular,
+    textAlign: 'center',
+    marginBottom: 16,
   },
   emojiButton: {
     borderRadius: 16,

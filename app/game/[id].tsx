@@ -9,7 +9,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
 import { useWallet } from '../../context/WalletContext';
 import { Post as PostType } from '../../types';
-import { initialPosts } from '../../data/mockData';
 import { useKorusAlert } from '../../components/KorusAlertProvider';
 import TicTacToeGame from '../../components/games/TicTacToeGame';
 import RockPaperScissorsGame from '../../components/games/RockPaperScissorsGame';
@@ -30,94 +29,13 @@ export default function GameScreen() {
   const currentUserWallet = walletAddress || 'loading...';
   
   useEffect(() => {
-    // Check regular posts first - ensure initialPosts is defined and is an array
-    let foundPost = initialPosts && Array.isArray(initialPosts) ? initialPosts.find(p => p.id === Number(id)) : null;
-    
-    // If not found, create a sample game post for testing
-    if (!foundPost && Number(id) >= 9997 && Number(id) <= 9999) {
-      const sampleGames = {
-        9999: {
-          id: 9999,
-          wallet: 'DeMo1K8tQpVHgLpQeN4eSkVHgfr6k6pVxZfO3syhUser',
-          time: 'Just now',
-          content: 'Looking for a Tic Tac Toe opponent!',
-          likes: 0,
-          replies: [],
-          tips: 0,
-          liked: false,
-          bumped: false,
-          category: 'GAMES',
-          isPremium: true,
-          userTheme: '#43e97b',
-          gameData: {
-            type: 'tictactoe' as const,
-            wager: 25,
-            player1: 'DeMo1K8tQpVHgLpQeN4eSkVHgfr6k6pVxZfO3syhUser',
-            status: 'waiting' as const,
-            createdAt: Date.now(),
-            expiresAt: Date.now() + 300000, // 5 minutes
-            board: [[null, null, null], [null, null, null], [null, null, null]]
-          }
-        },
-        9998: {
-          id: 9998,
-          wallet: 'RpS2K8tQpVHgLpQeN4eSkVHgfr6k6pVxZfO3syhGamer',
-          time: '2m ago',
-          content: 'Rock Paper Scissors - Best of 3!',
-          likes: 1,
-          replies: [],
-          tips: 0,
-          liked: false,
-          bumped: false,
-          category: 'GAMES',
-          isPremium: false,
-          userTheme: '#FF6B6B',
-          gameData: {
-            type: 'rps' as const,
-            wager: 50,
-            player1: 'RpS2K8tQpVHgLpQeN4eSkVHgfr6k6pVxZfO3syhGamer',
-            status: 'waiting' as const,
-            createdAt: Date.now() - 120000,
-            expiresAt: Date.now() + 300000, // 5 minutes
-          }
-        },
-        9997: {
-          id: 9997,
-          wallet: 'C4nN3K8tQpVHgLpQeN4eSkVHgfr6k6pVxZfO3syhCon4',
-          time: '5m ago',
-          content: 'Connect Four challenge - get 4 in a row!',
-          likes: 2,
-          replies: [],
-          tips: 0,
-          liked: false,
-          bumped: false,
-          category: 'GAMES',
-          isPremium: true,
-          userTheme: '#4ECDC4',
-          gameData: {
-            type: 'connect4' as const,
-            wager: 15,
-            player1: 'C4nN3K8tQpVHgLpQeN4eSkVHgfr6k6pVxZfO3syhCon4',
-            status: 'waiting' as const,
-            createdAt: Date.now() - 300000,
-            expiresAt: Date.now() + 300000, // 5 minutes
-            board: Array(6).fill(null).map(() => Array(7).fill(null))
-          }
-        }
-      };
-      foundPost = sampleGames[Number(id) as keyof typeof sampleGames];
-    }
-    
-    if (foundPost && foundPost.gameData) {
-      setPost(foundPost);
-    } else {
-      showAlert({
-        title: 'Error',
-        message: 'Game not found',
-        type: 'error'
-      });
-      router.back();
-    }
+    // TODO: Fetch game post from API
+    showAlert({
+      title: 'Error',
+      message: 'Game not found',
+      type: 'error'
+    });
+    router.back();
   }, [id]);
   
   // Add error boundary

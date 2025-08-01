@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../../context/ThemeContext';
+import { useWallet } from '../../context/WalletContext';
+import { useNotifications } from '../../context/NotificationContext';
 import { Fonts, FontSizes } from '../../constants/Fonts';
+import { ApiService } from '../../services/api';
+import { logger } from '../../utils/logger';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Notification {
   id: string;
@@ -15,339 +20,341 @@ interface Notification {
   read: boolean;
   fromUser: string;
   postPreview?: string;
-  amount?: number; // for tips
+  amount?: number;
+  createdAt?: string;
 }
 
 export default function NotificationsScreen() {
   const { colors, isDarkMode, gradients } = useTheme();
+  const { walletAddress } = useWallet();
+  const { markAsRead: contextMarkAsRead, markAllAsRead: contextMarkAllAsRead, refreshUnreadCount } = useNotifications();
+  const insets = useSafeAreaInsets();
   
-  // Mock notifications data
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      type: 'tip',
-      title: 'You received a tip!',
-      message: 'tipped you 5 $ALLY',
-      time: '2m ago',
-      read: false,
-      fromUser: 'zR8f...kL3m',
-      postPreview: 'Been struggling with imposter syndrome...',
-      amount: 5,
-    },
-    {
-      id: '2',
-      type: 'like',
-      title: 'New like on your post',
-      message: 'liked your post',
-      time: '15m ago',
-      read: false,
-      fromUser: 'mH5t...rK8j',
-      postPreview: 'Just hit my first $10K in crypto gains...',
-    },
-    {
-      id: '3',
-      type: 'reply',
-      title: 'New reply to your post',
-      message: 'replied: "This is so true! I felt the same way..."',
-      time: '1h ago',
-      read: true,
-      fromUser: 'nQ7p...vX9w',
-      postPreview: 'Been struggling with imposter syndrome...',
-    },
-    {
-      id: '4',
-      type: 'bump',
-      title: 'Your post was bumped!',
-      message: 'bumped your post',
-      time: '3h ago',
-      read: true,
-      fromUser: 'aB4c...9Fz2',
-      postPreview: 'Pro tip: Before every difficult conversation...',
-    },
-    {
-      id: '5',
-      type: 'mention',
-      title: 'You were mentioned',
-      message: 'mentioned you in a post',
-      time: '5h ago',
-      read: true,
-      fromUser: 'cG7h...xN3p',
-    },
-  ]);
-
-  const getNotificationIcon = (type: Notification['type']) => {
-    switch (type) {
-      case 'like':
-        return 'heart';
-      case 'reply':
-        return 'chatbubble';
-      case 'tip':
-        return 'cash';
-      case 'bump':
-        return 'trending-up';
-      case 'follow':
-        return 'person-add';
-      case 'mention':
-        return 'at';
-      default:
-        return 'notifications';
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  
+  const styles = React.useMemo(() => createStyles(colors, isDarkMode, insets), [colors, isDarkMode, insets]);
+  
+  // Fetch notifications
+  const fetchNotifications = async () => {
+    if (!walletAddress) {
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      const response = await ApiService.notifications.getAll();
+      
+      if (response.notifications) {
+        // Transform backend notifications to app format
+        const transformedNotifications = response.notifications.map((notif: any) => ({
+          id: notif.id,
+          type: notif.type,
+          title: getNotificationTitle(notif.type),
+          message: notif.message || getNotificationMessage(notif),
+          time: getTimeAgo(notif.createdAt),
+          read: notif.read || false,
+          fromUser: notif.fromUser?.walletAddress || notif.fromUserWallet || 'Unknown',
+          postPreview: notif.post?.content,
+          amount: notif.amount,
+          createdAt: notif.createdAt,
+        }));
+        
+        setNotifications(transformedNotifications);
+        
+        // Refresh the global unread count
+        refreshUnreadCount();
+      }
+    } catch (error) {
+      logger.error('Failed to fetch notifications:', error);
+      // If API fails, show empty state
+      setNotifications([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
-
-  const getNotificationColor = (type: Notification['type']) => {
+  
+  useEffect(() => {
+    fetchNotifications();
+  }, [walletAddress]);
+  
+  // Refresh unread count when screen comes into focus
+  useEffect(() => {
+    const unsubscribe = () => refreshUnreadCount();
+    return unsubscribe;
+  }, [refreshUnreadCount]);
+  
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchNotifications();
+  };
+  
+  const getNotificationTitle = (type: string): string => {
     switch (type) {
-      case 'like':
-        return '#FF4444';
-      case 'reply':
-        return colors.primary;
-      case 'tip':
-        return '#FFD700';
-      case 'bump':
-        return '#00D4FF';
-      case 'follow':
-        return '#9945FF';
-      case 'mention':
-        return '#FF6B9D';
-      default:
-        return colors.primary;
+      case 'like': return 'New like on your post';
+      case 'reply': return 'New reply to your post';
+      case 'tip': return 'You received a tip!';
+      case 'bump': return 'Your post was bumped!';
+      case 'follow': return 'New follower';
+      case 'mention': return 'You were mentioned';
+      default: return 'New notification';
     }
   };
-
+  
+  const getNotificationMessage = (notif: any): string => {
+    const username = notif.fromUser?.username || `${notif.fromUserWallet?.slice(0, 4)}...${notif.fromUserWallet?.slice(-4)}`;
+    
+    switch (notif.type) {
+      case 'like': return `${username} liked your post`;
+      case 'reply': return `${username} replied to your post`;
+      case 'tip': return `${username} tipped you ${notif.amount || 0} SOL`;
+      case 'bump': return `${username} bumped your post`;
+      case 'follow': return `${username} started following you`;
+      case 'mention': return `${username} mentioned you`;
+      default: return 'New activity on your post';
+    }
+  };
+  
+  const getTimeAgo = (timestamp: string): string => {
+    if (!timestamp) return 'Just now';
+    
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diff = now.getTime() - time.getTime();
+    
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
+    return time.toLocaleDateString();
+  };
+  
+  const markAsRead = async (id: string) => {
+    try {
+      await contextMarkAsRead(id);
+      setNotifications(prev => 
+        prev.map(n => n.id === id ? { ...n, read: true } : n)
+      );
+    } catch (error) {
+      logger.error('Failed to mark notification as read:', error);
+    }
+  };
+  
+  const markAllAsRead = async () => {
+    try {
+      await contextMarkAllAsRead();
+      setNotifications(prev => 
+        prev.map(n => ({ ...n, read: true }))
+      );
+    } catch (error) {
+      logger.error('Failed to mark all as read:', error);
+    }
+  };
+  
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'like': return 'heart';
+      case 'reply': return 'chatbubble';
+      case 'tip': return 'cash';
+      case 'bump': return 'trending-up';
+      case 'follow': return 'person-add';
+      case 'mention': return 'at';
+      default: return 'notifications';
+    }
+  };
+  
+  const getIconColor = (type: string) => {
+    switch (type) {
+      case 'like': return '#FF6B6B';
+      case 'tip': return '#4ECDC4';
+      case 'bump': return '#45B7D1';
+      default: return colors.primary;
+    }
+  };
+  
   const handleNotificationPress = (notification: Notification) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    
-    // Mark as read
-    setNotifications(prev => 
-      prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
-    );
-    
-    // Navigate to relevant screen based on type
-    // TODO: Implement navigation
+    if (!notification.read) {
+      markAsRead(notification.id);
+    }
+    // TODO: Navigate to the relevant post/profile
   };
-
+  
   const unreadCount = notifications.filter(n => !n.read).length;
-
+  
+  if (loading) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textTertiary }]}>
+            Loading notifications...
+          </Text>
+        </View>
+      </View>
+    );
+  }
+  
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* Background gradients */}
-        <LinearGradient
-          colors={gradients.surface}
-          style={styles.baseBackground}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        />
-        
-        <LinearGradient
-          colors={[
-            colors.primary + '14',
-            colors.secondary + '0C',
-            'transparent',
-            colors.primary + '0F',
-            colors.secondary + '1A',
-          ]}
-          style={styles.greenOverlay}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        />
-
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+          />
+        }
+      >
         {/* Header */}
-        <View style={[styles.header, { paddingTop: 50 }]}>
-          <Text style={[styles.title, { color: colors.text }]}>Notifications</Text>
+        <View style={styles.header}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Notifications</Text>
           {unreadCount > 0 && (
-            <View style={[styles.unreadBadge, { backgroundColor: colors.primary }]}>
-              <Text style={[styles.unreadText, { color: isDarkMode ? '#000' : '#fff' }]}>
-                {unreadCount}
-              </Text>
-            </View>
+            <TouchableOpacity
+              style={[styles.markAllButton, { backgroundColor: colors.surface }]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                markAllAsRead();
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.markAllText, { color: colors.primary }]}>Mark all read</Text>
+            </TouchableOpacity>
           )}
         </View>
-
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.contentContainer}
-          showsVerticalScrollIndicator={false}
-        >
-          {notifications.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons 
-                name="notifications-off-outline" 
-                size={64} 
-                color={colors.textTertiary} 
-              />
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                No notifications yet
-              </Text>
-              <Text style={[styles.emptySubtext, { color: colors.textTertiary }]}>
-                When someone interacts with your posts, you&apos;ll see it here
-              </Text>
-            </View>
-          ) : (
-            notifications.map((notification) => (
-              <TouchableOpacity
-                key={notification.id}
-                style={[
-                  styles.notificationItem,
-                  !notification.read && [
-                    styles.unreadItem,
-                    { borderColor: colors.primary + '4D' }
-                  ],
-                ]}
-                onPress={() => handleNotificationPress(notification)}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={!notification.read ? [
-                    colors.primary + '10',
-                    colors.secondary + '08',
-                  ] : ['transparent', 'transparent']}
-                  style={styles.notificationGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                >
-                  <View style={styles.notificationContent}>
-                    <View style={[
-                      styles.iconContainer,
-                      { backgroundColor: getNotificationColor(notification.type) + '20' }
-                    ]}>
-                      <Ionicons
-                        name={getNotificationIcon(notification.type)}
-                        size={20}
-                        color={getNotificationColor(notification.type)}
-                      />
-                    </View>
-                    
-                    <View style={styles.textContent}>
-                      <View style={styles.topRow}>
-                        <Text style={[styles.fromUser, { color: colors.primary }]}>
-                          {notification.fromUser}
-                        </Text>
-                        <Text style={[styles.time, { color: colors.textTertiary }]}>
-                          {notification.time}
-                        </Text>
-                      </View>
-                      
-                      <Text style={[styles.message, { color: colors.textSecondary }]}>
-                        {notification.message}
-                        {notification.amount && (
-                          <Text style={{ color: '#FFD700', fontWeight: 'bold' }}>
-                            {' '}({notification.amount} $ALLY)
-                          </Text>
-                        )}
-                      </Text>
-                      
-                      {notification.postPreview && (
-                        <Text 
-                          style={[styles.postPreview, { color: colors.textTertiary }]} 
-                          numberOfLines={1}
-                        >
-                          &quot;{notification.postPreview}&quot;
-                        </Text>
-                      )}
-                    </View>
-                    
-                    {!notification.read && (
-                      <View style={[styles.unreadDot, { backgroundColor: colors.primary }]} />
-                    )}
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
-            ))
-          )}
-        </ScrollView>
-      </View>
+        
+        {/* Notifications List */}
+        {notifications.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="notifications-off-outline" size={64} color={colors.textTertiary} />
+            <Text style={[styles.emptyText, { color: colors.textTertiary }]}>
+              No notifications yet
+            </Text>
+            <Text style={[styles.emptySubtext, { color: colors.textTertiary }]}>
+              When someone interacts with your posts, you'll see it here
+            </Text>
+          </View>
+        ) : (
+          notifications.map((notification) => (
+            <TouchableOpacity
+              key={notification.id}
+              style={[
+                styles.notificationItem,
+                { 
+                  backgroundColor: notification.read ? colors.surface : colors.surface + 'CC',
+                  borderColor: notification.read ? colors.border : colors.primary + '40'
+                }
+              ]}
+              onPress={() => handleNotificationPress(notification)}
+              activeOpacity={0.8}
+            >
+              <View style={[
+                styles.iconContainer,
+                { backgroundColor: getIconColor(notification.type) + '20' }
+              ]}>
+                <Ionicons
+                  name={getNotificationIcon(notification.type) as any}
+                  size={24}
+                  color={getIconColor(notification.type)}
+                />
+              </View>
+              
+              <View style={styles.contentContainer}>
+                <View style={styles.topRow}>
+                  <Text style={[styles.title, { color: colors.text }]}>
+                    {notification.title}
+                  </Text>
+                  <Text style={[styles.time, { color: colors.textTertiary }]}>
+                    {notification.time}
+                  </Text>
+                </View>
+                
+                <Text style={[styles.message, { color: colors.textSecondary }]}>
+                  {notification.message}
+                </Text>
+                
+                {notification.postPreview && (
+                  <Text style={[styles.postPreview, { color: colors.textTertiary }]} numberOfLines={1}>
+                    "{notification.postPreview.substring(0, 50)}..."
+                  </Text>
+                )}
+              </View>
+              
+              {!notification.read && (
+                <View style={[styles.unreadDot, { backgroundColor: colors.primary }]} />
+              )}
+            </TouchableOpacity>
+          ))
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleSheet.create({
   container: {
     flex: 1,
-  },
-  baseBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  greenOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    zIndex: 100,
-  },
-  title: {
-    fontSize: FontSizes.xxl,
-    fontFamily: Fonts.bold,
-    letterSpacing: -0.5,
-  },
-  unreadBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  unreadText: {
-    fontSize: FontSizes.sm,
-    fontFamily: Fonts.bold,
   },
   scrollView: {
     flex: 1,
   },
-  contentContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 100,
-  },
-  emptyState: {
-    alignItems: 'center',
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
-    paddingTop: 100,
+    alignItems: 'center',
   },
-  emptyText: {
-    fontSize: FontSizes.lg,
-    fontFamily: Fonts.medium,
+  loadingText: {
     marginTop: 16,
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.medium,
   },
-  emptySubtext: {
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: insets.top + 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  headerTitle: {
+    fontSize: FontSizes.xxxl,
+    fontFamily: Fonts.bold,
+  },
+  markAllButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  markAllText: {
     fontSize: FontSizes.sm,
-    fontFamily: Fonts.regular,
-    marginTop: 8,
-    textAlign: 'center',
-    paddingHorizontal: 40,
+    fontFamily: Fonts.semiBold,
   },
   notificationItem: {
-    marginBottom: 12,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  unreadItem: {
-    borderWidth: 1,
-  },
-  notificationGradient: {
-    borderRadius: 16,
-  },
-  notificationContent: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    marginHorizontal: 20,
+    marginBottom: 12,
     padding: 16,
-    gap: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: 'flex-start',
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
-  textContent: {
+  contentContainer: {
     flex: 1,
   },
   topRow: {
@@ -356,31 +363,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4,
   },
-  fromUser: {
+  title: {
     fontSize: FontSizes.base,
-    fontFamily: Fonts.bold,
+    fontFamily: Fonts.semiBold,
   },
   time: {
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.xs,
     fontFamily: Fonts.regular,
   },
   message: {
-    fontSize: FontSizes.base,
+    fontSize: FontSizes.sm,
     fontFamily: Fonts.regular,
-    lineHeight: 22,
+    marginBottom: 4,
   },
   postPreview: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.regular,
-    marginTop: 6,
     fontStyle: 'italic',
+    marginTop: 4,
   },
   unreadDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    position: 'absolute',
-    right: 16,
-    top: 16,
+    marginLeft: 8,
+    alignSelf: 'center',
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 150,
+    paddingHorizontal: 40,
+  },
+  emptyText: {
+    fontSize: FontSizes.lg,
+    fontFamily: Fonts.semiBold,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.regular,
+    textAlign: 'center',
   },
 });

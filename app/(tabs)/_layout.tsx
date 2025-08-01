@@ -7,12 +7,13 @@ import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '../../context/ThemeContext';
+import { useNotifications } from '../../context/NotificationContext';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function TabLayout() {
   const { colors, isDarkMode, gradients } = useTheme();
+  const { unreadCount } = useNotifications();
   const insets = useSafeAreaInsets();
-  const [unreadNotifications, setUnreadNotifications] = useState(2); // Mock unread count
 
   // Global scroll to top function - we'll use event emitter pattern
   const handleHomeTabPress = () => {
@@ -169,7 +170,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <View>
               <TabBarIcon name={focused ? "notifications" : "notifications-outline"} color={color} focused={focused} />
-              {unreadNotifications > 0 && (
+              {unreadCount > 0 && (
                 <View style={{
                   position: 'absolute',
                   top: -4,
@@ -187,7 +188,7 @@ export default function TabLayout() {
                     fontSize: 10,
                     fontWeight: 'bold',
                   }}>
-                    {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                    {unreadCount > 9 ? '9+' : unreadCount}
                   </Text>
                 </View>
               )}

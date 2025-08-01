@@ -420,7 +420,7 @@ export default function EditProfileScreen() {
       <AvatarSelectionModal
         visible={showAvatarSelection}
         onClose={() => setShowAvatarSelection(false)}
-        onSelectAvatar={(avatar) => {
+        onSelect={(avatar) => {
           setSelectedAvatar(avatar);
           setSelectedNFTAvatar(null);
           setShowAvatarSelection(false);
