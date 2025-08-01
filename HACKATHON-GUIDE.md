@@ -25,11 +25,17 @@ To deploy and share Korus with hackathon judges:
 
 ## 🎮 Demo Instructions for Judges
 
+### View Options
+When you visit the URL, you'll see:
+1. **"View with Phone Frame"** (Recommended) - See the app in a realistic iPhone/Android frame
+2. **"View Full Screen"** - Use the app without the phone frame
+
 ### Option 1: Connect Your Wallet
 1. Visit the deployed URL
-2. Click "Connect Wallet"
-3. Use Phantom, Solflare, or any Solana wallet
-4. You'll automatically receive 5000 ALLY tokens to play with!
+2. Choose your viewing preference
+3. Click "Connect Wallet"
+4. Use Phantom, Solflare, or any Solana wallet
+5. You'll automatically receive 5000 ALLY tokens to play with!
 
 ### Option 2: Quick Demo (No Wallet Needed)
 Use these pre-funded demo accounts:
