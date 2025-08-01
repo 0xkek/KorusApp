@@ -260,18 +260,13 @@
     </div>
 
     <div class="phone-container">
-      <div class="device-selector">
-        <button class="device-btn active" onclick="setDevice('iphone')">iPhone</button>
-        <button class="device-btn" onclick="setDevice('android')">Android</button>
-      </div>
-      
       <div class="phone-frame" id="phoneFrame">
         <div class="phone-screen">
           <div class="phone-notch" id="phoneNotch"></div>
           <iframe 
             id="appFrame"
             class="phone-iframe" 
-            src="/app"
+            src="/index.html"
             title="Korus App"
           ></iframe>
         </div>
@@ -280,23 +275,6 @@
   </div>
 
   <script>
-    function setDevice(device) {
-      const phoneFrame = document.getElementById('phoneFrame');
-      const phoneNotch = document.getElementById('phoneNotch');
-      const buttons = document.querySelectorAll('.device-btn');
-      
-      buttons.forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
-      
-      if (device === 'android') {
-        phoneFrame.style.borderRadius = '30px';
-        phoneNotch.style.display = 'none';
-      } else {
-        phoneFrame.style.borderRadius = '40px';
-        phoneNotch.style.display = 'block';
-      }
-    }
-
     // Reload iframe when clicking on logo
     document.querySelector('.logo').style.cursor = 'pointer';
     document.querySelector('.logo').addEventListener('click', () => {
