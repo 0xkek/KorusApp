@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Korus - Mobile Social Platform on Solana</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    .demo-container {
+      display: flex;
+      align-items: center;
+      gap: 60px;
+      max-width: 1400px;
+      width: 100%;
+    }
+
+    .info-section {
+      flex: 1;
+      color: white;
+      padding: 40px;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .logo-icon {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      font-weight: 900;
+      color: #000;
+      box-shadow: 0 10px 30px rgba(67, 233, 123, 0.3);
+    }
+
+    h1 {
+      font-size: 48px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+
+    .tagline {
+      font-size: 24px;
+      color: #888;
+      margin-bottom: 30px;
+    }
+
+    .description {
+      font-size: 18px;
+      line-height: 1.6;
+      color: #ccc;
+      margin-bottom: 40px;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      color: #aaa;
+    }
+
+    .feature::before {
+      content: "✓";
+      color: #43e97b;
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    .badges {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      padding: 8px 16px;
+      background: rgba(67, 233, 123, 0.1);
+      border: 1px solid rgba(67, 233, 123, 0.3);
+      border-radius: 20px;
+      font-size: 14px;
+      color: #43e97b;
+    }
+
+    .phone-container {
+      position: relative;
+      width: 375px;
+      height: 812px;
+      flex-shrink: 0;
+    }
+
+    .phone-frame {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #1a1a1a;
+      border-radius: 40px;
+      padding: 10px;
+      box-shadow: 
+        0 0 0 12px #222,
+        0 0 0 14px #333,
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        0 40px 120px rgba(67, 233, 123, 0.1);
+    }
+
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      border-radius: 30px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .phone-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 25px;
+      background: #1a1a1a;
+      border-radius: 0 0 20px 20px;
+      z-index: 10;
+    }
+
+    .phone-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #000;
+    }
+
+    .device-selector {
+      position: absolute;
+      top: -50px;
+      right: 0;
+      display: flex;
+      gap: 10px;
+    }
+
+    .device-btn {
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .device-btn:hover {
+      background: rgba(67, 233, 123, 0.2);
+      border-color: #43e97b;
+    }
+
+    .device-btn.active {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      border-color: transparent;
+      color: #000;
+    }
+
+    @media (max-width: 1200px) {
+      .demo-container {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .info-section {
+        text-align: center;
+        padding: 20px;
+      }
+
+      .features {
+        grid-template-columns: 1fr;
+      }
+
+      .badges {
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .phone-container {
+        transform: scale(0.85);
+      }
+
+      h1 {
+        font-size: 36px;
+      }
+
+      .tagline {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <div class="info-section">
+      <div class="logo">
+        <div class="logo-icon">K</div>
+        <h1>Korus</h1>
+      </div>
+      <p class="tagline">The Bot-Free Social Platform on Solana</p>
+      <p class="description">
+        Experience authentic human connections on a social platform where every account is verified through Solana wallet authentication. No bots, no fake accounts, just real people sharing real content.
+      </p>
+      
+      <div class="features">
+        <div class="feature">Wallet Authentication</div>
+        <div class="feature">ALLY Token Economy</div>
+        <div class="feature">On-Chain Gaming</div>
+        <div class="feature">Bot-Free Environment</div>
+        <div class="feature">Content Categories</div>
+        <div class="feature">Weekly Rewards</div>
+      </div>
+
+      <div class="badges">
+        <span class="badge">Solana Hackathon</span>
+        <span class="badge">React Native</span>
+        <span class="badge">TypeScript</span>
+        <span class="badge">Web3</span>
+      </div>
+    </div>
+
+    <div class="phone-container">
+      <div class="device-selector">
+        <button class="device-btn active" onclick="setDevice('iphone')">iPhone</button>
+        <button class="device-btn" onclick="setDevice('android')">Android</button>
+      </div>
+      
+      <div class="phone-frame" id="phoneFrame">
+        <div class="phone-screen">
+          <div class="phone-notch" id="phoneNotch"></div>
+          <iframe 
+            id="appFrame"
+            class="phone-iframe" 
+            src="/app"
+            title="Korus App"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function setDevice(device) {
+      const phoneFrame = document.getElementById('phoneFrame');
+      const phoneNotch = document.getElementById('phoneNotch');
+      const buttons = document.querySelectorAll('.device-btn');
+      
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      if (device === 'android') {
+        phoneFrame.style.borderRadius = '30px';
+        phoneNotch.style.display = 'none';
+      } else {
+        phoneFrame.style.borderRadius = '40px';
+        phoneNotch.style.display = 'block';
+      }
+    }
+
+    // Reload iframe when clicking on logo
+    document.querySelector('.logo').style.cursor = 'pointer';
+    document.querySelector('.logo').addEventListener('click', () => {
+      document.getElementById('appFrame').src = document.getElementById('appFrame').src;
+    });
+  </script>
+</body>
+</html>

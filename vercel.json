@@ -1,10 +1,18 @@
 {
-  "buildCommand": "npx expo export --platform web --output-dir web-build",
+  "buildCommand": "npx expo export --platform web --output-dir web-build && cp -r web/* web-build/",
   "outputDirectory": "web-build",
   "rewrites": [
     {
-      "source": "/(.*)",
-      "destination": "/"
+      "source": "/",
+      "destination": "/landing.html"
+    },
+    {
+      "source": "/demo",
+      "destination": "/phone-frame.html"
+    },
+    {
+      "source": "/app",
+      "destination": "/index.html"
     }
   ],
   "headers": [
@@ -17,7 +25,7 @@
         },
         {
           "key": "X-Frame-Options",
-          "value": "DENY"
+          "value": "SAMEORIGIN"
         },
         {
           "key": "X-XSS-Protection",
