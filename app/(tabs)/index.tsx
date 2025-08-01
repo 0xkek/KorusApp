@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { useRouter, useFocusEffect } from 'expo-router';
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View, Animated, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Create AnimatedFlatList to support native driver
@@ -1168,8 +1168,8 @@ export default function HomeScreen() {
           username={tipSuccessData?.username || ''}
         />
 
-        {/* Demo Instructions Modal */}
-        {showDemoInstructions && (
+        {/* Demo Instructions Modal - Only show on web */}
+        {showDemoInstructions && Platform.OS === 'web' && (
           <DemoInstructions onClose={() => setShowDemoInstructions(false)} />
         )}
         </View>
