@@ -18,6 +18,7 @@ import reportsRoutes from './routes/reports'
 import moderationRoutes from './routes/moderation'
 import reputationRoutes from './routes/reputation'
 import sponsoredRoutes from './routes/sponsored'
+import notificationsRoutes from './routes/notifications'
 // import distributionRoutes from './routes/distribution'
 
 dotenv.config()
@@ -66,6 +67,7 @@ app.use('/api/reports', reportsRoutes)
 app.use('/api/moderation', moderationRoutes)
 app.use('/api/reputation', reputationRoutes)
 app.use('/api/sponsored', sponsoredRoutes)
+app.use('/api/notifications', notificationsRoutes)
 // app.use('/api/distribution', distributionRoutes)
 
 // Test routes
