@@ -1,10 +1,14 @@
 {
-  "buildCommand": "npx expo export --platform web --output-dir web-build && cp web/phone-demo.html web-build/ && cp web/test-iframe.html web-build/ && cp public/_headers web-build/",
+  "buildCommand": "npx expo export --platform web --output-dir web-build && cp web/hackathon-landing.html web-build/ && cp -r pitch web-build/",
   "outputDirectory": "web-build",
   "rewrites": [
     {
       "source": "/",
-      "destination": "/phone-demo.html"
+      "destination": "/hackathon-landing.html"
+    },
+    {
+      "source": "/app",
+      "destination": "/index.html"
     }
   ]
 }
