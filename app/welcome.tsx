@@ -13,8 +13,6 @@ import { useKorusAlert } from '../components/KorusAlertProvider';
 import { getErrorMessage } from '../utils/errorHandler';
 import { logger } from '../utils/logger';
 import { WalletConnectionModal } from '../components/WalletConnectionModal';
-import { TestWalletButton } from '../components/TestWalletButton';
-import { ClearWalletButton } from '../components/ClearWalletButton';
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -136,83 +134,6 @@ export default function WelcomeScreen() {
               One account per wallet address.{'\n'}
               Secure, decentralized authentication.
             </Text>
-            
-            {/* Test button for debugging */}
-            <TestWalletButton />
-            
-            {/* Clear wallet data */}
-            <ClearWalletButton />
-            
-            {/* Simple direct connection button */}
-            <TouchableOpacity
-              onPress={async () => {
-                try {
-                  const { connectWalletDirect } = await import('../utils/simpleMWA');
-                  const result = await connectWalletDirect();
-                  if (result.token) {
-                    showAlert('Success', 'Wallet connected!', 'success');
-                    router.replace('/(tabs)');
-                  }
-                } catch (error: any) {
-                  logger.error('Simple connect error:', error);
-                  showAlert('Error', error.message, 'error');
-                }
-              }}
-              style={[styles.connectWalletButton, { marginTop: 10, backgroundColor: '#38f9d7' }]}
-            >
-              <Text style={styles.connectWalletText}>Simple Connect (Test)</Text>
-            </TouchableOpacity>
-            
-            {/* Test verification button */}
-            <TouchableOpacity
-              onPress={async () => {
-                try {
-                  const response = await fetch('https://korus-backend.onrender.com/api/auth/verify-test', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      walletAddress: '9ocv93TeuRq5iMyP6qXVnm9UY9zfM5L1zUaDnXcRoHtW',
-                      signature: 'test',
-                      message: 'test'
-                    })
-                  })
-                  const result = await response.json()
-                  showAlert('Test Result', JSON.stringify(result), 'info')
-                } catch (error: any) {
-                  showAlert('Test Error', error.message, 'error')
-                }
-              }}
-              style={[styles.connectWalletButton, { marginTop: 10, backgroundColor: '#ff6b6b' }]}
-            >
-              <Text style={styles.connectWalletText}>Test Verify Endpoint</Text>
-            </TouchableOpacity>
-            
-            {/* Demo mode button */}
-            <TouchableOpacity
-              onPress={async () => {
-                try {
-                  // Use a demo wallet for hackathon
-                  const demoAddress = 'Demo' + Math.random().toString(36).substring(7);
-                  const { authAPI } = await import('../utils/api');
-                  const result = await authAPI.connectWallet(
-                    demoAddress,
-                    'demo_signature',
-                    'demo_message'
-                  );
-                  if (result.token) {
-                    showAlert('Demo Mode', 'Connected with demo wallet for testing', 'success');
-                    setTimeout(() => {
-                      router.replace('/(tabs)');
-                    }, 1000);
-                  }
-                } catch (error: any) {
-                  showAlert('Error', error.message, 'error');
-                }
-              }}
-              style={[styles.connectWalletButton, { marginTop: 10, backgroundColor: '#666' }]}
-            >
-              <Text style={styles.connectWalletText}>Demo Mode (Hackathon)</Text>
-            </TouchableOpacity>
           </LinearGradient>
         </View>
       </View>
@@ -374,5 +295,16 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     color: colors.textTertiary,
     textAlign: 'center',
     lineHeight: 16,
+  },
+  connectWalletButton: {
+    padding: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  connectWalletText: {
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.semiBold,
+    color: '#000',
   },
 });

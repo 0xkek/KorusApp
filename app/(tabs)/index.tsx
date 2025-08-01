@@ -42,6 +42,7 @@ import TipModal from '../../components/TipModal';
 import TipSuccessModal from '../../components/TipSuccessModal';
 import GamesView from '../../components/GamesView';
 import EventsView from '../../components/EventsView';
+import DemoInstructions from '../../components/DemoInstructions';
 
 const HIDE_SPONSORED_KEY = 'korus_hide_sponsored_posts';
 
@@ -81,6 +82,7 @@ export default function HomeScreen() {
   const [isCreatingPost, setIsCreatingPost] = useState(false); // Track posts being liked
   const [isLoadingFeed, setIsLoadingFeed] = useState(true);
   const [feedError, setFeedError] = useState<string | null>(null);
+  const [showDemoInstructions, setShowDemoInstructions] = useState(true);
   
   // Reply sorting state - track sorting preference per post
   const [replySortPreferences, setReplySortPreferences] = useState<Record<number, ReplySortType>>({});
@@ -1165,6 +1167,11 @@ export default function HomeScreen() {
           amount={tipSuccessData?.amount || 0}
           username={tipSuccessData?.username || ''}
         />
+
+        {/* Demo Instructions Modal */}
+        {showDemoInstructions && (
+          <DemoInstructions onClose={() => setShowDemoInstructions(false)} />
+        )}
         </View>
       </View>
   );
