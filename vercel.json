@@ -1,10 +1,10 @@
 {
-  "buildCommand": "npx expo export --platform web --output-dir web-build && cp web/phone-frame.html web-build/phone-frame.html",
+  "buildCommand": "npx expo export --platform web --output-dir web-build && cp web/index.html web-build/demo.html",
   "outputDirectory": "web-build",
   "rewrites": [
     {
       "source": "/",
-      "destination": "/phone-frame.html"
+      "destination": "/demo.html"
     }
   ],
   "headers": [
