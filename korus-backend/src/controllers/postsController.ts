@@ -8,7 +8,7 @@ import { reputationService } from '../services/reputationService'
 export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Post>>) => {
   try {
     const walletAddress = req.userWallet!
-    const { content } = req.body
+    const { content, imageUrl, videoUrl } = req.body
 
     // Validate input
     if (!content) {
@@ -29,7 +29,9 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
     const post = await prisma.post.create({
       data: {
         authorWallet: walletAddress,
-        content: content.trim()
+        content: content.trim(),
+        imageUrl: imageUrl || undefined,
+        videoUrl: videoUrl || undefined
         // topic and subtopic are now optional
       },
       include: {

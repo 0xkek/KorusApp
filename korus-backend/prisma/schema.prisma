@@ -65,6 +65,8 @@ model Post {
   content      String @db.Text
   topic        String? @db.VarChar(50)
   subtopic     String? @db.VarChar(100)
+  imageUrl     String? @db.Text
+  videoUrl     String? @db.Text
 
   // Interaction counts (for quick display)
   likeCount  Int @default(0)

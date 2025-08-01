@@ -8,6 +8,8 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { validatePostContent, sanitizeInput, getCharacterCount } from '../utils/validation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { uploadToCloudinary, validateImage } from '../utils/imageUpload';
+import { logger } from '../utils/logger';
 
 
 interface CreatePostModalProps {
@@ -58,39 +60,56 @@ export default function CreatePostModal({
     }
     
     setIsSubmitting(true);
-    if (selectedMedia && !isUploading) {
-      // Simulate upload
-      setIsUploading(true);
-      setUploadProgress(0);
-      
-      // Simulate upload progress
-      const interval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            return 100;
-          }
-          return prev + 10;
-        });
-      }, 200);
-      
-      // Wait for "upload" to complete
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      setIsUploading(false);
-      setUploadProgress(0);
-    }
+    let uploadedImageUrl: string | undefined;
     
     try {
-      await onSubmit('GENERAL', selectedMedia?.uri);
+      // Upload image to Cloudinary if present
+      if (selectedMedia && selectedMedia.type === 'image') {
+        setIsUploading(true);
+        setUploadProgress(0);
+        
+        // Validate image
+        if (!validateImage(selectedMedia.uri)) {
+          throw new Error('Invalid image selected');
+        }
+        
+        // Upload to Cloudinary with progress simulation
+        const uploadPromise = uploadToCloudinary(selectedMedia.uri);
+        const progressInterval = setInterval(() => {
+          setUploadProgress(prev => {
+            if (prev >= 90) {
+              clearInterval(progressInterval);
+              return 90;
+            }
+            return prev + 10;
+          });
+        }, 200);
+        
+        try {
+          uploadedImageUrl = await uploadPromise;
+          setUploadProgress(100);
+          logger.info('Image uploaded successfully:', uploadedImageUrl);
+        } finally {
+          clearInterval(progressInterval);
+          setIsUploading(false);
+        }
+      }
+      
+      // Submit post with uploaded image URL
+      await onSubmit('GENERAL', uploadedImageUrl);
       setSelectedMedia(null); // Reset media after submission
       onContentChange(''); // Clear content
       onClose(); // Close modal on success
     } catch (error) {
-      // Re-enable submission on error
-      console.error('Failed to create post:', error);
+      logger.error('Failed to create post:', error);
+      Alert.alert(
+        'Failed to Create Post', 
+        error instanceof Error ? error.message : 'Please try again'
+      );
     } finally {
-      setIsSubmitting(false); // Always re-enable after completion
+      setIsSubmitting(false);
+      setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -150,11 +169,36 @@ export default function CreatePostModal({
                     showsVerticalScrollIndicator={false}
                   >
                     <View style={styles.modalHeader}>
+                      <TouchableOpacity onPress={onClose} style={styles.headerButton}>
+                        <Text style={[styles.headerButtonText, { color: colors.text }]}>Cancel</Text>
+                      </TouchableOpacity>
+                      
                       <Text style={[styles.modalTitle, { color: colors.text }]}>
-                        Share with the community
+                        New Post
                       </Text>
-                      <TouchableOpacity onPress={onClose} style={[styles.closeButtonContainer, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
-                        <Ionicons name="close" size={18} color={colors.textSecondary} />
+                      
+                      <TouchableOpacity
+                        style={[
+                          styles.headerButton,
+                          styles.shareButton,
+                          (!content.trim() || isUploading || isSubmitting) && styles.shareButtonDisabled
+                        ]}
+                        onPress={handleSubmit}
+                        disabled={!content.trim() || isUploading || isSubmitting}
+                      >
+                        <LinearGradient
+                          colors={(!content.trim() || isUploading || isSubmitting) ? [colors.surface, colors.surface] : gradients.primary}
+                          style={styles.shareButtonGradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        >
+                          <Text style={[
+                            styles.shareButtonText, 
+                            { color: (!content.trim() || isUploading || isSubmitting) ? colors.textTertiary : (isDarkMode ? '#000' : '#fff') }
+                          ]}>
+                            {isSubmitting ? 'Posting...' : 'Share'}
+                          </Text>
+                        </LinearGradient>
                       </TouchableOpacity>
                     </View>
 
@@ -230,52 +274,6 @@ export default function CreatePostModal({
                         </LinearGradient>
                       </TouchableOpacity>
                     </View>
-
-                    <View style={styles.modalActions}>
-                      <TouchableOpacity 
-                        style={styles.cancelButton} 
-                        onPress={onClose}
-                        activeOpacity={0.8}
-                      >
-                        <LinearGradient
-                          colors={gradients.surface}
-                          style={[styles.cancelButtonGradient, { borderColor: colors.borderLight, shadowColor: colors.shadowColor }]}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
-                        >
-                          <Text style={[styles.cancelButtonText, { color: colors.text }]}>Cancel</Text>
-                        </LinearGradient>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={[
-                          styles.postButton,
-                          (!content.trim() || isUploading || isSubmitting) && styles.postButtonDisabled
-                        ]}
-                        onPress={handleSubmit}
-                        disabled={!content.trim() || isUploading || isSubmitting}
-                        activeOpacity={0.8}
-                      >
-                        <LinearGradient
-                          colors={
-                            !content.trim() || isUploading || isSubmitting
-                              ? [colors.surface, colors.surface] // Use theme surface color when disabled
-                              : gradients.primary // Use primary gradient for vibrant enabled state
-                          }
-                          style={styles.postButtonGradient}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
-                        >
-                          <Text style={[
-                            styles.postButtonText,
-                            { color: (!content.trim() || isUploading || isSubmitting) ? colors.textTertiary : '#000000' }, // Always black text on bright gradient
-                            (!content.trim() || isUploading || isSubmitting) && styles.postButtonTextDisabled
-                          ]}>
-                            {isSubmitting ? 'Posting...' : isUploading ? 'Uploading...' : 'Share'}
-                          </Text>
-                        </LinearGradient>
-                      </TouchableOpacity>
-                    </View>
                   </ScrollView>
                 </LinearGradient>
               </View>
@@ -316,9 +314,34 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 24,
+    paddingHorizontal: 8,
+  },
+  headerButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  headerButtonText: {
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.medium,
+  },
+  shareButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  shareButtonDisabled: {
+    opacity: 0.5,
+  },
+  shareButtonGradient: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  shareButtonText: {
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.semiBold,
   },
   modalTitle: {
-    fontSize: FontSizes['2xl'],
+    fontSize: FontSizes.xl,
     fontFamily: Fonts.bold,
     letterSpacing: -0.02,
   },
