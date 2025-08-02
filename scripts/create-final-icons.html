@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Korus Icons - Black K on Gradient</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .icon-item {
+            text-align: center;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        canvas {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        button {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: black;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(67, 233, 123, 0.3);
+        }
+        .download-all {
+            text-align: center;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Korus App Icons - Black K on Green Gradient</h1>
+        <p>These icons will be generated with a black "K" on the Korus green gradient background.</p>
+        
+        <div class="icon-grid">
+            <div class="icon-item">
+                <h3>App Icon (1024×1024)</h3>
+                <canvas id="icon" width="1024" height="1024" style="width: 200px; height: 200px;"></canvas>
+                <br>
+                <button onclick="downloadIcon('icon', 'icon.png')">Download icon.png</button>
+            </div>
+            
+            <div class="icon-item">
+                <h3>Adaptive Icon (1024×1024)</h3>
+                <canvas id="adaptive" width="1024" height="1024" style="width: 200px; height: 200px;"></canvas>
+                <br>
+                <button onclick="downloadIcon('adaptive', 'adaptive-icon.png')">Download adaptive-icon.png</button>
+            </div>
+            
+            <div class="icon-item">
+                <h3>Splash Icon (400×400)</h3>
+                <canvas id="splash" width="400" height="400" style="width: 200px; height: 200px;"></canvas>
+                <br>
+                <button onclick="downloadIcon('splash', 'splash-icon.png')">Download splash-icon.png</button>
+            </div>
+            
+            <div class="icon-item">
+                <h3>Favicon (48×48)</h3>
+                <canvas id="favicon" width="48" height="48" style="width: 48px; height: 48px;"></canvas>
+                <br>
+                <button onclick="downloadIcon('favicon', 'favicon.png')">Download favicon.png</button>
+            </div>
+        </div>
+        
+        <div class="download-all">
+            <button onclick="downloadAll()" style="font-size: 18px; padding: 15px 30px;">
+                Download All Icons
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function drawKorusIcon(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const size = canvas.width;
+            
+            // Create gradient background
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#43e97b');
+            gradient.addColorStop(1, '#38f9d7');
+            
+            // Draw rounded rectangle background
+            const radius = size * 0.22; // 22% radius for app store compliance
+            ctx.beginPath();
+            ctx.moveTo(radius, 0);
+            ctx.lineTo(size - radius, 0);
+            ctx.quadraticCurveTo(size, 0, size, radius);
+            ctx.lineTo(size, size - radius);
+            ctx.quadraticCurveTo(size, size, size - radius, size);
+            ctx.lineTo(radius, size);
+            ctx.quadraticCurveTo(0, size, 0, size - radius);
+            ctx.lineTo(0, radius);
+            ctx.quadraticCurveTo(0, 0, radius, 0);
+            ctx.closePath();
+            
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            // Draw black K
+            ctx.fillStyle = '#000000';
+            ctx.font = `bold ${size * 0.65}px -apple-system, Arial, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Adjust position slightly for visual balance
+            ctx.fillText('K', size * 0.5, size * 0.52);
+            
+            // Add subtle shadow for depth
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+            ctx.shadowBlur = size * 0.02;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = size * 0.01;
+            ctx.fillText('K', size * 0.5, size * 0.52);
+        }
+        
+        // Draw all icons on load
+        window.onload = function() {
+            drawKorusIcon('icon');
+            drawKorusIcon('adaptive');
+            drawKorusIcon('splash');
+            drawKorusIcon('favicon');
+        };
+        
+        // Download single icon
+        function downloadIcon(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // Download all icons
+        function downloadAll() {
+            downloadIcon('icon', 'icon.png');
+            setTimeout(() => downloadIcon('adaptive', 'adaptive-icon.png'), 100);
+            setTimeout(() => downloadIcon('splash', 'splash-icon.png'), 200);
+            setTimeout(() => downloadIcon('favicon', 'favicon.png'), 300);
+        }
+    </script>
+</body>
+</html>

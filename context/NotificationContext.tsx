@@ -30,8 +30,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       } else {
         setUnreadCount(0);
       }
-    } catch (error) {
-      logger.error('Failed to fetch unread count:', error);
+    } catch (error: any) {
+      // Silently fail if notifications endpoint isn't available yet
+      if (error.message?.includes('JSON Parse error')) {
+        // Backend endpoint not deployed yet, ignore
+        logger.log('Notifications endpoint not available yet');
+      } else {
+        logger.error('Failed to fetch unread count:', error);
+      }
       setUnreadCount(0);
     }
   }, [walletAddress]);

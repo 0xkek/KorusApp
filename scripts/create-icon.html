@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Korus Icon Generator</title>
+</head>
+<body>
+    <h1>Korus Icon Generator</h1>
+    <p>Right-click and save each icon:</p>
+    
+    <h2>Main Icon (1024x1024)</h2>
+    <canvas id="icon" width="1024" height="1024"></canvas>
+    
+    <h2>Adaptive Icon (1024x1024)</h2>
+    <canvas id="adaptive" width="1024" height="1024"></canvas>
+    
+    <h2>Splash Icon (400x400)</h2>
+    <canvas id="splash" width="400" height="400"></canvas>
+    
+    <h2>Favicon (48x48)</h2>
+    <canvas id="favicon" width="48" height="48"></canvas>
+
+    <script>
+        function drawKorusIcon(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Background
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Create gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#43e97b');
+            gradient.addColorStop(1, '#38f9d7');
+            
+            // Scale for different sizes
+            const scale = size / 1024;
+            ctx.scale(scale, scale);
+            
+            // Draw K
+            ctx.fillStyle = gradient;
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = 16;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            ctx.beginPath();
+            // Left vertical line
+            ctx.moveTo(320, 256);
+            ctx.lineTo(320, 768);
+            ctx.lineTo(440, 768);
+            ctx.lineTo(440, 540);
+            
+            // Upper diagonal
+            ctx.lineTo(580, 768);
+            ctx.lineTo(720, 768);
+            ctx.lineTo(540, 512);
+            
+            // Lower diagonal
+            ctx.lineTo(700, 256);
+            ctx.lineTo(560, 256);
+            ctx.lineTo(440, 440);
+            ctx.lineTo(440, 256);
+            ctx.closePath();
+            
+            ctx.fill();
+            
+            // Add subtle glow effect
+            ctx.shadowColor = '#43e97b';
+            ctx.shadowBlur = 20;
+            ctx.stroke();
+        }
+        
+        // Generate all icons
+        drawKorusIcon('icon', 1024);
+        drawKorusIcon('adaptive', 1024);
+        drawKorusIcon('splash', 400);
+        drawKorusIcon('favicon', 48);
+        
+        // Auto-download function
+        function downloadCanvas(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    </script>
+    
+    <br><br>
+    <button onclick="downloadCanvas('icon', 'icon.png')">Download icon.png</button>
+    <button onclick="downloadCanvas('adaptive', 'adaptive-icon.png')">Download adaptive-icon.png</button>
+    <button onclick="downloadCanvas('splash', 'splash-icon.png')">Download splash-icon.png</button>
+    <button onclick="downloadCanvas('favicon', 'favicon.png')">Download favicon.png</button>
+</body>
+</html>

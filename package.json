@@ -67,7 +67,8 @@
     "stream-browserify": "^3.0.0",
     "text-encoding": "^0.7.0",
     "tweetnacl": "^1.0.3",
-    "util": "^0.12.5"
+    "util": "^0.12.5",
+    "expo-updates": "~0.28.17"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

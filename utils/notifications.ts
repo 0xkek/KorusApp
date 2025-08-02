@@ -29,7 +29,7 @@ export async function registerForPushNotificationsAsync() {
     try {
       // Skip push token in Expo Go for SDK 53+
       if (__DEV__) {
-        console.log('Push notifications require a development build with SDK 53+');
+        // Silently skip in development - no need to log every time
         return;
       }
       

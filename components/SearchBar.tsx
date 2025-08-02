@@ -41,7 +41,7 @@ export default function SearchBar({
   const [showHistory, setShowHistory] = useState(false);
 
   // Categories for filtering
-  const categories = ['All', 'Career', 'Mental Health', 'Hobbies', 'Lifestyle', 'Tech', 'Finance'];
+  const categories = ['All', 'General', 'Games', 'Events'];
 
   const handleQueryChange = (text: string) => {
     setQuery(text);

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Korus Icon Generator - Gradient Versions</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .icon-container { display: inline-block; margin: 20px; text-align: center; }
+        canvas { border: 1px solid #ccc; margin: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Korus Icon Generator - Choose Your Style</h1>
+    
+    <div class="icon-container">
+        <h2>Option 1: Black BG + Gradient K</h2>
+        <canvas id="black-bg" width="512" height="512"></canvas>
+    </div>
+    
+    <div class="icon-container">
+        <h2>Option 2: Gradient BG + White K</h2>
+        <canvas id="gradient-bg" width="512" height="512"></canvas>
+    </div>
+    
+    <div class="icon-container">
+        <h2>Option 3: Gradient BG + Black K</h2>
+        <canvas id="gradient-bg-black" width="512" height="512"></canvas>
+    </div>
+
+    <script>
+        // Option 1: Black background with gradient K
+        function drawBlackBgIcon() {
+            const canvas = document.getElementById('black-bg');
+            const ctx = canvas.getContext('2d');
+            const size = 512;
+            
+            // Black background with rounded corners
+            ctx.fillStyle = '#1a1a1a';
+            roundRect(ctx, 0, 0, size, size, size * 0.2);
+            ctx.fill();
+            
+            // Create gradient for K
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#43e97b');
+            gradient.addColorStop(1, '#38f9d7');
+            
+            // Draw K
+            ctx.fillStyle = gradient;
+            ctx.font = 'bold 320px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('K', size/2, size/2);
+        }
+        
+        // Option 2: Gradient background with white K
+        function drawGradientBgWhiteK() {
+            const canvas = document.getElementById('gradient-bg');
+            const ctx = canvas.getContext('2d');
+            const size = 512;
+            
+            // Gradient background
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#43e97b');
+            gradient.addColorStop(1, '#38f9d7');
+            
+            ctx.fillStyle = gradient;
+            roundRect(ctx, 0, 0, size, size, size * 0.2);
+            ctx.fill();
+            
+            // White K
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 320px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('K', size/2, size/2);
+        }
+        
+        // Option 3: Gradient background with black K
+        function drawGradientBgBlackK() {
+            const canvas = document.getElementById('gradient-bg-black');
+            const ctx = canvas.getContext('2d');
+            const size = 512;
+            
+            // Gradient background
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#43e97b');
+            gradient.addColorStop(1, '#38f9d7');
+            
+            ctx.fillStyle = gradient;
+            roundRect(ctx, 0, 0, size, size, size * 0.2);
+            ctx.fill();
+            
+            // Black K
+            ctx.fillStyle = '#000000';
+            ctx.font = 'bold 320px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('K', size/2, size/2);
+        }
+        
+        // Helper function for rounded rectangles
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+        
+        // Draw all options
+        drawBlackBgIcon();
+        drawGradientBgWhiteK();
+        drawGradientBgBlackK();
+        
+        // Generate final icons
+        function generateFinalIcons(style) {
+            const sizes = [
+                { id: 'final-icon', size: 1024, name: 'icon.png' },
+                { id: 'final-adaptive', size: 1024, name: 'adaptive-icon.png' },
+                { id: 'final-splash', size: 400, name: 'splash-icon.png' },
+                { id: 'final-favicon', size: 48, name: 'favicon.png' }
+            ];
+            
+            // Create hidden canvases
+            sizes.forEach(({ id, size, name }) => {
+                let canvas = document.getElementById(id);
+                if (!canvas) {
+                    canvas = document.createElement('canvas');
+                    canvas.id = id;
+                    canvas.style.display = 'none';
+                    document.body.appendChild(canvas);
+                }
+                canvas.width = size;
+                canvas.height = size;
+                
+                const ctx = canvas.getContext('2d');
+                
+                if (style === 'gradient-bg-white') {
+                    // Gradient background with white K
+                    const gradient = ctx.createLinearGradient(0, 0, size, size);
+                    gradient.addColorStop(0, '#43e97b');
+                    gradient.addColorStop(1, '#38f9d7');
+                    
+                    ctx.fillStyle = gradient;
+                    roundRect(ctx, 0, 0, size, size, size * 0.2);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = `bold ${size * 0.625}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('K', size/2, size/2);
+                }
+                
+                // Auto-download
+                const link = document.createElement('a');
+                link.download = name;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+    </script>
+    
+    <br><br>
+    <h3>Click to generate all icons with your preferred style:</h3>
+    <button onclick="generateFinalIcons('gradient-bg-white')" style="padding: 10px 20px; font-size: 16px;">
+        Generate Icons with Gradient Background + White K
+    </button>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="224" fill="#1a1a1a"/>
+  
+  <!-- Gradient definition -->
+  <defs>
+    <linearGradient id="korusGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#43e97b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#38f9d7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- K Letter -->
+  <path d="M 320 256 L 320 768 L 420 768 L 420 580 L 560 768 L 704 768 L 520 512 L 680 256 L 536 256 L 420 420 L 420 256 Z" 
+        fill="url(#korusGradient)" />
+</svg>
