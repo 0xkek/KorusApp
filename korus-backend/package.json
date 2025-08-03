@@ -14,7 +14,7 @@
     "start:prod": "node dist/server.js",
     "migrate:prod": "prisma migrate deploy && node dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && prisma migrate deploy",
     "migrate:deploy": "prisma migrate deploy",
     "migrate:dev": "prisma migrate dev",
     "db:push": "prisma db push"
