@@ -10,6 +10,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useWallet } from '../../context/WalletContext';
 import { Post as PostType } from '../../types';
 import { useKorusAlert } from '../../components/KorusAlertProvider';
+import { useGames } from '../../context/GameContext';
 import TicTacToeGame from '../../components/games/TicTacToeGame';
 import RockPaperScissorsGame from '../../components/games/RockPaperScissorsGame';
 import ConnectFourGame from '../../components/games/ConnectFourGame';
@@ -23,20 +24,46 @@ export default function GameScreen() {
   const { colors, isDarkMode, gradients } = useTheme();
   const { walletAddress, balance } = useWallet();
   const { showAlert } = useKorusAlert();
+  const { getGamePost, updateGamePost } = useGames();
   const insets = useSafeAreaInsets();
   
   const [post, setPost] = useState<PostType | null>(null);
   const currentUserWallet = walletAddress || 'loading...';
   
   useEffect(() => {
-    // TODO: Fetch game post from API
-    showAlert({
-      title: 'Error',
-      message: 'Game not found',
-      type: 'error'
-    });
-    router.back();
-  }, [id]);
+    if (id) {
+      // Try to get the game from context first
+      const gamePost = getGamePost(Number(id));
+      
+      if (gamePost) {
+        setPost(gamePost);
+      } else {
+        // Fallback to mock for testing
+        const mockPost: PostType = {
+          id: Number(id),
+          wallet: 'DeMo1K8tQpVHgLpQeN4eSkVHgfr6k6pVxZfO3syhUser',
+          time: 'Just now',
+          content: 'Game in progress',
+          likes: 0,
+          replies: [],
+          tips: 0,
+          liked: false,
+          category: 'GAMES',
+          gameData: {
+            type: 'tictactoe',
+            wager: 25,
+            player1: 'DeMo1K8tQpVHgLpQeN4eSkVHgfr6k6pVxZfO3syhUser',
+            player2: currentUserWallet,
+            status: 'active',
+            board: [[null, null, null], [null, null, null], [null, null, null]],
+            currentPlayer: 'DeMo1K8tQpVHgLpQeN4eSkVHgfr6k6pVxZfO3syhUser',
+            winner: null
+          }
+        };
+        setPost(mockPost);
+      }
+    }
+  }, [id, currentUserWallet, getGamePost]);
   
   // Add error boundary
   if (!id) {

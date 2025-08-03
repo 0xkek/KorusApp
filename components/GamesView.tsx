@@ -6,6 +6,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../context/ThemeContext';
 import { useWallet } from '../context/WalletContext';
+import { useGames } from '../context/GameContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import GameSelectionModal from './GameSelectionModal';
 import GameJoinModal from './GameJoinModal';
@@ -24,6 +25,7 @@ export default function GamesView({
 }: GamesViewProps) {
   const { colors, isDarkMode, gradients } = useTheme();
   const { balance } = useWallet();
+  const { gamePosts } = useGames();
   const router = useRouter();
   const [showGameSelection, setShowGameSelection] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -101,13 +103,25 @@ export default function GamesView({
     }
   ];
 
-  // Filter only posts with games (currently using sample games)
-  const gamePosts = sampleGames;
+  // Filter only posts with games - combine all sources
+  const feedGamePosts = posts.filter(post => post.gameData && post.category === 'GAMES');
+  const contextGamePosts = gamePosts.filter(post => post.gameData && post.category === 'GAMES');
+  
+  // Combine unique game posts from both sources
+  const allGamePosts = [...feedGamePosts];
+  contextGamePosts.forEach(contextPost => {
+    if (!allGamePosts.find(p => p.id === contextPost.id)) {
+      allGamePosts.push(contextPost);
+    }
+  });
+  
+  // Use real posts if available, fallback to samples
+  const displayPosts = allGamePosts.length > 0 ? allGamePosts : sampleGames;
 
   // Separate active and waiting games
-  const activeGames = gamePosts.filter(post => post.gameData?.status === 'active');
-  const waitingGames = gamePosts.filter(post => post.gameData?.status === 'waiting');
-  const completedGames = gamePosts.filter(post => post.gameData?.status === 'completed');
+  const activeGames = displayPosts.filter(post => post.gameData?.status === 'active');
+  const waitingGames = displayPosts.filter(post => post.gameData?.status === 'waiting');
+  const completedGames = displayPosts.filter(post => post.gameData?.status === 'completed');
 
   const handleGameSelect = (gameType: GameType, wager: number) => {
     onCreateGame({ type: gameType, wager });

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Korus Demo Background</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #0A0B0D;
+            position: relative;
+        }
+        
+        /* Animated wave background */
+        .gradient-bg {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background: linear-gradient(45deg, #43e97b, #38f9d7, #43e97b, #38f9d7);
+            animation: waveFlow 20s ease-in-out infinite;
+            opacity: 0.15;
+            filter: blur(120px);
+        }
+        
+        @keyframes waveFlow {
+            0%, 100% { 
+                transform: translate(0, 0) scale(1) rotate(0deg);
+            }
+            25% { 
+                transform: translate(-10%, -5%) scale(1.1) rotate(90deg);
+            }
+            50% { 
+                transform: translate(-20%, 10%) scale(0.9) rotate(180deg);
+            }
+            75% { 
+                transform: translate(10%, 5%) scale(1.05) rotate(270deg);
+            }
+        }
+        
+        /* Mesh gradient overlay */
+        .mesh-gradient {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(67, 233, 123, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(56, 249, 215, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 50% 100%, rgba(67, 233, 123, 0.1) 0%, transparent 50%);
+        }
+        
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            z-index: 1;
+        }
+        
+        /* Left side content */
+        .content-side {
+            flex: 1;
+            padding: 80px;
+            max-width: 700px;
+        }
+        
+        .logo {
+            font-size: 48px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 40px;
+            letter-spacing: -2px;
+        }
+        
+        .tagline {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+        
+        .subtitle {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 50px;
+            line-height: 1.5;
+        }
+        
+        .features {
+            list-style: none;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+            opacity: 0;
+            animation: fadeInSlide 0.6s ease forwards;
+        }
+        
+        .feature-item:nth-child(1) { animation-delay: 0.2s; }
+        .feature-item:nth-child(2) { animation-delay: 0.4s; }
+        .feature-item:nth-child(3) { animation-delay: 0.6s; }
+        .feature-item:nth-child(4) { animation-delay: 0.8s; }
+        .feature-item:nth-child(5) { animation-delay: 1.0s; }
+        
+        @keyframes fadeInSlide {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+        }
+        
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+        
+        .feature-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: #0A0B0D;
+        }
+        
+        .feature-text {
+            font-size: 18px;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        
+        /* Right side phone area */
+        .phone-side {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            position: relative;
+        }
+        
+        .phone-placeholder {
+            width: 380px;
+            height: 760px;
+            border: 3px solid rgba(67, 233, 123, 0.3);
+            border-radius: 40px;
+            background: rgba(10, 11, 13, 0.5);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .phone-glow {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: radial-gradient(circle at center, rgba(67, 233, 123, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        
+        .phone-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 16px;
+        }
+        
+        /* Decorative wave elements */
+        .wave-element {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            opacity: 0.05;
+            animation: waveMotion 15s ease-in-out infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .wave-element::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, #43e97b 0%, transparent 70%);
+            border-radius: 40% 60% 60% 40% / 60% 40% 60% 40%;
+            animation: morphWave 10s ease-in-out infinite;
+        }
+        
+        .wave-element.one {
+            top: -20%;
+            right: -10%;
+            animation-delay: 0s;
+        }
+        
+        .wave-element.two {
+            bottom: -20%;
+            left: -10%;
+            animation-delay: 5s;
+        }
+        
+        .wave-element.two::before {
+            background: radial-gradient(ellipse at center, #38f9d7 0%, transparent 70%);
+        }
+        
+        .wave-element.three {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: 2.5s;
+        }
+        
+        @keyframes waveMotion {
+            0%, 100% { 
+                transform: translate(0, 0) scale(1) rotate(0deg); 
+            }
+            33% { 
+                transform: translate(50px, -30px) scale(1.1) rotate(120deg); 
+            }
+            66% { 
+                transform: translate(-50px, 30px) scale(0.9) rotate(240deg); 
+            }
+        }
+        
+        @keyframes morphWave {
+            0%, 100% {
+                border-radius: 40% 60% 60% 40% / 60% 40% 60% 40%;
+            }
+            33% {
+                border-radius: 70% 30% 40% 60% / 50% 60% 40% 50%;
+            }
+            66% {
+                border-radius: 30% 70% 70% 30% / 30% 70% 70% 30%;
+            }
+        }
+        
+        /* Call to action */
+        .cta {
+            margin-top: 60px;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+        
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: #0A0B0D;
+            font-weight: 700;
+            font-size: 16px;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: transform 0.2s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .cta-text {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="gradient-bg"></div>
+    <div class="mesh-gradient"></div>
+    
+    <div class="wave-element one"></div>
+    <div class="wave-element two"></div>
+    <div class="wave-element three"></div>
+    
+    <div class="container">
+        <div class="content-side">
+            <!-- Content area for your own text/slides -->
+        </div>
+        
+        <div class="phone-side">
+            <div class="phone-placeholder">
+                <div class="phone-glow"></div>
+                <div class="phone-text">Phone demo goes here</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

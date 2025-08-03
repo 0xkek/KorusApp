@@ -10,6 +10,7 @@ const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 import { useKorusAlert } from '../../components/KorusAlertProvider';
 import { useTheme } from '../../context/ThemeContext';
 import { useWallet } from '../../context/WalletContext';
+import { useGames } from '../../context/GameContext';
 import { Post as PostType, Reply, GameType } from '../../types';
 import { registerForPushNotificationsAsync, setupNotificationListeners } from '../../utils/notifications';
 import { Ionicons } from '@expo/vector-icons';
@@ -52,6 +53,7 @@ export default function HomeScreen() {
   const { colors, isDarkMode, gradients } = useTheme();
   const { showAlert } = useKorusAlert();
   const { walletAddress, balance, deductBalance, selectedAvatar, selectedNFTAvatar, isPremium } = useWallet();
+  const { addGamePost } = useGames();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   
@@ -445,8 +447,11 @@ export default function HomeScreen() {
       ? `Connect Four challenge - get 4 in a row! Wager: ${gameData.wager} $ALLY`
       : `Coin Flip game! Wager: ${gameData.wager} $ALLY`;
 
+    // Generate a unique ID for the game
+    const gameId = Date.now() + Math.floor(Math.random() * 1000);
+    
     const newPost: PostType = {
-      id: posts.length + 1,
+      id: gameId,
       wallet: currentUserWallet,
       time: 'now',
       content: gameContent,
@@ -469,11 +474,14 @@ export default function HomeScreen() {
           [null, null, null]
         ] : gameData.type === 'connect4' ? Array(6).fill(null).map(() => Array(7).fill(null)) : undefined,
         currentPlayer: currentUserWallet,
-        winner: null
+        winner: null,
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 300000 // 5 minutes
       }
     };
 
     setPosts([newPost, ...posts]);
+    addGamePost(newPost); // Add to game context
     deductBalance(gameData.wager);
     showAlert({
       title: 'Game Created!',

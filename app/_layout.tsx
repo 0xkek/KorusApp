@@ -9,6 +9,7 @@ import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { KorusAlertProvider } from '../components/KorusAlertProvider';
 import { WalletProvider } from '../context/WalletContext';
 import { NotificationProvider } from '../context/NotificationContext';
+import { GameProvider } from '../context/GameContext';
 import ErrorBoundary from '../components/ErrorBoundary';
 
 function RootLayoutNav() {
@@ -60,9 +61,11 @@ export default function RootLayout() {
         <ThemeProvider>
           <WalletProvider>
             <NotificationProvider>
-              <KorusAlertProvider>
-                <RootLayoutNav />
-              </KorusAlertProvider>
+              <GameProvider>
+                <KorusAlertProvider>
+                  <RootLayoutNav />
+                </KorusAlertProvider>
+              </GameProvider>
             </NotificationProvider>
           </WalletProvider>
         </ThemeProvider>
