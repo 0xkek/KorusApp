@@ -35,10 +35,10 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
       take: 50, // Limit to last 50 notifications
     });
 
-    res.json({ success: true, notifications });
+    res.json({ notifications });
   } catch (error) {
     console.error('Error fetching notifications:', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch notifications' });
+    res.status(500).json({ error: 'Failed to fetch notifications' });
   }
 });
 
@@ -61,7 +61,7 @@ router.post('/:id/read', authenticate, async (req: AuthRequest, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Error marking notification as read:', error);
-    res.status(500).json({ success: false, error: 'Failed to mark notification as read' });
+    res.status(500).json({ error: 'Failed to mark notification as read' });
   }
 });
 
@@ -83,7 +83,7 @@ router.post('/read-all', authenticate, async (req: AuthRequest, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Error marking all as read:', error);
-    res.status(500).json({ success: false, error: 'Failed to mark all as read' });
+    res.status(500).json({ error: 'Failed to mark all as read' });
   }
 });
 
