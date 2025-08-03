@@ -69,14 +69,19 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   // Refresh unread count when wallet changes or on mount
   useEffect(() => {
-    refreshUnreadCount();
+    // Only fetch if we have a wallet address (user is authenticated)
+    if (walletAddress) {
+      refreshUnreadCount();
+    }
   }, [walletAddress, refreshUnreadCount]);
 
   // Poll for new notifications every 30 seconds
   useEffect(() => {
+    if (!walletAddress) return; // Don't poll if not authenticated
+    
     const interval = setInterval(refreshUnreadCount, 30000);
     return () => clearInterval(interval);
-  }, [refreshUnreadCount]);
+  }, [walletAddress, refreshUnreadCount]);
 
   return (
     <NotificationContext.Provider value={{ unreadCount, refreshUnreadCount, markAsRead, markAllAsRead }}>
