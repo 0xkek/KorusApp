@@ -9,12 +9,12 @@
   },
   "scripts": {
     "dev": "nodemon src/server.ts",
-    "build": "prisma generate && prisma migrate deploy && tsc",
+    "build": "prisma generate && tsc",
     "start": "node dist/server.js",
     "start:prod": "node dist/server.js",
     "migrate:prod": "prisma migrate deploy && node dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "prisma generate && prisma migrate deploy",
+    "postinstall": "prisma generate",
     "migrate:deploy": "prisma migrate deploy",
     "migrate:dev": "prisma migrate dev",
     "db:push": "prisma db push"
