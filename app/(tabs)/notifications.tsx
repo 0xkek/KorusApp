@@ -10,6 +10,7 @@ import { Fonts, FontSizes } from '../../constants/Fonts';
 import { ApiService } from '../../services/api';
 import { logger } from '../../utils/logger';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AuthService } from '../../services/auth';
 
 interface Notification {
   id: string;
@@ -39,6 +40,13 @@ export default function NotificationsScreen() {
   // Fetch notifications
   const fetchNotifications = async () => {
     if (!walletAddress) {
+      setLoading(false);
+      return;
+    }
+    
+    // Make sure we have a valid auth token
+    if (!AuthService.getToken()) {
+      logger.log('No auth token available yet, waiting...');
       setLoading(false);
       return;
     }
@@ -82,7 +90,12 @@ export default function NotificationsScreen() {
   };
   
   useEffect(() => {
-    fetchNotifications();
+    // Add delay to ensure auth token is set
+    const timer = setTimeout(() => {
+      fetchNotifications();
+    }, 500);
+    
+    return () => clearTimeout(timer);
   }, [walletAddress]);
   
   // Refresh unread count when screen comes into focus
