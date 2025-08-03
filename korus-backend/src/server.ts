@@ -100,7 +100,7 @@ app.get('/check-migrations', async (req, res) => {
 // Debug notification endpoint
 app.get('/debug-notifications', async (req, res) => {
   try {
-    const hasTable = await prisma.$queryRaw`
+    const hasTable = await prisma.$queryRaw<{exists: boolean}[]>`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
         WHERE table_schema = 'public' 
@@ -123,7 +123,7 @@ app.get('/debug-notifications', async (req, res) => {
       apiVersion: '1.0.3',
       deployTime: new Date().toISOString()
     })
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ 
       error: 'Debug check failed',
       details: error.message 
