@@ -305,6 +305,12 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     const storedFavoriteSNS = await SecureStore.getItemAsync(FAVORITE_SNS_KEY);
     const storedTimeFunUsername = await SecureStore.getItemAsync(TIMEFUN_USERNAME_KEY);
     
+    logger.log('Loading user preferences:', {
+      hasAvatar: !!storedAvatar,
+      hasNFTAvatar: !!storedNFTAvatar,
+      nftAvatarLength: storedNFTAvatar?.length
+    });
+    
     if (storedAvatar) {
       setSelectedAvatarState(storedAvatar);
     }
@@ -312,6 +318,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     if (storedNFTAvatar) {
       try {
         const parsedNFT = JSON.parse(storedNFTAvatar);
+        logger.log('Parsed NFT avatar:', parsedNFT);
         setSelectedNFTAvatarState(parsedNFT);
       } catch (error) {
         logger.error('Error parsing NFT avatar:', error);
@@ -411,10 +418,12 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
 
   const setSelectedNFTAvatar = async (nft: NFTAvatar | null) => {
     try {
+      logger.log('Setting NFT avatar:', nft);
       if (nft) {
         const nftString = JSON.stringify(nft);
         await SecureStore.setItemAsync(NFT_AVATAR_KEY, nftString);
         setSelectedNFTAvatarState(nft);
+        logger.log('NFT avatar saved to SecureStore');
         
         await SecureStore.deleteItemAsync(AVATAR_KEY);
         setSelectedAvatarState(null);
