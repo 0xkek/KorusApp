@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { ApiService } from '../services/api';
 import { useWallet } from './WalletContext';
 import { logger } from '../utils/logger';
+import { AuthService } from '../services/auth';
 
 interface NotificationContextType {
   unreadCount: number;
@@ -19,6 +20,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const refreshUnreadCount = useCallback(async () => {
     if (!walletAddress) {
       setUnreadCount(0);
+      return;
+    }
+
+    // Make sure we have a valid auth token before making the request
+    if (!AuthService.getToken()) {
+      logger.log('No auth token available yet, skipping notification fetch');
       return;
     }
 
@@ -40,10 +47,16 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         logger.error('Error details:', {
           message: error.message,
           status: error.status,
+          statusCode: error.statusCode,
           code: error.code,
           details: error.details,
-          stack: error.stack
+          name: error.name
         });
+        
+        // If it's a 401, the token might be invalid
+        if (error.statusCode === 401) {
+          logger.error('Authentication error - token may be invalid or expired');
+        }
       }
       setUnreadCount(0);
     }
@@ -71,7 +84,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     // Only fetch if we have a wallet address (user is authenticated)
     if (walletAddress) {
-      refreshUnreadCount();
+      // Add a small delay to ensure auth token is set
+      const timer = setTimeout(() => {
+        refreshUnreadCount();
+      }, 1000);
+      
+      return () => clearTimeout(timer);
     }
   }, [walletAddress, refreshUnreadCount]);
 

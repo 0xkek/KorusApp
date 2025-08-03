@@ -41,8 +41,16 @@ export class ApiService {
         const data = await response.json();
 
         if (!response.ok) {
+          // Log the error for debugging
+          logger.error('API request failed:', {
+            url: endpoint,
+            status: response.status,
+            statusText: response.statusText,
+            data
+          });
+          
           throw new ApiError(
-            data.message || 'Request failed',
+            data.message || data.error || 'Request failed',
             response.status,
             data.code,
             data.details
