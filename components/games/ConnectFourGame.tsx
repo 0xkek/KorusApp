@@ -137,6 +137,11 @@ export default function ConnectFourGame({
 
   return (
     <View style={styles.container}>
+      {/* Game Rule */}
+      <Text style={[styles.ruleText, { color: colors.textSecondary }]}>
+        Get 4 in a row to win!
+      </Text>
+      
       {/* Game Timer */}
       <View style={styles.header}>
         <View style={[styles.timerBadge, { backgroundColor: colors.surface }]}>
@@ -156,10 +161,10 @@ export default function ConnectFourGame({
         </View>
       )}
 
-      {player2 && !winner && (
-        <View style={[styles.statusBar, { backgroundColor: isMyTurn ? colors.primary + '20' : colors.surface }]}>
-          <Text style={[styles.statusText, { color: isMyTurn ? colors.primary : colors.textSecondary }]}>
-            {isMyTurn ? `Your turn! Drop a ${myColor === 'RED' ? '🔴' : '🟡'}` : "Opponent's turn..."}
+      {player2 && !winner && isMyTurn && (
+        <View style={[styles.statusBar, { backgroundColor: colors.primary + '20' }]}>
+          <Text style={[styles.statusText, { color: colors.primary }]}>
+            Your turn! Drop a {myColor === 'RED' ? '🔴' : '🟡'}
           </Text>
         </View>
       )}
@@ -234,13 +239,6 @@ export default function ConnectFourGame({
           ))}
         </View>
       </LinearGradient>
-
-      {/* Game Instructions */}
-      <View style={[styles.instructions, { backgroundColor: colors.surface + '60' }]}>
-        <Text style={[styles.instructionsText, { color: colors.textSecondary }]}>
-          🎯 Get 4 in a row (horizontal, vertical, or diagonal) to win!
-        </Text>
-      </View>
     </View>
   );
 }
@@ -249,8 +247,15 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
   },
+  ruleText: {
+    fontSize: FontSizes.xs,
+    fontFamily: Fonts.medium,
+    textAlign: 'center',
+    marginBottom: 4,
+    opacity: 0.7,
+  },
   header: {
-    marginBottom: 16,
+    marginBottom: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -296,10 +301,10 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium,
   },
   statusBar: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     borderRadius: 8,
-    marginBottom: 16,
+    marginBottom: 8,
     alignItems: 'center',
   },
   statusText: {
@@ -320,8 +325,8 @@ const styles = StyleSheet.create({
   },
   board: {
     borderRadius: 16,
-    padding: 8,
-    marginBottom: 12,
+    padding: 6,
+    marginBottom: 4,
   },
   columnButtons: {
     flexDirection: 'row',
@@ -358,17 +363,5 @@ const styles = StyleSheet.create({
     height: '80%',
     borderRadius: 50,
     position: 'absolute',
-  },
-  instructions: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  instructionsText: {
-    fontSize: FontSizes.base,
-    fontFamily: Fonts.medium,
-    textAlign: 'center',
   },
 });
