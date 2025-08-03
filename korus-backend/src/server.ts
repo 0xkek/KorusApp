@@ -79,10 +79,39 @@ app.get('/health', (req, res) => {
   })
 })
 
+// Temporary migration check endpoint
+app.get('/check-migrations', async (req, res) => {
+  try {
+    // Check migration history
+    const migrations = await prisma.$queryRaw`SELECT * FROM _prisma_migrations ORDER BY finished_at DESC LIMIT 10`
+    
+    res.json({
+      migrations,
+      totalMigrations: Array.isArray(migrations) ? migrations.length : 0
+    })
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Failed to check migrations',
+      details: error 
+    })
+  }
+})
+
 app.get('/test-db', async (req, res) => {
   try {
     const userCount = await prisma.user.count()
     const postCount = await prisma.post.count()
+    
+    // Check if notifications table exists
+    let notificationCount = 0
+    let hasNotificationsTable = false
+    try {
+      notificationCount = await prisma.notification.count()
+      hasNotificationsTable = true
+    } catch (e) {
+      console.log('Notifications table not found:', e)
+    }
+    
     const recentUsers = await prisma.user.findMany({
       take: 5,
       orderBy: { createdAt: 'desc' },
@@ -92,9 +121,11 @@ app.get('/test-db', async (req, res) => {
       message: 'Database connected successfully!', 
       userCount,
       postCount,
+      notificationCount,
+      hasNotificationsTable,
       recentUsers,
-      tables: 'users, posts, replies, interactions, games',
-      version: '1.0.1' // Force new deployment
+      tables: 'users, posts, replies, interactions, games' + (hasNotificationsTable ? ', notifications' : ''),
+      version: '1.0.2' // Check migration status
     })
   } catch (error) {
     console.error('Database error:', error)
