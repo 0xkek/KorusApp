@@ -97,6 +97,40 @@ app.get('/check-migrations', async (req, res) => {
   }
 })
 
+// Debug notification endpoint
+app.get('/debug-notifications', async (req, res) => {
+  try {
+    const hasTable = await prisma.$queryRaw`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'notifications'
+      )
+    `
+    
+    let sampleNotification = null
+    if (hasTable[0]?.exists) {
+      try {
+        sampleNotification = await prisma.notification.findFirst()
+      } catch (e) {
+        // Table exists but query failed
+      }
+    }
+    
+    res.json({
+      hasNotificationsTable: hasTable[0]?.exists || false,
+      sampleNotification,
+      apiVersion: '1.0.3',
+      deployTime: new Date().toISOString()
+    })
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Debug check failed',
+      details: error.message 
+    })
+  }
+})
+
 app.get('/test-db', async (req, res) => {
   try {
     const userCount = await prisma.user.count()
@@ -125,7 +159,7 @@ app.get('/test-db', async (req, res) => {
       hasNotificationsTable,
       recentUsers,
       tables: 'users, posts, replies, interactions, games' + (hasNotificationsTable ? ', notifications' : ''),
-      version: '1.0.2' // Check migration status
+      version: '1.0.3' // With debug endpoints
     })
   } catch (error) {
     console.error('Database error:', error)

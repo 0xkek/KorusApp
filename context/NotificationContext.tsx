@@ -37,6 +37,13 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         logger.log('Notifications endpoint not available yet');
       } else {
         logger.error('Failed to fetch unread count:', error);
+        logger.error('Error details:', {
+          message: error.message,
+          status: error.status,
+          code: error.code,
+          details: error.details,
+          stack: error.stack
+        });
       }
       setUnreadCount(0);
     }
