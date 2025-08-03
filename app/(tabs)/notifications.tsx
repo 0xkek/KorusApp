@@ -95,7 +95,18 @@ export default function NotificationsScreen() {
       fetchNotifications();
     }, 500);
     
-    return () => clearTimeout(timer);
+    // Set a timeout to show empty state if loading takes too long
+    const loadingTimeout = setTimeout(() => {
+      if (loading) {
+        setLoading(false);
+        setNotifications([]);
+      }
+    }, 3000); // 3 seconds timeout
+    
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(loadingTimeout);
+    };
   }, [walletAddress]);
   
   // Refresh unread count when screen comes into focus
@@ -252,12 +263,12 @@ export default function NotificationsScreen() {
         {/* Notifications List */}
         {notifications.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="notifications-off-outline" size={64} color={colors.textTertiary} />
+            <Ionicons name="notifications-outline" size={64} color={colors.textTertiary} />
             <Text style={[styles.emptyText, { color: colors.textTertiary }]}>
-              No notifications yet
+              All caught up!
             </Text>
             <Text style={[styles.emptySubtext, { color: colors.textTertiary }]}>
-              When someone interacts with your posts, you'll see it here
+              When someone likes, replies, or tips your posts, you'll see it here
             </Text>
           </View>
         ) : (
