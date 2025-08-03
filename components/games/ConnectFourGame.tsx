@@ -52,6 +52,12 @@ export default function ConnectFourGame({
   
   // Timer countdown
   useEffect(() => {
+    // Check if expiresAt is valid
+    if (!expiresAt || isNaN(expiresAt)) {
+      setTimeLeft('--:--');
+      return;
+    }
+
     const timer = setInterval(() => {
       const now = Date.now();
       const remaining = expiresAt - now;
@@ -62,7 +68,13 @@ export default function ConnectFourGame({
       } else {
         const minutes = Math.floor(remaining / 60000);
         const seconds = Math.floor((remaining % 60000) / 1000);
-        setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+        
+        // Ensure we don't show NaN
+        if (!isNaN(minutes) && !isNaN(seconds)) {
+          setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+        } else {
+          setTimeLeft('--:--');
+        }
       }
     }, 1000);
 
