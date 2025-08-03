@@ -93,7 +93,8 @@ app.get('/test-db', async (req, res) => {
       userCount,
       postCount,
       recentUsers,
-      tables: 'users, posts, replies, interactions, games'
+      tables: 'users, posts, replies, interactions, games',
+      version: '1.0.1' // Force new deployment
     })
   } catch (error) {
     console.error('Database error:', error)
