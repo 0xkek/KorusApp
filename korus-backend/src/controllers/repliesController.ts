@@ -3,6 +3,7 @@ import prisma from '../config/database'
 import { AuthRequest } from '../middleware/auth'
 import { autoModerate } from './moderationController'
 import { reputationService } from '../services/reputationService'
+import { createNotification } from '../utils/notifications'
 
 export const createReply = async (req: AuthRequest, res: Response) => {
   try {
@@ -87,6 +88,30 @@ export const createReply = async (req: AuthRequest, res: Response) => {
     // Award reputation points
     await reputationService.onCommentMade(walletAddress)
     await reputationService.onCommentReceived(post.authorWallet)
+    
+    // Create notification for post author
+    await createNotification({
+      userId: post.authorWallet,
+      type: 'reply',
+      fromUserId: walletAddress,
+      postId: postId
+    })
+    
+    // If replying to another reply, notify that user too
+    if (parentReplyId) {
+      const parentReply = await prisma.reply.findUnique({ 
+        where: { id: parentReplyId },
+        select: { authorWallet: true }
+      })
+      if (parentReply && parentReply.authorWallet !== walletAddress) {
+        await createNotification({
+          userId: parentReply.authorWallet,
+          type: 'reply',
+          fromUserId: walletAddress,
+          postId: postId
+        })
+      }
+    }
 
     res.status(201).json({
       success: true,

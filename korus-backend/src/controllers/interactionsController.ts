@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import prisma from '../config/database'
 import { AuthRequest } from '../middleware/auth'
 import { reputationService } from '../services/reputationService'
+import { createNotification } from '../utils/notifications'
 
 export const likePost = async (req: AuthRequest, res: Response) => {
   try {
@@ -53,6 +54,14 @@ export const likePost = async (req: AuthRequest, res: Response) => {
       // Award reputation points
       await reputationService.onLikeGiven(walletAddress, 'post')
       await reputationService.onLikeReceived(post.authorWallet, 'post')
+      
+      // Create notification
+      await createNotification({
+        userId: post.authorWallet,
+        type: 'like',
+        fromUserId: walletAddress,
+        postId: id
+      })
       
       res.json({ success: true, liked: true, message: 'Post liked' })
     }
@@ -118,6 +127,15 @@ export const tipPost = async (req: AuthRequest, res: Response) => {
     // Award reputation points
     await reputationService.onTipSent(walletAddress, Number(amount))
     await reputationService.onTipReceived(post.authorWallet, Number(amount))
+    
+    // Create notification
+    await createNotification({
+      userId: post.authorWallet,
+      type: 'tip',
+      fromUserId: walletAddress,
+      postId: id,
+      amount: Number(amount)
+    })
 
     res.json({
       success: true,

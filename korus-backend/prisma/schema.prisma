@@ -48,6 +48,8 @@ model User {
   moderatorActions  ModerationAction[] @relation("Moderator")
   repEvents      RepEvent[]
   tokenDistributions TokenDistribution[]
+  notifications  Notification[]
+  sentNotifications Notification[] @relation("NotificationSender")
 
   // Performance indexes
   @@index([tier, createdAt(sort: Desc)]) // For premium user queries 
@@ -86,6 +88,7 @@ model Post {
   replies Reply[]
   game    Game?
   sponsoredPost SponsoredPost?
+  notifications Notification[]
 
   // Performance indexes
   @@index([createdAt(sort: Desc)]) // For chronological post feeds
@@ -338,4 +341,26 @@ model TokenDistribution {
   @@index([claimed, userWallet])
   @@index([weekStartDate, weekEndDate])
   @@map("token_distributions")
+}
+
+model Notification {
+  id              String   @id @default(cuid())
+  userId          String   @db.VarChar(44)
+  type            String   @db.VarChar(20) // like, reply, tip, bump, follow, mention
+  title           String
+  message         String   @db.Text
+  read            Boolean  @default(false)
+  fromUserId      String?  @db.VarChar(44)
+  postId          String?
+  amount          Decimal? @db.Decimal(18, 6)
+  createdAt       DateTime @default(now())
+  
+  // Relations
+  user            User     @relation(fields: [userId], references: [walletAddress])
+  fromUser        User?    @relation("NotificationSender", fields: [fromUserId], references: [walletAddress])
+  post            Post?    @relation(fields: [postId], references: [id])
+  
+  // Indexes
+  @@index([userId, read, createdAt(sort: Desc)])
+  @@map("notifications")
 }

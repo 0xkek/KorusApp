@@ -1,14 +1,14 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { authenticate } from '../middleware/auth';
+import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 const prisma = new PrismaClient();
 
 // Get all notifications for the authenticated user
-router.get('/', authenticate, async (req, res) => {
+router.get('/', authenticate, async (req: AuthRequest, res) => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.userWallet!;
     const unreadOnly = req.query.unread === 'true';
 
     const notifications = await prisma.notification.findMany({
@@ -20,7 +20,6 @@ router.get('/', authenticate, async (req, res) => {
         fromUser: {
           select: {
             walletAddress: true,
-            username: true,
           },
         },
         post: {
@@ -44,9 +43,9 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 // Mark a notification as read
-router.post('/:id/read', authenticate, async (req, res) => {
+router.post('/:id/read', authenticate, async (req: AuthRequest, res) => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.userWallet!;
     const notificationId = req.params.id;
 
     await prisma.notification.update({
@@ -67,9 +66,9 @@ router.post('/:id/read', authenticate, async (req, res) => {
 });
 
 // Mark all notifications as read
-router.post('/read-all', authenticate, async (req, res) => {
+router.post('/read-all', authenticate, async (req: AuthRequest, res) => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.userWallet!;
 
     await prisma.notification.updateMany({
       where: {
