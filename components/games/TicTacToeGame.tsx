@@ -483,9 +483,11 @@ const styles = StyleSheet.create({
   },
   board: {
     aspectRatio: 1,
-    padding: 4,
+    padding: 8,
     borderRadius: 16,
     position: 'relative',
+    width: '100%',
+    maxWidth: 400, // Limit max size
   },
   row: {
     flex: 1,
@@ -493,11 +495,12 @@ const styles = StyleSheet.create({
   },
   cell: {
     flex: 1,
-    margin: 4,
-    borderRadius: 12,
+    margin: 3,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
+    aspectRatio: 1, // Keep cells square
   },
   cellHoverable: {
     opacity: 0.9,

@@ -362,11 +362,6 @@ export default function GameScreen() {
             <View style={styles.playersContainer}>
               <View style={[styles.playerCard, { 
                 backgroundColor: 'transparent',
-                shadowColor: isPlayer1 ? colors.primary : 'transparent',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: isPlayer1 ? 0.3 : 0,
-                shadowRadius: 8,
-                elevation: isPlayer1 ? 4 : 0,
               }]}>
                 <LinearGradient
                   colors={isPlayer1 ? [colors.primary + '20', colors.primary + '10'] : [colors.surface + '40', colors.surface + '20']}
@@ -406,11 +401,6 @@ export default function GameScreen() {
 
               <View style={[styles.playerCard, { 
                 backgroundColor: 'transparent',
-                shadowColor: isPlayer2 ? colors.secondary : 'transparent',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: isPlayer2 ? 0.3 : 0,
-                shadowRadius: 8,
-                elevation: isPlayer2 ? 4 : 0,
               }]}>
                 <LinearGradient
                   colors={isPlayer2 ? [colors.secondary + '20', colors.secondary + '10'] : [colors.surface + '40', colors.surface + '20']}
@@ -667,20 +657,21 @@ const styles = StyleSheet.create({
   },
   gameWrapper: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: 0,
-    paddingBottom: 110, // Compact game frame
+    paddingBottom: 20,
   },
   gameGradient: {
-    borderRadius: 32,
-    borderWidth: 3,
+    borderRadius: 24,
+    borderWidth: 2,
     overflow: 'hidden',
-    flex: 1, // Make gradient fill available space
+    flex: 1,
   },
   gameContainer: {
-    padding: 20,
-    paddingTop: 6,
-    flex: 1, // Make container fill available space
+    padding: 12,
+    paddingTop: 8,
+    flex: 1,
+    justifyContent: 'center', // Center the game board
   },
   statusBar: {
     position: 'absolute',
@@ -715,29 +706,30 @@ const styles = StyleSheet.create({
   },
   playersSection: {
     paddingHorizontal: 20,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   playersContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 20,
-    paddingTop: 10, // Add padding to prevent badge cutoff
+    marginBottom: 10,
+    paddingTop: 10,
   },
   playerCard: {
-    borderRadius: 20,
-    overflow: 'visible', // Changed to visible to prevent badge cutoff
+    borderRadius: 16,
+    overflow: 'visible',
     flex: 1,
     maxWidth: '42%',
-    position: 'relative', // Ensure proper positioning context
+    position: 'relative',
+    // Remove shadow properties to clean up the UI
   },
   playerCardGradient: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
     alignItems: 'center',
-    gap: 8,
-    borderRadius: 20, // Match parent borderRadius
-    overflow: 'hidden', // Ensure gradient respects border radius
+    gap: 6,
+    borderRadius: 16,
+    overflow: 'visible', // Allow badge to show properly
   },
   playerInfo: {
     alignItems: 'center',
@@ -768,18 +760,15 @@ const styles = StyleSheet.create({
   },
   youBadge: {
     position: 'absolute',
-    top: 8,
-    right: 8,
-    paddingHorizontal: 8,
+    top: -8,
+    right: -8,
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    borderRadius: 10,
+    zIndex: 10,
   },
   youText: {
-    fontSize: FontSizes.xs,
+    fontSize: 10,
     fontFamily: Fonts.bold,
     letterSpacing: 0.5,
   },
