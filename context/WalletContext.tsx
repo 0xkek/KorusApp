@@ -90,6 +90,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
 
   // Check for existing session on mount
   useEffect(() => {
+    logger.log('WalletProvider mounted - checking existing session');
     checkExistingSession();
     loadAvailableWallets();
   }, []);
@@ -103,10 +104,18 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     await withErrorHandling(async () => {
       setIsLoading(true);
       
+      logger.log('checkExistingSession - Starting...');
+      
       // Check for stored session
       const storedAddress = await SecureStore.getItemAsync(WALLET_ADDRESS_KEY);
       const storedToken = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
       const storedProvider = await SecureStore.getItemAsync(WALLET_PROVIDER_KEY);
+      
+      logger.log('checkExistingSession - Found stored values:', {
+        hasAddress: !!storedAddress,
+        hasToken: !!storedToken,
+        hasProvider: !!storedProvider
+      });
       
       if (storedAddress && storedToken) {
         // Verify token is still valid
@@ -115,6 +124,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
           
           if (profile.user?.walletAddress === storedAddress) {
             // Session is valid
+            logger.log('checkExistingSession - Session is valid, loading preferences...');
             setWalletAddress(storedAddress);
             setIsConnected(true);
             setBalance(parseFloat(profile.user.allyBalance || '0'));
@@ -133,12 +143,15 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
             logger.log('Restored valid session for wallet:', storedAddress);
           } else {
             // Invalid session, clear it
+            logger.log('checkExistingSession - Session invalid, clearing...');
             await clearSession();
           }
         } catch (error) {
           logger.error('Session validation failed:', error);
           await clearSession();
         }
+      } else {
+        logger.log('checkExistingSession - No stored session found');
       }
     }, 'checkExistingSession', {
       onError: () => setIsLoading(false)
@@ -300,29 +313,44 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   };
 
   const loadUserPreferences = async () => {
+    logger.log('Loading user preferences - Starting...');
+    
     const storedAvatar = await SecureStore.getItemAsync(AVATAR_KEY);
     const storedNFTAvatar = await SecureStore.getItemAsync(NFT_AVATAR_KEY);
     const storedFavoriteSNS = await SecureStore.getItemAsync(FAVORITE_SNS_KEY);
     const storedTimeFunUsername = await SecureStore.getItemAsync(TIMEFUN_USERNAME_KEY);
     
-    logger.log('Loading user preferences:', {
+    logger.log('Raw stored values:', {
+      avatarKey: AVATAR_KEY,
+      nftAvatarKey: NFT_AVATAR_KEY,
       hasAvatar: !!storedAvatar,
       hasNFTAvatar: !!storedNFTAvatar,
+      nftAvatarValue: storedNFTAvatar ? storedNFTAvatar.substring(0, 100) + '...' : null,
       nftAvatarLength: storedNFTAvatar?.length
     });
     
     if (storedAvatar) {
+      logger.log('Setting regular avatar:', storedAvatar);
       setSelectedAvatarState(storedAvatar);
     }
     
     if (storedNFTAvatar) {
       try {
+        logger.log('Attempting to parse NFT avatar JSON...');
         const parsedNFT = JSON.parse(storedNFTAvatar);
-        logger.log('Parsed NFT avatar:', parsedNFT);
+        logger.log('Successfully parsed NFT avatar:', {
+          id: parsedNFT.id,
+          name: parsedNFT.name,
+          hasImage: !!parsedNFT.image,
+          imageLength: parsedNFT.image?.length
+        });
         setSelectedNFTAvatarState(parsedNFT);
       } catch (error) {
         logger.error('Error parsing NFT avatar:', error);
+        logger.error('Invalid JSON:', storedNFTAvatar);
       }
+    } else {
+      logger.log('No NFT avatar found in storage');
     }
     
     if (storedFavoriteSNS && isPremium) {
@@ -332,6 +360,8 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     if (storedTimeFunUsername) {
       setTimeFunUsernameState(storedTimeFunUsername);
     }
+    
+    logger.log('User preferences loaded - Complete');
   };
 
   const updateSolBalance = async (address: string) => {
@@ -405,12 +435,14 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       if (avatar === null) {
         await SecureStore.deleteItemAsync(AVATAR_KEY);
         setSelectedAvatarState(null);
+        // Don't clear NFT avatar when just clearing regular avatar
       } else {
+        // Only clear NFT avatar when setting a new regular avatar
         await SecureStore.setItemAsync(AVATAR_KEY, avatar);
         setSelectedAvatarState(avatar);
+        await SecureStore.deleteItemAsync(NFT_AVATAR_KEY);
+        setSelectedNFTAvatarState(null);
       }
-      await SecureStore.deleteItemAsync(NFT_AVATAR_KEY);
-      setSelectedNFTAvatarState(null);
     } catch (error) {
       logger.error('Error saving avatar:', error);
     }
@@ -424,6 +456,10 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         await SecureStore.setItemAsync(NFT_AVATAR_KEY, nftString);
         setSelectedNFTAvatarState(nft);
         logger.log('NFT avatar saved to SecureStore');
+        
+        // Verify it was saved
+        const verification = await SecureStore.getItemAsync(NFT_AVATAR_KEY);
+        logger.log('Verification - NFT avatar in storage:', !!verification, 'length:', verification?.length);
         
         await SecureStore.deleteItemAsync(AVATAR_KEY);
         setSelectedAvatarState(null);

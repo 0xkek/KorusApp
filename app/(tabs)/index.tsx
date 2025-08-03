@@ -55,6 +55,15 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   
+  // Debug NFT avatar state
+  React.useEffect(() => {
+    logger.log('Feed - NFT avatar state:', {
+      hasNFTAvatar: !!selectedNFTAvatar,
+      nftId: selectedNFTAvatar?.id,
+      nftName: selectedNFTAvatar?.name
+    });
+  }, [selectedNFTAvatar]);
+  
   // State
   const [activeTab, setActiveTab] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
