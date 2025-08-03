@@ -16,6 +16,8 @@ import NFTAvatarModal from '../components/NFTAvatarModal';
 import TipModal from '../components/TipModal';
 import TipSuccessModal from '../components/TipSuccessModal';
 import { useKorusAlert } from '../components/KorusAlertProvider';
+import { AuthService } from '../services/auth';
+import { logger } from '../utils/logger';
 
 export default function ProfileScreen() {
   const params = useLocalSearchParams();
@@ -718,16 +720,31 @@ export default function ProfileScreen() {
               setShowNFTSelection(false);
               // Don't automatically open emoji picker
             }}
-            onSelectNFT={(nft) => {
-              setSelectedNFTAvatar({
+            onSelectNFT={async (nft) => {
+              const nftAvatarData = {
                 id: nft.mint,
                 name: nft.name,
                 image: nft.image,
                 uri: nft.uri,
                 collection: nft.collection?.name
-              });
+              };
+              
+              // Update local state immediately for responsiveness
+              setSelectedNFTAvatar(nftAvatarData);
               setSelectedAvatar(null);
               setShowNFTSelection(false);
+              
+              // Save to backend
+              try {
+                await AuthService.updateProfile({
+                  nftAvatar: nftAvatarData,
+                  avatar: null
+                });
+                logger.log('NFT avatar saved successfully');
+              } catch (error) {
+                logger.error('Failed to save NFT avatar:', error);
+                showAlert('Failed to save avatar', 'error');
+              }
             }}
             onSelectEmoji={() => {
               setShowNFTSelection(false);
@@ -738,10 +755,23 @@ export default function ProfileScreen() {
           <AvatarSelectionModal
             visible={showAvatarSelection}
             onClose={() => setShowAvatarSelection(false)}
-            onSelect={(avatar) => {
+            onSelect={async (avatar) => {
+              // Update local state immediately
               setSelectedAvatar(avatar);
               setSelectedNFTAvatar(null);
               setShowAvatarSelection(false);
+              
+              // Save to backend
+              try {
+                await AuthService.updateProfile({
+                  avatar: avatar,
+                  nftAvatar: null
+                });
+                logger.log('Avatar saved successfully');
+              } catch (error) {
+                logger.error('Failed to save avatar:', error);
+                showAlert('Failed to save avatar', 'error');
+              }
             }}
             currentAvatar={selectedAvatar}
           />
