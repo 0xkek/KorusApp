@@ -734,16 +734,17 @@ export default function ProfileScreen() {
               setSelectedAvatar(null);
               setShowNFTSelection(false);
               
-              // Save to backend
+              // Save to backend (currently not implemented, so just log)
               try {
-                await AuthService.updateProfile({
-                  nftAvatar: nftAvatarData,
-                  avatar: null
-                });
-                logger.log('NFT avatar saved successfully');
+                // TODO: Implement backend endpoint for profile updates
+                // await AuthService.updateProfile({
+                //   nftAvatar: nftAvatarData,
+                //   avatar: null
+                // });
+                logger.log('NFT avatar selected (backend save not implemented)');
               } catch (error) {
                 logger.error('Failed to save NFT avatar:', error);
-                showAlert('Failed to save avatar', 'error');
+                // Don't show error since backend doesn't support this yet
               }
             }}
             onSelectEmoji={() => {
@@ -761,16 +762,17 @@ export default function ProfileScreen() {
               setSelectedNFTAvatar(null);
               setShowAvatarSelection(false);
               
-              // Save to backend
+              // Save to backend (currently not implemented, so just log)
               try {
-                await AuthService.updateProfile({
-                  avatar: avatar,
-                  nftAvatar: null
-                });
-                logger.log('Avatar saved successfully');
+                // TODO: Implement backend endpoint for profile updates
+                // await AuthService.updateProfile({
+                //   avatar: avatar,
+                //   nftAvatar: null
+                // });
+                logger.log('Avatar selected (backend save not implemented)');
               } catch (error) {
                 logger.error('Failed to save avatar:', error);
-                showAlert('Failed to save avatar', 'error');
+                // Don't show error since backend doesn't support this yet
               }
             }}
             currentAvatar={selectedAvatar}
