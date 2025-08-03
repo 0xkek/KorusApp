@@ -31,8 +31,8 @@ export default function GamesView({
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [selectedGame, setSelectedGame] = useState<{ postId: number; gameType: GameType; wager: number } | null>(null);
 
-  // Sample games for testing
-  const sampleGames: PostType[] = [
+  // Get sample games from global context (for demo purposes only)
+  const sampleGames: PostType[] = (global as any).sampleGames || [
     {
       id: 9999,
       wallet: 'DeMo1K8tQpVHgLpQeN4eSkVHgfr6k6pVxZfO3syhUser',

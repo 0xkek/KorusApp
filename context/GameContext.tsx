@@ -11,7 +11,7 @@ interface GameContextType {
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
-  // Initialize with sample games for testing
+  // Sample games for demo/testing when no real games exist
   const sampleGames: PostType[] = [
     {
       id: 9999,
@@ -76,6 +76,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }
   ];
   
+  // Initialize with sample games so they can be accessed when clicked
   const [gamePosts, setGamePosts] = useState<PostType[]>(sampleGames);
 
   const addGamePost = (post: PostType) => {
