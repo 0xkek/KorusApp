@@ -66,8 +66,13 @@ export default function NotificationsScreen() {
         // Refresh the global unread count
         refreshUnreadCount();
       }
-    } catch (error) {
-      logger.error('Failed to fetch notifications:', error);
+    } catch (error: any) {
+      // Silently handle if notifications endpoint isn't available
+      if (error.message?.includes('JSON Parse error')) {
+        logger.log('Notifications endpoint not available yet');
+      } else {
+        logger.error('Failed to fetch notifications:', error);
+      }
       // If API fails, show empty state
       setNotifications([]);
     } finally {
