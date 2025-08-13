@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
+import { config } from '../config/environment';
 
 type GameType = 'tictactoe' | 'connect4' | 'rps' | 'coinflip';
 
@@ -26,8 +27,8 @@ const GAMES: Game[] = [
     name: 'Tic Tac Toe',
     icon: 'grid-outline',
     description: 'Classic 3x3 strategy game',
-    minWager: 10,
-    maxWager: 1000,
+    minWager: config.minWagerAmount,
+    maxWager: config.maxWagerAmount,
     duration: '5-10 min',
     difficulty: 'Easy'
   },
@@ -36,8 +37,8 @@ const GAMES: Game[] = [
     name: 'Rock Paper Scissors',
     icon: 'hand-left-outline',
     description: 'Best of 3 rounds',
-    minWager: 5,
-    maxWager: 500,
+    minWager: config.minWagerAmount,
+    maxWager: config.maxWagerAmount,
     duration: '2-5 min',
     difficulty: 'Easy'
   },
@@ -46,8 +47,8 @@ const GAMES: Game[] = [
     name: 'Coin Flip',
     icon: 'disc-outline',
     description: 'Simple heads or tails',
-    minWager: 1,
-    maxWager: 1000,
+    minWager: config.minWagerAmount,
+    maxWager: config.maxWagerAmount,
     duration: 'Instant',
     difficulty: 'Easy'
   },
@@ -56,8 +57,8 @@ const GAMES: Game[] = [
     name: 'Connect 4',
     icon: 'apps-outline',
     description: 'Connect 4 in a row to win',
-    minWager: 20,
-    maxWager: 2000,
+    minWager: config.minWagerAmount,
+    maxWager: config.maxWagerAmount,
     duration: '10-15 min',
     difficulty: 'Medium'
   }

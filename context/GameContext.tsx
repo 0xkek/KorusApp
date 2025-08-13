@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import { Post as PostType } from '../types';
+import { config } from '../config/environment';
 
 interface GameContextType {
   gamePosts: PostType[];
@@ -12,7 +13,7 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
   // Sample games for demo/testing when no real games exist
-  const sampleGames: PostType[] = [
+  const sampleGames: PostType[] = config.showDemoContent ? [
     {
       id: 9999,
       wallet: 'DeMo1K8tQpVHgLpQeN4eSkVHgfr6k6pVxZfO3syhUser',
@@ -74,9 +75,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         board: Array(6).fill(null).map(() => Array(7).fill(null))
       }
     }
-  ];
+  ] : [];
   
-  // Initialize with sample games so they can be accessed when clicked
+  // Initialize with sample games only in demo mode
   const [gamePosts, setGamePosts] = useState<PostType[]>(sampleGames);
 
   const addGamePost = (post: PostType) => {

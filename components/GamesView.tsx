@@ -11,6 +11,7 @@ import { Fonts, FontSizes } from '../constants/Fonts';
 import GameSelectionModal from './GameSelectionModal';
 import GameJoinModal from './GameJoinModal';
 import { Post as PostType, GameType } from '../types';
+import { config } from '../config/environment';
 
 interface GamesViewProps {
   posts: PostType[];
@@ -32,7 +33,7 @@ export default function GamesView({
   const [selectedGame, setSelectedGame] = useState<{ postId: number; gameType: GameType; wager: number } | null>(null);
 
   // Get sample games from global context (for demo purposes only)
-  const sampleGames: PostType[] = (global as any).sampleGames || [
+  const sampleGames: PostType[] = config.showDemoContent ? ((global as any).sampleGames || [
     {
       id: 9999,
       wallet: 'DeMo1K8tQpVHgLpQeN4eSkVHgfr6k6pVxZfO3syhUser',
@@ -101,7 +102,7 @@ export default function GamesView({
         board: Array(6).fill(null).map(() => Array(7).fill(null))
       }
     }
-  ];
+  ]) : [];
 
   // Filter only posts with games - combine all sources
   const feedGamePosts = posts.filter(post => post.gameData && post.category === 'GAMES');

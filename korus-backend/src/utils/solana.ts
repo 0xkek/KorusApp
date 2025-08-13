@@ -2,8 +2,16 @@ import { Connection, PublicKey } from '@solana/web3.js'
 import bs58 from 'bs58'
 import nacl from 'tweetnacl'
 
+// Use mainnet in production, devnet otherwise
+const getRpcUrl = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com'
+  }
+  return process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com'
+}
+
 const connection = new Connection(
-  process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com',
+  getRpcUrl(),
   'confirmed'
 )
 

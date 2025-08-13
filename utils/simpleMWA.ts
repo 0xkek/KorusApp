@@ -3,6 +3,8 @@ import { PublicKey } from '@solana/web3.js';
 import bs58 from 'bs58';
 import { authAPI } from './api';
 import { logger } from './logger';
+import { config } from '../config/environment';
+import { getClusterForWallet, debugConnectionParams } from './walletDebug';
 
 // Simple, direct MWA connection following official docs exactly
 export async function connectWalletDirect() {
@@ -13,14 +15,17 @@ export async function connectWalletDirect() {
       logger.log('[SimpleMWA] Transact callback started');
       
       // Step 1: Authorize
-      const authResult = await wallet.authorize({
-        cluster: 'solana:devnet',
+      const authParams = {
+        cluster: getClusterForWallet('phantom'),
         identity: {
-          name: 'Korus',
-          uri: 'https://korusapp.com',
+          name: config.appName,
+          uri: config.appUrl,
           icon: 'favicon.ico',
         },
-      });
+      };
+      debugConnectionParams(authParams);
+      
+      const authResult = await wallet.authorize(authParams);
       
       logger.log('[SimpleMWA] Authorization result:', authResult);
       

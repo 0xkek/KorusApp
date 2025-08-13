@@ -3,6 +3,8 @@ import bs58 from 'bs58';
 import { logger } from './logger';
 import { PublicKey } from '@solana/web3.js';
 import { Platform } from 'react-native';
+import { config } from '../config/environment';
+import { getClusterForWallet, debugConnectionParams } from './walletDebug';
 
 export interface WalletProvider {
   name: 'seedvault' | 'phantom' | 'solflare' | 'backpack';
@@ -45,8 +47,8 @@ export const seedVaultProvider: WalletProvider = {
 
 // Alternative: Connect and sign in one transaction (recommended for MWA)
 export const APP_IDENTITY = {
-  name: 'Korus',
-  uri: 'https://korus-backend.onrender.com',
+  name: config.appName,
+  uri: config.appUrl,
   icon: 'favicon.ico', // MWA will handle this properly
 };
 
@@ -74,10 +76,14 @@ export const connectAndSignWithMWA = async (message: string): Promise<{ address:
         logger.log('MWA callback started - wallet object received');
       // Authorize in the same session
       logger.log('Authorizing wallet...');
-      const authResult = await wallet.authorize({
-        cluster: 'solana:devnet', // Correct format per MWA spec
+      // Debug connection params
+      const authParams = {
+        cluster: getClusterForWallet('phantom'),
         identity: APP_IDENTITY,
-      });
+      };
+      debugConnectionParams(authParams);
+      
+      const authResult = await wallet.authorize(authParams);
     
     logger.log('Authorization successful:', authResult);
     const base64Address = authResult.accounts[0].address;

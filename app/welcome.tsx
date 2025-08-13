@@ -13,6 +13,8 @@ import { useKorusAlert } from '../components/KorusAlertProvider';
 import { getErrorMessage } from '../utils/errorHandler';
 import { logger } from '../utils/logger';
 import { WalletConnectionModal } from '../components/WalletConnectionModal';
+import AgeGate, { needsAgeVerification } from '../components/AgeGate';
+import { config, isProduction, currentEnvironment } from '../config/environment';
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -20,16 +22,35 @@ export default function WelcomeScreen() {
   const { colors, isDarkMode, gradients } = useTheme();
   const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [showAgeGate, setShowAgeGate] = useState(false);
   const { signIn, isAuthenticated } = useAuth();
   const { showAlert } = useKorusAlert();
 
+  // Check age verification on mount
+  useEffect(() => {
+    const checkAgeVerification = async () => {
+      logger.log('Environment check:', {
+        environment: currentEnvironment,
+        isProduction: isProduction,
+        showDemoContent: config.showDemoContent
+      });
+      
+      if (isProduction) {
+        const needsVerification = await needsAgeVerification();
+        logger.log('Age verification needed:', needsVerification);
+        setShowAgeGate(needsVerification);
+      }
+    };
+    checkAgeVerification();
+  }, []);
+
   // Auto-redirect if user is connected
   useEffect(() => {
-    if (isConnected && !isLoading) {
+    if (isConnected && !isLoading && !showAgeGate) {
       logger.log('User is connected, redirecting to tabs');
       router.replace('/(tabs)');
     }
-  }, [isConnected, isLoading]);
+  }, [isConnected, isLoading, showAgeGate]);
 
   const handleConnectWallet = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -144,6 +165,13 @@ export default function WelcomeScreen() {
         onClose={() => setShowWalletModal(false)}
         onSuccess={handleWalletConnected}
       />
+
+      {/* Age Gate Modal */}
+      {showAgeGate && (
+        <AgeGate
+          onComplete={() => setShowAgeGate(false)}
+        />
+      )}
     </View>
   );
 }

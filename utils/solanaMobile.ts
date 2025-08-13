@@ -1,6 +1,8 @@
 import { PublicKey, Transaction } from '@solana/web3.js';
 import { logger } from './logger';
 import { Platform } from 'react-native';
+import { config } from '../config/environment';
+import { getClusterForWallet, debugConnectionParams } from './walletDebug';
 
 // Solana Mobile Wallet Adapter requires native modules
 // Will only work in production build, not Expo Go
@@ -28,8 +30,8 @@ class SolanaMobileService {
   private currentWallet: SolanaMobileWallet | null = null;
   private authToken: string | null = null;
   private appIdentity = {
-    name: 'Korus',
-    uri: 'https://korus.app',
+    name: config.appName,
+    uri: config.appUrl,
     icon: 'favicon.ico', // Relative path to icon
   };
 
@@ -117,10 +119,13 @@ class SolanaMobileService {
       }
 
       // Request new authorization
-      const authorizationResult = await wallet.authorize({
-        cluster: 'solana:devnet', // Correct format per MWA spec
+      const authParams = {
+        cluster: getClusterForWallet('phantom'),
         identity: this.appIdentity,
-      });
+      };
+      debugConnectionParams(authParams);
+      
+      const authorizationResult = await wallet.authorize(authParams);
 
       logger.log('Authorization result:', authorizationResult);
       
@@ -185,20 +190,20 @@ class SolanaMobileService {
           logger.log('Reauthorizing with existing auth token');
           try {
             authResult = await wallet.authorize({
-              cluster: 'solana:devnet',
+              cluster: getClusterForWallet('phantom'),
               identity: this.appIdentity,
               auth_token: this.authToken,
             });
           } catch (error) {
             logger.log('Reauthorization failed, requesting new authorization');
             authResult = await wallet.authorize({
-              cluster: 'solana:devnet',
+              cluster: getClusterForWallet('phantom'),
               identity: this.appIdentity,
             });
           }
         } else {
           authResult = await wallet.authorize({
-            cluster: 'solana:devnet',
+            cluster: getClusterForWallet('phantom'),
             identity: this.appIdentity,
           });
         }

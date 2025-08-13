@@ -4,6 +4,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View, Animated, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { config } from '../../config/environment';
 
 // Create AnimatedFlatList to support native driver
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
@@ -92,7 +93,7 @@ export default function HomeScreen() {
   const [isCreatingPost, setIsCreatingPost] = useState(false); // Track posts being liked
   const [isLoadingFeed, setIsLoadingFeed] = useState(true);
   const [feedError, setFeedError] = useState<string | null>(null);
-  const [showDemoInstructions, setShowDemoInstructions] = useState(true);
+  const [showDemoInstructions, setShowDemoInstructions] = useState(config.showDemoInstructions);
   
   // Reply sorting state - track sorting preference per post
   const [replySortPreferences, setReplySortPreferences] = useState<Record<number, ReplySortType>>({});
