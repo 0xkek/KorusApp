@@ -76,6 +76,8 @@ export const getPosts = async (req: Request, res: Response<PaginatedResponse<Pos
         id: true,
         authorWallet: true,
         content: true,
+        topic: true,
+        subtopic: true,
         imageUrl: true,
         videoUrl: true,
         likeCount: true,
@@ -84,8 +86,7 @@ export const getPosts = async (req: Request, res: Response<PaginatedResponse<Pos
         createdAt: true,
         updatedAt: true,
         isHidden: true,
-        reportCount: true,
-        moderationStatus: true,
+        flaggedCount: true,
         moderationReason: true,
         author: {
           select: {
@@ -103,9 +104,7 @@ export const getPosts = async (req: Request, res: Response<PaginatedResponse<Pos
     // Add empty replies array for compatibility
     const postsWithReplies = posts.map((post: any) => {
       // Debug log
-      if (post.replyCount > 0) {
-        console.log(`Post ${post.id} has ${post.replyCount} replies (from DB field)`);
-      }
+      console.log(`Post ${post.id}: likeCount=${post.likeCount}, replyCount=${post.replyCount}`);
       
       return {
         ...post,
