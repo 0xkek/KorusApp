@@ -79,6 +79,11 @@ export const getPosts = async (req: Request, res: Response<PaginatedResponse<Pos
             tier: true,
             genesisVerified: true
           }
+        },
+        _count: {
+          select: {
+            replies: true
+          }
         }
       },
       orderBy: { createdAt: 'desc' },
@@ -86,10 +91,11 @@ export const getPosts = async (req: Request, res: Response<PaginatedResponse<Pos
       skip: Number(offset)
     })
 
-    // Add empty replies array for compatibility
+    // Add empty replies array and replyCount for compatibility
     const postsWithReplies = posts.map(post => ({
       ...post,
-      replies: []
+      replies: [],
+      replyCount: post._count.replies
     }))
 
     res.json({

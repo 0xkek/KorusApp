@@ -27,7 +27,8 @@ export function useLoadPosts() {
           time: new Date(post.createdAt).toLocaleDateString(),
           content: post.content,
           likes: post.likeCount || 0,
-          replies: post.replies || [],
+          replies: [], // Initialize empty, will fetch separately if needed
+          replyCount: post.replyCount || 0, // Store reply count
           tips: post.tipCount || 0,
           liked: post.liked || false, // Preserve liked state if it exists
           category: post.subtopic || 'general',

@@ -201,6 +201,7 @@ export default function HomeScreen() {
     }
   }, [scrollY, headerCollapsed]);
 
+
   // Handle scroll events
   const handleScroll = (event: any) => {
     const currentScrollY = event.nativeEvent.contentOffset.y;
@@ -747,7 +748,7 @@ export default function HomeScreen() {
         // Update the post with all replies
         setPosts(prevPosts => prevPosts.map(post =>
           post.id === postId
-            ? { ...post, replies: transformedReplies }
+            ? { ...post, replies: transformedReplies, replyCount: transformedReplies.length }
             : post
         ));
       }

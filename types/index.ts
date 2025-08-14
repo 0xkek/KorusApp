@@ -54,6 +54,7 @@ export interface Post {
   content: string;
   likes: number;
   replies: Reply[];
+  replyCount?: number;   // Count of replies from backend
   tips: number;
   liked: boolean;
   tipped?: boolean;

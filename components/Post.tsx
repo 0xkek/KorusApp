@@ -232,6 +232,9 @@ const Post = memo<PostProps>(function Post({
 
   const flatReplies = flattenReplies(post.replies);
   
+  // Use replyCount from backend if replies haven't been loaded yet
+  const displayReplyCount = post.replyCount !== undefined ? post.replyCount : flatReplies.length;
+  
   // Check if current user has replied to this post
   const hasUserReplied = flatReplies.some(reply => reply.wallet === currentUserWallet);
 
@@ -589,7 +592,7 @@ const Post = memo<PostProps>(function Post({
                 onPress={(e) => handleReplyWithQuote(post.id, undefined, undefined, e)}
                 android_disableSound={true}
                 accessible={true}
-                accessibilityLabel={`Reply to post. ${flatReplies.length} replies`}
+                accessibilityLabel={`Reply to post. ${displayReplyCount} replies`}
                 accessibilityRole="button"
               >
                 <View style={[styles.actionBlur, { backgroundColor: colors.surface + '30' }]}>
@@ -614,7 +617,7 @@ const Post = memo<PostProps>(function Post({
                         { color: colors.textSecondary },
                         hasUserReplied && [styles.activeText, { color: colors.primary, textShadowColor: colors.primary + '66' }]
                       ]}>
-                        {flatReplies.length}
+                        {displayReplyCount}
                       </Text>
                     </View>
                   </LinearGradient>
