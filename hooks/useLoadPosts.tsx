@@ -21,7 +21,9 @@ export function useLoadPosts() {
       
       // Debug log to see what backend returns
       if (response.posts && response.posts.length > 0) {
-        logger.log('Sample post from backend:', response.posts[0]);
+        logger.log('Sample post from backend:', JSON.stringify(response.posts[0], null, 2));
+        logger.log('Post has _count?', response.posts[0]._count);
+        logger.log('Post has replyCount?', response.posts[0].replyCount);
       }
       
       if (response.posts && response.posts.length > 0) {

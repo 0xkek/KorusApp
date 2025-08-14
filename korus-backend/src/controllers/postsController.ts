@@ -79,11 +79,6 @@ export const getPosts = async (req: Request, res: Response<PaginatedResponse<Pos
             tier: true,
             genesisVerified: true
           }
-        },
-        _count: {
-          select: {
-            replies: true
-          }
         }
       },
       orderBy: { createdAt: 'desc' },
@@ -91,20 +86,16 @@ export const getPosts = async (req: Request, res: Response<PaginatedResponse<Pos
       skip: Number(offset)
     })
 
-    // Add empty replies array and replyCount for compatibility
+    // Add empty replies array for compatibility
     const postsWithReplies = posts.map((post: any) => {
-      const { _count, ...postData } = post;
-      const replyCount = _count?.replies || 0;
-      
       // Debug log
-      if (replyCount > 0) {
-        console.log(`Post ${post.id} has ${replyCount} replies`);
+      if (post.replyCount > 0) {
+        console.log(`Post ${post.id} has ${post.replyCount} replies (from DB field)`);
       }
       
       return {
-        ...postData,
-        replies: [],
-        replyCount
+        ...post,
+        replies: []
       };
     });
 
