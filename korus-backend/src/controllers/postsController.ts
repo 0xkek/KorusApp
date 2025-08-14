@@ -92,11 +92,21 @@ export const getPosts = async (req: Request, res: Response<PaginatedResponse<Pos
     })
 
     // Add empty replies array and replyCount for compatibility
-    const postsWithReplies = posts.map(post => ({
-      ...post,
-      replies: [],
-      replyCount: post._count.replies
-    }))
+    const postsWithReplies = posts.map((post: any) => {
+      const { _count, ...postData } = post;
+      const replyCount = _count?.replies || 0;
+      
+      // Debug log
+      if (replyCount > 0) {
+        console.log(`Post ${post.id} has ${replyCount} replies`);
+      }
+      
+      return {
+        ...postData,
+        replies: [],
+        replyCount
+      };
+    });
 
     res.json({
       success: true,

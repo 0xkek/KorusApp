@@ -19,6 +19,11 @@ export function useLoadPosts() {
       // Try to load from API
       const response = await postsAPI.getPosts({ limit: 50 });
       
+      // Debug log to see what backend returns
+      if (response.posts && response.posts.length > 0) {
+        logger.log('Sample post from backend:', response.posts[0]);
+      }
+      
       if (response.posts && response.posts.length > 0) {
         // Transform backend posts to app format
         const transformedPosts = response.posts.map((post: any) => ({
