@@ -21,9 +21,14 @@ export function useLoadPosts() {
       
       // Debug log to see what backend returns
       if (response.posts && response.posts.length > 0) {
-        logger.log('Sample post from backend:', JSON.stringify(response.posts[0], null, 2));
-        logger.log('Post has _count?', response.posts[0]._count);
-        logger.log('Post has replyCount?', response.posts[0].replyCount);
+        const samplePost = response.posts[0];
+        logger.log('=== POST DATA DEBUG ===');
+        logger.log('Full post:', JSON.stringify(samplePost, null, 2));
+        logger.log('likeCount:', samplePost.likeCount);
+        logger.log('replyCount:', samplePost.replyCount);
+        logger.log('Has replyCount field?', 'replyCount' in samplePost);
+        logger.log('Type of replyCount:', typeof samplePost.replyCount);
+        logger.log('=== END DEBUG ===');
       }
       
       if (response.posts && response.posts.length > 0) {

@@ -70,9 +70,23 @@ export const getPosts = async (req: Request, res: Response<PaginatedResponse<Pos
   try {
     const { limit = 20, offset = 0 } = req.query
 
-    // Get posts with author info
+    // Get posts with author info - explicitly select all fields
     const posts = await prisma.post.findMany({
-      include: {
+      select: {
+        id: true,
+        authorWallet: true,
+        content: true,
+        imageUrl: true,
+        videoUrl: true,
+        likeCount: true,
+        replyCount: true,
+        tipCount: true,
+        createdAt: true,
+        updatedAt: true,
+        isHidden: true,
+        reportCount: true,
+        moderationStatus: true,
+        moderationReason: true,
         author: {
           select: {
             walletAddress: true,
