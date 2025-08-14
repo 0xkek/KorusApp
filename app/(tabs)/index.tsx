@@ -16,6 +16,7 @@ import { Post as PostType, Reply, GameType } from '../../types';
 import { registerForPushNotificationsAsync, setupNotificationListeners } from '../../utils/notifications';
 import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logger } from '../../utils/logger';
 import { reputationService } from '../../services/reputation';
 import { Fonts, FontSizes } from '../../constants/Fonts';
@@ -46,6 +47,8 @@ import EventsView from '../../components/EventsView';
 import DemoInstructions from '../../components/DemoInstructions';
 
 const HIDE_SPONSORED_KEY = 'korus_hide_sponsored_posts';
+const RECENTLY_EXPANDED_KEY = 'korus_recently_expanded_posts';
+const MAX_RECENTLY_EXPANDED = 10;
 
 // Reply sorting types
 type ReplySortType = 'best' | 'recent';
@@ -172,6 +175,44 @@ export default function HomeScreen() {
     }
   };
 
+  // Save recently expanded posts
+  const saveRecentlyExpanded = async (postIds: number[]) => {
+    try {
+      await AsyncStorage.setItem(RECENTLY_EXPANDED_KEY, JSON.stringify(postIds));
+    } catch (error) {
+      logger.error('Error saving recently expanded posts:', error);
+    }
+  };
+
+  // Load recently expanded posts and fetch their replies
+  const loadRecentlyExpanded = useCallback(async () => {
+    try {
+      const saved = await AsyncStorage.getItem(RECENTLY_EXPANDED_KEY);
+      if (saved) {
+        const postIds = JSON.parse(saved) as number[];
+        // Fetch replies for these posts
+        for (const postId of postIds) {
+          const post = posts.find(p => {
+            const pId = typeof p.id === 'string' ? parseInt(p.id) : p.id;
+            return pId === postId;
+          });
+          
+          if (post && post.replyCount && post.replyCount > 0) {
+            try {
+              await fetchAllReplies(postId);
+              // Also add to expandedPosts so they appear expanded
+              setExpandedPosts(prev => new Set(prev).add(postId));
+            } catch (error) {
+              logger.error(`Failed to load replies for recently expanded post ${postId}:`, error);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      logger.error('Error loading recently expanded posts:', error);
+    }
+  }, [posts, fetchAllReplies]);
+
   // Load hide sponsored preference when premium status changes
   useEffect(() => {
     if (isPremium) {
@@ -188,6 +229,13 @@ export default function HomeScreen() {
       loadHideSponsoredPreference();
     }, [])
   );
+
+  // Load recently expanded posts when posts are loaded
+  useEffect(() => {
+    if (posts.length > 0 && !postsLoading) {
+      loadRecentlyExpanded();
+    }
+  }, [posts.length, postsLoading, loadRecentlyExpanded]);
 
   // Update collapse state for other UI elements
   useEffect(() => {
@@ -721,12 +769,17 @@ export default function HomeScreen() {
         
         // Fetch all replies for this post when expanding
         fetchAllReplies(postId);
+        
+        // Save to recently expanded posts
+        const expandedArray = Array.from(newSet);
+        const recentlyExpanded = expandedArray.slice(-MAX_RECENTLY_EXPANDED);
+        saveRecentlyExpanded(recentlyExpanded);
       }
       return newSet;
     });
   };
 
-  const fetchAllReplies = async (postId: number) => {
+  const fetchAllReplies = useCallback(async (postId: number) => {
     try {
       const response = await repliesAPI.getReplies(String(postId));
       
@@ -760,7 +813,7 @@ export default function HomeScreen() {
         type: 'error'
       });
     }
-  };
+  }, [setPosts, showAlert]);
 
 
   const handleShowTipModal = (postId: number) => {
