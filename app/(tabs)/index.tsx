@@ -573,11 +573,22 @@ export default function HomeScreen() {
 
         setPosts(posts.map(post =>
           post.id === selectedPostId
-            ? { ...post, replies: [...post.replies, newReply] }
+            ? { 
+                ...post, 
+                replies: [...post.replies, newReply],
+                replyCount: (post.replyCount || 0) + 1
+              }
             : post
         ));
 
-        setExpandedPosts(prev => new Set([...prev, selectedPostId]));
+        setExpandedPosts(prev => {
+          const newSet = new Set([...prev, selectedPostId]);
+          // Save to recently expanded posts
+          const expandedArray = Array.from(newSet);
+          const recentlyExpanded = expandedArray.slice(-MAX_RECENTLY_EXPANDED);
+          saveRecentlyExpanded(recentlyExpanded);
+          return newSet;
+        });
         setNewReplyContent('');
         setQuotedText('');
         setQuotedUsername('');
