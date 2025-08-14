@@ -559,6 +559,8 @@ export default function HomeScreen() {
         const newReply: Reply = {
           id: response.reply.id,
           wallet: response.reply.authorWallet || walletAddress || '',
+          username: snsUsername || undefined,
+          avatar: nftAvatar || undefined,
           time: new Date(response.reply.createdAt).toLocaleDateString(),
           content: response.reply.content,
           likes: 0,
@@ -799,6 +801,8 @@ export default function HomeScreen() {
         const transformedReplies = response.replies.map((reply: any) => ({
           id: reply.id,
           wallet: reply.authorWallet || reply.author?.walletAddress || 'Unknown',
+          username: reply.author?.snsUsername || undefined,
+          avatar: reply.author?.nftAvatar || undefined,
           time: new Date(reply.createdAt).toLocaleDateString(),
           content: reply.content,
           likes: reply.likeCount || 0,

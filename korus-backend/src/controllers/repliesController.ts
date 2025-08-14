@@ -145,7 +145,9 @@ export const getReplies = async (req: Request, res: Response) => {
           select: {
             walletAddress: true,
             tier: true,
-            genesisVerified: true
+            genesisVerified: true,
+            snsUsername: true,
+            nftAvatar: true
           }
         },
         childReplies: {
@@ -154,7 +156,9 @@ export const getReplies = async (req: Request, res: Response) => {
               select: {
                 walletAddress: true,
                 tier: true,
-                genesisVerified: true
+                genesisVerified: true,
+                snsUsername: true,
+                nftAvatar: true
               }
             }
           },
