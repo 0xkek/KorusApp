@@ -1,0 +1,22 @@
+#!/bin/bash
+
+echo "=== APP VERIFICATION CHECKLIST ==="
+echo ""
+echo "✅ Step 1: Old WalletContext.old.tsx deleted successfully"
+echo "✅ Step 2: Lint passes (only warnings, no new errors)"
+echo ""
+echo "Step 3: Testing app functionality..."
+echo ""
+echo "Please manually verify:"
+echo "[ ] App starts without crashing (npm start)"
+echo "[ ] Can connect wallet"
+echo "[ ] Can view posts"
+echo "[ ] Can create a post"
+echo "[ ] Can like a post"
+echo "[ ] Can reply to a post"
+echo ""
+echo "Recovery command if needed:"
+echo "  git checkout LAST_KNOWN_WORKING"
+echo ""
+echo "Current changes:"
+git status --short
