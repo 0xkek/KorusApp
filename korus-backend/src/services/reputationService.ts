@@ -3,6 +3,11 @@ import prisma from '../config/database';
 import { logger } from '../utils/logger';
 import { getWeekDates } from '../utils/dateHelpers';
 
+// Check if reputation system is enabled
+const isReputationEnabled = () => {
+  return process.env.ENABLE_REPUTATION !== 'false'
+}
+
 interface RepEventData {
   userWallet: string;
   eventType: string;
@@ -131,6 +136,8 @@ class ReputationService {
    * Handle post creation
    */
   async onPostCreated(walletAddress: string, hasMedia: boolean): Promise<void> {
+    if (!isReputationEnabled()) return;
+    
     const points = hasMedia ? this.POINTS.POST_WITH_MEDIA : this.POINTS.POST_CREATED;
     
     await this.addReputation({
@@ -149,6 +156,7 @@ class ReputationService {
    * Handle like given
    */
   async onLikeGiven(walletAddress: string, targetType: string): Promise<void> {
+    if (!isReputationEnabled()) return;
     await this.addReputation({
       userWallet: walletAddress,
       eventType: 'like_given',
@@ -162,6 +170,7 @@ class ReputationService {
    * Handle like received
    */
   async onLikeReceived(authorWallet: string, targetType: string): Promise<void> {
+    if (!isReputationEnabled()) return;
     await this.addReputation({
       userWallet: authorWallet,
       eventType: 'like_received',
@@ -175,6 +184,7 @@ class ReputationService {
    * Handle comment/reply made
    */
   async onCommentMade(walletAddress: string): Promise<void> {
+    if (!isReputationEnabled()) return;
     await this.addReputation({
       userWallet: walletAddress,
       eventType: 'comment_made',
@@ -188,6 +198,7 @@ class ReputationService {
    * Handle comment received
    */
   async onCommentReceived(authorWallet: string): Promise<void> {
+    if (!isReputationEnabled()) return;
     await this.addReputation({
       userWallet: authorWallet,
       eventType: 'comment_received',
@@ -201,6 +212,7 @@ class ReputationService {
    * Handle tip sent
    */
   async onTipSent(walletAddress: string, amount: number): Promise<void> {
+    if (!isReputationEnabled()) return;
     const points = Math.floor(amount / 100) * this.POINTS.TIP_SENT_PER_100;
     
     await this.addReputation({
@@ -217,6 +229,7 @@ class ReputationService {
    * Handle tip received
    */
   async onTipReceived(authorWallet: string, amount: number): Promise<void> {
+    if (!isReputationEnabled()) return;
     const points = Math.floor(amount / 100) * this.POINTS.TIP_RECEIVED_PER_100;
     
     await this.addReputation({
@@ -238,6 +251,7 @@ class ReputationService {
     gameType: string, 
     wager: number
   ): Promise<void> {
+    if (!isReputationEnabled()) return;
     // Winner points
     const winnerPoints = this.POINTS.GAME_WON + 
       Math.floor(wager / 100) * this.POINTS.GAME_WAGER_BONUS_PER_100;
@@ -266,6 +280,7 @@ class ReputationService {
    * Handle daily login
    */
   async onDailyLogin(walletAddress: string): Promise<void> {
+    if (!isReputationEnabled()) return;
     const user = await prisma.user.findUnique({
       where: { walletAddress },
     });

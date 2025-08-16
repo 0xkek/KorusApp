@@ -52,9 +52,9 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
     // await autoModerate('post', post.id, content)
 
     // Award reputation points for creating a post
-    // TODO: Re-enable after fixing deployment
-    // const hasMedia = false; // TODO: Add media detection when implementing image/video uploads
-    // await reputationService.onPostCreated(walletAddress, hasMedia)
+    // Update reputation for post creation
+    const hasMedia = !!(imageUrl || videoUrl);
+    await reputationService.onPostCreated(walletAddress, hasMedia)
 
     res.status(201).json({
       success: true,
