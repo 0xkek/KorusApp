@@ -16,14 +16,17 @@ interface ActiveParticle extends Particle {
 
 const ParticleSystem: React.FC<ParticleSystemProps> = ({ children }) => {
   const [particles, setParticles] = useState<ActiveParticle[]>([]);
+  const timeoutRefs = useRef<NodeJS.Timeout[]>([]);
 
   const createExplosion = (
     type: ParticleType,
     x: number,
     y: number
   ) => {
-    // Clear existing particles to prevent performance issues
+    // Clear existing particles and timeouts to prevent memory leaks
     setParticles([]);
+    timeoutRefs.current.forEach(timeout => clearTimeout(timeout));
+    timeoutRefs.current = [];
     
     // Enhanced haptic pattern
     triggerHapticPattern(type);
@@ -47,7 +50,7 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ children }) => {
 
     // Animate particles
     newParticles.forEach((particle, index) => {
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         Animated.parallel([
           Animated.timing(particle.animatedTranslateX, {
             toValue: particle.endX - particle.x,
@@ -83,12 +86,15 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ children }) => {
           }),
         ]).start();
       }, particle.delay);
+      timeoutRefs.current.push(timeout);
     });
 
     // Clean up particles after animation
-    setTimeout(() => {
+    const cleanupTimeout = setTimeout(() => {
       setParticles([]);
+      timeoutRefs.current = [];
     }, Math.max(...newParticles.map(p => p.duration + p.delay)) + 100);
+    timeoutRefs.current.push(cleanupTimeout);
   };
 
   // Attach explosion function to global scope for easy access
@@ -96,6 +102,9 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ children }) => {
     (global as any).createParticleExplosion = createExplosion;
     return () => {
       delete (global as any).createParticleExplosion;
+      // Clean up any remaining timeouts
+      timeoutRefs.current.forEach(timeout => clearTimeout(timeout));
+      timeoutRefs.current = [];
     };
   }, []);
 

@@ -33,8 +33,14 @@ export async function fetchNFTsFromWallet(walletAddress: string): Promise<NFT[]>
   }
 
   try {
-    // Use Helius RPC endpoint with DAS API
-    const HELIUS_RPC_URL = 'https://mainnet.helius-rpc.com/?api-key=3d27295a-caf5-4a92-9fee-b52aa43e54bd';
+    // Get Helius API key from environment variable
+    const HELIUS_API_KEY = process.env.EXPO_PUBLIC_HELIUS_API_KEY;
+    if (!HELIUS_API_KEY) {
+      console.error('HELIUS_API_KEY not configured - NFT fetching disabled');
+      return [];
+    }
+    
+    const HELIUS_RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
     
     console.log('Fetching NFTs for wallet:', walletAddress);
     

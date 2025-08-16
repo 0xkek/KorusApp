@@ -1,7 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View, Clipboard, TextInput, Linking } from 'react-native';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { useWallet } from '../context/WalletContext';
@@ -32,6 +32,7 @@ export default function MyProfileModal({
   const [copied, setCopied] = useState(false);
   const [editingTimeFun, setEditingTimeFun] = useState(false);
   const [tempTimeFunUsername, setTempTimeFunUsername] = useState(timeFunUsername || '');
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Calculate actual profile data
   const getProfileData = () => {
@@ -92,10 +93,28 @@ export default function MyProfileModal({
     if (walletAddress) {
       Clipboard.setString(walletAddress);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      
+      // Clear any existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      timeoutRef.current = setTimeout(() => {
+        setCopied(false);
+        timeoutRef.current = null;
+      }, 2000);
     }
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
 
   return (

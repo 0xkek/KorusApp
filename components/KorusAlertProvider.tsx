@@ -1,4 +1,4 @@
-import React, { createContext, ReactNode, useContext, useState } from 'react';
+import React, { createContext, ReactNode, useContext, useState, useRef, useEffect } from 'react';
 import KorusAlert from './KorusAlert';
 
 interface AlertData {
@@ -30,8 +30,13 @@ interface KorusAlertProviderProps {
 export const KorusAlertProvider: React.FC<KorusAlertProviderProps> = ({ children }) => {
   const [alertData, setAlertData] = useState<AlertData | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const showAlert = (data: AlertData) => {
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
     setAlertData(data);
     setIsVisible(true);
   };
@@ -39,10 +44,20 @@ export const KorusAlertProvider: React.FC<KorusAlertProviderProps> = ({ children
   const hideAlert = () => {
     setIsVisible(false);
     // Clear alert data after animation completes
-    setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       setAlertData(null);
+      timeoutRef.current = null;
     }, 300);
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <KorusAlertContext.Provider value={{ showAlert }}>

@@ -20,8 +20,21 @@ type ActionType = typeof ACTION_TYPES[number]
 const TARGET_TYPES = ['user', 'post', 'reply'] as const
 type TargetType = typeof TARGET_TYPES[number]
 
+// Check if moderation is enabled
+const isModerationEnabled = () => {
+  return process.env.ENABLE_MODERATION === 'true'
+}
+
 // Hide content (posts/replies)
 export const hideContent = async (req: AuthRequest, res: Response) => {
+  // Check if moderation is enabled
+  if (!isModerationEnabled()) {
+    return res.status(503).json({
+      success: false,
+      error: 'Moderation system is currently disabled'
+    })
+  }
+  
   try {
     const { targetType, targetId, reason, reportId } = req.body
     const moderatorWallet = req.userWallet!
@@ -110,6 +123,14 @@ export const hideContent = async (req: AuthRequest, res: Response) => {
 
 // Suspend user
 export const suspendUser = async (req: AuthRequest, res: Response) => {
+  // Check if moderation is enabled
+  if (!isModerationEnabled()) {
+    return res.status(503).json({
+      success: false,
+      error: 'Moderation system is currently disabled'
+    })
+  }
+  
   try {
     const { targetWallet, reason, duration, reportId } = req.body
     const moderatorWallet = req.userWallet!
@@ -192,6 +213,14 @@ export const suspendUser = async (req: AuthRequest, res: Response) => {
 
 // Warn user (increment warning count)
 export const warnUser = async (req: AuthRequest, res: Response) => {
+  // Check if moderation is enabled
+  if (!isModerationEnabled()) {
+    return res.status(503).json({
+      success: false,
+      error: 'Moderation system is currently disabled'
+    })
+  }
+  
   try {
     const { targetWallet, reason, reportId } = req.body
     const moderatorWallet = req.userWallet!
@@ -268,6 +297,14 @@ export const warnUser = async (req: AuthRequest, res: Response) => {
 
 // Unsuspend user
 export const unsuspendUser = async (req: AuthRequest, res: Response) => {
+  // Check if moderation is enabled
+  if (!isModerationEnabled()) {
+    return res.status(503).json({
+      success: false,
+      error: 'Moderation system is currently disabled'
+    })
+  }
+  
   try {
     const { targetWallet, reason } = req.body
     const moderatorWallet = req.userWallet!
@@ -332,6 +369,14 @@ export const unsuspendUser = async (req: AuthRequest, res: Response) => {
 
 // Get moderation dashboard data
 export const getModerationDashboard = async (req: Request, res: Response) => {
+  // Check if moderation is enabled
+  if (!isModerationEnabled()) {
+    return res.status(503).json({
+      success: false,
+      error: 'Moderation system is currently disabled'
+    })
+  }
+  
   try {
     const { timeframe = '24h' } = req.query
     
@@ -433,6 +478,14 @@ export const getModerationDashboard = async (req: Request, res: Response) => {
 
 // Get moderation history for specific content
 export const getModerationHistory = async (req: Request, res: Response) => {
+  // Check if moderation is enabled
+  if (!isModerationEnabled()) {
+    return res.status(503).json({
+      success: false,
+      error: 'Moderation system is currently disabled'
+    })
+  }
+  
   try {
     const { targetType, targetId } = req.params
 
@@ -471,6 +524,11 @@ export const getModerationHistory = async (req: Request, res: Response) => {
 
 // Auto-moderate content based on rules
 export const autoModerate = async (targetType: string, targetId: string, content: string) => {
+  // Check if moderation is enabled
+  if (!isModerationEnabled()) {
+    console.log('Auto-moderation skipped: moderation system disabled')
+    return { flagged: false, reasons: [] }
+  }
   try {
     let shouldFlag = false
     let flagReason = ''
