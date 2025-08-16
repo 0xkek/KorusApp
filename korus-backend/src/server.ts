@@ -27,8 +27,41 @@ const app = express()
 const PORT = process.env.PORT || 3000
 
 // CORS configuration
+const getAllowedOrigins = () => {
+  const originsEnv = process.env.CORS_ORIGINS || ''
+  const origins = originsEnv.split(',').map(o => o.trim()).filter(Boolean)
+  
+  // Default origins for development
+  if (origins.length === 0 && process.env.NODE_ENV === 'development') {
+    return ['http://localhost:8081', 'http://localhost:3000', 'http://localhost:19006']
+  }
+  
+  return origins
+}
+
 const corsOptions = {
-  origin: true, // Allow all origins in development
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    const allowedOrigins = getAllowedOrigins()
+    
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!origin) {
+      return callback(null, true)
+    }
+    
+    // In development, be more permissive
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`CORS: Allowing origin ${origin} in development mode`)
+      return callback(null, true)
+    }
+    
+    // In production, strictly check the whitelist
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      console.warn(`CORS: Blocked origin ${origin}`)
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -41,14 +74,16 @@ app.use(cors(corsOptions))
 app.use(morgan('combined'))
 app.use(express.json())
 
-// Debug logging for all requests
+// Debug logging for all requests (only in development)
 app.use((req, res, next) => {
-  console.log('=== INCOMING REQUEST ===')
-  console.log('Method:', req.method)
-  console.log('URL:', req.url)
-  console.log('Body:', req.body)
-  console.log('Headers:', req.headers)
-  console.log('=======================')
+  if (process.env.DEBUG_MODE === 'true' || (process.env.NODE_ENV === 'development' && process.env.DEBUG_MODE !== 'false')) {
+    console.log('=== INCOMING REQUEST ===')
+    console.log('Method:', req.method)
+    console.log('URL:', req.url)
+    console.log('Body:', req.body)
+    console.log('Headers:', req.headers)
+    console.log('=======================')
+  }
   next()
 })
 

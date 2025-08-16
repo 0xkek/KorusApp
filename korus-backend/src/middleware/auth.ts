@@ -12,8 +12,16 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
     return res.status(401).json({ error: 'No token provided' })
   }
 
+  // Get JWT secret
+  const jwtSecret = process.env.JWT_SECRET || (process.env.NODE_ENV === 'development' ? 'dev-secret-key-CHANGE-THIS' : undefined)
+  
+  if (!jwtSecret) {
+    console.error('JWT_SECRET not configured in auth middleware')
+    return res.status(500).json({ error: 'Server configuration error' })
+  }
+
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { walletAddress: string }
+    const decoded = jwt.verify(token, jwtSecret) as { walletAddress: string }
     req.userWallet = decoded.walletAddress
     next()
   } catch (error) {

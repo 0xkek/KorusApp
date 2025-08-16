@@ -6,21 +6,23 @@ import { AuthRequest } from '../middleware/auth'
 import { isMockMode, mockAuthController } from '../middleware/mockMode'
 
 
+const isDebug = () => process.env.DEBUG_MODE === 'true' || (process.env.NODE_ENV === 'development' && process.env.DEBUG_MODE !== 'false')
+
 export const connectWallet = async (req: Request, res: Response) => {
-  console.log('connectWallet function called')
+  if (isDebug()) console.log('connectWallet function called')
   
   // Use mock mode if database is not available
   if (isMockMode()) {
-    console.log('Using mock mode')
+    if (isDebug()) console.log('Using mock mode')
     return mockAuthController.connectWallet(req, res)
   }
   
-  console.log('Using real authentication')
+  if (isDebug()) console.log('Using real authentication')
   
   try {
     const { walletAddress, signature, message } = req.body
     
-    console.log('Connect wallet request:', {
+    if (isDebug()) console.log('Connect wallet request:', {
       walletAddress,
       signatureLength: signature?.length,
       message,
@@ -35,44 +37,56 @@ export const connectWallet = async (req: Request, res: Response) => {
     }
 
     // Verify signature
-    console.log('=== WALLET CONNECTION ATTEMPT ===')
-    console.log('Wallet address:', walletAddress)
-    console.log('Timestamp:', new Date().toISOString())
+    if (isDebug()) {
+      console.log('=== WALLET CONNECTION ATTEMPT ===')
+      console.log('Wallet address:', walletAddress)
+      console.log('Timestamp:', new Date().toISOString())
+    }
     
     // Verify the signature
-    console.log('About to verify signature...')
+    if (isDebug()) console.log('About to verify signature...')
     let isValid = false
     try {
       isValid = await verifyWalletSignature(walletAddress, signature, message)
-      console.log('Signature verification completed, result:', isValid)
+      if (isDebug()) console.log('Signature verification completed, result:', isValid)
     } catch (verifyError: any) {
       console.error('Signature verification threw error:', verifyError)
       console.error('Error stack:', verifyError?.stack)
       // Continue anyway for debugging
     }
     
+    // Check if auth bypass is allowed via environment variable
+    const ALLOW_AUTH_BYPASS = process.env.ALLOW_AUTH_BYPASS === 'true'
+    
     // TEMPORARY: For hackathon, allow bypass if signature verification fails
     // This is because MWA and backend might encode signatures differently
     if (!isValid) {
-      console.log('WARNING: Signature verification failed, allowing for hackathon demo')
-      console.log('Wallet:', walletAddress)
-      // In production, we would return 401 here
-      // return res.status(401).json({ error: 'Invalid signature' })
+      if (ALLOW_AUTH_BYPASS) {
+        console.error('🚨 CRITICAL SECURITY WARNING: Authentication bypass is ACTIVE!')
+        console.error('🚨 Signature verification FAILED but allowing access anyway')
+        console.error('🚨 This MUST be disabled in production!')
+        console.warn('⚠️ Auth bypass enabled via ALLOW_AUTH_BYPASS=true')
+        console.log('Wallet:', walletAddress)
+      } else {
+        console.error('❌ Authentication failed: Invalid signature')
+        console.error('To enable bypass for development, set ALLOW_AUTH_BYPASS=true')
+        return res.status(401).json({ error: 'Invalid signature' })
+      }
     }
     
     // For hackathon: Skip message validation since we're using a simple nonce
     // In production, we'd store nonces and check for replay attacks
-    console.log('Message received:', message)
+    if (isDebug()) console.log('Message received:', message)
 
     // Check if user exists, create if not
     let user
     try {
-      console.log('Checking if user exists in database...')
+      if (isDebug()) console.log('Checking if user exists in database...')
       user = await prisma.user.findUnique({
         where: { walletAddress }
       })
-      console.log('User lookup result:', user ? 'USER FOUND' : 'USER NOT FOUND')
-      if (user) {
+      if (isDebug()) console.log('User lookup result:', user ? 'USER FOUND' : 'USER NOT FOUND')
+      if (user && isDebug()) {
         console.log('Existing user details:', {
           wallet: user.walletAddress,
           tier: user.tier,
@@ -89,7 +103,7 @@ export const connectWallet = async (req: Request, res: Response) => {
       
       // If database connection fails, try to recover
       if (findError?.code === 'P2021' || findError?.message?.includes('connection')) {
-        console.log('Database connection issue detected, attempting to reconnect...')
+        if (isDebug()) console.log('Database connection issue detected, attempting to reconnect...')
         // Give database a moment to recover
         await new Promise(resolve => setTimeout(resolve, 1000))
         
@@ -98,7 +112,7 @@ export const connectWallet = async (req: Request, res: Response) => {
           user = await prisma.user.findUnique({
             where: { walletAddress }
           })
-          console.log('Retry successful')
+          if (isDebug()) console.log('Retry successful')
         } catch (retryError) {
           console.error('Retry failed:', retryError)
           throw new Error(`Database connection failed: ${findError?.message || String(findError)}`)
@@ -110,7 +124,7 @@ export const connectWallet = async (req: Request, res: Response) => {
 
     if (!user) {
       try {
-        console.log('Creating new user...')
+        if (isDebug()) console.log('Creating new user...')
         
         // For development, skip Genesis Token check
         const hasGenesisToken = false
@@ -124,19 +138,21 @@ export const connectWallet = async (req: Request, res: Response) => {
           totalInteractionScore: 0
         }
         
-        console.log('User data to create:', userData)
+        if (isDebug()) console.log('User data to create:', userData)
         
         user = await prisma.user.create({
           data: userData
         })
 
-        console.log('=== NEW USER CREATED SUCCESSFULLY ===')
-        console.log('User details:', {
-          wallet: user.walletAddress,
-          tier: user.tier,
-          balance: user.allyBalance.toString(),
-          createdAt: user.createdAt
-        })
+        if (isDebug()) {
+          console.log('=== NEW USER CREATED SUCCESSFULLY ===')
+          console.log('User details:', {
+            wallet: user.walletAddress,
+            tier: user.tier,
+            balance: user.allyBalance.toString(),
+            createdAt: user.createdAt
+          })
+        }
       } catch (createError: any) {
         console.error('DATABASE CREATE ERROR:', createError)
         console.error('Error details:', {
@@ -148,13 +164,13 @@ export const connectWallet = async (req: Request, res: Response) => {
         
         // Check if it's a unique constraint violation (user already exists)
         if (createError?.code === 'P2002') {
-          console.log('User already exists, attempting to fetch again...')
+          if (isDebug()) console.log('User already exists, attempting to fetch again...')
           try {
             user = await prisma.user.findUnique({
               where: { walletAddress }
             })
             if (user) {
-              console.log('Found existing user on second attempt')
+              if (isDebug()) console.log('Found existing user on second attempt')
             } else {
               throw new Error('User exists but cannot be fetched')
             }
@@ -175,9 +191,54 @@ export const connectWallet = async (req: Request, res: Response) => {
     }
 
     // Generate JWT
-    console.log('Generating JWT token...')
-    const jwtSecret = process.env.JWT_SECRET || 'dev-secret-key'
-    console.log('JWT_SECRET is', jwtSecret === 'dev-secret-key' ? 'using default (not set)' : 'set from environment')
+    if (isDebug()) console.log('Generating JWT token...')
+    const jwtSecret = process.env.JWT_SECRET
+    
+    if (!jwtSecret) {
+      console.error('❌ JWT_SECRET not configured!')
+      console.error('Please set JWT_SECRET in your .env file')
+      
+      // Only allow fallback in development mode
+      if (process.env.NODE_ENV === 'development') {
+        const fallbackSecret = 'dev-secret-key-CHANGE-THIS'
+        console.warn('⚠️ Using fallback JWT secret for development only')
+        const token = jwt.sign(
+          { walletAddress },
+          fallbackSecret,
+          { expiresIn: '7d' }
+        )
+        if (isDebug()) console.log('JWT token generated with development fallback')
+        
+        // Continue with the response but warn in the response
+        const responseData = {
+          success: true,
+          token,
+          user: {
+            walletAddress: user.walletAddress,
+            tier: user.tier || 'standard',
+            genesisVerified: user.genesisVerified || false,
+            allyBalance: user.allyBalance ? user.allyBalance.toString() : '5000',
+            createdAt: user.createdAt ? user.createdAt.toISOString() : new Date().toISOString()
+          },
+          expiresIn: '7d',
+          warning: 'JWT_SECRET not configured - using development fallback'
+        }
+        
+        if (isDebug()) {
+          console.log('=== AUTHENTICATION SUCCESSFUL (DEV MODE) ===')
+          console.log('Sending response with warning')
+        }
+        return res.json(responseData)
+      } else {
+        // In production, fail if JWT_SECRET is not set
+        return res.status(500).json({ 
+          error: 'Server configuration error',
+          details: 'JWT_SECRET not configured'
+        })
+      }
+    }
+    
+    if (isDebug()) console.log('JWT_SECRET is set from environment')
     
     const token = jwt.sign(
       { walletAddress },
@@ -185,7 +246,7 @@ export const connectWallet = async (req: Request, res: Response) => {
       { expiresIn: '7d' }
     )
 
-    console.log('JWT token generated successfully')
+    if (isDebug()) console.log('JWT token generated successfully')
     
     // Prepare response data
     const responseData = {
@@ -201,8 +262,10 @@ export const connectWallet = async (req: Request, res: Response) => {
       expiresIn: '7d'
     }
     
-    console.log('=== AUTHENTICATION SUCCESSFUL ===')
-    console.log('Sending response:', JSON.stringify(responseData, null, 2))
+    if (isDebug()) {
+      console.log('=== AUTHENTICATION SUCCESSFUL ===')
+      console.log('Sending response:', JSON.stringify(responseData, null, 2))
+    }
 
     res.json(responseData)
   } catch (error: any) {
@@ -227,7 +290,7 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
   try {
     const walletAddress = req.userWallet!
     
-    console.log('Getting profile for:', walletAddress)
+    if (isDebug()) console.log('Getting profile for:', walletAddress)
 
     const user = await prisma.user.findUnique({
       where: { walletAddress }
@@ -238,11 +301,13 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'User not found' })
     }
 
-    console.log('Profile found:', {
-      wallet: user.walletAddress,
-      tier: user.tier,
-      balance: user.allyBalance.toString()
-    })
+    if (isDebug()) {
+      console.log('Profile found:', {
+        wallet: user.walletAddress,
+        tier: user.tier,
+        balance: user.allyBalance.toString()
+      })
+    }
 
     res.json({
       user: {

@@ -11,6 +11,7 @@ import { WalletProvider } from '../context/WalletContext';
 import { NotificationProvider } from '../context/NotificationContext';
 import { GameProvider } from '../context/GameContext';
 import ErrorBoundary from '../components/ErrorBoundary';
+import ParticleSystem from '../components/ParticleSystem';
 
 function RootLayoutNav() {
   const { isDarkMode } = useTheme();
@@ -64,6 +65,7 @@ export default function RootLayout() {
               <GameProvider>
                 <KorusAlertProvider>
                   <RootLayoutNav />
+                  <ParticleSystem />
                 </KorusAlertProvider>
               </GameProvider>
             </NotificationProvider>
