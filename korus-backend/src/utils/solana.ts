@@ -15,8 +15,10 @@ const connection = new Connection(
   'confirmed'
 )
 
-// Mock Genesis Token mint for now (we'll update this later)
-const SEEKER_GENESIS_MINT = new PublicKey('11111111111111111111111111111111')
+// Genesis Token mint address from environment
+const GENESIS_TOKEN_MINT = process.env.GENESIS_TOKEN_MINT 
+  ? new PublicKey(process.env.GENESIS_TOKEN_MINT)
+  : new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA') // Default to devnet token
 
 export const verifyWalletSignature = async (
   publicKey: string,
@@ -68,10 +70,24 @@ export const verifyWalletSignature = async (
 
 export const checkGenesisTokenOwnership = async (walletAddress: string): Promise<boolean> => {
   try {
-    // For now, we'll mock this - return false (no Seeker verification)
-    // Later we'll implement real Genesis Token checking
     console.log(`Checking Genesis Token for: ${walletAddress}`)
-    return false // Mock: no one has Genesis Token yet
+    
+    const wallet = new PublicKey(walletAddress)
+    
+    // Get token accounts for this wallet
+    const tokenAccounts = await connection.getParsedTokenAccountsByOwner(wallet, {
+      mint: GENESIS_TOKEN_MINT
+    })
+    
+    // Check if wallet has any Genesis tokens
+    if (tokenAccounts.value.length > 0) {
+      const balance = tokenAccounts.value[0].account.data.parsed.info.tokenAmount.uiAmount
+      console.log(`Genesis Token found! Balance: ${balance}`)
+      return balance > 0
+    }
+    
+    console.log('No Genesis Token found for wallet')
+    return false
   } catch (error) {
     console.error('Error checking Genesis Token:', error)
     return false

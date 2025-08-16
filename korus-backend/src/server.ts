@@ -5,7 +5,7 @@ import helmet from 'helmet'
 import morgan from 'morgan'
 import prisma from './config/database'
 import { apiLimiter } from './middleware/rateLimiter'
-// import { scheduleWeeklyDistribution } from './jobs/weeklyDistribution'
+import { scheduleWeeklyDistribution } from './jobs/weeklyDistribution'
 
 // Import routes
 import authRoutes from './routes/auth'
@@ -19,7 +19,7 @@ import moderationRoutes from './routes/moderation'
 import reputationRoutes from './routes/reputation'
 import sponsoredRoutes from './routes/sponsored'
 import notificationsRoutes from './routes/notifications'
-// import distributionRoutes from './routes/distribution'
+import distributionRoutes from './routes/distribution'
 
 dotenv.config()
 
@@ -103,7 +103,7 @@ app.use('/api/moderation', moderationRoutes)
 app.use('/api/reputation', reputationRoutes)
 app.use('/api/sponsored', sponsoredRoutes)
 app.use('/api/notifications', notificationsRoutes)
-// app.use('/api/distribution', distributionRoutes)
+app.use('/api/distribution', distributionRoutes)
 
 // Test routes
 app.get('/health', (req, res) => {
@@ -251,8 +251,12 @@ app.listen(PORT, () => {
     console.log(`\n⚠️  Running in MOCK MODE - No database connection required`)
     console.log(`📝 Data is stored in memory and will be lost on restart`)
   } else {
-    // Schedule weekly distribution cron job
-    // scheduleWeeklyDistribution()
-    // console.log(`\n⏰ Weekly distribution scheduled for Fridays at 8:00 PM UTC`)
+    // Schedule weekly distribution cron job if enabled
+    if (process.env.ENABLE_WEEKLY_DISTRIBUTION === 'true') {
+      scheduleWeeklyDistribution()
+      console.log(`\n⏰ Weekly distribution scheduled for Fridays at 8:00 PM UTC`)
+    } else {
+      console.log(`\n⏸️  Weekly distribution is disabled (set ENABLE_WEEKLY_DISTRIBUTION=true to enable)`)
+    }
   }
 })

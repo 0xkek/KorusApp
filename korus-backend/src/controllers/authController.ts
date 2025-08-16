@@ -126,8 +126,9 @@ export const connectWallet = async (req: Request, res: Response) => {
       try {
         if (isDebug()) console.log('Creating new user...')
         
-        // For development, skip Genesis Token check
-        const hasGenesisToken = false
+        // Check for Genesis Token ownership
+        const hasGenesisToken = await checkGenesisTokenOwnership(walletAddress)
+        if (isDebug()) console.log('Genesis Token check:', hasGenesisToken ? 'VERIFIED' : 'NOT FOUND')
         
         const userData = {
           walletAddress,
