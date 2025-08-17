@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: korus-backend
+    runtime: node
+    rootDir: korus-backend
+    buildCommand: npm install && npm run build
+    startCommand: npx prisma migrate resolve --applied 20250817000000_add_sponsored_games 2>/dev/null; npx prisma migrate deploy; node dist/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
