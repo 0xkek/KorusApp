@@ -20,6 +20,8 @@ import reputationRoutes from './routes/reputation'
 import sponsoredRoutes from './routes/sponsored'
 import notificationsRoutes from './routes/notifications'
 import distributionRoutes from './routes/distribution'
+import snsRoutes from './routes/sns'
+import nftsRoutes from './routes/nfts'
 
 dotenv.config()
 
@@ -104,6 +106,8 @@ app.use('/api/reputation', reputationRoutes)
 app.use('/api/sponsored', sponsoredRoutes)
 app.use('/api/notifications', notificationsRoutes)
 app.use('/api/distribution', distributionRoutes)
+app.use('/api/sns', snsRoutes)
+app.use('/api/nfts', nftsRoutes)
 
 // Test routes
 app.get('/health', (req, res) => {

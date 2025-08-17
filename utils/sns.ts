@@ -69,28 +69,37 @@ export async function fetchSNSDomains(walletAddress: string): Promise<SNSDomain[
       return cached.domains;
     }
 
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // For development, return mock domains
-    let domains = MOCK_SNS_DOMAINS[walletAddress];
+    // Get API URL from environment or use default
+    const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
     
-    // If no specific domains for this wallet, use default domains
-    if (!domains || domains.length === 0) {
-      domains = DEFAULT_USER_DOMAINS.map(d => ({
-        ...d,
-        owner: walletAddress
-      }));
+    try {
+      // Try to fetch real SNS domains from our backend
+      const response = await fetch(`${API_URL}/sns/domains/${walletAddress}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success && data.domains && data.domains.length > 0) {
+          // Cache and return real domains
+          snsCache.set(walletAddress, { domains: data.domains, timestamp: Date.now() });
+          return data.domains;
+        }
+      }
+    } catch (error) {
+      console.log('SNS API call failed, using fallback:', error);
     }
     
-    // In production, this would be:
-    // const response = await fetch(`${API_URL}/sns/domains/${walletAddress}`);
-    // const domains = await response.json();
-
-    // Cache the result
-    snsCache.set(walletAddress, { domains, timestamp: Date.now() });
+    // Fallback to mock domains for development/demo
+    // This ensures the app works even without real SNS domains
+    const mockDomains = MOCK_SNS_DOMAINS[walletAddress] || DEFAULT_USER_DOMAINS.map(d => ({
+      ...d,
+      owner: walletAddress
+    }));
     
-    return domains;
+    // Cache the result
+    snsCache.set(walletAddress, { domains: mockDomains, timestamp: Date.now() });
+    
+    return mockDomains;
   } catch (error) {
     console.error('Error fetching SNS domains:', error);
     return [];
@@ -123,20 +132,30 @@ export async function getFavoriteSNSDomain(walletAddress: string): Promise<strin
  */
 export async function resolveSNSDomain(domain: string): Promise<string | null> {
   try {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // Get API URL from environment or use default
+    const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+    
+    try {
+      // Try to resolve domain using real SNS API
+      const response = await fetch(`${API_URL}/sns/resolve/${encodeURIComponent(domain)}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success && data.owner) {
+          return data.owner;
+        }
+      }
+    } catch (error) {
+      console.log('SNS resolve API failed, using fallback:', error);
+    }
 
-    // For development, reverse lookup from our mock data
+    // Fallback to mock data for development
     for (const [wallet, domains] of Object.entries(MOCK_SNS_DOMAINS)) {
       if (domains.some(d => d.domain.toLowerCase() === domain.toLowerCase())) {
         return wallet;
       }
     }
-    
-    // In production:
-    // const response = await fetch(`${API_URL}/sns/resolve/${domain}`);
-    // const { owner } = await response.json();
-    // return owner;
     
     return null;
   } catch (error) {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { postsAPI, hasAuthToken, interactionsAPI } from '../utils/api';
+import { postsAPI, hasAuthToken, interactionsAPI, sponsoredAPI } from '../utils/api';
 import { Post as PostType } from '../types';
 import { logger } from '../utils/logger';
 
@@ -47,9 +47,26 @@ export function useLoadPosts() {
           imageUrl: post.imageUrl,
           videoUrl: post.videoUrl,
           isPremium: post.author?.tier === 'premium',
+          sponsored: false, // Will be updated with sponsored posts
           userTheme: undefined,
           gameData: undefined
         }));
+        
+        // Fetch sponsored posts
+        try {
+          const sponsoredResponse = await sponsoredAPI.getSponsoredPosts();
+          if (sponsoredResponse.success && sponsoredResponse.sponsoredPosts) {
+            // Mark sponsored posts
+            const sponsoredIds = new Set(sponsoredResponse.sponsoredPosts.map((sp: any) => sp.postId));
+            transformedPosts.forEach(post => {
+              if (sponsoredIds.has(post.id)) {
+                post.sponsored = true;
+              }
+            });
+          }
+        } catch (error) {
+          logger.log('Failed to fetch sponsored posts:', error);
+        }
         
         // Fetch user interactions to show which posts are already liked
         if (hasToken) {

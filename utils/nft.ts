@@ -33,7 +33,30 @@ export async function fetchNFTsFromWallet(walletAddress: string): Promise<NFT[]>
   }
 
   try {
-    // Get Helius API key from environment variable
+    // Get API URL from environment or use default
+    const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+    
+    console.log('Fetching NFTs for wallet:', walletAddress);
+    
+    // Try to fetch from our backend first
+    try {
+      const response = await fetch(`${API_URL}/nfts/wallet/${walletAddress}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success && data.nfts && data.nfts.length > 0) {
+          // Cache and return NFTs from our backend
+          nftCache[walletAddress] = { nfts: data.nfts, timestamp: Date.now() };
+          console.log(`Backend returned ${data.nfts.length} NFTs`);
+          return data.nfts;
+        }
+      }
+    } catch (backendError) {
+      console.log('Backend NFT fetch failed, trying direct Helius:', backendError);
+    }
+    
+    // Fallback to direct Helius API if backend fails
     const HELIUS_API_KEY = process.env.EXPO_PUBLIC_HELIUS_API_KEY;
     if (!HELIUS_API_KEY) {
       console.error('HELIUS_API_KEY not configured - NFT fetching disabled');
@@ -42,9 +65,7 @@ export async function fetchNFTsFromWallet(walletAddress: string): Promise<NFT[]>
     
     const HELIUS_RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
     
-    console.log('Fetching NFTs for wallet:', walletAddress);
-    
-    // Use the DAS API getAssetsByOwner method - reduced limit for faster response
+    // Use the DAS API getAssetsByOwner method
     const response = await fetch(HELIUS_RPC_URL, {
       method: 'POST',
       headers: {
@@ -57,7 +78,7 @@ export async function fetchNFTsFromWallet(walletAddress: string): Promise<NFT[]>
         params: {
           ownerAddress: walletAddress,
           page: 1,
-          limit: 50, // Reduced from 1000 to 50 for faster response
+          limit: 50,
           displayOptions: {
             showFungible: false,
             showNativeBalance: false,
@@ -71,9 +92,6 @@ export async function fetchNFTsFromWallet(walletAddress: string): Promise<NFT[]>
     
     if (!response.ok || data.error) {
       console.error('Helius RPC error:', data.error || data);
-      console.error('Response status:', response.status);
-      
-      // Return empty array instead of throwing
       return [];
     }
     

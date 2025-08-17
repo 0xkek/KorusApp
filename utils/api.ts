@@ -343,6 +343,29 @@ export const searchAPI = {
 };
 
 // Health check
+export const sponsoredAPI = {
+  async getSponsoredPosts() {
+    return makeRequest('get', '/sponsored');
+  },
+  
+  async createSponsoredPost(postId: string, data: {
+    campaignName: string;
+    durationDays: number;
+    targetViews: number;
+    pricePaid: number;
+  }) {
+    return makeRequest('post', '/sponsored/create', { postId, ...data });
+  },
+  
+  async trackView(postId: string) {
+    return makeRequest('post', `/sponsored/${postId}/view`);
+  },
+  
+  async trackClick(postId: string) {
+    return makeRequest('post', `/sponsored/${postId}/click`);
+  }
+};
+
 export const healthAPI = {
   async check() {
     // Health endpoint is at root level, not under /api

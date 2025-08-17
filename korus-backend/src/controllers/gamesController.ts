@@ -210,6 +210,45 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
 
     if (winner) {
       newStatus = 'completed'
+      
+      // Award game rewards
+      try {
+        // Award points to winner (could be reputation points or tokens in the future)
+        await prisma.interaction.create({
+          data: {
+            userWallet: winner,
+            targetType: 'game',
+            targetId: id,
+            interactionType: 'game_win'
+          }
+        })
+        
+        // Award participation points to both players
+        await prisma.interaction.create({
+          data: {
+            userWallet: game.player1,
+            targetType: 'game',
+            targetId: id,
+            interactionType: 'game_played'
+          }
+        })
+        
+        if (game.player2) {
+          await prisma.interaction.create({
+            data: {
+              userWallet: game.player2,
+              targetType: 'game',
+              targetId: id,
+              interactionType: 'game_played'
+            }
+          })
+        }
+        
+        console.log(`Game rewards awarded - Winner: ${winner}, Game: ${id}`)
+      } catch (error) {
+        console.error('Failed to award game rewards:', error)
+        // Don't fail the game update if rewards fail
+      }
     }
 
     // Update game state
