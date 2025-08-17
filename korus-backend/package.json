@@ -10,9 +10,10 @@
   "scripts": {
     "dev": "nodemon src/server.ts",
     "build": "prisma generate && tsc",
-    "start": "./start-production.sh",
+    "start": "npx prisma migrate resolve --applied 20250817000000_add_sponsored_games || true && npx prisma migrate deploy && node dist/server.js",
+    "start:safe": "node resolve-migration.js && npx prisma migrate deploy && node dist/server.js",
     "start:prod": "node dist/server.js",
-    "migrate:prod": "prisma migrate deploy && node dist/server.js",
+    "migrate:prod": "npx prisma migrate deploy && node dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "prisma generate",
     "migrate:deploy": "prisma migrate deploy",
