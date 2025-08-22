@@ -186,7 +186,16 @@ export const authAPI = {
     return response.data;
   },
   
-  async updateProfile(data: { snsUsername?: string | null; nftAvatar?: string | null }) {
+  async updateProfile(data: { 
+    snsUsername?: string | null; 
+    nftAvatar?: string | null;
+    displayName?: string | null;
+    bio?: string | null;
+    location?: string | null;
+    website?: string | null;
+    twitter?: string | null;
+    themeColor?: string | null;
+  }) {
     const response = await api.put('/auth/profile', data);
     return response.data;
   },

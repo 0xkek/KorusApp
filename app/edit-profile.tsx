@@ -12,6 +12,8 @@ import { Fonts, FontSizes } from '../constants/Fonts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AvatarSelectionModal from '../components/AvatarSelectionModal';
 import NFTAvatarModal from '../components/NFTAvatarModal';
+import { authAPI } from '../utils/api';
+import { logger } from '../utils/logger';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -41,6 +43,7 @@ export default function EditProfileScreen() {
   const [showAvatarSelection, setShowAvatarSelection] = useState(false);
   const [showNFTSelection, setShowNFTSelection] = useState(false);
   const [selectedThemeColor, setSelectedThemeColor] = useState(colors.primary);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Theme color options
   const themeColors = [
@@ -55,6 +58,30 @@ export default function EditProfileScreen() {
     '#6C5CE7', // Purple
     '#FD79A8', // Pink
   ];
+  
+  // Load existing profile data
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const profile = await authAPI.getProfile();
+        if (profile.user) {
+          // Set values from backend
+          setDisplayName(profile.user.displayName || profile.user.snsUsername || timeFunUsername || '');
+          setBio(profile.user.bio || '');
+          setLocation(profile.user.location || '');
+          setWebsite(profile.user.website || '');
+          setTwitter(profile.user.twitter || '');
+          setSelectedThemeColor(profile.user.themeColor || colors.primary);
+        }
+      } catch (error) {
+        logger.error('Failed to load profile:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadProfile();
+  }, []);
   
   // Track changes
   useEffect(() => {
@@ -80,15 +107,33 @@ export default function EditProfileScreen() {
       return;
     }
     
-    // TODO: Save to backend
-    // For now, just save what we can locally
-    if (displayName !== timeFunUsername) {
-      setTimeFunUsername(displayName);
+    try {
+      logger.log('Saving profile to backend...');
+      
+      // Save to backend
+      await authAPI.updateProfile({
+        displayName: displayName || null,
+        bio: bio || null,
+        location: location || null,
+        website: website || null,
+        twitter: twitter || null,
+        themeColor: selectedThemeColor || null,
+      });
+      
+      // Also save display name locally if it changed
+      if (displayName && displayName !== timeFunUsername) {
+        setTimeFunUsername(displayName);
+      }
+      
+      logger.log('Profile saved successfully');
+      
+      Alert.alert('Success', 'Profile updated successfully!', [
+        { text: 'OK', onPress: () => router.back() }
+      ]);
+    } catch (error) {
+      logger.error('Failed to save profile:', error);
+      Alert.alert('Error', 'Failed to save profile. Please try again.');
     }
-    
-    Alert.alert('Success', 'Profile updated successfully!', [
-      { text: 'OK', onPress: () => router.back() }
-    ]);
   };
   
   const handleChangeAvatar = () => {

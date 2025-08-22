@@ -1,0 +1,7 @@
+-- Add profile customization fields to users table
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "displayName" VARCHAR(50);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "bio" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "location" VARCHAR(100);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "website" VARCHAR(200);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "twitter" VARCHAR(50);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "themeColor" VARCHAR(7);

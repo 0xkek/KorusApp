@@ -330,15 +330,21 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
   
   try {
     const walletAddress = req.userWallet!
-    const { snsUsername, nftAvatar } = req.body
+    const { snsUsername, nftAvatar, displayName, bio, location, website, twitter, themeColor } = req.body
     
-    if (isDebug()) console.log('Updating profile for:', walletAddress, { snsUsername, nftAvatar })
+    if (isDebug()) console.log('Updating profile for:', walletAddress, req.body)
 
     const updatedUser = await prisma.user.update({
       where: { walletAddress },
       data: {
         ...(snsUsername !== undefined && { snsUsername }),
-        ...(nftAvatar !== undefined && { nftAvatar })
+        ...(nftAvatar !== undefined && { nftAvatar }),
+        ...(displayName !== undefined && { displayName }),
+        ...(bio !== undefined && { bio }),
+        ...(location !== undefined && { location }),
+        ...(website !== undefined && { website }),
+        ...(twitter !== undefined && { twitter }),
+        ...(themeColor !== undefined && { themeColor })
       }
     })
 

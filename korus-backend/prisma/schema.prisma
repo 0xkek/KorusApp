@@ -18,6 +18,12 @@ model User {
   // Profile fields
   snsUsername           String?  @db.VarChar(100) // Solana Name Service username
   nftAvatar             String?  @db.Text // URL to NFT avatar image
+  displayName           String?  @db.VarChar(50) // Display name
+  bio                   String?  @db.Text // User bio
+  location              String?  @db.VarChar(100) // User location
+  website               String?  @db.VarChar(200) // User website
+  twitter               String?  @db.VarChar(50) // Twitter handle
+  themeColor            String?  @db.VarChar(7) // Profile theme color
   
   // Reputation fields
   reputationScore       Int      @default(0)
