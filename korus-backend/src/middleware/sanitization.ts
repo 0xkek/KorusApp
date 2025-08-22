@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express'
-import validator from 'validator'
 import { body, validationResult } from 'express-validator'
 
 // HTML tags that are allowed in post content
@@ -9,8 +8,14 @@ const ALLOWED_TAGS: string[] = []  // No HTML allowed by default
 export const sanitizeString = (input: string): string => {
   if (!input) return ''
   
-  // Remove any HTML tags
-  let sanitized = validator.escape(input)
+  // HTML escape function
+  let sanitized = input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;')
   
   // Remove any potential script injections
   sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
