@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { connectWallet, getProfile } from '../controllers/authController'
+import { connectWallet, getProfile, updateProfile } from '../controllers/authController'
 import { authenticate } from '../middleware/auth'
 import { validateWalletConnect } from '../middleware/validation'
 import { authLimiter } from '../middleware/rateLimiter'
@@ -16,6 +16,9 @@ router.post('/connect', validateWalletConnect, asyncHandler(connectWallet))
 
 // GET /api/auth/profile - Get user profile (requires auth)
 router.get('/profile', authenticate, asyncHandler(getProfile))
+
+// PUT /api/auth/profile - Update user profile (requires auth)
+router.put('/profile', authenticate, asyncHandler(updateProfile))
 
 // TEST: Direct connect without validation
 router.post('/connect-test', asyncHandler(async (req: any, res: any) => {

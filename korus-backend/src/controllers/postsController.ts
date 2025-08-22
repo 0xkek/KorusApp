@@ -39,7 +39,9 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
           select: {
             walletAddress: true,
             tier: true,
-            genesisVerified: true
+            genesisVerified: true,
+            snsUsername: true,
+            nftAvatar: true
           }
         }
       }
@@ -92,7 +94,9 @@ export const getPosts = async (req: Request, res: Response<PaginatedResponse<Pos
           select: {
             walletAddress: true,
             tier: true,
-            genesisVerified: true
+            genesisVerified: true,
+            snsUsername: true,
+            nftAvatar: true
           }
         }
       },
@@ -144,7 +148,9 @@ export const getSinglePost = async (req: Request, res: Response<ApiResponse<Post
           select: {
             walletAddress: true,
             tier: true,
-            genesisVerified: true
+            genesisVerified: true,
+            snsUsername: true,
+            nftAvatar: true
           }
         },
         replies: {

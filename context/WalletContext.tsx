@@ -419,6 +419,14 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       await SecureStore.setItemAsync(FAVORITE_SNS_KEY, domain);
       setSnsDomain(domain);
       
+      // Update backend with SNS username
+      try {
+        await authAPI.updateProfile({ snsUsername: domain });
+        logger.log('SNS domain updated in backend');
+      } catch (error) {
+        logger.error('Failed to update SNS domain in backend:', error);
+      }
+      
       setAllSNSDomains(prevDomains => 
         prevDomains.map(d => ({
           ...d,
@@ -457,6 +465,15 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         setSelectedNFTAvatarState(nft);
         logger.log('NFT avatar saved to SecureStore');
         
+        // Update backend with NFT avatar
+        try {
+          const nftAvatarUrl = nft.image || nft.uri || null;
+          await authAPI.updateProfile({ nftAvatar: nftAvatarUrl });
+          logger.log('NFT avatar updated in backend');
+        } catch (error) {
+          logger.error('Failed to update NFT avatar in backend:', error);
+        }
+        
         // Verify it was saved
         const verification = await SecureStore.getItemAsync(NFT_AVATAR_KEY);
         logger.log('Verification - NFT avatar in storage:', !!verification, 'length:', verification?.length);
@@ -466,6 +483,14 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       } else {
         await SecureStore.deleteItemAsync(NFT_AVATAR_KEY);
         setSelectedNFTAvatarState(null);
+        
+        // Clear in backend
+        try {
+          await authAPI.updateProfile({ nftAvatar: null });
+          logger.log('NFT avatar cleared in backend');
+        } catch (error) {
+          logger.error('Failed to clear NFT avatar in backend:', error);
+        }
       }
     } catch (error) {
       logger.error('Error saving NFT avatar:', error);

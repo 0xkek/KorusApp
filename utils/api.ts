@@ -186,6 +186,11 @@ export const authAPI = {
     return response.data;
   },
   
+  async updateProfile(data: { snsUsername?: string | null; nftAvatar?: string | null }) {
+    const response = await api.put('/auth/profile', data);
+    return response.data;
+  },
+  
   async logout() {
     await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
   },

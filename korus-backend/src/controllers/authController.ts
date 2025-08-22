@@ -321,3 +321,44 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Failed to get profile' })
   }
 }
+
+export const updateProfile = async (req: AuthRequest, res: Response) => {
+  // Use mock mode if database is not available
+  if (isMockMode()) {
+    return res.json({ success: true, message: 'Profile updated (mock mode)' })
+  }
+  
+  try {
+    const walletAddress = req.userWallet!
+    const { snsUsername, nftAvatar } = req.body
+    
+    if (isDebug()) console.log('Updating profile for:', walletAddress, { snsUsername, nftAvatar })
+
+    const updatedUser = await prisma.user.update({
+      where: { walletAddress },
+      data: {
+        ...(snsUsername !== undefined && { snsUsername }),
+        ...(nftAvatar !== undefined && { nftAvatar })
+      }
+    })
+
+    if (isDebug()) {
+      console.log('Profile updated:', {
+        wallet: updatedUser.walletAddress,
+        snsUsername: updatedUser.snsUsername,
+        nftAvatar: updatedUser.nftAvatar
+      })
+    }
+
+    res.json({
+      success: true,
+      user: {
+        ...updatedUser,
+        allyBalance: updatedUser.allyBalance.toString()
+      }
+    })
+  } catch (error) {
+    console.error('Update profile error:', error)
+    res.status(500).json({ error: 'Failed to update profile' })
+  }
+}
