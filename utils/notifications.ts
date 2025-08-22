@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export async function registerForPushNotificationsAsync() {
   let token;
@@ -33,9 +34,27 @@ export async function registerForPushNotificationsAsync() {
         return;
       }
       
-      const projectId = 'your-expo-project-id'; // Replace with your actual project ID
+      const projectId = '6f182b5a-61e8-4be6-83a4-0accb8873ca3'; // Your actual Expo project ID
       token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-      console.log(token);
+      console.log('Push token:', token);
+      
+      // Send token to backend
+      try {
+        const authToken = await AsyncStorage.getItem('korus_auth_token');
+        if (authToken) {
+          await fetch(`${process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/push-token`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ pushToken: token })
+          });
+          console.log('Push token saved to backend');
+        }
+      } catch (error) {
+        console.error('Failed to save push token to backend:', error);
+      }
     } catch (error) {
       console.log('Push notifications not available in Expo Go with SDK 53+');
       // Silently fail in development - push notifications will work in production builds

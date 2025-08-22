@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import React, { useRef, useState } from 'react';
-import { Platform, Text, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

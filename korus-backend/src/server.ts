@@ -6,6 +6,8 @@ import morgan from 'morgan'
 import prisma from './config/database'
 import { apiLimiter } from './middleware/rateLimiter'
 import { scheduleWeeklyDistribution } from './jobs/weeklyDistribution'
+import { validateEnv } from './config/validateEnv'
+import { sanitizeBody } from './middleware/sanitization'
 
 // Import routes
 import authRoutes from './routes/auth'
@@ -25,8 +27,11 @@ import nftsRoutes from './routes/nfts'
 
 dotenv.config()
 
+// Validate environment variables
+const envConfig = validateEnv()
+
 const app = express()
-const PORT = process.env.PORT || 3000
+const PORT = envConfig.PORT
 
 // CORS configuration
 const getAllowedOrigins = () => {

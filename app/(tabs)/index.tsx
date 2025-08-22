@@ -1,13 +1,10 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { useRouter, useFocusEffect } from 'expo-router';
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View, Animated, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { config } from '../../config/environment';
-
-// Create AnimatedFlatList to support native driver
-const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 import { useKorusAlert } from '../../components/KorusAlertProvider';
 import { useTheme } from '../../context/ThemeContext';
 import { useWallet } from '../../context/WalletContext';
@@ -21,18 +18,11 @@ import { logger } from '../../utils/logger';
 import { reputationService } from '../../services/reputation';
 import { Fonts, FontSizes } from '../../constants/Fonts';
 import { useLoadPosts } from '../../hooks/useLoadPosts';
-import { postsAPI, authAPI, interactionsAPI, repliesAPI } from '../../utils/api';
+import { postsAPI, interactionsAPI, repliesAPI } from '../../utils/api';
 import { testBackendConnection } from '../../utils/testApi';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { FeedSkeleton } from '../../components/SkeletonLoader';
 import { getErrorMessage } from '../../utils/errorHandler';
-
-// Global type declaration for scroll to top and reset functions
-declare global {
-  var scrollToTop: (() => void) | undefined;
-  var refreshFeed: (() => void) | undefined;
-  var resetToGeneral: (() => void) | undefined;
-}
 
 // Components
 import CreatePostModal from '../../components/CreatePostModal';
@@ -45,6 +35,16 @@ import TipSuccessModal from '../../components/TipSuccessModal';
 import GamesView from '../../components/GamesView';
 import EventsView from '../../components/EventsView';
 import DemoInstructions from '../../components/DemoInstructions';
+
+// Create AnimatedFlatList to support native driver
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+
+// Global type declaration for scroll to top and reset functions
+declare global {
+  var scrollToTop: (() => void) | undefined;
+  var refreshFeed: (() => void) | undefined;
+  var resetToGeneral: (() => void) | undefined;
+}
 
 const HIDE_SPONSORED_KEY = 'korus_hide_sponsored_posts';
 const RECENTLY_EXPANDED_KEY = 'korus_recently_expanded_posts';

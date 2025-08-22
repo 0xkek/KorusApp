@@ -25,6 +25,10 @@ model User {
   twitter               String?  @db.VarChar(50) // Twitter handle
   themeColor            String?  @db.VarChar(7) // Profile theme color
   
+  // Push notification fields
+  pushToken             String?  @db.VarChar(255) // Expo push token
+  pushNotificationsEnabled Boolean @default(true) // Whether user wants push notifications
+  
   // Reputation fields
   reputationScore       Int      @default(0)
   contentScore          Int      @default(0)

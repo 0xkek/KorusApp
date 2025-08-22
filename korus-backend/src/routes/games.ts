@@ -7,8 +7,12 @@ import {
   getGameByPostId 
 } from '../controllers/gamesController'
 import { authenticate } from '../middleware/auth'
+import { gameLimiter } from '../middleware/rateLimiter'
 
 const router = Router()
+
+// Apply rate limiting to all game routes
+router.use(gameLimiter)
 
 // All game routes require authentication
 

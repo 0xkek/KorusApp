@@ -34,3 +34,39 @@ export const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+// Rate limiter for game endpoints
+export const gameLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // Limit each IP to 10 game requests per minute
+  message: 'Too many game requests, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiter for search endpoints
+export const searchLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30, // Limit each IP to 30 search requests per minute
+  message: 'Too many search requests, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiter for interaction endpoints (likes, tips)
+export const interactionLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60, // Limit each IP to 60 interactions per minute
+  message: 'Too many interactions, please slow down.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiter for report endpoints
+export const reportLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // Limit each IP to 10 reports per hour
+  message: 'Too many reports submitted, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
