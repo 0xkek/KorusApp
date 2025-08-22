@@ -32,7 +32,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#1a1a1a"
       },
-      "edgeToEdgeEnabled": true,
+      "edgeToEdgeEnabled": false,
+      "softwareKeyboardLayoutMode": "pan",
       "package": "com.korus.app",
       "versionCode": 1,
       "permissions": [
