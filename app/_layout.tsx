@@ -4,7 +4,6 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { View } from 'react-native';
 
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { KorusAlertProvider } from '../components/KorusAlertProvider';
@@ -19,13 +18,11 @@ function RootLayoutNav() {
 
   return (
     <>
-      <StatusBar style="light" backgroundColor="#000000" translucent={false} />
       <Stack
         screenOptions={{
           gestureEnabled: true,
           gestureDirection: 'horizontal',
-          animation: 'slide_from_right',
-          contentStyle: { backgroundColor: '#000000' }
+          animation: 'slide_from_right'
         }}
       >
         <Stack.Screen name="welcome" options={{ headerShown: false }} />
@@ -40,6 +37,7 @@ function RootLayoutNav() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
     </>
   );
 }
@@ -60,20 +58,18 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaProvider style={{ flex: 1, backgroundColor: '#000000' }}>
+      <SafeAreaProvider>
         <ThemeProvider>
-          <View style={{ flex: 1, backgroundColor: '#000000' }}>
-            <WalletProvider>
-              <NotificationProvider>
-                <GameProvider>
-                  <KorusAlertProvider>
-                    <RootLayoutNav />
-                    <ParticleSystem />
-                  </KorusAlertProvider>
-                </GameProvider>
-              </NotificationProvider>
-            </WalletProvider>
-          </View>
+          <WalletProvider>
+            <NotificationProvider>
+              <GameProvider>
+                <KorusAlertProvider>
+                  <RootLayoutNav />
+                  <ParticleSystem />
+                </KorusAlertProvider>
+              </GameProvider>
+            </NotificationProvider>
+          </WalletProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </ErrorBoundary>
