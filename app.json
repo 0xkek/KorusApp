@@ -4,7 +4,7 @@
     "slug": "KorusApp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/korus-app-icon.png",
     "scheme": "korus",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
@@ -29,7 +29,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/korus-app-icon.png",
         "backgroundColor": "#1a1a1a"
       },
       "edgeToEdgeEnabled": false,

@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -73,7 +73,9 @@ export default function TabLayout() {
             shadowOpacity: 0.1,
             shadowRadius: 8,
             elevation: 8,
-            position: 'absolute',
+            // Position absolute causes half-screen bug on Android
+            // See: https://github.com/react-navigation/react-navigation/issues/10484
+            ...(Platform.OS === 'ios' ? { position: 'absolute' } : {}),
           },
           tabBarBackground: () => (
             <View style={{ flex: 1 }}>
