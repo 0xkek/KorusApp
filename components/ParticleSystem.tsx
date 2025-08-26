@@ -2,9 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Particle, ParticleType, createParticleExplosion, triggerHapticPattern } from '../utils/particleAnimations';
 
-interface ParticleSystemProps {
-  children: React.ReactNode;
-}
 
 interface ActiveParticle extends Particle {
   animatedTranslateX: Animated.Value;
@@ -14,7 +11,7 @@ interface ActiveParticle extends Particle {
   animatedRotation: Animated.Value;
 }
 
-const ParticleSystem: React.FC<ParticleSystemProps> = ({ children }) => {
+const ParticleSystem: React.FC = () => {
   const [particles, setParticles] = useState<ActiveParticle[]>([]);
   const timeoutRefs = useRef<NodeJS.Timeout[]>([]);
 
@@ -109,12 +106,8 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ children }) => {
   }, []);
 
   return (
-    <View style={styles.container}>
-      {children}
-      
-      {/* Particle Layer */}
-      <View style={styles.particleLayer} pointerEvents="none">
-        {particles.map((particle) => (
+    <View style={styles.particleLayer} pointerEvents="none">
+      {particles.map((particle) => (
           <Animated.View
             key={particle.id}
             style={[
@@ -142,15 +135,11 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ children }) => {
             </Text>
           </Animated.View>
         ))}
-      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   particleLayer: {
     position: 'absolute',
     top: 0,
