@@ -356,6 +356,8 @@ export default function NFTAvatarModal({
                   </View>
                 </>
               )}
+              </>
+              )}
             </LinearGradient>
           </BlurView>
         </View>
