@@ -2,8 +2,6 @@
 // import { Connection, PublicKey } from '@solana/web3.js';
 // import { Metaplex } from '@metaplex-foundation/js';
 
-import { filterSpamNFTs, getSpamStats } from './nftSpamFilter';
-
 export interface NFT {
   name: string;
   symbol: string;
@@ -48,127 +46,42 @@ export async function fetchNFTsFromWallet(
     // Get API URL from environment or use default
     const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
     
-    console.log('Fetching NFTs for wallet:', walletAddress);
+    console.log('Fetching NFTs for wallet:', walletAddress, 'page:', page);
     
-    // Try to fetch from our backend first
-    try {
-      const response = await fetch(`${API_URL}/nfts/wallet/${walletAddress}`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        
-        if (data.success && data.nfts && data.nfts.length > 0) {
-          // Cache and return NFTs from our backend
-          nftCache[walletAddress] = { nfts: data.nfts, timestamp: Date.now() };
-          console.log(`Backend returned ${data.nfts.length} NFTs`);
-          return data.nfts;
-        }
-      }
-    } catch (backendError) {
-      console.log('Backend NFT fetch failed, trying direct Helius:', backendError);
-    }
+    // Fetch from our backend API (which uses Helius internally)
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      includeSpam: includeSpam.toString()
+    });
     
-    // Fallback to direct Helius API if backend fails
-    const HELIUS_API_KEY = process.env.EXPO_PUBLIC_HELIUS_API_KEY;
-    if (!HELIUS_API_KEY) {
-      console.error('HELIUS_API_KEY not configured - NFT fetching disabled');
+    const response = await fetch(`${API_URL}/nfts/wallet/${walletAddress}?${queryParams}`);
+    
+    if (!response.ok) {
+      console.error('Backend NFT fetch failed:', response.status, response.statusText);
       return { nfts: [], hasMore: false };
     }
-    
-    const HELIUS_RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
-    
-    // Use the DAS API getAssetsByOwner method
-    const response = await fetch(HELIUS_RPC_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: 'nft-fetch',
-        method: 'getAssetsByOwner',
-        params: {
-          ownerAddress: walletAddress,
-          page: 1,
-          limit: 50,
-          displayOptions: {
-            showFungible: false,
-            showNativeBalance: false,
-            showInscription: false,
-          },
-        },
-      }),
-    });
     
     const data = await response.json();
     
-    if (!response.ok || data.error) {
-      console.error('Helius RPC error:', data.error || data);
+    if (!data.success) {
+      console.error('Backend NFT fetch error:', data.error);
       return { nfts: [], hasMore: false };
     }
     
-    const assets = data.result?.items || [];
-    console.log(`Helius DAS API returned ${assets.length} assets`);
-    
-    // Transform DAS API response to our NFT format - process in parallel
-    const nfts: NFT[] = assets
-      .filter((item: any) => {
-        // Quick filter - only check for basic image presence
-        return item.content?.links?.image || item.content?.files?.[0]?.uri;
-      })
-      .slice(0, 20) // Limit to first 20 NFTs for performance
-      .map((item: any) => {
-        // Handle different image URL formats from DAS API
-        const imageUrl = item.content?.links?.image || 
-                        item.content?.files?.[0]?.uri || 
-                        '';
-        
-        return {
-          name: item.content?.metadata?.name || 'Unknown NFT',
-          symbol: item.content?.metadata?.symbol || 'NFT',
-          uri: item.content?.json_uri || '',
-          image: imageUrl,
-          mint: item.id || '',
-          updateAuthority: item.authorities?.[0]?.address || '',
-          collection: item.grouping?.[0] ? {
-            name: item.grouping[0].collection_metadata?.name || 'Unknown Collection',
-            family: item.grouping[0].collection_metadata?.family
-          } : undefined
-        };
-      });
-    
-    const allNFTs = nfts; // Rename for clarity
-    console.log(`Processed ${allNFTs.length} NFTs with images`);
-    
-    // Filter spam NFTs unless explicitly requested
-    const filteredNFTs = includeSpam ? allNFTs : filterSpamNFTs(allNFTs, {
-      showPotentialSpam: false,
-      confidenceThreshold: 50
-    });
-    
-    // Get spam statistics for debugging
-    if (!includeSpam) {
-      const stats = getSpamStats(allNFTs);
-      console.log(`NFT Spam Stats: ${stats.spam}/${stats.total} (${stats.spamPercentage.toFixed(1)}%) filtered as spam`);
-    }
-    
-    // Paginate the filtered results
-    const startIndex = (page - 1) * limit;
-    const paginatedNFTs = filteredNFTs.slice(startIndex, startIndex + limit);
-    
     // Cache the results
     nftCache[cacheKey] = {
-      nfts: paginatedNFTs,
+      nfts: data.nfts || [],
       timestamp: Date.now()
     };
     
-    console.log(`Returning ${paginatedNFTs.length} NFTs (page ${page}, filtered ${allNFTs.length - filteredNFTs.length} spam)`);
+    console.log(`Backend returned ${data.nfts?.length || 0} NFTs (page ${page})`);
     
     return {
-      nfts: paginatedNFTs,
-      hasMore: filteredNFTs.length > startIndex + limit,
-      totalBeforeFilter: allNFTs.length,
-      spamFiltered: allNFTs.length - filteredNFTs.length
+      nfts: data.nfts || [],
+      hasMore: data.hasMore || false,
+      totalBeforeFilter: data.totalBeforeFilter,
+      spamFiltered: data.spamFiltered
     };
   } catch (error) {
     console.error('Error fetching NFTs:', error);

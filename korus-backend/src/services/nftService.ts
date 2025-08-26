@@ -14,15 +14,82 @@ export interface NFT {
 }
 
 // Use Helius RPC for NFT fetching
-const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '3d27295a-caf5-4a92-9fee-b52aa43e54bd'
-const HELIUS_RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`
+const HELIUS_API_KEY = process.env.HELIUS_API_KEY
+if (!HELIUS_API_KEY) {
+  console.warn('HELIUS_API_KEY not configured - NFT fetching may be limited')
+}
+const HELIUS_RPC_URL = HELIUS_API_KEY ? `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}` : ''
+
+// Spam detection patterns
+const SPAM_PATTERNS = [
+  /^(test|demo|sample|example)/i,
+  /^\d+$/, // Just numbers
+  /^#\d+$/, // Just #numbers
+  /^NFT\s*#?\d+$/i, // Generic "NFT #123"
+  /^(mint|token|asset)\s*#?\d+$/i,
+  /airdrop/i,
+  /claim/i,
+  /free\s*mint/i,
+  /^untitled/i,
+  /^unnamed/i,
+]
+
+// Known verified collections
+const VERIFIED_COLLECTIONS = [
+  'DeGods',
+  'y00ts',
+  'Okay Bears',
+  'Mad Lads',
+  'Claynosaurz',
+  'SMB',
+  'Famous Fox Federation',
+  'Tensorians',
+  'Bored Ape Solana',
+]
+
+function isSpamNFT(nft: any): boolean {
+  const name = nft.content?.metadata?.name || ''
+  const collectionName = nft.grouping?.[0]?.collection_metadata?.name || ''
+  
+  // Check if verified collection
+  if (VERIFIED_COLLECTIONS.some(vc => 
+    collectionName.toLowerCase().includes(vc.toLowerCase())
+  )) {
+    return false
+  }
+  
+  // Check spam patterns
+  if (SPAM_PATTERNS.some(pattern => pattern.test(name))) {
+    return true
+  }
+  
+  // Check for missing metadata
+  if (!name || name === 'Unknown NFT' || !nft.content?.links?.image) {
+    return true
+  }
+  
+  return false
+}
 
 /**
  * Fetch NFTs owned by a wallet using Helius DAS API
  */
-export async function fetchNFTsForWallet(walletAddress: string): Promise<NFT[]> {
+export async function fetchNFTsForWallet(
+  walletAddress: string,
+  options?: {
+    page?: number
+    limit?: number
+    includeSpam?: boolean
+  }
+): Promise<{ nfts: NFT[]; hasMore: boolean; totalBeforeFilter?: number; spamFiltered?: number }> {
+  const { page = 1, limit = 20, includeSpam = false } = options || {}
+  
+  if (!HELIUS_RPC_URL) {
+    return { nfts: [], hasMore: false }
+  }
+  
   try {
-    console.log(`Fetching NFTs for wallet: ${walletAddress}`)
+    console.log(`Fetching NFTs for wallet: ${walletAddress}, page: ${page}`)
     
     // Use Helius DAS API for better performance
     const response = await fetch(HELIUS_RPC_URL, {
@@ -37,7 +104,7 @@ export async function fetchNFTsForWallet(walletAddress: string): Promise<NFT[]> 
         params: {
           ownerAddress: walletAddress,
           page: 1,
-          limit: 100, // Get up to 100 NFTs
+          limit: 200, // Get more to filter spam
           displayOptions: {
             showFungible: false,
             showNativeBalance: false,
@@ -52,21 +119,20 @@ export async function fetchNFTsForWallet(walletAddress: string): Promise<NFT[]> 
     
     if (!response.ok || data.error) {
       console.error('Helius RPC error:', data.error || data)
-      return []
+      return { nfts: [], hasMore: false }
     }
     
     const assets = data.result?.items || []
     console.log(`Found ${assets.length} assets for wallet`)
     
-    // Filter and transform to NFT format
-    const nfts: NFT[] = assets
+    // Filter out items without images
+    const assetsWithImages = assets
       .filter((item: any) => {
         // Only include items with images
         return item.content?.links?.image || 
                item.content?.files?.[0]?.uri ||
                item.content?.files?.[0]?.cdn_uri
       })
-      .slice(0, 50) // Limit to 50 NFTs for performance
       .map((item: any) => {
         // Get the best available image URL
         const imageUrl = 
@@ -89,11 +155,50 @@ export async function fetchNFTsForWallet(walletAddress: string): Promise<NFT[]> 
         }
       })
     
-    console.log(`Returning ${nfts.length} NFTs with images`)
-    return nfts
+    
+    const totalBeforeFilter = assetsWithImages.length
+    
+    // Filter spam if requested
+    const filtered = includeSpam ? assetsWithImages : assetsWithImages.filter(item => !isSpamNFT(item))
+    const spamFiltered = totalBeforeFilter - filtered.length
+    
+    console.log(`Found ${totalBeforeFilter} NFTs, filtered ${spamFiltered} spam`)
+    
+    // Transform to NFT format and paginate
+    const startIndex = (page - 1) * limit
+    const paginatedAssets = filtered.slice(startIndex, startIndex + limit)
+    
+    const nfts: NFT[] = paginatedAssets.map((item: any) => {
+      const imageUrl = 
+        item.content?.links?.image || 
+        item.content?.files?.[0]?.cdn_uri ||
+        item.content?.files?.[0]?.uri || 
+        ''
+      
+      return {
+        name: item.content?.metadata?.name || 'Unknown NFT',
+        symbol: item.content?.metadata?.symbol || 'NFT',
+        uri: item.content?.json_uri || '',
+        image: imageUrl,
+        mint: item.id || '',
+        updateAuthority: item.authorities?.[0]?.address,
+        collection: item.grouping?.[0] ? {
+          name: item.grouping[0].collection_metadata?.name || item.grouping[0].group_value,
+          family: item.grouping[0].group_key
+        } : undefined
+      }
+    })
+    
+    console.log(`Returning ${nfts.length} NFTs (page ${page})`)
+    return {
+      nfts,
+      hasMore: filtered.length > startIndex + limit,
+      totalBeforeFilter,
+      spamFiltered
+    }
   } catch (error) {
     console.error('Error fetching NFTs:', error)
-    return []
+    return { nfts: [], hasMore: false }
   }
 }
 

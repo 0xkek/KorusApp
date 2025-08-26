@@ -8,6 +8,7 @@ import { fetchNFTsForWallet, getNFTByMint } from '../services/nftService'
 export const getNFTsForWallet = async (req: Request, res: Response) => {
   try {
     const { walletAddress } = req.params
+    const { page = '1', limit = '20', includeSpam = 'false' } = req.query
     
     if (!walletAddress) {
       return res.status(400).json({ 
@@ -16,14 +17,17 @@ export const getNFTsForWallet = async (req: Request, res: Response) => {
       })
     }
     
-    console.log(`[NFT Controller] Getting NFTs for wallet: ${walletAddress}`)
+    console.log(`[NFT Controller] Getting NFTs for wallet: ${walletAddress}, page: ${page}`)
     
-    const nfts = await fetchNFTsForWallet(walletAddress)
+    const result = await fetchNFTsForWallet(walletAddress, {
+      page: parseInt(page as string),
+      limit: parseInt(limit as string),
+      includeSpam: includeSpam === 'true'
+    })
     
     res.json({
       success: true,
-      nfts,
-      count: nfts.length
+      ...result
     })
   } catch (error: any) {
     console.error('[NFT Controller] Get NFTs error:', error)
