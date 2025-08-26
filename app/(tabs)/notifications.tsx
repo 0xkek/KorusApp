@@ -268,7 +268,7 @@ export default function NotificationsScreen() {
               All caught up!
             </Text>
             <Text style={[styles.emptySubtext, { color: colors.textTertiary }]}>
-              When someone likes, replies, or tips your posts, you'll see it here
+              When someone likes, replies, or tips your posts, you&apos;ll see it here
             </Text>
           </View>
         ) : (
@@ -312,7 +312,7 @@ export default function NotificationsScreen() {
                 
                 {notification.postPreview && (
                   <Text style={[styles.postPreview, { color: colors.textTertiary }]} numberOfLines={1}>
-                    "{notification.postPreview.substring(0, 50)}..."
+                    &ldquo;{notification.postPreview.substring(0, 50)}...&rdquo;
                   </Text>
                 )}
               </View>

@@ -5,7 +5,8 @@ import {
   Animated,
   View,
   ActivityIndicator,
-  StyleSheet
+  StyleSheet,
+  Text
 } from 'react-native'
 import { BlurView } from 'expo-blur'
 

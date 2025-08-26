@@ -39,7 +39,7 @@ export default function DemoInstructions({ onClose }: { onClose: () => void }) {
             Connect any Solana wallet (Phantom, Solflare, etc.)
           </Text>
           <Text style={[styles.text, { color: colors.textSecondary }]}>
-            You'll start with 5000 ALLY tokens to play with!
+            You&apos;ll start with 5000 ALLY tokens to play with!
           </Text>
         </View>
 
