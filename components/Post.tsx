@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import LinkPreview from './LinkPreview';
 import GamePost from './GamePost';
+import { OptimizedImage } from './OptimizedImage';
 
 // Video Player Component
 const VideoPlayer = ({ videoUrl }: { videoUrl: string }) => {
@@ -507,10 +508,10 @@ const Post = memo<PostProps>(function Post({
                   {post.videoUrl ? (
                     <VideoPlayer videoUrl={post.videoUrl} />
                   ) : (
-                    <Image 
+                    <OptimizedImage 
                       source={{ uri: post.imageUrl }} 
                       style={styles.postImage}
-                      resizeMode="cover"
+                      priority={expandedPosts.has(post.id) ? 'high' : 'low'}
                     />
                   )}
                 </View>

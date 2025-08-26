@@ -1,10 +1,11 @@
 import '../polyfills'; // Must be first import
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { errorMonitor } from '../utils/errorMonitoring';
 
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { KorusAlertProvider } from '../components/KorusAlertProvider';
@@ -52,6 +53,14 @@ export default function RootLayout() {
     'Poppins-Bold': require('../assets/fonts/Poppins-Bold.ttf'),
     'Poppins-ExtraBold': require('../assets/fonts/Poppins-ExtraBold.ttf'),
   });
+
+  useEffect(() => {
+    // Initialize error monitoring (only if we have a Sentry DSN)
+    const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
+    if (sentryDsn) {
+      errorMonitor.initialize(sentryDsn);
+    }
+  }, []);
 
 
   if (!loaded) {

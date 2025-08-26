@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { logger } from './logger';
+import { offlineManager } from './offlineManager';
 
 // API base URL - use environment variable or default to Render URL
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://korus-backend.onrender.com/api';
@@ -212,9 +213,30 @@ export const postsAPI = {
     subtopic?: string; 
     limit?: number; 
     offset?: number;
+    cursor?: string;
   }) {
-    const response = await api.get('/posts', { params });
-    return response.data;
+    const cacheKey = `posts_${JSON.stringify(params || {})}`;
+    
+    // Check cache first if offline or for quick load
+    const cached = await offlineManager.getCached(cacheKey);
+    if (cached && !offlineManager.getIsOnline()) {
+      return cached;
+    }
+    
+    try {
+      const response = await api.get('/posts', { params });
+      
+      // Cache the successful response
+      await offlineManager.setCached(cacheKey, response.data, 5 * 60 * 1000); // 5 min cache
+      
+      return response.data;
+    } catch (error) {
+      // If offline and have cache, return it
+      if (cached && !offlineManager.getIsOnline()) {
+        return cached;
+      }
+      throw error;
+    }
   },
   
   async getPost(id: string) {

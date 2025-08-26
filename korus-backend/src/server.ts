@@ -8,6 +8,7 @@ import { apiLimiter } from './middleware/rateLimiter'
 import { scheduleWeeklyDistribution } from './jobs/weeklyDistribution'
 import { validateEnv } from './config/validateEnv'
 import { sanitizeBody } from './middleware/sanitization'
+import { securityHeaders, requestIdMiddleware, validateCSRFToken } from './middleware/security'
 
 // Import routes
 import authRoutes from './routes/auth'
@@ -75,11 +76,13 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization']
 }
 
-// Middleware
-app.use(helmet())
+// Security middleware
+app.use(securityHeaders) // Enhanced security headers
+app.use(requestIdMiddleware) // Add request tracking
 app.use(cors(corsOptions))
 app.use(morgan('combined'))
 app.use(express.json())
+app.use(sanitizeBody) // Sanitize all inputs
 
 // Debug logging for all requests (only in development)
 app.use((req, res, next) => {

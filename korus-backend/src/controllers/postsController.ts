@@ -4,6 +4,7 @@ import { AuthRequest } from '../middleware/auth'
 import { CreatePostRequest, ApiResponse, PaginatedResponse, Post } from '../types'
 import { autoModerate } from './moderationController'
 import { reputationService } from '../services/reputationService'
+import { CursorPagination } from '../utils/pagination'
 
 export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Post>>) => {
   try {
@@ -68,63 +69,52 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
   }
 }
 
-export const getPosts = async (req: Request, res: Response<PaginatedResponse<Post>>) => {
+export const getPosts = async (req: Request, res: Response) => {
   try {
-    const { limit = 20, offset = 0 } = req.query
+    const { cursor, limit, maxId, sinceId } = req.query
 
-    // Get posts with author info - explicitly select all fields
-    const posts = await prisma.post.findMany({
-      select: {
-        id: true,
-        authorWallet: true,
-        content: true,
-        topic: true,
-        subtopic: true,
-        imageUrl: true,
-        videoUrl: true,
-        likeCount: true,
-        replyCount: true,
-        tipCount: true,
-        createdAt: true,
-        updatedAt: true,
-        isHidden: true,
-        flaggedCount: true,
-        moderationReason: true,
-        author: {
-          select: {
-            walletAddress: true,
-            tier: true,
-            genesisVerified: true,
-            snsUsername: true,
-            nftAvatar: true
-          }
-        }
+    // Use cursor pagination
+    const result = await CursorPagination.paginateQuery<any>(
+      prisma.post,
+      {
+        cursor: cursor as string,
+        limit: limit ? parseInt(limit as string) : undefined,
+        maxId: maxId as string,
+        sinceId: sinceId as string
       },
-      orderBy: { createdAt: 'desc' },
-      take: Number(limit),
-      skip: Number(offset)
-    })
+      {
+        where: { isHidden: false },
+        include: {
+          author: {
+            select: {
+              walletAddress: true,
+              tier: true,
+              genesisVerified: true,
+              snsUsername: true,
+              nftAvatar: true
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      }
+    )
 
     // Add empty replies array for compatibility
-    const postsWithReplies = posts.map((post: any) => {
-      // Debug log
-      console.log(`Post ${post.id}: likeCount=${post.likeCount}, replyCount=${post.replyCount}`);
-      
-      return {
-        ...post,
-        replies: []
-      };
-    });
+    const postsWithReplies = result.data.map((post: any) => ({
+      ...post,
+      replies: []
+    }))
 
     res.json({
       success: true,
       posts: postsWithReplies,
+      meta: result.meta,
       pagination: {
-        limit: Number(limit),
-        offset: Number(offset),
-        hasMore: posts.length === Number(limit)
+        limit: result.meta.resultCount,
+        cursor: result.meta.nextCursor,
+        hasMore: result.meta.hasMore
       }
-    } as any)
+    })
   } catch (error: any) {
     console.error('Get posts error:', error)
     console.error('Error stack:', error?.stack)
