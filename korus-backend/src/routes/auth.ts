@@ -2,9 +2,24 @@ import { Router } from 'express'
 import { connectWallet, getProfile, updateProfile } from '../controllers/authController'
 import { authenticate } from '../middleware/auth'
 import { validateWalletConnect } from '../middleware/validation'
-import { authLimiter } from '../middleware/rateLimiter'
+import { generateCSRFToken } from '../middleware/security'
+import { authRateLimiter, burstProtection } from '../middleware/advancedRateLimiter'
 
 const router = Router()
+
+// CSRF token generation endpoint
+router.get('/csrf', (req, res) => {
+  const sessionId = req.headers['x-session-id'] as string
+  
+  if (!sessionId) {
+    return res.status(400).json({ error: 'Session ID required' })
+  }
+  
+  // Generate CSRF token using the security middleware function
+  const token = generateCSRFToken(sessionId)
+  
+  res.json({ token })
+})
 
 // Wrapper to handle async errors in Express
 const asyncHandler = (fn: any) => (req: any, res: any, next: any) => {
@@ -12,7 +27,7 @@ const asyncHandler = (fn: any) => (req: any, res: any, next: any) => {
 };
 
 // POST /api/auth/connect - Connect wallet and get JWT
-router.post('/connect', validateWalletConnect, asyncHandler(connectWallet))
+router.post('/connect', burstProtection, authRateLimiter, validateWalletConnect, asyncHandler(connectWallet))
 
 // GET /api/auth/profile - Get user profile (requires auth)
 router.get('/profile', authenticate, asyncHandler(getProfile))

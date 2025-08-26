@@ -2,6 +2,8 @@
 // import { Connection, PublicKey } from '@solana/web3.js';
 // import { Metaplex } from '@metaplex-foundation/js';
 
+import { filterSpamNFTs, getSpamStats } from './nftSpamFilter';
+
 export interface NFT {
   name: string;
   symbol: string;
@@ -19,17 +21,27 @@ export interface NFT {
 const nftCache: { [walletAddress: string]: { nfts: NFT[], timestamp: number } } = {};
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-export async function fetchNFTsFromWallet(walletAddress: string): Promise<NFT[]> {
+export async function fetchNFTsFromWallet(
+  walletAddress: string,
+  options?: {
+    page?: number;
+    limit?: number;
+    includeSpam?: boolean;
+  }
+): Promise<{ nfts: NFT[]; hasMore: boolean; totalBeforeFilter?: number; spamFiltered?: number }> {
   if (!walletAddress) {
     console.error('No wallet address provided for NFT fetching');
-    return [];
+    return { nfts: [], hasMore: false };
   }
+  
+  const { page = 1, limit = 20, includeSpam = false } = options || {};
 
-  // Check cache first
-  const cached = nftCache[walletAddress];
+  // Check cache first (cache key includes page and spam filter setting)
+  const cacheKey = `${walletAddress}_${page}_${includeSpam}`;
+  const cached = nftCache[cacheKey];
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
     console.log('Returning cached NFTs');
-    return cached.nfts;
+    return { nfts: cached.nfts, hasMore: cached.nfts.length === limit };
   }
 
   try {
@@ -125,18 +137,42 @@ export async function fetchNFTsFromWallet(walletAddress: string): Promise<NFT[]>
         };
       });
     
-    console.log(`Processed ${nfts.length} NFTs with images`);
+    const allNFTs = nfts; // Rename for clarity
+    console.log(`Processed ${allNFTs.length} NFTs with images`);
+    
+    // Filter spam NFTs unless explicitly requested
+    const filteredNFTs = includeSpam ? allNFTs : filterSpamNFTs(allNFTs, {
+      showPotentialSpam: false,
+      confidenceThreshold: 50
+    });
+    
+    // Get spam statistics for debugging
+    if (!includeSpam) {
+      const stats = getSpamStats(allNFTs);
+      console.log(`NFT Spam Stats: ${stats.spam}/${stats.total} (${stats.spamPercentage.toFixed(1)}%) filtered as spam`);
+    }
+    
+    // Paginate the filtered results
+    const startIndex = (page - 1) * limit;
+    const paginatedNFTs = filteredNFTs.slice(startIndex, startIndex + limit);
     
     // Cache the results
-    nftCache[walletAddress] = {
-      nfts,
+    nftCache[cacheKey] = {
+      nfts: paginatedNFTs,
       timestamp: Date.now()
     };
     
-    return nfts;
+    console.log(`Returning ${paginatedNFTs.length} NFTs (page ${page}, filtered ${allNFTs.length - filteredNFTs.length} spam)`);
+    
+    return {
+      nfts: paginatedNFTs,
+      hasMore: filteredNFTs.length > startIndex + limit,
+      totalBeforeFilter: allNFTs.length,
+      spamFiltered: allNFTs.length - filteredNFTs.length
+    };
   } catch (error) {
     console.error('Error fetching NFTs:', error);
-    return [];
+    return { nfts: [], hasMore: false };
   }
 }
 

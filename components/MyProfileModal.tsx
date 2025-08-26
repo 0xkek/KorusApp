@@ -2,7 +2,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import React, { useState, useRef, useEffect } from 'react';
-import { Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View, Clipboard, TextInput, Linking } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View, Clipboard, TextInput, Linking } from 'react-native';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { useWallet } from '../context/WalletContext';
 import { useTheme } from '../context/ThemeContext';
@@ -10,6 +10,7 @@ import AvatarSelectionModal from './AvatarSelectionModal';
 import NFTAvatarModal from './NFTAvatarModal';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { OptimizedImage } from './OptimizedImage';
 
 interface MyProfileModalProps {
   visible: boolean;
@@ -194,9 +195,10 @@ export default function MyProfileModal({
                       end={{ x: 1, y: 1 }}
                     >
                       {selectedNFTAvatar ? (
-                        <Image 
+                        <OptimizedImage 
                           source={{ uri: selectedNFTAvatar.image || selectedNFTAvatar.uri }}
                           style={styles.nftAvatar}
+                          priority="high"
                         />
                       ) : selectedAvatar ? (
                         <Text style={styles.avatarEmoji}>{selectedAvatar}</Text>

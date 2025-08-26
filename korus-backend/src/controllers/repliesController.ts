@@ -4,6 +4,7 @@ import { AuthRequest } from '../middleware/auth'
 import { autoModerate } from './moderationController'
 import { reputationService } from '../services/reputationService'
 import { createNotification } from '../utils/notifications'
+import { CursorPagination } from '../utils/pagination'
 
 export const createReply = async (req: AuthRequest, res: Response) => {
   try {
@@ -126,7 +127,7 @@ export const createReply = async (req: AuthRequest, res: Response) => {
 export const getReplies = async (req: Request, res: Response) => {
   try {
     const { id: postId } = req.params
-    const { limit = 50, offset = 0 } = req.query
+    const { cursor, limit, maxId, sinceId } = req.query
 
     // Check if post exists
     const post = await prisma.post.findUnique({ where: { id: postId } })
@@ -134,45 +135,67 @@ export const getReplies = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Post not found' })
     }
 
-    // Get all replies for this post (excluding hidden ones)
-    const replies = await prisma.reply.findMany({
-      where: { 
-        postId,
-        isHidden: false // Filter out hidden replies
+    // Use cursor pagination for Twitter-style loading
+    const result = await CursorPagination.paginateQuery<any>(
+      prisma.reply,
+      {
+        cursor: cursor as string,
+        limit: limit ? parseInt(limit as string) : 30, // Default 30 replies
+        maxId: maxId as string,
+        sinceId: sinceId as string
       },
-      include: {
-        author: {
-          select: {
-            walletAddress: true,
-            tier: true,
-            genesisVerified: true
-          }
+      {
+        where: { 
+          postId,
+          isHidden: false,
+          parentReplyId: null // Only top-level replies
         },
-        childReplies: {
-          include: {
-            author: {
-              select: {
-                walletAddress: true,
-                tier: true,
-                genesisVerified: true
-              }
+        include: {
+          author: {
+            select: {
+              walletAddress: true,
+              tier: true,
+              genesisVerified: true,
+              snsUsername: true,
+              nftAvatar: true
             }
           },
-          orderBy: { createdAt: 'asc' }
-        }
-      },
-      orderBy: { createdAt: 'asc' },
-      take: Number(limit),
-      skip: Number(offset)
-    })
+          childReplies: {
+            where: { isHidden: false },
+            include: {
+              author: {
+                select: {
+                  walletAddress: true,
+                  tier: true,
+                  genesisVerified: true,
+                  snsUsername: true,
+                  nftAvatar: true
+                }
+              }
+            },
+            orderBy: { createdAt: 'asc' },
+            take: 3 // Show first 3 nested replies
+          },
+          _count: {
+            select: {
+              childReplies: {
+                where: { isHidden: false }
+              }
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' } // Newest first like Twitter
+      }
+    )
 
     res.json({
       success: true,
-      replies,
+      replies: result.data,
+      meta: result.meta,
       pagination: {
-        limit: Number(limit),
-        offset: Number(offset),
-        hasMore: replies.length === Number(limit)
+        limit: result.meta.resultCount,
+        cursor: result.meta.nextCursor,
+        hasMore: result.meta.hasMore
       }
     })
   } catch (error) {

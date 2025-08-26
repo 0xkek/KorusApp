@@ -2,12 +2,13 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { useWallet } from '../context/WalletContext';
 import { useTheme } from '../context/ThemeContext';
 import { fetchNFTsFromWallet, getFallbackNFTImage, NFT } from '../utils/nft';
 import { Ionicons } from '@expo/vector-icons';
+import { OptimizedImage } from './OptimizedImage';
 
 interface NFTAvatarModalProps {
   visible: boolean;
@@ -27,35 +28,79 @@ export default function NFTAvatarModal({
   const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
   const [nfts, setNfts] = useState<NFT[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [selectedNFT, setSelectedNFT] = useState<NFT | null>(null);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [showSpam, setShowSpam] = useState(false);
+  const [spamStats, setSpamStats] = useState({ filtered: 0, total: 0 });
 
   useEffect(() => {
     if (visible && walletAddress) {
-      loadNFTs();
+      setPage(1);
+      loadNFTs(1, false);
     }
   }, [visible, walletAddress]);
 
-  const loadNFTs = async () => {
+  const loadNFTs = async (pageNum: number = 1, append: boolean = false) => {
     if (!walletAddress) {
       console.error('NFTAvatarModal: No wallet address available');
       setLoading(false);
       return;
     }
     
-    console.log('NFTAvatarModal: Loading NFTs for wallet:', walletAddress);
+    console.log(`NFTAvatarModal: Loading NFTs page ${pageNum} for wallet:`, walletAddress);
     
-    setLoading(true);
+    if (pageNum === 1) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
+    
     try {
-      const fetchedNFTs = await fetchNFTsFromWallet(walletAddress);
-      console.log('NFTAvatarModal: Received', fetchedNFTs.length, 'NFTs');
-      setNfts(fetchedNFTs);
+      const result = await fetchNFTsFromWallet(walletAddress, {
+        page: pageNum,
+        limit: 20,
+        includeSpam: showSpam
+      });
+      
+      console.log('NFTAvatarModal: Received', result.nfts.length, 'NFTs');
+      
+      if (append) {
+        setNfts(prev => [...prev, ...result.nfts]);
+      } else {
+        setNfts(result.nfts);
+      }
+      
+      setHasMore(result.hasMore);
+      setSpamStats({
+        filtered: result.spamFiltered || 0,
+        total: result.totalBeforeFilter || 0
+      });
     } catch (error) {
       console.error('NFTAvatarModal: Error loading NFTs:', error);
-      setNfts([]);
+      if (!append) setNfts([]);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
+  };
+  
+  const handleLoadMore = () => {
+    if (!loadingMore && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      loadNFTs(nextPage, true);
+    }
+  };
+  
+  const toggleSpamFilter = () => {
+    setShowSpam(!showSpam);
+    setPage(1);
+    setNfts([]);
+    // Reload with new filter settings
+    loadNFTs(1, false);
   };
 
   const handleSelect = (nft: NFT) => {
@@ -147,10 +192,10 @@ export default function NFTAvatarModal({
                       shadowColor: colors.shadowColor,
                     }
                   ]}>
-                    <Image 
+                    <OptimizedImage 
                       source={{ uri: getImageSource(selectedNFT) }}
                       style={styles.previewImage}
-                      onError={() => handleImageError(selectedNFT.mint)}
+                      priority="high"
                     />
                   </View>
                   <Text style={[styles.previewName, { color: colors.text }]}>{selectedNFT.name}</Text>
@@ -166,7 +211,27 @@ export default function NFTAvatarModal({
                   <ActivityIndicator size="large" color={colors.primary} />
                   <Text style={[styles.loadingText, { color: colors.textTertiary }]}>Loading your NFTs...</Text>
                 </View>
-              ) : nfts.length === 0 ? (
+              ) : (
+                <>
+                  {/* Spam filter toggle */}
+                  {spamStats.filtered > 0 && (
+                    <View style={styles.filterBar}>
+                      <Text style={[styles.filterText, { color: colors.textSecondary }]}>
+                        {spamStats.filtered} spam NFTs hidden
+                      </Text>
+                      <TouchableOpacity
+                        style={[styles.filterToggle, { backgroundColor: colors.primary + '20' }]}
+                        onPress={toggleSpamFilter}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.filterToggleText, { color: colors.primary }]}>
+                          {showSpam ? 'Hide Spam' : 'Show All'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                  
+                  {nfts.length === 0 ? (
                 <View style={styles.emptyContainer}>
                   <Text style={[styles.emptyText, { color: colors.textTertiary }]}>
                     {walletAddress ? 'Unable to load NFTs at this time' : 'No wallet connected'}
@@ -217,10 +282,10 @@ export default function NFTAvatarModal({
                           onPress={() => handleSelect(nft)}
                           activeOpacity={0.8}
                         >
-                          <Image 
+                          <OptimizedImage 
                             source={{ uri: getImageSource(nft) }}
                             style={styles.nftImage}
-                            onError={() => handleImageError(nft.mint)}
+                            priority="medium"
                           />
                           <Text style={[styles.nftName, { color: colors.text }]} numberOfLines={1}>
                             {nft.name}
@@ -228,6 +293,26 @@ export default function NFTAvatarModal({
                         </TouchableOpacity>
                       ))}
                     </View>
+                    {/* Load More button */}
+                    {hasMore && (
+                      <TouchableOpacity
+                        style={[
+                          styles.loadMoreButton,
+                          { backgroundColor: colors.primary + '20' }
+                        ]}
+                        onPress={handleLoadMore}
+                        activeOpacity={0.8}
+                        disabled={loadingMore}
+                      >
+                        {loadingMore ? (
+                          <ActivityIndicator size="small" color={colors.primary} />
+                        ) : (
+                          <Text style={[styles.loadMoreText, { color: colors.primary }]}>
+                            Load More NFTs
+                          </Text>
+                        )}
+                      </TouchableOpacity>
+                    )}
                   </ScrollView>
 
                   {/* Action Buttons */}
@@ -269,6 +354,65 @@ export default function NFTAvatarModal({
                       </LinearGradient>
                     </TouchableOpacity>
                   </View>
+                  ) : (
+                    // The existing NFT grid
+                    <ScrollView 
+                      style={styles.nftGrid}
+                      showsVerticalScrollIndicator={false}
+                      contentContainerStyle={styles.gridContent}
+                    >
+                      <View style={styles.gridContainer}>
+                        {nfts.map((nft) => (
+                          <TouchableOpacity
+                            key={nft.mint}
+                            style={[
+                              styles.nftItem,
+                              { backgroundColor: colors.surfaceLight + '0D' },
+                              selectedNFT?.mint === nft.mint && [
+                                styles.nftItemSelected,
+                                {
+                                  borderColor: colors.primary,
+                                  shadowColor: colors.shadowColor,
+                                }
+                              ]
+                            ]}
+                            onPress={() => handleSelect(nft)}
+                            activeOpacity={0.8}
+                          >
+                            <OptimizedImage 
+                              source={{ uri: getImageSource(nft) }}
+                              style={styles.nftImage}
+                              priority="medium"
+                            />
+                            <Text style={[styles.nftName, { color: colors.text }]} numberOfLines={1}>
+                              {nft.name}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                      
+                      {/* Load More button */}
+                      {hasMore && (
+                        <TouchableOpacity
+                          style={[
+                            styles.loadMoreButton,
+                            { backgroundColor: colors.primary + '20' }
+                          ]}
+                          onPress={handleLoadMore}
+                          activeOpacity={0.8}
+                          disabled={loadingMore}
+                        >
+                          {loadingMore ? (
+                            <ActivityIndicator size="small" color={colors.primary} />
+                          ) : (
+                            <Text style={[styles.loadMoreText, { color: colors.primary }]}>
+                              Load More NFTs
+                            </Text>
+                          )}
+                        </TouchableOpacity>
+                      )}
+                    </ScrollView>
+                  )}
                 </>
               )}
             </LinearGradient>
@@ -439,6 +583,40 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     fontSize: FontSizes.sm,
     fontFamily: Fonts.medium,
     textAlign: 'center',
+  },
+  filterBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    marginBottom: 10,
+  },
+  filterText: {
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.regular,
+  },
+  filterToggle: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  filterToggleText: {
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.semiBold,
+  },
+  loadMoreButton: {
+    marginTop: 20,
+    marginBottom: 20,
+    marginHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadMoreText: {
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.semiBold,
   },
   actionButtons: {
     flexDirection: 'row',

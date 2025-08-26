@@ -2,41 +2,52 @@ import { Request, Response, NextFunction } from 'express'
 import crypto from 'crypto'
 import helmet from 'helmet'
 
-// CSRF Token management
-const csrfTokens = new Map<string, { token: string; expires: number }>()
+// CSRF Token management using HMAC (stateless approach)
+const csrfSecret = process.env.CSRF_SECRET || 'korus-csrf-secret-change-in-production'
 
 export const generateCSRFToken = (sessionId: string): string => {
-  const token = crypto.randomBytes(32).toString('hex')
-  const expires = Date.now() + (4 * 60 * 60 * 1000) // 4 hours
-  csrfTokens.set(sessionId, { token, expires })
-  
-  // Cleanup expired tokens
-  for (const [key, value] of csrfTokens.entries()) {
-    if (value.expires < Date.now()) {
-      csrfTokens.delete(key)
-    }
-  }
+  // Generate deterministic token based on session ID
+  // This allows stateless validation
+  const token = crypto
+    .createHmac('sha256', csrfSecret)
+    .update(sessionId)
+    .digest('hex')
   
   return token
 }
 
 export const validateCSRFToken = (req: Request, res: Response, next: NextFunction) => {
-  // Skip CSRF for GET requests
+  // Skip CSRF for GET requests and public endpoints
   if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') {
+    return next()
+  }
+  
+  // Skip CSRF for public auth endpoint (wallet connection doesn't need CSRF)
+  if (req.path === '/api/auth/connect') {
     return next()
   }
 
   const sessionId = req.headers['x-session-id'] as string
   const providedToken = req.headers['x-csrf-token'] as string
 
+  // In development, warn but don't block if CSRF is missing
   if (!sessionId || !providedToken) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('CSRF token missing in development mode:', req.path)
+      return next()
+    }
     return res.status(403).json({ error: 'CSRF token required' })
   }
 
-  const storedData = csrfTokens.get(sessionId)
+  // Regenerate the expected token
+  const expectedToken = crypto
+    .createHmac('sha256', csrfSecret)
+    .update(sessionId)
+    .digest('hex')
   
-  if (!storedData || storedData.expires < Date.now() || storedData.token !== providedToken) {
-    return res.status(403).json({ error: 'Invalid or expired CSRF token' })
+  // Compare tokens using timing-safe comparison
+  if (!crypto.timingSafeEqual(Buffer.from(providedToken), Buffer.from(expectedToken))) {
+    return res.status(403).json({ error: 'Invalid CSRF token' })
   }
 
   next()

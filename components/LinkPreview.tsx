@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, ActivityIndicator, Linking } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
+import { OptimizedImage } from './OptimizedImage';
 
 interface LinkPreviewData {
   url: string;
@@ -138,10 +139,10 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
       >
         {previewData.image && (
           <View style={styles.imageContainer}>
-            <Image 
+            <OptimizedImage 
               source={{ uri: previewData.image }} 
               style={styles.image}
-              resizeMode="cover"
+              priority="low"
             />
             {previewData.type === 'video' && (
               <View style={styles.playButton}>

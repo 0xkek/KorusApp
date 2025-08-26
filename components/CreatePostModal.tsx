@@ -1,7 +1,7 @@
 // import { BlurView } from 'expo-blur'; // Removed for performance
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert, TouchableWithoutFeedback, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, TouchableWithoutFeedback, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,6 +10,7 @@ import { validatePostContent, sanitizeInput, getCharacterCount } from '../utils/
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { uploadToCloudinary, validateImage } from '../utils/imageUpload';
 import { logger } from '../utils/logger';
+import { OptimizedImage } from './OptimizedImage';
 
 
 interface CreatePostModalProps {
@@ -221,12 +222,13 @@ export default function CreatePostModal({
                     {selectedMedia && (
                       <View style={styles.imagePreviewContainer}>
                         {selectedMedia.type === 'image' ? (
-                          <Image source={{ uri: selectedMedia.uri }} style={styles.imagePreview} />
+                          <OptimizedImage source={{ uri: selectedMedia.uri }} style={styles.imagePreview} priority="high" />
                         ) : (
                           <View style={styles.videoPreviewContainer}>
-                            <Image 
+                            <OptimizedImage 
                               source={{ uri: selectedMedia.uri }} 
                               style={styles.imagePreview} 
+                              priority="high"
                             />
                             <View style={styles.videoPlayIcon}>
                               <Ionicons name="play-circle" size={48} color="rgba(255, 255, 255, 0.9)" />

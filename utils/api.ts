@@ -76,6 +76,37 @@ api.interceptors.request.use(
         config.headers['X-Retry-Count'] = '0';
       }
       
+      // Add CSRF token for state-changing requests
+      if (config.method && ['post', 'put', 'patch', 'delete'].includes(config.method.toLowerCase())) {
+        const sessionId = await SecureStore.getItemAsync('korus_session_id');
+        const csrfToken = await SecureStore.getItemAsync('korus_csrf_token');
+        
+        if (!sessionId) {
+          // Generate new session ID
+          const newSessionId = `${Date.now()}_${Math.random().toString(36).substring(2)}`;
+          await SecureStore.setItemAsync('korus_session_id', newSessionId);
+          config.headers['X-Session-Id'] = newSessionId;
+          
+          // Request new CSRF token from backend
+          try {
+            const csrfResponse = await axios.get(`${API_BASE_URL}/auth/csrf`, {
+              headers: { 'X-Session-Id': newSessionId }
+            });
+            if (csrfResponse.data.token) {
+              await SecureStore.setItemAsync('korus_csrf_token', csrfResponse.data.token);
+              config.headers['X-CSRF-Token'] = csrfResponse.data.token;
+            }
+          } catch (error) {
+            logger.warn('Failed to get CSRF token:', error);
+          }
+        } else {
+          config.headers['X-Session-Id'] = sessionId;
+          if (csrfToken) {
+            config.headers['X-CSRF-Token'] = csrfToken;
+          }
+        }
+      }
+      
       // Log the request for debugging (commented out to reduce noise)
       // logger.log('API Request:', {
       //   url: config.url,
@@ -167,6 +198,11 @@ api.interceptors.response.use(
 // Auth functions
 export const authAPI = {
   async connectWallet(walletAddress: string, signature: string, message: string) {
+    // Authentication must be online
+    if (!offlineManager.getIsOnline()) {
+      throw new Error('Authentication requires an internet connection');
+    }
+    
     const response = await api.post('/auth/connect', {
       walletAddress,
       signature,
@@ -177,14 +213,33 @@ export const authAPI = {
     if (response.data.token) {
       await SecureStore.setItemAsync(AUTH_TOKEN_KEY, response.data.token);
       await SecureStore.setItemAsync('korus_wallet_address', walletAddress);
+      // Cache user profile
+      await offlineManager.setCached('user_profile', response.data.user, 30 * 60 * 1000);
     }
     
     return response.data;
   },
   
   async getProfile() {
-    const response = await api.get('/auth/profile');
-    return response.data;
+    const cacheKey = 'user_profile';
+    
+    // Check cache first
+    const cached = await offlineManager.getCached(cacheKey);
+    if (cached && !offlineManager.getIsOnline()) {
+      return { user: cached };
+    }
+    
+    try {
+      const response = await api.get('/auth/profile');
+      // Cache profile for 30 minutes
+      await offlineManager.setCached(cacheKey, response.data.user, 30 * 60 * 1000);
+      return response.data;
+    } catch (error) {
+      if (cached) {
+        return { user: cached };
+      }
+      throw error;
+    }
   },
   
   async updateProfile(data: { 
@@ -197,12 +252,48 @@ export const authAPI = {
     twitter?: string | null;
     themeColor?: string | null;
   }) {
-    const response = await api.put('/auth/profile', data);
-    return response.data;
+    // Queue profile updates if offline
+    if (!offlineManager.getIsOnline()) {
+      await offlineManager.queueRequest({
+        method: 'PUT',
+        url: '/auth/profile',
+        data
+      });
+      // Update local cache optimistically
+      const cached = await offlineManager.getCached('user_profile');
+      if (cached) {
+        const updated = { ...cached, ...data };
+        await offlineManager.setCached('user_profile', updated, 30 * 60 * 1000);
+      }
+      return { queued: true, message: 'Profile will update when online', user: { ...cached, ...data } };
+    }
+    
+    try {
+      const response = await api.put('/auth/profile', data);
+      // Update cache
+      await offlineManager.setCached('user_profile', response.data.user, 30 * 60 * 1000);
+      return response.data;
+    } catch (error: any) {
+      if (error.code === 'ECONNABORTED' || !navigator.onLine) {
+        await offlineManager.queueRequest({
+          method: 'PUT',
+          url: '/auth/profile',
+          data
+        });
+        const cached = await offlineManager.getCached('user_profile');
+        const updated = { ...cached, ...data };
+        await offlineManager.setCached('user_profile', updated, 30 * 60 * 1000);
+        return { queued: true, message: 'Profile will update when online', user: updated };
+      }
+      throw error;
+    }
   },
   
   async logout() {
     await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
+    await SecureStore.deleteItemAsync('korus_wallet_address');
+    // Clear all cached data
+    await offlineManager.clearCache();
   },
 };
 
@@ -240,8 +331,25 @@ export const postsAPI = {
   },
   
   async getPost(id: string) {
-    const response = await api.get(`/posts/${id}`);
-    return response.data;
+    const cacheKey = `post_${id}`;
+    
+    // Check cache first
+    const cached = await offlineManager.getCached(cacheKey);
+    if (cached && !offlineManager.getIsOnline()) {
+      return cached;
+    }
+    
+    try {
+      const response = await api.get(`/posts/${id}`);
+      // Cache individual post for 10 minutes
+      await offlineManager.setCached(cacheKey, response.data, 10 * 60 * 1000);
+      return response.data;
+    } catch (error) {
+      if (cached) {
+        return cached;
+      }
+      throw error;
+    }
   },
   
   async createPost(data: {
@@ -260,14 +368,34 @@ export const postsAPI = {
       return pendingRequests.get(requestKey);
     }
     
+    // If offline, queue the request
+    if (!offlineManager.getIsOnline()) {
+      await offlineManager.queueRequest({
+        method: 'POST',
+        url: '/posts',
+        data
+      });
+      return { queued: true, message: 'Post will be created when online' };
+    }
+    
     // Create the promise and store it
     const promise = api.post('/posts', data)
       .then(response => {
         pendingRequests.delete(requestKey);
+        // Invalidate posts cache after creating new post
+        offlineManager.invalidateCache('posts_');
         return response.data;
       })
       .catch(error => {
         pendingRequests.delete(requestKey);
+        // Queue for retry if network error
+        if (error.code === 'ECONNABORTED' || !navigator.onLine) {
+          offlineManager.queueRequest({
+            method: 'POST',
+            url: '/posts',
+            data
+          });
+        }
         throw error;
       });
     
@@ -288,43 +416,168 @@ export const repliesAPI = {
     content: string;
     parentReplyId?: string;
   }) {
-    const response = await api.post(`/posts/${postId}/replies`, data);
-    return response.data;
+    // If offline, queue the request
+    if (!offlineManager.getIsOnline()) {
+      await offlineManager.queueRequest({
+        method: 'POST',
+        url: `/posts/${postId}/replies`,
+        data
+      });
+      return { queued: true, message: 'Reply will be posted when online' };
+    }
+    
+    try {
+      const response = await api.post(`/posts/${postId}/replies`, data);
+      // Invalidate replies cache for this post
+      offlineManager.invalidateCache(`replies_${postId}`);
+      return response.data;
+    } catch (error: any) {
+      // Queue for retry if network error
+      if (error.code === 'ECONNABORTED' || !navigator.onLine) {
+        await offlineManager.queueRequest({
+          method: 'POST',
+          url: `/posts/${postId}/replies`,
+          data
+        });
+        return { queued: true, message: 'Reply will be posted when online' };
+      }
+      throw error;
+    }
   },
   
   async getReplies(postId: string) {
-    const response = await api.get(`/posts/${postId}/replies`);
-    return response.data;
+    const cacheKey = `replies_${postId}`;
+    
+    // Check cache first
+    const cached = await offlineManager.getCached(cacheKey);
+    if (cached && !offlineManager.getIsOnline()) {
+      return cached;
+    }
+    
+    try {
+      const response = await api.get(`/posts/${postId}/replies`);
+      // Cache replies for 5 minutes
+      await offlineManager.setCached(cacheKey, response.data, 5 * 60 * 1000);
+      return response.data;
+    } catch (error) {
+      if (cached) {
+        return cached;
+      }
+      throw error;
+    }
   },
   
   async likeReply(replyId: string) {
-    const response = await api.post(`/replies/${replyId}/like`);
-    return response.data;
+    // Optimistic update for offline
+    if (!offlineManager.getIsOnline()) {
+      await offlineManager.queueRequest({
+        method: 'POST',
+        url: `/replies/${replyId}/like`,
+        data: {}
+      });
+      return { queued: true, liked: true, message: 'Like will sync when online' };
+    }
+    
+    try {
+      const response = await api.post(`/replies/${replyId}/like`);
+      return response.data;
+    } catch (error: any) {
+      if (error.code === 'ECONNABORTED' || !navigator.onLine) {
+        await offlineManager.queueRequest({
+          method: 'POST',
+          url: `/replies/${replyId}/like`,
+          data: {}
+        });
+        return { queued: true, liked: true, message: 'Like will sync when online' };
+      }
+      throw error;
+    }
   },
 };
 
 // Interactions API
 export const interactionsAPI = {
   async likePost(postId: string) {
-    const response = await api.post(`/interactions/posts/${postId}/like`);
-    return response.data;
+    // Optimistic update for offline
+    if (!offlineManager.getIsOnline()) {
+      await offlineManager.queueRequest({
+        method: 'POST',
+        url: `/interactions/posts/${postId}/like`,
+        data: {}
+      });
+      return { queued: true, liked: true, message: 'Like will sync when online' };
+    }
+    
+    try {
+      const response = await api.post(`/interactions/posts/${postId}/like`);
+      // Invalidate interactions cache
+      offlineManager.invalidateCache(`interactions_${postId}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.code === 'ECONNABORTED' || !navigator.onLine) {
+        await offlineManager.queueRequest({
+          method: 'POST',
+          url: `/interactions/posts/${postId}/like`,
+          data: {}
+        });
+        return { queued: true, liked: true, message: 'Like will sync when online' };
+      }
+      throw error;
+    }
   },
   
   async tipPost(postId: string, amount: number) {
+    // Tips require online connection (blockchain transaction)
+    if (!offlineManager.getIsOnline()) {
+      throw new Error('Tips require an internet connection');
+    }
+    
     const response = await api.post(`/interactions/posts/${postId}/tip`, { amount });
+    // Invalidate interactions cache
+    offlineManager.invalidateCache(`interactions_${postId}`);
     return response.data;
   },
   
   async getPostInteractions(postId: string) {
-    const response = await api.get(`/interactions/posts/${postId}`);
-    return response.data;
+    const cacheKey = `interactions_${postId}`;
+    
+    const cached = await offlineManager.getCached(cacheKey);
+    if (cached && !offlineManager.getIsOnline()) {
+      return cached;
+    }
+    
+    try {
+      const response = await api.get(`/interactions/posts/${postId}`);
+      await offlineManager.setCached(cacheKey, response.data, 5 * 60 * 1000);
+      return response.data;
+    } catch (error) {
+      if (cached) {
+        return cached;
+      }
+      throw error;
+    }
   },
   
   async getUserInteractions(postIds: (string | number)[]) {
-    const response = await api.post('/interactions/user', { 
-      postIds: postIds.map(id => String(id)) 
-    });
-    return response.data;
+    const cacheKey = `user_interactions_${postIds.join(',')}`;
+    
+    const cached = await offlineManager.getCached(cacheKey);
+    if (cached && !offlineManager.getIsOnline()) {
+      return cached;
+    }
+    
+    try {
+      const response = await api.post('/interactions/user', { 
+        postIds: postIds.map(id => String(id)) 
+      });
+      await offlineManager.setCached(cacheKey, response.data, 2 * 60 * 1000);
+      return response.data;
+    } catch (error) {
+      if (cached) {
+        return cached;
+      }
+      throw error;
+    }
   },
 };
 
@@ -363,18 +616,51 @@ export const gamesAPI = {
 // Search API
 export const searchAPI = {
   async search(query: string, limit: number = 20, offset: number = 0, signal?: AbortSignal) {
-    const response = await api.get('/search', {
-      params: { query, limit, offset },
-      signal
-    });
-    return response.data;
+    const cacheKey = `search_${query}_${limit}_${offset}`;
+    
+    // Check cache for recent searches
+    const cached = await offlineManager.getCached(cacheKey);
+    if (cached && !offlineManager.getIsOnline()) {
+      return cached;
+    }
+    
+    try {
+      const response = await api.get('/search', {
+        params: { query, limit, offset },
+        signal
+      });
+      // Cache search results for 2 minutes
+      await offlineManager.setCached(cacheKey, response.data, 2 * 60 * 1000);
+      return response.data;
+    } catch (error) {
+      if (cached) {
+        return cached;
+      }
+      throw error;
+    }
   },
   
   async searchUsers(query: string, limit: number = 10) {
-    const response = await api.get('/search/users', {
-      params: { query, limit }
-    });
-    return response.data;
+    const cacheKey = `search_users_${query}_${limit}`;
+    
+    const cached = await offlineManager.getCached(cacheKey);
+    if (cached && !offlineManager.getIsOnline()) {
+      return cached;
+    }
+    
+    try {
+      const response = await api.get('/search/users', {
+        params: { query, limit }
+      });
+      // Cache user search for 5 minutes
+      await offlineManager.setCached(cacheKey, response.data, 5 * 60 * 1000);
+      return response.data;
+    } catch (error) {
+      if (cached) {
+        return cached;
+      }
+      throw error;
+    }
   },
 };
 
