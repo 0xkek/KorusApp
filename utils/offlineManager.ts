@@ -10,8 +10,8 @@ interface CacheEntry<T> {
 
 interface QueuedRequest {
   id: string
-  type: 'POST' | 'PUT' | 'DELETE'
-  endpoint: string
+  method: 'POST' | 'PUT' | 'DELETE'
+  url: string
   data: any
   timestamp: number
   retries: number
@@ -138,6 +138,29 @@ export class OfflineManager extends EventEmitter {
     }
   }
 
+  // Clear cache
+  async clearCache() {
+    try {
+      const keys = await AsyncStorage.getAllKeys()
+      const cacheKeys = keys.filter(k => k.startsWith(this.CACHE_PREFIX))
+      await AsyncStorage.multiRemove(cacheKeys)
+      this.cache.clear()
+    } catch (error) {
+      console.error('Clear cache error:', error)
+    }
+  }
+
+  // Invalidate cache entries matching pattern
+  invalidateCache(pattern: string) {
+    const keysToDelete: string[] = []
+    this.cache.forEach((_, key) => {
+      if (key.startsWith(pattern)) {
+        keysToDelete.push(key)
+      }
+    })
+    keysToDelete.forEach(key => this.cache.delete(key))
+  }
+
   // Request queue for offline actions
   async queueRequest(request: Omit<QueuedRequest, 'id' | 'timestamp' | 'retries'>) {
     const queuedRequest: QueuedRequest = {
@@ -165,8 +188,8 @@ export class OfflineManager extends EventEmitter {
     for (const request of queue) {
       try {
         // Execute the request
-        const response = await fetch(request.endpoint, {
-          method: request.type,
+        const response = await fetch(request.url, {
+          method: request.method,
           headers: {
             'Content-Type': 'application/json',
             // Add auth headers
@@ -236,14 +259,6 @@ export class OfflineManager extends EventEmitter {
   // Check if online
   getIsOnline(): boolean {
     return this.isOnline
-  }
-
-  // Clear all cache
-  async clearCache(): Promise<void> {
-    this.cache.clear()
-    const keys = await AsyncStorage.getAllKeys()
-    const cacheKeys = keys.filter(k => k.startsWith(this.CACHE_PREFIX))
-    await AsyncStorage.multiRemove(cacheKeys)
   }
 }
 

@@ -664,10 +664,11 @@ export const searchAPI = {
   },
 };
 
-// Health check
+// Sponsored API
 export const sponsoredAPI = {
   async getSponsoredPosts() {
-    return makeRequest('get', '/sponsored');
+    const response = await api.get('/sponsored');
+    return response.data;
   },
   
   async createSponsoredPost(postId: string, data: {
@@ -676,15 +677,18 @@ export const sponsoredAPI = {
     targetViews: number;
     pricePaid: number;
   }) {
-    return makeRequest('post', '/sponsored/create', { postId, ...data });
+    const response = await api.post('/sponsored/create', { postId, ...data });
+    return response.data;
   },
   
   async trackView(postId: string) {
-    return makeRequest('post', `/sponsored/${postId}/view`);
+    const response = await api.post(`/sponsored/${postId}/view`);
+    return response.data;
   },
   
   async trackClick(postId: string) {
-    return makeRequest('post', `/sponsored/${postId}/click`);
+    const response = await api.post(`/sponsored/${postId}/click`);
+    return response.data;
   }
 };
 

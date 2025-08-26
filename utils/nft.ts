@@ -72,7 +72,7 @@ export async function fetchNFTsFromWallet(
     const HELIUS_API_KEY = process.env.EXPO_PUBLIC_HELIUS_API_KEY;
     if (!HELIUS_API_KEY) {
       console.error('HELIUS_API_KEY not configured - NFT fetching disabled');
-      return [];
+      return { nfts: [], hasMore: false };
     }
     
     const HELIUS_RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
@@ -104,7 +104,7 @@ export async function fetchNFTsFromWallet(
     
     if (!response.ok || data.error) {
       console.error('Helius RPC error:', data.error || data);
-      return [];
+      return { nfts: [], hasMore: false };
     }
     
     const assets = data.result?.items || [];
