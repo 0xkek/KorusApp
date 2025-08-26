@@ -354,65 +354,6 @@ export default function NFTAvatarModal({
                       </LinearGradient>
                     </TouchableOpacity>
                   </View>
-                  ) : (
-                    // The existing NFT grid
-                    <ScrollView 
-                      style={styles.nftGrid}
-                      showsVerticalScrollIndicator={false}
-                      contentContainerStyle={styles.gridContent}
-                    >
-                      <View style={styles.gridContainer}>
-                        {nfts.map((nft) => (
-                          <TouchableOpacity
-                            key={nft.mint}
-                            style={[
-                              styles.nftItem,
-                              { backgroundColor: colors.surfaceLight + '0D' },
-                              selectedNFT?.mint === nft.mint && [
-                                styles.nftItemSelected,
-                                {
-                                  borderColor: colors.primary,
-                                  shadowColor: colors.shadowColor,
-                                }
-                              ]
-                            ]}
-                            onPress={() => handleSelect(nft)}
-                            activeOpacity={0.8}
-                          >
-                            <OptimizedImage 
-                              source={{ uri: getImageSource(nft) }}
-                              style={styles.nftImage}
-                              priority="medium"
-                            />
-                            <Text style={[styles.nftName, { color: colors.text }]} numberOfLines={1}>
-                              {nft.name}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                      
-                      {/* Load More button */}
-                      {hasMore && (
-                        <TouchableOpacity
-                          style={[
-                            styles.loadMoreButton,
-                            { backgroundColor: colors.primary + '20' }
-                          ]}
-                          onPress={handleLoadMore}
-                          activeOpacity={0.8}
-                          disabled={loadingMore}
-                        >
-                          {loadingMore ? (
-                            <ActivityIndicator size="small" color={colors.primary} />
-                          ) : (
-                            <Text style={[styles.loadMoreText, { color: colors.primary }]}>
-                              Load More NFTs
-                            </Text>
-                          )}
-                        </TouchableOpacity>
-                      )}
-                    </ScrollView>
-                  )}
                 </>
               )}
             </LinearGradient>
