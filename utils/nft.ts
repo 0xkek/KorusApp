@@ -55,17 +55,33 @@ export async function fetchNFTsFromWallet(
       includeSpam: includeSpam.toString()
     });
     
-    const response = await fetch(`${API_URL}/nfts/wallet/${walletAddress}?${queryParams}`);
+    const url = `${API_URL}/nfts/wallet/${walletAddress}?${queryParams}`;
+    console.log('Fetching NFTs from:', url);
+    
+    const response = await fetch(url);
     
     if (!response.ok) {
-      console.error('Backend NFT fetch failed:', response.status, response.statusText);
+      console.error('Backend NFT fetch failed:', {
+        status: response.status, 
+        statusText: response.statusText,
+        url: url
+      });
+      
+      // Try to get error details
+      try {
+        const errorData = await response.json();
+        console.error('Backend error details:', errorData);
+      } catch (e) {
+        console.error('Could not parse error response');
+      }
+      
       return { nfts: [], hasMore: false };
     }
     
     const data = await response.json();
     
     if (!data.success) {
-      console.error('Backend NFT fetch error:', data.error);
+      console.error('Backend NFT fetch error:', data.error, data.details);
       return { nfts: [], hasMore: false };
     }
     

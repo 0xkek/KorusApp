@@ -65,22 +65,29 @@ export default function NFTAvatarModal({
         includeSpam: showSpam
       });
       
-      console.log('NFTAvatarModal: Received', result.nfts.length, 'NFTs');
+      console.log('NFTAvatarModal: Received', result.nfts?.length || 0, 'NFTs');
       
-      if (append) {
-        setNfts(prev => [...prev, ...result.nfts]);
+      if (result.nfts && result.nfts.length > 0) {
+        if (append) {
+          setNfts(prev => [...prev, ...result.nfts]);
+        } else {
+          setNfts(result.nfts);
+        }
+        
+        setHasMore(result.hasMore || false);
+        setSpamStats({
+          filtered: result.spamFiltered || 0,
+          total: result.totalBeforeFilter || 0
+        });
       } else {
-        setNfts(result.nfts);
+        console.log('NFTAvatarModal: No NFTs returned from backend');
+        if (!append) setNfts([]);
+        setHasMore(false);
       }
-      
-      setHasMore(result.hasMore);
-      setSpamStats({
-        filtered: result.spamFiltered || 0,
-        total: result.totalBeforeFilter || 0
-      });
     } catch (error) {
       console.error('NFTAvatarModal: Error loading NFTs:', error);
       if (!append) setNfts([]);
+      setHasMore(false);
     } finally {
       setLoading(false);
       setLoadingMore(false);
