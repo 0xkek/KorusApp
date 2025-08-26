@@ -1,0 +1,17 @@
+--- a/korus-backend/src/middleware/advancedRateLimiter.ts
++++ b/korus-backend/src/middleware/advancedRateLimiter.ts
+@@ -22,7 +22,7 @@ const createRedisStore = () => {
+     
+     redisClient.on('error', (err: any) => console.warn('Redis client error:', err));
+     
+-    return new RedisStore({
++    return new (require('rate-limit-redis'))({
+       client: redisClient,
+       prefix: 'rate-limit:',
+     });
+@@ -31,7 +31,7 @@ const createRedisStore = () => {
+     // Fall back to memory store if Redis is not available
+     return undefined;
+   }
+-};
++};

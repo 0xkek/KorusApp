@@ -8,28 +8,9 @@ import { AuthRequest } from './auth';
 
 // Create a Redis client if available (for production)
 const createRedisStore = () => {
-  try {
-    const Redis = require('ioredis');
-    const redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
-      enableOfflineQueue: false,
-      retryStrategy: (times: number) => {
-        const delay = Math.min(times * 50, 2000);
-        return delay;
-      }
-    });
-    
-    redisClient.on('error', (err: any) => {
-      console.warn('Redis rate limiter error:', err.message);
-    });
-    
-    return new RedisStore({
-      client: redisClient,
-      prefix: 'rl:',
-    });
-  } catch (error) {
-    console.log('Redis not available, using in-memory rate limiting');
-    return undefined;
-  }
+  // Redis store disabled until rate-limit-redis package is installed
+  // To enable: npm install rate-limit-redis ioredis
+  return undefined;
 };
 
 // Rate limit configurations per endpoint category
