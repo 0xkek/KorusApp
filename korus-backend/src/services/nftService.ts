@@ -159,7 +159,7 @@ export async function fetchNFTsForWallet(
     const totalBeforeFilter = assetsWithImages.length
     
     // Filter spam if requested
-    const filtered = includeSpam ? assetsWithImages : assetsWithImages.filter(item => !isSpamNFT(item))
+    const filtered = includeSpam ? assetsWithImages : assetsWithImages.filter((item: any) => !isSpamNFT(item))
     const spamFiltered = totalBeforeFilter - filtered.length
     
     console.log(`Found ${totalBeforeFilter} NFTs, filtered ${spamFiltered} spam`)

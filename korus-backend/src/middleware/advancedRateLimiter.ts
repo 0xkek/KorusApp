@@ -1,5 +1,5 @@
 import rateLimit from 'express-rate-limit';
-import RedisStore from 'rate-limit-redis';
+// import RedisStore from 'rate-limit-redis'; // Commented until package is installed
 import { Request, Response, NextFunction } from 'express';
 import { AuthRequest } from './auth';
 

@@ -3,6 +3,9 @@ import jwt from 'jsonwebtoken'
 
 export interface AuthRequest extends Request {
   userWallet?: string
+  rateLimit?: {
+    multiplier: number
+  }
 }
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {

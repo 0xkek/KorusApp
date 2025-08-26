@@ -72,7 +72,7 @@ export class CursorPagination {
   }
 
   // Optimized query with proper indexes
-  static async paginateQuery<T>(
+  static async paginateQuery<T extends { id: number }>(
     model: any,
     params: PaginationParams,
     options: {
@@ -93,7 +93,7 @@ export class CursorPagination {
       orderBy: options.orderBy || { id: 'desc' }
     })
 
-    return this.formatResponse(items, paginationOptions.take - 1)
+    return this.formatResponse<T>(items, paginationOptions.take - 1)
   }
 }
 
