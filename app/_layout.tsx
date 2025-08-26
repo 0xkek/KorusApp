@@ -3,7 +3,6 @@ import React from 'react';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import * as SystemUI from 'expo-system-ui';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -54,10 +53,6 @@ export default function RootLayout() {
     'Poppins-ExtraBold': require('../assets/fonts/Poppins-ExtraBold.ttf'),
   });
 
-  // Set the root view background color for Android
-  React.useEffect(() => {
-    SystemUI.setBackgroundColorAsync('#000000');
-  }, []);
 
   if (!loaded) {
     return null;

@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import React, { useRef, useState } from 'react';
-import { Platform, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -56,9 +56,8 @@ export default function TabLayout() {
   );
 
   return (
-    <View style={{ flex: 1 }}>
-      <Tabs
-        screenOptions={{
+    <Tabs
+      screenOptions={{
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.textSecondary,
           headerShown: false,
@@ -73,6 +72,7 @@ export default function TabLayout() {
             shadowOpacity: 0.1,
             shadowRadius: 8,
             elevation: 8,
+            ...(Platform.OS === 'ios' ? { position: 'absolute' } : {}),
           },
           tabBarBackground: () => (
             <View style={{ flex: 1 }}>
@@ -205,6 +205,5 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
-    </View>
   );
 }
