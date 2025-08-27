@@ -21,7 +21,7 @@ if (!process.env.HELIUS_API_KEY) {
 }
 const HELIUS_RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`
 
-// Spam detection patterns
+// Spam detection patterns - expanded list
 const SPAM_PATTERNS = [
   /^(test|demo|sample|example)/i,
   /^\d+$/, // Just numbers
@@ -33,6 +33,15 @@ const SPAM_PATTERNS = [
   /free\s*mint/i,
   /^untitled/i,
   /^unnamed/i,
+  /^(CM|CC|CD|CE|CF|CG|CH|CI|CJ|CK)$/i, // Single letter combos
+  /^[A-Z]{1,2}$/,  // 1-2 letter names
+  /whitelist/i,
+  /reward/i,
+  /^nft$/i,
+  /^solana/i,
+  /^sol\s*#?\d+$/i,
+  /^item\s*#?\d+$/i,
+  /^(common|uncommon|rare|epic|legendary)\s*#?\d+$/i,
 ]
 
 // Known verified collections
@@ -52,21 +61,27 @@ function isSpamNFT(nft: any): boolean {
   // Handle both raw API data and transformed NFT objects
   const name = nft.content?.metadata?.name || nft.name || ''
   const collectionName = nft.grouping?.[0]?.collection_metadata?.name || nft.collection?.name || ''
+  const symbol = nft.content?.metadata?.symbol || nft.symbol || ''
   
-  // Check if verified collection
+  // Check if verified collection - these are always shown
   if (VERIFIED_COLLECTIONS.some(vc => 
     collectionName.toLowerCase().includes(vc.toLowerCase())
   )) {
     return false
   }
   
-  // Check spam patterns
-  if (SPAM_PATTERNS.some(pattern => pattern.test(name))) {
+  // Check spam patterns on both name and symbol
+  if (SPAM_PATTERNS.some(pattern => pattern.test(name) || pattern.test(symbol))) {
     return true
   }
   
-  // Check for missing metadata (but be less strict about images)
-  if (!name || name === 'Unknown NFT') {
+  // Check for missing or suspicious metadata
+  if (!name || name === 'Unknown NFT' || name.length < 3) {
+    return true
+  }
+  
+  // Filter out NFTs with no collection and generic names
+  if (!collectionName && name.length <= 5) {
     return true
   }
   
@@ -142,10 +157,10 @@ export async function fetchNFTsForWallet(
     // Transform all assets (don't filter by image availability yet)
     const transformedAssets = assets
       .map((item: any) => {
-        // Get the best available image URL
+        // Prefer CDN URLs for faster loading
         const imageUrl = 
+          item.content?.files?.[0]?.cdn_uri ||  // CDN first (fastest)
           item.content?.links?.image || 
-          item.content?.files?.[0]?.cdn_uri ||
           item.content?.files?.[0]?.uri || 
           ''
         
