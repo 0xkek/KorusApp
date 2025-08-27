@@ -48,8 +48,9 @@ const VERIFIED_COLLECTIONS = [
 ]
 
 function isSpamNFT(nft: any): boolean {
-  const name = nft.content?.metadata?.name || ''
-  const collectionName = nft.grouping?.[0]?.collection_metadata?.name || ''
+  // Handle both raw API data and transformed NFT objects
+  const name = nft.content?.metadata?.name || nft.name || ''
+  const collectionName = nft.grouping?.[0]?.collection_metadata?.name || nft.collection?.name || ''
   
   // Check if verified collection
   if (VERIFIED_COLLECTIONS.some(vc => 
@@ -63,8 +64,8 @@ function isSpamNFT(nft: any): boolean {
     return true
   }
   
-  // Check for missing metadata
-  if (!name || name === 'Unknown NFT' || !nft.content?.links?.image) {
+  // Check for missing metadata (but be less strict about images)
+  if (!name || name === 'Unknown NFT') {
     return true
   }
   
@@ -158,8 +159,8 @@ export async function fetchNFTsForWallet(
     
     const totalBeforeFilter = assetsWithImages.length
     
-    // Filter spam if requested
-    const filtered = includeSpam ? assetsWithImages : assetsWithImages.filter((item: any) => !isSpamNFT(item))
+    // Filter spam if requested (pass the transformed NFT objects)
+    const filtered = includeSpam ? assetsWithImages : assetsWithImages.filter((nft: any) => !isSpamNFT(nft))
     const spamFiltered = totalBeforeFilter - filtered.length
     
     console.log(`Found ${totalBeforeFilter} NFTs, filtered ${spamFiltered} spam`)
