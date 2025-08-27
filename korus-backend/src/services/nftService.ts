@@ -130,7 +130,13 @@ export async function fetchNFTsForWallet(
     
     // Log first asset structure for debugging
     if (assets.length > 0) {
-      console.log('First asset structure:', JSON.stringify(assets[0], null, 2).substring(0, 500))
+      console.log('First asset structure:', JSON.stringify({
+        id: assets[0].id,
+        name: assets[0].content?.metadata?.name,
+        image: assets[0].content?.links?.image,
+        files: assets[0].content?.files?.length,
+        collection: assets[0].grouping?.[0]?.collection_metadata?.name
+      }, null, 2))
     }
     
     // Transform all assets (don't filter by image availability yet)
@@ -143,8 +149,15 @@ export async function fetchNFTsForWallet(
           item.content?.files?.[0]?.uri || 
           ''
         
+        // Handle empty name by using collection name or symbol as fallback
+        const nftName = item.content?.metadata?.name && item.content.metadata.name.trim() !== '' 
+          ? item.content.metadata.name 
+          : item.grouping?.[0]?.collection_metadata?.name || 
+            item.content?.metadata?.symbol || 
+            'NFT';
+        
         return {
-          name: item.content?.metadata?.name || 'Unknown NFT',
+          name: nftName,
           symbol: item.content?.metadata?.symbol || 'NFT',
           uri: item.content?.json_uri || '',
           image: imageUrl,
