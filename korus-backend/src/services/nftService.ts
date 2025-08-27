@@ -179,30 +179,12 @@ export async function fetchNFTsForWallet(
     
     console.log(`Found ${totalBeforeFilter} NFTs, filtered ${spamFiltered} spam`)
     
-    // Transform to NFT format and paginate
+    // Paginate the already-transformed assets
     const startIndex = (page - 1) * limit
     const paginatedAssets = filtered.slice(startIndex, startIndex + limit)
     
-    const nfts: NFT[] = paginatedAssets.map((item: any) => {
-      const imageUrl = 
-        item.content?.links?.image || 
-        item.content?.files?.[0]?.cdn_uri ||
-        item.content?.files?.[0]?.uri || 
-        ''
-      
-      return {
-        name: item.content?.metadata?.name || 'Unknown NFT',
-        symbol: item.content?.metadata?.symbol || 'NFT',
-        uri: item.content?.json_uri || '',
-        image: imageUrl,
-        mint: item.id || '',
-        updateAuthority: item.authorities?.[0]?.address,
-        collection: item.grouping?.[0] ? {
-          name: item.grouping[0].collection_metadata?.name || item.grouping[0].group_value,
-          family: item.grouping[0].group_key
-        } : undefined
-      }
-    })
+    // The assets are already transformed, just use them directly
+    const nfts: NFT[] = paginatedAssets
     
     console.log(`Returning ${nfts.length} NFTs (page ${page})`)
     return {
