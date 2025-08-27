@@ -125,7 +125,7 @@ export default function HomeScreen() {
     testBackendConnection();
     
     // Test Cloudinary connection for image issues
-    import('../utils/imageUpload').then(({ testCloudinaryConnection }) => {
+    import('../../utils/imageUpload').then(({ testCloudinaryConnection }) => {
       testCloudinaryConnection().then(isConnected => {
         if (!isConnected) {
           logger.error('⚠️ Cloudinary connection test failed - images may not load properly');
