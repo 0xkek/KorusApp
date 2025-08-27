@@ -14,11 +14,12 @@ export interface NFT {
 }
 
 // Use Helius RPC for NFT fetching
-const HELIUS_API_KEY = process.env.HELIUS_API_KEY
-if (!HELIUS_API_KEY) {
-  console.warn('HELIUS_API_KEY not configured - NFT fetching may be limited')
+// Fallback to the hardcoded key if env var is not set (for now)
+const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '3d27295a-caf5-4a92-9fee-b52aa43e54bd'
+if (!process.env.HELIUS_API_KEY) {
+  console.warn('HELIUS_API_KEY not in env, using fallback key')
 }
-const HELIUS_RPC_URL = HELIUS_API_KEY ? `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}` : ''
+const HELIUS_RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`
 
 // Spam detection patterns
 const SPAM_PATTERNS = [
@@ -91,6 +92,7 @@ export async function fetchNFTsForWallet(
   
   try {
     console.log(`Fetching NFTs for wallet: ${walletAddress}, page: ${page}`)
+    console.log(`Using Helius RPC URL: ${HELIUS_RPC_URL.substring(0, 50)}...`)
     
     // Use Helius DAS API for better performance
     const response = await fetch(HELIUS_RPC_URL, {
@@ -126,14 +128,13 @@ export async function fetchNFTsForWallet(
     const assets = data.result?.items || []
     console.log(`Found ${assets.length} assets for wallet`)
     
-    // Filter out items without images
-    const assetsWithImages = assets
-      .filter((item: any) => {
-        // Only include items with images
-        return item.content?.links?.image || 
-               item.content?.files?.[0]?.uri ||
-               item.content?.files?.[0]?.cdn_uri
-      })
+    // Log first asset structure for debugging
+    if (assets.length > 0) {
+      console.log('First asset structure:', JSON.stringify(assets[0], null, 2).substring(0, 500))
+    }
+    
+    // Transform all assets (don't filter by image availability yet)
+    const transformedAssets = assets
       .map((item: any) => {
         // Get the best available image URL
         const imageUrl = 
@@ -157,10 +158,10 @@ export async function fetchNFTsForWallet(
       })
     
     
-    const totalBeforeFilter = assetsWithImages.length
+    const totalBeforeFilter = transformedAssets.length
     
     // Filter spam if requested (pass the transformed NFT objects)
-    const filtered = includeSpam ? assetsWithImages : assetsWithImages.filter((nft: any) => !isSpamNFT(nft))
+    const filtered = includeSpam ? transformedAssets : transformedAssets.filter((nft: any) => !isSpamNFT(nft))
     const spamFiltered = totalBeforeFilter - filtered.length
     
     console.log(`Found ${totalBeforeFilter} NFTs, filtered ${spamFiltered} spam`)
