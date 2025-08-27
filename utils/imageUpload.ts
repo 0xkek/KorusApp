@@ -4,6 +4,19 @@ import { logger } from './logger';
 const CLOUDINARY_CLOUD_NAME = 'dldke4tjm';
 const CLOUDINARY_UPLOAD_PRESET = 'korus-hackathon';
 
+// Test if Cloudinary is accessible
+export const testCloudinaryConnection = async (): Promise<boolean> => {
+  try {
+    const testUrl = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/v1234567890/test.jpg`;
+    const response = await fetch(testUrl, { method: 'HEAD' });
+    // We expect 404 for non-existent image, but it confirms Cloudinary is accessible
+    return response.status === 404 || response.status === 200;
+  } catch (error) {
+    logger.error('Cloudinary connection test failed:', error);
+    return false;
+  }
+};
+
 interface UploadResponse {
   secure_url: string;
   public_id: string;

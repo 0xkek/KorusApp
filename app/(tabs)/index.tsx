@@ -124,6 +124,17 @@ export default function HomeScreen() {
     // Test backend connection
     testBackendConnection();
     
+    // Test Cloudinary connection for image issues
+    import('../utils/imageUpload').then(({ testCloudinaryConnection }) => {
+      testCloudinaryConnection().then(isConnected => {
+        if (!isConnected) {
+          logger.error('⚠️ Cloudinary connection test failed - images may not load properly');
+        } else {
+          logger.log('✅ Cloudinary connection test passed');
+        }
+      });
+    });
+    
     // Setup global scroll to top function
     global.scrollToTop = () => {
       flatListRef.current?.scrollToOffset({ offset: 0, animated: true });

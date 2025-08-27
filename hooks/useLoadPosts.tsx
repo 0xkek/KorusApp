@@ -33,24 +33,37 @@ export function useLoadPosts() {
       
       if (response.posts && response.posts.length > 0) {
         // Transform backend posts to app format
-        const transformedPosts = response.posts.map((post: any) => ({
-          id: post.id,
-          wallet: post.authorWallet || post.author?.walletAddress || 'Unknown',
-          time: new Date(post.createdAt).toLocaleDateString(),
-          content: post.content,
-          likes: post.likeCount || 0,
-          replies: [], // Initialize empty, will fetch separately if needed
-          replyCount: post.replyCount || 0, // Store reply count
-          tips: post.tipCount || 0,
-          liked: post.liked || false, // Preserve liked state if it exists
-          category: post.subtopic || 'general',
-          imageUrl: post.imageUrl,
-          videoUrl: post.videoUrl,
-          isPremium: post.author?.tier === 'premium',
-          sponsored: false, // Will be updated with sponsored posts
-          userTheme: undefined,
-          gameData: undefined
-        }));
+        const transformedPosts = response.posts.map((post: any) => {
+          // Log image URLs for debugging
+          if (post.imageUrl) {
+            logger.log('Post has image:', {
+              postId: post.id,
+              imageUrl: post.imageUrl,
+              urlLength: post.imageUrl.length,
+              startsWithHttp: post.imageUrl.startsWith('http'),
+              includesCloudinary: post.imageUrl.includes('cloudinary')
+            });
+          }
+          
+          return {
+            id: post.id,
+            wallet: post.authorWallet || post.author?.walletAddress || 'Unknown',
+            time: new Date(post.createdAt).toLocaleDateString(),
+            content: post.content,
+            likes: post.likeCount || 0,
+            replies: [], // Initialize empty, will fetch separately if needed
+            replyCount: post.replyCount || 0, // Store reply count
+            tips: post.tipCount || 0,
+            liked: post.liked || false, // Preserve liked state if it exists
+            category: post.subtopic || 'general',
+            imageUrl: post.imageUrl,
+            videoUrl: post.videoUrl,
+            isPremium: post.author?.tier === 'premium',
+            sponsored: false, // Will be updated with sponsored posts
+            userTheme: undefined,
+            gameData: undefined
+          };
+        });
         
         // Fetch sponsored posts
         try {

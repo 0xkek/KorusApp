@@ -32,6 +32,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
 }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [useOriginalUrl, setUseOriginalUrl] = useState(false)
   const fadeAnim = useRef(new Animated.Value(0)).current
   const mountedRef = useRef(true)
 
@@ -68,15 +69,31 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
     onLoad?.()
   }
 
-  const handleError = () => {
+  const handleError = (error: any) => {
     if (!mountedRef.current) return
     
-    setLoading(false)
-    setError(true)
-    onError?.()
+    console.error('Image failed to load:', {
+      url: source.uri,
+      optimizedUrl: imageUrl,
+      useOriginalUrl,
+      error: error?.nativeEvent?.error || 'Unknown error'
+    })
+    
+    // If optimized URL failed, try original URL
+    if (!useOriginalUrl) {
+      console.log('Retrying with original URL...')
+      setUseOriginalUrl(true)
+      setError(false)
+      setLoading(true)
+    } else {
+      // Both URLs failed
+      setLoading(false)
+      setError(true)
+      onError?.()
+    }
   }
 
-  const imageUrl = getOptimizedUrl(source.uri)
+  const imageUrl = useOriginalUrl ? source.uri : getOptimizedUrl(source.uri)
 
   return (
     <View style={[styles.container, { aspectRatio }, style]}>
@@ -111,10 +128,13 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
         resizeMode="cover"
       />
       
-      {/* Error fallback */}
+      {/* Error fallback with retry */}
       {error && (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Failed to load image</Text>
+          <Text style={styles.errorUrlText} numberOfLines={2}>
+            {source.uri?.substring(0, 50)}...
+          </Text>
         </View>
       )}
     </View>
@@ -172,5 +192,11 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#666',
     fontSize: 12
+  },
+  errorUrlText: {
+    color: '#444',
+    fontSize: 10,
+    marginTop: 4,
+    paddingHorizontal: 10
   }
 })
