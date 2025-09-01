@@ -811,16 +811,16 @@ export default function HomeScreen() {
         // Transform backend replies to frontend format
         const transformedReplies = response.replies.map((reply: any) => ({
           id: reply.id,
-          wallet: reply.authorWallet || reply.author?.walletAddress || 'Unknown',
-          username: reply.author?.snsUsername || undefined,
-          avatar: reply.author?.nftAvatar || undefined,
+          wallet: reply.authorWallet || (reply.author && reply.author.walletAddress) || 'Unknown',
+          username: reply.author && reply.author.snsUsername ? reply.author.snsUsername : undefined,
+          avatar: reply.author && reply.author.nftAvatar ? reply.author.nftAvatar : undefined,
           time: new Date(reply.createdAt).toLocaleDateString(),
           content: reply.content,
           likes: reply.likeCount || 0,
           liked: false, // TODO: Check if user liked this reply
           tips: reply.tipCount || 0,
           replies: [], // Nested replies not supported yet
-          isPremium: reply.author?.tier === 'premium',
+          isPremium: reply.author && reply.author.tier === 'premium',
           userTheme: undefined
         }));
         
