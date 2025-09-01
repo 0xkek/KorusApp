@@ -76,8 +76,9 @@ export const rateLimitConfigs = {
 // Key generator that includes user wallet for authenticated routes
 const keyGenerator = (req: Request | AuthRequest): string => {
   const authReq = req as AuthRequest;
-  // Use wallet address for authenticated users, IP for others
-  const identifier = authReq.userWallet || req.ip;
+  // Use wallet address for authenticated users, anonymous for others
+  // This avoids IPv6 validation issues with express-rate-limit
+  const identifier = authReq.userWallet || 'anonymous';
   return `${req.route?.path || req.path}:${identifier}`;
 };
 

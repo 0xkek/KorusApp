@@ -48,7 +48,9 @@ export const createReply = async (req: AuthRequest, res: Response) => {
           select: {
             walletAddress: true,
             tier: true,
-            genesisVerified: true
+            genesisVerified: true,
+            snsUsername: true,
+            nftAvatar: true
           }
         }
       }
