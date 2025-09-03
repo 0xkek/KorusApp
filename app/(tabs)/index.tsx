@@ -56,7 +56,7 @@ type ReplySortType = 'best' | 'recent';
 export default function HomeScreen() {
   const { colors, isDarkMode, gradients } = useTheme();
   const { showAlert } = useKorusAlert();
-  const { walletAddress, balance, deductBalance, selectedAvatar, selectedNFTAvatar, isPremium } = useWallet();
+  const { walletAddress, balance, deductBalance, selectedAvatar, selectedNFTAvatar, isPremium, snsDomain } = useWallet();
   const { addGamePost } = useGames();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -369,11 +369,12 @@ export default function HomeScreen() {
     }
   };
 
-  const handleCreatePost = async (category: string, mediaUrl?: string) => {
+  const handleCreatePost = async (mediaUrl?: string) => {
     logger.info('handleCreatePost called', { 
       hasContent: !!newPostContent.trim(), 
       isCreatingPost, 
-      contentLength: newPostContent.length 
+      contentLength: newPostContent.length,
+      hasMedia: !!mediaUrl
     });
     
     if (newPostContent.trim() && !isCreatingPost) {
@@ -421,8 +422,6 @@ export default function HomeScreen() {
         logger.info('Calling API to create post');
         const response = await postsAPI.createPost({
           content: newPostContent,
-          topic: category.toUpperCase(),
-          subtopic: category,
           imageUrl: isVideo ? undefined : mediaUrl,
           videoUrl: isVideo ? mediaUrl : undefined,
         });
@@ -570,8 +569,8 @@ export default function HomeScreen() {
         const newReply: Reply = {
           id: response.reply.id,
           wallet: response.reply.authorWallet || walletAddress || '',
-          username: response.reply.author?.snsUsername || snsDomain || undefined,
-          avatar: response.reply.author?.nftAvatar || selectedNFTAvatar?.image || undefined,
+          username: response.reply.author?.snsUsername || undefined,
+          avatar: response.reply.author?.nftAvatar || undefined,
           time: new Date(response.reply.createdAt).toLocaleDateString(),
           content: response.reply.content,
           likes: 0,

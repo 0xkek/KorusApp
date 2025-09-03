@@ -354,8 +354,6 @@ export const postsAPI = {
   
   async createPost(data: {
     content: string;
-    topic?: string;
-    subtopic?: string;
     imageUrl?: string;
     videoUrl?: string;
   }) {

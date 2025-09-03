@@ -16,7 +16,6 @@ import Post from '../../components/Post';
 import Reply from '../../components/Reply';
 import ReplyModal from '../../components/ReplyModal';
 import { useKorusAlert } from '../../components/KorusAlertProvider';
-import ParticleSystem from '../../components/ParticleSystem';
 
 export default function PostDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -70,8 +69,11 @@ export default function PostDetailScreen() {
     // Load the post from API
     const loadPost = async () => {
       try {
+        console.log('[PostDetail] Loading post with ID:', id);
         setLoading(true);
         const response = await postsAPI.getPost(String(id));
+        console.log('[PostDetail] API Response:', response);
+        console.log('[PostDetail] Replies:', response.post?.replies);
         
         if (response.success && response.post) {
           // Transform backend post to app format
@@ -83,7 +85,9 @@ export default function PostDetailScreen() {
             likes: response.post.likeCount || 0,
             replies: response.post.replies?.map((reply: any) => ({
               id: reply.id,
-              wallet: reply.author?.walletAddress || 'Unknown',
+              wallet: reply.authorWallet || (reply.author && reply.author.walletAddress) || 'Unknown',
+              username: reply.author && reply.author.snsUsername ? reply.author.snsUsername : undefined,
+              avatar: reply.author && reply.author.nftAvatar ? reply.author.nftAvatar : undefined,
               time: new Date(reply.createdAt).toLocaleDateString(),
               content: reply.content,
               likes: reply.likeCount || 0,
@@ -91,7 +95,7 @@ export default function PostDetailScreen() {
               tips: 0,
               replies: [],
               parentId: response.post.id,
-              isPremium: reply.author?.walletAddress === walletAddress ? isPremium : reply.author?.tier === 'premium',
+              isPremium: reply.author && reply.author.tier === 'premium',
               userTheme: undefined
             })) || [],
             tips: response.post.tipCount || 0,
@@ -115,6 +119,7 @@ export default function PostDetailScreen() {
           router.back();
         }
       } catch (error) {
+        console.error('[PostDetail] Error loading post:', error);
         logger.error('Error loading post:', error);
         showAlert({
           title: 'Error',
@@ -323,8 +328,7 @@ export default function PostDetailScreen() {
           gestureDirection: 'horizontal'
         }} 
       />
-      <ParticleSystem>
-        <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Full screen background gradients */}
         <LinearGradient
           colors={gradients.surface}
@@ -605,7 +609,6 @@ export default function PostDetailScreen() {
           onSubmit={handleCreateReply}
         />
       </View>
-    </ParticleSystem>
     </>
   );
 }

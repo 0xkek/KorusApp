@@ -25,7 +25,7 @@ export const rateLimitConfigs = {
   // Post creation - prevent spam
   createPost: {
     windowMs: 60 * 1000, // 1 minute
-    max: 1, // 1 post per minute initially
+    max: 10, // 10 posts per minute
     delayAfter: 0,
     delayMs: 30000, // 30 second delay after limit
   },

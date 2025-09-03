@@ -18,7 +18,7 @@ interface CreatePostModalProps {
   content: string;
   onClose: () => void;
   onContentChange: (text: string) => void;
-  onSubmit: (category: string, imageUrl?: string) => void;
+  onSubmit: (imageUrl?: string) => void;
 }
 
 export default function CreatePostModal({
@@ -97,7 +97,7 @@ export default function CreatePostModal({
       }
       
       // Submit post with uploaded image URL
-      await onSubmit('GENERAL', uploadedImageUrl);
+      await onSubmit(uploadedImageUrl);
       setSelectedMedia(null); // Reset media after submission
       onContentChange(''); // Clear content
       onClose(); // Close modal on success
