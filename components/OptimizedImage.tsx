@@ -45,7 +45,18 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   // Generate optimized URL based on screen size (like Twitter's image proxy)
   const getOptimizedUrl = (url: string): string => {
     // Twitter uses format=jpg&name=small/medium/large
-    const width = style?.width || 300
+    let width = style?.width || 300
+    
+    // Handle percentage widths and ensure numeric value
+    if (typeof width === 'string') {
+      if (width.includes('%')) {
+        // Use a reasonable default for percentage widths
+        width = 300
+      } else {
+        width = parseInt(width, 10) || 300
+      }
+    }
+    
     const quality = priority === 'high' ? 90 : 70
     
     // If using a CDN that supports transforms

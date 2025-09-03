@@ -83,6 +83,16 @@ export const validateCreateReply = [
     .optional()
     .isString().withMessage('Invalid parent reply ID'),
   
+  body('imageUrl')
+    .optional()
+    .trim()
+    .isURL().withMessage('Invalid image URL'),
+  
+  body('videoUrl')
+    .optional()
+    .trim()
+    .isURL().withMessage('Invalid video URL'),
+  
   handleValidationErrors
 ];
 

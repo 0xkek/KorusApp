@@ -446,7 +446,6 @@ export default function HomeScreen() {
           replies: [],
           tips: backendPost.tipCount || 0,
           liked: false,
-          category: backendPost.subtopic || category,
           imageUrl: backendPost.imageUrl || (isVideo ? undefined : mediaUrl),
           videoUrl: backendPost.videoUrl || (isVideo ? mediaUrl : undefined),
           isPremium: isPremium, // Always use the wallet's premium status
@@ -975,12 +974,8 @@ export default function HomeScreen() {
 
 
 
-  // Filter posts based on user preferences and category
+  // Filter posts based on user preferences
   const filteredPosts = posts.filter(post => {
-    // Filter by category if one is selected
-    if (activeTab !== 'all' && post.category?.toLowerCase() !== activeTab) {
-      return false;
-    }
     // If user has premium and wants to hide sponsored posts, filter them out
     if (isPremium && hideSponsoredPosts && post.sponsored) {
       return false;

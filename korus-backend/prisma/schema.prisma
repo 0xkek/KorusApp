@@ -121,6 +121,8 @@ model Reply {
   authorWallet  String  @db.VarChar(44)
   content       String  @db.Text
   parentReplyId String? // For nested replies
+  imageUrl      String? @db.VarChar(500) // Optional image URL
+  videoUrl      String? @db.VarChar(500) // Optional video URL
 
   likeCount Int @default(0)
   tipCount  Int @default(0)

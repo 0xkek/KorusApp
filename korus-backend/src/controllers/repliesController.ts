@@ -10,7 +10,7 @@ export const createReply = async (req: AuthRequest, res: Response) => {
   try {
     const { id: postId } = req.params
     const walletAddress = req.userWallet!
-    const { content, parentReplyId } = req.body
+    const { content, parentReplyId, imageUrl, videoUrl } = req.body
 
     // Validate input
     if (!content || content.trim().length === 0) {
@@ -41,7 +41,9 @@ export const createReply = async (req: AuthRequest, res: Response) => {
         postId,
         authorWallet: walletAddress,
         content: content.trim(),
-        parentReplyId: parentReplyId || null
+        parentReplyId: parentReplyId || null,
+        imageUrl: imageUrl || undefined,
+        videoUrl: videoUrl || undefined
       },
       include: {
         author: {
