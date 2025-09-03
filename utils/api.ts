@@ -180,16 +180,26 @@ api.interceptors.response.use(
       }
     }
     
-    // Log error details
-    logger.error('API Error:', {
+    // Log error details with proper stringification of nested objects
+    const errorData = error.response?.data;
+    const errorDetails = {
       url: error.config?.url,
       method: error.config?.method,
       status: error.response?.status,
       statusText: error.response?.statusText,
-      data: error.response?.data,
+      data: errorData,
       message: error.message,
       retryCount: config?.headers?.['X-Retry-Count'] || '0',
-    });
+    };
+    
+    // If there are validation details, log them separately for clarity
+    if (errorData?.details && Array.isArray(errorData.details)) {
+      logger.error('Validation Error Details:', errorData.details.map((d: any) => 
+        typeof d === 'object' ? JSON.stringify(d) : d
+      ));
+    }
+    
+    logger.error('API Error:', errorDetails);
     
     return Promise.reject(error);
   }

@@ -31,17 +31,25 @@ export const sanitizeString = (input: string): string => {
 // Middleware to sanitize request body
 export const sanitizeBody = (req: Request, res: Response, next: NextFunction) => {
   if (req.body) {
+    // List of fields that should NOT be sanitized (URLs, etc.)
+    const skipFields = ['imageUrl', 'videoUrl', 'website', 'avatar', 'nftAvatar', 'url', 'link'];
+    
     // Recursively sanitize all string values in the body
-    const sanitizeObject = (obj: any): any => {
+    const sanitizeObject = (obj: any, path: string = ''): any => {
       if (typeof obj === 'string') {
+        // Check if current field should be skipped
+        const fieldName = path.split('.').pop() || '';
+        if (skipFields.includes(fieldName)) {
+          return obj; // Don't sanitize URLs
+        }
         return sanitizeString(obj)
       } else if (Array.isArray(obj)) {
-        return obj.map(sanitizeObject)
+        return obj.map((item, index) => sanitizeObject(item, `${path}[${index}]`))
       } else if (obj !== null && typeof obj === 'object') {
         const sanitized: any = {}
         for (const key in obj) {
           if (obj.hasOwnProperty(key)) {
-            sanitized[key] = sanitizeObject(obj[key])
+            sanitized[key] = sanitizeObject(obj[key], path ? `${path}.${key}` : key)
           }
         }
         return sanitized
