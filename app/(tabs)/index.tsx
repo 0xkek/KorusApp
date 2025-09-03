@@ -549,7 +549,7 @@ export default function HomeScreen() {
     });
   };
 
-  const handleCreateReply = async () => {
+  const handleCreateReply = async (imageUrl?: string, videoUrl?: string) => {
     if (newReplyContent.trim() && selectedPostId) {
       try {
         let replyContent = newReplyContent;
@@ -561,7 +561,9 @@ export default function HomeScreen() {
 
         // Call the API to create the reply
         const response = await repliesAPI.createReply(String(selectedPostId), {
-          content: replyContent
+          content: replyContent,
+          imageUrl,
+          videoUrl
         });
 
         // Transform the backend reply to match frontend format
@@ -571,13 +573,17 @@ export default function HomeScreen() {
           username: response.reply.author?.snsUsername || undefined,
           avatar: response.reply.author?.nftAvatar || undefined,
           time: new Date(response.reply.createdAt).toLocaleDateString(),
+          timestamp: response.reply.createdAt,
           content: response.reply.content,
+          postId: parseInt(String(selectedPostId)),
           likes: 0,
           liked: false,
           tips: 0,
           replies: [],
           isPremium: isPremium, // Use current user's premium status for their own replies
-          userTheme: colors.primary
+          userTheme: colors.primary,
+          imageUrl: response.reply.imageUrl || imageUrl,
+          videoUrl: response.reply.videoUrl || videoUrl
         };
         
         const post = posts.find(p => p.id === selectedPostId);

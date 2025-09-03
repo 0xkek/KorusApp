@@ -423,6 +423,8 @@ export const repliesAPI = {
   async createReply(postId: string, data: {
     content: string;
     parentReplyId?: string;
+    imageUrl?: string;
+    videoUrl?: string;
   }) {
     // If offline, queue the request
     if (!offlineManager.getIsOnline()) {

@@ -6,6 +6,7 @@ import { Reply as ReplyType } from '../types';
 import { Ionicons } from '@expo/vector-icons';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { useDisplayName, useSNSDomain } from '../hooks/useSNSDomain';
+import { OptimizedImage } from './OptimizedImage';
 // import { sendLocalNotification } from '../utils/notifications';
 
 // Subcomponent for replying to section
@@ -235,6 +236,33 @@ const Reply = memo<ReplyProps>(function Reply({
           <Text style={[styles.replyContent, { color: colors.textSecondary }]}>
             {renderTextWithLinks(replyText, [styles.replyContent, { color: colors.textSecondary }], colors.primary)}
           </Text>
+
+          {/* Display image if present */}
+          {reply.imageUrl && (
+            <View style={styles.mediaContainer}>
+              <OptimizedImage 
+                source={{ uri: reply.imageUrl }} 
+                style={styles.replyImage} 
+                priority="normal" 
+              />
+            </View>
+          )}
+
+          {/* Display video thumbnail if present */}
+          {reply.videoUrl && (
+            <View style={styles.mediaContainer}>
+              <View style={styles.videoContainer}>
+                <OptimizedImage 
+                  source={{ uri: reply.videoUrl }} 
+                  style={styles.replyImage} 
+                  priority="normal" 
+                />
+                <View style={styles.videoPlayIcon}>
+                  <Ionicons name="play-circle" size={48} color="rgba(255, 255, 255, 0.9)" />
+                </View>
+              </View>
+            </View>
+          )}
 
           <View style={[styles.replyActions, { borderTopColor: colors.borderLight }]}>
             <TouchableOpacity
@@ -539,6 +567,26 @@ const styles = StyleSheet.create({
   replyActiveText: {
     color: '#43e97b',
     fontWeight: '700',
+  },
+  mediaContainer: {
+    marginTop: 12,
+    marginBottom: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  replyImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+  },
+  videoContainer: {
+    position: 'relative',
+  },
+  videoPlayIcon: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -24 }, { translateY: -24 }],
   },
 });
 

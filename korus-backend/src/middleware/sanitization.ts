@@ -32,7 +32,7 @@ export const sanitizeString = (input: string): string => {
 export const sanitizeBody = (req: Request, res: Response, next: NextFunction) => {
   if (req.body) {
     // List of fields that should NOT be sanitized (URLs, etc.)
-    const skipFields = ['imageUrl', 'videoUrl', 'website', 'avatar', 'nftAvatar', 'url', 'link'];
+    const skipFields = ['imageUrl', 'videoUrl', 'website', 'avatar', 'nftAvatar', 'url', 'link', 'profilePicture'];
     
     // Recursively sanitize all string values in the body
     const sanitizeObject = (obj: any, path: string = ''): any => {

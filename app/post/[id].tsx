@@ -9,7 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
 import { useWallet } from '../../context/WalletContext';
 import { Post as PostType, Reply as ReplyType } from '../../types';
-import { postsAPI } from '../../utils/api';
+import { postsAPI, repliesAPI } from '../../utils/api';
 import { logger } from '../../utils/logger';
 
 import Post from '../../components/Post';
@@ -80,15 +80,20 @@ export default function PostDetailScreen() {
           const transformedPost: PostType = {
             id: response.post.id,
             wallet: response.post.authorWallet || response.post.author?.walletAddress || 'Unknown',
+            username: response.post.author?.snsUsername,
+            avatar: response.post.author?.nftAvatar?.replace(/&#x2F;/g, '/'), // Fix HTML entities in avatar URL
             time: new Date(response.post.createdAt).toLocaleDateString(),
+            timestamp: response.post.createdAt,
             content: response.post.content,
             likes: response.post.likeCount || 0,
             replies: response.post.replies?.map((reply: any) => ({
               id: reply.id,
               wallet: reply.authorWallet || (reply.author && reply.author.walletAddress) || 'Unknown',
               username: reply.author && reply.author.snsUsername ? reply.author.snsUsername : undefined,
-              avatar: reply.author && reply.author.nftAvatar ? reply.author.nftAvatar : undefined,
+              avatar: reply.author && reply.author.nftAvatar ? reply.author.nftAvatar.replace(/&#x2F;/g, '/') : undefined,
               time: new Date(reply.createdAt).toLocaleDateString(),
+              timestamp: reply.createdAt,
+              postId: parseInt(String(response.post.id)),
               content: reply.content,
               likes: reply.likeCount || 0,
               liked: false,
@@ -96,7 +101,9 @@ export default function PostDetailScreen() {
               replies: [],
               parentId: response.post.id,
               isPremium: reply.author && reply.author.tier === 'premium',
-              userTheme: undefined
+              userTheme: undefined,
+              imageUrl: reply.imageUrl,
+              videoUrl: reply.videoUrl
             })) || [],
             tips: response.post.tipCount || 0,
             liked: response.post.liked || false,
@@ -177,75 +184,106 @@ export default function PostDetailScreen() {
     setShowReplyModal(true);
   };
   
-  const handleCreateReply = () => {
+  const handleCreateReply = async (imageUrl?: string, videoUrl?: string) => {
     if (newReplyContent.trim() && post) {
-      let replyContent = newReplyContent;
-      
-      if (quotedText && quotedUsername) {
-        replyContent = `> "${quotedText}"\n\n${newReplyContent}`;
-      }
-      
-      const newReply: ReplyType = {
-        id: Date.now(),
-        wallet: currentUserWallet,
-        time: 'now',
-        content: replyContent,
-        likes: 0,
-        liked: false,
-        tips: 0,
-        replies: [],
-        bumped: false,
-        bumpedAt: undefined,
-        bumpExpiresAt: undefined,
-        parentId: selectedReplyId || post.id,
-        isPremium: isPremium,
-        userTheme: colors.primary
-      };
-      
-      // Update the post with new reply
-      if (selectedReplyId) {
-        // This is a reply to a reply - need to add it to the parent reply's replies array
-        const addReplyToParent = (replies: ReplyType[]): ReplyType[] => {
-          return replies.map(reply => {
-            if (reply.id === selectedReplyId) {
-              return {
-                ...reply,
-                replies: [...reply.replies, newReply]
-              };
-            }
-            if (reply.replies && reply.replies.length > 0) {
-              return {
-                ...reply,
-                replies: addReplyToParent(reply.replies)
-              };
-            }
-            return reply;
+      try {
+        let replyContent = newReplyContent;
+        
+        if (quotedText && quotedUsername) {
+          replyContent = `> "${quotedText}"\n\n${newReplyContent}`;
+        }
+        
+        // Call the API to create the reply
+        const response = await repliesAPI.createReply(String(post.id), {
+          content: replyContent,
+          parentReplyId: selectedReplyId ? String(selectedReplyId) : undefined,
+          imageUrl,
+          videoUrl
+        });
+        
+        // Check if the reply was queued for offline mode
+        if (response.queued) {
+          showAlert({
+            title: 'Queued',
+            message: response.message,
+            type: 'info'
           });
+          return;
+        }
+        
+        // Transform the backend reply to match frontend format
+        const newReply: ReplyType = {
+          id: response.reply.id,
+          postId: parseInt(String(post.id)),
+          wallet: response.reply.authorWallet || currentUserWallet,
+          username: response.reply.author?.snsUsername,
+          avatar: response.reply.author?.nftAvatar?.replace(/&#x2F;/g, '/'),
+          time: 'now',
+          timestamp: response.reply.createdAt,
+          content: response.reply.content,
+          likes: 0,
+          liked: false,
+          tips: 0,
+          replies: [],
+          parentId: selectedReplyId || undefined,
+          isPremium: isPremium,
+          userTheme: colors.primary,
+          imageUrl: response.reply.imageUrl,
+          videoUrl: response.reply.videoUrl
         };
         
-        setPost({
-          ...post,
-          replies: addReplyToParent(post.replies)
+        // Update the post with new reply
+        if (selectedReplyId) {
+          // This is a reply to a reply - need to add it to the parent reply's replies array
+          const addReplyToParent = (replies: ReplyType[]): ReplyType[] => {
+            return replies.map(reply => {
+              if (reply.id === selectedReplyId) {
+                return {
+                  ...reply,
+                  replies: [...reply.replies, newReply]
+                };
+              }
+              if (reply.replies && reply.replies.length > 0) {
+                return {
+                  ...reply,
+                  replies: addReplyToParent(reply.replies)
+                };
+              }
+              return reply;
+            });
+          };
+          
+          setPost({
+            ...post,
+            replies: addReplyToParent(post.replies)
+          });
+        } else {
+          // This is a direct reply to the post
+          setPost({
+            ...post,
+            replies: [...post.replies, newReply]
+          });
+        }
+        
+        setNewReplyContent('');
+        setQuotedText('');
+        setQuotedUsername('');
+        setShowReplyModal(false);
+        setSelectedReplyId(null);
+        
+        showAlert({
+          title: 'Success',
+          message: 'Your reply has been posted!',
+          type: 'success'
         });
-      } else {
-        // This is a direct reply to the post
-        setPost({
-          ...post,
-          replies: [...post.replies, newReply]
+      } catch (error) {
+        console.error('Failed to create reply:', error);
+        showAlert({
+          title: 'Error',
+          message: 'Failed to post reply. Please try again.',
+          type: 'error'
         });
       }
-      
-      setNewReplyContent('');
-      setQuotedText('');
-      setQuotedUsername('');
-      setShowReplyModal(false);
-      setSelectedReplyId(null);
-      
-      showAlert({
-        title: 'Success',
-        message: 'Your reply has been posted!',
-        type: 'success'
-      });
     }
   };
   

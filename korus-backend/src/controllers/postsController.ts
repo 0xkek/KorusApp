@@ -150,7 +150,9 @@ export const getSinglePost = async (req: Request, res: Response<ApiResponse<Post
               select: {
                 walletAddress: true,
                 tier: true,
-                genesisVerified: true
+                genesisVerified: true,
+                snsUsername: true,
+                nftAvatar: true
               }
             }
           }

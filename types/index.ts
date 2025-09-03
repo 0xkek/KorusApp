@@ -42,6 +42,8 @@ export interface Reply {
   userTheme?: string; // User's selected theme color
   bumped?: boolean;
   bumpExpiresAt?: number;
+  imageUrl?: string; // Optional image URL
+  videoUrl?: string; // Optional video URL
 }
 
 export interface Post {

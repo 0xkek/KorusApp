@@ -6,6 +6,10 @@ import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { Ionicons } from '@expo/vector-icons';
 import { validateReplyContent, sanitizeInput, getCharacterCount } from '../utils/validation';
+import * as ImagePicker from 'expo-image-picker';
+import { uploadToCloudinary, validateImage } from '../utils/imageUpload';
+import { logger } from '../utils/logger';
+import { OptimizedImage } from './OptimizedImage';
 
 interface ReplyModalProps {
   visible: boolean;
@@ -14,7 +18,7 @@ interface ReplyModalProps {
   quotedUsername?: string;
   onClose: () => void;
   onContentChange: (text: string) => void;
-  onSubmit: () => void;
+  onSubmit: (imageUrl?: string, videoUrl?: string) => void;
 }
 
 export default function ReplyModal({
@@ -29,6 +33,103 @@ export default function ReplyModal({
   const { colors, isDarkMode, gradients } = useTheme();
   const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState<{ uri: string; type: 'image' | 'video' } | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  
+  const pickMedia = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'We need camera roll permissions to upload media.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+      videoMaxDuration: 60, // 60 seconds max for videos
+    });
+
+    if (!result.canceled) {
+      const asset = result.assets[0];
+      const isVideo = asset.type === 'video' || asset.uri.toLowerCase().includes('.mp4') || asset.uri.toLowerCase().includes('.mov');
+      setSelectedMedia({ uri: asset.uri, type: isVideo ? 'video' : 'image' });
+    }
+  };
+  
+  const removeMedia = () => {
+    setSelectedMedia(null);
+    setUploadProgress(0);
+  };
+  
+  const handleSubmit = async () => {
+    if (isSubmitting || isUploading) return;
+    
+    setIsSubmitting(true);
+    let uploadedUrl: string | undefined;
+    
+    try {
+      // Upload media if selected
+      if (selectedMedia) {
+        setIsUploading(true);
+        setUploadProgress(0);
+        
+        if (selectedMedia.type === 'image') {
+          // Validate and upload image
+          if (!validateImage(selectedMedia.uri)) {
+            throw new Error('Invalid image selected');
+          }
+          
+          // Upload to Cloudinary with progress simulation
+          const uploadPromise = uploadToCloudinary(selectedMedia.uri);
+          const progressInterval = setInterval(() => {
+            setUploadProgress(prev => {
+              if (prev >= 90) {
+                clearInterval(progressInterval);
+                return 90;
+              }
+              return prev + 10;
+            });
+          }, 200);
+          
+          try {
+            const uploadedImageUrl = await uploadPromise;
+            clearInterval(progressInterval);
+            setUploadProgress(100);
+            uploadedUrl = uploadedImageUrl;
+            logger.info('Image uploaded successfully:', uploadedImageUrl);
+          } catch (error) {
+            clearInterval(progressInterval);
+            throw error;
+          }
+        } else {
+          // For videos, we'd need to implement video upload
+          // For now, we'll just show an alert
+          throw new Error('Video upload not yet implemented');
+        }
+        
+        setIsUploading(false);
+      }
+      
+      // Submit reply with media URL
+      await onSubmit(selectedMedia?.type === 'image' ? uploadedUrl : undefined, 
+                     selectedMedia?.type === 'video' ? uploadedUrl : undefined);
+      setSelectedMedia(null);
+      setUploadProgress(0);
+    } catch (error) {
+      logger.error('Failed to submit reply:', error);
+      Alert.alert(
+        'Failed to Submit Reply', 
+        error instanceof Error ? error.message : 'Please try again'
+      );
+    } finally {
+      setIsSubmitting(false);
+      setIsUploading(false);
+    }
+  };
 
   return (
     <Modal
@@ -84,6 +185,49 @@ export default function ReplyModal({
                   maxLength={300}
                 />
               </View>
+              
+              {/* Media preview */}
+              {selectedMedia && (
+                <View style={styles.mediaPreviewContainer}>
+                  {selectedMedia.type === 'image' ? (
+                    <OptimizedImage source={{ uri: selectedMedia.uri }} style={styles.mediaPreview} priority="high" />
+                  ) : (
+                    <View style={styles.videoPreviewContainer}>
+                      <OptimizedImage 
+                        source={{ uri: selectedMedia.uri }} 
+                        style={styles.mediaPreview} 
+                        priority="high"
+                      />
+                      <View style={styles.videoPlayIcon}>
+                        <Ionicons name="play-circle" size={48} color="rgba(255, 255, 255, 0.9)" />
+                      </View>
+                    </View>
+                  )}
+                  {isUploading && (
+                    <View style={styles.uploadProgressContainer}>
+                      <View style={[styles.uploadProgressBar, { width: `${uploadProgress}%` }]} />
+                      <Text style={styles.uploadProgressText}>{uploadProgress}%</Text>
+                    </View>
+                  )}
+                  <TouchableOpacity 
+                    style={[styles.removeMediaButton, { backgroundColor: colors.surface }]}
+                    onPress={removeMedia}
+                    disabled={isUploading}
+                  >
+                    <Ionicons name="close-circle" size={24} color={colors.error} />
+                  </TouchableOpacity>
+                </View>
+              )}
+              
+              {/* Media button */}
+              <TouchableOpacity 
+                style={[styles.mediaButton, { backgroundColor: colors.surface }]}
+                onPress={pickMedia}
+                disabled={isUploading || isSubmitting}
+              >
+                <Ionicons name="image-outline" size={20} color={colors.primary} />
+                <Text style={[styles.mediaButtonText, { color: colors.text }]}>Add Photo/Video</Text>
+              </TouchableOpacity>
 
               <View style={styles.modalActions}>
                 <TouchableOpacity 
@@ -104,18 +248,10 @@ export default function ReplyModal({
                 <TouchableOpacity
                   style={[
                     styles.postButton,
-                    !content.trim() && styles.postButtonDisabled
+                    (!content.trim() || isUploading) && styles.postButtonDisabled
                   ]}
-                  onPress={async () => {
-                    if (isSubmitting) return;
-                    setIsSubmitting(true);
-                    try {
-                      await onSubmit();
-                    } finally {
-                      setIsSubmitting(false);
-                    }
-                  }}
-                  disabled={!content.trim() || isSubmitting}
+                  onPress={handleSubmit}
+                  disabled={!content.trim() || isSubmitting || isUploading}
                   activeOpacity={0.8}
                 >
                   <LinearGradient
@@ -138,7 +274,7 @@ export default function ReplyModal({
                         styles.postButtonText,
                         (!content.trim() || isSubmitting) && styles.postButtonTextDisabled
                       ]}>
-                        {isSubmitting ? 'Replying...' : 'Reply'}
+                        {isUploading ? 'Uploading...' : isSubmitting ? 'Replying...' : 'Reply'}
                       </Text>
                     </View>
                   </LinearGradient>
@@ -337,5 +473,67 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     fontSize: FontSizes.sm,
     fontFamily: Fonts.medium,
     color: 'rgba(255, 255, 255, 0.4)',
+  },
+  mediaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  mediaButtonText: {
+    fontSize: FontSizes.md,
+    fontFamily: Fonts.semiBold,
+  },
+  mediaPreviewContainer: {
+    marginBottom: 16,
+    position: 'relative',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  mediaPreview: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+  },
+  videoPreviewContainer: {
+    position: 'relative',
+  },
+  videoPlayIcon: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -24 }, { translateY: -24 }],
+  },
+  removeMediaButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    borderRadius: 12,
+    padding: 4,
+  },
+  uploadProgressContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    paddingVertical: 8,
+  },
+  uploadProgressBar: {
+    height: 3,
+    backgroundColor: colors.primary,
+  },
+  uploadProgressText: {
+    color: '#ffffff',
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.medium,
+    textAlign: 'center',
+    marginTop: 4,
   },
 });
