@@ -570,8 +570,8 @@ export default function HomeScreen() {
         const newReply: Reply = {
           id: response.reply.id,
           wallet: response.reply.authorWallet || walletAddress || '',
-          username: snsUsername || undefined,
-          avatar: nftAvatar || undefined,
+          username: response.reply.author?.snsUsername || snsDomain || undefined,
+          avatar: response.reply.author?.nftAvatar || selectedNFTAvatar?.image || undefined,
           time: new Date(response.reply.createdAt).toLocaleDateString(),
           content: response.reply.content,
           likes: 0,
