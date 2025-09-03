@@ -98,9 +98,18 @@ const Reply = memo<ReplyProps>(function Reply({
   const replyUserTheme = reply?.userTheme || '#43e97b';
   
   // Memoize callbacks
-  const handleLike = useCallback(() => {
+  const handleLike = useCallback((event?: any) => {
+    // Only trigger particle explosion when adding a like, not removing it
+    const isAddingLike = !reply.liked;
+    
     onLike(postId, reply.id);
-  }, [onLike, postId, reply.id]);
+    
+    // Trigger particle explosion only when giving a like
+    if (isAddingLike && event && global.createParticleExplosion) {
+      const touch = event.nativeEvent;
+      global.createParticleExplosion('like', touch.pageX || 200, touch.pageY || 300);
+    }
+  }, [onLike, postId, reply.id, reply.liked]);
   
   const handleReply = useCallback(() => {
     const displayName = replyIsPremium ? replyWallet.slice(0, 6) + '...' : replyUsername || replyWallet.slice(0, 6) + '...';
