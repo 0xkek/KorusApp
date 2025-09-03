@@ -14,10 +14,9 @@ export interface NFT {
 }
 
 // Use Helius RPC for NFT fetching
-// Fallback to the hardcoded key if env var is not set (for now)
-const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '3d27295a-caf5-4a92-9fee-b52aa43e54bd'
-if (!process.env.HELIUS_API_KEY) {
-  console.warn('HELIUS_API_KEY not in env, using fallback key')
+const HELIUS_API_KEY = process.env.HELIUS_API_KEY
+if (!HELIUS_API_KEY) {
+  throw new Error('HELIUS_API_KEY is required in environment variables')
 }
 const HELIUS_RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`
 
