@@ -445,7 +445,12 @@ const Post = memo<PostProps>(function Post({
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   >
-                    {post.wallet === currentUserWallet && currentUserNFTAvatar ? (
+                    {post.avatar ? (
+                      <Image 
+                        source={{ uri: post.avatar }}
+                        style={styles.nftAvatar}
+                      />
+                    ) : post.wallet === currentUserWallet && currentUserNFTAvatar ? (
                       <Image 
                         source={{ uri: currentUserNFTAvatar.image || currentUserNFTAvatar.uri }}
                         style={styles.nftAvatar}

@@ -21,7 +21,7 @@ export default function PostDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { colors, isDarkMode, gradients } = useTheme();
-  const { walletAddress, isPremium } = useWallet();
+  const { walletAddress, isPremium, selectedNFTAvatar, selectedAvatar } = useWallet();
   const { showAlert } = useKorusAlert();
   const insets = useSafeAreaInsets();
   
@@ -460,6 +460,8 @@ export default function PostDetailScreen() {
                 post={post}
                 expandedPosts={new Set([post.id])} // Always expand games in detail view
                 currentUserWallet={currentUserWallet}
+                currentUserAvatar={selectedAvatar}
+                currentUserNFTAvatar={selectedNFTAvatar}
                 onLike={(postId) => {
                   // Update post likes
                   if (post) {
