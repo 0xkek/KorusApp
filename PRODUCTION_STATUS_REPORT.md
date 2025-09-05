@@ -30,7 +30,7 @@
 
 ### 5. ✅ Helius API Key Replaced
 - Old exposed key removed from all files
-- New key: `573b969e-057e-49c1-9652-0b95226030ed`
+- New key: `[REDACTED - SET IN RENDER ENVIRONMENT]`
 - Updated in Render dashboard
 - **Status**: SECURE & WORKING
 

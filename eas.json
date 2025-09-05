@@ -4,6 +4,16 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "preview": {
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
+      },
+      "env": {
+        "NODE_ENV": "production",
+        "EXPO_PUBLIC_ENVIRONMENT": "production"
+      }
+    },
     "production": {
       "android": {
         "buildType": "apk",
