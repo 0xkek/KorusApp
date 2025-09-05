@@ -1,5 +1,6 @@
 import { Expo, ExpoPushMessage, ExpoPushTicket } from 'expo-server-sdk';
 import prisma from '../config/database';
+import { logger } from '../utils/logger';
 
 // Create a new Expo SDK client
 const expo = new Expo();
@@ -20,7 +21,7 @@ class PushNotificationService {
   async sendNotification(notification: PushNotificationData): Promise<void> {
     // Check that the push token is valid
     if (!Expo.isExpoPushToken(notification.to)) {
-      console.error(`Push token ${notification.to} is not a valid Expo push token`);
+      logger.error(`Push token ${notification.to} is not a valid Expo push token`);
       return;
     }
 
@@ -45,7 +46,7 @@ class PushNotificationService {
       // Handle errors
       tickets.forEach((ticket) => {
         if (ticket.status === 'error') {
-          console.error('Error sending notification:', ticket.message);
+          logger.error('Error sending notification:', ticket.message);
           if (ticket.details?.error === 'DeviceNotRegistered') {
             // Remove invalid token from database
             this.removeInvalidToken(notification.to);
@@ -53,7 +54,7 @@ class PushNotificationService {
         }
       });
     } catch (error) {
-      console.error('Failed to send push notification:', error);
+      logger.error('Failed to send push notification:', error);
     }
   }
 
@@ -84,7 +85,7 @@ class PushNotificationService {
       try {
         await expo.sendPushNotificationsAsync(chunk);
       } catch (error) {
-        console.error('Failed to send bulk notifications:', error);
+        logger.error('Failed to send bulk notifications:', error);
       }
     }
   }
@@ -102,9 +103,9 @@ class PushNotificationService {
         where: { walletAddress },
         data: { pushToken },
       });
-      // console.log(`Push token saved for user ${walletAddress}`);
+      // logger.debug(`Push token saved for user ${walletAddress}`);
     } catch (error) {
-      console.error('Failed to save push token:', error);
+      logger.error('Failed to save push token:', error);
       throw error;
     }
   }
@@ -118,9 +119,9 @@ class PushNotificationService {
         where: { pushToken },
         data: { pushToken: null },
       });
-      // console.log(`Removed invalid push token: ${pushToken}`);
+      // logger.debug(`Removed invalid push token: ${pushToken}`);
     } catch (error) {
-      console.error('Failed to remove invalid token:', error);
+      logger.error('Failed to remove invalid token:', error);
     }
   }
 
@@ -161,7 +162,7 @@ class PushNotificationService {
         data: { type: 'like', postId: postContent },
       });
     } catch (error) {
-      console.error('Failed to send like notification:', error);
+      logger.error('Failed to send like notification:', error);
     }
   }
 
@@ -201,7 +202,7 @@ class PushNotificationService {
         data: { type: 'reply', postId },
       });
     } catch (error) {
-      console.error('Failed to send reply notification:', error);
+      logger.error('Failed to send reply notification:', error);
     }
   }
 
@@ -237,7 +238,7 @@ class PushNotificationService {
         data: { type: 'tip', amount },
       });
     } catch (error) {
-      console.error('Failed to send tip notification:', error);
+      logger.error('Failed to send tip notification:', error);
     }
   }
 }

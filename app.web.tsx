@@ -9,7 +9,7 @@ export function WebPhoneFrame({ children }: { children: React.ReactNode }) {
       if (window.self === window.top) {
         // Add phone frame styles to the document
         const style = document.createElement('style');
-        style.innerHTML = `
+        style.textContent = `
           body {
             margin: 0;
             padding: 0;

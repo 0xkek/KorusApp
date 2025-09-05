@@ -4,7 +4,7 @@ import KorusAlert from './KorusAlert';
 interface AlertData {
   title: string;
   message: string;
-  type?: 'success' | 'bump' | 'info';
+  type?: 'success' | 'info';
   autoDismiss?: boolean;
   autoDismissDelay?: number;
 }

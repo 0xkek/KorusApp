@@ -4,24 +4,23 @@ import {
   resolveSNSDomain,
   getFavoriteSNSDomain 
 } from '../services/snsService'
+import { logger } from '../utils/logger'
 import { Connection } from '@solana/web3.js'
+import { asyncHandler } from '../middleware/errorHandler'
+import { AppError } from '../utils/AppError'
 
 /**
  * Get all SNS domains for a wallet
  * GET /api/sns/domains/:walletAddress
  */
-export const getSNSDomains = async (req: Request, res: Response) => {
-  try {
+export const getSNSDomains = asyncHandler(async (req: Request, res: Response) => {
     const { walletAddress } = req.params
     
     if (!walletAddress) {
-      return res.status(400).json({ 
-        success: false,
-        error: 'Wallet address is required' 
-      })
+      throw new AppError('Wallet address is required', 400, 'MISSING_WALLET')
     }
     
-    console.log(`[SNS Controller] Getting domains for wallet: ${walletAddress}`)
+    logger.debug(`[SNS Controller] Getting domains for wallet: ${walletAddress}`)
     
     const domains = await fetchSNSDomainsForWallet(walletAddress)
     
@@ -30,40 +29,25 @@ export const getSNSDomains = async (req: Request, res: Response) => {
       domains,
       count: domains.length
     })
-  } catch (error: any) {
-    console.error('[SNS Controller] Get domains error:', error)
-    res.status(500).json({ 
-      success: false,
-      error: 'Failed to fetch SNS domains',
-      details: error.message
-    })
-  }
-}
+})
 
 /**
  * Resolve an SNS domain to a wallet address
  * GET /api/sns/resolve/:domain
  */
-export const resolveDomain = async (req: Request, res: Response) => {
-  try {
+export const resolveDomain = asyncHandler(async (req: Request, res: Response) => {
     const { domain } = req.params
     
     if (!domain) {
-      return res.status(400).json({ 
-        success: false,
-        error: 'Domain is required' 
-      })
+      throw new AppError('Domain is required', 400, 'MISSING_DOMAIN')
     }
     
-    console.log(`[SNS Controller] Resolving domain: ${domain}`)
+    logger.debug(`[SNS Controller] Resolving domain: ${domain}`)
     
     const owner = await resolveSNSDomain(domain)
     
     if (!owner) {
-      return res.status(404).json({ 
-        success: false,
-        error: 'Domain not found or not registered' 
-      })
+      throw new AppError('Domain not found or not registered', 404, 'DOMAIN_NOT_FOUND')
     }
     
     res.json({
@@ -71,32 +55,20 @@ export const resolveDomain = async (req: Request, res: Response) => {
       domain,
       owner
     })
-  } catch (error: any) {
-    console.error('[SNS Controller] Resolve domain error:', error)
-    res.status(500).json({ 
-      success: false,
-      error: 'Failed to resolve domain',
-      details: error.message
-    })
-  }
-}
+})
 
 /**
  * Get the favorite SNS domain for a wallet
  * GET /api/sns/favorite/:walletAddress
  */
-export const getFavoriteDomain = async (req: Request, res: Response) => {
-  try {
+export const getFavoriteDomain = asyncHandler(async (req: Request, res: Response) => {
     const { walletAddress } = req.params
     
     if (!walletAddress) {
-      return res.status(400).json({ 
-        success: false,
-        error: 'Wallet address is required' 
-      })
+      throw new AppError('Wallet address is required', 400, 'MISSING_WALLET')
     }
     
-    console.log(`[SNS Controller] Getting favorite domain for wallet: ${walletAddress}`)
+    logger.debug(`[SNS Controller] Getting favorite domain for wallet: ${walletAddress}`)
     
     const favoriteDomain = await getFavoriteSNSDomain(walletAddress)
     
@@ -105,25 +77,18 @@ export const getFavoriteDomain = async (req: Request, res: Response) => {
       domain: favoriteDomain,
       hasDomain: !!favoriteDomain
     })
-  } catch (error: any) {
-    console.error('[SNS Controller] Get favorite domain error:', error)
-    res.status(500).json({ 
-      success: false,
-      error: 'Failed to fetch favorite domain',
-      details: error.message
-    })
-  }
-}
+})
 
 /**
  * Health check for SNS service
  * GET /api/sns/health
  */
-export const healthCheck = async (req: Request, res: Response) => {
-  try {
+export const healthCheck = asyncHandler(async (req: Request, res: Response) => {
     // SNS is on mainnet - use Helius RPC
-    const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '3d27295a-caf5-4a92-9fee-b52aa43e54bd'
-    const RPC_ENDPOINT = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`
+    const HELIUS_API_KEY = process.env.HELIUS_API_KEY
+    const RPC_ENDPOINT = HELIUS_API_KEY 
+      ? `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`
+      : 'https://api.mainnet-beta.solana.com'
     
     const connection = new Connection(RPC_ENDPOINT, 'confirmed')
     
@@ -138,12 +103,4 @@ export const healthCheck = async (req: Request, res: Response) => {
         endpoint: 'Helius Mainnet RPC'
       }
     })
-  } catch (error: any) {
-    console.error('[SNS Controller] Health check error:', error)
-    res.status(500).json({ 
-      success: false,
-      error: 'SNS service health check failed',
-      details: error.message
-    })
-  }
-}
+})

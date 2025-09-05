@@ -8,7 +8,7 @@ interface KorusAlertProps {
   visible: boolean;
   title: string;
   message: string;
-  type?: 'success' | 'bump' | 'info';
+  type?: 'success' | 'info';
   onClose: () => void;
   autoDismiss?: boolean;
   autoDismissDelay?: number;

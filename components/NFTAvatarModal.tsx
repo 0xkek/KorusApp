@@ -45,12 +45,12 @@ export default function NFTAvatarModal({
 
   const loadNFTs = async (pageNum: number = 1, append: boolean = false) => {
     if (!walletAddress) {
-      console.error('NFTAvatarModal: No wallet address available');
+      logger.error('NFTAvatarModal: No wallet address available');
       setLoading(false);
       return;
     }
     
-    console.log(`NFTAvatarModal: Loading NFTs page ${pageNum} for wallet:`, walletAddress);
+    logger.log(`NFTAvatarModal: Loading NFTs page ${pageNum} for wallet:`, walletAddress);
     
     if (pageNum === 1) {
       setLoading(true);
@@ -65,7 +65,7 @@ export default function NFTAvatarModal({
         includeSpam: showSpam
       });
       
-      console.log('NFTAvatarModal: Received', result.nfts?.length || 0, 'NFTs');
+      logger.log('NFTAvatarModal: Received', result.nfts?.length || 0, 'NFTs');
       
       if (result.nfts && result.nfts.length > 0) {
         if (append) {
@@ -80,12 +80,12 @@ export default function NFTAvatarModal({
           total: result.totalBeforeFilter || 0
         });
       } else {
-        console.log('NFTAvatarModal: No NFTs returned from backend');
+        logger.log('NFTAvatarModal: No NFTs returned from backend');
         if (!append) setNfts([]);
         setHasMore(false);
       }
     } catch (error) {
-      console.error('NFTAvatarModal: Error loading NFTs:', error);
+      logger.error('NFTAvatarModal: Error loading NFTs:', error);
       if (!append) setNfts([]);
       setHasMore(false);
     } finally {

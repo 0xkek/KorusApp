@@ -7,6 +7,7 @@ import {
   getGameByPostId 
 } from '../controllers/gamesController'
 import { authenticate } from '../middleware/auth'
+import { requireTokenFeatures } from '../middleware/tokenFeatures'
 import { gameLimiter } from '../middleware/rateLimiter'
 
 const router = Router()
@@ -16,11 +17,11 @@ router.use(gameLimiter)
 
 // All game routes require authentication
 
-// POST /api/games - Create a new game
-router.post('/', authenticate, createGame)
+// POST /api/games - Create a new game (requires tokens for wagers)
+router.post('/', authenticate, requireTokenFeatures, createGame)
 
-// POST /api/games/:id/join - Join an existing game
-router.post('/:id/join', authenticate, joinGame)
+// POST /api/games/:id/join - Join an existing game (requires tokens for wagers)
+router.post('/:id/join', authenticate, requireTokenFeatures, joinGame)
 
 // POST /api/games/:id/move - Make a move in the game
 router.post('/:id/move', authenticate, makeMove)

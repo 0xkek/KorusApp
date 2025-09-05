@@ -105,7 +105,7 @@ export default function ExploreScreen() {
         setSearchResults({ posts: [], users: [] });
       }
     } catch (error) {
-      console.error('Search error:', error);
+      logger.error('Search error:', error);
       setSearchResults({ posts: [], users: [] });
     } finally {
       setIsLoading(false);
@@ -369,7 +369,6 @@ export default function ExploreScreen() {
                   onShowTipModal={() => {}}
                   onLikeReply={() => {}}
                   onTipReply={() => {}}
-                  onBumpReply={() => {}}
                   onToggleReplies={(postId) => {
                     setExpandedPosts(prev => {
                       const newSet = new Set(prev);

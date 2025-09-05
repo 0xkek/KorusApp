@@ -4,10 +4,11 @@ import { PLATFORM_CONFIG } from '../config/platform';
 import prisma from '../config/database';
 import { getWeekDates } from '../utils/dateHelpers';
 
-const connection = new Connection(
-  process.env.SOLANA_RPC_URL || clusterApiUrl('devnet'),
-  'confirmed'
-);
+const rpcUrl = process.env.SOLANA_RPC_URL;
+if (!rpcUrl) {
+  throw new Error('SOLANA_RPC_URL is required for blockchain scanner');
+}
+const connection = new Connection(rpcUrl, 'confirmed');
 
 export class BlockchainScanner {
   /**

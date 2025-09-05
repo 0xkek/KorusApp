@@ -1,13 +1,15 @@
 import { Connection, PublicKey } from '@solana/web3.js'
 import bs58 from 'bs58'
 import nacl from 'tweetnacl'
+import { logger } from './logger'
 
-// Use mainnet in production, devnet otherwise
+// Production only - RPC URL required
 const getRpcUrl = () => {
-  if (process.env.NODE_ENV === 'production') {
-    return process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com'
+  const url = process.env.SOLANA_RPC_URL;
+  if (!url) {
+    throw new Error('SOLANA_RPC_URL is required');
   }
-  return process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com'
+  return url;
 }
 
 const connection = new Connection(
@@ -26,7 +28,7 @@ export const verifyWalletSignature = async (
   message: string
 ): Promise<boolean> => {
   try {
-    console.log('Verifying signature:', {
+    logger.debug('Verifying signature:', {
       publicKey,
       signatureLength: signature.length,
       messageLength: message.length,
@@ -41,36 +43,36 @@ export const verifyWalletSignature = async (
     try {
       // Try to decode signature as base58
       signatureBytes = bs58.decode(signature)
-      console.log('Signature decoded as base58, length:', signatureBytes.length)
+      logger.debug('Signature decoded as base58, length:', signatureBytes.length)
     } catch (e) {
-      console.error('Failed to decode signature as base58:', e)
+      logger.error('Failed to decode signature as base58:', e)
       throw new Error('Invalid signature format')
     }
     
     try {
       // Decode public key
       publicKeyBytes = new PublicKey(publicKey).toBytes()
-      console.log('Public key decoded, length:', publicKeyBytes.length)
+      logger.debug('Public key decoded, length:', publicKeyBytes.length)
     } catch (e) {
-      console.error('Failed to decode public key:', e)
+      logger.error('Failed to decode public key:', e)
       throw new Error('Invalid public key format')
     }
     
     // Verify signature
     const isValid = nacl.sign.detached.verify(messageBytes, signatureBytes, publicKeyBytes)
-    console.log('Signature verification result:', isValid)
+    logger.debug('Signature verification result:', isValid)
     
     return isValid
   } catch (error: any) {
-    console.error('Signature verification error:', error.message)
-    console.error('Full error:', error)
+    logger.error('Signature verification error:', error.message)
+    logger.error('Full error:', error)
     return false
   }
 }
 
 export const checkGenesisTokenOwnership = async (walletAddress: string): Promise<boolean> => {
   try {
-    console.log(`Checking Genesis Token for: ${walletAddress}`)
+    logger.debug(`Checking Genesis Token for: ${walletAddress}`)
     
     const wallet = new PublicKey(walletAddress)
     
@@ -82,14 +84,14 @@ export const checkGenesisTokenOwnership = async (walletAddress: string): Promise
     // Check if wallet has any Genesis tokens
     if (tokenAccounts.value.length > 0) {
       const balance = tokenAccounts.value[0].account.data.parsed.info.tokenAmount.uiAmount
-      console.log(`Genesis Token found! Balance: ${balance}`)
+      logger.debug(`Genesis Token found! Balance: ${balance}`)
       return balance > 0
     }
     
-    console.log('No Genesis Token found for wallet')
+    logger.debug('No Genesis Token found for wallet')
     return false
   } catch (error) {
-    console.error('Error checking Genesis Token:', error)
+    logger.error('Error checking Genesis Token:', error)
     return false
   }
 }

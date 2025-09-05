@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { logger } from './logger';
 
 const prisma = new PrismaClient();
 
@@ -10,7 +11,7 @@ export async function createNotification({
   amount,
 }: {
   userId: string;
-  type: 'like' | 'reply' | 'tip' | 'bump' | 'follow' | 'mention';
+  type: 'like' | 'reply' | 'tip' | 'mention';
   fromUserId: string;
   postId?: string;
   amount?: number;
@@ -25,8 +26,6 @@ export async function createNotification({
     like: 'New like on your post',
     reply: 'New reply to your post',
     tip: 'You received a tip!',
-    bump: 'Your post was bumped!',
-    follow: 'New follower',
     mention: 'You were mentioned',
   };
 
@@ -34,8 +33,6 @@ export async function createNotification({
     like: 'liked your post',
     reply: 'replied to your post',
     tip: `tipped you ${amount || 0} SOL`,
-    bump: 'bumped your post',
-    follow: 'started following you',
     mention: 'mentioned you in a post',
   };
 
@@ -53,6 +50,6 @@ export async function createNotification({
       },
     });
   } catch (error) {
-    console.error('Error creating notification:', error);
+    logger.error('Error creating notification:', error);
   }
 }

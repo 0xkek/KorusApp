@@ -1,13 +1,47 @@
-import { Router } from 'express'
+import { Router, Request, Response, NextFunction } from 'express'
 import { connectWallet, getProfile, updateProfile } from '../controllers/authController'
 import { authenticate } from '../middleware/auth'
-import { validateWalletConnect } from '../middleware/validation'
 import { generateCSRFToken } from '../middleware/security'
 import { authRateLimiter, burstProtection } from '../middleware/advancedRateLimiter'
 
 const router = Router()
 
-// CSRF token generation endpoint
+/**
+ * @swagger
+ * /api/auth/csrf:
+ *   get:
+ *     tags: [Authentication]
+ *     summary: Generate CSRF token
+ *     description: Generate a CSRF token for state-changing operations
+ *     parameters:
+ *       - in: header
+ *         name: x-session-id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Session ID to bind the CSRF token to
+ *     responses:
+ *       200:
+ *         description: CSRF token generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   example: "csrf_token_example"
+ *       400:
+ *         description: Session ID required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Session ID required"
+ */
 router.get('/csrf', (req, res) => {
   const sessionId = req.headers['x-session-id'] as string
   
@@ -22,54 +56,152 @@ router.get('/csrf', (req, res) => {
 })
 
 // Wrapper to handle async errors in Express
-const asyncHandler = (fn: any) => (req: any, res: any, next: any) => {
+const asyncHandler = (fn: Function) => (req: Request, res: Response, next: NextFunction) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };
 
-// POST /api/auth/connect - Connect wallet and get JWT
-router.post('/connect', burstProtection, authRateLimiter, validateWalletConnect, asyncHandler(connectWallet))
+/**
+ * @swagger
+ * /api/auth/connect:
+ *   post:
+ *     tags: [Authentication]
+ *     summary: Connect wallet and authenticate
+ *     description: Authenticate using Solana wallet signature
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - walletAddress
+ *               - signature
+ *               - message
+ *             properties:
+ *               walletAddress:
+ *                 type: string
+ *                 pattern: '^[1-9A-HJ-NP-Za-km-z]{32,44}$'
+ *                 example: 'GvQW7V9rqBhxjRczBnfCBKCK2s5bfFhL2WbLz7KQtq1h'
+ *                 description: Solana wallet address
+ *               signature:
+ *                 type: string
+ *                 description: Signature of the message
+ *               message:
+ *                 type: string
+ *                 maxLength: 500
+ *                 description: Message that was signed
+ *     responses:
+ *       200:
+ *         description: Authentication successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 token:
+ *                   type: string
+ *                   description: JWT token for authentication
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *                 expiresIn:
+ *                   type: string
+ *                   example: '7d'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       429:
+ *         $ref: '#/components/responses/RateLimitError'
+ */
+router.post('/connect', burstProtection, authRateLimiter, asyncHandler(connectWallet))
 
-// GET /api/auth/profile - Get user profile (requires auth)
+/**
+ * @swagger
+ * /api/auth/profile:
+ *   get:
+ *     tags: [Authentication]
+ *     summary: Get user profile
+ *     description: Get the authenticated user's profile
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ */
 router.get('/profile', authenticate, asyncHandler(getProfile))
 
-// PUT /api/auth/profile - Update user profile (requires auth)
+/**
+ * @swagger
+ * /api/auth/profile:
+ *   put:
+ *     tags: [Authentication]
+ *     summary: Update user profile
+ *     description: Update the authenticated user's profile
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               snsUsername:
+ *                 type: string
+ *                 example: 'korus.sol'
+ *               nftAvatar:
+ *                 type: string
+ *                 format: uri
+ *                 example: 'https://nft.storage/avatar.png'
+ *               displayName:
+ *                 type: string
+ *                 example: 'Korus User'
+ *               bio:
+ *                 type: string
+ *                 example: 'Web3 enthusiast'
+ *               location:
+ *                 type: string
+ *                 example: 'San Francisco, CA'
+ *               website:
+ *                 type: string
+ *                 format: uri
+ *                 example: 'https://korus.app'
+ *               twitter:
+ *                 type: string
+ *                 example: '@korusapp'
+ *               themeColor:
+ *                 type: string
+ *                 example: '#8B5CF6'
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ */
 router.put('/profile', authenticate, asyncHandler(updateProfile))
-
-// TEST: Direct connect without validation
-router.post('/connect-test', asyncHandler(async (req: any, res: any) => {
-  console.log('TEST ENDPOINT HIT')
-  console.log('Body:', req.body)
-  res.json({ success: true, message: 'Test endpoint reached' })
-}))
-
-// TEST: Minimal signature verification
-router.post('/verify-test', asyncHandler(async (req: any, res: any) => {
-  const { walletAddress, signature, message } = req.body
-  console.log('VERIFY TEST:', { walletAddress, signature, message })
-  
-  try {
-    const bs58 = require('bs58')
-    const nacl = require('tweetnacl')
-    const { PublicKey } = require('@solana/web3.js')
-    
-    // Test decoding
-    const messageBytes = new TextEncoder().encode(message)
-    console.log('Message bytes length:', messageBytes.length)
-    
-    const signatureBytes = bs58.decode(signature)
-    console.log('Signature bytes length:', signatureBytes.length)
-    
-    const publicKeyBytes = new PublicKey(walletAddress).toBytes()
-    console.log('Public key bytes length:', publicKeyBytes.length)
-    
-    const isValid = nacl.sign.detached.verify(messageBytes, signatureBytes, publicKeyBytes)
-    console.log('Verification result:', isValid)
-    
-    res.json({ success: true, isValid })
-  } catch (error: any) {
-    console.error('VERIFY TEST ERROR:', error.message)
-    res.json({ success: false, error: error.message })
-  }
-}))
 
 export default router

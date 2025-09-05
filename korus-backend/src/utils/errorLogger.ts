@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { logger } from './logger';
 
 // Error severity levels
 export enum ErrorSeverity {
@@ -61,7 +62,7 @@ class ErrorLogger {
 
     // Console log in development
     if (process.env.NODE_ENV !== 'production') {
-      console.error('🔴 Error logged:', errorLog);
+      logger.error('🔴 Error logged:', errorLog);
     }
 
     // Write to file
@@ -86,7 +87,7 @@ class ErrorLogger {
       
       fs.appendFileSync(filepath, logLine);
     } catch (writeError) {
-      console.error('Failed to write error log:', writeError);
+      logger.error('Failed to write error log:', writeError);
     }
   }
 
@@ -108,7 +109,7 @@ class ErrorLogger {
    */
   private sendAlert(errorLog: ErrorLog): void {
     // TODO: Implement alerting (email, Slack, PagerDuty, etc.)
-    console.error('🚨 CRITICAL ERROR ALERT:', errorLog.error.message);
+    logger.error('🚨 CRITICAL ERROR ALERT:', errorLog.error.message);
   }
 
   /**

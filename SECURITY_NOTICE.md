@@ -4,7 +4,7 @@
 
 The Helius API key that was previously hardcoded in `utils/nft.ts` has been removed and replaced with an environment variable.
 
-**Old exposed key:** `3d27295a-caf5-4a92-9fee-b52aa43e54bd`
+**Old exposed key:** `[REDACTED - KEY INVALIDATED]`
 
 ### Actions Required:
 

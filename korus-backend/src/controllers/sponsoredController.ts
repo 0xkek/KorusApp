@@ -2,9 +2,11 @@ import { Request, Response } from 'express'
 import prisma from '../config/database'
 import { AuthRequest } from '../middleware/auth'
 import { getWeekNumber, getWeekDates } from '../utils/dateHelpers'
+import { asyncHandler } from '../middleware/errorHandler'
+import { AppError } from '../utils/AppError'
+import { logger } from '../utils/logger'
 
-export const createSponsoredPost = async (req: AuthRequest, res: Response) => {
-  try {
+export const createSponsoredPost = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { postId, campaignName, durationDays, targetViews, pricePaid } = req.body
     const sponsorWallet = req.userWallet!
 
@@ -14,7 +16,7 @@ export const createSponsoredPost = async (req: AuthRequest, res: Response) => {
     })
 
     if (!post) {
-      return res.status(404).json({ error: 'Post not found' })
+      throw new AppError('Post not found', 404, 'POST_NOT_FOUND')
     }
 
     // Check if post is already sponsored
@@ -23,7 +25,7 @@ export const createSponsoredPost = async (req: AuthRequest, res: Response) => {
     })
 
     if (existingSponsorship) {
-      return res.status(400).json({ error: 'Post is already sponsored' })
+      throw new AppError('Post is already sponsored', 400, 'ALREADY_SPONSORED')
     }
 
     const now = new Date()
@@ -67,14 +69,9 @@ export const createSponsoredPost = async (req: AuthRequest, res: Response) => {
       success: true,
       sponsoredPost
     })
-  } catch (error) {
-    console.error('Create sponsored post error:', error)
-    res.status(500).json({ error: 'Failed to create sponsored post' })
-  }
-}
+})
 
-export const getSponsoredPosts = async (req: Request, res: Response) => {
-  try {
+export const getSponsoredPosts = asyncHandler(async (req: Request, res: Response) => {
     const now = new Date()
 
     // Get active sponsored posts
@@ -103,14 +100,9 @@ export const getSponsoredPosts = async (req: Request, res: Response) => {
       success: true,
       sponsoredPosts
     })
-  } catch (error) {
-    console.error('Get sponsored posts error:', error)
-    res.status(500).json({ error: 'Failed to get sponsored posts' })
-  }
-}
+})
 
-export const trackView = async (req: Request, res: Response) => {
-  try {
+export const trackView = asyncHandler(async (req: Request, res: Response) => {
     const { postId } = req.params
 
     await prisma.sponsoredPost.update({
@@ -121,14 +113,9 @@ export const trackView = async (req: Request, res: Response) => {
     })
 
     res.json({ success: true })
-  } catch (error) {
-    console.error('Track view error:', error)
-    res.status(500).json({ error: 'Failed to track view' })
-  }
-}
+})
 
-export const trackClick = async (req: Request, res: Response) => {
-  try {
+export const trackClick = asyncHandler(async (req: Request, res: Response) => {
     const { postId } = req.params
 
     await prisma.sponsoredPost.update({
@@ -139,14 +126,9 @@ export const trackClick = async (req: Request, res: Response) => {
     })
 
     res.json({ success: true })
-  } catch (error) {
-    console.error('Track click error:', error)
-    res.status(500).json({ error: 'Failed to track click' })
-  }
-}
+})
 
-export const getRevenueStats = async (req: AuthRequest, res: Response) => {
-  try {
+export const getRevenueStats = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { week, year } = req.query
     
     const weekNumber = week ? parseInt(week as string) : getWeekNumber(new Date())
@@ -179,8 +161,4 @@ export const getRevenueStats = async (req: AuthRequest, res: Response) => {
         distributed: pool?.distributed || false
       }
     })
-  } catch (error) {
-    console.error('Get revenue stats error:', error)
-    res.status(500).json({ error: 'Failed to get revenue stats' })
-  }
-}
+})

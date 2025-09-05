@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger'
 import { Request, Response } from 'express'
 import prisma from '../config/database'
 import { AuthRequest } from '../middleware/auth'
@@ -38,7 +39,7 @@ export const getMyDistributions = async (req: AuthRequest, res: Response) => {
       }
     })
   } catch (error) {
-    console.error('Get my distributions error:', error)
+    logger.error('Get my distributions error:', error)
     res.status(500).json({ error: 'Failed to get distributions' })
   }
 }
@@ -103,7 +104,7 @@ export const getWeeklyLeaderboard = async (req: Request, res: Response) => {
       }
     })
   } catch (error) {
-    console.error('Get weekly leaderboard error:', error)
+    logger.error('Get weekly leaderboard error:', error)
     res.status(500).json({ error: 'Failed to get leaderboard' })
   }
 }
@@ -154,7 +155,7 @@ export const getCurrentPoolStatus = async (req: Request, res: Response) => {
       }
     })
   } catch (error) {
-    console.error('Get pool status error:', error)
+    logger.error('Get pool status error:', error)
     res.status(500).json({ error: 'Failed to get pool status' })
   }
 }
@@ -178,7 +179,7 @@ export const claimTokens = async (req: AuthRequest, res: Response) => {
       distribution
     })
   } catch (error: any) {
-    console.error('Claim tokens error:', error)
+    logger.error('Claim tokens error:', error)
     res.status(400).json({ error: error.message || 'Failed to claim tokens' })
   }
 }

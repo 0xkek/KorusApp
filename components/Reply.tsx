@@ -120,11 +120,6 @@ const Reply = memo<ReplyProps>(function Reply({
     onTip(postId, reply.id);
   }, [onTip, postId, reply.id]);
 
-  // Helper function to check if reply's bump is still active
-  const isBumpActive = (reply: ReplyType) => {
-    if (!reply?.bumped || !reply?.bumpExpiresAt) return false;
-    return Date.now() < reply.bumpExpiresAt;
-  };
 
   // Check if this reply contains a quote
   const parseContent = (content: string) => {
@@ -144,7 +139,6 @@ const Reply = memo<ReplyProps>(function Reply({
   };
 
   const { quotedText, replyText } = parseContent(replyContent);
-  const bumpActive = isBumpActive(reply);
   const displayName = useDisplayName(replyWallet, replyIsPremium);
 
   // Guard against invalid reply

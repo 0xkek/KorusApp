@@ -135,7 +135,7 @@ export function cached(ttl: number = 5 * 60 * 1000) {
       // Check cache
       const cachedResult = postCache.get(cacheKey);
       if (cachedResult) {
-        // console.log(`Cache hit: ${cacheKey}`);
+        // logger.debug(`Cache hit: ${cacheKey}`);
         return cachedResult;
       }
       
@@ -144,7 +144,7 @@ export function cached(ttl: number = 5 * 60 * 1000) {
       
       // Cache result
       postCache.set(cacheKey, result, ttl);
-      // console.log(`Cached: ${cacheKey}`);
+      // logger.debug(`Cached: ${cacheKey}`);
       
       return result;
     };

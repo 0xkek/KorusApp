@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticate, AuthRequest } from '../middleware/auth';
+import { logger } from '../utils/logger';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -37,7 +38,7 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
 
     res.json({ notifications });
   } catch (error) {
-    console.error('Error fetching notifications:', error);
+    logger.error('Error fetching notifications:', error);
     res.status(500).json({ error: 'Failed to fetch notifications' });
   }
 });
@@ -60,7 +61,7 @@ router.post('/:id/read', authenticate, async (req: AuthRequest, res) => {
 
     res.json({ success: true });
   } catch (error) {
-    console.error('Error marking notification as read:', error);
+    logger.error('Error marking notification as read:', error);
     res.status(500).json({ error: 'Failed to mark notification as read' });
   }
 });
@@ -82,7 +83,7 @@ router.post('/read-all', authenticate, async (req: AuthRequest, res) => {
 
     res.json({ success: true });
   } catch (error) {
-    console.error('Error marking all as read:', error);
+    logger.error('Error marking all as read:', error);
     res.status(500).json({ error: 'Failed to mark all as read' });
   }
 });

@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger'
 import rateLimit from 'express-rate-limit';
 // import RedisStore from 'rate-limit-redis'; // Commented until package is installed
 import { Request, Response, NextFunction } from 'express';
@@ -95,7 +96,7 @@ export const createRateLimiter = (configName: keyof typeof rateLimitConfigs) => 
     legacyHeaders: false,
     handler: (req: Request, res: Response) => {
       const retryAfter = Math.ceil(config.windowMs / 1000);
-      console.log(`Rate limit hit for ${configName}:`, {
+      logger.debug(`Rate limit hit for ${configName}:`, {
         ip: req.ip,
         path: req.path,
         userWallet: (req as AuthRequest).userWallet
@@ -109,8 +110,8 @@ export const createRateLimiter = (configName: keyof typeof rateLimitConfigs) => 
       });
     },
     skip: (req: Request) => {
-      // Skip rate limiting for health checks and test endpoints in development
-      if (req.path === '/health' || req.path === '/test-db') {
+      // Skip rate limiting for health checks
+      if (req.path === '/health') {
         return true;
       }
       // Skip for localhost in development
@@ -163,7 +164,7 @@ export const reputationBasedRateLimiter = async (req: AuthRequest, res: Response
     }
     
   } catch (error) {
-    console.error('Error in reputation-based rate limiter:', error);
+    logger.error('Error in reputation-based rate limiter:', error);
   }
   
   next();

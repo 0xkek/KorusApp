@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger'
 import { Request, Response } from 'express'
 import prisma from '../config/database'
 import { AuthRequest } from '../middleware/auth'
@@ -88,7 +89,7 @@ export const createReply = async (req: AuthRequest, res: Response) => {
       }
     })
 
-    console.log(`Reply created by ${walletAddress} on post ${postId}`)
+    logger.debug(`Reply created by ${walletAddress} on post ${postId}`)
 
     // Award reputation points
     await reputationService.onCommentMade(walletAddress)
@@ -123,7 +124,7 @@ export const createReply = async (req: AuthRequest, res: Response) => {
       reply
     })
   } catch (error) {
-    console.error('Create reply error:', error)
+    logger.error('Create reply error:', error)
     res.status(500).json({ error: 'Failed to create reply' })
   }
 }
@@ -203,7 +204,7 @@ export const getReplies = async (req: Request, res: Response) => {
       }
     })
   } catch (error) {
-    console.error('Get replies error:', error)
+    logger.error('Get replies error:', error)
     res.status(500).json({ error: 'Failed to get replies' })
   }
 }
@@ -255,7 +256,7 @@ export const likeReply = async (req: AuthRequest, res: Response) => {
       res.json({ success: true, liked: true, message: 'Reply liked' })
     }
   } catch (error) {
-    console.error('Like reply error:', error)
+    logger.error('Like reply error:', error)
     res.status(500).json({ error: 'Failed to like reply' })
   }
 }

@@ -53,14 +53,19 @@ export const APP_IDENTITY = {
 };
 
 export const connectAndSignWithMWA = async (message: string): Promise<{ address: string; signature: string }> => {
-  const { transact, Web3MobileWallet } = await import('@solana-mobile/mobile-wallet-adapter-protocol-web3js');
-  
-  logger.log('Starting MWA transaction...');
-  logger.log('Platform:', Platform.OS);
-  logger.log('App Identity:', APP_IDENTITY);
-  
-  // Add a small delay to ensure wallet app is ready
-  await new Promise(resolve => setTimeout(resolve, 500));
+  try {
+    logger.log('Importing MWA library...');
+    const mwaModule = await import('@solana-mobile/mobile-wallet-adapter-protocol-web3js');
+    const transact = mwaModule.transact;
+    
+    if (!transact) {
+      throw new Error('MWA transact function not found in module');
+    }
+    
+    logger.log('MWA library imported successfully');
+    logger.log('Starting MWA transaction...');
+    logger.log('Platform:', Platform.OS);
+    logger.log('App Identity:', APP_IDENTITY);
   
   // Create a timeout promise
   const timeoutPromise = new Promise<never>((_, reject) => {
@@ -70,20 +75,22 @@ export const connectAndSignWithMWA = async (message: string): Promise<{ address:
   });
   
   try {
+    logger.log('Calling transact function...');
+    
+    // Test if transact is actually a function
+    logger.log('Type of transact:', typeof transact);
+    
     // Race between the transaction and timeout
     const result = await Promise.race([
-      transact(async (wallet: Web3MobileWallet) => {
+      transact(
+        async (wallet) => {
         logger.log('MWA callback started - wallet object received');
       // Authorize in the same session
       logger.log('Authorizing wallet...');
-      // Debug connection params
-      const authParams = {
-        cluster: getClusterForWallet('phantom'),
+      const authResult = await wallet.authorize({
+        cluster: 'mainnet-beta',
         identity: APP_IDENTITY,
-      };
-      debugConnectionParams(authParams);
-      
-      const authResult = await wallet.authorize(authParams);
+      });
     
     logger.log('Authorization successful:', authResult);
     const base64Address = authResult.accounts[0].address;
@@ -109,10 +116,20 @@ export const connectAndSignWithMWA = async (message: string): Promise<{ address:
         throw new Error('No signed message returned');
       }
       
-      // Extract signature (last 64 bytes) and convert to base58
+      // Extract signature from signed message
       const signedMessage = signedMessages[0];
-      const signatureBytes = signedMessage.slice(-64);
-      const signature = bs58.encode(signatureBytes);
+      // The signature should be 64 bytes
+      let signature: string;
+      if (signedMessage.length === 64) {
+        // Just the signature
+        signature = bs58.encode(signedMessage);
+      } else if (signedMessage.length > 64) {
+        // Signature is the last 64 bytes
+        const signatureBytes = signedMessage.slice(-64);
+        signature = bs58.encode(signatureBytes);
+      } else {
+        throw new Error(`Invalid signature length: ${signedMessage.length}`);
+      }
       
       // Store auth token for future use
       if (authResult.auth_token) {
@@ -141,6 +158,10 @@ export const connectAndSignWithMWA = async (message: string): Promise<{ address:
       throw new Error('Unable to connect to wallet. Please make sure a Solana wallet app is installed and try again.');
     }
     throw error;
+  }
+  } catch (importError: any) {
+    logger.error('Failed to import MWA libraries:', importError);
+    throw new Error('Mobile wallet adapter not available. Please ensure you have a compatible Solana wallet installed.');
   }
 };
 

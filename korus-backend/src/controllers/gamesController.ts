@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger'
 import { Request, Response } from 'express'
 import prisma from '../config/database'
 
@@ -6,25 +7,50 @@ interface AuthRequest extends Request {
   user?: { walletAddress: string }
 }
 
+// Game interface from Prisma
+interface GameRecord {
+  id: string
+  postId: string
+  gameType: string
+  player1: string
+  player2: string | null
+  currentTurn: string | null
+  gameState: any // JSON from database
+  wager: any // Decimal from database
+  winner: string | null
+  status: string
+  createdAt: Date
+  updatedAt: Date
+}
+
 // ApiResponse type
 interface ApiResponse {
   success: boolean
   error?: string
-  game?: any
+  game?: GameRecord
   message?: string
 }
 
 // Game type definitions
 type GameType = 'tictactoe' | 'rps' | 'coinflip' | 'connectfour'
+type BoardCell = string | null
+type GameBoard = BoardCell[][]
+
+interface Move {
+  player: string
+  position?: { row: number; col: number }
+  choice?: string
+  timestamp: Date
+}
 
 interface GameState {
-  board?: any[][] // For tictactoe and connectfour
-  moves?: any[] // For tracking move history
+  board?: GameBoard // For tictactoe and connectfour
+  moves?: Move[] // For tracking move history
   player1Choice?: string // For RPS and coinflip
   player2Choice?: string
   round?: number // For RPS (best of 3)
   score?: { player1: number; player2: number }
-  [key: string]: any // Allow additional properties for JSON compatibility
+  [key: string]: unknown // Allow additional properties for JSON compatibility
 }
 
 // Create a new game
@@ -95,7 +121,7 @@ export const createGame = async (req: AuthRequest, res: Response) => {
         player1,
         wager: wager || 0,
         status: 'waiting',
-        gameState: initialState,
+        gameState: initialState as any,
         currentTurn: gameType === 'coinflip' || gameType === 'rps' ? undefined : player1
       },
       include: {
@@ -113,7 +139,7 @@ export const createGame = async (req: AuthRequest, res: Response) => {
       game
     })
   } catch (error) {
-    console.error('Create game error:', error)
+    logger.error('Create game error:', error)
     res.status(500).json({ success: false, error: 'Failed to create game' })
   }
 }
@@ -159,7 +185,7 @@ export const joinGame = async (req: AuthRequest, res: Response) => {
       game: updatedGame
     })
   } catch (error) {
-    console.error('Join game error:', error)
+    logger.error('Join game error:', error)
     res.status(500).json({ success: false, error: 'Failed to join game' })
   }
 }
@@ -244,9 +270,9 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
           })
         }
         
-        console.log(`Game rewards awarded - Winner: ${winner}, Game: ${id}`)
+        logger.debug(`Game rewards awarded - Winner: ${winner}, Game: ${id}`)
       } catch (error) {
-        console.error('Failed to award game rewards:', error)
+        logger.error('Failed to award game rewards:', error)
         // Don't fail the game update if rewards fail
       }
     }
@@ -255,7 +281,7 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
     const updatedGame = await prisma.game.update({
       where: { id },
       data: {
-        gameState,
+        gameState: gameState as any,
         currentTurn: winner ? null : (game.currentTurn === game.player1 ? game.player2 : game.player1),
         winner,
         status: newStatus
@@ -272,7 +298,7 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
       game: updatedGame
     })
   } catch (error) {
-    console.error('Make move error:', error)
+    logger.error('Make move error:', error)
     res.status(500).json({ success: false, error: 'Failed to make move' })
   }
 }
@@ -305,7 +331,7 @@ export const getGame = async (req: Request, res: Response) => {
       game
     })
   } catch (error) {
-    console.error('Get game error:', error)
+    logger.error('Get game error:', error)
     res.status(500).json({ success: false, error: 'Failed to get game' })
   }
 }
@@ -333,13 +359,13 @@ export const getGameByPostId = async (req: Request, res: Response) => {
       game
     })
   } catch (error) {
-    console.error('Get game by post error:', error)
+    logger.error('Get game by post error:', error)
     res.status(500).json({ success: false, error: 'Failed to get game' })
   }
 }
 
 // Game logic helpers
-function processTicTacToeMove(game: any, gameState: GameState, move: any, playerWallet: string): string | null {
+function processTicTacToeMove(game: GameRecord, gameState: GameState, move: { row: number; col: number }, playerWallet: string): string | null {
   const { row, col } = move
   const board = gameState.board!
   
@@ -356,13 +382,13 @@ function processTicTacToeMove(game: any, gameState: GameState, move: any, player
   // Make the move
   const symbol = playerWallet === game.player1 ? 'X' : 'O'
   board[row][col] = symbol
-  gameState.moves!.push({ player: playerWallet, row, col, symbol })
+  gameState.moves!.push({ player: playerWallet, position: { row, col }, timestamp: new Date() } as Move)
 
   // Check for winner
   return checkTicTacToeWinner(board, game.player1, game.player2!)
 }
 
-function processConnectFourMove(game: any, gameState: GameState, move: any, playerWallet: string): string | null {
+function processConnectFourMove(game: GameRecord, gameState: GameState, move: { column: number }, playerWallet: string): string | null {
   const { column } = move
   const board = gameState.board!
   
@@ -387,13 +413,13 @@ function processConnectFourMove(game: any, gameState: GameState, move: any, play
   // Make the move
   const color = playerWallet === game.player1 ? 'red' : 'yellow'
   board[row][column] = color
-  gameState.moves!.push({ player: playerWallet, row, column, color })
+  gameState.moves!.push({ player: playerWallet, position: { row, col: column }, timestamp: new Date() } as Move)
 
   // Check for winner
   return checkConnectFourWinner(board, row, column, color, game.player1, game.player2!)
 }
 
-function processRPSMove(game: any, gameState: GameState, move: any, playerWallet: string): string | null {
+function processRPSMove(game: GameRecord, gameState: GameState, move: { choice: string }, playerWallet: string): string | null {
   const { choice } = move // 'rock', 'paper', or 'scissors'
   
   if (playerWallet === game.player1) {
@@ -412,7 +438,12 @@ function processRPSMove(game: any, gameState: GameState, move: any, playerWallet
       gameState.score!.player2++
     }
 
-    gameState.moves!.push({
+    // Store the round result in a different property
+    if (!gameState.roundResults) {
+      gameState.roundResults = []
+    }
+    const results = gameState.roundResults as any[]
+    results.push({
       round: gameState.round,
       player1Choice: gameState.player1Choice,
       player2Choice: gameState.player2Choice,
@@ -435,7 +466,7 @@ function processRPSMove(game: any, gameState: GameState, move: any, playerWallet
   return null
 }
 
-function processCoinFlipMove(game: any, gameState: GameState, move: any, playerWallet: string): string | null {
+function processCoinFlipMove(game: GameRecord, gameState: GameState, move: { choice: string }, playerWallet: string): string | null {
   const { choice } = move // 'heads' or 'tails'
   
   // First player chooses
@@ -461,7 +492,7 @@ function processCoinFlipMove(game: any, gameState: GameState, move: any, playerW
 }
 
 // Winner checking functions
-function checkTicTacToeWinner(board: any[][], player1: string, player2: string): string | null {
+function checkTicTacToeWinner(board: GameBoard, player1: string, player2: string): string | null {
   // Check rows, columns, and diagonals
   for (let i = 0; i < 3; i++) {
     // Check rows
@@ -489,7 +520,7 @@ function checkTicTacToeWinner(board: any[][], player1: string, player2: string):
   return null
 }
 
-function checkConnectFourWinner(board: any[][], row: number, col: number, color: string, player1: string, player2: string): string | null {
+function checkConnectFourWinner(board: GameBoard, row: number, col: number, color: string, player1: string, player2: string): string | null {
   // Check horizontal, vertical, and both diagonals
   const directions = [
     [[0, 1], [0, -1]], // Horizontal

@@ -2,9 +2,10 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { logger } from './logger';
 import { offlineManager } from './offlineManager';
+import { config } from '../config/environment';
 
-// API base URL - use environment variable or default to Render URL
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://korus-backend.onrender.com/api';
+// API base URL - use config which respects environment
+const API_BASE_URL = config.apiUrl;
 logger.log('API Base URL:', API_BASE_URL);
 
 // Hackathon mode flag

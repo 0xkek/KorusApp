@@ -83,7 +83,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   const handleError = (error: any) => {
     if (!mountedRef.current) return
     
-    console.error('Image failed to load:', {
+    logger.error('Image failed to load:', {
       url: source.uri,
       optimizedUrl: imageUrl,
       useOriginalUrl,
@@ -92,7 +92,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
     
     // If optimized URL failed, try original URL
     if (!useOriginalUrl) {
-      console.log('Retrying with original URL...')
+      logger.log('Retrying with original URL...')
       setUseOriginalUrl(true)
       setError(false)
       setLoading(true)

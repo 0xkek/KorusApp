@@ -21,11 +21,11 @@ import { searchAPI } from '../utils/api';
 import { logger } from '../utils/logger';
 
 export default function SearchScreen() {
-  console.log('[SEARCH SCREEN] Component rendering');
+  logger.log('[SEARCH SCREEN] Component rendering');
   
   // Test function to verify component is working
   React.useEffect(() => {
-    console.log('[SEARCH SCREEN] Component mounted');
+    logger.log('[SEARCH SCREEN] Component mounted');
   }, []);
   
   const router = useRouter();
@@ -75,11 +75,11 @@ export default function SearchScreen() {
 
   // Search function - Simple Twitter-like search
   const performSearch = React.useCallback(async (query: string) => {
-    console.log('[SEARCH] performSearch called with query:', query);
+    logger.log('[SEARCH] performSearch called with query:', query);
     
     // Cancel any previous search request
     if (abortControllerRef.current) {
-      console.log('[SEARCH] Cancelling previous search request');
+      logger.log('[SEARCH] Cancelling previous search request');
       abortControllerRef.current.abort();
     }
     
@@ -99,23 +99,23 @@ export default function SearchScreen() {
     try {
       // Use the backend search API
       logger.log('[SEARCH] Calling API with query:', query.trim());
-      console.log('[SEARCH] About to call searchAPI.search with:', query.trim());
+      logger.log('[SEARCH] About to call searchAPI.search with:', query.trim());
       
       const response = await searchAPI.search(query.trim() || '', 20, 0, abortController.signal);
       
       // Check if request was aborted
       if (abortController.signal.aborted) {
-        console.log('[SEARCH] Request was aborted, ignoring response');
+        logger.log('[SEARCH] Request was aborted, ignoring response');
         return;
       }
       
-      console.log('[SEARCH] Full API response:', JSON.stringify(response, null, 2));
+      logger.log('[SEARCH] Full API response:', response);
       logger.log('[SEARCH] API response:', response);
       logger.log('[SEARCH] Response posts:', response.posts?.length);
       logger.log('[SEARCH] Response success:', response.success);
 
       if (response && response.posts) {
-        console.log('[SEARCH] Processing', response.posts.length, 'posts');
+        logger.log('[SEARCH] Processing', response.posts.length, 'posts');
         let results = response.posts;
 
         // Transform backend posts to app format
@@ -169,7 +169,7 @@ export default function SearchScreen() {
           return bScore - aScore;
         });
 
-        console.log('[SEARCH] Results count:', results.length);
+        logger.log('[SEARCH] Results count:', results.length);
         setSearchResults(results);
       } else {
         logger.error('[SEARCH] Search failed:', response);
@@ -178,10 +178,10 @@ export default function SearchScreen() {
     } catch (error: any) {
       // Don't log abort errors
       if (error.name !== 'AbortError') {
-        console.error('Search error:', error);
-        console.error('Error details:', error.response?.data || error.message);
-        console.error('Error status:', error.response?.status);
-        console.error('Error headers:', error.response?.headers);
+        logger.error('Search error:', error);
+        logger.error('Error details:', error.response?.data || error.message);
+        logger.error('Error status:', error.response?.status);
+        logger.error('Error headers:', error.response?.headers);
         logger.error('[SEARCH] Error occurred:', error);
         setSearchResults([]);
       }
@@ -271,20 +271,6 @@ export default function SearchScreen() {
     ));
   };
 
-  const handleBump = (postId: number) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    const now = Date.now();
-    setSearchResults(results => results.map(post =>
-      post.id === postId
-        ? { 
-            ...post, 
-            bumped: true, 
-            bumpedAt: now,
-            bumpExpiresAt: now + (5 * 60 * 1000)
-          }
-        : post
-    ));
-  };
 
   const handleReply = (postId: number) => {
     // For now, just expand the post replies
@@ -307,7 +293,7 @@ export default function SearchScreen() {
     await performSearch(searchQuery);
   };
 
-  console.log('[SEARCH SCREEN] About to render, hasSearched:', hasSearched, 'searchResults:', searchResults.length);
+  logger.log('[SEARCH SCREEN] About to render, hasSearched:', hasSearched, 'searchResults:', searchResults.length);
   
   return (
     <View style={styles.container}>
@@ -407,12 +393,10 @@ export default function SearchScreen() {
                   replySortType="best"
                   onLike={handleLike}
                   onReply={handleReply}
-                  onBump={handleBump}
                   onTip={handleTip}
                   onShowTipModal={() => {}} // Handle tip modal
                   onLikeReply={() => {}} // Handle reply interactions
                   onTipReply={() => {}}
-                  onBumpReply={() => {}}
                   onToggleReplies={toggleReplies}
                   onToggleReplySorting={() => {}}
                 />

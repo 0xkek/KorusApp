@@ -17,10 +17,14 @@ import {
 } from '@solana/spl-token';
 
 const prisma = new PrismaClient();
-const connection = new Connection(
-  process.env.SOLANA_RPC_URL || clusterApiUrl('devnet'),
-  'confirmed'
-);
+
+// Check if token features are enabled
+const TOKEN_FEATURES_ENABLED = process.env.ENABLE_TOKEN_FEATURES !== 'false';
+
+const rpcUrl = process.env.SOLANA_RPC_URL;
+const connection = TOKEN_FEATURES_ENABLED && rpcUrl 
+  ? new Connection(rpcUrl, 'confirmed')
+  : null;
 
 export class DistributionService {
   /**
@@ -269,6 +273,10 @@ export class DistributionService {
       };
       transaction.add(memoIx);
       
+      if (!connection) {
+        throw new Error('Token features are disabled');
+      }
+      
       const signature = await sendAndConfirmTransaction(
         connection,
         transaction,
@@ -327,6 +335,10 @@ export class DistributionService {
       };
       transaction.add(memoIx);
       
+      if (!connection) {
+        throw new Error('Token features are disabled');
+      }
+      
       const signature = await sendAndConfirmTransaction(
         connection,
         transaction,
@@ -361,8 +373,13 @@ export class DistributionService {
       throw new Error('Tokens already claimed');
     }
 
-    // TODO: Integrate with Solana smart contract to transfer tokens
-    // For now, just mark as claimed
+    // Check if token mint is configured
+    if (!process.env.ALLY_TOKEN_MINT) {
+      throw new Error('ALLY token not yet deployed. Token distribution is pending smart contract deployment.');
+    }
+    
+    // Smart contract integration will be added after token deployment
+    // This will involve calling the on-chain distribution contract
     
     await prisma.tokenDistribution.update({
       where: {

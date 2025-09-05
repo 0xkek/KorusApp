@@ -70,7 +70,10 @@ const PREMIUM_STATUS_KEY = 'korus_premium_status';
 const TIMEFUN_USERNAME_KEY = 'korus_timefun_username';
 
 // Solana connection
-const SOLANA_NETWORK = process.env.EXPO_PUBLIC_SOLANA_NETWORK || 'devnet';
+const SOLANA_NETWORK = process.env.EXPO_PUBLIC_SOLANA_NETWORK;
+if (!SOLANA_NETWORK) {
+  throw new Error('EXPO_PUBLIC_SOLANA_NETWORK is required');
+}
 const connection = new Connection(clusterApiUrl(SOLANA_NETWORK as any), 'confirmed');
 
 export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
@@ -202,24 +205,9 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       try {
         authResult = await authAPI.connectWallet(publicKey, signature, authMessage);
       } catch (error: any) {
-        // If backend is unavailable, use mock authentication for testing
-        if (error.response?.status === 500 || error.code === 'ECONNREFUSED') {
-          logger.warn('Backend unavailable, using mock authentication');
-          
-          // Generate a mock JWT token
-          const mockToken = btoa(JSON.stringify({ walletAddress: publicKey, exp: Date.now() + 86400000 }));
-          
-          authResult = {
-            token: mockToken,
-            user: {
-              walletAddress: publicKey,
-              tier: 'standard',
-              allyBalance: '5000',
-            }
-          };
-        } else {
-          throw error;
-        }
+        // No mock authentication - always require real backend
+        logger.error('Backend authentication failed:', error);
+        throw error;
       }
       
       if (!authResult.token) {

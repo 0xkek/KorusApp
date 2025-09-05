@@ -1,7 +1,11 @@
 import { ApiError, NetworkError, retryOperation } from '../utils/errorHandler';
 import { logger } from '../utils/logger';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+if (!API_BASE_URL) {
+  logger.error('EXPO_PUBLIC_API_URL is not configured');
+  throw new Error('API URL is required');
+}
 
 interface ApiRequestOptions extends RequestInit {
   token?: string;

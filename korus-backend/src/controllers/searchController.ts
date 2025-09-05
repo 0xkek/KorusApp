@@ -1,6 +1,9 @@
 import { Request, Response } from 'express'
 import prisma from '../config/database'
-
+import { SNS_CONFIG } from '../config/constants'
+import { asyncHandler } from '../middleware/errorHandler'
+import { AppError } from '../utils/AppError'
+import { logger } from '../utils/logger'
 // ApiResponse type
 interface ApiResponse {
   success: boolean
@@ -11,31 +14,20 @@ interface ApiResponse {
   hasMore?: boolean
 }
 
-// SNS domain mapping (this would be from a real SNS resolver in production)
-const SNS_DOMAINS: { [wallet: string]: string } = {
-  '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU': 'shadowy.sol',
-  'GKJRSuAqFatpGpNcB3dQkUDddt5p5uTwYdM2qygYzRBe': 'defi.sol',
-  'E7r83mAKJRSuAZFatpGpNcBdK3dQkTDddt5p5uUYqwY': 'moonshot.sol',
-  'B9r3dQkTDddt5p5uUYqGKJRSuAZFatpGpNcmAKwYE7r8': 'ape.sol',
-  '5p5uUYqGKJRSuAZFatpGpNcmAKwYE7r8B9r3dQkTDddt': 'wagmi.sol',
-  'BKJRSuAqF8tpGpNcB3dQkUDddt5p5uTwYdM2qygYzRBe': 'korus.sol',
-  'CKdR8mBvH9tgLpQeN4eSkVHgfr6k6pVxZfO3syhZaSDt': 'solana.sol',
-  'RPS5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhGamer': 'rockstar.sol',
-  'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip': 'coinflip.sol'
-}
+// Use SNS domain mapping from config
+const SNS_DOMAINS = SNS_CONFIG.DEMO_DOMAINS
 
 // Default domain for wallets not in the mapping
-const DEFAULT_DOMAIN = 'anonymous.sol'
+const DEFAULT_DOMAIN = SNS_CONFIG.DEFAULT_DOMAIN || 'anonymous.sol'
 
 function getWalletDomain(wallet: string): string {
   return SNS_DOMAINS[wallet] || DEFAULT_DOMAIN
 }
 
-export const searchPosts = async (req: Request, res: Response) => {
-  try {
+export const searchPosts = asyncHandler(async (req: Request, res: Response) => {
     const { query, limit = 20, offset = 0 } = req.query
     
-    console.log('[SEARCH] Received search request:', { query, limit, offset })
+    logger.debug('[SEARCH] Received search request:', { query, limit, offset })
     
     // If no query, return all posts
     if (!query || typeof query !== 'string' || !query.trim()) {
@@ -95,28 +87,28 @@ export const searchPosts = async (req: Request, res: Response) => {
     }
 
     const searchQuery = query.toLowerCase().trim()
-    console.log('[SEARCH] Searching for:', searchQuery)
+    logger.debug('[SEARCH] Searching for:', searchQuery)
     
     // First, find wallets that match the SNS domain search
     const matchingWallets: string[] = []
     
     // Check if the query matches any SNS domains
     for (const [wallet, domain] of Object.entries(SNS_DOMAINS)) {
-      if (domain.toLowerCase().includes(searchQuery)) {
-        console.log('[SEARCH] Found SNS match:', domain, 'for wallet:', wallet)
+      if (typeof domain === 'string' && domain.toLowerCase().includes(searchQuery)) {
+        logger.debug('[SEARCH] Found SNS match: ' + domain + ' for wallet: ' + wallet)
         matchingWallets.push(wallet)
       }
     }
     
     // Also check if searching for default domain
     if (DEFAULT_DOMAIN.toLowerCase().includes(searchQuery)) {
-      console.log('[SEARCH] Query matches default domain:', DEFAULT_DOMAIN)
+      logger.debug('[SEARCH] Query matches default domain:', DEFAULT_DOMAIN)
       // Get all wallets not in SNS_DOMAINS
       const allUsers = await prisma.user.findMany({
         select: { walletAddress: true }
       })
       
-      console.log('[SEARCH] Found', allUsers.length, 'total users')
+      logger.debug('[SEARCH] Found ' + allUsers.length + ' total users')
       
       allUsers.forEach(user => {
         if (!SNS_DOMAINS[user.walletAddress]) {
@@ -124,7 +116,7 @@ export const searchPosts = async (req: Request, res: Response) => {
         }
       })
       
-      console.log('[SEARCH] Added', matchingWallets.length, 'wallets with default domain')
+      logger.debug('[SEARCH] Added ' + matchingWallets.length + ' wallets with default domain')
     }
 
     // Search posts by content, wallet address, or matching SNS wallets
@@ -190,7 +182,7 @@ export const searchPosts = async (req: Request, res: Response) => {
       skip: Number(offset)
     })
     
-    console.log('[SEARCH] Found', posts.length, 'posts matching query')
+    logger.debug('[SEARCH] Found ' + posts.length + ' posts matching query')
 
     // Also search for users by wallet or SNS domain
     const users = await prisma.user.findMany({
@@ -240,25 +232,14 @@ export const searchPosts = async (req: Request, res: Response) => {
       totalPosts: posts.length,
       hasMore: posts.length === Number(limit)
     })
-  } catch (error) {
-    console.error('Search error:', error)
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to search posts' 
-    })
-  }
-}
+})
 
 // Search users specifically
-export const searchUsers = async (req: Request, res: Response) => {
-  try {
+export const searchUsers = asyncHandler(async (req: Request, res: Response) => {
     const { query, limit = 10 } = req.query
     
     if (!query || typeof query !== 'string') {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Search query is required' 
-      })
+      throw new AppError('Search query is required', 400, 'MISSING_QUERY')
     }
 
     const searchQuery = query.toLowerCase().trim()
@@ -267,7 +248,7 @@ export const searchUsers = async (req: Request, res: Response) => {
     const matchingWallets: string[] = []
     
     for (const [wallet, domain] of Object.entries(SNS_DOMAINS)) {
-      if (domain.toLowerCase().includes(searchQuery)) {
+      if (typeof domain === 'string' && domain.toLowerCase().includes(searchQuery)) {
         matchingWallets.push(wallet)
       }
     }
@@ -323,11 +304,4 @@ export const searchUsers = async (req: Request, res: Response) => {
       success: true,
       users: transformedUsers
     })
-  } catch (error) {
-    console.error('Search users error:', error)
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to search users' 
-    })
-  }
-}
+})

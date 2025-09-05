@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
+import { logger } from '../utils/logger'
 
 export interface AuthRequest extends Request {
   userWallet?: string
@@ -19,7 +20,7 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
   const jwtSecret = process.env.JWT_SECRET
   
   if (!jwtSecret) {
-    console.error('CRITICAL: JWT_SECRET not configured in auth middleware')
+    logger.error('CRITICAL: JWT_SECRET not configured in auth middleware')
     // In production, fail fast
     if (process.env.NODE_ENV === 'production') {
       process.exit(1)

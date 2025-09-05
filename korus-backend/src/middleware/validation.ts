@@ -2,6 +2,8 @@ import { body, param, query, validationResult } from 'express-validator';
 import { Request, Response, NextFunction } from 'express';
 import DOMPurify from 'dompurify';
 import { JSDOM } from 'jsdom';
+import { ValidationError } from '../utils/AppError';
+import { logger } from '../utils/logger';
 
 // Initialize DOMPurify with JSDOM
 const window = new JSDOM('').window;
@@ -19,15 +21,15 @@ export const sanitizeHtml = (dirty: string): string => {
 export const handleValidationErrors = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    console.error('Validation failed:', {
+    logger.error('Validation failed:', {
       url: req.url,
       body: req.body,
       errors: errors.array()
     });
-    return res.status(400).json({ 
-      error: 'Validation failed',
-      details: errors.array() 
-    });
+    const errorMessages = errors.array().map(error => 
+      'msg' in error ? error.msg : 'Validation error'
+    );
+    throw new ValidationError(errorMessages.join(', '));
   }
   next();
 };
@@ -154,8 +156,8 @@ export const validateWalletConnect = [
     .trim()
     .notEmpty().withMessage('Signature is required')
     .custom((value) => {
-      // Allow mock signatures in development
-      if (process.env.NODE_ENV === 'development' && value.startsWith('mock_signature')) {
+      // Allow mock signatures in development and test
+      if ((process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') && value.startsWith('mock_signature')) {
         return true;
       }
       // Allow base58 (Solana standard) or base64 signatures
@@ -180,6 +182,83 @@ export const validateBatchInteractions = [
     .custom((value) => {
       return value.every((id: any) => typeof id === 'string');
     }).withMessage('All post IDs must be strings'),
+  
+  handleValidationErrors
+];
+
+// NFT validations
+export const validateNFTWallet = [
+  param('walletAddress')
+    .trim()
+    .notEmpty().withMessage('Wallet address is required')
+    .matches(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).withMessage('Invalid Solana wallet address'),
+  
+  handleValidationErrors
+];
+
+export const validateNFTMint = [
+  param('mintAddress')
+    .trim()
+    .notEmpty().withMessage('Mint address is required')
+    .matches(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).withMessage('Invalid mint address'),
+  
+  handleValidationErrors
+];
+
+// SNS validations
+export const validateSNSWallet = [
+  param('walletAddress')
+    .trim()
+    .notEmpty().withMessage('Wallet address is required')
+    .matches(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).withMessage('Invalid Solana wallet address'),
+  
+  handleValidationErrors
+];
+
+export const validateSNSDomain = [
+  param('domain')
+    .trim()
+    .notEmpty().withMessage('Domain is required')
+    .matches(/^[a-z0-9-]+\.sol$/).withMessage('Invalid SNS domain format (must end with .sol)'),
+  
+  handleValidationErrors
+];
+
+// Sponsored post validations
+export const validateSponsoredView = [
+  param('postId')
+    .trim()
+    .notEmpty().withMessage('Post ID is required')
+    .isString().withMessage('Invalid post ID format'),
+  
+  handleValidationErrors
+];
+
+// Interaction validations
+export const validateInteractionGet = [
+  param('id')
+    .trim()
+    .notEmpty().withMessage('Post ID is required')
+    .isString().withMessage('Invalid post ID format'),
+  
+  handleValidationErrors
+];
+
+// Search validations
+export const validateSearch = [
+  query('q')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 100 }).withMessage('Search query must be between 1 and 100 characters')
+    .customSanitizer(value => sanitizeHtml(value)),
+  
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
+  
+  query('offset')
+    .optional()
+    .isInt({ min: 0 }).withMessage('Offset must be non-negative'),
   
   handleValidationErrors
 ];

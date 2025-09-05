@@ -47,6 +47,9 @@ export function useDisplayName(walletAddress: string, isPremium: boolean = false
   // Only show SNS domains for premium users
   if (isPremium && domain) return domain;
   
+  // Handle null/undefined wallet addresses
+  if (!walletAddress) return 'Unknown';
+  
   // For truncated addresses, return as is
   if (walletAddress.includes('...')) return walletAddress;
   

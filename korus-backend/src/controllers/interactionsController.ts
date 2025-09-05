@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger'
 import { Request, Response } from 'express'
 import prisma from '../config/database'
 import { AuthRequest } from '../middleware/auth'
@@ -66,8 +67,8 @@ export const likePost = async (req: AuthRequest, res: Response) => {
       res.json({ success: true, liked: true, message: 'Post liked' })
     }
   } catch (error: any) {
-    console.error('Like post error:', error)
-    console.error('Error details:', {
+    logger.error('Like post error:', error)
+    logger.error('Error details:', {
       message: error?.message,
       code: error?.code,
       meta: error?.meta
@@ -122,7 +123,7 @@ export const tipPost = async (req: AuthRequest, res: Response) => {
       data: { allyBalance: { increment: amount } }
     })
 
-    console.log(`${walletAddress} tipped ${amount} $ALLY to post ${id}`)
+    logger.debug(`${walletAddress} tipped ${amount} $ALLY to post ${id}`)
 
     // Award reputation points
     await reputationService.onTipSent(walletAddress, Number(amount))
@@ -143,7 +144,7 @@ export const tipPost = async (req: AuthRequest, res: Response) => {
       amount
     })
   } catch (error) {
-    console.error('Tip post error:', error)
+    logger.error('Tip post error:', error)
     res.status(500).json({ error: 'Failed to tip post' })
   }
 }
@@ -182,7 +183,7 @@ export const getPostInteractions = async (req: Request, res: Response) => {
       }
     })
   } catch (error) {
-    console.error('Get interactions error:', error)
+    logger.error('Get interactions error:', error)
     res.status(500).json({ error: 'Failed to get interactions' })
   }
 }
@@ -246,7 +247,7 @@ export const getUserInteractions = async (req: AuthRequest, res: Response) => {
       interactions: interactionMap
     })
   } catch (error) {
-    console.error('Get user interactions error:', error)
+    logger.error('Get user interactions error:', error)
     res.status(500).json({ error: 'Failed to get user interactions' })
   }
 }

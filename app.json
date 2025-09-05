@@ -13,20 +13,6 @@
     "assetBundlePatterns": [
       "**/*"
     ],
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.korus.app",
-      "buildNumber": "1",
-      "infoPlist": {
-        "NSCameraUsageDescription": "Korus needs access to your camera to take photos for posts and avatars.",
-        "NSPhotoLibraryUsageDescription": "Korus needs access to your photo library to select images for posts and avatars.",
-        "NSPhotoLibraryAddUsageDescription": "Korus needs permission to save images to your photo library.",
-        "ITSAppUsesNonExemptEncryption": false
-      },
-      "config": {
-        "usesNonExemptEncryption": false
-      }
-    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/korus-app-icon.png",
@@ -38,7 +24,11 @@
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.USE_BIOMETRIC",
-        "android.permission.USE_FINGERPRINT"
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.INTERNET",
+        "android.permission.VIBRATE"
       ],
       "intentFilters": [
         {

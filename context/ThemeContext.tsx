@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { Theme, getTheme } from '../constants/Themes';
+import { logger } from '../utils/logger';
 
 type ColorScheme = 'mint' | 'purple' | 'blue' | 'gold' | 'cherry' | 'cyber';
 
@@ -46,7 +47,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         setIsDark(savedDarkMode === 'true');
       }
     } catch (error) {
-      console.error('Error loading theme preferences:', error);
+      logger.error('Error loading theme preferences:', error);
     } finally {
       setIsLoading(false);
     }
@@ -56,14 +57,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     try {
       // Check if the scheme is premium-only
       if (!isPremium && (scheme === 'purple' || scheme === 'blue' || scheme === 'gold' || scheme === 'cherry' || scheme === 'cyber')) {
-        console.warn('Premium subscription required for this color scheme');
+        logger.warn('Premium subscription required for this color scheme');
         return;
       }
       
       setColorSchemeState(scheme);
       await SecureStore.setItemAsync(THEME_STORAGE_KEY, scheme);
     } catch (error) {
-      console.error('Error saving color scheme:', error);
+      logger.error('Error saving color scheme:', error);
     }
   };
   
@@ -79,7 +80,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setIsDark(newDarkMode);
       await SecureStore.setItemAsync(DARK_MODE_STORAGE_KEY, String(newDarkMode));
     } catch (error) {
-      console.error('Error saving dark mode preference:', error);
+      logger.error('Error saving dark mode preference:', error);
     }
   };
 

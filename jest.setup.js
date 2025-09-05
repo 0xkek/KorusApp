@@ -1,5 +1,29 @@
 // Jest setup file
 
+// Set required environment variables for tests
+process.env.EXPO_PUBLIC_SOLANA_NETWORK = 'devnet';
+process.env.EXPO_PUBLIC_ALLY_TOKEN_ADDRESS = 'test-token-address';
+process.env.EXPO_PUBLIC_API_URL = 'http://localhost:3000';
+
+// Mock Solana web3.js
+jest.mock('@solana/web3.js', () => ({
+  Connection: jest.fn().mockImplementation(() => ({
+    getBalance: jest.fn().mockResolvedValue(1000000000),
+    getAccountInfo: jest.fn().mockResolvedValue(null),
+    confirmTransaction: jest.fn().mockResolvedValue({ value: { err: null } }),
+  })),
+  PublicKey: jest.fn().mockImplementation((key) => ({ 
+    toString: () => key,
+    toBase58: () => key,
+  })),
+  Transaction: jest.fn(),
+  SystemProgram: {
+    transfer: jest.fn(),
+  },
+  clusterApiUrl: jest.fn((network) => `https://api.${network}.solana.com`),
+  LAMPORTS_PER_SOL: 1000000000,
+}));
+
 // Mock expo modules
 jest.mock('expo-font');
 jest.mock('expo-asset');
@@ -48,6 +72,45 @@ jest.mock('react-native-safe-area-context', () => ({
   SafeAreaProvider: ({ children }) => children,
   SafeAreaView: ({ children }) => children,
   useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
+}));
+
+// Mock expo-video
+jest.mock('expo-video', () => ({
+  useVideoPlayer: jest.fn(() => ({
+    play: jest.fn(),
+    pause: jest.fn(),
+    playing: false,
+  })),
+  VideoView: 'VideoView',
+}));
+
+// Mock useSNSDomain hook
+jest.mock('./hooks/useSNSDomain', () => ({
+  useSNSDomain: jest.fn(() => ({ 
+    domain: null, 
+    loading: false 
+  })),
+  useDisplayName: jest.fn((address) => {
+    if (!address) return 'Unknown';
+    if (address.includes && address.includes('...')) return address;
+    if (!address.slice) return address;
+    return `${address.slice(0, 4)}...${address.slice(-4)}`;
+  }),
+  formatWalletAddress: jest.fn((address) => {
+    if (!address) return 'Unknown';
+    if (address.includes && address.includes('...')) return address;
+    if (!address.slice) return address;
+    return `${address.slice(0, 4)}...${address.slice(-4)}`;
+  })
+}));
+
+// Mock @expo/vector-icons
+jest.mock('@expo/vector-icons', () => ({
+  Ionicons: 'Ionicons',
+  MaterialIcons: 'MaterialIcons',
+  MaterialCommunityIcons: 'MaterialCommunityIcons',
+  FontAwesome: 'FontAwesome',
+  Feather: 'Feather',
 }));
 
 // Mock expo-router

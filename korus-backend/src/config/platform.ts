@@ -1,15 +1,16 @@
+import { logger } from '../utils/logger'
 import { Keypair } from '@solana/web3.js';
 import bs58 from 'bs58';
 
 export const PLATFORM_CONFIG = {
   // Platform wallet that receives sponsored post payments
-  PLATFORM_WALLET_ADDRESS: process.env.PLATFORM_WALLET_ADDRESS || 'YOUR_PLATFORM_WALLET_ADDRESS',
+  PLATFORM_WALLET_ADDRESS: process.env.PLATFORM_WALLET_ADDRESS || '',
   
   // Platform wallet private key for distributions (keep secure!)
   PLATFORM_WALLET_PRIVATE_KEY: process.env.PLATFORM_WALLET_PRIVATE_KEY,
   
   // ALLY token mint address
-  ALLY_TOKEN_MINT: process.env.ALLY_TOKEN_MINT || 'YOUR_ALLY_TOKEN_MINT',
+  ALLY_TOKEN_MINT: process.env.ALLY_TOKEN_MINT || '',
   
   // Distribution settings
   PLATFORM_FEE_PERCENT: 50, // Platform keeps 50% total
@@ -18,7 +19,7 @@ export const PLATFORM_CONFIG = {
   TEAM_FEE_PERCENT: 45, // 45% goes to team wallet
   
   // Team wallet that receives 45% of revenue
-  TEAM_WALLET_ADDRESS: process.env.TEAM_WALLET_ADDRESS || 'YOUR_TEAM_WALLET_ADDRESS',
+  TEAM_WALLET_ADDRESS: process.env.TEAM_WALLET_ADDRESS || '',
   
   // Minimum amounts
   MIN_POOL_SIZE: 1000, // Minimum 1000 ALLY to trigger distribution
@@ -30,7 +31,7 @@ export const PLATFORM_CONFIG = {
  */
 export function getPlatformKeypair(): Keypair | null {
   if (!PLATFORM_CONFIG.PLATFORM_WALLET_PRIVATE_KEY) {
-    console.error('Platform wallet private key not configured');
+    logger.error('Platform wallet private key not configured');
     return null;
   }
   
@@ -38,7 +39,7 @@ export function getPlatformKeypair(): Keypair | null {
     const privateKey = bs58.decode(PLATFORM_CONFIG.PLATFORM_WALLET_PRIVATE_KEY);
     return Keypair.fromSecretKey(privateKey);
   } catch (error) {
-    console.error('Invalid platform wallet private key:', error);
+    logger.error('Invalid platform wallet private key:', error);
     return null;
   }
 }

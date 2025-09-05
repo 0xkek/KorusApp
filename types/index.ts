@@ -40,8 +40,6 @@ export interface Reply {
   isPremium?: boolean; // Premium user status
   tier?: 'standard' | 'premium';
   userTheme?: string; // User's selected theme color
-  bumped?: boolean;
-  bumpExpiresAt?: number;
   imageUrl?: string; // Optional image URL
   videoUrl?: string; // Optional video URL
 }

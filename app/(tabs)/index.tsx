@@ -34,7 +34,7 @@ import TipModal from '../../components/TipModal';
 import TipSuccessModal from '../../components/TipSuccessModal';
 import GamesView from '../../components/GamesView';
 import EventsView from '../../components/EventsView';
-import DemoInstructions from '../../components/DemoInstructions';
+// DemoInstructions removed for production
 
 // Create AnimatedFlatList to support native driver
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
@@ -96,7 +96,7 @@ export default function HomeScreen() {
   const [isCreatingPost, setIsCreatingPost] = useState(false); // Track posts being liked
   const [isLoadingFeed, setIsLoadingFeed] = useState(true);
   const [feedError, setFeedError] = useState<string | null>(null);
-  const [showDemoInstructions, setShowDemoInstructions] = useState(config.showDemoInstructions);
+  // Demo instructions removed for production
   
   // Reply sorting state - track sorting preference per post
   const [replySortPreferences, setReplySortPreferences] = useState<Record<number, ReplySortType>>({});
@@ -1265,10 +1265,7 @@ export default function HomeScreen() {
           username={tipSuccessData?.username || ''}
         />
 
-        {/* Demo Instructions Modal - Only show on web */}
-        {showDemoInstructions && Platform.OS === 'web' && (
-          <DemoInstructions onClose={() => setShowDemoInstructions(false)} />
-        )}
+        {/* Demo Instructions Modal - Removed for production */}
         </View>
       </View>
   );

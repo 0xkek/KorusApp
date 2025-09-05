@@ -11,7 +11,7 @@ Fixed critical issues for hackathon submission including removing all mock data,
 - Restored Helius API integration for real NFT fetching
 - Switched from REST API endpoint to RPC endpoint with DAS API
 - Used `getAssetsByOwner` method which is more reliable
-- API Key: `3d27295a-caf5-4a92-9fee-b52aa43e54bd`
+- API Key: `[REDACTED]`
 
 **Files Changed**:
 - `/utils/nft.ts` - Complete rewrite to use Helius RPC with DAS API
@@ -52,7 +52,7 @@ Fixed critical issues for hackathon submission including removing all mock data,
 ### Helius API Configuration
 ```javascript
 // RPC Endpoint with DAS API
-const HELIUS_RPC_URL = 'https://mainnet.helius-rpc.com/?api-key=3d27295a-caf5-4a92-9fee-b52aa43e54bd';
+const HELIUS_RPC_URL = 'https://mainnet.helius-rpc.com/?api-key=[YOUR_API_KEY_HERE]';
 
 // Request format
 {
@@ -72,7 +72,7 @@ const HELIUS_RPC_URL = 'https://mainnet.helius-rpc.com/?api-key=3d27295a-caf5-4a
 ```
 
 ### Environment Variables
-- `EXPO_PUBLIC_HELIUS_API_KEY=3d27295a-caf5-4a92-9fee-b52aa43e54bd`
+- `EXPO_PUBLIC_HELIUS_API_KEY=[YOUR_API_KEY_HERE]`
 
 ## Current Status
 - ✅ NFT fetching working with real Solana data

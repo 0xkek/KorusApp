@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger'
 import { Request, Response } from 'express'
 import prisma from '../config/database'
 
@@ -113,7 +114,7 @@ export const hideContent = async (req: AuthRequest, res: Response) => {
       data: moderationAction
     })
   } catch (error) {
-    console.error('Hide content error:', error)
+    logger.error('Hide content error:', error)
     res.status(500).json({ 
       success: false, 
       error: 'Failed to hide content' 
@@ -203,7 +204,7 @@ export const suspendUser = async (req: AuthRequest, res: Response) => {
       data: { moderationAction, suspendedUntil }
     })
   } catch (error) {
-    console.error('Suspend user error:', error)
+    logger.error('Suspend user error:', error)
     res.status(500).json({ 
       success: false, 
       error: 'Failed to suspend user' 
@@ -287,7 +288,7 @@ export const warnUser = async (req: AuthRequest, res: Response) => {
       }
     })
   } catch (error) {
-    console.error('Warn user error:', error)
+    logger.error('Warn user error:', error)
     res.status(500).json({ 
       success: false, 
       error: 'Failed to warn user' 
@@ -359,7 +360,7 @@ export const unsuspendUser = async (req: AuthRequest, res: Response) => {
       data: moderationAction
     })
   } catch (error) {
-    console.error('Unsuspend user error:', error)
+    logger.error('Unsuspend user error:', error)
     res.status(500).json({ 
       success: false, 
       error: 'Failed to unsuspend user' 
@@ -468,7 +469,7 @@ export const getModerationDashboard = async (req: Request, res: Response) => {
       }
     })
   } catch (error) {
-    console.error('Get moderation dashboard error:', error)
+    logger.error('Get moderation dashboard error:', error)
     res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch moderation dashboard' 
@@ -514,7 +515,7 @@ export const getModerationHistory = async (req: Request, res: Response) => {
       data: actions
     })
   } catch (error) {
-    console.error('Get moderation history error:', error)
+    logger.error('Get moderation history error:', error)
     res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch moderation history' 
@@ -526,7 +527,7 @@ export const getModerationHistory = async (req: Request, res: Response) => {
 export const autoModerate = async (targetType: string, targetId: string, content: string) => {
   // Check if moderation is enabled
   if (!isModerationEnabled()) {
-    console.log('Auto-moderation skipped: moderation system disabled')
+    logger.debug('Auto-moderation skipped: moderation system disabled')
     return { flagged: false, reasons: [] }
   }
   try {
@@ -595,7 +596,7 @@ export const autoModerate = async (targetType: string, targetId: string, content
 
     return { flagged: false }
   } catch (error) {
-    console.error('Auto-moderation error:', error)
+    logger.error('Auto-moderation error:', error)
     return { flagged: false, error: 'Auto-moderation failed' }
   }
 }

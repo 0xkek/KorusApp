@@ -8,265 +8,217 @@ datasource db {
 }
 
 model User {
-  walletAddress         String   @id @db.VarChar(44)
-  tier                  String   @default("standard") // "premium" or "standard"
-  walletSource          String   @default("app") // "seeker" or "app"
-  genesisVerified       Boolean  @default(false)
-  allyBalance           Decimal  @default(0) @db.Decimal(18, 6)
-  totalInteractionScore Int      @default(0)
-  
-  // Profile fields
-  snsUsername           String?  @db.VarChar(100) // Solana Name Service username
-  nftAvatar             String?  @db.Text // URL to NFT avatar image
-  displayName           String?  @db.VarChar(50) // Display name
-  bio                   String?  @db.Text // User bio
-  location              String?  @db.VarChar(100) // User location
-  website               String?  @db.VarChar(200) // User website
-  twitter               String?  @db.VarChar(50) // Twitter handle
-  themeColor            String?  @db.VarChar(7) // Profile theme color
-  
-  // Push notification fields
-  pushToken             String?  @db.VarChar(255) // Expo push token
-  pushNotificationsEnabled Boolean @default(true) // Whether user wants push notifications
-  
-  // Reputation fields
-  reputationScore       Int      @default(0)
-  contentScore          Int      @default(0)
-  engagementScore       Int      @default(0)
-  communityScore        Int      @default(0)
-  loyaltyScore          Int      @default(0)
-  weeklyRepEarned       Int      @default(0)
-  weekStartDate         DateTime? // Monday when current week started
-  lastRepUpdate         DateTime @default(now())
-  loginStreak           Int      @default(0)
-  lastLoginDate         DateTime?
-  
-  // Moderation fields
-  isSuspended           Boolean  @default(false)
-  suspensionReason      String?  @db.Text
-  suspendedUntil        DateTime?
-  warningCount          Int      @default(0)
-  
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  walletAddress            String              @id @db.VarChar(44)
+  tier                     String              @default("standard")
+  walletSource             String              @default("app")
+  genesisVerified          Boolean             @default(false)
+  allyBalance              Decimal             @default(0) @db.Decimal(18, 6)
+  totalInteractionScore    Int                 @default(0)
+  createdAt                DateTime            @default(now())
+  updatedAt                DateTime            @updatedAt
+  bio                      String?
+  communityScore           Int                 @default(0)
+  contentScore             Int                 @default(0)
+  displayName              String?             @db.VarChar(50)
+  engagementScore          Int                 @default(0)
+  isSuspended              Boolean             @default(false)
+  lastLoginDate            DateTime?
+  lastRepUpdate            DateTime            @default(now())
+  location                 String?             @db.VarChar(100)
+  loginStreak              Int                 @default(0)
+  loyaltyScore             Int                 @default(0)
+  nftAvatar                String?
+  pushNotificationsEnabled Boolean             @default(true)
+  pushToken                String?             @db.VarChar(255)
+  reputationScore          Int                 @default(0)
+  snsUsername              String?             @db.VarChar(100)
+  suspendedUntil           DateTime?
+  suspensionReason         String?
+  themeColor               String?             @db.VarChar(7)
+  twitter                  String?             @db.VarChar(50)
+  warningCount             Int                 @default(0)
+  website                  String?             @db.VarChar(200)
+  weekStartDate            DateTime?
+  weeklyRepEarned          Int                 @default(0)
+  gamesAsPlayer1           Game[]              @relation("Player1Games")
+  gamesAsPlayer2           Game[]              @relation("Player2Games")
+  gamesWon                 Game[]              @relation("WonGames")
+  interactions             Interaction[]
+  moderatorActions         ModerationAction[]  @relation("Moderator")
+  moderationActions        ModerationAction[]  @relation("ModeratedUser")
+  sentNotifications        Notification[]      @relation("NotificationSender")
+  notifications            Notification[]
+  posts                    Post[]
+  repEvents                RepEvent[]
+  replies                  Reply[]
+  reports                  Report[]
+  tokenDistributions       TokenDistribution[]
 
-  // Relations
-  posts          Post[]
-  replies        Reply[]
-  interactions   Interaction[]
-  gamesAsPlayer1 Game[]        @relation("Player1Games")
-  gamesAsPlayer2 Game[]        @relation("Player2Games")
-  gamesWon       Game[]        @relation("WonGames")
-  reports        Report[]
-  moderationActions ModerationAction[] @relation("ModeratedUser")
-  moderatorActions  ModerationAction[] @relation("Moderator")
-  repEvents      RepEvent[]
-  tokenDistributions TokenDistribution[]
-  notifications  Notification[]
-  sentNotifications Notification[] @relation("NotificationSender")
-
-  // Performance indexes
-  @@index([tier, createdAt(sort: Desc)]) // For premium user queries 
-  @@index([totalInteractionScore(sort: Desc)]) // For leaderboards
-  @@index([reputationScore(sort: Desc)]) // For reputation leaderboards
-  @@index([weeklyRepEarned(sort: Desc), weekStartDate]) // For weekly distribution
-  @@index([createdAt(sort: Desc)]) // For newest users
-  @@index([isSuspended, suspendedUntil]) // For moderation queries
+  @@index([tier, createdAt(sort: Desc)])
+  @@index([totalInteractionScore(sort: Desc)])
+  @@index([reputationScore(sort: Desc)])
+  @@index([weeklyRepEarned(sort: Desc), weekStartDate])
+  @@index([createdAt(sort: Desc)])
+  @@index([isSuspended, suspendedUntil])
   @@map("users")
 }
 
 model Post {
-  id           String @id @default(cuid())
-  authorWallet String @db.VarChar(44)
-  content      String @db.Text
-  topic        String? @db.VarChar(50)
-  subtopic     String? @db.VarChar(100)
-  imageUrl     String? @db.Text
-  videoUrl     String? @db.Text
+  id               String         @id @default(cuid())
+  authorWallet     String         @db.VarChar(44)
+  content          String
+  topic            String?        @db.VarChar(50)
+  subtopic         String?        @db.VarChar(100)
+  likeCount        Int            @default(0)
+  replyCount       Int            @default(0)
+  tipCount         Int            @default(0)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  flaggedCount     Int            @default(0)
+  imageUrl         String?
+  isHidden         Boolean        @default(false)
+  moderationReason String?
+  videoUrl         String?
+  game             Game?
+  notifications    Notification[]
+  author           User           @relation(fields: [authorWallet], references: [walletAddress])
+  replies          Reply[]
+  sponsoredPost    SponsoredPost?
 
-  // Interaction counts (for quick display)
-  likeCount  Int @default(0)
-  replyCount Int @default(0)
-  tipCount   Int @default(0)
-
-  // Moderation fields
-  isHidden          Boolean  @default(false)
-  moderationReason  String?  @db.Text
-  flaggedCount      Int      @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  author  User    @relation(fields: [authorWallet], references: [walletAddress])
-  replies Reply[]
-  game    Game?
-  sponsoredPost SponsoredPost?
-  notifications Notification[]
-
-  // Performance indexes
-  @@index([createdAt(sort: Desc)]) // For chronological post feeds
-  @@index([authorWallet, createdAt(sort: Desc)]) // For user profiles
-  @@index([topic, createdAt(sort: Desc)]) // For category filtering
-  @@index([likeCount(sort: Desc)]) // For popular posts
-  @@index([content]) // For search functionality (full-text search)
-  @@index([isHidden, createdAt(sort: Desc)]) // For moderation filtering
-  @@index([flaggedCount(sort: Desc)]) // For flagged content review
+  @@index([createdAt(sort: Desc)])
+  @@index([authorWallet, createdAt(sort: Desc)])
+  @@index([topic, createdAt(sort: Desc)])
+  @@index([likeCount(sort: Desc)])
+  @@index([content])
+  @@index([isHidden, createdAt(sort: Desc)])
+  @@index([flaggedCount(sort: Desc)])
   @@map("posts")
 }
 
 model Reply {
-  id            String  @id @default(cuid())
-  postId        String
-  authorWallet  String  @db.VarChar(44)
-  content       String  @db.Text
-  parentReplyId String? // For nested replies
-  imageUrl      String? @db.VarChar(500) // Optional image URL
-  videoUrl      String? @db.VarChar(500) // Optional video URL
+  id               String   @id @default(cuid())
+  postId           String
+  authorWallet     String   @db.VarChar(44)
+  content          String
+  parentReplyId    String?
+  likeCount        Int      @default(0)
+  tipCount         Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  flaggedCount     Int      @default(0)
+  isHidden         Boolean  @default(false)
+  moderationReason String?
+  imageUrl         String?  @db.VarChar(500)
+  videoUrl         String?  @db.VarChar(500)
+  author           User     @relation(fields: [authorWallet], references: [walletAddress])
+  parentReply      Reply?   @relation("ReplyToReply", fields: [parentReplyId], references: [id])
+  childReplies     Reply[]  @relation("ReplyToReply")
+  post             Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 
-  likeCount Int @default(0)
-  tipCount  Int @default(0)
-
-  // Moderation fields
-  isHidden          Boolean  @default(false)
-  moderationReason  String?  @db.Text
-  flaggedCount      Int      @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  post         Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  author       User    @relation(fields: [authorWallet], references: [walletAddress])
-  parentReply  Reply?  @relation("ReplyToReply", fields: [parentReplyId], references: [id])
-  childReplies Reply[] @relation("ReplyToReply")
-
-  // Performance indexes
-  @@index([postId, createdAt(sort: Asc)]) // For loading replies in order
-  @@index([authorWallet, createdAt(sort: Desc)]) // For user reply history
-  @@index([parentReplyId]) // For nested reply threads
-  @@index([isHidden, createdAt(sort: Desc)]) // For moderation filtering
-  @@index([flaggedCount(sort: Desc)]) // For flagged content review
+  @@index([postId, createdAt])
+  @@index([authorWallet, createdAt(sort: Desc)])
+  @@index([parentReplyId])
+  @@index([isHidden, createdAt(sort: Desc)])
+  @@index([flaggedCount(sort: Desc)])
   @@map("replies")
 }
 
 model Interaction {
   id              String   @id @default(cuid())
   userWallet      String   @db.VarChar(44)
-  targetType      String   @db.VarChar(10) // "post" or "reply"
-  targetId        String // ID of post or reply
-  interactionType String   @db.VarChar(10) // "like", "tip"
-  amount          Decimal? @db.Decimal(18, 6) // For tips
+  targetType      String   @db.VarChar(10)
+  targetId        String
+  interactionType String   @db.VarChar(10)
+  amount          Decimal? @db.Decimal(18, 6)
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userWallet], references: [walletAddress])
 
-  createdAt DateTime @default(now())
-
-  // Relations
-  user User @relation(fields: [userWallet], references: [walletAddress])
-
-  // Prevent duplicate interactions
   @@unique([userWallet, targetId, interactionType])
-  // Performance indexes
-  @@index([targetId, interactionType]) // For counting likes/tips on posts
-  @@index([userWallet, createdAt(sort: Desc)]) // For user activity history
-  @@index([createdAt(sort: Desc)]) // For recent activity feeds
+  @@index([targetId, interactionType])
+  @@index([userWallet, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
   @@map("interactions")
 }
 
 model Game {
-  id          String  @id @default(cuid())
-  postId      String  @unique
-  gameType    String  @db.VarChar(20) // "tictactoe", "rps", "coinflip", "connectfour"
-  player1     String  @db.VarChar(44)
-  player2     String? @db.VarChar(44)
-  currentTurn String? @db.VarChar(44)
-  gameState   Json // Board state, moves, etc.
-  wager       Decimal @db.Decimal(18, 6)
-  winner      String? @db.VarChar(44)
-  status      String  @db.VarChar(20) // "waiting", "active", "completed", "cancelled"
+  id          String   @id @default(cuid())
+  postId      String   @unique
+  gameType    String   @db.VarChar(20)
+  player1     String   @db.VarChar(44)
+  player2     String?  @db.VarChar(44)
+  currentTurn String?  @db.VarChar(44)
+  gameState   Json
+  wager       Decimal  @db.Decimal(18, 6)
+  winner      String?  @db.VarChar(44)
+  status      String   @db.VarChar(20)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  player1User User     @relation("Player1Games", fields: [player1], references: [walletAddress])
+  player2User User?    @relation("Player2Games", fields: [player2], references: [walletAddress])
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  winnerUser  User?    @relation("WonGames", fields: [winner], references: [walletAddress])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  post        Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
-  player1User User  @relation("Player1Games", fields: [player1], references: [walletAddress])
-  player2User User? @relation("Player2Games", fields: [player2], references: [walletAddress])
-  winnerUser  User? @relation("WonGames", fields: [winner], references: [walletAddress])
-
-  // Performance indexes
-  @@index([status, createdAt(sort: Desc)]) // For finding active/waiting games
-  @@index([player1, status]) // For player's games
-  @@index([player2, status]) // For player's games
-  @@index([gameType, status]) // For browsing games by type
+  @@index([status, createdAt(sort: Desc)])
+  @@index([player1, status])
+  @@index([player2, status])
+  @@index([gameType, status])
   @@map("games")
 }
 
 model Report {
   id             String    @id @default(cuid())
   reporterWallet String    @db.VarChar(44)
-  targetType     String    @db.VarChar(10) // "post" or "reply"
-  targetId       String // ID of post or reply
-  reason         String    @db.VarChar(50) // "spam", "harassment", "inappropriate", "misinformation", "other"
-  description    String?   @db.Text // Optional detailed description
-  status         String    @default("pending") @db.VarChar(20) // "pending", "reviewed", "resolved", "dismissed"
-  moderatorNotes String?   @db.Text // Notes from moderator
+  targetType     String    @db.VarChar(10)
+  targetId       String
+  reason         String    @db.VarChar(50)
+  description    String?
+  status         String    @default("pending") @db.VarChar(20)
+  moderatorNotes String?
   resolvedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  reporter       User      @relation(fields: [reporterWallet], references: [walletAddress])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  reporter User @relation(fields: [reporterWallet], references: [walletAddress])
-
-  // Prevent duplicate reports from same user for same content
   @@unique([reporterWallet, targetId])
-  // Performance indexes
-  @@index([status, createdAt(sort: Desc)]) // For moderator dashboard
-  @@index([targetId, targetType]) // For getting reports on specific content
-  @@index([reporterWallet, createdAt(sort: Desc)]) // For user report history
-  @@index([reason, status]) // For report analytics
+  @@index([status, createdAt(sort: Desc)])
+  @@index([targetId, targetType])
+  @@index([reporterWallet, createdAt(sort: Desc)])
+  @@index([reason, status])
   @@map("reports")
 }
 
 model ModerationAction {
   id              String   @id @default(cuid())
   moderatorWallet String   @db.VarChar(44)
-  targetType      String   @db.VarChar(10) // "user", "post", "reply"
-  targetId        String // ID of user, post, or reply
-  actionType      String   @db.VarChar(20) // "hide", "warn", "suspend", "unsuspend", "delete"
-  reason          String   @db.Text
-  duration        Int? // Duration in hours for suspensions
-  reportId        String? // Related report that triggered this action
-  
-  createdAt DateTime @default(now())
-  
-  // Relations
-  moderator User @relation("Moderator", fields: [moderatorWallet], references: [walletAddress])
-  targetUser User? @relation("ModeratedUser", fields: [targetId], references: [walletAddress])
-  
-  // Performance indexes
-  @@index([targetType, targetId]) // For content moderation history
-  @@index([moderatorWallet, createdAt(sort: Desc)]) // For moderator activity
-  @@index([actionType, createdAt(sort: Desc)]) // For action analytics
-  @@index([reportId]) // For linking to reports
+  targetType      String   @db.VarChar(10)
+  targetId        String
+  actionType      String   @db.VarChar(20)
+  reason          String
+  duration        Int?
+  reportId        String?
+  createdAt       DateTime @default(now())
+  moderator       User     @relation("Moderator", fields: [moderatorWallet], references: [walletAddress])
+  targetUser      User     @relation("ModeratedUser", fields: [targetId], references: [walletAddress])
+
+  @@index([targetType, targetId])
+  @@index([moderatorWallet, createdAt(sort: Desc)])
+  @@index([actionType, createdAt(sort: Desc)])
+  @@index([reportId])
   @@map("moderation_actions")
 }
 
 model RepEvent {
   id          String   @id @default(cuid())
   userWallet  String   @db.VarChar(44)
-  eventType   String   @db.VarChar(50) // post, like, comment, tip, game_win, etc.
-  category    String   @db.VarChar(20) // content, engagement, community, loyalty
+  eventType   String   @db.VarChar(50)
+  category    String   @db.VarChar(20)
   points      Int
   multiplier  Decimal  @default(1.0) @db.Decimal(3, 2)
-  description String?  @db.Text
+  description String?
   metadata    Json?
   createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userWallet], references: [walletAddress], onDelete: Cascade)
 
-  // Relations
-  user User @relation(fields: [userWallet], references: [walletAddress], onDelete: Cascade)
-
-  // Performance indexes
   @@index([userWallet, createdAt(sort: Desc)])
   @@index([eventType])
   @@index([createdAt])
@@ -274,85 +226,64 @@ model RepEvent {
 }
 
 model WeeklyRepPool {
-  id                String    @id @default(cuid())
-  weekStartDate     DateTime  @unique @db.Date // Monday of the week
-  weekEndDate       DateTime  @db.Date // Sunday of the week
-  distributionDate  DateTime  @db.Date // Friday of the week
-  
-  // Revenue sources
-  sponsoredPostRevenue Decimal @default(0) @db.Decimal(18, 6) // Total sponsored post revenue
-  gameFeesCollected    Decimal @default(0) @db.Decimal(18, 6) // 2% from game wagers
-  eventFeesCollected   Decimal @default(0) @db.Decimal(18, 6) // 5% from event tickets
-  
-  // Distribution calculations
-  platformFeePercent   Int      @default(50) // Platform keeps 50%
-  totalPoolSize        Decimal  @default(0) @db.Decimal(18, 6) // Calculated: (revenues * 50%)
-  totalRepGenerated    Int      @default(0)
-  participantCount     Int      @default(0)
-  
-  distributed       Boolean   @default(false)
-  distributedAt     DateTime?
-  createdAt         DateTime  @default(now())
+  id                   String    @id @default(cuid())
+  weekStartDate        DateTime  @unique @db.Date
+  weekEndDate          DateTime  @db.Date
+  distributionDate     DateTime  @db.Date
+  sponsoredPostRevenue Decimal   @default(0) @db.Decimal(18, 6)
+  gameFeesCollected    Decimal   @default(0) @db.Decimal(18, 6)
+  eventFeesCollected   Decimal   @default(0) @db.Decimal(18, 6)
+  platformFeePercent   Int       @default(50)
+  totalPoolSize        Decimal   @default(0) @db.Decimal(18, 6)
+  totalRepGenerated    Int       @default(0)
+  participantCount     Int       @default(0)
+  distributed          Boolean   @default(false)
+  distributedAt        DateTime?
+  createdAt            DateTime  @default(now())
 
   @@map("weekly_rep_pools")
 }
 
 model SponsoredPost {
-  id              String    @id @default(cuid())
-  postId          String    @unique
-  sponsorWallet   String    @db.VarChar(44)
-  campaignName    String    @db.VarChar(100)
-  
-  // Pricing and performance
-  pricePaid       Decimal   @db.Decimal(18, 6) // Amount paid in ALLY
-  startDate       DateTime
-  endDate         DateTime
-  targetViews     Int       @default(0)
-  actualViews     Int       @default(0)
-  clickCount      Int       @default(0)
-  
-  // Revenue tracking
-  weekNumber      Int       // ISO week number for easy grouping
-  yearNumber      Int       // Year for the week
-  revenueShared   Boolean   @default(false) // Has this been included in weekly pool
-  
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  // Relations
-  post            Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
-  // Performance indexes
-  @@index([weekNumber, yearNumber, revenueShared]) // For weekly revenue calculations
-  @@index([startDate, endDate]) // For active campaigns
+  id            String   @id @default(cuid())
+  postId        String   @unique
+  sponsorWallet String   @db.VarChar(44)
+  campaignName  String   @db.VarChar(100)
+  pricePaid     Decimal  @db.Decimal(18, 6)
+  startDate     DateTime
+  endDate       DateTime
+  targetViews   Int      @default(0)
+  actualViews   Int      @default(0)
+  clickCount    Int      @default(0)
+  weekNumber    Int
+  yearNumber    Int
+  revenueShared Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  post          Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([weekNumber, yearNumber, revenueShared])
+  @@index([startDate, endDate])
   @@map("sponsored_posts")
 }
 
 model TokenDistribution {
-  id              String    @id @default(cuid())
-  userWallet      String    @db.VarChar(44)
-  weekStartDate   DateTime  @db.Date // Monday of the distribution week
-  weekEndDate     DateTime  @db.Date // Sunday of the distribution week
-  distributionDate DateTime @db.Date // Friday when distributed
-  
-  repEarned       Int       // Total rep earned this week
-  sharePercentage Decimal   @db.Decimal(6, 4) // e.g., 5.25%
-  tokensEarned    Decimal   @db.Decimal(18, 6) // Actual ALLY tokens earned
-  
-  // Pool info for transparency
-  weeklyPoolSize  Decimal   @db.Decimal(18, 6) // Total pool for this week
-  totalParticipants Int     // Number of users in distribution
-  
-  claimed         Boolean   @default(false)
-  claimedAt       DateTime?
-  createdAt       DateTime  @default(now())
+  id                String    @id @default(cuid())
+  userWallet        String    @db.VarChar(44)
+  weekStartDate     DateTime  @db.Date
+  weekEndDate       DateTime  @db.Date
+  distributionDate  DateTime  @db.Date
+  repEarned         Int
+  sharePercentage   Decimal   @db.Decimal(6, 4)
+  tokensEarned      Decimal   @db.Decimal(18, 6)
+  weeklyPoolSize    Decimal   @db.Decimal(18, 6)
+  totalParticipants Int
+  claimed           Boolean   @default(false)
+  claimedAt         DateTime?
+  createdAt         DateTime  @default(now())
+  user              User      @relation(fields: [userWallet], references: [walletAddress], onDelete: Cascade)
 
-  // Relations
-  user User @relation(fields: [userWallet], references: [walletAddress], onDelete: Cascade)
-
-  // Prevent duplicate distributions
   @@unique([userWallet, weekStartDate])
-  // Performance indexes
   @@index([userWallet, distributionDate(sort: Desc)])
   @@index([claimed, userWallet])
   @@index([weekStartDate, weekEndDate])
@@ -360,23 +291,20 @@ model TokenDistribution {
 }
 
 model Notification {
-  id              String   @id @default(cuid())
-  userId          String   @db.VarChar(44)
-  type            String   @db.VarChar(20) // like, reply, tip, bump, follow, mention
-  title           String
-  message         String   @db.Text
-  read            Boolean  @default(false)
-  fromUserId      String?  @db.VarChar(44)
-  postId          String?
-  amount          Decimal? @db.Decimal(18, 6)
-  createdAt       DateTime @default(now())
-  
-  // Relations
-  user            User     @relation(fields: [userId], references: [walletAddress])
-  fromUser        User?    @relation("NotificationSender", fields: [fromUserId], references: [walletAddress])
-  post            Post?    @relation(fields: [postId], references: [id])
-  
-  // Indexes
+  id         String   @id @default(cuid())
+  userId     String   @db.VarChar(44)
+  type       String   @db.VarChar(20)
+  title      String
+  message    String
+  read       Boolean  @default(false)
+  fromUserId String?  @db.VarChar(44)
+  postId     String?
+  amount     Decimal? @db.Decimal(18, 6)
+  createdAt  DateTime @default(now())
+  fromUser   User?    @relation("NotificationSender", fields: [fromUserId], references: [walletAddress])
+  post       Post?    @relation(fields: [postId], references: [id])
+  user       User     @relation(fields: [userId], references: [walletAddress])
+
   @@index([userId, read, createdAt(sort: Desc)])
   @@map("notifications")
 }

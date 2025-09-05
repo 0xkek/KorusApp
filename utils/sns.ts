@@ -1,6 +1,8 @@
 // SNS (Solana Name Service) utilities
 // In production, these would call a backend API to resolve SNS domains
 
+import { logger } from './logger';
+
 export interface SNSDomain {
   domain: string;
   owner: string;
@@ -70,7 +72,10 @@ export async function fetchSNSDomains(walletAddress: string): Promise<SNSDomain[
     }
 
     // Get API URL from environment or use default
-    const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+    const API_URL = process.env.EXPO_PUBLIC_API_URL;
+    if (!API_URL) {
+      return null; // Silently fail for SNS lookups without API
+    }
     
     try {
       // Try to fetch real SNS domains from our backend
@@ -86,7 +91,7 @@ export async function fetchSNSDomains(walletAddress: string): Promise<SNSDomain[
         }
       }
     } catch (error) {
-      console.log('SNS API call failed, using fallback:', error);
+      logger.log('SNS API call failed, using fallback:', error);
     }
     
     // Fallback to mock domains for development/demo
@@ -101,7 +106,7 @@ export async function fetchSNSDomains(walletAddress: string): Promise<SNSDomain[
     
     return mockDomains;
   } catch (error) {
-    console.error('Error fetching SNS domains:', error);
+    logger.error('Error fetching SNS domains:', error);
     return [];
   }
 }
@@ -122,7 +127,7 @@ export async function getFavoriteSNSDomain(walletAddress: string): Promise<strin
     
     return null;
   } catch (error) {
-    console.error('Error getting favorite SNS domain:', error);
+    logger.error('Error getting favorite SNS domain:', error);
     return null;
   }
 }
@@ -133,7 +138,10 @@ export async function getFavoriteSNSDomain(walletAddress: string): Promise<strin
 export async function resolveSNSDomain(domain: string): Promise<string | null> {
   try {
     // Get API URL from environment or use default
-    const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+    const API_URL = process.env.EXPO_PUBLIC_API_URL;
+    if (!API_URL) {
+      return null; // Silently fail for SNS lookups without API
+    }
     
     try {
       // Try to resolve domain using real SNS API
@@ -147,7 +155,7 @@ export async function resolveSNSDomain(domain: string): Promise<string | null> {
         }
       }
     } catch (error) {
-      console.log('SNS resolve API failed, using fallback:', error);
+      logger.log('SNS resolve API failed, using fallback:', error);
     }
 
     // Fallback to mock data for development
@@ -159,7 +167,7 @@ export async function resolveSNSDomain(domain: string): Promise<string | null> {
     
     return null;
   } catch (error) {
-    console.error('Error resolving SNS domain:', error);
+    logger.error('Error resolving SNS domain:', error);
     return null;
   }
 }

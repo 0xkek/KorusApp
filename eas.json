@@ -4,31 +4,35 @@
     "appVersionSource": "remote"
   },
   "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal",
-      "android": {
-        "buildType": "apk"
-      }
-    },
-    "preview": {
-      "distribution": "internal",
-      "android": {
-        "buildType": "apk"
-      },
-      "channel": "preview"
-    },
     "production": {
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease",
+        "env": {
+          "NODE_ENV": "production",
+          "EXPO_PUBLIC_ENVIRONMENT": "production"
+        }
       },
       "env": {
+        "NODE_ENV": "production",
         "EXPO_PUBLIC_ENVIRONMENT": "production"
       },
       "channel": "production"
+    },
+    "production-aab": {
+      "extends": "production",
+      "android": {
+        "buildType": "app-bundle",
+        "gradleCommand": ":app:bundleRelease"
+      }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "android": {
+        "releaseStatus": "completed",
+        "track": "production"
+      }
+    }
   }
 }

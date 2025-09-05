@@ -69,11 +69,11 @@ export default function PostDetailScreen() {
     // Load the post from API
     const loadPost = async () => {
       try {
-        console.log('[PostDetail] Loading post with ID:', id);
+        logger.log('[PostDetail] Loading post with ID:', id);
         setLoading(true);
         const response = await postsAPI.getPost(String(id));
-        console.log('[PostDetail] API Response:', response);
-        console.log('[PostDetail] Replies:', response.post?.replies);
+        logger.log('[PostDetail] API Response:', response);
+        logger.log('[PostDetail] Replies:', response.post?.replies);
         
         if (response.success && response.post) {
           // Transform backend post to app format
@@ -126,7 +126,7 @@ export default function PostDetailScreen() {
           router.back();
         }
       } catch (error) {
-        console.error('[PostDetail] Error loading post:', error);
+        logger.error('[PostDetail] Error loading post:', error);
         logger.error('Error loading post:', error);
         showAlert({
           title: 'Error',
@@ -277,7 +277,7 @@ export default function PostDetailScreen() {
           type: 'success'
         });
       } catch (error) {
-        console.error('Failed to create reply:', error);
+        logger.error('Failed to create reply:', error);
         showAlert({
           title: 'Error',
           message: 'Failed to post reply. Please try again.',
@@ -338,7 +338,6 @@ export default function PostDetailScreen() {
                 setSelectedReplyId(reply.id);
                 handleReply(postId, quotedText, quotedUsername);
               }}
-              onBump={() => {}}
               onTip={() => {}}
               isDetailView={true}
               parentUsername={replyIndex === 0 ? post!.wallet : thread[replyIndex - 1].wallet}
@@ -473,22 +472,6 @@ export default function PostDetailScreen() {
                   }
                 }}
                 onReply={handleReply}
-                onBump={(postId) => {
-                  // Update post bump status
-                  if (post) {
-                    setPost({
-                      ...post,
-                      bumped: true,
-                      bumpedAt: Date.now(),
-                      bumpExpiresAt: Date.now() + (5 * 60 * 1000)
-                    });
-                    showAlert({
-                      title: 'Bump',
-                      message: 'Post bumped for 5 minutes! ⬆️',
-                      type: 'bump'
-                    });
-                  }
-                }}
                 onTip={(postId, amount) => {
                   // Update post tips
                   if (post) {
@@ -501,7 +484,6 @@ export default function PostDetailScreen() {
                 onShowTipModal={() => {}}
                 onLikeReply={handleLikeReply}
                 onTipReply={() => {}}
-                onBumpReply={() => {}}
                 onToggleReplies={() => {}}
                 onToggleReplySorting={() => {}}
                 onReport={() => {}}

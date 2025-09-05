@@ -1,4 +1,6 @@
+import { logger } from '../utils/logger'
 import { Connection } from '@solana/web3.js'
+import { NFT_CONFIG } from '../config/constants'
 
 export interface NFT {
   name: string
@@ -15,10 +17,13 @@ export interface NFT {
 
 // Use Helius RPC for NFT fetching
 const HELIUS_API_KEY = process.env.HELIUS_API_KEY
+const HELIUS_RPC_URL = HELIUS_API_KEY 
+  ? `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`
+  : 'https://api.mainnet-beta.solana.com' // Fallback to public RPC
+
 if (!HELIUS_API_KEY) {
-  throw new Error('HELIUS_API_KEY is required in environment variables')
+  logger.warn('HELIUS_API_KEY not set - NFT fetching may be limited')
 }
-const HELIUS_RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`
 
 // Spam detection patterns - expanded list
 const SPAM_PATTERNS = [
@@ -43,18 +48,8 @@ const SPAM_PATTERNS = [
   /^(common|uncommon|rare|epic|legendary)\s*#?\d+$/i,
 ]
 
-// Known verified collections
-const VERIFIED_COLLECTIONS = [
-  'DeGods',
-  'y00ts',
-  'Okay Bears',
-  'Mad Lads',
-  'Claynosaurz',
-  'SMB',
-  'Famous Fox Federation',
-  'Tensorians',
-  'Bored Ape Solana',
-]
+// Use verified collections from config
+const VERIFIED_COLLECTIONS = NFT_CONFIG.VERIFIED_COLLECTIONS
 
 function isSpamNFT(nft: any): boolean {
   // Handle both raw API data and transformed NFT objects
@@ -105,8 +100,8 @@ export async function fetchNFTsForWallet(
   }
   
   try {
-    console.log(`Fetching NFTs for wallet: ${walletAddress}, page: ${page}`)
-    console.log(`Using Helius RPC URL: ${HELIUS_RPC_URL.substring(0, 50)}...`)
+    logger.debug(`Fetching NFTs for wallet: ${walletAddress}, page: ${page}`)
+    logger.debug(`Using Helius RPC URL: ${HELIUS_RPC_URL.substring(0, 50)}...`)
     
     // Use Helius DAS API for better performance
     const response = await fetch(HELIUS_RPC_URL, {
@@ -135,16 +130,16 @@ export async function fetchNFTsForWallet(
     const data = await response.json()
     
     if (!response.ok || data.error) {
-      console.error('Helius RPC error:', data.error || data)
+      logger.error('Helius RPC error:', data.error || data)
       return { nfts: [], hasMore: false }
     }
     
     const assets = data.result?.items || []
-    console.log(`Found ${assets.length} assets for wallet`)
+    logger.debug(`Found ${assets.length} assets for wallet`)
     
     // Log first asset structure for debugging
     if (assets.length > 0) {
-      console.log('First asset structure:', JSON.stringify({
+      logger.debug('First asset structure:', JSON.stringify({
         id: assets[0].id,
         name: assets[0].content?.metadata?.name,
         image: assets[0].content?.links?.image,
@@ -191,7 +186,7 @@ export async function fetchNFTsForWallet(
     const filtered = includeSpam ? transformedAssets : transformedAssets.filter((nft: any) => !isSpamNFT(nft))
     const spamFiltered = totalBeforeFilter - filtered.length
     
-    console.log(`Found ${totalBeforeFilter} NFTs, filtered ${spamFiltered} spam`)
+    logger.debug(`Found ${totalBeforeFilter} NFTs, filtered ${spamFiltered} spam`)
     
     // Paginate the already-transformed assets
     const startIndex = (page - 1) * limit
@@ -200,7 +195,7 @@ export async function fetchNFTsForWallet(
     // The assets are already transformed, just use them directly
     const nfts: NFT[] = paginatedAssets
     
-    console.log(`Returning ${nfts.length} NFTs (page ${page})`)
+    logger.debug(`Returning ${nfts.length} NFTs (page ${page})`)
     return {
       nfts,
       hasMore: filtered.length > startIndex + limit,
@@ -208,7 +203,7 @@ export async function fetchNFTsForWallet(
       spamFiltered
     }
   } catch (error) {
-    console.error('Error fetching NFTs:', error)
+    logger.error('Error fetching NFTs:', error)
     return { nfts: [], hasMore: false }
   }
 }
@@ -263,7 +258,7 @@ export async function getNFTByMint(mintAddress: string): Promise<NFT | null> {
       } : undefined
     }
   } catch (error) {
-    console.error('Error fetching NFT by mint:', error)
+    logger.error('Error fetching NFT by mint:', error)
     return null
   }
 }

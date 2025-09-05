@@ -7,6 +7,8 @@ import {
   trackClick,
   getRevenueStats 
 } from '../controllers/sponsoredController'
+import { sponsoredTrackingLimiter } from '../middleware/rateLimiter'
+import { validateSponsoredView } from '../middleware/validation'
 
 const router = Router()
 
@@ -14,13 +16,13 @@ const router = Router()
 router.post('/create', authenticate, createSponsoredPost)
 
 // GET /api/sponsored - Get active sponsored posts
-router.get('/', getSponsoredPosts)
+router.get('/', sponsoredTrackingLimiter, getSponsoredPosts)
 
 // POST /api/sponsored/:postId/view - Track a view
-router.post('/:postId/view', trackView)
+router.post('/:postId/view', validateSponsoredView, sponsoredTrackingLimiter, trackView)
 
 // POST /api/sponsored/:postId/click - Track a click
-router.post('/:postId/click', trackClick)
+router.post('/:postId/click', validateSponsoredView, sponsoredTrackingLimiter, trackClick)
 
 // GET /api/sponsored/revenue - Get revenue stats (admin only)
 router.get('/revenue', authenticate, getRevenueStats)

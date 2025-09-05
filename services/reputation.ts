@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ReputationScore, ReputationTier, Achievement, ReputationEvent } from '../types';
+import { logger } from '../utils/logger';
 
 const REPUTATION_STORAGE_KEY = 'korus_reputation_scores';
 const ACHIEVEMENTS_KEY = 'korus_achievements';
@@ -90,7 +91,7 @@ class ReputationService {
       }
       this.isInitialized = true;
     } catch (error) {
-      console.error('Failed to load reputation scores:', error);
+      logger.error('Failed to load reputation scores:', error);
     }
   }
 
@@ -258,7 +259,7 @@ class ReputationService {
       });
       await AsyncStorage.setItem(REPUTATION_STORAGE_KEY, JSON.stringify(data));
     } catch (error) {
-      console.error('Failed to save reputation scores:', error);
+      logger.error('Failed to save reputation scores:', error);
     }
   }
 

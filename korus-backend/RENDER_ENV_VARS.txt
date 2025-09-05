@@ -1,0 +1,20 @@
+# REQUIRED Environment Variables for Render Deployment
+
+DATABASE_URL=<Render will provide this>
+JWT_SECRET=<generate-a-secure-random-string-at-least-32-chars>
+CSRF_SECRET=<generate-another-secure-random-string>
+NODE_ENV=production
+
+# Optional but recommended:
+HELIUS_API_KEY=<your-helius-api-key>
+PLATFORM_WALLET_ADDRESS=<your-platform-wallet-public-key>
+TEAM_WALLET_ADDRESS=<your-team-wallet-public-key>
+ALLY_TOKEN_MINT=<your-token-mint-address>
+
+# Feature flags
+ENABLE_REPUTATION=true
+ENABLE_WEEKLY_DISTRIBUTION=false
+ENABLE_MODERATION=true
+
+# CORS (update after frontend is deployed)
+CORS_ORIGINS=https://your-app-domain.com

@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger'
 import { Request, Response } from 'express'
 import prisma from '../config/database'
 import { AuthRequest } from '../middleware/auth'
@@ -46,7 +47,7 @@ export const getUserReputation = async (req: Request, res: Response) => {
       }
     })
   } catch (error) {
-    console.error('Get user reputation error:', error)
+    logger.error('Get user reputation error:', error)
     res.status(500).json({ error: 'Failed to get reputation' })
   }
 }
@@ -72,7 +73,7 @@ export const getLeaderboard = async (req: Request, res: Response) => {
       leaderboard,
     })
   } catch (error) {
-    console.error('Get leaderboard error:', error)
+    logger.error('Get leaderboard error:', error)
     res.status(500).json({ error: 'Failed to get leaderboard' })
   }
 }
@@ -97,7 +98,7 @@ export const recordDailyLogin = async (req: AuthRequest, res: Response) => {
       reputationScore: user?.reputationScore || 0,
     })
   } catch (error) {
-    console.error('Record daily login error:', error)
+    logger.error('Record daily login error:', error)
     res.status(500).json({ error: 'Failed to record login' })
   }
 }

@@ -3,12 +3,17 @@ import dotenv from 'dotenv'
 import express from 'express'
 import helmet from 'helmet'
 import morgan from 'morgan'
+import swaggerUi from 'swagger-ui-express'
 import prisma from './config/database'
 import { apiLimiter } from './middleware/rateLimiter'
 import { scheduleWeeklyDistribution } from './jobs/weeklyDistribution'
 import { validateEnv } from './config/validateEnv'
 import { sanitizeBody } from './middleware/sanitization'
 import { securityHeaders, requestIdMiddleware, validateCSRFToken } from './middleware/security'
+import { errorHandler, notFoundHandler } from './middleware/errorHandler'
+import { requestLogger, performanceLogger } from './middleware/requestLogger'
+import { logger } from './utils/logger'
+import { swaggerSpec } from './config/swagger'
 
 // Import routes
 import authRoutes from './routes/auth'
@@ -25,6 +30,7 @@ import notificationsRoutes from './routes/notifications'
 import distributionRoutes from './routes/distribution'
 import snsRoutes from './routes/sns'
 import nftsRoutes from './routes/nfts'
+import healthRoutes from './routes/health'
 
 dotenv.config()
 
@@ -56,17 +62,10 @@ const corsOptions = {
       return callback(null, true)
     }
     
-    // In development, be more permissive
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`CORS: Allowing origin ${origin} in development mode`)
-      return callback(null, true)
-    }
-    
-    // In production, strictly check the whitelist
+    // Strictly check the whitelist in production
     if (allowedOrigins.includes(origin)) {
       callback(null, true)
     } else {
-      console.warn(`CORS: Blocked origin ${origin}`)
       callback(new Error('Not allowed by CORS'))
     }
   },
@@ -80,27 +79,36 @@ const corsOptions = {
 app.use(securityHeaders) // Enhanced security headers
 app.use(requestIdMiddleware) // Add request tracking
 app.use(cors(corsOptions))
-app.use(morgan('combined'))
+
+// Logging middleware
+if (process.env.NODE_ENV === 'production') {
+  // In production, use structured JSON logging
+  app.use(morgan('combined'))
+} else {
+  // In development, use colored console logging
+  app.use(morgan('dev'))
+}
+
 app.use(express.json())
 app.use(sanitizeBody) // Sanitize all inputs
 
-// Debug logging for all requests (only in development)
-app.use((req, res, next) => {
-  if (process.env.DEBUG_MODE === 'true' || (process.env.NODE_ENV === 'development' && process.env.DEBUG_MODE !== 'false')) {
-    console.log('=== INCOMING REQUEST ===')
-    console.log('Method:', req.method)
-    console.log('URL:', req.url)
-    console.log('Body:', req.body)
-    console.log('Headers:', req.headers)
-    console.log('=======================')
-  }
-  next()
-})
+// Request/Response logging
+app.use(requestLogger)
+app.use(performanceLogger(1000)) // Log requests taking > 1 second
+
+// Swagger API documentation (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'Korus API Documentation'
+  }))
+}
 
 // Apply rate limiting to all API routes
 app.use('/api', apiLimiter)
 
 // Routes
+app.use('/', healthRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/posts', postsRoutes)
 app.use('/api/posts', repliesRoutes)  // For /api/posts/:id/replies endpoints
@@ -117,158 +125,48 @@ app.use('/api/distribution', distributionRoutes)
 app.use('/api/sns', snsRoutes)
 app.use('/api/nfts', nftsRoutes)
 
-// Test routes
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    message: 'Korus Backend is running!',
-    timestamp: new Date().toISOString() 
-  })
-})
-
-// Temporary migration check endpoint
-app.get('/check-migrations', async (req, res) => {
-  try {
-    // Check migration history
-    const migrations = await prisma.$queryRaw`SELECT * FROM _prisma_migrations ORDER BY finished_at DESC LIMIT 10`
-    
-    res.json({
-      migrations,
-      totalMigrations: Array.isArray(migrations) ? migrations.length : 0
-    })
-  } catch (error) {
-    res.status(500).json({ 
-      error: 'Failed to check migrations',
-      details: error 
-    })
-  }
-})
-
-// Debug notification endpoint
-app.get('/debug-notifications', async (req, res) => {
-  try {
-    const hasTable = await prisma.$queryRaw<{exists: boolean}[]>`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = 'notifications'
-      )
-    `
-    
-    let sampleNotification = null
-    if (hasTable[0]?.exists) {
-      try {
-        sampleNotification = await prisma.notification.findFirst()
-      } catch (e) {
-        // Table exists but query failed
-      }
-    }
-    
-    res.json({
-      hasNotificationsTable: hasTable[0]?.exists || false,
-      sampleNotification,
-      apiVersion: '1.0.3',
-      deployTime: new Date().toISOString()
-    })
-  } catch (error: any) {
-    res.status(500).json({ 
-      error: 'Debug check failed',
-      details: error.message 
-    })
-  }
-})
-
-app.get('/test-db', async (req, res) => {
-  try {
-    const userCount = await prisma.user.count()
-    const postCount = await prisma.post.count()
-    
-    // Check if notifications table exists
-    let notificationCount = 0
-    let hasNotificationsTable = false
-    try {
-      notificationCount = await prisma.notification.count()
-      hasNotificationsTable = true
-    } catch (e) {
-      console.log('Notifications table not found:', e)
-    }
-    
-    const recentUsers = await prisma.user.findMany({
-      take: 5,
-      orderBy: { createdAt: 'desc' },
-      select: { walletAddress: true, createdAt: true }
-    })
-    res.json({ 
-      message: 'Database connected successfully!', 
-      userCount,
-      postCount,
-      notificationCount,
-      hasNotificationsTable,
-      recentUsers,
-      tables: 'users, posts, replies, interactions, games' + (hasNotificationsTable ? ', notifications' : ''),
-      version: '1.0.3' // With debug endpoints
-    })
-  } catch (error) {
-    console.error('Database error:', error)
-    res.status(500).json({ 
-      error: 'Database connection failed',
-      details: error 
-    })
-  }
-})
+// Debug endpoints removed for production security
 
 // Global error handler (must be last)
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('=== UNHANDLED ERROR ===')
-  console.error('URL:', req.url)
-  console.error('Method:', req.method)
-  console.error('Body:', req.body)
-  console.error('Error:', err)
-  console.error('Stack:', err?.stack)
-  console.error('====================')
-  
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal server error',
-    details: process.env.NODE_ENV === 'development' ? err : undefined
-  })
-})
+// 404 handler - must come after all routes
+app.use(notFoundHandler)
+
+// Global error handler - must be last middleware
+app.use(errorHandler)
 
 // Start server
 app.listen(PORT, () => {
-  const isMockMode = !process.env.DATABASE_URL || process.env.MOCK_MODE === 'true';
+  // Production mode only - mock mode removed
   
-  console.log(`🚀 Korus Backend running on http://localhost:${PORT}`)
-  console.log(`📊 Health: http://localhost:${PORT}/health`)
-  console.log(`🗄️ Database: http://localhost:${PORT}/test-db`)
-  console.log(`🔐 Auth: http://localhost:${PORT}/api/auth/*`)
-  console.log(`📝 Posts: http://localhost:${PORT}/api/posts/*`)
-  console.log(`💫 Interactions: http://localhost:${PORT}/api/interactions/*`)
-  console.log(`💬 Replies: http://localhost:${PORT}/api/posts/*/replies`)
-  console.log(`🎮 Games: http://localhost:${PORT}/api/games/*`)
-  console.log(`🔍 Search: http://localhost:${PORT}/api/search`)
-  console.log(`🚨 Reports: http://localhost:${PORT}/api/reports`)
-  console.log(`🛡️ Moderation: http://localhost:${PORT}/api/moderation`)
-  console.log(`🏆 Reputation: http://localhost:${PORT}/api/reputation/*`)
-  console.log(`💰 Sponsored: http://localhost:${PORT}/api/sponsored/*`)
-  console.log(`🎁 Distribution: http://localhost:${PORT}/api/distribution/*`)
-  console.log(`\n🔧 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:8081'}`)
+  logger.info(`🚀 Korus Backend running on http://localhost:${PORT}`)
+  logger.info(`📊 Health: http://localhost:${PORT}/health`)
+  if (process.env.NODE_ENV !== 'production') {
+    logger.info(`📚 API Docs: http://localhost:${PORT}/api-docs`)
+  }
+  logger.info(`🔐 Auth: http://localhost:${PORT}/api/auth/*`)
+  logger.info(`📝 Posts: http://localhost:${PORT}/api/posts/*`)
+  logger.info(`💫 Interactions: http://localhost:${PORT}/api/interactions/*`)
+  logger.info(`💬 Replies: http://localhost:${PORT}/api/posts/*/replies`)
+  logger.info(`🎮 Games: http://localhost:${PORT}/api/games/*`)
+  logger.info(`🔍 Search: http://localhost:${PORT}/api/search`)
+  logger.info(`🚨 Reports: http://localhost:${PORT}/api/reports`)
+  logger.info(`🛡️ Moderation: http://localhost:${PORT}/api/moderation`)
+  logger.info(`🏆 Reputation: http://localhost:${PORT}/api/reputation/*`)
+  logger.info(`💰 Sponsored: http://localhost:${PORT}/api/sponsored/*`)
+  logger.info(`🎁 Distribution: http://localhost:${PORT}/api/distribution/*`)
+  logger.info(`\n🔧 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:8081'}`)
   
   // Environment check
-  console.log(`\n🔐 Environment Check:`)
-  console.log(`- DATABASE_URL: ${process.env.DATABASE_URL ? '✅ Set' : '❌ Not set'}`)
-  console.log(`- JWT_SECRET: ${process.env.JWT_SECRET ? '✅ Set' : '⚠️  Using default (not secure for production)'}`)
-  console.log(`- NODE_ENV: ${process.env.NODE_ENV || 'development'}`)
+  logger.info(`\n🔐 Environment Check:`)
+  logger.info(`- DATABASE_URL: ${process.env.DATABASE_URL ? '✅ Set' : '❌ Not set'}`)
+  logger.info(`- JWT_SECRET: ${process.env.JWT_SECRET ? '✅ Set' : '⚠️  Using default (not secure for production)'}`)
+  logger.info(`- NODE_ENV: ${process.env.NODE_ENV || 'development'}`)
   
-  if (isMockMode) {
-    console.log(`\n⚠️  Running in MOCK MODE - No database connection required`)
-    console.log(`📝 Data is stored in memory and will be lost on restart`)
+  // Schedule weekly distribution cron job if enabled
+  if (process.env.ENABLE_WEEKLY_DISTRIBUTION === 'true') {
+    scheduleWeeklyDistribution()
+    logger.info(`\n⏰ Weekly distribution scheduled for Fridays at 8:00 PM UTC`)
   } else {
-    // Schedule weekly distribution cron job if enabled
-    if (process.env.ENABLE_WEEKLY_DISTRIBUTION === 'true') {
-      scheduleWeeklyDistribution()
-      console.log(`\n⏰ Weekly distribution scheduled for Fridays at 8:00 PM UTC`)
-    } else {
-      console.log(`\n⏸️  Weekly distribution is disabled (set ENABLE_WEEKLY_DISTRIBUTION=true to enable)`)
-    }
+    logger.info(`\n⏸️  Weekly distribution is disabled (set ENABLE_WEEKLY_DISTRIBUTION=true to enable)`)
   }
 })

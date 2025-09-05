@@ -14,7 +14,7 @@ import { AuthService } from '../../services/auth';
 
 interface Notification {
   id: string;
-  type: 'like' | 'reply' | 'tip' | 'bump' | 'follow' | 'mention';
+  type: 'like' | 'reply' | 'tip' | 'mention';
   title: string;
   message: string;
   time: string;
@@ -125,8 +125,6 @@ export default function NotificationsScreen() {
       case 'like': return 'New like on your post';
       case 'reply': return 'New reply to your post';
       case 'tip': return 'You received a tip!';
-      case 'bump': return 'Your post was bumped!';
-      case 'follow': return 'New follower';
       case 'mention': return 'You were mentioned';
       default: return 'New notification';
     }
@@ -139,8 +137,6 @@ export default function NotificationsScreen() {
       case 'like': return `${username} liked your post`;
       case 'reply': return `${username} replied to your post`;
       case 'tip': return `${username} tipped you ${notif.amount || 0} SOL`;
-      case 'bump': return `${username} bumped your post`;
-      case 'follow': return `${username} started following you`;
       case 'mention': return `${username} mentioned you`;
       default: return 'New activity on your post';
     }
@@ -191,8 +187,6 @@ export default function NotificationsScreen() {
       case 'like': return 'heart';
       case 'reply': return 'chatbubble';
       case 'tip': return 'cash';
-      case 'bump': return 'trending-up';
-      case 'follow': return 'person-add';
       case 'mention': return 'at';
       default: return 'notifications';
     }
@@ -202,7 +196,6 @@ export default function NotificationsScreen() {
     switch (type) {
       case 'like': return '#FF6B6B';
       case 'tip': return '#4ECDC4';
-      case 'bump': return '#45B7D1';
       default: return colors.primary;
     }
   };

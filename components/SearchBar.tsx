@@ -14,6 +14,7 @@ import {
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { useTheme } from '../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
+import { logger } from '../utils/logger';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -51,14 +52,14 @@ export default function SearchBar({
   let searchTimeout: NodeJS.Timeout | number;
 
   const handleSubmit = () => {
-    console.log('[SearchBar] handleSubmit called with query:', query);
+    logger.log('[SearchBar] handleSubmit called with query:', query);
     if (query.trim()) {
-      console.log('[SearchBar] Calling onSearch with:', query.trim());
+      logger.log('[SearchBar] Calling onSearch with:', query.trim());
       try {
         onSearch(query.trim());
-        console.log('[SearchBar] onSearch called successfully');
+        logger.log('[SearchBar] onSearch called successfully');
       } catch (error) {
-        console.error('[SearchBar] Error calling onSearch:', error);
+        logger.error('[SearchBar] Error calling onSearch:', error);
       }
       Keyboard.dismiss();
       setShowHistory(false);

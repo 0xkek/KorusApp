@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express'
 import prisma from '../config/database'
 import { AuthRequest } from './auth'
+import { logger } from '../utils/logger'
 
 // Middleware to check if user is suspended
 export const checkSuspension = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -39,7 +40,7 @@ export const checkSuspension = async (req: AuthRequest, res: Response, next: Nex
           }
         })
         
-        console.log(`Auto-unsuspended user: ${userWallet}`)
+        logger.debug(`Auto-unsuspended user: ${userWallet}`)
         next()
       } else {
         // User is still suspended
@@ -63,7 +64,7 @@ export const checkSuspension = async (req: AuthRequest, res: Response, next: Nex
       next()
     }
   } catch (error) {
-    console.error('Suspension check error:', error)
+    logger.error('Suspension check error:', error)
     res.status(500).json({
       success: false,
       error: 'Failed to check user status'
@@ -90,7 +91,7 @@ export const checkWarnings = async (req: AuthRequest, res: Response, next: NextF
 
     // If user has 5+ warnings, show warning message but don't block
     if (user.warningCount >= 5) {
-      console.log(`User ${userWallet} has ${user.warningCount} warnings - monitoring activity`)
+      logger.debug(`User ${userWallet} has ${user.warningCount} warnings - monitoring activity`)
       
       // Add warning header but continue
       res.setHeader('X-Moderation-Warning', `You have ${user.warningCount} warnings. Please follow community guidelines.`)
@@ -98,7 +99,7 @@ export const checkWarnings = async (req: AuthRequest, res: Response, next: NextF
 
     next()
   } catch (error) {
-    console.error('Warning check error:', error)
+    logger.error('Warning check error:', error)
     next() // Don't block on warning check failure
   }
 }

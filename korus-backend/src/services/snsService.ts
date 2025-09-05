@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger'
 import { Connection, PublicKey } from '@solana/web3.js'
 import { 
   getAllDomains, 
@@ -7,8 +8,10 @@ import {
 } from '@bonfida/spl-name-service'
 
 // SNS domains are on mainnet - use Helius RPC for better reliability
-// Fallback to public RPC if Helius is not configured
-const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '3d27295a-caf5-4a92-9fee-b52aa43e54bd'
+const HELIUS_API_KEY = process.env.HELIUS_API_KEY
+if (!HELIUS_API_KEY) {
+  logger.error('WARNING: HELIUS_API_KEY not set - SNS lookups may be rate limited')
+}
 const RPC_ENDPOINT = HELIUS_API_KEY 
   ? `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`
   : 'https://api.mainnet-beta.solana.com'
@@ -26,28 +29,28 @@ export interface SNSDomain {
  */
 export async function fetchSNSDomainsForWallet(walletAddress: string): Promise<SNSDomain[]> {
   try {
-    console.log(`Fetching SNS domains for wallet: ${walletAddress}`)
+    logger.debug(`Fetching SNS domains for wallet: ${walletAddress}`)
     
     // Validate wallet address
     let owner: PublicKey
     try {
       owner = new PublicKey(walletAddress)
     } catch (error) {
-      console.error('Invalid wallet address:', walletAddress)
+      logger.error('Invalid wallet address:', walletAddress)
       return []
     }
     
     // Fetch all domain public keys owned by this wallet
-    console.log('Calling getAllDomains with owner:', owner.toString())
+    logger.debug('Calling getAllDomains with owner:', owner.toString())
     const domainKeys = await getAllDomains(connection, owner)
-    console.log('getAllDomains returned:', domainKeys)
+    logger.debug('getAllDomains returned:', domainKeys)
     
     if (!domainKeys || domainKeys.length === 0) {
-      console.log('No domains found for wallet:', walletAddress)
+      logger.debug('No domains found for wallet:', walletAddress)
       return []
     }
     
-    console.log(`Found ${domainKeys.length} domain keys for wallet`)
+    logger.debug(`Found ${domainKeys.length} domain keys for wallet`)
     
     // Resolve each domain key to get the actual domain name
     const domainNames = await Promise.all(
@@ -56,7 +59,7 @@ export async function fetchSNSDomainsForWallet(walletAddress: string): Promise<S
           const domainName = await performReverseLookup(connection, domainKey)
           return domainName
         } catch (error) {
-          console.error('Error resolving domain key:', domainKey.toString(), error)
+          logger.error('Error resolving domain key:', domainKey.toString(), error)
           return null
         }
       })
@@ -71,11 +74,11 @@ export async function fetchSNSDomainsForWallet(walletAddress: string): Promise<S
         favorite: index === 0 // Set first domain as favorite
       }))
     
-    console.log(`Successfully resolved ${snsDomains.length} domains:`, snsDomains.map(d => d.domain))
+    logger.debug(`Successfully resolved ${snsDomains.length} domains:`, snsDomains.map(d => d.domain))
     
     return snsDomains
   } catch (error) {
-    console.error('Error fetching SNS domains:', error)
+    logger.error('Error fetching SNS domains:', error)
     return []
   }
 }
@@ -85,7 +88,7 @@ export async function fetchSNSDomainsForWallet(walletAddress: string): Promise<S
  */
 export async function resolveSNSDomain(domain: string): Promise<string | null> {
   try {
-    console.log(`Resolving SNS domain: ${domain}`)
+    logger.debug(`Resolving SNS domain: ${domain}`)
     
     // Remove .sol suffix if present
     const domainName = domain.replace('.sol', '')
@@ -111,18 +114,18 @@ export async function resolveSNSDomain(domain: string): Promise<string | null> {
       }
       
       if (ownerAddress) {
-        console.log(`Domain ${domain} resolved to: ${ownerAddress}`)
+        logger.debug(`Domain ${domain} resolved to: ${ownerAddress}`)
         return ownerAddress
       }
     } catch (innerError: any) {
       // Domain might not exist or have different structure
-      console.log(`Domain ${domain} lookup failed:`, innerError.message)
+      logger.debug(`Domain ${domain} lookup failed:`, innerError.message)
     }
     
-    console.log(`Could not resolve domain ${domain}`)
+    logger.debug(`Could not resolve domain ${domain}`)
     return null
   } catch (error) {
-    console.error('Error resolving SNS domain:', error)
+    logger.error('Error resolving SNS domain:', error)
     return null
   }
 }
@@ -143,7 +146,7 @@ export async function getFavoriteSNSDomain(walletAddress: string): Promise<strin
     
     return null
   } catch (error) {
-    console.error('Error getting favorite SNS domain:', error)
+    logger.error('Error getting favorite SNS domain:', error)
     return null
   }
 }

@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { authenticate } from '../middleware/auth'
+import { requireTokenFeatures } from '../middleware/tokenFeatures'
 import { 
   getMyDistributions,
   getWeeklyLeaderboard,
@@ -10,15 +11,15 @@ import {
 const router = Router()
 
 // GET /api/distribution/my - Get user's distribution history
-router.get('/my', authenticate, getMyDistributions)
+router.get('/my', authenticate, requireTokenFeatures, getMyDistributions)
 
 // GET /api/distribution/leaderboard - Get weekly leaderboard
-router.get('/leaderboard', getWeeklyLeaderboard)
+router.get('/leaderboard', requireTokenFeatures, getWeeklyLeaderboard)
 
 // GET /api/distribution/pool - Get current pool status
-router.get('/pool', getCurrentPoolStatus)
+router.get('/pool', requireTokenFeatures, getCurrentPoolStatus)
 
 // POST /api/distribution/claim - Claim tokens for a specific week
-router.post('/claim', authenticate, claimTokens)
+router.post('/claim', authenticate, requireTokenFeatures, claimTokens)
 
 export default router

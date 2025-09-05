@@ -1,5 +1,6 @@
 import rateLimit from 'express-rate-limit';
 import { Request, Response } from 'express';
+import { logger } from '../utils/logger';
 
 // Rate limiter for post creation - prevent duplicate posts
 export const createPostLimiter = rateLimit({
@@ -9,7 +10,7 @@ export const createPostLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req: Request, res: Response) => {
-    console.log(`Rate limit hit for IP: ${req.ip}`);
+    logger.debug(`Rate limit hit for IP: ${req.ip}`);
     res.status(429).json({
       error: 'Too many posts created. Please wait 30 seconds before posting again.',
       retryAfter: 30
@@ -44,10 +45,10 @@ export const gameLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Rate limiter for search endpoints
+// Rate limiter for search endpoints - LOOSE
 export const searchLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 30, // Limit each IP to 30 search requests per minute
+  max: 100, // Limit each IP to 100 search requests per minute
   message: 'Too many search requests, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -67,6 +68,33 @@ export const reportLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 10, // Limit each IP to 10 reports per hour
   message: 'Too many reports submitted, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiter for NFT endpoints - VERY LOOSE
+export const nftLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 200, // Limit each IP to 200 NFT requests per minute
+  message: 'Too many NFT requests, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiter for SNS endpoints - VERY LOOSE
+export const snsLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 200, // Limit each IP to 200 SNS requests per minute
+  message: 'Too many SNS requests, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiter for sponsored content tracking - VERY LOOSE
+export const sponsoredTrackingLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 500, // Limit each IP to 500 tracking events per minute
+  message: 'Too many tracking requests, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
 });

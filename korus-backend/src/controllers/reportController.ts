@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger'
 import { Request, Response } from 'express'
 import prisma from '../config/database'
 
@@ -112,7 +113,7 @@ export const createReport = async (req: AuthRequest, res: Response) => {
       message: 'Report submitted successfully'
     })
   } catch (error) {
-    console.error('Create report error:', error)
+    logger.error('Create report error:', error)
     res.status(500).json({ 
       success: false, 
       error: 'Failed to create report' 
@@ -166,7 +167,7 @@ export const getReports = async (req: Request, res: Response) => {
       }
     })
   } catch (error) {
-    console.error('Get reports error:', error)
+    logger.error('Get reports error:', error)
     res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch reports' 
@@ -204,7 +205,7 @@ export const getReport = async (req: Request, res: Response) => {
       report
     })
   } catch (error) {
-    console.error('Get report error:', error)
+    logger.error('Get report error:', error)
     res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch report' 
@@ -267,7 +268,7 @@ export const updateReportStatus = async (req: Request, res: Response) => {
       message: `Report status updated to ${status}`
     })
   } catch (error) {
-    console.error('Update report status error:', error)
+    logger.error('Update report status error:', error)
     res.status(500).json({ 
       success: false, 
       error: 'Failed to update report status' 
@@ -326,7 +327,7 @@ export const getContentReports = async (req: Request, res: Response) => {
       }
     })
   } catch (error) {
-    console.error('Get content reports error:', error)
+    logger.error('Get content reports error:', error)
     res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch content reports' 

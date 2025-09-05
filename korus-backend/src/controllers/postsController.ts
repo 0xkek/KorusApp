@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger'
 import { Request, Response } from 'express'
 import prisma from '../config/database'
 import { AuthRequest } from '../middleware/auth'
@@ -48,7 +49,7 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
       }
     })
 
-    console.log(`New post created by ${walletAddress}: ${content.substring(0, 50)}...`)
+    logger.debug(`New post created by ${walletAddress}: ${content.substring(0, 50)}...`)
 
     // Run auto-moderation on the new post
     // TODO: Re-enable after fixing deployment
@@ -64,7 +65,7 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
       post: post
     } as any)
   } catch (error) {
-    console.error('Create post error:', error)
+    logger.error('Create post error:', error)
     res.status(500).json({ success: false, error: 'Failed to create post' })
   }
 }
@@ -116,8 +117,8 @@ export const getPosts = async (req: Request, res: Response) => {
       }
     })
   } catch (error: any) {
-    console.error('Get posts error:', error)
-    console.error('Error stack:', error?.stack)
+    logger.error('Get posts error:', error)
+    logger.error('Error stack:', error?.stack)
     res.status(500).json({ 
       success: false, 
       error: 'Failed to get posts',
@@ -169,7 +170,7 @@ export const getSinglePost = async (req: Request, res: Response<ApiResponse<Post
       post: post
     } as any)
   } catch (error) {
-    console.error('Get single post error:', error)
+    logger.error('Get single post error:', error)
     res.status(500).json({ success: false, error: 'Failed to get post' })
   }
 }

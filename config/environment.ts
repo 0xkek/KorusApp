@@ -15,9 +15,7 @@ interface EnvironmentConfig {
   solanaRpcUrl: string;
   
   // Feature Flags
-  showDemoContent: boolean;
-  showDemoInstructions: boolean;
-  enableMockMode: boolean;
+  // Demo and mock features removed for production
   smartContractsEnabled: boolean;
   
   // Token Configuration
@@ -45,16 +43,13 @@ interface EnvironmentConfig {
 const configs: Record<Environment, EnvironmentConfig> = {
   development: {
     // API
-    apiUrl: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api',
+    apiUrl: process.env.EXPO_PUBLIC_API_URL || '',
     
     // Solana
     solanaCluster: 'solana:devnet',
     solanaRpcUrl: 'https://api.devnet.solana.com',
     
-    // Features
-    showDemoContent: true,
-    showDemoInstructions: true,
-    enableMockMode: false,
+    // Features - production only
     smartContractsEnabled: false,
     
     // Token
@@ -81,16 +76,13 @@ const configs: Record<Environment, EnvironmentConfig> = {
   
   staging: {
     // API
-    apiUrl: process.env.EXPO_PUBLIC_API_URL || 'https://korus-backend-staging.onrender.com/api',
+    apiUrl: process.env.EXPO_PUBLIC_API_URL || '',
     
     // Solana
     solanaCluster: 'solana:testnet',
     solanaRpcUrl: 'https://api.testnet.solana.com',
     
-    // Features
-    showDemoContent: false,
-    showDemoInstructions: false,
-    enableMockMode: false,
+    // Features - production only
     smartContractsEnabled: false,
     
     // Token
@@ -117,16 +109,13 @@ const configs: Record<Environment, EnvironmentConfig> = {
   
   production: {
     // API
-    apiUrl: process.env.EXPO_PUBLIC_API_URL || 'https://korus-backend.onrender.com/api',
+    apiUrl: process.env.EXPO_PUBLIC_API_URL || '',
     
     // Solana
     solanaCluster: 'solana:mainnet-beta',
-    solanaRpcUrl: process.env.EXPO_PUBLIC_SOLANA_RPC || 'https://api.mainnet-beta.solana.com',
+    solanaRpcUrl: process.env.EXPO_PUBLIC_SOLANA_RPC || '',
     
-    // Features
-    showDemoContent: false,
-    showDemoInstructions: false,
-    enableMockMode: false,
+    // Features - production only
     smartContractsEnabled: false,
     
     // Token (TODO: Add actual ALLY token address when deployed)
@@ -164,9 +153,10 @@ export const isProduction = ENV === 'production';
 // Helper to check if we're in development
 export const isDevelopment = ENV === 'development';
 
-// Always log environment on app start for debugging
-console.log('🌍 Environment:', ENV);
-console.log('📡 API URL:', config.apiUrl);
-console.log('⛓️ Solana Cluster:', config.solanaCluster);
-console.log('🎮 Demo Content:', config.showDemoContent);
-console.log('📱 App Name:', config.appName);
+// Log environment on app start for debugging (development only)
+if (isDevelopment && config.enableLogging) {
+  console.log('🌍 Environment:', ENV);
+  console.log('📡 API URL:', config.apiUrl);
+  console.log('⛓️ Solana Cluster:', config.solanaCluster);
+  console.log('📱 App Name:', config.appName);
+}

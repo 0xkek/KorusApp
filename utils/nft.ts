@@ -28,7 +28,7 @@ export async function fetchNFTsFromWallet(
   }
 ): Promise<{ nfts: NFT[]; hasMore: boolean; totalBeforeFilter?: number; spamFiltered?: number }> {
   if (!walletAddress) {
-    console.error('No wallet address provided for NFT fetching');
+    logger.error('No wallet address provided for NFT fetching');
     return { nfts: [], hasMore: false };
   }
   
@@ -38,15 +38,18 @@ export async function fetchNFTsFromWallet(
   const cacheKey = `${walletAddress}_${page}_${includeSpam}`;
   const cached = nftCache[cacheKey];
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    console.log('Returning cached NFTs');
+    logger.log('Returning cached NFTs');
     return { nfts: cached.nfts, hasMore: cached.nfts.length === limit };
   }
 
   try {
-    // Get API URL from environment or use default
-    const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+    // Get API URL from environment
+    const API_URL = process.env.EXPO_PUBLIC_API_URL;
+    if (!API_URL) {
+      throw new Error('EXPO_PUBLIC_API_URL is not configured');
+    }
     
-    console.log('Fetching NFTs for wallet:', walletAddress, 'page:', page);
+    logger.log('Fetching NFTs for wallet:', walletAddress, 'page:', page);
     
     // Fetch from our backend API (which uses Helius internally)
     const queryParams = new URLSearchParams({
@@ -56,12 +59,12 @@ export async function fetchNFTsFromWallet(
     });
     
     const url = `${API_URL}/nfts/wallet/${walletAddress}?${queryParams}`;
-    console.log('Fetching NFTs from:', url);
+    logger.log('Fetching NFTs from:', url);
     
     const response = await fetch(url);
     
     if (!response.ok) {
-      console.error('Backend NFT fetch failed:', {
+      logger.error('Backend NFT fetch failed:', {
         status: response.status, 
         statusText: response.statusText,
         url: url
@@ -70,9 +73,9 @@ export async function fetchNFTsFromWallet(
       // Try to get error details
       try {
         const errorData = await response.json();
-        console.error('Backend error details:', errorData);
+        logger.error('Backend error details:', errorData);
       } catch (e) {
-        console.error('Could not parse error response');
+        logger.error('Could not parse error response');
       }
       
       return { nfts: [], hasMore: false };
@@ -81,7 +84,7 @@ export async function fetchNFTsFromWallet(
     const data = await response.json();
     
     if (!data.success) {
-      console.error('Backend NFT fetch error:', data.error, data.details);
+      logger.error('Backend NFT fetch error:', data.error, data.details);
       return { nfts: [], hasMore: false };
     }
     
@@ -91,7 +94,7 @@ export async function fetchNFTsFromWallet(
       timestamp: Date.now()
     };
     
-    console.log(`Backend returned ${data.nfts?.length || 0} NFTs (page ${page})`);
+    logger.log(`Backend returned ${data.nfts?.length || 0} NFTs (page ${page})`);
     
     return {
       nfts: data.nfts || [],
@@ -100,7 +103,7 @@ export async function fetchNFTsFromWallet(
       spamFiltered: data.spamFiltered
     };
   } catch (error) {
-    console.error('Error fetching NFTs:', error);
+    logger.error('Error fetching NFTs:', error);
     return { nfts: [], hasMore: false };
   }
 }

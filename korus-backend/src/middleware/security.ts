@@ -3,7 +3,10 @@ import crypto from 'crypto'
 import helmet from 'helmet'
 
 // CSRF Token management using HMAC (stateless approach)
-const csrfSecret = process.env.CSRF_SECRET || 'korus-csrf-secret-change-in-production'
+const csrfSecret = process.env.CSRF_SECRET
+if (!csrfSecret) {
+  throw new Error('CSRF_SECRET environment variable is required')
+}
 
 export const generateCSRFToken = (sessionId: string): string => {
   // Generate deterministic token based on session ID
@@ -30,12 +33,8 @@ export const validateCSRFToken = (req: Request, res: Response, next: NextFunctio
   const sessionId = req.headers['x-session-id'] as string
   const providedToken = req.headers['x-csrf-token'] as string
 
-  // In development, warn but don't block if CSRF is missing
+  // Always require CSRF token in production
   if (!sessionId || !providedToken) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('CSRF token missing in development mode:', req.path)
-      return next()
-    }
     return res.status(403).json({ error: 'CSRF token required' })
   }
 

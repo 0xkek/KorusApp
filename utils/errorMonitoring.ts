@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/react-native'
 import { CaptureContext } from '@sentry/types'
+import { logger } from './logger'
 
 interface ErrorMetadata {
   userId?: string
@@ -76,10 +77,10 @@ class ErrorMonitor {
   }
 
   captureException(error: Error, metadata?: ErrorMetadata) {
-    console.error('Error captured:', error)
+    logger.error('Error captured:', error)
 
     if (!this.initialized) {
-      console.warn('Error monitoring not initialized')
+      logger.warn('Error monitoring not initialized')
       return
     }
 

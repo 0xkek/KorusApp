@@ -25,5 +25,12 @@ module.exports = {
     '**/__tests__/**/*.(ts|tsx|js|jsx)',
     '**/*.(test|spec).(ts|tsx|js|jsx)'
   ],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/korus-backend/',
+    '/.expo/',
+    '/dist/',
+    '/build/'
+  ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
 };

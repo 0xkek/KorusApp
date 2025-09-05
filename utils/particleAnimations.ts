@@ -3,7 +3,7 @@ import { Dimensions } from 'react-native';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-export type ParticleType = 'like' | 'tip' | 'bump' | 'reply';
+export type ParticleType = 'like' | 'tip' | 'reply';
 
 interface ParticleConfig {
   emojis: string[];
@@ -23,12 +23,6 @@ const particleConfigs: Record<ParticleType, ParticleConfig> = {
     emojis: ['💰', '⭐', '💎', '✨', '🪙'],
     count: 10,
     colors: ['#43e97b', '#38f9d7', '#FFD700'],
-    hapticType: 'Heavy',
-  },
-  bump: {
-    emojis: ['⬆️', '✨', '🚀', '💫'],
-    count: 6,
-    colors: ['#43e97b', '#38f9d7', '#00ff88'],
     hapticType: 'Heavy',
   },
   reply: {
@@ -131,13 +125,6 @@ export const triggerHapticPattern = (type: ParticleType): void => {
       }, 160);
       break;
       
-    case 'bump':
-      // Bump up pattern
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      setTimeout(() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      }, 150);
-      break;
       
     case 'reply':
       // Simple feedback

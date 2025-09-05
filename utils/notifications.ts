@@ -2,6 +2,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logger } from './logger';
 
 export async function registerForPushNotificationsAsync() {
   let token;
@@ -36,7 +37,7 @@ export async function registerForPushNotificationsAsync() {
       
       const projectId = '6f182b5a-61e8-4be6-83a4-0accb8873ca3'; // Your actual Expo project ID
       token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-      console.log('Push token:', token);
+      logger.log('Push token:', token);
       
       // Send token to backend
       try {
@@ -50,13 +51,13 @@ export async function registerForPushNotificationsAsync() {
             },
             body: JSON.stringify({ pushToken: token })
           });
-          console.log('Push token saved to backend');
+          logger.log('Push token saved to backend');
         }
       } catch (error) {
-        console.error('Failed to save push token to backend:', error);
+        logger.error('Failed to save push token to backend:', error);
       }
     } catch (error) {
-      console.log('Push notifications not available in Expo Go with SDK 53+');
+      logger.log('Push notifications not available in Expo Go with SDK 53+');
       // Silently fail in development - push notifications will work in production builds
     }
   } else {
@@ -78,11 +79,11 @@ export function setupNotificationListeners() {
   });
 
   const notificationListener = Notifications.addNotificationReceivedListener(notification => {
-    console.log('Notification received:', notification);
+    logger.log('Notification received:', notification);
   });
 
   const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
-    console.log('Notification response:', response);
+    logger.log('Notification response:', response);
   });
 
   // Return a cleanup function

@@ -727,10 +727,6 @@ export default function SettingsScreen() {
                           <Text style={[styles.faqAnswer, { color: colors.textSecondary }]}>You earn $ALLY tokens by receiving tips from other users who appreciate your content. Create valuable posts and engage meaningfully with the community.</Text>
                         </View>
                         
-                        <View style={styles.faqItem}>
-                          <Text style={[styles.faqQuestion, { color: colors.primary }]}>What are bumps?</Text>
-                          <Text style={[styles.faqAnswer, { color: colors.textSecondary }]}>Bumps temporarily boost a post&apos;s visibility for 5 minutes, helping important content reach more people. Use bumps to highlight time-sensitive or valuable posts.</Text>
-                        </View>
                         
                         <View style={styles.faqItem}>
                           <Text style={[styles.faqQuestion, { color: colors.primary }]}>What&apos;s included in Premium?</Text>
