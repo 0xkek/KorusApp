@@ -7,7 +7,7 @@
     "preview": {
       "android": {
         "buildType": "apk",
-        "gradleCommand": ":app:assembleDebug"
+        "gradleCommand": ":app:assembleRelease"
       },
       "env": {
         "NODE_ENV": "production",
