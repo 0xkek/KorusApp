@@ -234,13 +234,12 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
                   {/* Connect Other Wallet Button */}
                   <TouchableOpacity
                     onPress={() => {
-                      // On Android, both buttons trigger the same native wallet picker
-                      // The Solana Mobile Wallet Adapter shows all available wallets
-                      const seedVault = availableWallets.find(w => w.name === 'seedvault');
-                      if (seedVault) {
-                        handleWalletConnect(seedVault);
+                      // Look for non-seedvault wallets (like Phantom)
+                      const otherWallet = availableWallets.find(w => w.name !== 'seedvault');
+                      if (otherWallet) {
+                        handleWalletConnect(otherWallet);
                       } else {
-                        showAlert('No Wallets Found', 'Please install a Solana wallet app to continue.', 'info');
+                        showAlert('No Wallets Found', 'Please install a Solana wallet app like Phantom to continue.', 'info');
                       }
                     }}
                     style={styles.otherWalletsButton}
@@ -320,13 +319,13 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   title: {
     fontSize: FontSizes['2xl'],
     fontFamily: Fonts.bold,
-    color: colors.text,
+    color: '#ffffff', // Hardcoded white for visibility
     marginBottom: 8,
   },
   subtitle: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.regular,
-    color: colors.textSecondary,
+    color: '#a0a0a0', // Hardcoded gray for visibility
     marginBottom: 24,
   },
   connectedCard: {
@@ -371,7 +370,7 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   noWalletsText: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.regular,
-    color: colors.textSecondary,
+    color: '#a0a0a0', // Hardcoded gray for visibility
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -388,7 +387,7 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   newToWalletsText: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.semiBold,
-    color: isDarkMode ? '#000' : '#fff',
+    color: '#000000', // Hardcoded black for green gradient button
   },
   walletOption: {
     backgroundColor: '#1a1a1a',
@@ -427,7 +426,7 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   getStartedText: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.regular,
-    color: colors.textSecondary,
+    color: '#a0a0a0', // Hardcoded gray for visibility
     textAlign: 'center',
   },
   cancelButton: {
@@ -462,13 +461,13 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   primaryWalletName: {
     fontSize: FontSizes.lg,
     fontFamily: Fonts.bold,
-    color: isDarkMode ? '#000' : '#fff',
+    color: '#000000', // Hardcoded black for green gradient button
     marginBottom: 4,
   },
   primaryWalletDescription: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.regular,
-    color: isDarkMode ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.8)',
+    color: 'rgba(0,0,0,0.7)', // Hardcoded dark gray for green gradient button
   },
   otherWalletsButton: {
     backgroundColor: '#1a1a1a',
