@@ -20,12 +20,18 @@
         "gradleCommand": ":app:assembleRelease",
         "env": {
           "NODE_ENV": "production",
-          "EXPO_PUBLIC_ENVIRONMENT": "production"
+          "EXPO_PUBLIC_ENVIRONMENT": "production",
+          "EXPO_PUBLIC_API_URL": "https://korus-backend.onrender.com",
+          "EXPO_PUBLIC_SOLANA_NETWORK": "mainnet-beta",
+          "EXPO_PUBLIC_ALLY_TOKEN_ADDRESS": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       },
       "env": {
         "NODE_ENV": "production",
-        "EXPO_PUBLIC_ENVIRONMENT": "production"
+        "EXPO_PUBLIC_ENVIRONMENT": "production",
+        "EXPO_PUBLIC_API_URL": "https://korus-backend.onrender.com",
+        "EXPO_PUBLIC_SOLANA_NETWORK": "mainnet-beta",
+        "EXPO_PUBLIC_ALLY_TOKEN_ADDRESS": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
       },
       "channel": "production"
     },

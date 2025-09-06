@@ -9,6 +9,7 @@ import {
   Text
 } from 'react-native'
 import { BlurView } from 'expo-blur'
+import { logger } from '../utils/logger'
 
 interface OptimizedImageProps extends Omit<ImageProps, 'source'> {
   source: { uri: string }

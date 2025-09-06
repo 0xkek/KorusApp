@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -9,9 +9,8 @@ import {
   Linking,
   StyleSheet,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useWallet } from '../context/WalletContext';
-import { WalletProvider, seedVaultProvider } from '../utils/walletConnectors';
+import { WalletProvider } from '../utils/walletConnectors';
 import { logger } from '../utils/logger';
 import { useKorusAlert } from './KorusAlertProvider';
 import { useTheme } from '../context/ThemeContext';
@@ -196,9 +195,6 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
                   {/* Seed Vault - Primary Button */}
                   <TouchableOpacity
                     onPress={() => {
-                      // For Seeker mobile users, deep link directly to Seed Vault
-                      // TODO: Implement direct Seed Vault deep linking
-                      // For now, use the standard connection flow
                       const seedVault = availableWallets.find(w => w.name === 'seedvault');
                       if (seedVault) {
                         handleWalletConnect(seedVault);
@@ -219,7 +215,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
                         <Text style={styles.primaryWalletDescription}>Recommended for Seeker users</Text>
                       </View>
                       {isConnecting && selectedProvider?.name === 'seedvault' && (
-                        <ActivityIndicator color={isDarkMode ? '#000' : '#fff'} size="small" />
+                        <ActivityIndicator color={'#000000'} size="small" />
                       )}
                     </LinearGradient>
                   </TouchableOpacity>
@@ -234,10 +230,9 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
                   {/* Connect Other Wallet Button */}
                   <TouchableOpacity
                     onPress={() => {
-                      // Look for non-seedvault wallets (like Phantom)
-                      const otherWallet = availableWallets.find(w => w.name !== 'seedvault');
-                      if (otherWallet) {
-                        handleWalletConnect(otherWallet);
+                      const phantom = availableWallets.find(w => w.name === 'phantom');
+                      if (phantom) {
+                        handleWalletConnect(phantom);
                       } else {
                         showAlert('No Wallets Found', 'Please install a Solana wallet app like Phantom to continue.', 'info');
                       }
@@ -245,7 +240,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
                     style={styles.otherWalletsButton}
                     disabled={isConnecting}
                   >
-                    <Text style={styles.otherWalletsText}>Connect Other Wallet</Text>
+                    <Text style={styles.otherWalletsText}>Connect Phantom</Text>
                   </TouchableOpacity>
                   
                   <TouchableOpacity
@@ -533,5 +528,13 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     fontSize: FontSizes.sm,
     fontFamily: Fonts.regular,
     color: '#999999',
+  },
+  walletNote: {
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.regular,
+    color: '#999999',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 8,
   },
 });

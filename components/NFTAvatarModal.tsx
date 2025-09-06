@@ -9,6 +9,7 @@ import { useTheme } from '../context/ThemeContext';
 import { fetchNFTsFromWallet, getFallbackNFTImage, NFT } from '../utils/nft';
 import { Ionicons } from '@expo/vector-icons';
 import { OptimizedImage } from './OptimizedImage';
+import { logger } from '../utils/logger';
 
 interface NFTAvatarModalProps {
   visible: boolean;

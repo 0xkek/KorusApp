@@ -4,6 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import { getFavoriteSNSDomain, fetchSNSDomains, SNSDomain } from '../utils/sns';
 import { NFTAvatar } from '../types/theme';
+import { clearNFTCache } from '../utils/nft';
 import { logger } from '../utils/logger';
 import { withErrorHandling, handleError } from '../utils/errorHandler';
 import { authAPI } from '../utils/api';
@@ -171,18 +172,38 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       let signature: string;
       let authMessage: string;
       
-      // On mobile, ALL wallets must use MWA
+      // On mobile, handle Seed Vault separately from other wallets
       if (Platform.OS !== 'web') {
-        logger.log(`Using MWA flow for ${provider.name} on mobile...`);
-        authMessage = createAuthMessage();
-        
-        // Use the combined connect and sign flow
-        const { connectAndSignWithMWA } = await import('../utils/walletConnectors');
-        const result = await connectAndSignWithMWA(authMessage);
-        publicKey = result.address;
-        signature = result.signature;
-        
-        logger.log('MWA flow completed, address:', publicKey);
+        if (provider.name === 'seedvault') {
+          // Try Seed Vault's native connection first
+          logger.log('Attempting Seed Vault native connection...');
+          try {
+            publicKey = await provider.connect();
+            authMessage = createAuthMessage();
+            signature = await provider.signMessage(authMessage);
+            logger.log('Seed Vault native connection successful');
+          } catch (seedVaultError) {
+            // If Seed Vault fails, fall back to MWA
+            logger.log('Seed Vault native failed, using MWA:', seedVaultError);
+            authMessage = createAuthMessage();
+            const { connectAndSignWithMWA } = await import('../utils/walletConnectors');
+            const result = await connectAndSignWithMWA(authMessage);
+            publicKey = result.address;
+            signature = result.signature;
+          }
+        } else {
+          // For other wallets (Phantom, etc), use MWA
+          logger.log(`Using MWA flow for ${provider.name} on mobile...`);
+          authMessage = createAuthMessage();
+          
+          // Use the combined connect and sign flow
+          const { connectAndSignWithMWA } = await import('../utils/walletConnectors');
+          const result = await connectAndSignWithMWA(authMessage);
+          publicKey = result.address;
+          signature = result.signature;
+          
+          logger.log('MWA flow completed, address:', publicKey);
+        }
       } else {
         // Web browser flow
         logger.log(`Connecting to ${provider.name} wallet on web...`);
@@ -260,7 +281,10 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       // Clear session
       await clearSession();
       
-      // Reset state
+      // Clear NFT cache for all wallets
+      clearNFTCache();
+      
+      // Reset ALL state including avatars and user data
       setWalletAddress(null);
       setIsConnected(false);
       setCurrentProvider(null);
@@ -269,6 +293,9 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       setIsPremium(false);
       setSelectedAvatarState(null);
       setSelectedNFTAvatarState(null);
+      setSnsDomain(null);
+      setAllSNSDomains([]);
+      setTimeFunUsername(null);
       setSnsDomain(null);
       setAllSNSDomains([]);
       setTimeFunUsernameState(null);
@@ -295,9 +322,17 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   };
 
   const clearSession = async () => {
+    // Clear wallet data
     await SecureStore.deleteItemAsync(WALLET_ADDRESS_KEY);
     await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
     await SecureStore.deleteItemAsync(WALLET_PROVIDER_KEY);
+    
+    // Clear user-specific data that should reset on wallet change
+    await SecureStore.deleteItemAsync(AVATAR_KEY);
+    await SecureStore.deleteItemAsync(NFT_AVATAR_KEY);
+    await SecureStore.deleteItemAsync(FAVORITE_SNS_KEY);
+    await SecureStore.deleteItemAsync(PREMIUM_STATUS_KEY);
+    await SecureStore.deleteItemAsync(TIMEFUN_USERNAME_KEY);
   };
 
   const loadUserPreferences = async () => {

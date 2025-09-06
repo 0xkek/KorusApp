@@ -1,4 +1,3 @@
-import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -10,7 +9,6 @@ import { Fonts, FontSizes } from '../constants/Fonts';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../hooks/useAuth';
 import { useKorusAlert } from '../components/KorusAlertProvider';
-import { getErrorMessage } from '../utils/errorHandler';
 import { logger } from '../utils/logger';
 import { WalletConnectionModal } from '../components/WalletConnectionModal';
 import AgeGate, { needsAgeVerification } from '../components/AgeGate';
@@ -216,7 +214,7 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   subtitle: {
     fontSize: FontSizes.lg,
     fontFamily: Fonts.medium,
-    color: colors.textSecondary,
+    color: '#a0a0a0', // Hardcoded for visibility on dark background
     marginTop: 8,
   },
   logoContainer: {
@@ -271,13 +269,13 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   cardTitle: {
     fontSize: FontSizes['2xl'],
     fontFamily: Fonts.bold,
-    color: colors.text,
+    color: '#ffffff', // Hardcoded white for dark background
     textAlign: 'center',
   },
   cardDescription: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.regular,
-    color: colors.textSecondary,
+    color: '#a0a0a0', // Hardcoded for visibility on dark background
     textAlign: 'center',
     marginBottom: 32,
     lineHeight: 22,
@@ -307,20 +305,20 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: '#1a1a1a', // Hardcoded dark surface
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: '#2a2a2a', // Hardcoded dark border
   },
   secondaryButtonText: {
     fontSize: FontSizes.lg,
     fontFamily: Fonts.semiBold,
-    color: colors.text,
+    color: '#ffffff', // Hardcoded white for dark background
     letterSpacing: 0.3,
   },
   disclaimer: {
     fontSize: FontSizes.xs,
     fontFamily: Fonts.regular,
-    color: colors.textTertiary,
+    color: '#808080', // Hardcoded gray for dark background
     textAlign: 'center',
     lineHeight: 16,
   },

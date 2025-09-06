@@ -1,6 +1,8 @@
 // Temporarily removed Solana imports due to React Native compatibility issues
 // import { Connection, PublicKey } from '@solana/web3.js';
 // import { Metaplex } from '@metaplex-foundation/js';
+import { logger } from './logger';
+import { config } from '../config/environment';
 
 export interface NFT {
   name: string;
@@ -18,6 +20,16 @@ export interface NFT {
 // Simple in-memory cache
 const nftCache: { [walletAddress: string]: { nfts: NFT[], timestamp: number } } = {};
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Clear NFT cache for a specific wallet or all wallets
+export function clearNFTCache(walletAddress?: string) {
+  if (walletAddress) {
+    delete nftCache[walletAddress];
+  } else {
+    // Clear entire cache
+    Object.keys(nftCache).forEach(key => delete nftCache[key]);
+  }
+}
 
 export async function fetchNFTsFromWallet(
   walletAddress: string,
@@ -43,10 +55,10 @@ export async function fetchNFTsFromWallet(
   }
 
   try {
-    // Get API URL from environment
-    const API_URL = process.env.EXPO_PUBLIC_API_URL;
+    // Get API URL from config
+    const API_URL = config.apiUrl;
     if (!API_URL) {
-      throw new Error('EXPO_PUBLIC_API_URL is not configured');
+      throw new Error('API URL is not configured');
     }
     
     logger.log('Fetching NFTs for wallet:', walletAddress, 'page:', page);

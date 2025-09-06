@@ -1,5 +1,5 @@
 import { solanaMobileService } from './solanaMobile';
-import bs58 from 'bs58';
+const bs58 = require('bs58');
 import { logger } from './logger';
 import { PublicKey } from '@solana/web3.js';
 import { Platform } from 'react-native';
@@ -54,18 +54,25 @@ export const APP_IDENTITY = {
 
 export const connectAndSignWithMWA = async (message: string): Promise<{ address: string; signature: string }> => {
   try {
-    logger.log('Importing MWA library...');
-    const mwaModule = await import('@solana-mobile/mobile-wallet-adapter-protocol-web3js');
-    const transact = mwaModule.transact;
+    logger.log('Starting MWA transaction...');
+    logger.log('Platform:', Platform.OS);
+    logger.log('App Identity:', APP_IDENTITY);
+    
+    // Import MWA dynamically for mobile
+    let transact: any;
+    try {
+      const mwaModule = require('@solana-mobile/mobile-wallet-adapter-protocol-web3js');
+      transact = mwaModule.transact;
+    } catch (requireError) {
+      logger.error('Failed to require MWA module:', requireError);
+      throw new Error('Mobile wallet adapter not available. Please ensure you have a compatible Solana wallet installed.');
+    }
     
     if (!transact) {
       throw new Error('MWA transact function not found in module');
     }
     
-    logger.log('MWA library imported successfully');
-    logger.log('Starting MWA transaction...');
-    logger.log('Platform:', Platform.OS);
-    logger.log('App Identity:', APP_IDENTITY);
+    logger.log('MWA library loaded successfully');
   
   // Create a timeout promise
   const timeoutPromise = new Promise<never>((_, reject) => {
@@ -175,7 +182,11 @@ export const phantomProvider: WalletProvider = {
     if (typeof window !== 'undefined' && (window as any).solana?.isPhantom) {
       return true;
     }
-    // On mobile, could check for Phantom app via deep linking
+    // On mobile, Phantom will work through MWA
+    // We return true to show it as an option - MWA will handle the actual connection
+    if (Platform.OS === 'android' || Platform.OS === 'ios') {
+      return true;
+    }
     return false;
   },
   connect: async () => {

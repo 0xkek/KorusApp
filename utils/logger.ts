@@ -8,7 +8,7 @@ enum LogLevel {
 }
 
 class Logger {
-  private isDevelopment = __DEV__;
+  private isDevelopment = typeof __DEV__ !== 'undefined' ? __DEV__ : false;
   private logLevel: LogLevel = this.isDevelopment ? LogLevel.DEBUG : LogLevel.ERROR;
 
   private formatMessage(level: string, message: string, ...args: any[]): string {
