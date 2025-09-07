@@ -167,29 +167,48 @@ export default function ProfileScreen() {
         setHasSetUsername(true);
         setEditingUsername(false);
         tempUsernameValue = '';
-        Alert.alert('Success', 'Username updated successfully!');
+        showAlert({
+          title: 'Success! 🎉',
+          message: 'Your username has been updated successfully!',
+          buttons: [
+            { 
+              text: 'Awesome!', 
+              style: 'primary' as const
+            }
+          ]
+        });
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'Failed to update username';
       const requiresPremium = error.response?.data?.requiresPremium;
       
       if (requiresPremium) {
-        Alert.alert(
-          'Premium Required',
-          errorMessage,
-          [
-            { text: 'Cancel', style: 'cancel' },
+        showAlert({
+          title: 'Premium Required 👑',
+          message: errorMessage,
+          buttons: [
             { 
-              text: 'Upgrade to Premium', 
-              onPress: () => {
-                // Navigate to premium upgrade screen or show premium modal
-                router.push('/premium');
-              }
+              text: 'Maybe Later', 
+              style: 'cancel' as const
+            },
+            { 
+              text: 'Upgrade Now ✨', 
+              onPress: () => router.push('/premium'),
+              style: 'primary' as const
             }
           ]
-        );
+        });
       } else {
-        Alert.alert('Error', errorMessage);
+        showAlert({
+          title: 'Oops!',
+          message: errorMessage,
+          buttons: [
+            { 
+              text: 'OK', 
+              style: 'primary' as const
+            }
+          ]
+        });
       }
     } finally {
       setSavingUsername(false);
@@ -420,30 +439,62 @@ export default function ProfileScreen() {
                   const canEdit = !hasSetUsername || isActuallyPremium;
                   
                   if (!canEdit) {
-                    Alert.alert(
-                      'Username Locked',
-                      'You have already set your username. Upgrade to Premium to change it anytime!',
-                      [
-                        { text: 'Cancel', style: 'cancel' },
+                    showAlert({
+                      title: 'Username Locked 🔒',
+                      message: 'You have already set your username. Upgrade to Premium to change it anytime!',
+                      buttons: [
                         { 
-                          text: 'Upgrade to Premium', 
-                          onPress: () => router.push('/premium')
+                          text: 'Maybe Later', 
+                          style: 'cancel' as const
+                        },
+                        { 
+                          text: 'Upgrade to Premium ✨', 
+                          onPress: () => router.push('/premium'),
+                          style: 'primary' as const
                         }
                       ]
-                    );
+                    });
                     return;
                   }
                   
-                  setEditingUsername(true);
-                  setUsernameError('');
-                  // Initialize the temp value with current username
-                  tempUsernameValue = currentUsername || '';
-                  // Set the initial value when starting to edit
-                  setTimeout(() => {
-                    if (usernameInputRef.current) {
-                      usernameInputRef.current.setNativeProps({ text: currentUsername || '' });
-                    }
-                  }, 50);
+                  // Show disclaimer for first-time username setup if user is not premium
+                  if (!currentUsername && !isActuallyPremium) {
+                    showAlert({
+                      title: 'Important Notice ⚠️',
+                      message: 'As a free user, you can only set your username ONCE. Choose wisely! Premium users can change their username anytime.',
+                      buttons: [
+                        { 
+                          text: 'Cancel', 
+                          style: 'cancel' as const
+                        },
+                        { 
+                          text: 'I Understand', 
+                          onPress: () => {
+                            setEditingUsername(true);
+                            setUsernameError('');
+                            tempUsernameValue = currentUsername || '';
+                            setTimeout(() => {
+                              if (usernameInputRef.current) {
+                                usernameInputRef.current.setNativeProps({ text: currentUsername || '' });
+                              }
+                            }, 50);
+                          },
+                          style: 'primary' as const
+                        }
+                      ]
+                    });
+                  } else {
+                    setEditingUsername(true);
+                    setUsernameError('');
+                    // Initialize the temp value with current username
+                    tempUsernameValue = currentUsername || '';
+                    // Set the initial value when starting to edit
+                    setTimeout(() => {
+                      if (usernameInputRef.current) {
+                        usernameInputRef.current.setNativeProps({ text: currentUsername || '' });
+                      }
+                    }, 50);
+                  }
                 }}
                 activeOpacity={0.8}
                 style={styles.usernameWrapper}
