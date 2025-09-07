@@ -101,10 +101,10 @@ export default function ProfileScreen() {
     
     // Load username if viewing own profile - only once to avoid rate limiting
     if (isOwnProfile && !hasLoadedProfile && currentUserWallet) {
+      setHasLoadedProfile(true); // Set this BEFORE loading to prevent multiple calls
       loadUserProfile();
-      setHasLoadedProfile(true);
     }
-  }, [isOwnProfile, hasLoadedProfile, currentUserWallet]);
+  }, [isOwnProfile, currentUserWallet]); // Remove hasLoadedProfile from dependencies
 
   const loadUserProfile = async () => {
     try {

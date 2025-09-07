@@ -21,7 +21,7 @@ export const createPostLimiter = rateLimit({
 // General API rate limiter
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per 15 minutes
+  max: 300, // Increased to 300 requests per 15 minutes (more lenient)
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -95,6 +95,15 @@ export const sponsoredTrackingLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 500, // Limit each IP to 500 tracking events per minute
   message: 'Too many tracking requests, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiter for username changes - LENIENT
+export const usernameLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // Allow 10 username change attempts per minute
+  message: 'Too many username change attempts, please wait a moment.',
   standardHeaders: true,
   legacyHeaders: false,
 });

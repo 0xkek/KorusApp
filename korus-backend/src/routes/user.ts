@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { validateUsername, normalizeUsername } from '../utils/usernameValidation';
 import { logger } from '../utils/logger';
+import { usernameLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -50,7 +51,7 @@ router.get('/profile', authenticate, async (req: AuthRequest, res) => {
  * POST /api/user/username
  * Set or update username
  */
-router.post('/username', authenticate, async (req: AuthRequest, res) => {
+router.post('/username', usernameLimiter, authenticate, async (req: AuthRequest, res) => {
   try {
     const userWallet = req.userWallet!;
     const { username } = req.body;
