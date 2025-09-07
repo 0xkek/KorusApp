@@ -12,12 +12,25 @@ import GameSelectionModal from './GameSelectionModal';
 import GameJoinModal from './GameJoinModal';
 import { Post as PostType, GameType } from '../types';
 import { config } from '../config/environment';
+import { useDisplayName } from '../hooks/useSNSDomain';
 
 interface GamesViewProps {
   posts: PostType[];
   currentUserWallet: string;
   onCreateGame: (gameData: { type: GameType; wager: number }) => void;
 }
+
+// Helper component to display player names with username support
+const GamePlayerDisplay = ({ player, username, label }: { player: string; username?: string | null; label: string }) => {
+  const { colors } = useTheme();
+  const displayName = useDisplayName(player, false, username);
+  
+  return (
+    <Text style={[styles.playerLabel, { color: colors.textTertiary }]}>
+      {label}: {displayName}
+    </Text>
+  );
+};
 
 export default function GamesView({ 
   posts, 
@@ -274,13 +287,17 @@ export default function GamesView({
           </View>
 
           <View style={styles.playerInfo}>
-            <Text style={[styles.playerLabel, { color: colors.textTertiary }]}>
-              Player 1: {post.gameData.player1.slice(0, 6)}...{post.gameData.player1.slice(-4)}
-            </Text>
+            <GamePlayerDisplay 
+              player={post.gameData.player1}
+              username={post.gameData.player1Username}
+              label="Player 1"
+            />
             {post.gameData.player2 && (
-              <Text style={[styles.playerLabel, { color: colors.textTertiary }]}>
-                Player 2: {post.gameData.player2.slice(0, 6)}...{post.gameData.player2.slice(-4)}
-              </Text>
+              <GamePlayerDisplay 
+                player={post.gameData.player2}
+                username={post.gameData.player2Username}
+                label="Player 2"
+              />
             )}
           </View>
         </LinearGradient>

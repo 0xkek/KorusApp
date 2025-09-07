@@ -6,10 +6,13 @@ export interface GameData {
   wager: number;
   player1: string;
   player2?: string;
+  player1Username?: string;
+  player2Username?: string;
   status: GameStatus;
   winner?: string;
   board?: any; // TicTacToe and Connect4 board state
   currentPlayer?: string;
+  currentPlayerUsername?: string;
   createdAt: number;
   expiresAt: number;
   // Rock Paper Scissors specific

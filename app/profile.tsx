@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View, Image, ScrollView, TextInput, Linking, Clipboard } from 'react-native';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View, Image, ScrollView, TextInput, Linking, Clipboard, Alert, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +18,7 @@ import TipSuccessModal from '../components/TipSuccessModal';
 import { useKorusAlert } from '../components/KorusAlertProvider';
 import { AuthService } from '../services/auth';
 import { logger } from '../utils/logger';
+import { userAPI } from '../utils/api';
 
 export default function ProfileScreen() {
   const params = useLocalSearchParams();
@@ -53,8 +54,12 @@ export default function ProfileScreen() {
   const [showNFTSelection, setShowNFTSelection] = useState(false);
   const [showSNSDropdown, setShowSNSDropdown] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [editingTimeFun, setEditingTimeFun] = useState(false);
-  const [tempTimeFunUsername, setTempTimeFunUsername] = useState(timeFunUsername || '');
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null);
+  const [tempUsername, setTempUsername] = useState('');
+  const [usernameError, setUsernameError] = useState('');
+  const [savingUsername, setSavingUsername] = useState(false);
+  const [checkingUsername, setCheckingUsername] = useState(false);
   const [showRepDetails, setShowRepDetails] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
   const [showTipSuccessModal, setShowTipSuccessModal] = useState(false);
@@ -65,7 +70,7 @@ export default function ProfileScreen() {
     if (profileWallet === currentUserWallet) {
       return {
         wallet: profileWallet,
-        username: snsDomain || timeFunUsername,
+        username: snsDomain || currentUsername || timeFunUsername,
         avatar: selectedAvatar,
         nftAvatar: selectedNFTAvatar,
         isPremium: isPremium,
@@ -81,12 +86,93 @@ export default function ProfileScreen() {
       isPremium: false,
       userTheme: colors.primary
     };
-  }, [profileWallet, currentUserWallet, snsDomain, timeFunUsername, selectedAvatar, selectedNFTAvatar, isPremium, colors.primary]);
+  }, [profileWallet, currentUserWallet, snsDomain, currentUsername, timeFunUsername, selectedAvatar, selectedNFTAvatar, isPremium, colors.primary]);
   
   useEffect(() => {
     // TODO: Fetch user posts from API
     setUserPosts([]);
-  }, [profileWallet]);
+    
+    // Load username if viewing own profile
+    if (isOwnProfile) {
+      loadUserProfile();
+    }
+  }, [profileWallet, isOwnProfile]);
+
+  const loadUserProfile = async () => {
+    try {
+      const response = await userAPI.getProfile();
+      if (response?.user?.username) {
+        setCurrentUsername(response.user.username);
+      }
+    } catch (error) {
+      logger.log('Failed to load user profile:', error);
+    }
+  };
+
+  const validateUsername = (username: string) => {
+    // Alphanumeric only, 3-20 chars
+    const regex = /^[a-zA-Z0-9]{3,20}$/;
+    
+    if (!username) {
+      return 'Username is required';
+    }
+    if (username.length < 3) {
+      return 'Username must be at least 3 characters';
+    }
+    if (username.length > 20) {
+      return 'Username cannot exceed 20 characters';
+    }
+    if (!regex.test(username)) {
+      return 'Username can only contain letters and numbers';
+    }
+    if (username.toLowerCase().endsWith('sol')) {
+      return 'Usernames ending with "sol" are reserved';
+    }
+    return '';
+  };
+
+  const handleUsernameChange = async (text: string) => {
+    setTempUsername(text);
+    const error = validateUsername(text);
+    setUsernameError(error);
+    
+    if (!error && text.length >= 3) {
+      setCheckingUsername(true);
+      try {
+        const response = await userAPI.checkUsername(text);
+        if (!response.available && text.toLowerCase() !== currentUsername?.toLowerCase()) {
+          setUsernameError('Username is already taken');
+        }
+      } catch (error) {
+        logger.log('Failed to check username:', error);
+      } finally {
+        setCheckingUsername(false);
+      }
+    }
+  };
+
+  const handleSaveUsername = async () => {
+    const error = validateUsername(tempUsername);
+    if (error) {
+      setUsernameError(error);
+      return;
+    }
+
+    setSavingUsername(true);
+    try {
+      const response = await userAPI.setUsername(tempUsername);
+      if (response.success) {
+        setCurrentUsername(response.username);
+        setEditingUsername(false);
+        setTempUsername('');
+        Alert.alert('Success', 'Username updated successfully!');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.error || 'Failed to update username');
+    } finally {
+      setSavingUsername(false);
+    }
+  };
   
   
   const stats = React.useMemo(() => {
@@ -299,83 +385,88 @@ export default function ProfileScreen() {
           </View>
         )}
         
-        {/* Time.fun Profile */}
-        {isOwnProfile && (
-          <View style={styles.timeFunSection}>
-            <Text style={styles.sectionTitle}>time.fun Profile</Text>
+        {/* Username */}
+        {isOwnProfile && !snsDomain && (
+          <View style={styles.usernameSection}>
+            <Text style={styles.sectionTitle}>Username</Text>
             
-            {!editingTimeFun ? (
+            {!editingUsername ? (
               <TouchableOpacity
-                onPress={() => setEditingTimeFun(true)}
+                onPress={() => {
+                  setEditingUsername(true);
+                  setTempUsername(currentUsername || '');
+                  setUsernameError('');
+                }}
                 activeOpacity={0.8}
-                style={styles.timeFunWrapper}
+                style={styles.usernameWrapper}
               >
                 <LinearGradient
                   colors={gradients.surface}
-                  style={styles.timeFunGradientSecondary}
+                  style={styles.usernameGradientSecondary}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
-                  <View style={styles.timeFunContent}>
-                    <Ionicons name="time-outline" size={20} color={colors.primary} />
-                    {timeFunUsername ? (
-                      <Text style={styles.timeFunUsername}>@{timeFunUsername}</Text>
+                  <View style={styles.usernameContent}>
+                    <Ionicons name="at" size={20} color={colors.primary} />
+                    {currentUsername ? (
+                      <Text style={styles.usernameText}>@{currentUsername}</Text>
                     ) : (
-                      <Text style={styles.timeFunPlaceholder}>Add your time.fun username</Text>
+                      <Text style={styles.usernamePlaceholder}>Set your username</Text>
                     )}
                     <Ionicons name="create-outline" size={16} color={colors.textSecondary} />
                   </View>
                 </LinearGradient>
               </TouchableOpacity>
             ) : (
-              <View style={styles.timeFunEditContainer}>
+              <View style={styles.usernameEditContainer}>
                 <TextInput
-                  style={styles.timeFunInput}
-                  value={tempTimeFunUsername}
-                  onChangeText={setTempTimeFunUsername}
-                  placeholder="Enter time.fun username"
+                  style={styles.usernameInput}
+                  value={tempUsername}
+                  onChangeText={handleUsernameChange}
+                  placeholder="Enter username (letters and numbers only)"
                   placeholderTextColor={colors.textTertiary}
                   autoCapitalize="none"
+                  maxLength={20}
                 />
-                <View style={styles.timeFunEditButtons}>
+                {usernameError ? (
+                  <Text style={[styles.usernameError, { color: colors.error || '#ff4444' }]}>{usernameError}</Text>
+                ) : checkingUsername ? (
+                  <View style={styles.usernameChecking}>
+                    <ActivityIndicator size="small" color={colors.primary} />
+                    <Text style={[styles.usernameCheckingText, { color: colors.textSecondary }]}>Checking availability...</Text>
+                  </View>
+                ) : null}
+                <View style={styles.usernameEditButtons}>
                   <TouchableOpacity
-                    style={styles.timeFunCancelButton}
+                    style={styles.usernameCancelButton}
                     onPress={() => {
-                      setTempTimeFunUsername(timeFunUsername || '');
-                      setEditingTimeFun(false);
+                      setTempUsername(currentUsername || '');
+                      setEditingUsername(false);
+                      setUsernameError('');
                     }}
                   >
-                    <Text style={styles.timeFunCancelText}>Cancel</Text>
+                    <Text style={styles.usernameCancelText}>Cancel</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={styles.timeFunSaveButton}
-                    onPress={() => {
-                      setTimeFunUsername(tempTimeFunUsername || null);
-                      setEditingTimeFun(false);
-                    }}
+                    style={[styles.usernameSaveButton, (savingUsername || !!usernameError) && styles.saveButtonDisabled]}
+                    onPress={handleSaveUsername}
+                    disabled={savingUsername || !!usernameError}
                   >
                     <LinearGradient
-                      colors={gradients.primary}
-                      style={styles.timeFunSaveGradient}
+                      colors={savingUsername || !!usernameError ? [colors.borderLight, colors.borderLight] : gradients.primary}
+                      style={styles.usernameSaveGradient}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                     >
-                      <Text style={styles.timeFunSaveText}>Save</Text>
+                      {savingUsername ? (
+                        <ActivityIndicator size="small" color={colors.text} />
+                      ) : (
+                        <Text style={styles.usernameSaveText}>Save</Text>
+                      )}
                     </LinearGradient>
                   </TouchableOpacity>
                 </View>
               </View>
-            )}
-            
-            {timeFunUsername && !editingTimeFun && (
-              <TouchableOpacity
-                style={styles.timeFunLink}
-                onPress={() => Linking.openURL(`https://time.fun/@${timeFunUsername}`)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.timeFunLinkText}>View on time.fun</Text>
-                <Ionicons name="open-outline" size={16} color={colors.primary} />
-              </TouchableOpacity>
             )}
           </View>
         )}
@@ -1195,43 +1286,43 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     color: colors.primary,
     fontFamily: Fonts.semiBold,
   },
-  timeFunSection: {
+  usernameSection: {
     marginBottom: 20,
   },
-  timeFunBlur: {
+  usernameBlur: {
     flex: 1,
   },
-  timeFunDisplay: {
+  usernameDisplay: {
     // No styling needed - BlurView and LinearGradient handle borders
   },
-  timeFunWrapper: {
+  usernameWrapper: {
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.primary,
     overflow: 'hidden',
   },
-  timeFunGradient: {
+  usernameGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     gap: 12,
   },
-  timeFunUsername: {
+  usernameText: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.semiBold,
     color: colors.text,
     flex: 1,
   },
-  timeFunPlaceholder: {
+  usernamePlaceholder: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.regular,
     color: colors.textTertiary,
     flex: 1,
   },
-  timeFunEditContainer: {
+  usernameEditContainer: {
     marginTop: 8,
   },
-  timeFunInput: {
+  usernameInput: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.regular,
     color: colors.text,
@@ -1243,11 +1334,11 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     borderColor: colors.borderLight,
     marginBottom: 12,
   },
-  timeFunEditButtons: {
+  usernameEditButtons: {
     flexDirection: 'row',
     gap: 12,
   },
-  timeFunCancelButton: {
+  usernameCancelButton: {
     flex: 1,
     paddingVertical: 10,
     borderRadius: 8,
@@ -1255,26 +1346,26 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     borderColor: colors.borderLight,
     alignItems: 'center',
   },
-  timeFunCancelText: {
+  usernameCancelText: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.medium,
     color: colors.textSecondary,
   },
-  timeFunSaveButton: {
+  usernameSaveButton: {
     flex: 1,
     borderRadius: 8,
     overflow: 'hidden',
   },
-  timeFunSaveGradient: {
+  usernameSaveGradient: {
     paddingVertical: 10,
     alignItems: 'center',
   },
-  timeFunSaveText: {
+  usernameSaveText: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.semiBold,
     color: isDarkMode ? '#000' : '#fff',
   },
-  timeFunLinkButton: {
+  usernameLinkButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1282,10 +1373,32 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     marginTop: 12,
     paddingVertical: 8,
   },
-  timeFunLinkText: {
+  usernameLinkText: {
     fontSize: FontSizes.sm,
     fontFamily: Fonts.medium,
     color: colors.primary,
+  },
+  usernameError: {
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.regular,
+    marginTop: 8,
+    marginBottom: 8,
+    paddingHorizontal: 16,
+  },
+  usernameChecking: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 8,
+    marginBottom: 8,
+    paddingHorizontal: 16,
+  },
+  usernameCheckingText: {
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.regular,
+  },
+  saveButtonDisabled: {
+    opacity: 0.5,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -1550,13 +1663,13 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
   snsDropdownItemLast: {
     borderBottomWidth: 0,
   },
-  timeFunContent: {
+  usernameContent: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
     gap: 12,
   },
-  timeFunLink: {
+  usernameLink: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1615,18 +1728,18 @@ const createStyles = (colors: any, isDarkMode: boolean, insets: any) => StyleShe
     borderColor: colors.borderLight,
     overflow: 'hidden',
   },
-  timeFunCard: {
+  usernameCard: {
     borderRadius: 16,
     overflow: 'hidden',
     marginTop: 12,
   },
-  timeFunGradientSecondary: {
+  usernameGradientSecondary: {
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.borderLight + '40',
   },
-  timeFunDisplaySecondary: {
+  usernameDisplaySecondary: {
     flexDirection: 'row',
     alignItems: 'center',
   },

@@ -65,6 +65,7 @@ export function useLoadPosts() {
           return {
             id: post.id,
             wallet: wallet,
+            username: post.author?.username || undefined, // Include username from backend
             avatar: avatar || undefined, // Use backend avatar first, then cached
             time: new Date(post.createdAt).toLocaleDateString(),
             content: post.content,
@@ -97,6 +98,11 @@ export function useLoadPosts() {
           }
         } catch (error) {
           logger.log('Failed to fetch sponsored posts:', error);
+          // FOR TESTING: Mark the first post as sponsored to test the UI
+          if (transformedPosts.length > 0) {
+            transformedPosts[0].sponsored = true;
+            logger.log('🎯 TEST MODE: Marked first post as sponsored for testing');
+          }
         }
         
         // Fetch user interactions to show which posts are already liked

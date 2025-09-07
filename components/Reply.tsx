@@ -12,10 +12,25 @@ import { OptimizedImage } from './OptimizedImage';
 // Subcomponent for replying to section
 const ReplyingToSection = memo(function ReplyingToSection({ parentUsername }: { parentUsername: string }) {
   const { colors } = useTheme();
-  const { domain } = useSNSDomain(parentUsername);
   
-  // Use SNS domain if available, otherwise show truncated address
-  const displayName = domain ? `@${domain}` : `@${parentUsername.slice(0, 8)}...`;
+  // Handle display name
+  let displayName;
+  if (!parentUsername || parentUsername === 'anonymous.sol') {
+    // No username or legacy anonymous.sol - don't show anything
+    return null;
+  } else if (parentUsername.includes('.sol') && parentUsername !== 'anonymous.sol') {
+    // Real SNS domain
+    displayName = `@${parentUsername}`;
+  } else if (parentUsername.includes('...')) {
+    // Already truncated
+    displayName = `@${parentUsername}`;
+  } else if (parentUsername.length > 20) {
+    // Likely a wallet address, truncate it
+    displayName = `@${parentUsername.slice(0, 6)}...${parentUsername.slice(-4)}`;
+  } else {
+    // Short username, show as is
+    displayName = `@${parentUsername}`;
+  }
   
   return (
     <Text style={[{ 
@@ -112,9 +127,9 @@ const Reply = memo<ReplyProps>(function Reply({
   }, [onLike, postId, reply.id, reply.liked]);
   
   const handleReply = useCallback(() => {
-    const displayName = replyIsPremium ? replyWallet.slice(0, 6) + '...' : replyUsername || replyWallet.slice(0, 6) + '...';
+    // Use the displayName from useDisplayName hook which handles all cases properly
     onReply(postId, replyContent.substring(0, 100), displayName);
-  }, [onReply, postId, replyContent, replyWallet, replyUsername, replyIsPremium]);
+  }, [onReply, postId, replyContent, displayName]);
   
   const handleTip = useCallback(() => {
     onTip(postId, reply.id);
@@ -139,7 +154,7 @@ const Reply = memo<ReplyProps>(function Reply({
   };
 
   const { quotedText, replyText } = parseContent(replyContent);
-  const displayName = useDisplayName(replyWallet, replyIsPremium);
+  const displayName = useDisplayName(replyWallet, replyIsPremium, replyUsername);
 
   // Guard against invalid reply
   if (!reply || !reply.id) {

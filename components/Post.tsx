@@ -146,7 +146,7 @@ const Post = memo<PostProps>(function Post({
   
   // If this is the current user's post, use their premium status
   const postIsPremium = post.wallet === currentUserWallet ? currentUserIsPremium : post.isPremium;
-  const displayName = useDisplayName(post.wallet, postIsPremium || false);
+  const displayName = useDisplayName(post.wallet, postIsPremium || false, post.username);
   
   // Memoize expensive computations
   const isExpanded = useMemo(() => expandedPosts.has(post.id), [expandedPosts, post.id]);
@@ -757,7 +757,12 @@ const Post = memo<PostProps>(function Post({
                         (index < flatReplies.length - 1 && flatReplies[index + 1].depth < reply.depth)}
                       hasMoreSiblings={index < flatReplies.length - 1 && 
                         flatReplies[index + 1].depth >= reply.depth}
-                      parentUsername={reply.parentId ? flatReplies.find(r => r.id === reply.parentId)?.wallet : post.wallet}
+                      parentUsername={(() => {
+                        const parentWallet = reply.parentId ? 
+                          flatReplies.find(r => r.id === reply.parentId)?.wallet : 
+                          post.wallet;
+                        return parentWallet === 'anonymous.sol' ? null : parentWallet;
+                      })()}
                       post={post}
                     />
                   </View>

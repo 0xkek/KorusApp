@@ -6,6 +6,7 @@ import * as Haptics from 'expo-haptics';
 import { useTheme } from '../../context/ThemeContext';
 import { useWallet } from '../../context/WalletContext';
 import { Fonts, FontSizes } from '../../constants/Fonts';
+import { useDisplayName } from '../../hooks/useSNSDomain';
 
 type Choice = 'rock' | 'paper' | 'scissors' | null;
 type GameStatus = 'waiting' | 'active' | 'revealing' | 'completed';
@@ -20,6 +21,8 @@ interface RockPaperScissorsGameProps {
   gameId: string;
   player1: string;
   player2: string | null;
+  player1Username?: string | null;
+  player2Username?: string | null;
   currentPlayer: string;
   isMyTurn: boolean;
   wager: number;
@@ -41,6 +44,8 @@ export default function RockPaperScissorsGame({
   gameId,
   player1,
   player2,
+  player1Username,
+  player2Username,
   currentPlayer,
   isMyTurn,
   wager,

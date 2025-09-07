@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Switch, Modal, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Switch, Modal, TouchableWithoutFeedback, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -10,6 +10,7 @@ import { useWallet } from '../context/WalletContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import * as SecureStore from 'expo-secure-store';
 import { logger } from '../utils/logger';
+import { userAPI } from '../utils/api';
 
 const HIDE_SPONSORED_KEY = 'korus_hide_sponsored_posts';
 const HIDE_GAME_POSTS_KEY = 'korus_hide_game_posts';
@@ -26,10 +27,17 @@ export default function SettingsScreen() {
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [showAdsModal, setShowAdsModal] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showUsernameModal, setShowUsernameModal] = useState(false);
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null);
+  const [newUsername, setNewUsername] = useState('');
+  const [usernameError, setUsernameError] = useState('');
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [savingUsername, setSavingUsername] = useState(false);
 
   // Load saved preferences
   React.useEffect(() => {
     loadPreferences();
+    loadUserProfile();
   }, []);
 
   const loadPreferences = async () => {
@@ -45,6 +53,82 @@ export default function SettingsScreen() {
       }
     } catch (error) {
       logger.error('Error loading preferences:', error);
+    }
+  };
+
+  const loadUserProfile = async () => {
+    try {
+      const response = await userAPI.getProfile();
+      if (response?.user?.username) {
+        setCurrentUsername(response.user.username);
+      }
+    } catch (error) {
+      logger.log('Failed to load user profile:', error);
+    }
+  };
+
+  const validateUsername = (username: string) => {
+    // Alphanumeric only, 3-20 chars
+    const regex = /^[a-zA-Z0-9]{3,20}$/;
+    
+    if (!username) {
+      return 'Username is required';
+    }
+    if (username.length < 3) {
+      return 'Username must be at least 3 characters';
+    }
+    if (username.length > 20) {
+      return 'Username cannot exceed 20 characters';
+    }
+    if (!regex.test(username)) {
+      return 'Username can only contain letters and numbers';
+    }
+    if (username.toLowerCase().endsWith('sol')) {
+      return 'Usernames ending with "sol" are reserved';
+    }
+    return '';
+  };
+
+  const handleUsernameChange = async (text: string) => {
+    setNewUsername(text);
+    const error = validateUsername(text);
+    setUsernameError(error);
+    
+    if (!error && text.length >= 3) {
+      setCheckingUsername(true);
+      try {
+        const response = await userAPI.checkUsername(text);
+        if (!response.available && text.toLowerCase() !== currentUsername?.toLowerCase()) {
+          setUsernameError('Username is already taken');
+        }
+      } catch (error) {
+        logger.log('Failed to check username:', error);
+      } finally {
+        setCheckingUsername(false);
+      }
+    }
+  };
+
+  const handleSaveUsername = async () => {
+    const error = validateUsername(newUsername);
+    if (error) {
+      setUsernameError(error);
+      return;
+    }
+
+    setSavingUsername(true);
+    try {
+      const response = await userAPI.setUsername(newUsername);
+      if (response.success) {
+        setCurrentUsername(response.username);
+        setShowUsernameModal(false);
+        setNewUsername('');
+        Alert.alert('Success', 'Username updated successfully!');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.error || 'Failed to update username');
+    } finally {
+      setSavingUsername(false);
     }
   };
 
@@ -193,6 +277,48 @@ export default function SettingsScreen() {
             </BlurView>
           </View>
 
+          {/* Profile Settings */}
+          <View style={[styles.sectionWrapper, {
+            shadowColor: colors.primary,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 12,
+            elevation: 6,
+          }]}>
+            <BlurView intensity={25} style={styles.sectionBlur}>
+              <LinearGradient
+                colors={gradients.surface}
+                style={[styles.sectionGradient, { borderColor: colors.primary + '4D' }]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Profile</Text>
+                
+                {/* Username Setting */}
+                <TouchableOpacity
+                  style={[styles.settingRow, { borderBottomColor: colors.borderLight }]}
+                  onPress={() => {
+                    setNewUsername(currentUsername || '');
+                    setUsernameError('');
+                    setShowUsernameModal(true);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.settingInfo}>
+                    <Text style={[styles.settingLabel, { color: colors.text }]}>Username</Text>
+                    <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
+                      {currentUsername ? `@${currentUsername}` : 'Set your username'}
+                    </Text>
+                  </View>
+                  <Ionicons 
+                    name="chevron-forward" 
+                    size={20} 
+                    color={colors.textSecondary} 
+                  />
+                </TouchableOpacity>
+              </LinearGradient>
+            </BlurView>
+          </View>
 
           {/* Appearance Settings */}
           <View style={[styles.sectionWrapper, {

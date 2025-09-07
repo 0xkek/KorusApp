@@ -53,26 +53,25 @@ export const APP_IDENTITY = {
 };
 
 export const connectAndSignWithMWA = async (message: string): Promise<{ address: string; signature: string }> => {
+  logger.log('Starting MWA transaction...');
+  logger.log('Platform:', Platform.OS);
+  logger.log('App Identity:', APP_IDENTITY);
+  
+  // Import MWA dynamically for mobile
+  let transact: any;
   try {
-    logger.log('Starting MWA transaction...');
-    logger.log('Platform:', Platform.OS);
-    logger.log('App Identity:', APP_IDENTITY);
-    
-    // Import MWA dynamically for mobile
-    let transact: any;
-    try {
-      const mwaModule = require('@solana-mobile/mobile-wallet-adapter-protocol-web3js');
-      transact = mwaModule.transact;
-    } catch (requireError) {
-      logger.error('Failed to require MWA module:', requireError);
-      throw new Error('Mobile wallet adapter not available. Please ensure you have a compatible Solana wallet installed.');
-    }
-    
-    if (!transact) {
-      throw new Error('MWA transact function not found in module');
-    }
-    
-    logger.log('MWA library loaded successfully');
+    const mwaModule = require('@solana-mobile/mobile-wallet-adapter-protocol-web3js');
+    transact = mwaModule.transact;
+  } catch (requireError) {
+    logger.error('Failed to require MWA module:', requireError);
+    throw new Error('Mobile wallet adapter not available. Please ensure you have a compatible Solana wallet installed.');
+  }
+  
+  if (!transact) {
+    throw new Error('MWA transact function not found in module');
+  }
+  
+  logger.log('MWA library loaded successfully');
   
   // Create a timeout promise
   const timeoutPromise = new Promise<never>((_, reject) => {
@@ -159,35 +158,23 @@ export const connectAndSignWithMWA = async (message: string): Promise<{ address:
   } catch (error: any) {
     // Only log as error if it's not a cancellation
     const errorStr = error.toString();
+    const errorMessage = error.message || '';
+    
     if (!errorStr.includes('CancellationException')) {
       logger.error('MWA transaction error:', error);
     } else {
       logger.log('User cancelled wallet connection');
     }
-    // Better error handling
-    if (error.message?.includes('cancelled')) {
-      throw new Error('Wallet connection cancelled by user');
-    } else if (error.message?.includes('websocket')) {
-      throw new Error('Unable to connect to wallet. Please make sure a Solana wallet app is installed and try again.');
-    }
-    throw error;
-  }
-  } catch (importError: any) {
+    
     // Check if user cancelled the connection
-    const errorStr = importError.toString();
-    const errorMessage = importError.message || '';
-    
-    // Only log as error if it's not a cancellation
-    if (!errorStr.includes('CancellationException')) {
-      logger.error('Failed to import MWA libraries:', importError);
-    }
-    
     if (errorStr.includes('CancellationException') || 
         errorMessage.includes('CancellationException') ||
         errorMessage.includes('cancelled') || 
         errorMessage.includes('declined') ||
-        importError.code === 'EUNSPECIFIED') {
+        error.code === 'EUNSPECIFIED') {
       throw new Error('Connection cancelled');
+    } else if (errorMessage.includes('websocket')) {
+      throw new Error('Unable to connect to wallet. Please make sure a Solana wallet app is installed and try again.');
     }
     throw new Error('Failed to connect wallet. Please try again.');
   }

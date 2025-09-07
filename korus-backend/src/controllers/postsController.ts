@@ -92,6 +92,7 @@ export const getPosts = async (req: Request, res: Response) => {
               tier: true,
               genesisVerified: true,
               snsUsername: true,
+              username: true,
               nftAvatar: true
             }
           }
@@ -141,6 +142,7 @@ export const getSinglePost = async (req: Request, res: Response<ApiResponse<Post
             tier: true,
             genesisVerified: true,
             snsUsername: true,
+            username: true,
             nftAvatar: true
           }
         },
@@ -153,6 +155,7 @@ export const getSinglePost = async (req: Request, res: Response<ApiResponse<Post
                 tier: true,
                 genesisVerified: true,
                 snsUsername: true,
+                username: true,
                 nftAvatar: true
               }
             }

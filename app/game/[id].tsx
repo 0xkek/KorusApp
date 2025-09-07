@@ -16,6 +16,8 @@ import RockPaperScissorsGame from '../../components/games/RockPaperScissorsGame'
 import ConnectFourGame from '../../components/games/ConnectFourGame';
 import CoinFlipGame from '../../components/games/CoinFlipGameCompact';
 import { Fonts, FontSizes } from '../../constants/Fonts';
+import { userAPI } from '../../utils/api';
+import { logger } from '../../utils/logger';
 
 export default function GameScreen() {
   const params = useLocalSearchParams();
@@ -28,8 +30,26 @@ export default function GameScreen() {
   const insets = useSafeAreaInsets();
   
   const [post, setPost] = useState<PostType | null>(null);
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null);
   const currentUserWallet = walletAddress || 'loading...';
   
+  // Fetch current user's username
+  useEffect(() => {
+    const fetchUsername = async () => {
+      if (currentUserWallet) {
+        try {
+          const response = await userAPI.getProfile();
+          if (response.success && response.user) {
+            setCurrentUsername(response.user.username || null);
+          }
+        } catch (error) {
+          logger.error('Failed to fetch username:', error);
+        }
+      }
+    };
+    fetchUsername();
+  }, [currentUserWallet]);
+
   useEffect(() => {
     if (id) {
       // Try to get the game from context first
@@ -115,8 +135,10 @@ export default function GameScreen() {
     const updatedGameData: any = {
       ...gameData,
       player2: currentUserWallet,
+      player2Username: currentUsername,
       status: 'active',
-      currentPlayer: gameData.type === 'coinflip' ? currentUserWallet : gameData.player1
+      currentPlayer: gameData.type === 'coinflip' ? currentUserWallet : gameData.player1,
+      currentPlayerUsername: gameData.type === 'coinflip' ? currentUsername : gameData.player1Username
     };
     
     // Initialize game-specific data
@@ -474,6 +496,8 @@ export default function GameScreen() {
               gameId={post.id.toString()}
               player1={gameData.player1}
               player2={gameData.player2 || null}
+              player1Username={gameData.player1Username}
+              player2Username={gameData.player2Username}
               currentPlayer={gameData.currentPlayer || gameData.player1}
               isMyTurn={isMyTurn}
               wager={gameData.wager}
@@ -490,6 +514,8 @@ export default function GameScreen() {
               gameId={post.id.toString()}
               player1={gameData.player1}
               player2={gameData.player2 || null}
+              player1Username={gameData.player1Username}
+              player2Username={gameData.player2Username}
               currentPlayer={gameData.currentPlayer || gameData.player1}
               isMyTurn={isMyTurn}
               wager={gameData.wager}
@@ -507,6 +533,8 @@ export default function GameScreen() {
               gameId={post.id.toString()}
               player1={gameData.player1}
               player2={gameData.player2 || null}
+              player1Username={gameData.player1Username}
+              player2Username={gameData.player2Username}
               currentPlayer={gameData.currentPlayer || gameData.player1}
               isMyTurn={isMyTurn}
               wager={gameData.wager}
@@ -523,6 +551,8 @@ export default function GameScreen() {
               gameId={post.id.toString()}
               player1={gameData.player1}
               player2={gameData.player2 || null}
+              player1Username={gameData.player1Username}
+              player2Username={gameData.player2Username}
               wager={gameData.wager}
               onChoose={(choice) => handleGameMove(choice, 'coinflip')}
               player1Choice={gameData.player1Choice || null}

@@ -84,12 +84,16 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   const handleError = (error: any) => {
     if (!mountedRef.current) return
     
-    logger.error('Image failed to load:', {
-      url: source.uri,
-      optimizedUrl: imageUrl,
-      useOriginalUrl,
-      error: error?.nativeEvent?.error || 'Unknown error'
-    })
+    // Only log non-IPFS errors (IPFS 403s are common and expected)
+    const errorMessage = error?.nativeEvent?.error || 'Unknown error';
+    if (!source.uri?.includes('ipfs') || !errorMessage.includes('403')) {
+      logger.error('Image failed to load:', {
+        url: source.uri,
+        optimizedUrl: imageUrl,
+        useOriginalUrl,
+        error: errorMessage
+      })
+    }
     
     // If optimized URL failed, try original URL
     if (!useOriginalUrl) {

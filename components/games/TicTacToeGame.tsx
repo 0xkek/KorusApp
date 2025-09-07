@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../../context/ThemeContext';
 import { Fonts, FontSizes } from '../../constants/Fonts';
+import { useDisplayName } from '../../hooks/useSNSDomain';
 
 type Player = 'X' | 'O' | null;
 type Board = Player[][];
@@ -13,6 +14,8 @@ interface TicTacToeGameProps {
   gameId: string;
   player1: string;
   player2: string | null;
+  player1Username?: string | null;
+  player2Username?: string | null;
   currentPlayer: string;
   isMyTurn: boolean;
   wager: number;
@@ -26,6 +29,8 @@ export default function TicTacToeGame({
   gameId,
   player1,
   player2,
+  player1Username,
+  player2Username,
   currentPlayer,
   isMyTurn,
   wager,
@@ -38,6 +43,11 @@ export default function TicTacToeGame({
   const [timeLeft, setTimeLeft] = useState<string>('');
   const [pendingMove, setPendingMove] = useState<{ row: number; col: number } | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  
+  // Get display names for players - always call hooks
+  const player1Display = useDisplayName(player1, false, player1Username);
+  const player2DisplayTemp = useDisplayName(player2 || '', false, player2Username);
+  const player2Display = player2 ? player2DisplayTemp : 'Waiting...';
   
   // Ensure board is always defined
   const gameBoard = board || [[null, null, null], [null, null, null], [null, null, null]];
@@ -261,11 +271,11 @@ export default function TicTacToeGame({
       <View style={styles.header}>
         <View style={styles.playerInfo}>
           <Text style={[styles.playerName, { color: colors.text }]}>
-            {player1.slice(0, 8)}... (X)
+            {player1Display} (X)
           </Text>
           <Text style={[styles.vs, { color: colors.textSecondary }]}>VS</Text>
           <Text style={[styles.playerName, { color: colors.text }]}>
-            {player2 ? `${player2.slice(0, 8)}... (O)` : 'Waiting...'}
+            {player2Display} {player2 ? '(O)' : ''}
           </Text>
         </View>
         

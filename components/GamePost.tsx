@@ -117,6 +117,8 @@ export default function GamePost({ gameData, postId, onJoinGame, onMakeMove }: G
             gameId={postId.toString()}
             player1={gameData.player1}
             player2={gameData.player2 || null}
+            player1Username={gameData.player1Username}
+            player2Username={gameData.player2Username}
             currentPlayer={gameData.currentPlayer || gameData.player1}
             isMyTurn={isMyTurn}
             wager={gameData.wager}
@@ -133,6 +135,8 @@ export default function GamePost({ gameData, postId, onJoinGame, onMakeMove }: G
             gameId={postId.toString()}
             player1={gameData.player1}
             player2={gameData.player2 || null}
+            player1Username={gameData.player1Username}
+            player2Username={gameData.player2Username}
             currentPlayer={gameData.currentPlayer || gameData.player1}
             isMyTurn={isMyTurn}
             wager={gameData.wager}
@@ -151,6 +155,8 @@ export default function GamePost({ gameData, postId, onJoinGame, onMakeMove }: G
             gameId={postId.toString()}
             player1={gameData.player1}
             player2={gameData.player2 || null}
+            player1Username={gameData.player1Username}
+            player2Username={gameData.player2Username}
             wager={gameData.wager}
             onChoose={(choice) => handleMove(choice, 'coinflip')}
             player1Choice={gameData.player1Choice || null}
@@ -166,6 +172,8 @@ export default function GamePost({ gameData, postId, onJoinGame, onMakeMove }: G
             gameId={postId.toString()}
             player1={gameData.player1}
             player2={gameData.player2 || null}
+            player1Username={gameData.player1Username}
+            player2Username={gameData.player2Username}
             currentPlayer={gameData.currentTurn}
             isMyTurn={isMyTurn}
             wager={gameData.wager}

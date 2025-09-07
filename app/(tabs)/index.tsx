@@ -19,7 +19,7 @@ import { reputationService } from '../../services/reputation';
 import { postAvatarCache } from '../../services/postAvatarCache';
 import { Fonts, FontSizes } from '../../constants/Fonts';
 import { useLoadPosts } from '../../hooks/useLoadPosts';
-import { postsAPI, interactionsAPI, repliesAPI } from '../../utils/api';
+import { postsAPI, interactionsAPI, repliesAPI, userAPI } from '../../utils/api';
 import { testBackendConnection } from '../../utils/testApi';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { FeedSkeleton } from '../../components/SkeletonLoader';
@@ -80,6 +80,7 @@ export default function HomeScreen() {
   const [showTipModal, setShowTipModal] = useState(false);
   const [showTipSuccessModal, setShowTipSuccessModal] = useState(false);
   const [tipSuccessData, setTipSuccessData] = useState<{ amount: number; username: string } | null>(null);
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
   const [quotedText, setQuotedText] = useState<string>('');
@@ -159,6 +160,23 @@ export default function HomeScreen() {
       global.resetToGeneral = undefined;
     };
   }, []);
+
+  // Fetch current user's username
+  useEffect(() => {
+    const fetchUsername = async () => {
+      if (walletAddress && currentUserWallet) {
+        try {
+          const response = await userAPI.getProfile();
+          if (response.success && response.user) {
+            setCurrentUsername(response.user.username || null);
+          }
+        } catch (error) {
+          logger.error('Failed to fetch username:', error);
+        }
+      }
+    };
+    fetchUsername();
+  }, [walletAddress, currentUserWallet]);
   
   // Setup global refresh feed function in a separate effect
   useEffect(() => {
@@ -534,7 +552,9 @@ export default function HomeScreen() {
         type: gameData.type,
         wager: gameData.wager,
         player1: currentUserWallet,
+        player1Username: currentUsername,
         player2: null,
+        player2Username: null,
         status: 'waiting',
         board: gameData.type === 'tictactoe' ? [
           [null, null, null],
@@ -542,6 +562,7 @@ export default function HomeScreen() {
           [null, null, null]
         ] : gameData.type === 'connect4' ? Array(6).fill(null).map(() => Array(7).fill(null)) : undefined,
         currentPlayer: currentUserWallet,
+        currentPlayerUsername: currentUsername,
         winner: null,
         createdAt: Date.now(),
         expiresAt: Date.now() + 300000 // 5 minutes
@@ -579,7 +600,7 @@ export default function HomeScreen() {
         const newReply: Reply = {
           id: response.reply.id,
           wallet: response.reply.authorWallet || walletAddress || '',
-          username: response.reply.author?.snsUsername || undefined,
+          username: undefined, // Don't use backend SNS, let useDisplayName handle it
           avatar: response.reply.author?.nftAvatar || undefined,
           time: new Date(response.reply.createdAt).toLocaleDateString(),
           timestamp: response.reply.createdAt,
@@ -825,7 +846,7 @@ export default function HomeScreen() {
         const transformedReplies = response.replies.map((reply: any) => ({
           id: reply.id,
           wallet: reply.authorWallet || (reply.author && reply.author.walletAddress) || 'Unknown',
-          username: reply.author && reply.author.snsUsername ? reply.author.snsUsername : undefined,
+          username: undefined, // Don't use backend SNS, let useDisplayName handle it
           avatar: reply.author && reply.author.nftAvatar ? reply.author.nftAvatar : undefined,
           time: new Date(reply.createdAt).toLocaleDateString(),
           content: reply.content,

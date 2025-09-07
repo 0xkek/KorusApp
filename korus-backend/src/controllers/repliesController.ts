@@ -162,6 +162,7 @@ export const getReplies = async (req: Request, res: Response) => {
               tier: true,
               genesisVerified: true,
               snsUsername: true,
+              username: true,
               nftAvatar: true
             }
           },

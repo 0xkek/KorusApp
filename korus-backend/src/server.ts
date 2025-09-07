@@ -31,6 +31,7 @@ import distributionRoutes from './routes/distribution'
 import snsRoutes from './routes/sns'
 import nftsRoutes from './routes/nfts'
 import healthRoutes from './routes/health'
+import userRoutes from './routes/user'
 
 dotenv.config()
 
@@ -124,6 +125,7 @@ app.use('/api/notifications', notificationsRoutes)
 app.use('/api/distribution', distributionRoutes)
 app.use('/api/sns', snsRoutes)
 app.use('/api/nfts', nftsRoutes)
+app.use('/api/user', userRoutes)
 
 // Debug endpoints removed for production security
 

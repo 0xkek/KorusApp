@@ -162,7 +162,11 @@ export default function ReplyModal({
                 <View style={styles.quoteContainer}>
                   <View style={styles.quoteAccent} />
                   <Text style={styles.quoteHeader}>
-                    Replying to @{quotedUsername}:
+                    Replying to {quotedUsername && quotedUsername !== 'anonymous.sol' 
+                      ? `@${quotedUsername}` 
+                      : quotedUsername?.startsWith('0x') || quotedUsername?.length > 30
+                        ? `${quotedUsername?.slice(0, 4)}...${quotedUsername?.slice(-4)}`
+                        : `@${quotedUsername}`}:
                   </Text>
                   <Text style={styles.quotedText}>
                     &ldquo;{quotedText}&rdquo;

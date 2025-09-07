@@ -6,6 +6,7 @@ import * as Haptics from 'expo-haptics';
 import { useTheme } from '../../context/ThemeContext';
 import { useWallet } from '../../context/WalletContext';
 import { Fonts, FontSizes } from '../../constants/Fonts';
+import { useDisplayName } from '../../hooks/useSNSDomain';
 
 type CoinSide = 'heads' | 'tails';
 
@@ -13,6 +14,8 @@ interface CoinFlipGameProps {
   gameId: string;
   player1: string;
   player2: string | null;
+  player1Username?: string | null;
+  player2Username?: string | null;
   wager: number;
   onChoose: (choice: CoinSide) => void;
   player1Choice: CoinSide | null;
@@ -26,6 +29,8 @@ export default function CoinFlipGame({
   gameId,
   player1,
   player2,
+  player1Username,
+  player2Username,
   wager,
   onChoose,
   player1Choice,

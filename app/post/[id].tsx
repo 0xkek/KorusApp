@@ -80,7 +80,7 @@ export default function PostDetailScreen() {
           const transformedPost: PostType = {
             id: response.post.id,
             wallet: response.post.authorWallet || response.post.author?.walletAddress || 'Unknown',
-            username: response.post.author?.snsUsername,
+            username: response.post.author?.username || response.post.author?.snsUsername,
             avatar: response.post.author?.nftAvatar?.replace(/&#x2F;/g, '/'), // Fix HTML entities in avatar URL
             time: new Date(response.post.createdAt).toLocaleDateString(),
             timestamp: response.post.createdAt,
@@ -89,7 +89,7 @@ export default function PostDetailScreen() {
             replies: response.post.replies?.map((reply: any) => ({
               id: reply.id,
               wallet: reply.authorWallet || (reply.author && reply.author.walletAddress) || 'Unknown',
-              username: reply.author && reply.author.snsUsername ? reply.author.snsUsername : undefined,
+              username: reply.author?.username || undefined, // Use backend username
               avatar: reply.author && reply.author.nftAvatar ? reply.author.nftAvatar.replace(/&#x2F;/g, '/') : undefined,
               time: new Date(reply.createdAt).toLocaleDateString(),
               timestamp: reply.createdAt,
@@ -216,7 +216,7 @@ export default function PostDetailScreen() {
           id: response.reply.id,
           postId: parseInt(String(post.id)),
           wallet: response.reply.authorWallet || currentUserWallet,
-          username: response.reply.author?.snsUsername,
+          username: response.reply.author?.username || undefined, // Use backend username
           avatar: response.reply.author?.nftAvatar?.replace(/&#x2F;/g, '/'),
           time: 'now',
           timestamp: response.reply.createdAt,
@@ -340,7 +340,10 @@ export default function PostDetailScreen() {
               }}
               onTip={() => {}}
               isDetailView={true}
-              parentUsername={replyIndex === 0 ? post!.wallet : thread[replyIndex - 1].wallet}
+              parentUsername={replyIndex === 0 ? 
+                (post!.wallet === 'anonymous.sol' ? null : post!.wallet) : 
+                (thread[replyIndex - 1].wallet === 'anonymous.sol' ? null : thread[replyIndex - 1].wallet)
+              }
               post={post}
             />
           </View>

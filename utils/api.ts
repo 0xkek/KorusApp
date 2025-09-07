@@ -711,6 +711,32 @@ export const healthAPI = {
   },
 };
 
+// User API
+export const userAPI = {
+  async getProfile() {
+    // Use auth/profile endpoint which is already deployed
+    const response = await api.get('/auth/profile');
+    return response.data;
+  },
+
+  async setUsername(username: string) {
+    const response = await api.post('/user/username', { username });
+    return response.data;
+  },
+
+  async checkUsername(username: string) {
+    const response = await api.get('/user/check-username', {
+      params: { username }
+    });
+    return response.data;
+  },
+
+  async getUserByUsername(username: string) {
+    const response = await api.get(`/user/by-username/${username}`);
+    return response.data;
+  }
+};
+
 // Helper to check if we have a stored token
 export async function hasAuthToken(): Promise<boolean> {
   try {

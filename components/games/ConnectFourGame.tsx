@@ -6,6 +6,7 @@ import * as Haptics from 'expo-haptics';
 import { useTheme } from '../../context/ThemeContext';
 import { useWallet } from '../../context/WalletContext';
 import { Fonts, FontSizes } from '../../constants/Fonts';
+import { useDisplayName } from '../../hooks/useSNSDomain';
 
 type Cell = 'RED' | 'YELLOW' | null;
 type Board = Cell[][];
@@ -14,6 +15,8 @@ interface ConnectFourGameProps {
   gameId: string;
   player1: string;
   player2: string | null;
+  player1Username?: string | null;
+  player2Username?: string | null;
   currentPlayer: string;
   isMyTurn: boolean;
   wager: number;
@@ -30,6 +33,8 @@ export default function ConnectFourGame({
   gameId,
   player1,
   player2,
+  player1Username,
+  player2Username,
   currentPlayer,
   isMyTurn,
   wager,
