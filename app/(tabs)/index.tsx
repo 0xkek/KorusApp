@@ -229,7 +229,8 @@ export default function HomeScreen() {
           
           if (post && post.replyCount && post.replyCount > 0) {
             try {
-              await fetchAllReplies(postId);
+              // TODO: fetchAllReplies needs to be defined before this function
+              // await fetchAllReplies(postId);
               // Also add to expandedPosts so they appear expanded
               setExpandedPosts(prev => new Set(prev).add(postId));
             } catch (error) {
@@ -241,7 +242,7 @@ export default function HomeScreen() {
     } catch (error) {
       logger.error('Error loading recently expanded posts:', error);
     }
-  }, [posts, fetchAllReplies]);
+  }, [posts]); // fetchAllReplies removed from deps to fix circular dependency
 
   // Load hide sponsored preference when premium status changes
   useEffect(() => {
