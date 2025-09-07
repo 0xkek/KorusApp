@@ -411,46 +411,15 @@ export default function ProfileScreen() {
                     // Only allow alphanumeric characters
                     const cleanedText = text.replace(/[^a-zA-Z0-9]/g, '');
                     setTempUsername(cleanedText);
-                    
-                    // Clear any previous errors immediately
-                    if (usernameError) {
-                      setUsernameError('');
-                    }
-                    
-                    // Cancel any pending validation
-                    if (debounceTimer.current) {
-                      clearTimeout(debounceTimer.current);
-                    }
-                    
-                    // Only validate after user stops typing for 2 seconds
-                    if (cleanedText.length > 0) {
-                      debounceTimer.current = setTimeout(() => {
-                        const error = validateUsername(cleanedText);
-                        if (error) {
-                          setUsernameError(error);
-                        } else if (cleanedText.length >= 3) {
-                          setCheckingUsername(true);
-                          userAPI.checkUsername(cleanedText).then(response => {
-                            if (!response.available && cleanedText.toLowerCase() !== currentUsername?.toLowerCase()) {
-                              setUsernameError('Username is already taken');
-                            }
-                            setCheckingUsername(false);
-                          }).catch(() => {
-                            setCheckingUsername(false);
-                          });
-                        }
-                      }, 2000);
-                    }
+                    // Don't do ANY validation while typing - just update the text
                   }}
-                  placeholder="Enter username (letters and numbers only)"
+                  placeholder="Enter username (3-20 chars, letters/numbers)"
                   placeholderTextColor={colors.textTertiary}
                   autoCapitalize="none"
                   maxLength={20}
                   autoCorrect={false}
                   keyboardType="default"
                   returnKeyType="done"
-                  selectTextOnFocus={false}
-                  clearButtonMode="while-editing"
                 />
                 {usernameError ? (
                   <Text style={[styles.usernameError, { color: colors.error || '#ff4444' }]}>{usernameError}</Text>
