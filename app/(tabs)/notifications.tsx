@@ -45,7 +45,7 @@ export default function NotificationsScreen() {
     }
     
     // Make sure we have a valid auth token
-    if (!AuthService.getToken()) {
+    if (!AuthService.getAuthToken()) {
       logger.log('No auth token available yet, waiting...');
       setLoading(false);
       return;

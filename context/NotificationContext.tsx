@@ -24,7 +24,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
 
     // Make sure we have a valid auth token before making the request
-    if (!AuthService.getToken()) {
+    if (!AuthService.getAuthToken()) {
       logger.log('No auth token available yet, skipping notification fetch');
       return;
     }

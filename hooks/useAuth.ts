@@ -15,8 +15,10 @@ export function useAuth() {
 
   // Check authentication status on mount
   useEffect(() => {
-    checkAuthStatus();
-  }, [walletAddress]);
+    if (!walletLoading) {
+      checkAuthStatus();
+    }
+  }, [walletAddress, walletLoading]);
 
   const checkAuthStatus = async () => {
     try {
