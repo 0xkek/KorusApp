@@ -132,46 +132,7 @@ export default function ProfileScreen() {
     return '';
   };
 
-  const handleUsernameChange = (text: string) => {
-    setTempUsername(text);
-    
-    // Clear any existing checking state when user types
-    setCheckingUsername(false);
-    
-    // Basic validation (don't call setState for error on every keystroke)
-    if (text && !validateUsername(text)) {
-      // Only set error if there's an actual validation error
-      const error = validateUsername(text);
-      if (error) {
-        setUsernameError(error);
-      }
-    } else {
-      setUsernameError('');
-    }
-    
-    // Clear previous debounce timer
-    if (debounceTimer.current) {
-      clearTimeout(debounceTimer.current);
-    }
-    
-    // Only check availability for valid usernames
-    if (text.length >= 3 && !validateUsername(text)) {
-      // Debounce the availability check - wait 1000ms after user stops typing
-      debounceTimer.current = setTimeout(async () => {
-        setCheckingUsername(true);
-        try {
-          const response = await userAPI.checkUsername(text);
-          if (!response.available && text.toLowerCase() !== currentUsername?.toLowerCase()) {
-            setUsernameError('Username is already taken');
-          }
-        } catch (error) {
-          logger.log('Failed to check username:', error);
-        } finally {
-          setCheckingUsername(false);
-        }
-      }, 1000);
-    }
-  };
+  // Removed handleUsernameChange - validation now happens onEndEditing
 
   const handleSaveUsername = async () => {
     const error = validateUsername(tempUsername);
@@ -443,14 +404,30 @@ export default function ProfileScreen() {
               <View style={styles.usernameEditContainer}>
                 <TextInput
                   style={styles.usernameInput}
-                  value={tempUsername}
-                  onChangeText={handleUsernameChange}
+                  defaultValue={tempUsername}
+                  onChangeText={(text) => setTempUsername(text)}
+                  onEndEditing={() => {
+                    // Validate and check availability when user finishes editing
+                    const error = validateUsername(tempUsername);
+                    if (error) {
+                      setUsernameError(error);
+                    } else if (tempUsername.length >= 3) {
+                      setCheckingUsername(true);
+                      userAPI.checkUsername(tempUsername).then(response => {
+                        if (!response.available && tempUsername.toLowerCase() !== currentUsername?.toLowerCase()) {
+                          setUsernameError('Username is already taken');
+                        }
+                        setCheckingUsername(false);
+                      }).catch(() => {
+                        setCheckingUsername(false);
+                      });
+                    }
+                  }}
                   placeholder="Enter username (letters and numbers only)"
                   placeholderTextColor={colors.textTertiary}
                   autoCapitalize="none"
                   maxLength={20}
                   autoCorrect={false}
-                  blurOnSubmit={false}
                   keyboardType="default"
                   returnKeyType="done"
                 />
