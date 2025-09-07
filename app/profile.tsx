@@ -132,18 +132,31 @@ export default function ProfileScreen() {
     return '';
   };
 
-  const handleUsernameChange = async (text: string) => {
+  const handleUsernameChange = (text: string) => {
     setTempUsername(text);
-    const error = validateUsername(text);
-    setUsernameError(error);
+    
+    // Clear any existing checking state when user types
+    setCheckingUsername(false);
+    
+    // Basic validation (don't call setState for error on every keystroke)
+    if (text && !validateUsername(text)) {
+      // Only set error if there's an actual validation error
+      const error = validateUsername(text);
+      if (error) {
+        setUsernameError(error);
+      }
+    } else {
+      setUsernameError('');
+    }
     
     // Clear previous debounce timer
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
     }
     
-    if (!error && text.length >= 3) {
-      // Debounce the availability check - wait 800ms after user stops typing
+    // Only check availability for valid usernames
+    if (text.length >= 3 && !validateUsername(text)) {
+      // Debounce the availability check - wait 1000ms after user stops typing
       debounceTimer.current = setTimeout(async () => {
         setCheckingUsername(true);
         try {
@@ -156,7 +169,7 @@ export default function ProfileScreen() {
         } finally {
           setCheckingUsername(false);
         }
-      }, 800);
+      }, 1000);
     }
   };
 
@@ -436,6 +449,10 @@ export default function ProfileScreen() {
                   placeholderTextColor={colors.textTertiary}
                   autoCapitalize="none"
                   maxLength={20}
+                  autoCorrect={false}
+                  blurOnSubmit={false}
+                  keyboardType="default"
+                  returnKeyType="done"
                 />
                 {usernameError ? (
                   <Text style={[styles.usernameError, { color: colors.error || '#ff4444' }]}>{usernameError}</Text>
