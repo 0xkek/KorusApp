@@ -20,6 +20,9 @@ import { AuthService } from '../services/auth';
 import { logger } from '../utils/logger';
 import { userAPI } from '../utils/api';
 
+// Store temp username value outside of state to avoid re-renders
+let tempUsernameValue = '';
+
 export default function ProfileScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
@@ -58,7 +61,6 @@ export default function ProfileScreen() {
   const [copied, setCopied] = useState(false);
   const [editingUsername, setEditingUsername] = useState(false);
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
-  const [tempUsername, setTempUsername] = useState('');
   const [usernameError, setUsernameError] = useState('');
   const [savingUsername, setSavingUsername] = useState(false);
   const [checkingUsername, setCheckingUsername] = useState(false);
@@ -66,6 +68,8 @@ export default function ProfileScreen() {
   const [showTipModal, setShowTipModal] = useState(false);
   const [showTipSuccessModal, setShowTipSuccessModal] = useState(false);
   const [tipSuccessData, setTipSuccessData] = useState<{ amount: number; username: string } | null>(null);
+  const [hasLoadedProfile, setHasLoadedProfile] = useState(false);
+  const [hasSetUsername, setHasSetUsername] = useState(false);
   
   // Extract user info from current user if viewing own profile
   const userInfo = React.useMemo(() => {
@@ -94,17 +98,23 @@ export default function ProfileScreen() {
     // TODO: Fetch user posts from API
     setUserPosts([]);
     
-    // Load username if viewing own profile
-    if (isOwnProfile) {
+    // Load username if viewing own profile - only once to avoid rate limiting
+    if (isOwnProfile && !hasLoadedProfile && currentUserWallet) {
       loadUserProfile();
+      setHasLoadedProfile(true);
     }
-  }, [profileWallet, isOwnProfile]);
+  }, [isOwnProfile, hasLoadedProfile, currentUserWallet]);
 
   const loadUserProfile = async () => {
     try {
       const response = await userAPI.getProfile();
-      if (response?.user?.username) {
-        setCurrentUsername(response.user.username);
+      if (response?.user) {
+        if (response.user.username) {
+          setCurrentUsername(response.user.username);
+        }
+        if (response.user.hasSetUsername !== undefined) {
+          setHasSetUsername(response.user.hasSetUsername);
+        }
       }
     } catch (error) {
       logger.log('Failed to load user profile:', error);
@@ -136,7 +146,10 @@ export default function ProfileScreen() {
   // Removed handleUsernameChange - validation now happens onEndEditing
 
   const handleSaveUsername = async () => {
-    const error = validateUsername(tempUsername);
+    // Use the tempUsernameValue instead of state
+    const usernameToSave = tempUsernameValue || '';
+    
+    const error = validateUsername(usernameToSave);
     if (error) {
       setUsernameError(error);
       return;
@@ -144,15 +157,36 @@ export default function ProfileScreen() {
 
     setSavingUsername(true);
     try {
-      const response = await userAPI.setUsername(tempUsername);
+      const response = await userAPI.setUsername(usernameToSave);
       if (response.success) {
         setCurrentUsername(response.username);
+        setHasSetUsername(true);
         setEditingUsername(false);
-        setTempUsername('');
+        tempUsernameValue = '';
         Alert.alert('Success', 'Username updated successfully!');
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error || 'Failed to update username');
+      const errorMessage = error.response?.data?.error || 'Failed to update username';
+      const requiresPremium = error.response?.data?.requiresPremium;
+      
+      if (requiresPremium) {
+        Alert.alert(
+          'Premium Required',
+          errorMessage,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { 
+              text: 'Upgrade to Premium', 
+              onPress: () => {
+                // Navigate to premium upgrade screen or show premium modal
+                router.push('/premium');
+              }
+            }
+          ]
+        );
+      } else {
+        Alert.alert('Error', errorMessage);
+      }
     } finally {
       setSavingUsername(false);
     }
@@ -377,9 +411,34 @@ export default function ProfileScreen() {
             {!editingUsername ? (
               <TouchableOpacity
                 onPress={() => {
+                  // Check if user can edit username
+                  const canEdit = !hasSetUsername || isPremium;
+                  
+                  if (!canEdit) {
+                    Alert.alert(
+                      'Username Locked',
+                      'You have already set your username. Upgrade to Premium to change it anytime!',
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        { 
+                          text: 'Upgrade to Premium', 
+                          onPress: () => router.push('/premium')
+                        }
+                      ]
+                    );
+                    return;
+                  }
+                  
                   setEditingUsername(true);
-                  setTempUsername(currentUsername || '');
                   setUsernameError('');
+                  // Initialize the temp value with current username
+                  tempUsernameValue = currentUsername || '';
+                  // Set the initial value when starting to edit
+                  setTimeout(() => {
+                    if (usernameInputRef.current) {
+                      usernameInputRef.current.setNativeProps({ text: currentUsername || '' });
+                    }
+                  }, 50);
                 }}
                 activeOpacity={0.8}
                 style={styles.usernameWrapper}
@@ -397,7 +456,11 @@ export default function ProfileScreen() {
                     ) : (
                       <Text style={styles.usernamePlaceholder}>Set your username</Text>
                     )}
-                    <Ionicons name="create-outline" size={16} color={colors.textSecondary} />
+                    {hasSetUsername && !isPremium ? (
+                      <Ionicons name="lock-closed" size={16} color={colors.textSecondary} />
+                    ) : (
+                      <Ionicons name="create-outline" size={16} color={colors.textSecondary} />
+                    )}
                   </View>
                 </LinearGradient>
               </TouchableOpacity>
@@ -406,12 +469,16 @@ export default function ProfileScreen() {
                 <TextInput
                   ref={usernameInputRef}
                   style={styles.usernameInput}
-                  value={tempUsername}
+                  defaultValue={currentUsername || ''}
                   onChangeText={(text) => {
-                    // Only allow alphanumeric characters
+                    // Only allow alphanumeric characters - filter them directly in the input
                     const cleanedText = text.replace(/[^a-zA-Z0-9]/g, '');
-                    setTempUsername(cleanedText);
-                    // Don't do ANY validation while typing - just update the text
+                    if (cleanedText !== text) {
+                      // If we filtered something out, update the input
+                      usernameInputRef.current?.setNativeProps({ text: cleanedText });
+                    }
+                    // Store the value without causing re-renders
+                    tempUsernameValue = cleanedText;
                   }}
                   placeholder="Enter username (3-20 chars, letters/numbers)"
                   placeholderTextColor={colors.textTertiary}
@@ -433,7 +500,7 @@ export default function ProfileScreen() {
                   <TouchableOpacity
                     style={styles.usernameCancelButton}
                     onPress={() => {
-                      setTempUsername(currentUsername || '');
+                      tempUsernameValue = '';
                       setEditingUsername(false);
                       setUsernameError('');
                     }}

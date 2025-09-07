@@ -33,6 +33,7 @@ model User {
   reputationScore          Int                 @default(0)
   snsUsername              String?             @db.VarChar(100)
   username                 String?             @unique @db.VarChar(20)
+  hasSetUsername           Boolean             @default(false)
   suspendedUntil           DateTime?
   suspensionReason         String?
   themeColor               String?             @db.VarChar(7)

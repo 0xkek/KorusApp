@@ -20,6 +20,7 @@ router.get('/profile', authenticate, async (req: AuthRequest, res) => {
       select: {
         walletAddress: true,
         username: true,
+        hasSetUsername: true,
         snsUsername: true,
         displayName: true,
         bio: true,
@@ -60,18 +61,31 @@ router.post('/username', authenticate, async (req: AuthRequest, res) => {
       return res.status(400).json({ error: validation.error });
     }
 
-    // Check if user exists
+    // Check if user exists and get their tier and username status
     const existingUser = await prisma.user.findUnique({
       where: { walletAddress: userWallet },
-      select: { username: true }
+      select: { 
+        username: true,
+        hasSetUsername: true,
+        tier: true
+      }
     });
 
     if (!existingUser) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Check if user already has a username (can only set once, or allow changes?)
-    // For now, let's allow changes but with rate limiting
+    // Check if user can change username
+    // - Free users: can only set username once
+    // - Premium users: can change username anytime
+    const isPremium = existingUser.tier === 'premium' || existingUser.tier === 'vip';
+    
+    if (existingUser.hasSetUsername && !isPremium) {
+      return res.status(403).json({ 
+        error: 'You have already set your username. Upgrade to Premium to change it anytime.',
+        requiresPremium: true
+      });
+    }
     
     // Normalize username for storage
     const normalizedUsername = normalizeUsername(username);
@@ -88,10 +102,13 @@ router.post('/username', authenticate, async (req: AuthRequest, res) => {
       return res.status(409).json({ error: 'Username is already taken' });
     }
 
-    // Update username
+    // Update username and mark that user has set username
     const updatedUser = await prisma.user.update({
       where: { walletAddress: userWallet },
-      data: { username: normalizedUsername },
+      data: { 
+        username: normalizedUsername,
+        hasSetUsername: true
+      },
       select: { username: true }
     });
 
