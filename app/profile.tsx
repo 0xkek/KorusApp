@@ -25,6 +25,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { colors, isDarkMode, gradients } = useTheme();
   const debounceTimer = useRef<NodeJS.Timeout>();
+  const usernameInputRef = useRef<TextInput>(null);
   const { 
     walletAddress: currentUserWallet, 
     balance,
@@ -403,24 +404,42 @@ export default function ProfileScreen() {
             ) : (
               <View style={styles.usernameEditContainer}>
                 <TextInput
+                  ref={usernameInputRef}
                   style={styles.usernameInput}
-                  defaultValue={tempUsername}
-                  onChangeText={(text) => setTempUsername(text)}
-                  onEndEditing={() => {
-                    // Validate and check availability when user finishes editing
-                    const error = validateUsername(tempUsername);
-                    if (error) {
-                      setUsernameError(error);
-                    } else if (tempUsername.length >= 3) {
-                      setCheckingUsername(true);
-                      userAPI.checkUsername(tempUsername).then(response => {
-                        if (!response.available && tempUsername.toLowerCase() !== currentUsername?.toLowerCase()) {
-                          setUsernameError('Username is already taken');
+                  value={tempUsername}
+                  onChangeText={(text) => {
+                    // Only allow alphanumeric characters
+                    const cleanedText = text.replace(/[^a-zA-Z0-9]/g, '');
+                    setTempUsername(cleanedText);
+                    
+                    // Clear any previous errors immediately
+                    if (usernameError) {
+                      setUsernameError('');
+                    }
+                    
+                    // Cancel any pending validation
+                    if (debounceTimer.current) {
+                      clearTimeout(debounceTimer.current);
+                    }
+                    
+                    // Only validate after user stops typing for 2 seconds
+                    if (cleanedText.length > 0) {
+                      debounceTimer.current = setTimeout(() => {
+                        const error = validateUsername(cleanedText);
+                        if (error) {
+                          setUsernameError(error);
+                        } else if (cleanedText.length >= 3) {
+                          setCheckingUsername(true);
+                          userAPI.checkUsername(cleanedText).then(response => {
+                            if (!response.available && cleanedText.toLowerCase() !== currentUsername?.toLowerCase()) {
+                              setUsernameError('Username is already taken');
+                            }
+                            setCheckingUsername(false);
+                          }).catch(() => {
+                            setCheckingUsername(false);
+                          });
                         }
-                        setCheckingUsername(false);
-                      }).catch(() => {
-                        setCheckingUsername(false);
-                      });
+                      }, 2000);
                     }
                   }}
                   placeholder="Enter username (letters and numbers only)"
@@ -430,6 +449,8 @@ export default function ProfileScreen() {
                   autoCorrect={false}
                   keyboardType="default"
                   returnKeyType="done"
+                  selectTextOnFocus={false}
+                  clearButtonMode="while-editing"
                 />
                 {usernameError ? (
                   <Text style={[styles.usernameError, { color: colors.error || '#ff4444' }]}>{usernameError}</Text>
