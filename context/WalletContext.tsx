@@ -262,9 +262,25 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       setIsLoading(false);
       return true;
       
-    } catch (error) {
-      logger.error('Error connecting wallet:', error);
+    } catch (error: any) {
+      const errorMessage = error.message || '';
+      const isCancellation = errorMessage === 'Connection cancelled' || 
+                            errorMessage.toLowerCase().includes('cancel');
+      
+      // Only log as error if it's not a cancellation
+      if (!isCancellation) {
+        logger.error('Error connecting wallet:', error);
+      } else {
+        logger.log('User cancelled wallet connection');
+      }
+      
       setIsLoading(false);
+      
+      // If it's a cancellation, throw it up so the modal can handle it
+      if (isCancellation) {
+        throw error;
+      }
+      
       return false;
     }
   };

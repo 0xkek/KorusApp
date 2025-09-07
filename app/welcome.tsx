@@ -51,6 +51,7 @@ export default function WelcomeScreen() {
   }, [isConnected, isLoading, showAgeGate]);
 
   const handleConnectWallet = () => {
+    logger.log('🟢 USER ACTION: Tapped "Connect Wallet" button on welcome screen');
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setShowWalletModal(true);
   };

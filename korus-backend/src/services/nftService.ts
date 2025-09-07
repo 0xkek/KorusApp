@@ -152,11 +152,17 @@ export async function fetchNFTsForWallet(
     const transformedAssets = assets
       .map((item: any) => {
         // Prefer CDN URLs for faster loading
-        const imageUrl = 
+        let imageUrl = 
           item.content?.files?.[0]?.cdn_uri ||  // CDN first (fastest)
           item.content?.links?.image || 
           item.content?.files?.[0]?.uri || 
           ''
+        
+        // Fix double slash issue in Helius CDN URLs
+        if (imageUrl && imageUrl.includes('cdn.helius-rpc.com/cdn-cgi/image//')) {
+          // Use the original image URL instead of broken CDN URL
+          imageUrl = item.content?.links?.image || item.content?.files?.[0]?.uri || ''
+        }
         
         // Handle empty name by using collection name or symbol as fallback
         const nftName = item.content?.metadata?.name && item.content.metadata.name.trim() !== '' 

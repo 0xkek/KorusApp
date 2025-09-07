@@ -36,7 +36,20 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
   const [selectedProvider, setSelectedProvider] = useState<WalletProvider | null>(null);
   const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
 
+  // Log when modal opens/closes
+  React.useEffect(() => {
+    if (isVisible) {
+      logger.log('🔵 ACTION LOG: Wallet Connection Modal OPENED');
+      logger.log('  - Is Connected:', isConnected);
+      logger.log('  - Current Wallet:', walletAddress);
+      logger.log('  - Available Wallets:', availableWallets.map(w => w.name));
+    } else {
+      logger.log('🔵 ACTION LOG: Wallet Connection Modal CLOSED');
+    }
+  }, [isVisible]);
+
   const handleWalletConnect = async (provider: WalletProvider) => {
+    logger.log('🟢 USER ACTION: Tapped connect with provider:', provider.name);
     try {
       setIsConnecting(true);
       setSelectedProvider(provider);
@@ -51,14 +64,39 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
         showAlert('Connection Failed', 'Failed to connect wallet. Please try again.', 'error');
       }
     } catch (error: any) {
-      logger.error('Wallet connection error:', error);
-      
       // Handle specific error cases
-      if (error.message?.includes('declined') || error.message?.includes('cancelled')) {
-        showAlert('Authentication Required', 'Please approve the signature request to connect your wallet.', 'warning');
+      const errorStr = error.toString();
+      const errorMessage = error.message || '';
+      
+      // Don't log cancellations as errors
+      if (!errorMessage.includes('cancel') && errorMessage !== 'Connection cancelled') {
+        logger.error('Wallet connection error:', error);
+      }
+      
+      // Check for cancellation (including MWA CancellationException)
+      const isCancellation = 
+        errorStr.includes('CancellationException') ||
+        errorMessage.includes('CancellationException') ||
+        errorMessage.toLowerCase().includes('cancel') || 
+        errorMessage.includes('declined') ||
+        errorMessage === 'Connection cancelled' ||
+        error.code === 'EUNSPECIFIED'; // MWA cancellation often has this code
+      
+      if (isCancellation) {
+        // User cancelled - don't show an error, just close modal
+        logger.log('🔴 USER ACTION: User CANCELLED wallet connection');
+        logger.log('  - Full error:', errorStr);
+        logger.log('  - Error message:', errorMessage);
+        logger.log('  - Error code:', error.code);
+        logger.log('  - Not showing error modal - handling silently');
+        // Just close modal silently
+        onClose();
+        return;
       } else if (error.message?.includes('Failed to sign')) {
         showAlert('Signature Failed', 'Unable to authenticate. Please try again and approve the signature request.', 'error');
       } else {
+        logger.log('🔴 ERROR: Connection failed, showing error modal');
+        logger.log('  - Error message:', error.message);
         showAlert('Connection Error', error.message || 'An error occurred while connecting your wallet.', 'error');
       }
     } finally {
@@ -68,6 +106,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
   };
 
   const handleNewToWallets = () => {
+    logger.log('🟢 USER ACTION: Tapped "New to Wallets" button');
     showAlert(
       'Get Started with Wallets',
       'To use Korus, you need a Solana wallet. We recommend Seed Vault for Seeker users, or Phantom for general use.',
@@ -95,6 +134,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
   };
 
   const handleDisconnect = () => {
+    logger.log('🟢 USER ACTION: Tapped disconnect wallet button');
     showAlert(
       'Disconnect Wallet',
       'Are you sure you want to disconnect your wallet? You will need to reconnect to use Korus.',
@@ -108,6 +148,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
           text: 'Disconnect',
           style: 'destructive',
           onPress: async () => {
+            logger.log('🟢 USER ACTION: Confirmed disconnect');
             await disconnectWallet();
             onClose();
           },
@@ -121,13 +162,19 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
       visible={isVisible}
       animationType="slide"
       transparent={true}
-      onRequestClose={onClose}
+      onRequestClose={() => {
+        logger.log('🟢 USER ACTION: Hardware back button pressed');
+        onClose();
+      }}
     >
       <View style={styles.container}>
         <TouchableOpacity 
           style={styles.backdrop} 
           activeOpacity={1} 
-          onPress={onClose}
+          onPress={() => {
+            logger.log('🟢 USER ACTION: Tapped backdrop to close modal');
+            onClose();
+          }}
         />
         <View style={styles.modal}>
           <BlurView intensity={40} style={styles.blurContainer}>
@@ -195,6 +242,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
                   {/* Seed Vault - Primary Button */}
                   <TouchableOpacity
                     onPress={() => {
+                      logger.log('🟢 USER ACTION: Tapped "Connect Seed Vault" button');
                       const seedVault = availableWallets.find(w => w.name === 'seedvault');
                       if (seedVault) {
                         handleWalletConnect(seedVault);
@@ -230,6 +278,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
                   {/* Connect Other Wallet Button */}
                   <TouchableOpacity
                     onPress={() => {
+                      logger.log('🟢 USER ACTION: Tapped "Connect Other Wallets" button');
                       const phantom = availableWallets.find(w => w.name === 'phantom');
                       if (phantom) {
                         handleWalletConnect(phantom);
@@ -255,7 +304,10 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
               )}
 
               <TouchableOpacity
-                onPress={onClose}
+                onPress={() => {
+                  logger.log('🟢 USER ACTION: Tapped Cancel button');
+                  onClose();
+                }}
                 disabled={isConnecting}
                 style={styles.cancelButton}
               >

@@ -157,7 +157,13 @@ export const connectAndSignWithMWA = async (message: string): Promise<{ address:
     
     return result as { address: string; signature: string };
   } catch (error: any) {
-    logger.error('MWA transaction error:', error);
+    // Only log as error if it's not a cancellation
+    const errorStr = error.toString();
+    if (!errorStr.includes('CancellationException')) {
+      logger.error('MWA transaction error:', error);
+    } else {
+      logger.log('User cancelled wallet connection');
+    }
     // Better error handling
     if (error.message?.includes('cancelled')) {
       throw new Error('Wallet connection cancelled by user');
@@ -167,9 +173,20 @@ export const connectAndSignWithMWA = async (message: string): Promise<{ address:
     throw error;
   }
   } catch (importError: any) {
-    logger.error('Failed to import MWA libraries:', importError);
     // Check if user cancelled the connection
-    if (importError.message?.includes('cancelled') || importError.message?.includes('declined')) {
+    const errorStr = importError.toString();
+    const errorMessage = importError.message || '';
+    
+    // Only log as error if it's not a cancellation
+    if (!errorStr.includes('CancellationException')) {
+      logger.error('Failed to import MWA libraries:', importError);
+    }
+    
+    if (errorStr.includes('CancellationException') || 
+        errorMessage.includes('CancellationException') ||
+        errorMessage.includes('cancelled') || 
+        errorMessage.includes('declined') ||
+        importError.code === 'EUNSPECIFIED') {
       throw new Error('Connection cancelled');
     }
     throw new Error('Failed to connect wallet. Please try again.');

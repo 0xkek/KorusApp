@@ -46,13 +46,8 @@ export default function KorusAlert({
     >
       <View style={styles.modalOverlay}>
         <View style={styles.alertContainer}>
-          <View style={[styles.blurWrapper, { backgroundColor: colors.surface + '95' }]}>
-            <LinearGradient
-              colors={gradients.surface}
-              style={styles.contentContainer}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
+          <View style={[styles.blurWrapper, { backgroundColor: '#2a2a2a' }]}>
+            <View style={[styles.contentContainer, { backgroundColor: '#2a2a2a' }]}>
               <Text style={[styles.title, { color: '#ffffff' }]}>{title}</Text>
               <Text style={[styles.message, { color: '#d0d0d0' }]}>{message}</Text>
 
@@ -72,7 +67,7 @@ export default function KorusAlert({
                   </LinearGradient>
                 </TouchableOpacity>
               )}
-            </LinearGradient>
+            </View>
           </View>
         </View>
       </View>
