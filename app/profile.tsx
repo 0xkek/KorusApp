@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View, Image, ScrollView, TextInput, Linking, Clipboard, Alert, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
@@ -24,6 +24,7 @@ export default function ProfileScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
   const { colors, isDarkMode, gradients } = useTheme();
+  const debounceTimer = useRef<NodeJS.Timeout>();
   const { 
     walletAddress: currentUserWallet, 
     balance,
@@ -136,18 +137,26 @@ export default function ProfileScreen() {
     const error = validateUsername(text);
     setUsernameError(error);
     
+    // Clear previous debounce timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+    
     if (!error && text.length >= 3) {
-      setCheckingUsername(true);
-      try {
-        const response = await userAPI.checkUsername(text);
-        if (!response.available && text.toLowerCase() !== currentUsername?.toLowerCase()) {
-          setUsernameError('Username is already taken');
+      // Debounce the availability check - wait 800ms after user stops typing
+      debounceTimer.current = setTimeout(async () => {
+        setCheckingUsername(true);
+        try {
+          const response = await userAPI.checkUsername(text);
+          if (!response.available && text.toLowerCase() !== currentUsername?.toLowerCase()) {
+            setUsernameError('Username is already taken');
+          }
+        } catch (error) {
+          logger.log('Failed to check username:', error);
+        } finally {
+          setCheckingUsername(false);
         }
-      } catch (error) {
-        logger.log('Failed to check username:', error);
-      } finally {
-        setCheckingUsername(false);
-      }
+      }, 800);
     }
   };
 
