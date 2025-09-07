@@ -240,7 +240,7 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
                     style={styles.otherWalletsButton}
                     disabled={isConnecting}
                   >
-                    <Text style={styles.otherWalletsText}>Connect Phantom</Text>
+                    <Text style={styles.otherWalletsText}>Connect Other Wallets</Text>
                   </TouchableOpacity>
                   
                   <TouchableOpacity

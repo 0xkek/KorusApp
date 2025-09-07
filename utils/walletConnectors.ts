@@ -168,7 +168,11 @@ export const connectAndSignWithMWA = async (message: string): Promise<{ address:
   }
   } catch (importError: any) {
     logger.error('Failed to import MWA libraries:', importError);
-    throw new Error('Mobile wallet adapter not available. Please ensure you have a compatible Solana wallet installed.');
+    // Check if user cancelled the connection
+    if (importError.message?.includes('cancelled') || importError.message?.includes('declined')) {
+      throw new Error('Connection cancelled');
+    }
+    throw new Error('Failed to connect wallet. Please try again.');
   }
 };
 

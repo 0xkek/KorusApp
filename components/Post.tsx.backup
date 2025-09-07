@@ -445,33 +445,19 @@ const Post = memo<PostProps>(function Post({
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   >
-                    {/* First check if post has stored avatar data */}
                     {post.avatar ? (
-                      // Post has stored avatar (could be NFT URL or emoji)
-                      post.avatar.startsWith('http') || post.avatar.startsWith('data:') ? (
-                        <Image 
-                          source={{ uri: post.avatar }}
-                          style={styles.nftAvatar}
-                        />
-                      ) : (
-                        <Text style={styles.avatarEmoji}>{post.avatar}</Text>
-                      )
-                    ) : post.wallet === currentUserWallet ? (
-                      // This is current user's post - show their current avatar
-                      currentUserNFTAvatar ? (
-                        <Image 
-                          source={{ uri: currentUserNFTAvatar.image || currentUserNFTAvatar.uri }}
-                          style={styles.nftAvatar}
-                        />
-                      ) : currentUserAvatar ? (
-                        <Text style={styles.avatarEmoji}>{currentUserAvatar}</Text>
-                      ) : (
-                        <Text style={[styles.avatarText, { color: isDarkMode ? '#000' : '#fff' }]}>
-                          {post.wallet.slice(0, 2)}
-                        </Text>
-                      )
+                      <Image 
+                        source={{ uri: post.avatar }}
+                        style={styles.nftAvatar}
+                      />
+                    ) : post.wallet === currentUserWallet && currentUserNFTAvatar ? (
+                      <Image 
+                        source={{ uri: currentUserNFTAvatar.image || currentUserNFTAvatar.uri }}
+                        style={styles.nftAvatar}
+                      />
+                    ) : post.wallet === currentUserWallet && currentUserAvatar ? (
+                      <Text style={styles.avatarEmoji}>{currentUserAvatar}</Text>
                     ) : (
-                      // Other users' posts - show wallet initials as fallback
                       <Text style={[styles.avatarText, { color: isDarkMode ? '#000' : '#fff' }]}>
                         {post.wallet.slice(0, 2)}
                       </Text>

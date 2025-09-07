@@ -34,12 +34,17 @@ export default function NFTAvatarModal({
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [showSpam, setShowSpam] = useState(false);
+  const [showSpam, setShowSpam] = useState(false); // Default to hiding spam
   const [spamStats, setSpamStats] = useState({ filtered: 0, total: 0 });
 
   useEffect(() => {
     if (visible && walletAddress) {
+      // Reset state when wallet changes or modal opens
+      setNfts([]);
       setPage(1);
+      setHasMore(true);
+      // Keep showSpam as is - user preference
+      setSelectedNFT(null);
       loadNFTs(1, false);
     }
   }, [visible, walletAddress]);

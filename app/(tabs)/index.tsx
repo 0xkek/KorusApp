@@ -16,6 +16,7 @@ import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logger } from '../../utils/logger';
 import { reputationService } from '../../services/reputation';
+import { postAvatarCache } from '../../services/postAvatarCache';
 import { Fonts, FontSizes } from '../../constants/Fonts';
 import { useLoadPosts } from '../../hooks/useLoadPosts';
 import { postsAPI, interactionsAPI, repliesAPI } from '../../utils/api';
@@ -439,6 +440,7 @@ export default function HomeScreen() {
         const newPost: PostType = {
           id: backendPost.id,
           wallet: backendPost.authorWallet || backendPost.author?.walletAddress || currentUserWallet,
+          avatar: selectedNFTAvatar ? (selectedNFTAvatar.image || selectedNFTAvatar.uri) : selectedAvatar, // Store current avatar with post
           time: 'Just now',
           timestamp: new Date().toISOString(),
           content: backendPost.content,
@@ -453,6 +455,12 @@ export default function HomeScreen() {
           gameData: undefined
         };
 
+        // Save avatar to cache for this post
+        const avatarToSave = selectedNFTAvatar ? (selectedNFTAvatar.image || selectedNFTAvatar.uri) : selectedAvatar;
+        if (avatarToSave) {
+          await postAvatarCache.saveAvatar(String(newPost.id), newPost.wallet, avatarToSave);
+        }
+        
         setPosts([newPost, ...posts]);
         setNewPostContent('');
         setShowCreatePost(false);
@@ -512,6 +520,7 @@ export default function HomeScreen() {
     const newPost: PostType = {
       id: gameId,
       wallet: currentUserWallet,
+      avatar: selectedNFTAvatar ? (selectedNFTAvatar.image || selectedNFTAvatar.uri) : selectedAvatar, // Store current avatar with post
       time: 'now',
       content: gameContent,
       likes: 0,

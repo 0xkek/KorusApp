@@ -8,7 +8,7 @@ interface KorusAlertProps {
   visible: boolean;
   title: string;
   message: string;
-  type?: 'success' | 'info';
+  type?: 'success' | 'info' | 'error' | 'warning';
   onClose: () => void;
   autoDismiss?: boolean;
   autoDismissDelay?: number;
@@ -53,8 +53,8 @@ export default function KorusAlert({
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <Text style={styles.title}>{title}</Text>
-              <Text style={styles.message}>{message}</Text>
+              <Text style={[styles.title, { color: '#ffffff' }]}>{title}</Text>
+              <Text style={[styles.message, { color: '#d0d0d0' }]}>{message}</Text>
 
               {!autoDismiss && (
                 <TouchableOpacity
@@ -117,7 +117,7 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '800',
-    color: colors.text,
+    color: isDarkMode ? '#ffffff' : '#000000', // Hardcoded for visibility
     textAlign: 'center',
     marginBottom: 12,
     letterSpacing: -0.02,
@@ -125,7 +125,7 @@ const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   message: {
     fontSize: 16,
     fontWeight: '500',
-    color: colors.textSecondary,
+    color: isDarkMode ? '#e0e0e0' : '#333333', // Hardcoded for visibility
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 24,
