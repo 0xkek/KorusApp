@@ -70,6 +70,7 @@ export default function ProfileScreen() {
   const [tipSuccessData, setTipSuccessData] = useState<{ amount: number; username: string } | null>(null);
   const [hasLoadedProfile, setHasLoadedProfile] = useState(false);
   const [hasSetUsername, setHasSetUsername] = useState(false);
+  const [userTier, setUserTier] = useState<string>('standard');
   
   // Extract user info from current user if viewing own profile
   const userInfo = React.useMemo(() => {
@@ -114,6 +115,9 @@ export default function ProfileScreen() {
         }
         if (response.user.hasSetUsername !== undefined) {
           setHasSetUsername(response.user.hasSetUsername);
+        }
+        if (response.user.tier) {
+          setUserTier(response.user.tier);
         }
       }
     } catch (error) {
@@ -411,8 +415,9 @@ export default function ProfileScreen() {
             {!editingUsername ? (
               <TouchableOpacity
                 onPress={() => {
-                  // Check if user can edit username
-                  const canEdit = !hasSetUsername || isPremium;
+                  // Check if user can edit username based on actual tier from backend
+                  const isActuallyPremium = userTier === 'premium' || userTier === 'vip';
+                  const canEdit = !hasSetUsername || isActuallyPremium;
                   
                   if (!canEdit) {
                     Alert.alert(
@@ -456,7 +461,7 @@ export default function ProfileScreen() {
                     ) : (
                       <Text style={styles.usernamePlaceholder}>Set your username</Text>
                     )}
-                    {hasSetUsername && !isPremium ? (
+                    {hasSetUsername && userTier !== 'premium' && userTier !== 'vip' ? (
                       <Ionicons name="lock-closed" size={16} color={colors.textSecondary} />
                     ) : (
                       <Ionicons name="create-outline" size={16} color={colors.textSecondary} />
