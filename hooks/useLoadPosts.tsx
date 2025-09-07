@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { postsAPI, hasAuthToken, interactionsAPI, sponsoredAPI } from '../utils/api';
 import { Post as PostType } from '../types';
 import { logger } from '../utils/logger';
+import { postAvatarCache } from '../services/postAvatarCache';
 
 export function useLoadPosts() {
   const [posts, setPosts] = useState<PostType[]>([]);
@@ -33,7 +34,7 @@ export function useLoadPosts() {
       
       if (response.posts && response.posts.length > 0) {
         // Transform backend posts to app format
-        const transformedPosts = response.posts.map((post: any) => {
+        const transformedPosts = await Promise.all(response.posts.map(async (post: any) => {
           // Log image URLs for debugging
           if (post.imageUrl) {
             logger.log('Post has image:', {
@@ -45,9 +46,26 @@ export function useLoadPosts() {
             });
           }
           
+          const wallet = post.authorWallet || post.author?.walletAddress || 'Unknown';
+          
+          // Get avatar from backend first, then try cache as fallback
+          const backendAvatar = post.author?.nftAvatar?.replace(/&#x2F;/g, '/');
+          let avatar = backendAvatar;
+          
+          // If no backend avatar, try cache
+          if (!avatar) {
+            avatar = await postAvatarCache.getAvatar(post.id, wallet);
+          }
+          
+          // If we have a backend avatar, save it to cache for future use
+          if (backendAvatar) {
+            await postAvatarCache.saveAvatar(String(post.id), wallet, backendAvatar);
+          }
+          
           return {
             id: post.id,
-            wallet: post.authorWallet || post.author?.walletAddress || 'Unknown',
+            wallet: wallet,
+            avatar: avatar || undefined, // Use backend avatar first, then cached
             time: new Date(post.createdAt).toLocaleDateString(),
             content: post.content,
             likes: post.likeCount || 0,
@@ -63,7 +81,7 @@ export function useLoadPosts() {
             userTheme: undefined,
             gameData: undefined
           };
-        });
+        }));
         
         // Fetch sponsored posts
         try {
