@@ -52,10 +52,10 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
       // Check user balance
       const user = await prisma.user.findUnique({
         where: { walletAddress },
-        select: { balance: true }
+        select: { allyBalance: true }
       })
 
-      if (!user || Number(user.balance) < price) {
+      if (!user || Number(user.allyBalance) < price) {
         return res.status(400).json({
           success: false,
           error: 'Insufficient balance for shoutout'
@@ -66,7 +66,7 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
       await prisma.user.update({
         where: { walletAddress },
         data: {
-          balance: {
+          allyBalance: {
             decrement: price
           }
         }
