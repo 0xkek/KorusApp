@@ -1,7 +1,7 @@
 // import { BlurView } from 'expo-blur'; // Removed for performance
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, TouchableWithoutFeedback, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, TouchableWithoutFeedback, KeyboardAvoidingView, Platform, Keyboard, FlatList } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,8 +18,20 @@ interface CreatePostModalProps {
   content: string;
   onClose: () => void;
   onContentChange: (text: string) => void;
-  onSubmit: (imageUrl?: string) => void;
+  onSubmit: (imageUrl?: string, shoutoutDuration?: number) => void;
 }
+
+// Shoutout duration options and pricing
+const SHOUTOUT_OPTIONS = [
+  { label: 'Select duration', value: null, price: 0 },
+  { label: '10 minutes', value: 10, price: 0.05 },
+  { label: '20 minutes', value: 20, price: 0.10 },
+  { label: '30 minutes', value: 30, price: 0.18 },
+  { label: '1 hour', value: 60, price: 0.35 },
+  { label: '2 hours', value: 120, price: 0.70 },
+  { label: '3 hours', value: 180, price: 1.30 },
+  { label: '4 hours', value: 240, price: 2.00 },
+];
 
 export default function CreatePostModal({
   visible,
@@ -36,6 +48,9 @@ export default function CreatePostModal({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false); // Twitter-style submission guard
+  const [showShoutout, setShowShoutout] = useState(false);
+  const [shoutoutDuration, setShoutoutDuration] = useState<number | null>(null);
+  const [showDurationPicker, setShowDurationPicker] = useState(false);
 
   // Reset state when modal closes
   React.useEffect(() => {
@@ -44,6 +59,9 @@ export default function CreatePostModal({
       setIsUploading(false);
       setUploadProgress(0);
       setSelectedMedia(null);
+      setShowShoutout(false);
+      setShoutoutDuration(null);
+      setShowDurationPicker(false);
     }
   }, [visible]);
 
@@ -96,8 +114,8 @@ export default function CreatePostModal({
         }
       }
       
-      // Submit post with uploaded image URL
-      await onSubmit(uploadedImageUrl);
+      // Submit post with uploaded image URL and shoutout duration if selected
+      await onSubmit(uploadedImageUrl, shoutoutDuration || undefined);
       setSelectedMedia(null); // Reset media after submission
       onContentChange(''); // Clear content
       onClose(); // Close modal on success
@@ -203,6 +221,124 @@ export default function CreatePostModal({
                       </TouchableOpacity>
                     </View>
 
+                    {/* Shoutout Section */}
+                    <TouchableOpacity
+                      style={[styles.shoutoutBanner, { 
+                        backgroundColor: colors.surface,
+                        borderColor: showShoutout ? '#FFD700' : colors.borderLight,
+                        borderWidth: showShoutout ? 2 : 1
+                      }]}
+                      onPress={() => setShowShoutout(!showShoutout)}
+                      activeOpacity={0.7}
+                    >
+                      <LinearGradient
+                        colors={showShoutout ? ['#FFD700', '#FFA500'] : [colors.surface, colors.surface]}
+                        style={styles.shoutoutGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                      >
+                        <View style={styles.shoutoutHeader}>
+                          <View style={styles.shoutoutIconText}>
+                            <Text style={styles.shoutoutEmoji}>📢</Text>
+                            <Text style={[styles.shoutoutTitle, { color: showShoutout ? '#000' : '#FFD700' }]}>
+                              Make it a Shoutout!
+                            </Text>
+                          </View>
+                          <Ionicons 
+                            name={showShoutout ? "chevron-up" : "chevron-down"} 
+                            size={16} 
+                            color={showShoutout ? '#000' : '#FFD700'} 
+                          />
+                        </View>
+                        {!showShoutout && (
+                          <Text style={[styles.shoutoutSubtitle, { color: colors.textSecondary }]}>
+                            Get guaranteed visibility at the top of feeds
+                          </Text>
+                        )}
+                      </LinearGradient>
+                    </TouchableOpacity>
+
+                    {/* Expanded Shoutout Options */}
+                    {showShoutout && (
+                      <View style={[styles.shoutoutOptions, { backgroundColor: colors.surface, borderColor: 'rgba(255, 215, 0, 0.3)' }]}>
+                        <Text style={[styles.shoutoutLabel, { color: colors.text }]}>Duration:</Text>
+                        <TouchableOpacity
+                          style={[styles.pickerContainer, { backgroundColor: colors.background, borderColor: 'rgba(255, 215, 0, 0.5)' }]}
+                          onPress={() => setShowDurationPicker(true)}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={[styles.pickerText, { color: colors.text }]}>
+                            {SHOUTOUT_OPTIONS.find(opt => opt.value === shoutoutDuration)?.label || 'Select duration'}
+                          </Text>
+                          <Ionicons name="chevron-down" size={16} color={colors.textSecondary} />
+                        </TouchableOpacity>
+                        
+                        {shoutoutDuration && (
+                          <View style={styles.shoutoutPricing}>
+                            <Text style={[styles.priceLabel, { color: colors.textSecondary }]}>Cost:</Text>
+                            <Text style={[styles.priceAmount, { color: '#FFD700' }]}>
+                              {SHOUTOUT_OPTIONS.find(opt => opt.value === shoutoutDuration)?.price.toFixed(3)} SOL
+                            </Text>
+                            <Text style={[styles.priceNote, { color: colors.textTertiary }]}>
+                              (~${((SHOUTOUT_OPTIONS.find(opt => opt.value === shoutoutDuration)?.price || 0) * 200).toFixed(0)})
+                            </Text>
+                          </View>
+                        )}
+                        
+                        <Text style={[styles.shoutoutInfo, { color: colors.textSecondary }]}>
+                          ✨ Your post will be pinned at the top of all feeds for the selected duration
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Duration Picker Modal */}
+                    <Modal
+                      visible={showDurationPicker}
+                      transparent={true}
+                      animationType="fade"
+                      onRequestClose={() => setShowDurationPicker(false)}
+                    >
+                      <TouchableOpacity 
+                        style={styles.pickerModalOverlay}
+                        activeOpacity={1}
+                        onPress={() => setShowDurationPicker(false)}
+                      >
+                        <View style={[styles.pickerModalContent, { backgroundColor: colors.surface }]}>
+                          <Text style={[styles.pickerModalTitle, { color: colors.text, fontFamily: Fonts.bold }]}>Select Duration</Text>
+                          <FlatList
+                            data={SHOUTOUT_OPTIONS}
+                            keyExtractor={(item) => item.label}
+                            renderItem={({ item }) => (
+                              <TouchableOpacity
+                                style={[
+                                  styles.pickerOption,
+                                  { borderBottomColor: colors.borderLight },
+                                  item.value === shoutoutDuration && { backgroundColor: 'rgba(255, 215, 0, 0.1)' }
+                                ]}
+                                onPress={() => {
+                                  setShoutoutDuration(item.value);
+                                  setShowDurationPicker(false);
+                                }}
+                              >
+                                <Text style={[
+                                  styles.pickerOptionText,
+                                  { color: colors.text, fontFamily: Fonts.regular },
+                                  item.value === shoutoutDuration && { fontFamily: Fonts.bold }
+                                ]}>
+                                  {item.label}
+                                </Text>
+                                {item.value && (
+                                  <Text style={[styles.pickerOptionPrice, { color: '#FFD700', fontFamily: Fonts.medium }]}>
+                                    {item.price.toFixed(3)} SOL
+                                  </Text>
+                                )}
+                              </TouchableOpacity>
+                            )}
+                          />
+                        </View>
+                      </TouchableOpacity>
+                    </Modal>
+
                     <View style={styles.textInputContainer}>
                       <TextInput
                         style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.borderLight, color: colors.text, shadowColor: colors.shadowColor }]}
@@ -301,8 +437,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 4,
-    maxHeight: '85%',
-    minHeight: 400,
+    maxHeight: '90%',
+    minHeight: 500,
     overflow: 'hidden',
   },
   contentContainer: {
@@ -504,5 +640,123 @@ const styles = StyleSheet.create({
     right: 12,
     fontSize: FontSizes.sm,
     fontFamily: Fonts.medium,
+  },
+  // Shoutout styles
+  shoutoutBanner: {
+    marginBottom: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  shoutoutGradient: {
+    padding: 10,
+  },
+  shoutoutHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  shoutoutIconText: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  shoutoutEmoji: {
+    fontSize: 18,
+  },
+  shoutoutTitle: {
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.semiBold,
+  },
+  shoutoutSubtitle: {
+    fontSize: FontSizes.xs,
+    fontFamily: Fonts.regular,
+    marginTop: 2,
+    marginLeft: 24,
+  },
+  shoutoutOptions: {
+    marginTop: -6,
+    marginBottom: 12,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  shoutoutLabel: {
+    fontSize: FontSizes.xs,
+    fontFamily: Fonts.medium,
+    marginBottom: 4,
+  },
+  pickerContainer: {
+    borderRadius: 6,
+    borderWidth: 1,
+    marginBottom: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  pickerText: {
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.regular,
+  },
+  pickerModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pickerModalContent: {
+    width: '80%',
+    maxHeight: '60%',
+    borderRadius: 16,
+    padding: 20,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  pickerModalTitle: {
+    fontSize: FontSizes.xl,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  pickerOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+  },
+  pickerOptionText: {
+    fontSize: FontSizes.base,
+  },
+  pickerOptionPrice: {
+    fontSize: FontSizes.sm,
+  },
+  shoutoutPricing: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+    marginBottom: 8,
+  },
+  priceLabel: {
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.regular,
+  },
+  priceAmount: {
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.bold,
+  },
+  priceNote: {
+    fontSize: FontSizes.xs,
+    fontFamily: Fonts.regular,
+  },
+  shoutoutInfo: {
+    fontSize: FontSizes.xs,
+    fontFamily: Fonts.regular,
+    fontStyle: 'italic',
+    lineHeight: 16,
   },
 });

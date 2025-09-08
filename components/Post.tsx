@@ -344,19 +344,21 @@ const Post = memo<PostProps>(function Post({
         style={[
           styles.blurContainer,
           { 
-            borderColor: colors.border + '60', 
+            borderColor: post.isShoutout ? '#FFD700' + '80' : post.sponsored ? colors.primary + '99' : colors.border + '60', 
             backgroundColor: colors.surface + '20',
-            shadowColor: post.sponsored ? colors.primary : colors.shadowColor,
+            shadowColor: colors.shadowColor,
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: isDarkMode ? 0.1 : 0.05,
             shadowRadius: 8,
             elevation: 3,
           },
-          post.sponsored && [styles.sponsoredBlurContainer, { borderColor: colors.primary + '99' }]
+          post.sponsored && !post.isShoutout && styles.sponsoredBlurContainer
         ]}
       >
         <LinearGradient
-          colors={gradients.surface}
+          colors={post.isShoutout 
+            ? ['rgba(255, 215, 0, 0.02)', 'rgba(255, 215, 0, 0.01)'] 
+            : gradients.surface}
           style={styles.postGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}

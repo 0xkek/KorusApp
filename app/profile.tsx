@@ -434,8 +434,9 @@ export default function ProfileScreen() {
             {!editingUsername ? (
               <TouchableOpacity
                 onPress={() => {
-                  // Check if user can edit username based on actual tier from backend
-                  const isActuallyPremium = userTier === 'premium' || userTier === 'vip';
+                  // Check if user can edit username
+                  // Use isPremium from wallet context (includes debug setting) OR database tier
+                  const isActuallyPremium = isPremium || userTier === 'premium' || userTier === 'vip';
                   const canEdit = !hasSetUsername || isActuallyPremium;
                   
                   if (!canEdit) {

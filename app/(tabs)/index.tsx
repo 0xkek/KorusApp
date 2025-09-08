@@ -29,6 +29,7 @@ import { getErrorMessage } from '../../utils/errorHandler';
 import CreatePostModal from '../../components/CreatePostModal';
 import Header from '../../components/Header';
 import Post from '../../components/Post';
+import ShoutoutPost from '../../components/ShoutoutPost';
 import ReplyModal from '../../components/ReplyModal';
 import ReportModal from '../../components/ReportModal';
 import TipModal from '../../components/TipModal';
@@ -98,6 +99,7 @@ export default function HomeScreen() {
   const [isCreatingPost, setIsCreatingPost] = useState(false); // Track posts being liked
   const [isLoadingFeed, setIsLoadingFeed] = useState(true);
   const [feedError, setFeedError] = useState<string | null>(null);
+  const [currentShoutout, setCurrentShoutout] = useState<{ postId: number; expiresAt: Date } | null>(null);
   // Demo instructions removed for production
   
   // Reply sorting state - track sorting preference per post
@@ -389,7 +391,7 @@ export default function HomeScreen() {
     }
   };
 
-  const handleCreatePost = async (mediaUrl?: string) => {
+  const handleCreatePost = async (mediaUrl?: string, shoutoutDuration?: number) => {
     logger.info('handleCreatePost called', { 
       hasContent: !!newPostContent.trim(), 
       isCreatingPost, 
@@ -439,11 +441,12 @@ export default function HomeScreen() {
         );
         
         // Create post via API
-        logger.info('Calling API to create post');
+        logger.info('Calling API to create post', { shoutoutDuration });
         const response = await postsAPI.createPost({
           content: newPostContent,
           imageUrl: isVideo ? undefined : mediaUrl,
           videoUrl: isVideo ? mediaUrl : undefined,
+          shoutoutDuration: shoutoutDuration || undefined,
         });
 
         // Transform backend post to app format
@@ -465,6 +468,9 @@ export default function HomeScreen() {
           content: backendPost.content,
           likes: backendPost.likeCount || 0,
           replies: [],
+          isShoutout: backendPost.isShoutout || false,
+          shoutoutDuration: backendPost.shoutoutDuration,
+          shoutoutExpiresAt: backendPost.shoutoutExpiresAt,
           tips: backendPost.tipCount || 0,
           liked: false,
           imageUrl: backendPost.imageUrl || (isVideo ? undefined : mediaUrl),
@@ -484,16 +490,34 @@ export default function HomeScreen() {
         setNewPostContent('');
         setShowCreatePost(false);
         
+        // If this is a shoutout, set it as the current shoutout
+        if (shoutoutDuration && newPost.id) {
+          const expiresAt = new Date();
+          expiresAt.setMinutes(expiresAt.getMinutes() + shoutoutDuration);
+          setCurrentShoutout({
+            postId: newPost.id,
+            expiresAt
+          });
+          
+          // Show shoutout success message
+          showAlert({
+            title: 'Shoutout Created! 🎉',
+            message: `Your post is now pinned at the top for ${shoutoutDuration} minutes!`,
+            type: 'success'
+          });
+        } else {
+          // Show regular success alert
+          showAlert({
+            title: 'Success',
+            message: 'Your post has been shared with the community!',
+            type: 'success'
+          });
+        }
+        
         // Track reputation for post creation
         if (walletAddress) {
           await reputationService.onPostCreated(walletAddress, !!mediaUrl);
         }
-        
-        showAlert({
-          title: 'Success',
-          message: 'Your post has been shared with the community!',
-          type: 'success'
-        });
       } catch (error) {
         logger.error('Failed to create post:', error);
         const errorMessage = getErrorMessage(error);
@@ -1024,38 +1048,81 @@ export default function HomeScreen() {
     return true;
   });
 
-  // Sort posts by newest first
+  // Sort posts by newest first, with shoutout at the top
   const sortedPosts = React.useMemo(() => {
-    return [...filteredPosts].sort((a, b) => b.id - a.id);
-  }, [filteredPosts]);
+    const sorted = [...filteredPosts].sort((a, b) => b.id - a.id);
+    
+    // If there's a current shoutout that hasn't expired, move it to the top
+    if (currentShoutout && new Date() < currentShoutout.expiresAt) {
+      const shoutoutIndex = sorted.findIndex(post => post.id === currentShoutout.postId);
+      if (shoutoutIndex > 0) {
+        const shoutoutPost = sorted[shoutoutIndex];
+        sorted.splice(shoutoutIndex, 1);
+        sorted.unshift(shoutoutPost);
+      }
+    }
+    
+    return sorted;
+  }, [filteredPosts, currentShoutout]);
   
   // Memoized callbacks for FlatList - must be defined before conditional rendering
   const keyExtractor = useCallback((item: PostType) => String(item.id), []);
   
-  const renderItem = useCallback(({ item: post }: { item: PostType }) => (
-    <Post
-      post={{
-        ...post,
-        replies: sortReplies(post.replies, getReplySortType(post.id))
-      }}
-      expandedPosts={expandedPosts}
-      currentUserWallet={currentUserWallet}
-      currentUserAvatar={selectedAvatar}
-      currentUserNFTAvatar={selectedNFTAvatar}
-      replySortType={getReplySortType(post.id)}
-      onLike={handleLike}
-      onReply={handleReply}
-      onTip={handleTip}
-      onShowTipModal={handleShowTipModal}
-      onLikeReply={handleLikeReply}
-      onTipReply={handleTipReply}
-      onToggleReplies={toggleReplies}
-      onToggleReplySorting={toggleReplySorting}
-      onReport={handleReport}
-      onShowProfile={handleShowProfile}
-      onShowReportModal={handleShowReportModal}
-    />
-  ), [expandedPosts, currentUserWallet, selectedAvatar, selectedNFTAvatar, handleLike, handleReply, handleTip, handleShowTipModal, handleLikeReply, handleTipReply, toggleReplies, toggleReplySorting, handleReport, handleShowProfile, handleShowReportModal, getReplySortType, sortReplies]);
+  const renderItem = useCallback(({ item: post }: { item: PostType }) => {
+    const isShoutout = currentShoutout && currentShoutout.postId === post.id && new Date() < currentShoutout.expiresAt;
+    
+    if (isShoutout) {
+      return (
+        <ShoutoutPost
+          post={{
+            ...post,
+            replies: sortReplies(post.replies, getReplySortType(post.id))
+          }}
+          expandedPosts={expandedPosts}
+          currentUserWallet={currentUserWallet}
+          currentUserAvatar={selectedAvatar}
+          currentUserNFTAvatar={selectedNFTAvatar}
+          replySortType={getReplySortType(post.id)}
+          onLike={handleLike}
+          onReply={handleReply}
+          onTip={handleTip}
+          onShowTipModal={handleShowTipModal}
+          onLikeReply={handleLikeReply}
+          onTipReply={handleTipReply}
+          onToggleReplies={toggleReplies}
+          onToggleReplySorting={toggleReplySorting}
+          onReport={handleReport}
+          onShowProfile={handleShowProfile}
+          onShowReportModal={handleShowReportModal}
+        />
+      );
+    }
+    
+    return (
+      <Post
+        post={{
+          ...post,
+          replies: sortReplies(post.replies, getReplySortType(post.id))
+        }}
+        expandedPosts={expandedPosts}
+        currentUserWallet={currentUserWallet}
+        currentUserAvatar={selectedAvatar}
+        currentUserNFTAvatar={selectedNFTAvatar}
+        replySortType={getReplySortType(post.id)}
+        onLike={handleLike}
+        onReply={handleReply}
+        onTip={handleTip}
+        onShowTipModal={handleShowTipModal}
+        onLikeReply={handleLikeReply}
+        onTipReply={handleTipReply}
+        onToggleReplies={toggleReplies}
+        onToggleReplySorting={toggleReplySorting}
+        onReport={handleReport}
+        onShowProfile={handleShowProfile}
+        onShowReportModal={handleShowReportModal}
+      />
+    );
+  }, [expandedPosts, currentUserWallet, selectedAvatar, selectedNFTAvatar, handleLike, handleReply, handleTip, handleShowTipModal, handleLikeReply, handleTipReply, toggleReplies, toggleReplySorting, handleReport, handleShowProfile, handleShowReportModal, getReplySortType, sortReplies, currentShoutout]);
   
   const getItemLayout = useCallback((data: any, index: number) => ({
     length: 200, // Estimated height of post

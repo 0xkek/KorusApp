@@ -81,6 +81,10 @@ model Post {
   isHidden         Boolean        @default(false)
   moderationReason String?
   videoUrl         String?
+  isShoutout       Boolean        @default(false)
+  shoutoutDuration Int?           // Duration in minutes
+  shoutoutExpiresAt DateTime?     // When the shoutout expires
+  shoutoutPrice    Decimal?       @db.Decimal(18, 6) // Price paid in SOL
   game             Game?
   notifications    Notification[]
   author           User           @relation(fields: [authorWallet], references: [walletAddress])
@@ -94,6 +98,7 @@ model Post {
   @@index([content])
   @@index([isHidden, createdAt(sort: Desc)])
   @@index([flaggedCount(sort: Desc)])
+  @@index([isShoutout, shoutoutExpiresAt(sort: Desc)])
   @@map("posts")
 }
 

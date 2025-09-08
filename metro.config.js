@@ -13,4 +13,23 @@ config.resolver.extraNodeModules = {
   crypto: require.resolve('react-native-crypto'),
 };
 
+// Disable async requires for production builds to avoid chunk loading issues
+if (process.env.NODE_ENV === 'production') {
+  config.transformer = {
+    ...config.transformer,
+    asyncRequireModulePath: null,
+  };
+}
+
+// Ensure proper minification settings
+config.transformer = {
+  ...config.transformer,
+  minifierConfig: {
+    keep_fnames: true,
+    mangle: {
+      keep_fnames: true,
+    },
+  },
+};
+
 module.exports = config;

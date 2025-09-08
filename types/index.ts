@@ -76,6 +76,10 @@ export interface Post {
   gameWager?: number;
   reportCount?: number;  // Number of times reported
   reportedBy?: string[]; // Wallets that reported this post
+  isShoutout?: boolean;  // Shoutout post flag
+  shoutoutDuration?: number; // Duration in minutes
+  shoutoutExpiresAt?: string; // ISO string of when shoutout expires
+  shoutoutPrice?: number; // Price paid in SOL
 }
 
 export interface User {
