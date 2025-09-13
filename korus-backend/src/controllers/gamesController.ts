@@ -60,7 +60,7 @@ export const createGame = async (req: AuthRequest, res: Response) => {
     const player1 = req.user!.walletAddress
 
     // Validate game type
-    if (!['tictactoe', 'rps', 'coinflip', 'connectfour'].includes(gameType)) {
+    if (!['tictactoe', 'rps', 'connectfour'].includes(gameType)) {
       return res.status(400).json({ success: false, error: 'Invalid game type' })
     }
 
@@ -105,12 +105,6 @@ export const createGame = async (req: AuthRequest, res: Response) => {
           moves: []
         }
         break
-      case 'coinflip':
-        initialState = {
-          player1Choice: undefined,
-          player2Choice: undefined
-        }
-        break
     }
 
     // Create the game
@@ -122,7 +116,7 @@ export const createGame = async (req: AuthRequest, res: Response) => {
         wager: wager || 0,
         status: 'waiting',
         gameState: initialState as any,
-        currentTurn: gameType === 'coinflip' || gameType === 'rps' ? undefined : player1
+        currentTurn: gameType === 'rps' ? undefined : player1
       },
       include: {
         post: {
@@ -172,7 +166,7 @@ export const joinGame = async (req: AuthRequest, res: Response) => {
       data: {
         player2,
         status: 'active',
-        currentTurn: game.gameType === 'coinflip' || game.gameType === 'rps' ? undefined : game.player1
+        currentTurn: game.gameType === 'rps' ? undefined : game.player1
       },
       include: {
         player1User: true,
@@ -228,9 +222,6 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
         break
       case 'rps':
         winner = processRPSMove(game, gameState, move, playerWallet)
-        break
-      case 'coinflip':
-        winner = processCoinFlipMove(game, gameState, move, playerWallet)
         break
     }
 
@@ -466,30 +457,6 @@ function processRPSMove(game: GameRecord, gameState: GameState, move: { choice: 
   return null
 }
 
-function processCoinFlipMove(game: GameRecord, gameState: GameState, move: { choice: string }, playerWallet: string): string | null {
-  const { choice } = move // 'heads' or 'tails'
-  
-  // First player chooses
-  if (!gameState.player1Choice && playerWallet === game.player1) {
-    gameState.player1Choice = choice
-    return null
-  }
-
-  // Second player triggers the flip
-  if (gameState.player1Choice && playerWallet === game.player2) {
-    const flip = Math.random() < 0.5 ? 'heads' : 'tails'
-    gameState.player2Choice = flip
-    
-    // Winner is whoever's choice matches the flip
-    if (gameState.player1Choice === flip) {
-      return game.player1
-    } else {
-      return game.player2
-    }
-  }
-
-  throw new Error('Invalid move')
-}
 
 // Winner checking functions
 function checkTicTacToeWinner(board: GameBoard, player1: string, player2: string): string | null {
