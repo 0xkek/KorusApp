@@ -1,73 +1,91 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
+use anchor_lang::solana_program::system_instruction;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("AugM9Nh81Ne3CgTdQFPYqjeNefwfBfDSmTHeg6dNyC6u");
 
-const PLATFORM_FEE_BPS: u16 = 250; // 2.5% platform fee
-const MINIMUM_WAGER: u64 = 100_000_000; // 0.1 SOL minimum
-const MAXIMUM_WAGER: u64 = 10_000_000_000; // 10 SOL maximum
-const GAME_EXPIRY_SECONDS: i64 = 86400; // 24 hours
+const PLATFORM_FEE_BPS: u16 = 200; // 2% platform fee
+const MINIMUM_WAGER: u64 = 10_000_000; // 0.01 SOL minimum
+const MAXIMUM_WAGER: u64 = 1_000_000_000; // 1 SOL maximum
+const MOVE_TIMEOUT_SECONDS: i64 = 600; // 10 minutes per move
 
 #[program]
 pub mod korus_game_escrow {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialize>, treasury: Pubkey) -> Result<()> {
         let state = &mut ctx.accounts.state;
         state.authority = ctx.accounts.authority.key();
-        state.treasury = ctx.accounts.treasury.key();
+        state.treasury = treasury;
         state.total_games = 0;
         state.total_volume = 0;
         state.platform_fee_bps = PLATFORM_FEE_BPS;
+        state.active_games = 0;
         Ok(())
     }
 
     pub fn create_game(
         ctx: Context<CreateGame>,
-        game_type: GameType,
+        game_type: u8,
         wager_amount: u64,
-        game_data: String,
     ) -> Result<()> {
         require!(
             wager_amount >= MINIMUM_WAGER && wager_amount <= MAXIMUM_WAGER,
             ErrorCode::InvalidWagerAmount
         );
-        require!(game_data.len() <= 256, ErrorCode::GameDataTooLong);
 
-        let game = &mut ctx.accounts.game;
+        // Check if player already has an active game
+        let player_state = &ctx.accounts.player_state;
+        require!(
+            !player_state.has_active_game,
+            ErrorCode::PlayerAlreadyInGame
+        );
+
         let state = &mut ctx.accounts.state;
+        let game = &mut ctx.accounts.game;
         let clock = Clock::get()?;
-
-        game.id = state.total_games;
+        
+        game.game_id = state.total_games;
         game.game_type = game_type;
-        game.creator = ctx.accounts.creator.key();
-        game.opponent = None;
+        game.player1 = ctx.accounts.player1.key();
+        game.player2 = Pubkey::default();
         game.wager_amount = wager_amount;
-        game.status = GameStatus::Open;
-        game.winner = None;
-        game.game_data = game_data;
+        game.status = 0; // Waiting
+        game.winner = Pubkey::default();
+        game.player1_deposited = wager_amount;
+        game.player2_deposited = 0;
         game.created_at = clock.unix_timestamp;
-        game.expires_at = clock.unix_timestamp + GAME_EXPIRY_SECONDS;
-        game.escrow = ctx.accounts.escrow.key();
+        game.last_move_time = clock.unix_timestamp;
+        game.current_turn = ctx.accounts.player1.key();
 
-        // Transfer wager to escrow
-        let cpi_accounts = Transfer {
-            from: ctx.accounts.creator_ata.to_account_info(),
-            to: ctx.accounts.escrow.to_account_info(),
-            authority: ctx.accounts.creator.to_account_info(),
-        };
-        let cpi_program = ctx.accounts.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        token::transfer(cpi_ctx, wager_amount)?;
+        // Transfer SOL from player1 to escrow
+        let ix = system_instruction::transfer(
+            &ctx.accounts.player1.key(),
+            &ctx.accounts.escrow.key(),
+            wager_amount,
+        );
+        anchor_lang::solana_program::program::invoke(
+            &ix,
+            &[
+                ctx.accounts.player1.to_account_info(),
+                ctx.accounts.escrow.to_account_info(),
+            ],
+        )?;
+
+        // Update player state
+        let player_state = &mut ctx.accounts.player_state;
+        player_state.player = ctx.accounts.player1.key();
+        player_state.has_active_game = true;
+        player_state.current_game_id = Some(state.total_games);
 
         state.total_games += 1;
         state.total_volume += wager_amount;
+        state.active_games += 1;
 
         emit!(GameCreated {
-            game_id: game.id,
-            creator: game.creator,
+            game_id: game.game_id,
+            player1: game.player1,
             wager_amount,
-            game_type: game.game_type.clone(),
+            game_type,
         });
 
         Ok(())
@@ -76,28 +94,98 @@ pub mod korus_game_escrow {
     pub fn join_game(ctx: Context<JoinGame>) -> Result<()> {
         let game = &mut ctx.accounts.game;
         let clock = Clock::get()?;
+        
+        require!(game.status == 0, ErrorCode::GameNotWaiting);
+        require!(game.player2 == Pubkey::default(), ErrorCode::GameAlreadyJoined);
+        require!(game.player1 != ctx.accounts.player2.key(), ErrorCode::CannotJoinOwnGame);
 
-        require!(game.status == GameStatus::Open, ErrorCode::GameNotOpen);
-        require!(game.opponent.is_none(), ErrorCode::GameAlreadyJoined);
-        require!(game.creator != ctx.accounts.opponent.key(), ErrorCode::CannotJoinOwnGame);
-        require!(clock.unix_timestamp < game.expires_at, ErrorCode::GameExpired);
+        // Check if player2 already has an active game
+        let player2_state = &ctx.accounts.player2_state;
+        require!(
+            !player2_state.has_active_game,
+            ErrorCode::PlayerAlreadyInGame
+        );
 
-        game.opponent = Some(ctx.accounts.opponent.key());
-        game.status = GameStatus::Active;
+        game.player2 = ctx.accounts.player2.key();
+        game.status = 1; // Active
+        game.player2_deposited = game.wager_amount;
+        game.last_move_time = clock.unix_timestamp;
 
-        // Transfer wager to escrow
-        let cpi_accounts = Transfer {
-            from: ctx.accounts.opponent_ata.to_account_info(),
-            to: ctx.accounts.escrow.to_account_info(),
-            authority: ctx.accounts.opponent.to_account_info(),
-        };
-        let cpi_program = ctx.accounts.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        token::transfer(cpi_ctx, game.wager_amount)?;
+        // Transfer SOL from player2 to escrow
+        let ix = system_instruction::transfer(
+            &ctx.accounts.player2.key(),
+            &ctx.accounts.escrow.key(),
+            game.wager_amount,
+        );
+        anchor_lang::solana_program::program::invoke(
+            &ix,
+            &[
+                ctx.accounts.player2.to_account_info(),
+                ctx.accounts.escrow.to_account_info(),
+            ],
+        )?;
+
+        // Update player2 state
+        let player2_state = &mut ctx.accounts.player2_state;
+        player2_state.player = ctx.accounts.player2.key();
+        player2_state.has_active_game = true;
+        player2_state.current_game_id = Some(game.game_id);
+
+        let state = &mut ctx.accounts.state;
+        state.total_volume += game.wager_amount;
 
         emit!(GameJoined {
-            game_id: game.id,
-            opponent: ctx.accounts.opponent.key(),
+            game_id: game.game_id,
+            player2: game.player2,
+        });
+
+        Ok(())
+    }
+
+    pub fn cancel_game(ctx: Context<CancelGame>) -> Result<()> {
+        let game = &mut ctx.accounts.game;
+        
+        // Only player1 can cancel and only if waiting for player2
+        require!(game.status == 0, ErrorCode::GameNotWaiting);
+        require!(game.player1 == ctx.accounts.player1.key(), ErrorCode::NotGameCreator);
+
+        game.status = 3; // Cancelled
+
+        // Refund player1
+        let game_key = game.key();
+        let seeds = &[
+            b"escrow",
+            game_key.as_ref(),
+            &[ctx.bumps.escrow],
+        ];
+        let signer_seeds = &[&seeds[..]];
+
+        let refund_ix = system_instruction::transfer(
+            &ctx.accounts.escrow.key(),
+            &ctx.accounts.player1.key(),
+            game.player1_deposited,
+        );
+        anchor_lang::solana_program::program::invoke_signed(
+            &refund_ix,
+            &[
+                ctx.accounts.escrow.to_account_info(),
+                ctx.accounts.player1.to_account_info(),
+            ],
+            signer_seeds,
+        )?;
+
+        // Update player state
+        let player_state = &mut ctx.accounts.player_state;
+        player_state.has_active_game = false;
+        player_state.current_game_id = None;
+
+        // Update global state
+        let state = &mut ctx.accounts.state;
+        state.active_games = state.active_games.saturating_sub(1);
+
+        emit!(GameCancelled {
+            game_id: game.game_id,
+            refund_amount: game.player1_deposited,
         });
 
         Ok(())
@@ -105,57 +193,92 @@ pub mod korus_game_escrow {
 
     pub fn complete_game(ctx: Context<CompleteGame>, winner: Pubkey) -> Result<()> {
         let game = &mut ctx.accounts.game;
-        let state = &ctx.accounts.state;
+        let state = &mut ctx.accounts.state;
 
-        require!(game.status == GameStatus::Active, ErrorCode::GameNotActive);
+        require!(game.status == 1, ErrorCode::GameNotActive);
         require!(
-            winner == game.creator || winner == game.opponent.unwrap(),
+            winner == game.player1 || winner == game.player2,
             ErrorCode::InvalidWinner
         );
 
-        game.status = GameStatus::Completed;
-        game.winner = Some(winner);
+        // CRITICAL SECURITY: Only the backend authority can complete games
+        // This prevents players from declaring themselves winners
+        require!(
+            ctx.accounts.authority.key() == state.authority,
+            ErrorCode::UnauthorizedCaller
+        );
+
+        // Prevent double completion
+        require!(game.winner == Pubkey::default(), ErrorCode::GameAlreadyCompleted);
+
+        game.status = 2; // Completed
+        game.winner = winner;
 
         // Calculate amounts
-        let total_pot = game.wager_amount * 2;
+        let total_pot = game.player1_deposited + game.player2_deposited;
         let platform_fee = (total_pot * state.platform_fee_bps as u64) / 10000;
         let winner_amount = total_pot - platform_fee;
 
-        // Transfer platform fee to treasury
+        // PDA signer seeds for escrow
+        let game_key = game.key();
         let seeds = &[
             b"escrow",
-            game.key().as_ref(),
+            game_key.as_ref(),
             &[ctx.bumps.escrow],
         ];
-        let signer = &[&seeds[..]];
+        let signer_seeds = &[&seeds[..]];
 
-        let cpi_accounts = Transfer {
-            from: ctx.accounts.escrow.to_account_info(),
-            to: ctx.accounts.treasury_ata.to_account_info(),
-            authority: ctx.accounts.escrow.to_account_info(),
-        };
-        let cpi_program = ctx.accounts.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
-        token::transfer(cpi_ctx, platform_fee)?;
+        // Transfer platform fee to treasury
+        let fee_ix = system_instruction::transfer(
+            &ctx.accounts.escrow.key(),
+            &state.treasury,
+            platform_fee,
+        );
+        anchor_lang::solana_program::program::invoke_signed(
+            &fee_ix,
+            &[
+                ctx.accounts.escrow.to_account_info(),
+                ctx.accounts.treasury.to_account_info(),
+            ],
+            signer_seeds,
+        )?;
 
         // Transfer winnings to winner
-        let winner_ata = if winner == game.creator {
-            ctx.accounts.creator_ata.to_account_info()
+        let winner_account = if winner == game.player1 {
+            ctx.accounts.player1.key()
         } else {
-            ctx.accounts.opponent_ata.to_account_info()
+            ctx.accounts.player2.key()
         };
+        
+        let winner_ix = system_instruction::transfer(
+            &ctx.accounts.escrow.key(),
+            &winner_account,
+            winner_amount,
+        );
+        anchor_lang::solana_program::program::invoke_signed(
+            &winner_ix,
+            &[
+                ctx.accounts.escrow.to_account_info(),
+                if winner == game.player1 {
+                    ctx.accounts.player1.to_account_info()
+                } else {
+                    ctx.accounts.player2.to_account_info()
+                },
+            ],
+            signer_seeds,
+        )?;
 
-        let cpi_accounts = Transfer {
-            from: ctx.accounts.escrow.to_account_info(),
-            to: winner_ata,
-            authority: ctx.accounts.escrow.to_account_info(),
-        };
-        let cpi_program = ctx.accounts.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
-        token::transfer(cpi_ctx, winner_amount)?;
+        // Update player states
+        ctx.accounts.player1_state.has_active_game = false;
+        ctx.accounts.player1_state.current_game_id = None;
+        ctx.accounts.player2_state.has_active_game = false;
+        ctx.accounts.player2_state.current_game_id = None;
+
+        // Update global state
+        state.active_games = state.active_games.saturating_sub(1);
 
         emit!(GameCompleted {
-            game_id: game.id,
+            game_id: game.game_id,
             winner,
             winner_amount,
             platform_fee,
@@ -164,41 +287,185 @@ pub mod korus_game_escrow {
         Ok(())
     }
 
-    pub fn cancel_expired_game(ctx: Context<CancelExpiredGame>) -> Result<()> {
+    pub fn claim_timeout_win(ctx: Context<ClaimTimeoutWin>) -> Result<()> {
+        let game = &mut ctx.accounts.game;
+        let state = &mut ctx.accounts.state;
+        let clock = Clock::get()?;
+
+        require!(game.status == 1, ErrorCode::GameNotActive);
+        
+        // Check if timeout has occurred (10 minutes since last move)
+        let time_since_last_move = clock.unix_timestamp - game.last_move_time;
+        require!(
+            time_since_last_move > MOVE_TIMEOUT_SECONDS,
+            ErrorCode::TimeoutNotReached
+        );
+
+        // Claimer must be one of the players
+        let claimer = ctx.accounts.claimer.key();
+        require!(
+            claimer == game.player1 || claimer == game.player2,
+            ErrorCode::NotAPlayer
+        );
+
+        // Winner is the player who is NOT supposed to make the current move
+        // (The player whose turn it is has timed out)
+        let winner = if game.current_turn == game.player1 {
+            game.player2
+        } else {
+            game.player1
+        };
+
+        // Only the non-timed-out player can claim
+        require!(claimer == winner, ErrorCode::CannotClaimOwnTimeout);
+
+        game.status = 2; // Completed
+        game.winner = winner;
+
+        // Calculate amounts
+        let total_pot = game.player1_deposited + game.player2_deposited;
+        let platform_fee = (total_pot * state.platform_fee_bps as u64) / 10000;
+        let winner_amount = total_pot - platform_fee;
+
+        // PDA signer seeds for escrow
+        let game_key = game.key();
+        let seeds = &[
+            b"escrow",
+            game_key.as_ref(),
+            &[ctx.bumps.escrow],
+        ];
+        let signer_seeds = &[&seeds[..]];
+
+        // Transfer platform fee to treasury
+        let fee_ix = system_instruction::transfer(
+            &ctx.accounts.escrow.key(),
+            &state.treasury,
+            platform_fee,
+        );
+        anchor_lang::solana_program::program::invoke_signed(
+            &fee_ix,
+            &[
+                ctx.accounts.escrow.to_account_info(),
+                ctx.accounts.treasury.to_account_info(),
+            ],
+            signer_seeds,
+        )?;
+
+        // Transfer winnings to winner
+        let winner_account = if winner == game.player1 {
+            ctx.accounts.player1.key()
+        } else {
+            ctx.accounts.player2.key()
+        };
+        
+        let winner_ix = system_instruction::transfer(
+            &ctx.accounts.escrow.key(),
+            &winner_account,
+            winner_amount,
+        );
+        anchor_lang::solana_program::program::invoke_signed(
+            &winner_ix,
+            &[
+                ctx.accounts.escrow.to_account_info(),
+                if winner == game.player1 {
+                    ctx.accounts.player1.to_account_info()
+                } else {
+                    ctx.accounts.player2.to_account_info()
+                },
+            ],
+            signer_seeds,
+        )?;
+
+        // Update player states
+        ctx.accounts.player1_state.has_active_game = false;
+        ctx.accounts.player1_state.current_game_id = None;
+        ctx.accounts.player2_state.has_active_game = false;
+        ctx.accounts.player2_state.current_game_id = None;
+
+        // Update global state
+        state.active_games = state.active_games.saturating_sub(1);
+
+        emit!(GameTimeout {
+            game_id: game.game_id,
+            winner,
+            winner_amount,
+            platform_fee,
+        });
+
+        Ok(())
+    }
+
+    pub fn update_move_time(ctx: Context<UpdateMoveTime>) -> Result<()> {
         let game = &mut ctx.accounts.game;
         let clock = Clock::get()?;
 
-        require!(game.status == GameStatus::Open, ErrorCode::GameNotOpen);
-        require!(clock.unix_timestamp >= game.expires_at, ErrorCode::GameNotExpired);
+        require!(game.status == 1, ErrorCode::GameNotActive);
+        
+        // Only the current player can update (after making their move)
+        require!(
+            ctx.accounts.player.key() == game.current_turn,
+            ErrorCode::NotYourTurn
+        );
 
-        game.status = GameStatus::Expired;
-
-        // Refund creator
-        let seeds = &[
-            b"escrow",
-            game.key().as_ref(),
-            &[ctx.bumps.escrow],
-        ];
-        let signer = &[&seeds[..]];
-
-        let cpi_accounts = Transfer {
-            from: ctx.accounts.escrow.to_account_info(),
-            to: ctx.accounts.creator_ata.to_account_info(),
-            authority: ctx.accounts.escrow.to_account_info(),
+        // Update last move time and switch turns
+        game.last_move_time = clock.unix_timestamp;
+        game.current_turn = if game.current_turn == game.player1 {
+            game.player2
+        } else {
+            game.player1
         };
-        let cpi_program = ctx.accounts.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
-        token::transfer(cpi_ctx, game.wager_amount)?;
-
-        emit!(GameCancelled {
-            game_id: game.id,
-            reason: "Expired".to_string(),
-        });
 
         Ok(())
     }
 }
 
+// Account structures
+#[account]
+pub struct State {
+    pub authority: Pubkey,
+    pub treasury: Pubkey,
+    pub total_games: u64,
+    pub total_volume: u64,
+    pub platform_fee_bps: u16,
+    pub active_games: u64,
+}
+
+impl State {
+    pub const LEN: usize = 32 + 32 + 8 + 8 + 2 + 8;
+}
+
+#[account]
+pub struct Game {
+    pub game_id: u64,
+    pub game_type: u8,
+    pub player1: Pubkey,
+    pub player2: Pubkey,
+    pub wager_amount: u64,
+    pub status: u8, // 0: Waiting, 1: Active, 2: Completed, 3: Cancelled
+    pub winner: Pubkey,
+    pub player1_deposited: u64,
+    pub player2_deposited: u64,
+    pub created_at: i64,
+    pub last_move_time: i64,
+    pub current_turn: Pubkey,
+}
+
+impl Game {
+    pub const LEN: usize = 8 + 1 + 32 + 32 + 8 + 1 + 32 + 8 + 8 + 8 + 8 + 32;
+}
+
+#[account]
+pub struct PlayerState {
+    pub player: Pubkey,
+    pub has_active_game: bool,
+    pub current_game_id: Option<u64>,
+}
+
+impl PlayerState {
+    pub const LEN: usize = 32 + 1 + 9; // Option<u64> = 1 + 8
+}
+
+// Contexts
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(
@@ -211,8 +478,6 @@ pub struct Initialize<'info> {
     pub state: Account<'info, State>,
     #[account(mut)]
     pub authority: Signer<'info>,
-    /// CHECK: Treasury account
-    pub treasury: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -222,141 +487,182 @@ pub struct CreateGame<'info> {
     pub state: Account<'info, State>,
     #[account(
         init,
-        payer = creator,
+        payer = player1,
         space = 8 + Game::LEN,
         seeds = [b"game", state.total_games.to_le_bytes().as_ref()],
         bump
     )]
     pub game: Account<'info, Game>,
     #[account(
-        init,
-        payer = creator,
-        token::mint = mint,
-        token::authority = escrow,
+        init_if_needed,
+        payer = player1,
+        space = 8 + PlayerState::LEN,
+        seeds = [b"player", player1.key().as_ref()],
+        bump
+    )]
+    pub player_state: Account<'info, PlayerState>,
+    /// CHECK: Escrow PDA that holds SOL
+    #[account(
+        mut,
         seeds = [b"escrow", game.key().as_ref()],
         bump
     )]
-    pub escrow: Account<'info, TokenAccount>,
+    pub escrow: AccountInfo<'info>,
     #[account(mut)]
-    pub creator: Signer<'info>,
-    #[account(mut)]
-    pub creator_ata: Account<'info, TokenAccount>,
-    /// CHECK: Mint account
-    pub mint: UncheckedAccount<'info>,
-    pub token_program: Program<'info, Token>,
+    pub player1: Signer<'info>,
     pub system_program: Program<'info, System>,
-    pub rent: Sysvar<'info, Rent>,
 }
 
 #[derive(Accounts)]
 pub struct JoinGame<'info> {
     #[account(mut)]
+    pub state: Account<'info, State>,
+    #[account(mut)]
     pub game: Account<'info, Game>,
+    #[account(
+        init_if_needed,
+        payer = player2,
+        space = 8 + PlayerState::LEN,
+        seeds = [b"player", player2.key().as_ref()],
+        bump
+    )]
+    pub player2_state: Account<'info, PlayerState>,
+    /// CHECK: Escrow PDA that holds SOL
+    #[account(
+        mut,
+        seeds = [b"escrow", game.key().as_ref()],
+        bump
+    )]
+    pub escrow: AccountInfo<'info>,
     #[account(mut)]
-    pub escrow: Account<'info, TokenAccount>,
+    pub player2: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct CancelGame<'info> {
     #[account(mut)]
-    pub opponent: Signer<'info>,
+    pub state: Account<'info, State>,
     #[account(mut)]
-    pub opponent_ata: Account<'info, TokenAccount>,
-    pub token_program: Program<'info, Token>,
+    pub game: Account<'info, Game>,
+    #[account(
+        mut,
+        seeds = [b"player", player1.key().as_ref()],
+        bump
+    )]
+    pub player_state: Account<'info, PlayerState>,
+    /// CHECK: Escrow PDA that holds SOL
+    #[account(
+        mut,
+        seeds = [b"escrow", game.key().as_ref()],
+        bump
+    )]
+    pub escrow: AccountInfo<'info>,
+    #[account(mut)]
+    pub player1: Signer<'info>,
 }
 
 #[derive(Accounts)]
 pub struct CompleteGame<'info> {
     #[account(mut)]
-    pub game: Account<'info, Game>,
     pub state: Account<'info, State>,
+    #[account(mut)]
+    pub game: Account<'info, Game>,
+    #[account(
+        mut,
+        seeds = [b"player", game.player1.as_ref()],
+        bump
+    )]
+    pub player1_state: Account<'info, PlayerState>,
+    #[account(
+        mut,
+        seeds = [b"player", game.player2.as_ref()],
+        bump
+    )]
+    pub player2_state: Account<'info, PlayerState>,
+    /// CHECK: Escrow PDA that holds SOL
     #[account(
         mut,
         seeds = [b"escrow", game.key().as_ref()],
         bump
     )]
-    pub escrow: Account<'info, TokenAccount>,
-    /// CHECK: Authority to complete game (backend or arbiter)
+    pub escrow: AccountInfo<'info>,
+    /// CHECK: Treasury account (validated in instruction)
+    #[account(mut)]
+    pub treasury: AccountInfo<'info>,
+    /// CHECK: Player 1 account
+    #[account(mut)]
+    pub player1: AccountInfo<'info>,
+    /// CHECK: Player 2 account
+    #[account(mut)]
+    pub player2: AccountInfo<'info>,
+    #[account(mut)]
     pub authority: Signer<'info>,
-    #[account(mut)]
-    pub creator_ata: Account<'info, TokenAccount>,
-    #[account(mut)]
-    pub opponent_ata: Account<'info, TokenAccount>,
-    #[account(mut)]
-    pub treasury_ata: Account<'info, TokenAccount>,
-    pub token_program: Program<'info, Token>,
 }
 
 #[derive(Accounts)]
-pub struct CancelExpiredGame<'info> {
+pub struct ClaimTimeoutWin<'info> {
+    #[account(mut)]
+    pub state: Account<'info, State>,
     #[account(mut)]
     pub game: Account<'info, Game>,
+    #[account(
+        mut,
+        seeds = [b"player", game.player1.as_ref()],
+        bump
+    )]
+    pub player1_state: Account<'info, PlayerState>,
+    #[account(
+        mut,
+        seeds = [b"player", game.player2.as_ref()],
+        bump
+    )]
+    pub player2_state: Account<'info, PlayerState>,
+    /// CHECK: Escrow PDA that holds SOL
     #[account(
         mut,
         seeds = [b"escrow", game.key().as_ref()],
         bump
     )]
-    pub escrow: Account<'info, TokenAccount>,
+    pub escrow: AccountInfo<'info>,
+    /// CHECK: Treasury account (from state)
     #[account(mut)]
-    pub creator_ata: Account<'info, TokenAccount>,
-    pub token_program: Program<'info, Token>,
+    pub treasury: AccountInfo<'info>,
+    /// CHECK: Player 1 account
+    #[account(mut)]
+    pub player1: AccountInfo<'info>,
+    /// CHECK: Player 2 account
+    #[account(mut)]
+    pub player2: AccountInfo<'info>,
+    pub claimer: Signer<'info>,
 }
 
-#[account]
-pub struct State {
-    pub authority: Pubkey,
-    pub treasury: Pubkey,
-    pub total_games: u64,
-    pub total_volume: u64,
-    pub platform_fee_bps: u16,
+#[derive(Accounts)]
+pub struct UpdateMoveTime<'info> {
+    #[account(mut)]
+    pub game: Account<'info, Game>,
+    pub player: Signer<'info>,
 }
 
-impl State {
-    pub const LEN: usize = 32 + 32 + 8 + 8 + 2;
-}
-
-#[account]
-pub struct Game {
-    pub id: u64,
-    pub game_type: GameType,
-    pub creator: Pubkey,
-    pub opponent: Option<Pubkey>,
-    pub wager_amount: u64,
-    pub status: GameStatus,
-    pub winner: Option<Pubkey>,
-    pub game_data: String,
-    pub created_at: i64,
-    pub expires_at: i64,
-    pub escrow: Pubkey,
-}
-
-impl Game {
-    pub const LEN: usize = 8 + 1 + 32 + 33 + 8 + 1 + 33 + 256 + 8 + 8 + 32;
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq)]
-pub enum GameType {
-    GuessTheWord,
-    TruthOrDare,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq)]
-pub enum GameStatus {
-    Open,
-    Active,
-    Completed,
-    Disputed,
-    Expired,
-}
-
+// Events
 #[event]
 pub struct GameCreated {
     pub game_id: u64,
-    pub creator: Pubkey,
+    pub player1: Pubkey,
     pub wager_amount: u64,
-    pub game_type: GameType,
+    pub game_type: u8,
 }
 
 #[event]
 pub struct GameJoined {
     pub game_id: u64,
-    pub opponent: Pubkey,
+    pub player2: Pubkey,
+}
+
+#[event]
+pub struct GameCancelled {
+    pub game_id: u64,
+    pub refund_amount: u64,
 }
 
 #[event]
@@ -368,29 +674,42 @@ pub struct GameCompleted {
 }
 
 #[event]
-pub struct GameCancelled {
+pub struct GameTimeout {
     pub game_id: u64,
-    pub reason: String,
+    pub winner: Pubkey,
+    pub winner_amount: u64,
+    pub platform_fee: u64,
 }
 
+// Error codes
 #[error_code]
 pub enum ErrorCode {
     #[msg("Invalid wager amount")]
     InvalidWagerAmount,
-    #[msg("Game data too long")]
-    GameDataTooLong,
-    #[msg("Game is not open")]
-    GameNotOpen,
-    #[msg("Game already has an opponent")]
+    #[msg("Game is not waiting for players")]
+    GameNotWaiting,
+    #[msg("Game already has a second player")]
     GameAlreadyJoined,
     #[msg("Cannot join your own game")]
     CannotJoinOwnGame,
-    #[msg("Game has expired")]
-    GameExpired,
+    #[msg("Not the game creator")]
+    NotGameCreator,
     #[msg("Game is not active")]
     GameNotActive,
     #[msg("Invalid winner")]
     InvalidWinner,
-    #[msg("Game has not expired yet")]
-    GameNotExpired,
+    #[msg("Unauthorized caller")]
+    UnauthorizedCaller,
+    #[msg("Game already completed")]
+    GameAlreadyCompleted,
+    #[msg("Timeout not reached")]
+    TimeoutNotReached,
+    #[msg("Not a player in this game")]
+    NotAPlayer,
+    #[msg("Cannot claim your own timeout")]
+    CannotClaimOwnTimeout,
+    #[msg("Not your turn")]
+    NotYourTurn,
+    #[msg("Player already has an active game")]
+    PlayerAlreadyInGame,
 }
