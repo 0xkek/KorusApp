@@ -13,6 +13,7 @@ interface EnvironmentConfig {
   // Solana Configuration
   solanaCluster: 'solana:devnet' | 'solana:testnet' | 'solana:mainnet-beta';
   solanaRpcUrl: string;
+  gameEscrowProgramId: string;
   
   // Feature Flags
   // Demo and mock features removed for production
@@ -48,6 +49,7 @@ const configs: Record<Environment, EnvironmentConfig> = {
     // Solana
     solanaCluster: 'solana:devnet',
     solanaRpcUrl: 'https://api.devnet.solana.com',
+    gameEscrowProgramId: '9rLXaB3a8qeb55N119sC3mjK58LyPeXXnj8vEvm3EWFG',
     
     // Features - production only
     smartContractsEnabled: false,
@@ -79,8 +81,9 @@ const configs: Record<Environment, EnvironmentConfig> = {
     apiUrl: process.env.EXPO_PUBLIC_API_URL || '',
     
     // Solana
-    solanaCluster: 'solana:testnet',
-    solanaRpcUrl: 'https://api.testnet.solana.com',
+    solanaCluster: 'solana:devnet',
+    solanaRpcUrl: 'https://api.devnet.solana.com',
+    gameEscrowProgramId: '9rLXaB3a8qeb55N119sC3mjK58LyPeXXnj8vEvm3EWFG',
     
     // Features - production only
     smartContractsEnabled: false,
@@ -111,9 +114,10 @@ const configs: Record<Environment, EnvironmentConfig> = {
     // API
     apiUrl: process.env.EXPO_PUBLIC_API_URL || '',
     
-    // Solana
-    solanaCluster: 'solana:mainnet-beta',
-    solanaRpcUrl: process.env.EXPO_PUBLIC_SOLANA_RPC || '',
+    // Solana  (Using devnet for testing)
+    solanaCluster: 'solana:devnet',
+    solanaRpcUrl: 'https://api.devnet.solana.com',
+    gameEscrowProgramId: '9rLXaB3a8qeb55N119sC3mjK58LyPeXXnj8vEvm3EWFG',
     
     // Features - production only
     smartContractsEnabled: false,
