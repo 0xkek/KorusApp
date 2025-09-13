@@ -44,3 +44,8 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+
+# Sensitive files
+authority-keypair.json
+*-keypair.json
+mainnet-*.json
