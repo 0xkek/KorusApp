@@ -7,6 +7,8 @@ import swaggerUi from 'swagger-ui-express'
 import prisma from './config/database'
 import { apiLimiter } from './middleware/rateLimiter'
 import { scheduleWeeklyDistribution } from './jobs/weeklyDistribution'
+import { startShoutoutCleanupJob } from './jobs/cleanupShoutouts'
+import { startSubscriptionExpirationJob } from './jobs/subscriptionExpiration'
 import { validateEnv } from './config/validateEnv'
 import { sanitizeBody } from './middleware/sanitization'
 import { securityHeaders, requestIdMiddleware, validateCSRFToken } from './middleware/security'
@@ -32,6 +34,7 @@ import snsRoutes from './routes/sns'
 import nftsRoutes from './routes/nfts'
 import healthRoutes from './routes/health'
 import userRoutes from './routes/user'
+import subscriptionRoutes from './routes/subscription'
 
 dotenv.config()
 
@@ -126,6 +129,7 @@ app.use('/api/distribution', distributionRoutes)
 app.use('/api/sns', snsRoutes)
 app.use('/api/nfts', nftsRoutes)
 app.use('/api/user', userRoutes)
+app.use('/api/subscription', subscriptionRoutes)
 
 // Debug endpoints removed for production security
 
@@ -156,6 +160,7 @@ app.listen(PORT, () => {
   logger.info(`🏆 Reputation: http://localhost:${PORT}/api/reputation/*`)
   logger.info(`💰 Sponsored: http://localhost:${PORT}/api/sponsored/*`)
   logger.info(`🎁 Distribution: http://localhost:${PORT}/api/distribution/*`)
+  logger.info(`💳 Subscription: http://localhost:${PORT}/api/subscription/*`)
   logger.info(`\n🔧 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:8081'}`)
   
   // Environment check
@@ -171,4 +176,12 @@ app.listen(PORT, () => {
   } else {
     logger.info(`\n⏸️  Weekly distribution is disabled (set ENABLE_WEEKLY_DISTRIBUTION=true to enable)`)
   }
+  
+  // Start shoutout cleanup job
+  startShoutoutCleanupJob()
+  logger.info(`\n🧹 Shoutout cleanup job started (runs every hour)`)
+  
+  // Start subscription expiration job
+  startSubscriptionExpirationJob()
+  logger.info(`\n💳 Subscription expiration check started (runs every hour)`)
 })

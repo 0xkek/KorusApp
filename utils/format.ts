@@ -34,6 +34,6 @@ export function formatDate(date: Date | string): string {
   }
 }
 
-export function formatCurrency(amount: number, symbol: string = '$ALLY'): string {
+export function formatCurrency(amount: number, symbol: string = 'SOL'): string {
   return `${amount.toFixed(2)} ${symbol}`;
 }

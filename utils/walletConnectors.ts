@@ -6,6 +6,8 @@ import { Platform } from 'react-native';
 import { config } from '../config/environment';
 import { getClusterForWallet, debugConnectionParams } from './walletDebug';
 
+import { Transaction } from '@solana/web3.js';
+
 export interface WalletProvider {
   name: 'seedvault' | 'phantom' | 'solflare' | 'backpack';
   displayName: string;
@@ -13,6 +15,7 @@ export interface WalletProvider {
   isAvailable: () => boolean | Promise<boolean>;
   connect: () => Promise<string>; // Returns public key
   signMessage: (message: string) => Promise<string>; // Returns signature
+  signTransaction?: (transaction: Transaction) => Promise<Transaction>; // Returns signed transaction
   disconnect: () => void;
 }
 
@@ -36,6 +39,19 @@ export const seedVaultProvider: WalletProvider = {
       logger.error('Seed Vault sign error:', error);
       if (error.message?.includes('declined') || error.message?.includes('cancelled')) {
         throw new Error('User declined to sign message');
+      }
+      throw error;
+    }
+  },
+  signTransaction: async (transaction: Transaction) => {
+    try {
+      const signedTx = await solanaMobileService.signTransaction(transaction);
+      if (!signedTx) throw new Error('Failed to sign transaction');
+      return signedTx;
+    } catch (error: any) {
+      logger.error('Seed Vault transaction sign error:', error);
+      if (error.message?.includes('declined') || error.message?.includes('cancelled')) {
+        throw new Error('User declined to sign transaction');
       }
       throw error;
     }
@@ -76,29 +92,56 @@ export const connectAndSignWithMWA = async (message: string): Promise<{ address:
   // Create a timeout promise
   const timeoutPromise = new Promise<never>((_, reject) => {
     setTimeout(() => {
-      reject(new Error('MWA connection timed out. Please make sure Phantom is updated to the latest version.'));
-    }, 20000); // Reduced to 20 seconds
+      logger.log('MWA timeout reached after 15 seconds');
+      reject(new Error('Wallet connection timed out. Please try again or use a different wallet.'));
+    }, 15000); // 15 seconds timeout
   });
   
   try {
     logger.log('Calling transact function...');
-    
+
     // Test if transact is actually a function
     logger.log('Type of transact:', typeof transact);
-    
+
+    // Add detailed logging before transact
+    logger.log('About to invoke MWA transact - this should open wallet selector');
+    logger.log('If no wallet selector appears, MWA intent is not being handled');
+
     // Race between the transaction and timeout
     const result = await Promise.race([
       transact(
         async (wallet) => {
         logger.log('MWA callback started - wallet object received');
+        logger.log('Wallet selector was opened and user selected a wallet');
+        logger.log('Wallet type:', wallet?.constructor?.name || 'unknown');
       // Authorize in the same session
       logger.log('Authorizing wallet...');
-      const authResult = await wallet.authorize({
-        cluster: 'mainnet-beta',
+      logger.log('Requesting authorization with:', {
+        cluster: config.network === 'mainnet-beta' ? 'solana:mainnet' : 'solana:devnet',
         identity: APP_IDENTITY,
       });
-    
-    logger.log('Authorization successful:', authResult);
+
+      // Try simpler authorization first for better compatibility
+      let authResult;
+      try {
+        authResult = await wallet.authorize({
+          cluster: config.network === 'mainnet-beta' ? 'mainnet' : 'devnet',
+          identity: APP_IDENTITY,
+        });
+      } catch (firstError) {
+        logger.log('First auth attempt failed, trying with solana: prefix');
+        // Some wallets need the 'solana:' prefix
+        authResult = await wallet.authorize({
+          cluster: config.network === 'mainnet-beta' ? 'solana:mainnet' : 'solana:devnet',
+          identity: APP_IDENTITY,
+        });
+      }
+
+    logger.log('Authorization successful:', {
+      hasAuthToken: !!authResult.auth_token,
+      accountsCount: authResult.accounts?.length || 0,
+      firstAccount: authResult.accounts?.[0]?.address ? 'present' : 'missing'
+    });
     const base64Address = authResult.accounts[0].address;
     
     // Convert base64 to base58 for our use
@@ -180,6 +223,48 @@ export const connectAndSignWithMWA = async (message: string): Promise<{ address:
   }
 };
 
+export const signAndSendTransactionWithMWA = async (transaction: Transaction): Promise<string> => {
+  logger.log('Starting MWA sign and send transaction...');
+
+  const transact = require('@solana-mobile/mobile-wallet-adapter-protocol-web3js').transact;
+
+  const result = await transact(async (wallet) => {
+    const authResult = await wallet.authorize({
+      cluster: config.solanaCluster.replace('solana:', ''),
+      identity: APP_IDENTITY,
+    });
+
+    const signedTransactions = await wallet.signAndSendTransactions({
+      transactions: [transaction],
+    });
+
+    return signedTransactions[0].signature;
+  });
+
+  return result;
+};
+
+export const signTransactionWithMWA = async (transaction: Transaction): Promise<Transaction> => {
+  logger.log('Starting MWA sign transaction...');
+
+  const transact = require('@solana-mobile/mobile-wallet-adapter-protocol-web3js').transact;
+
+  const result = await transact(async (wallet) => {
+    const authResult = await wallet.authorize({
+      cluster: config.solanaCluster.replace('solana:', ''),
+      identity: APP_IDENTITY,
+    });
+
+    const signedTransactions = await wallet.signTransactions({
+      transactions: [transaction],
+    });
+
+    return signedTransactions[0];
+  });
+
+  return result;
+};
+
 // Phantom Provider (Browser/Mobile)
 export const phantomProvider: WalletProvider = {
   name: 'phantom',
@@ -212,6 +297,9 @@ export const phantomProvider: WalletProvider = {
     const signedMessage = await phantom.signMessage(encodedMessage, 'utf8');
     return bs58.encode(signedMessage.signature);
   },
+  signTransaction: async (transaction: Transaction) => {
+    throw new Error('Use signAndSendTransactionWithMWA for mobile');
+  },
   disconnect: () => {
     const phantom = (window as any).solana;
     phantom?.disconnect();
@@ -224,6 +312,11 @@ export const solflareProvider: WalletProvider = {
   displayName: 'Solflare',
   icon: '☀️',
   isAvailable: () => {
+    // On mobile, Solflare works through MWA
+    if (Platform.OS === 'android' || Platform.OS === 'ios') {
+      return true; // Available through MWA
+    }
+    // On web, check for browser extension
     if (typeof window !== 'undefined' && (window as any).solflare?.isSolflare) {
       return true;
     }
@@ -244,6 +337,9 @@ export const solflareProvider: WalletProvider = {
     const signedMessage = await solflare.signMessage(encodedMessage, 'utf8');
     return bs58.encode(signedMessage.signature);
   },
+  signTransaction: async (transaction: Transaction) => {
+    throw new Error('Use signAndSendTransactionWithMWA for mobile');
+  },
   disconnect: () => {
     const solflare = (window as any).solflare;
     solflare?.disconnect();
@@ -256,6 +352,11 @@ export const backpackProvider: WalletProvider = {
   displayName: 'Backpack',
   icon: '🎒',
   isAvailable: () => {
+    // On mobile, Backpack works through MWA
+    if (Platform.OS === 'android' || Platform.OS === 'ios') {
+      return true; // Available through MWA
+    }
+    // On web, check for browser extension
     if (typeof window !== 'undefined' && (window as any).backpack?.isBackpack) {
       return true;
     }
@@ -275,6 +376,9 @@ export const backpackProvider: WalletProvider = {
     const encodedMessage = new TextEncoder().encode(message);
     const signedMessage = await backpack.signMessage(encodedMessage);
     return bs58.encode(signedMessage.signature);
+  },
+  signTransaction: async (transaction: Transaction) => {
+    throw new Error('Use signAndSendTransactionWithMWA for mobile');
   },
   disconnect: () => {
     const backpack = (window as any).backpack;

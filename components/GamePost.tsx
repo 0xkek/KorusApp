@@ -7,9 +7,9 @@ import { useTheme } from '../context/ThemeContext';
 import { useWallet } from '../context/WalletContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { GameData } from '../types';
+import { useGameEscrow } from '../hooks/useGameEscrow';
 import TicTacToeGame from './games/TicTacToeGame';
 import RockPaperScissorsGame from './games/RockPaperScissorsGame';
-import CoinFlipGame from './games/CoinFlipGameCompact';
 import ConnectFourGame from './games/ConnectFourGame';
 
 interface GamePostProps {
@@ -22,19 +22,27 @@ interface GamePostProps {
 export default function GamePost({ gameData, postId, onJoinGame, onMakeMove }: GamePostProps) {
   const { colors, gradients, isDarkMode } = useTheme();
   const { walletAddress, balance } = useWallet();
+  const { joinGame: joinGameOnChain, cancelGame: cancelGameOnChain, isProcessing } = useGameEscrow();
   
   // Ensure case-insensitive comparison for wallet addresses
   const isPlayer1 = gameData.player1?.toLowerCase() === walletAddress?.toLowerCase();
   const isPlayer2 = gameData.player2?.toLowerCase() === walletAddress?.toLowerCase();
   const isParticipant = isPlayer1 || isPlayer2;
   const isMyTurn = gameData.currentPlayer?.toLowerCase() === walletAddress?.toLowerCase();
-  
-  const canJoin = !isParticipant && gameData.status === 'waiting' && balance >= gameData.wager;
 
-  const handleJoinGame = () => {
-    if (canJoin) {
+  const canJoin = !isParticipant && gameData.status === 'waiting' && balance >= gameData.wager;
+  const canCancel = isPlayer1 && gameData.status === 'waiting';
+
+  const handleJoinGame = async () => {
+    if (canJoin && !isProcessing) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      onJoinGame(postId);
+
+      // Try blockchain transaction first with the wager amount
+      const signature = await joinGameOnChain(postId, gameData.wager);
+      if (signature) {
+        // If successful, update local state
+        onJoinGame(postId);
+      }
     }
   };
 
@@ -44,11 +52,23 @@ export default function GamePost({ gameData, postId, onJoinGame, onMakeMove }: G
     }
   };
 
+  const handleCancelGame = async () => {
+    if (canCancel && !isProcessing) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+      // Cancel the game on blockchain
+      const signature = await cancelGameOnChain(postId);
+      if (signature) {
+        // Game cancelled successfully - the UI will update automatically
+        console.log('Game cancelled successfully:', signature);
+      }
+    }
+  };
+
   const getGameIcon = () => {
     switch (gameData.type) {
       case 'tictactoe': return 'grid-outline';
       case 'rps': return 'hand-left-outline';
-      case 'coinflip': return 'disc-outline';
       case 'connect4': return 'apps-outline';
       default: return 'game-controller-outline';
     }
@@ -58,7 +78,6 @@ export default function GamePost({ gameData, postId, onJoinGame, onMakeMove }: G
     switch (gameData.type) {
       case 'tictactoe': return 'Tic Tac Toe';
       case 'rps': return 'Rock Paper Scissors';
-      case 'coinflip': return 'Coin Flip';
       case 'connect4': return 'Connect 4';
       default: return 'Game';
     }
@@ -78,7 +97,7 @@ export default function GamePost({ gameData, postId, onJoinGame, onMakeMove }: G
           <View>
             <Text style={[styles.gameName, { color: colors.text }]}>{getGameName()}</Text>
             <Text style={[styles.wagerText, { color: colors.textSecondary }]}>
-              💰 {gameData.wager} ALLY wager
+              💰 {gameData.wager} SOL wager
             </Text>
           </View>
         </View>
@@ -149,24 +168,6 @@ export default function GamePost({ gameData, postId, onJoinGame, onMakeMove }: G
           />
         )}
         
-        {gameData.type === 'coinflip' && (
-          <CoinFlipGame
-            key={`coin-${postId}`}
-            gameId={postId.toString()}
-            player1={gameData.player1}
-            player2={gameData.player2 || null}
-            player1Username={gameData.player1Username}
-            player2Username={gameData.player2Username}
-            wager={gameData.wager}
-            onChoose={(choice) => handleMove(choice, 'coinflip')}
-            player1Choice={gameData.player1Choice || null}
-            player2Choice={gameData.player2Choice || null}
-            result={gameData.result || null}
-            winner={gameData.winner || null}
-            expiresAt={gameData.expiresAt}
-          />
-        )}
-        
         {gameData.type === 'connect4' && (
           <ConnectFourGame
             gameId={postId.toString()}
@@ -191,15 +192,33 @@ export default function GamePost({ gameData, postId, onJoinGame, onMakeMove }: G
           style={styles.joinButton}
           onPress={handleJoinGame}
           activeOpacity={0.8}
+          disabled={isProcessing}
         >
           <LinearGradient
             colors={gradients.primary}
             style={styles.joinButtonGradient}
           >
             <Text style={styles.joinButtonText}>
-              Join Game ({gameData.wager} ALLY)
+              {isProcessing ? 'Processing...' : `Join Game (${gameData.wager} SOL)`}
             </Text>
           </LinearGradient>
+        </TouchableOpacity>
+      )}
+
+      {/* Cancel Game Button */}
+      {canCancel && (
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={handleCancelGame}
+          activeOpacity={0.8}
+          disabled={isProcessing}
+        >
+          <View style={[styles.cancelButtonInner, { backgroundColor: colors.error + '20', borderColor: colors.error }]}>
+            <Ionicons name="close-circle-outline" size={20} color={colors.error} />
+            <Text style={[styles.cancelButtonText, { color: colors.error }]}>
+              {isProcessing ? 'Processing...' : 'Cancel Game'}
+            </Text>
+          </View>
         </TouchableOpacity>
       )}
       
@@ -208,7 +227,7 @@ export default function GamePost({ gameData, postId, onJoinGame, onMakeMove }: G
         <View style={[styles.warningContainer, { backgroundColor: colors.error + '20' }]}>
           <Ionicons name="alert-circle" size={20} color={colors.error} />
           <Text style={[styles.warningText, { color: colors.error }]}>
-            Insufficient balance. You need {gameData.wager} ALLY to join.
+            Insufficient balance. You need {gameData.wager} SOL to join.
           </Text>
         </View>
       )}
@@ -284,6 +303,23 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.base,
     fontFamily: Fonts.semiBold,
     color: '#000',
+  },
+  cancelButton: {
+    marginTop: 8,
+    borderRadius: 12,
+  },
+  cancelButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderRadius: 12,
+  },
+  cancelButtonText: {
+    fontSize: FontSizes.base,
+    fontFamily: Fonts.semiBold,
   },
   warningContainer: {
     flexDirection: 'row',

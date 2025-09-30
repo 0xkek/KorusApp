@@ -10,6 +10,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useWallet } from '../../context/WalletContext';
 import { useGames } from '../../context/GameContext';
 import { Post as PostType, Reply, GameType } from '../../types';
+import { useGameEscrow } from '../../hooks/useGameEscrow';
 import { registerForPushNotificationsAsync, setupNotificationListeners } from '../../utils/notifications';
 import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
@@ -19,7 +20,7 @@ import { reputationService } from '../../services/reputation';
 import { postAvatarCache } from '../../services/postAvatarCache';
 import { Fonts, FontSizes } from '../../constants/Fonts';
 import { useLoadPosts } from '../../hooks/useLoadPosts';
-import { postsAPI, interactionsAPI, repliesAPI, userAPI } from '../../utils/api';
+import { postsAPI, interactionsAPI, repliesAPI, userAPI, gamesAPI } from '../../utils/api';
 import { testBackendConnection } from '../../utils/testApi';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { FeedSkeleton } from '../../components/SkeletonLoader';
@@ -58,7 +59,7 @@ type ReplySortType = 'best' | 'recent';
 export default function HomeScreen() {
   const { colors, isDarkMode, gradients } = useTheme();
   const { showAlert } = useKorusAlert();
-  const { walletAddress, balance, deductBalance, selectedAvatar, selectedNFTAvatar, isPremium, snsDomain } = useWallet();
+  const { walletAddress, balance, deductBalance, selectedAvatar, selectedNFTAvatar, isPremium, snsDomain, currentProvider, signAndSendTransaction } = useWallet();
   const { addGamePost } = useGames();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -440,13 +441,52 @@ export default function HomeScreen() {
           mediaUrl.toLowerCase().includes('video')
         );
         
+        // Handle payment for shoutout posts
+        let transactionSignature: string | undefined;
+        
+        if (shoutoutDuration) {
+          // Pricing logic (must match backend)
+          const shoutoutPrices: { [key: number]: number } = {
+            10: 0.05,
+            20: 0.10,
+            30: 0.18,
+            60: 0.35,
+            120: 0.70,
+            180: 1.30,
+            240: 2.00
+          };
+          
+          const price = shoutoutPrices[shoutoutDuration];
+          if (!price) {
+            showAlert({
+              title: 'Invalid Duration',
+              message: 'Please select a valid shoutout duration',
+              type: 'error'
+            });
+            setIsCreatingPost(false);
+            return;
+          }
+          
+          // TODO: Implement SOL payment here
+          // For now, just show that payment is needed
+          showAlert({
+            title: 'Payment Required',
+            message: `Shoutout requires ${price} SOL payment. Feature coming soon!`,
+            type: 'info'
+          });
+          
+          // TODO: Process actual payment and get transaction signature
+          // transactionSignature = await processSolPayment(price);
+        }
+        
         // Create post via API
-        logger.info('Calling API to create post', { shoutoutDuration });
+        logger.info('Calling API to create post', { shoutoutDuration, transactionSignature });
         const response = await postsAPI.createPost({
           content: newPostContent,
           imageUrl: isVideo ? undefined : mediaUrl,
           videoUrl: isVideo ? mediaUrl : undefined,
           shoutoutDuration: shoutoutDuration || undefined,
+          transactionSignature: transactionSignature || undefined,
         });
 
         // Transform backend post to app format
@@ -538,70 +578,146 @@ export default function HomeScreen() {
     }
   };
 
-  const handleCreateGame = (gameData: { type: GameType; wager: number }) => {
-    // Check if user has sufficient balance for the wager
-    if (gameData.wager > balance) {
+  const handleCreateGame = async (gameData: { type: GameType; wager: number }) => {
+    logger.info('🎮 handleCreateGame called!', { type: gameData.type, wager: gameData.wager });
+
+    if (!walletAddress) {
       showAlert({
-        title: 'Insufficient Funds',
-        message: `You need ${gameData.wager} $ALLY to create this game. Your balance is ${balance.toFixed(2)} $ALLY.`,
+        title: 'Wallet Not Connected',
+        message: 'Please connect your wallet to create a game',
         type: 'error'
       });
       return;
     }
 
-    const gameContent = gameData.type === 'tictactoe' 
-      ? `Let's play Tic Tac Toe! Wager: ${gameData.wager} $ALLY`
-      : gameData.type === 'rps'
-      ? `Rock Paper Scissors challenge! Wager: ${gameData.wager} $ALLY`
-      : gameData.type === 'connect4'
-      ? `Connect Four challenge - get 4 in a row! Wager: ${gameData.wager} $ALLY`
-      : `Coin Flip game! Wager: ${gameData.wager} $ALLY`;
+    if (gameData.wager > balance) {
+      showAlert({
+        title: 'Insufficient Funds',
+        message: `You need ${gameData.wager} SOL to create this game. Your balance is ${balance.toFixed(2)} SOL.`,
+        type: 'error'
+      });
+      return;
+    }
 
-    // Generate a unique ID for the game
-    const gameId = Date.now() + Math.floor(Math.random() * 1000);
-    
-    const newPost: PostType = {
-      id: gameId,
-      wallet: currentUserWallet,
-      avatar: selectedNFTAvatar ? (selectedNFTAvatar.image || selectedNFTAvatar.uri) : selectedAvatar, // Store current avatar with post
-      time: 'now',
-      content: gameContent,
-      likes: 0,
-      replies: [],
-      tips: 0,
-      liked: false,
-      category: 'GAMES',
-      isPremium: isPremium,
-      userTheme: colors.primary,
-      gameData: {
-        type: gameData.type,
-        wager: gameData.wager,
-        player1: currentUserWallet,
-        player1Username: currentUsername,
-        player2: null,
-        player2Username: null,
-        status: 'waiting',
-        board: gameData.type === 'tictactoe' ? [
-          [null, null, null],
-          [null, null, null],
-          [null, null, null]
-        ] : gameData.type === 'connect4' ? Array(6).fill(null).map(() => Array(7).fill(null)) : undefined,
-        currentPlayer: currentUserWallet,
-        currentPlayerUsername: currentUsername,
-        winner: null,
-        createdAt: Date.now(),
-        expiresAt: Date.now() + 300000 // 5 minutes
+    try {
+      const { gameEscrowService } = await import('../../utils/contracts/gameEscrowComplete');
+
+      const gameTypeMapping: { [key: string]: number } = {
+        'tictactoe': 0,
+        'rps': 1,
+        'connect4': 2,
+        'coinflip': 3
+      };
+
+      showAlert({
+        title: 'Creating Game',
+        message: `Wager: ${gameData.wager} SOL. Opening wallet for approval...`,
+        type: 'info'
+      });
+
+      const { transaction, gameId: onChainGameId } = await gameEscrowService.createGame(        gameTypeMapping[gameData.type],        gameData.wager,        currentProvider,        walletAddress      );
+
+      const signature = await signAndSendTransaction(transaction);
+
+      if (!signature) {
+        throw new Error('Failed to create game on blockchain');
       }
-    };
 
-    setPosts([newPost, ...posts]);
-    addGamePost(newPost); // Add to game context
-    deductBalance(gameData.wager);
-    showAlert({
-      title: 'Game Created!',
-      message: 'Your game has been created. Waiting for an opponent to join!',
-      type: 'success'
-    });
+      const gameContent = gameData.type === 'tictactoe'
+        ? `Let's play Tic Tac Toe! Wager: ${gameData.wager} SOL`
+        : gameData.type === 'rps'
+        ? `Rock Paper Scissors challenge! Wager: ${gameData.wager} SOL`
+        : gameData.type === 'connect4'
+        ? `Connect Four challenge - get 4 in a row! Wager: ${gameData.wager} SOL`
+        : `Coin Flip game! Wager: ${gameData.wager} SOL`;
+
+      const postId = Date.now() + Math.floor(Math.random() * 1000);
+
+      try {
+        logger.info('Saving game to backend with onChainGameId:', onChainGameId);
+        await gamesAPI.createGame({
+          postId: postId.toString(),
+          gameType: gameData.type,
+          wager: gameData.wager,
+          onChainGameId: onChainGameId
+        });
+        logger.info('✅ Game saved to backend successfully');
+      } catch (backendError: any) {
+        logger.error('Failed to save game to backend:', backendError);
+        showAlert({
+          title: 'Warning',
+          message: 'Game created on blockchain but failed to sync with server. You can still play.',
+          type: 'warning'
+        });
+      }
+
+      const newPost: PostType = {
+        id: postId,
+        wallet: currentUserWallet,
+        avatar: selectedNFTAvatar ? (selectedNFTAvatar.image || selectedNFTAvatar.uri) : selectedAvatar,
+        time: 'now',
+        content: gameContent,
+        likes: 0,
+        replies: [],
+        tips: 0,
+        liked: false,
+        category: 'GAMES',
+        isPremium: isPremium,
+        userTheme: colors.primary,
+        gameData: {
+          type: gameData.type,
+          wager: gameData.wager,
+          player1: currentUserWallet,
+          player1Username: currentUsername,
+          player2: null,
+          player2Username: null,
+          status: 'waiting',
+          board: gameData.type === 'tictactoe' ? [
+            [null, null, null],
+            [null, null, null],
+            [null, null, null]
+          ] : gameData.type === 'connect4' ? Array(6).fill(null).map(() => Array(7).fill(null)) : undefined,
+          currentPlayer: currentUserWallet,
+          currentPlayerUsername: currentUsername,
+          winner: null,
+          createdAt: Date.now(),
+          expiresAt: Date.now() + 300000, // 5 minutes
+          transactionSignature: signature, // Store blockchain tx
+          onChainGameId: onChainGameId // Store blockchain game ID
+        }
+      };
+
+      setPosts([newPost, ...posts]);
+      addGamePost(newPost);
+      showAlert({
+        title: 'Game Created!',
+        message: `Game created on blockchain! TX: ${signature.slice(0, 8)}...`,
+        type: 'success'
+      });
+    } catch (error: any) {
+      logger.error('Failed to create game:', {
+        error: error.message || error,
+        stack: error.stack,
+        details: error
+      });
+
+      let errorMessage = 'Could not create game on blockchain';
+      if (error.message?.includes('User rejected')) {
+        errorMessage = 'Transaction was cancelled by user';
+      } else if (error.message?.includes('insufficient')) {
+        errorMessage = 'Insufficient SOL balance for transaction';
+      } else if (error.message?.includes('wallet')) {
+        errorMessage = 'Wallet connection issue. Please reconnect your wallet';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      showAlert({
+        title: 'Failed to Create Game',
+        message: errorMessage,
+        type: 'error'
+      });
+    }
   };
 
   const handleCreateReply = async (imageUrl?: string, videoUrl?: string) => {
@@ -1037,6 +1153,13 @@ export default function HomeScreen() {
 
   // Filter posts based on user preferences
   const filteredPosts = posts.filter(post => {
+    // Filter out expired shoutout posts
+    if (post.isShoutout && post.shoutoutExpiresAt) {
+      const expiresAt = new Date(post.shoutoutExpiresAt);
+      if (expiresAt < new Date()) {
+        return false; // Hide expired shoutout posts
+      }
+    }
     // If user has premium and wants to hide sponsored posts, filter them out
     if (isPremium && hideSponsoredPosts && post.sponsored) {
       return false;
@@ -1048,30 +1171,47 @@ export default function HomeScreen() {
     return true;
   });
 
-  // Sort posts by newest first, with shoutout at the top
+  // Sort posts by newest first, with active shoutouts at the top
   const sortedPosts = React.useMemo(() => {
-    const sorted = [...filteredPosts].sort((a, b) => b.id - a.id);
+    const now = new Date();
+    const activeShoutouts: PostType[] = [];
+    const regularPosts: PostType[] = [];
     
-    // If there's a current shoutout that hasn't expired, move it to the top
-    if (currentShoutout && new Date() < currentShoutout.expiresAt) {
-      const shoutoutIndex = sorted.findIndex(post => post.id === currentShoutout.postId);
-      if (shoutoutIndex > 0) {
-        const shoutoutPost = sorted[shoutoutIndex];
-        sorted.splice(shoutoutIndex, 1);
-        sorted.unshift(shoutoutPost);
+    // Separate active shoutouts from regular posts
+    filteredPosts.forEach(post => {
+      if (post.isShoutout && post.shoutoutExpiresAt) {
+        const expiresAt = new Date(post.shoutoutExpiresAt);
+        if (expiresAt > now) {
+          activeShoutouts.push(post);
+        }
+      } else {
+        regularPosts.push(post);
       }
-    }
+    });
     
-    return sorted;
-  }, [filteredPosts, currentShoutout]);
+    // Sort shoutouts by expiration time (most recently expiring first)
+    activeShoutouts.sort((a, b) => {
+      const aExpires = new Date(a.shoutoutExpiresAt!).getTime();
+      const bExpires = new Date(b.shoutoutExpiresAt!).getTime();
+      return bExpires - aExpires;
+    });
+    
+    // Sort regular posts by newest first
+    regularPosts.sort((a, b) => b.id - a.id);
+    
+    // Combine with shoutouts at the top
+    return [...activeShoutouts, ...regularPosts];
+  }, [filteredPosts]);
   
   // Memoized callbacks for FlatList - must be defined before conditional rendering
   const keyExtractor = useCallback((item: PostType) => String(item.id), []);
   
   const renderItem = useCallback(({ item: post }: { item: PostType }) => {
-    const isShoutout = currentShoutout && currentShoutout.postId === post.id && new Date() < currentShoutout.expiresAt;
+    // Check if this is an active shoutout post
+    const isActiveShoutout = post.isShoutout && post.shoutoutExpiresAt && 
+      new Date(post.shoutoutExpiresAt) > new Date();
     
-    if (isShoutout) {
+    if (isActiveShoutout) {
       return (
         <ShoutoutPost
           post={{
@@ -1122,7 +1262,7 @@ export default function HomeScreen() {
         onShowReportModal={handleShowReportModal}
       />
     );
-  }, [expandedPosts, currentUserWallet, selectedAvatar, selectedNFTAvatar, handleLike, handleReply, handleTip, handleShowTipModal, handleLikeReply, handleTipReply, toggleReplies, toggleReplySorting, handleReport, handleShowProfile, handleShowReportModal, getReplySortType, sortReplies, currentShoutout]);
+  }, [expandedPosts, currentUserWallet, selectedAvatar, selectedNFTAvatar, handleLike, handleReply, handleTip, handleShowTipModal, handleLikeReply, handleTipReply, toggleReplies, toggleReplySorting, handleReport, handleShowProfile, handleShowReportModal, getReplySortType, sortReplies]);
   
   const getItemLayout = useCallback((data: any, index: number) => ({
     length: 200, // Estimated height of post

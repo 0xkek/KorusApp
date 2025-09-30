@@ -53,9 +53,9 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
     try {
       setIsConnecting(true);
       setSelectedProvider(provider);
-      
+
       const success = await connectWallet(provider);
-      
+
       if (success) {
         // Success alert is already shown by the auth hook
         onSuccess?.();
@@ -275,16 +275,21 @@ export const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
                     <View style={styles.dividerLine} />
                   </View>
 
-                  {/* Connect Other Wallet Button */}
+                  {/* Connect Other Wallet Button - This will use MWA for ALL wallets */}
                   <TouchableOpacity
                     onPress={() => {
                       logger.log('🟢 USER ACTION: Tapped "Connect Other Wallets" button');
-                      const phantom = availableWallets.find(w => w.name === 'phantom');
-                      if (phantom) {
-                        handleWalletConnect(phantom);
-                      } else {
-                        showAlert('No Wallets Found', 'Please install a Solana wallet app like Phantom to continue.', 'info');
-                      }
+                      // On mobile, just use a generic provider that will trigger MWA
+                      const mwaProvider: WalletProvider = {
+                        name: 'mwa' as any,
+                        displayName: 'Mobile Wallet',
+                        icon: '🔗',
+                        isAvailable: () => true,
+                        connect: () => Promise.resolve(''),
+                        signMessage: () => Promise.resolve(''),
+                        disconnect: () => {},
+                      };
+                      handleWalletConnect(mwaProvider);
                     }}
                     style={styles.otherWalletsButton}
                     disabled={isConnecting}

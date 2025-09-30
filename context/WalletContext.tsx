@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
-import { Connection, PublicKey, clusterApiUrl, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { Connection, PublicKey, clusterApiUrl, LAMPORTS_PER_SOL, Transaction } from '@solana/web3.js';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import { getFavoriteSNSDomain, fetchSNSDomains, SNSDomain } from '../utils/sns';
@@ -11,7 +11,9 @@ import { authAPI } from '../utils/api';
 import { 
   WalletProvider as WalletProviderInterface, 
   getAvailableWallets, 
-  createAuthMessage 
+  createAuthMessage,
+  signAndSendTransactionWithMWA,
+  signTransactionWithMWA
 } from '../utils/walletConnectors';
 
 interface WalletContextType {
@@ -34,6 +36,8 @@ interface WalletContextType {
   disconnectWallet: () => Promise<void>;
   logout: () => Promise<void>;
   signMessage: (message: string) => Promise<string | null>;
+  signTransaction: (transaction: Transaction) => Promise<Transaction | null>;
+  signAndSendTransaction: (transaction: Transaction) => Promise<string | null>;
   
   // App-specific methods
   refreshBalance: () => Promise<void>;
@@ -408,6 +412,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       const pubkey = new PublicKey(address);
       const lamports = await connection.getBalance(pubkey);
       const sol = lamports / LAMPORTS_PER_SOL;
+      console.log('Updated SOL balance:', sol, 'for address:', address);
       setSolBalance(sol);
     } catch (error) {
       logger.error('Error fetching SOL balance:', error);
@@ -563,10 +568,53 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     }
   };
 
+  const signTransaction = async (transaction: Transaction): Promise<Transaction | null> => {
+    try {
+      if (!currentProvider || !isConnected) {
+        throw new Error('No wallet connected');
+      }
+
+      if (Platform.OS !== 'web') {
+        return await signTransactionWithMWA(transaction);
+      } else {
+        if (!currentProvider.signTransaction) {
+          throw new Error('signTransaction not supported by this wallet provider');
+        }
+        return await currentProvider.signTransaction(transaction);
+      }
+    } catch (error) {
+      logger.error('Error signing transaction:', error);
+      return null;
+    }
+  };
+
+  const signAndSendTransaction = async (transaction: Transaction): Promise<string | null> => {
+    try {
+      if (!currentProvider || !isConnected) {
+        throw new Error('No wallet connected');
+      }
+
+      if (Platform.OS !== 'web') {
+        return await signAndSendTransactionWithMWA(transaction);
+      } else {
+        if (!currentProvider.signTransaction) {
+          throw new Error('signTransaction not supported by this wallet provider');
+        }
+        const signedTransaction = await currentProvider.signTransaction(transaction);
+        const signature = await connection.sendRawTransaction(signedTransaction.serialize());
+        await connection.confirmTransaction(signature);
+        return signature;
+      }
+    } catch (error) {
+      logger.error('Error signing and sending transaction:', error);
+      return null;
+    }
+  };
+
   const contextValue = useMemo(
     () => ({
       walletAddress,
-      balance,
+      balance: solBalance, // Use real SOL balance
       solBalance,
       isLoading,
       isConnected,
@@ -582,6 +630,8 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       disconnectWallet,
       logout: disconnectWallet, // logout is an alias for disconnectWallet
       signMessage,
+      signTransaction,
+      signAndSendTransaction,
       refreshBalance,
       deductBalance,
       setSelectedAvatar,
@@ -593,7 +643,6 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     }),
     [
       walletAddress,
-      balance,
       solBalance,
       isLoading,
       isConnected,

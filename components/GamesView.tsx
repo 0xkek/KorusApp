@@ -13,6 +13,8 @@ import GameJoinModal from './GameJoinModal';
 import { Post as PostType, GameType } from '../types';
 import { config } from '../config/environment';
 import { useDisplayName } from '../hooks/useSNSDomain';
+import { testSimpleTransaction } from '../utils/testTransaction';
+import { useKorusAlert } from './KorusAlertProvider';
 
 interface GamesViewProps {
   posts: PostType[];
@@ -32,14 +34,15 @@ const GamePlayerDisplay = ({ player, username, label }: { player: string; userna
   );
 };
 
-export default function GamesView({ 
-  posts, 
-  currentUserWallet, 
-  onCreateGame 
+export default function GamesView({
+  posts,
+  currentUserWallet,
+  onCreateGame
 }: GamesViewProps) {
   const { colors, isDarkMode, gradients } = useTheme();
-  const { balance } = useWallet();
+  const { balance, walletAddress } = useWallet();
   const { gamePosts } = useGames();
+  const { showAlert } = useKorusAlert();
   const router = useRouter();
   const [showGameSelection, setShowGameSelection] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -310,6 +313,35 @@ export default function GamesView({
       {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Games Arena</Text>
+
+        {/* Test Transaction Button - TEMPORARY FOR DEBUGGING */}
+        <TouchableOpacity
+          style={[styles.createButton, { backgroundColor: '#ff0000' }]}
+          onPress={async () => {
+            if (!walletAddress) {
+              showAlert({ title: 'Error', message: 'Please connect wallet first', type: 'error' });
+              return;
+            }
+            try {
+              console.log('Testing transaction...');
+              await testSimpleTransaction(walletAddress);
+              showAlert({ title: 'Success', message: 'Test transaction sent!', type: 'success' });
+            } catch (error: any) {
+              console.error('Test failed:', error);
+              showAlert({ title: 'Test Failed', message: error.message, type: 'error' });
+            }
+          }}
+        >
+          <LinearGradient
+            colors={['#ff0000', '#cc0000']}
+            style={styles.createButtonGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <Text style={[styles.createButtonText, { color: '#fff' }]}>TEST TX</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.createButton}
           onPress={() => setShowGameSelection(true)}

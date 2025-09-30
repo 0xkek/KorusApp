@@ -7,14 +7,20 @@
     "build": "anchor build",
     "test": "anchor test",
     "deploy:devnet": "anchor deploy --provider.cluster devnet",
-    "deploy:mainnet": "anchor deploy --provider.cluster mainnet-beta"
+    "deploy:mainnet": "anchor deploy --provider.cluster mainnet-beta",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.29.0",
-    "@solana/web3.js": "^1.87.6",
-    "@solana/spl-token": "^0.3.9"
+    "@solana/spl-token": "^0.3.9",
+    "expo": "~53.0.22",
+    "react": "19.0.0",
+    "react-native": "0.79.6"
   },
   "devDependencies": {
+    "@coral-xyz/anchor": "^0.31.1",
+    "@coral-xyz/anchor-cli": "^0.29.0",
+    "@solana/web3.js": "^1.98.4",
     "@types/bn.js": "^5.1.0",
     "@types/chai": "^4.3.0",
     "@types/mocha": "^9.0.0",

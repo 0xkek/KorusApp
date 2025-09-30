@@ -4,14 +4,19 @@ skip-lint = false
 
 [programs.localnet]
 korus_game_escrow = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
-korus_tipping = "Gf6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnT"
+
+[programs.devnet]
+korus_game_escrow = "AugM9Nh81Ne3CgTdQFPYqjeNefwfBfDSmTHeg6dNyC6u"
+
+[programs.mainnet]
+korus_game_escrow = "4iUdAkPRmZLzUFXTLpt5QPGmUUtP6yfgpPpF3sLD9xtd"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
-wallet = "~/.config/solana/id.json"
+cluster = "Mainnet"
+wallet = "../authority-keypair.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

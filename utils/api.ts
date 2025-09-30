@@ -367,6 +367,8 @@ export const postsAPI = {
     content: string;
     imageUrl?: string;
     videoUrl?: string;
+    shoutoutDuration?: number;
+    transactionSignature?: string;
   }) {
     // Twitter-style deduplication: prevent duplicate posts
     const requestKey = `createPost:${data.content}:${Date.now()}`;
@@ -598,6 +600,7 @@ export const gamesAPI = {
     postId: string;
     gameType: string;
     wager: number;
+    onChainGameId?: number;
   }) {
     const response = await api.post('/games', data);
     return response.data;

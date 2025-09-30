@@ -338,32 +338,54 @@ const Post = memo<PostProps>(function Post({
 
 
   return (
-    <View style={styles.postContainer}>
+    <View style={[styles.postContainer, post.isShoutout && { marginBottom: 20, marginHorizontal: 10 }]}>
       {/* Main glassmorphism card with subtle glow */}
       <View 
         style={[
           styles.blurContainer,
           { 
-            borderColor: post.isShoutout ? '#FFD700' + '80' : post.sponsored ? colors.primary + '99' : colors.border + '60', 
-            backgroundColor: colors.surface + '20',
-            shadowColor: colors.shadowColor,
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: isDarkMode ? 0.1 : 0.05,
-            shadowRadius: 8,
-            elevation: 3,
+            borderColor: post.isShoutout ? '#FFD700' : post.sponsored ? colors.primary + '99' : colors.border + '60', 
+            backgroundColor: post.isShoutout 
+              ? (isDarkMode ? 'rgba(255, 215, 0, 0.03)' : 'rgba(255, 215, 0, 0.02)') 
+              : colors.surface + '20',
+            shadowColor: post.isShoutout ? '#FFD700' : colors.shadowColor,
+            shadowOffset: { width: 0, height: post.isShoutout ? 4 : 2 },
+            shadowOpacity: post.isShoutout ? 0.3 : (isDarkMode ? 0.1 : 0.05),
+            shadowRadius: post.isShoutout ? 12 : 8,
+            elevation: post.isShoutout ? 8 : 3,
+            borderWidth: post.isShoutout ? 3 : 2,
           },
-          post.sponsored && !post.isShoutout && styles.sponsoredBlurContainer
+          post.sponsored && !post.isShoutout && styles.sponsoredBlurContainer,
+          post.isShoutout && styles.shoutoutGlow
         ]}
       >
         <LinearGradient
-          colors={post.isShoutout 
-            ? ['rgba(255, 215, 0, 0.02)', 'rgba(255, 215, 0, 0.01)'] 
-            : gradients.surface}
+          colors={gradients.surface} // Use same gradient for all posts, border color handles the shoutout styling
           style={styles.postGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
-          <View style={styles.post}>
+          {/* Shoutout banner inside the frame */}
+          {post.isShoutout && (
+            <LinearGradient
+              colors={['#FFD700', '#FFA500']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.shoutoutBanner}
+            >
+              <Ionicons name="megaphone" size={18} color="#FFF" />
+              <Text style={[styles.shoutoutBannerText, { fontFamily: Fonts.bold }]}>
+                SHOUTOUT
+              </Text>
+              <View style={styles.starContainer}>
+                <Ionicons name="star" size={12} color="#FFF" />
+                <Ionicons name="star" size={12} color="#FFF" />
+                <Ionicons name="star" size={12} color="#FFF" />
+              </View>
+            </LinearGradient>
+          )}
+          
+          <View style={[styles.post, post.isShoutout && { paddingTop: 15 }]}>
 
             {/* Top-right badges area */}
             <View style={styles.topRightBadges}>
@@ -482,7 +504,10 @@ const Post = memo<PostProps>(function Post({
                 </TouchableOpacity>
                 <View style={styles.postMeta}>
                   <View style={styles.usernameRow}>
-                    <Text style={[styles.username, { color: colors.primary, textShadowColor: colors.primary + '66' }]}>{displayName}</Text>
+                    <Text style={[styles.username, { 
+                      color: post.isShoutout ? '#FFD700' : colors.primary, 
+                      textShadowColor: post.isShoutout ? '#FFD700' + '66' : colors.primary + '66' 
+                    }]}>{displayName}</Text>
                     {postIsPremium && (
                       <View style={[styles.verifiedBadge, { backgroundColor: '#FFD700' }]}>
                         <Ionicons name="star" size={10} color="#000" />
@@ -581,8 +606,8 @@ const Post = memo<PostProps>(function Post({
                     colors={gradients.button}
                     style={[
                       styles.actionBtnGradient,
-                      { borderColor: colors.borderLight },
-                      post.liked && [styles.likedBtnGradient, { borderColor: colors.primary }]
+                      { borderColor: post.isShoutout ? '#FFD700' : colors.borderLight },
+                      post.liked && [styles.likedBtnGradient, { borderColor: post.isShoutout ? '#FFD700' : colors.primary }]
                     ]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
@@ -622,8 +647,8 @@ const Post = memo<PostProps>(function Post({
                     colors={gradients.button}
                     style={[
                       styles.actionBtnGradient,
-                      { borderColor: colors.borderLight },
-                      hasUserReplied && [styles.activeBtnGradient, { borderColor: colors.primary }]
+                      { borderColor: post.isShoutout ? '#FFD700' : colors.borderLight },
+                      hasUserReplied && [styles.activeBtnGradient, { borderColor: post.isShoutout ? '#FFD700' : colors.primary }]
                     ]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
@@ -660,8 +685,8 @@ const Post = memo<PostProps>(function Post({
                     colors={gradients.button}
                     style={[
                       styles.actionBtnGradient,
-                      { borderColor: colors.borderLight },
-                      post.tips > 0 && [styles.activeBtnGradient, { borderColor: colors.primary }]
+                      { borderColor: post.isShoutout ? '#FFD700' : colors.borderLight },
+                      post.tips > 0 && [styles.activeBtnGradient, { borderColor: post.isShoutout ? '#FFD700' : colors.primary }]
                     ]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
@@ -784,6 +809,29 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 24,
   },
+  shoutoutGlow: {
+    // Additional golden glow for shoutout posts - no transform to avoid layout issues
+  },
+  shoutoutBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    gap: 10,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  shoutoutBannerText: {
+    color: '#FFF',
+    fontSize: 18,
+    letterSpacing: 3,
+    fontWeight: '900',
+  },
+  starContainer: {
+    flexDirection: 'row',
+    gap: 3,
+  },
   clickableContent: {
     flex: 1,
   },
@@ -799,11 +847,11 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   postGradient: {
-    borderRadius: 24,
+    borderRadius: 22, // Slightly smaller to prevent inner border showing
     padding: 0,
   },
   post: {
-    borderRadius: 24,
+    borderRadius: 22, // Match gradient radius
     padding: 20,
     paddingBottom: 12,
     position: 'relative',

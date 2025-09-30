@@ -105,7 +105,7 @@ export default function GameJoinModal({
                   </Text>
                   <View style={styles.wagerRow}>
                     <Text style={[styles.wagerAmount, { color: colors.primary }]}>
-                      {wager} $ALLY
+                      {wager} SOL
                     </Text>
                     <Text style={[styles.wagerDollar, { color: colors.textTertiary }]}>
                       ≈ ${(wager * 0.01).toFixed(2)}
@@ -122,7 +122,7 @@ export default function GameJoinModal({
                     styles.balanceAmount, 
                     { color: canAfford ? colors.success : colors.error }
                   ]}>
-                    {walletBalance.toFixed(2)} $ALLY
+                    {walletBalance.toFixed(2)} SOL
                   </Text>
                 </View>
 

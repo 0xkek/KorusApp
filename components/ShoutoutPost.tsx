@@ -35,25 +35,7 @@ const ShoutoutPost: React.FC<ShoutoutPostProps> = (props) => {
 
   return (
     <View style={styles.container}>
-      {/* Shoutout header badge */}
-      <LinearGradient
-        colors={['#FFD700', '#FFA500']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.shoutoutBadge}
-      >
-        <Ionicons name="megaphone" size={14} color="#FFF" />
-        <Text style={[styles.shoutoutText, { fontFamily: Fonts.bold }]}>
-          SHOUTOUT
-        </Text>
-        <View style={styles.starContainer}>
-          <Ionicons name="star" size={10} color="#FFD700" />
-          <Ionicons name="star" size={10} color="#FFD700" />
-          <Ionicons name="star" size={10} color="#FFD700" />
-        </View>
-      </LinearGradient>
-
-      {/* Pass through to Post with the shoutout flag */}
+      {/* Pass through to Post with the shoutout flag - banner will be inside */}
       <Post {...props} post={shoutoutPost} />
     </View>
   );
@@ -66,21 +48,26 @@ const styles = StyleSheet.create({
   shoutoutBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderTopLeftRadius: 14,
+    borderTopRightRadius: 14,
+    gap: 8,
     alignSelf: 'flex-start',
     marginLeft: 15,
     marginBottom: -1,
     zIndex: 10,
-    elevation: 5,
+    elevation: 10,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
   },
   shoutoutText: {
     color: '#FFF',
-    fontSize: 12,
-    letterSpacing: 1,
+    fontSize: 13,
+    letterSpacing: 1.5,
+    fontWeight: '800',
   },
   starContainer: {
     flexDirection: 'row',

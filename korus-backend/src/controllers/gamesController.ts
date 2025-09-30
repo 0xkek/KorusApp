@@ -1,6 +1,8 @@
 import { logger } from '../utils/logger'
 import { Request, Response } from 'express'
 import prisma from '../config/database'
+import { gameEscrowService } from '../services/gameEscrowService'
+import { PublicKey } from '@solana/web3.js'
 
 // AuthRequest type
 interface AuthRequest extends Request {
@@ -19,6 +21,7 @@ interface GameRecord {
   wager: any // Decimal from database
   winner: string | null
   status: string
+  onChainGameId: bigint | null
   createdAt: Date
   updatedAt: Date
 }
@@ -56,7 +59,7 @@ interface GameState {
 // Create a new game
 export const createGame = async (req: AuthRequest, res: Response) => {
   try {
-    const { postId, gameType, wager } = req.body
+    const { postId, gameType, wager, onChainGameId } = req.body
     const player1 = req.user!.walletAddress
 
     // Validate game type
@@ -116,7 +119,8 @@ export const createGame = async (req: AuthRequest, res: Response) => {
         wager: wager || 0,
         status: 'waiting',
         gameState: initialState as any,
-        currentTurn: gameType === 'rps' ? undefined : player1
+        currentTurn: gameType === 'rps' ? undefined : player1,
+        onChainGameId: onChainGameId ? BigInt(onChainGameId) : null
       },
       include: {
         post: {
@@ -265,6 +269,38 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
       } catch (error) {
         logger.error('Failed to award game rewards:', error)
         // Don't fail the game update if rewards fail
+      }
+
+      // Complete game on blockchain (distribute escrow funds)
+      if (game.player2 && winner !== 'draw') {
+        try {
+          logger.info(`Completing game on blockchain: ${id}, winner: ${winner}`)
+
+          const player1Pubkey = new PublicKey(game.player1)
+          const player2Pubkey = new PublicKey(game.player2)
+          const winnerPubkey = new PublicKey(winner)
+
+          // Get the on-chain game ID from the database
+          if (!game.onChainGameId) {
+            logger.error(`Game ${id} has no onChainGameId - cannot complete on blockchain`)
+            throw new Error('Game missing blockchain ID')
+          }
+
+          const txSignature = await gameEscrowService.completeGame(
+            Number(game.onChainGameId),
+            player1Pubkey,
+            player2Pubkey,
+            winnerPubkey
+          )
+
+          logger.info(`Game completed on blockchain: ${txSignature}`)
+        } catch (error) {
+          logger.error('Failed to complete game on blockchain:', error)
+          // Continue with database update even if blockchain fails
+          // This allows manual resolution of blockchain issues
+        }
+      } else if (winner === 'draw') {
+        logger.info('Game ended in draw - no blockchain completion needed (manual refund required)')
       }
     }
 

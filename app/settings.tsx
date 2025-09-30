@@ -11,6 +11,7 @@ import { Fonts, FontSizes } from '../constants/Fonts';
 import * as SecureStore from 'expo-secure-store';
 import { logger } from '../utils/logger';
 import { userAPI } from '../utils/api';
+import SubscriptionSection from '../components/SubscriptionSection';
 
 const HIDE_SPONSORED_KEY = 'korus_hide_sponsored_posts';
 const HIDE_GAME_POSTS_KEY = 'korus_hide_game_posts';
@@ -226,7 +227,7 @@ export default function SettingsScreen() {
           contentContainerStyle={styles.contentContainer}
           showsVerticalScrollIndicator={false}
         >
-          {/* Premium Status */}
+          {/* Subscription Section */}
           <View style={[styles.sectionWrapper, {
             shadowColor: colors.primary,
             shadowOffset: { width: 0, height: 4 },
@@ -241,38 +242,7 @@ export default function SettingsScreen() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <LinearGradient
-                  colors={isPremium ? ['#FFD700', '#FFA500'] : gradients.primary}
-                  style={styles.premiumBadge}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                >
-                  <Ionicons 
-                    name={isPremium ? "star" : "star-outline"} 
-                    size={20} 
-                    color={isDarkMode ? '#000' : '#fff'} 
-                  />
-                  <Text style={[styles.premiumBadgeText, { color: isDarkMode ? '#000' : '#fff' }]}>
-                    {isPremium ? 'PREMIUM MEMBER' : 'FREE ACCOUNT'}
-                  </Text>
-                </LinearGradient>
-                
-                {!isPremium && (
-                  <TouchableOpacity
-                    style={styles.upgradeButton}
-                    onPress={() => setShowPremiumModal(true)}
-                    activeOpacity={0.8}
-                  >
-                    <LinearGradient
-                      colors={['#FFD700', '#FFA500']}
-                      style={styles.upgradeButtonGradient}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    >
-                      <Text style={styles.upgradeButtonText}>Upgrade to Premium</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                )}
+                <SubscriptionSection />
               </LinearGradient>
             </BlurView>
           </View>

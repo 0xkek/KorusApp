@@ -14,9 +14,9 @@ export async function connectWalletDirect() {
     const result = await transact(async (wallet) => {
       logger.log('[SimpleMWA] Transact callback started');
       
-      // Step 1: Authorize
+      // Step 1: Authorize (use solana:devnet format)
       const authParams = {
-        cluster: getClusterForWallet('phantom'),
+        cluster: 'solana:devnet',
         identity: {
           name: config.appName,
           uri: config.appUrl,

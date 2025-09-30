@@ -69,8 +69,11 @@ export class GameEscrowService {
         GAME_ESCROW_PROGRAM_ID
       );
 
+      // Fix: Use u64 LE encoding for game ID (matching smart contract)
+      const gameIdBuffer = Buffer.alloc(8);
+      gameIdBuffer.writeBigUInt64LE(BigInt(gameId));
       const [gamePda] = await PublicKey.findProgramAddress(
-        [Buffer.from('game'), Buffer.from(gameId.toString().padStart(8, '0'))],
+        [Buffer.from('game'), gameIdBuffer],
         GAME_ESCROW_PROGRAM_ID
       );
 
@@ -118,8 +121,11 @@ export class GameEscrowService {
    */
   async getGameState(gameId: number): Promise<any> {
     try {
+      // Fix: Use u64 LE encoding for game ID (matching smart contract)
+      const gameIdBuffer = Buffer.alloc(8);
+      gameIdBuffer.writeBigUInt64LE(BigInt(gameId));
       const [gamePda] = await PublicKey.findProgramAddress(
-        [Buffer.from('game'), Buffer.from(gameId.toString().padStart(8, '0'))],
+        [Buffer.from('game'), gameIdBuffer],
         GAME_ESCROW_PROGRAM_ID
       );
 

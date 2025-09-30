@@ -282,7 +282,7 @@ export default function ProfileScreen() {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            <Text style={styles.balanceAmount}>{balance.toFixed(2)} $ALLY</Text>
+            <Text style={styles.balanceAmount}>{balance.toFixed(2)} SOL</Text>
           </LinearGradient>
         </View>
         

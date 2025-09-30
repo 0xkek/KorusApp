@@ -10,7 +10,7 @@ import { CursorPagination } from '../utils/pagination'
 export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Post>>) => {
   try {
     const walletAddress = req.userWallet!
-    const { content, imageUrl, videoUrl, shoutoutDuration } = req.body
+    const { content, imageUrl, videoUrl, shoutoutDuration, transactionSignature } = req.body
 
     // Validate input
     if (!content) {
@@ -49,28 +49,22 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
         } as any)
       }
 
-      // Check user balance
-      const user = await prisma.user.findUnique({
-        where: { walletAddress },
-        select: { balance: true }
-      })
-
-      if (!user || Number(user.balance) < price) {
+      // Require transaction signature for shoutout posts
+      if (!transactionSignature) {
         return res.status(400).json({
           success: false,
-          error: 'Insufficient balance for shoutout'
+          error: 'Payment transaction signature required for shoutout posts'
         } as any)
       }
 
-      // Deduct balance
-      await prisma.user.update({
-        where: { walletAddress },
-        data: {
-          balance: {
-            decrement: price
-          }
-        }
-      })
+      // TODO: Verify the SOL transaction here
+      // For now, we'll trust the frontend but in production you should:
+      // 1. Verify the transaction signature with Solana RPC
+      // 2. Check that the amount matches the price
+      // 3. Confirm transaction is to the platform wallet
+      // 4. Ensure transaction is recent (within last few minutes)
+      
+      logger.debug(`Shoutout payment received - Duration: ${shoutoutDuration} minutes, Price: ${price} SOL, Tx: ${transactionSignature}`)
 
       // Set shoutout fields
       const expiresAt = new Date()
@@ -159,7 +153,7 @@ export const getPosts = async (req: Request, res: Response) => {
       }
     })
 
-    // Then get regular posts using cursor pagination
+    // Then get regular posts using cursor pagination (excluding ALL shoutout posts)
     const result = await CursorPagination.paginateQuery<any>(
       prisma.post,
       {
@@ -171,15 +165,7 @@ export const getPosts = async (req: Request, res: Response) => {
       {
         where: { 
           isHidden: false,
-          OR: [
-            { isShoutout: false },
-            { 
-              isShoutout: true,
-              shoutoutExpiresAt: {
-                lte: now // Expired shoutouts appear in regular feed
-              }
-            }
-          ]
+          isShoutout: false // Only show non-shoutout posts in regular feed
         },
         include: {
           author: {
@@ -268,6 +254,14 @@ export const getSinglePost = async (req: Request, res: Response<ApiResponse<Post
 
     if (!post) {
       return res.status(404).json({ success: false, error: 'Post not found' })
+    }
+
+    // Check if it's an expired shoutout post
+    if (post.isShoutout && post.shoutoutExpiresAt) {
+      const now = new Date()
+      if (post.shoutoutExpiresAt < now) {
+        return res.status(404).json({ success: false, error: 'Post has expired' })
+      }
     }
 
     res.json({

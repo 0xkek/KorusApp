@@ -18,7 +18,7 @@ interface CreatePostModalProps {
   content: string;
   onClose: () => void;
   onContentChange: (text: string) => void;
-  onSubmit: (imageUrl?: string, shoutoutDuration?: number) => void;
+  onSubmit: (imageUrl?: string, shoutoutDuration?: number, transactionSignature?: string) => void;
 }
 
 // Shoutout duration options and pricing

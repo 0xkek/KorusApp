@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_instruction;
 
-declare_id!("AugM9Nh81Ne3CgTdQFPYqjeNefwfBfDSmTHeg6dNyC6u");
+declare_id!("4iUdAkPRmZLzUFXTLpt5QPGmUUtP6yfgpPpF3sLD9xtd");
 
 const PLATFORM_FEE_BPS: u16 = 200; // 2% platform fee
 const MINIMUM_WAGER: u64 = 10_000_000; // 0.01 SOL minimum
@@ -43,7 +43,7 @@ pub mod korus_game_escrow {
         let state = &mut ctx.accounts.state;
         let game = &mut ctx.accounts.game;
         let clock = Clock::get()?;
-        
+
         game.game_id = state.total_games;
         game.game_type = game_type;
         game.player1 = ctx.accounts.player1.key();
@@ -57,19 +57,70 @@ pub mod korus_game_escrow {
         game.last_move_time = clock.unix_timestamp;
         game.current_turn = ctx.accounts.player1.key();
 
-        // Transfer SOL from player1 to escrow
-        let ix = system_instruction::transfer(
-            &ctx.accounts.player1.key(),
-            &ctx.accounts.escrow.key(),
-            wager_amount,
+        // NO CPI! The transfer happens directly in the transaction
+        // The escrow account receives SOL via the transaction's SystemProgram.transfer
+        // We just verify the escrow has received the funds
+        let escrow_balance = ctx.accounts.escrow.lamports();
+        require!(
+            escrow_balance >= wager_amount,
+            ErrorCode::InsufficientEscrowBalance
         );
-        anchor_lang::solana_program::program::invoke(
-            &ix,
-            &[
-                ctx.accounts.player1.to_account_info(),
-                ctx.accounts.escrow.to_account_info(),
-            ],
-        )?;
+
+        // Update player state
+        let player_state = &mut ctx.accounts.player_state;
+        player_state.player = ctx.accounts.player1.key();
+        player_state.has_active_game = true;
+        player_state.current_game_id = Some(state.total_games);
+
+        state.total_games += 1;
+        state.total_volume += wager_amount;
+        state.active_games += 1;
+
+        emit!(GameCreated {
+            game_id: game.game_id,
+            player1: game.player1,
+            wager_amount,
+            game_type,
+        });
+
+        Ok(())
+    }
+
+    pub fn create_game_with_deposit(
+        ctx: Context<CreateGameWithDeposit>,
+        game_type: u8,
+        wager_amount: u64,
+    ) -> Result<()> {
+        require!(
+            wager_amount >= MINIMUM_WAGER && wager_amount <= MAXIMUM_WAGER,
+            ErrorCode::InvalidWagerAmount
+        );
+
+        // Check if player already has an active game
+        let player_state = &ctx.accounts.player_state;
+        require!(
+            !player_state.has_active_game,
+            ErrorCode::PlayerAlreadyInGame
+        );
+
+        let state = &mut ctx.accounts.state;
+        let game = &mut ctx.accounts.game;
+        let clock = Clock::get()?;
+
+        game.game_id = state.total_games;
+        game.game_type = game_type;
+        game.player1 = ctx.accounts.player1.key();
+        game.player2 = Pubkey::default();
+        game.wager_amount = wager_amount;
+        game.status = 0; // Waiting
+        game.winner = Pubkey::default();
+        game.player1_deposited = wager_amount;
+        game.player2_deposited = 0;
+        game.created_at = clock.unix_timestamp;
+        game.last_move_time = clock.unix_timestamp;
+        game.current_turn = ctx.accounts.player1.key();
+
+        // No CPI transfer here - player deposits directly to escrow beforehand
 
         // Update player state
         let player_state = &mut ctx.accounts.player_state;
@@ -94,7 +145,7 @@ pub mod korus_game_escrow {
     pub fn join_game(ctx: Context<JoinGame>) -> Result<()> {
         let game = &mut ctx.accounts.game;
         let clock = Clock::get()?;
-        
+
         require!(game.status == 0, ErrorCode::GameNotWaiting);
         require!(game.player2 == Pubkey::default(), ErrorCode::GameAlreadyJoined);
         require!(game.player1 != ctx.accounts.player2.key(), ErrorCode::CannotJoinOwnGame);
@@ -191,15 +242,19 @@ pub mod korus_game_escrow {
         Ok(())
     }
 
-    pub fn complete_game(ctx: Context<CompleteGame>, winner: Pubkey) -> Result<()> {
+    pub fn complete_game(ctx: Context<CompleteGame>, winner: Option<Pubkey>) -> Result<()> {
         let game = &mut ctx.accounts.game;
         let state = &mut ctx.accounts.state;
 
         require!(game.status == 1, ErrorCode::GameNotActive);
-        require!(
-            winner == game.player1 || winner == game.player2,
-            ErrorCode::InvalidWinner
-        );
+
+        // If winner is provided, verify it's one of the players
+        if let Some(winner_pubkey) = winner {
+            require!(
+                winner_pubkey == game.player1 || winner_pubkey == game.player2,
+                ErrorCode::InvalidWinner
+            );
+        }
 
         // CRITICAL SECURITY: Only the backend authority can complete games
         // This prevents players from declaring themselves winners
@@ -212,12 +267,27 @@ pub mod korus_game_escrow {
         require!(game.winner == Pubkey::default(), ErrorCode::GameAlreadyCompleted);
 
         game.status = 2; // Completed
-        game.winner = winner;
+        game.winner = winner.unwrap_or(Pubkey::default()); // Default means draw
 
         // Calculate amounts
         let total_pot = game.player1_deposited + game.player2_deposited;
         let platform_fee = (total_pot * state.platform_fee_bps as u64) / 10000;
-        let winner_amount = total_pot - platform_fee;
+
+        // Handle draw vs winner payouts
+        let (payout_player1, payout_player2) = if let Some(winner_pubkey) = winner {
+            // Winner takes all (minus platform fee)
+            let winner_amount = total_pot - platform_fee;
+            if winner_pubkey == game.player1 {
+                (winner_amount, 0u64)
+            } else {
+                (0u64, winner_amount)
+            }
+        } else {
+            // Draw: split pot equally (minus platform fee)
+            let remaining = total_pot - platform_fee;
+            let half = remaining / 2;
+            (half, remaining - half) // Handle odd amounts
+        };
 
         // PDA signer seeds for escrow
         let game_key = game.key();
@@ -243,30 +313,38 @@ pub mod korus_game_escrow {
             signer_seeds,
         )?;
 
-        // Transfer winnings to winner
-        let winner_account = if winner == game.player1 {
-            ctx.accounts.player1.key()
-        } else {
-            ctx.accounts.player2.key()
-        };
-        
-        let winner_ix = system_instruction::transfer(
-            &ctx.accounts.escrow.key(),
-            &winner_account,
-            winner_amount,
-        );
-        anchor_lang::solana_program::program::invoke_signed(
-            &winner_ix,
-            &[
-                ctx.accounts.escrow.to_account_info(),
-                if winner == game.player1 {
-                    ctx.accounts.player1.to_account_info()
-                } else {
-                    ctx.accounts.player2.to_account_info()
-                },
-            ],
-            signer_seeds,
-        )?;
+        // Transfer payouts to players
+        if payout_player1 > 0 {
+            let player1_ix = system_instruction::transfer(
+                &ctx.accounts.escrow.key(),
+                &ctx.accounts.player1.key(),
+                payout_player1,
+            );
+            anchor_lang::solana_program::program::invoke_signed(
+                &player1_ix,
+                &[
+                    ctx.accounts.escrow.to_account_info(),
+                    ctx.accounts.player1.to_account_info(),
+                ],
+                signer_seeds,
+            )?;
+        }
+
+        if payout_player2 > 0 {
+            let player2_ix = system_instruction::transfer(
+                &ctx.accounts.escrow.key(),
+                &ctx.accounts.player2.key(),
+                payout_player2,
+            );
+            anchor_lang::solana_program::program::invoke_signed(
+                &player2_ix,
+                &[
+                    ctx.accounts.escrow.to_account_info(),
+                    ctx.accounts.player2.to_account_info(),
+                ],
+                signer_seeds,
+            )?;
+        }
 
         // Update player states
         ctx.accounts.player1_state.has_active_game = false;
@@ -280,8 +358,10 @@ pub mod korus_game_escrow {
         emit!(GameCompleted {
             game_id: game.game_id,
             winner,
-            winner_amount,
+            player1_payout: payout_player1,
+            player2_payout: payout_player2,
             platform_fee,
+            is_draw: winner.is_none(),
         });
 
         Ok(())
@@ -293,7 +373,7 @@ pub mod korus_game_escrow {
         let clock = Clock::get()?;
 
         require!(game.status == 1, ErrorCode::GameNotActive);
-        
+
         // Check if timeout has occurred (10 minutes since last move)
         let time_since_last_move = clock.unix_timestamp - game.last_move_time;
         require!(
@@ -351,13 +431,13 @@ pub mod korus_game_escrow {
             signer_seeds,
         )?;
 
-        // Transfer winnings to winner
+        // Transfer winnings to winner (timeout always has a winner, no draw)
         let winner_account = if winner == game.player1 {
             ctx.accounts.player1.key()
         } else {
             ctx.accounts.player2.key()
         };
-        
+
         let winner_ix = system_instruction::transfer(
             &ctx.accounts.escrow.key(),
             &winner_account,
@@ -502,6 +582,38 @@ pub struct CreateGame<'info> {
     )]
     pub player_state: Account<'info, PlayerState>,
     /// CHECK: Escrow PDA that holds SOL
+    #[account(
+        mut,
+        seeds = [b"escrow", game.key().as_ref()],
+        bump
+    )]
+    pub escrow: AccountInfo<'info>,
+    #[account(mut)]
+    pub player1: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct CreateGameWithDeposit<'info> {
+    #[account(mut)]
+    pub state: Account<'info, State>,
+    #[account(
+        init,
+        payer = player1,
+        space = 8 + Game::LEN,
+        seeds = [b"game", state.total_games.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub game: Account<'info, Game>,
+    #[account(
+        init_if_needed,
+        payer = player1,
+        space = 8 + PlayerState::LEN,
+        seeds = [b"player", player1.key().as_ref()],
+        bump
+    )]
+    pub player_state: Account<'info, PlayerState>,
+    /// CHECK: Escrow PDA that holds SOL (player should have already deposited)
     #[account(
         mut,
         seeds = [b"escrow", game.key().as_ref()],
@@ -668,9 +780,11 @@ pub struct GameCancelled {
 #[event]
 pub struct GameCompleted {
     pub game_id: u64,
-    pub winner: Pubkey,
-    pub winner_amount: u64,
+    pub winner: Option<Pubkey>,
+    pub player1_payout: u64,
+    pub player2_payout: u64,
     pub platform_fee: u64,
+    pub is_draw: bool,
 }
 
 #[event]
@@ -686,6 +800,8 @@ pub struct GameTimeout {
 pub enum ErrorCode {
     #[msg("Invalid wager amount")]
     InvalidWagerAmount,
+    #[msg("Insufficient escrow balance")]
+    InsufficientEscrowBalance,
     #[msg("Game is not waiting for players")]
     GameNotWaiting,
     #[msg("Game already has a second player")]

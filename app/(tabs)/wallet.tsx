@@ -269,7 +269,7 @@ export default function WalletScreen() {
                     styles.activityAmount,
                     activity.amount > 0 ? styles.amountPositive : styles.amountNegative
                   ]}>
-                    {activity.amount > 0 ? '+' : ''}{activity.amount} ALLY
+                    {activity.amount > 0 ? '+' : ''}{activity.amount} SOL
                   </Text>
                 )}
               </TouchableOpacity>

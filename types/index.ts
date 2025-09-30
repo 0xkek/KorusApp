@@ -1,4 +1,4 @@
-export type GameType = 'tictactoe' | 'connect4' | 'rps' | 'coinflip';
+export type GameType = 'tictactoe' | 'connect4' | 'rps';
 export type GameStatus = 'waiting' | 'active' | 'completed' | 'expired';
 
 export interface GameData {
@@ -15,6 +15,8 @@ export interface GameData {
   currentPlayerUsername?: string;
   createdAt: number;
   expiresAt: number;
+  transactionSignature?: string; // Blockchain transaction signature
+  onChainGameId?: number; // Blockchain game ID (u64)
   // Rock Paper Scissors specific
   rounds?: any[];
   currentRound?: number;

@@ -45,23 +45,23 @@ const configs: Record<Environment, EnvironmentConfig> = {
   development: {
     // API
     apiUrl: process.env.EXPO_PUBLIC_API_URL || '',
-    
+
     // Solana
     solanaCluster: 'solana:devnet',
-    solanaRpcUrl: 'https://api.devnet.solana.com',
-    gameEscrowProgramId: '9rLXaB3a8qeb55N119sC3mjK58LyPeXXnj8vEvm3EWFG',
+    solanaRpcUrl: process.env.EXPO_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com',
+    gameEscrowProgramId: '9jsNDSzvsRHH8KUhFwLdEeEKL6nTWhx4YgzmdkhEh1Te',
     
     // Features - production only
-    smartContractsEnabled: false,
+    smartContractsEnabled: true,
     
     // Token
     allyTokenAddress: undefined, // Using devnet tokens
     allyTokenDecimals: 9,
     
     // Game
-    minWagerAmount: 1,
-    maxWagerAmount: 10000,
-    gameTimeoutMs: 300000, // 5 minutes
+    minWagerAmount: 0.01,
+    maxWagerAmount: 1,
+    gameTimeoutMs: 600000, // 10 minutes
     
     // App
     appName: 'Korus (Dev)',
@@ -82,20 +82,20 @@ const configs: Record<Environment, EnvironmentConfig> = {
     
     // Solana
     solanaCluster: 'solana:devnet',
-    solanaRpcUrl: 'https://api.devnet.solana.com',
-    gameEscrowProgramId: '9rLXaB3a8qeb55N119sC3mjK58LyPeXXnj8vEvm3EWFG',
-    
+    solanaRpcUrl: process.env.EXPO_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com',
+    gameEscrowProgramId: '9jsNDSzvsRHH8KUhFwLdEeEKL6nTWhx4YgzmdkhEh1Te',
+
     // Features - production only
-    smartContractsEnabled: false,
-    
+    smartContractsEnabled: true,
+
     // Token
     allyTokenAddress: undefined, // Using testnet tokens
     allyTokenDecimals: 9,
     
     // Game
-    minWagerAmount: 10,
-    maxWagerAmount: 5000,
-    gameTimeoutMs: 300000, // 5 minutes
+    minWagerAmount: 0.01,
+    maxWagerAmount: 1,
+    gameTimeoutMs: 600000, // 10 minutes
     
     // App
     appName: 'Korus (Staging)',
@@ -113,23 +113,23 @@ const configs: Record<Environment, EnvironmentConfig> = {
   production: {
     // API
     apiUrl: process.env.EXPO_PUBLIC_API_URL || '',
-    
-    // Solana  (Using devnet for testing)
-    solanaCluster: 'solana:devnet',
-    solanaRpcUrl: 'https://api.devnet.solana.com',
-    gameEscrowProgramId: '9rLXaB3a8qeb55N119sC3mjK58LyPeXXnj8vEvm3EWFG',
+
+    // Solana - MAINNET
+    solanaCluster: 'solana:mainnet-beta',
+    solanaRpcUrl: process.env.EXPO_PUBLIC_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com',
+    gameEscrowProgramId: '4iUdAkPRmZLzUFXTLpt5QPGmUUtP6yfgpPpF3sLD9xtd',
     
     // Features - production only
-    smartContractsEnabled: false,
+    smartContractsEnabled: true,
     
     // Token (TODO: Add actual ALLY token address when deployed)
     allyTokenAddress: process.env.EXPO_PUBLIC_ALLY_TOKEN_ADDRESS,
     allyTokenDecimals: 9,
     
     // Game
-    minWagerAmount: 10,
-    maxWagerAmount: 1000,
-    gameTimeoutMs: 300000, // 5 minutes
+    minWagerAmount: 0.01,
+    maxWagerAmount: 1,
+    gameTimeoutMs: 600000, // 10 minutes
     
     // App
     appName: 'Korus',

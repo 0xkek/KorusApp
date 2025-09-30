@@ -31,8 +31,10 @@
   "type": "commonjs",
   "dependencies": {
     "@bonfida/spl-name-service": "^3.0.12",
+    "@coral-xyz/anchor": "^0.31.1",
     "@prisma/client": "^6.11.1",
     "@solana/spl-token": "^0.4.0",
+    "@solana/wallet-adapter-react": "^0.15.39",
     "@solana/web3.js": "^1.98.4",
     "@types/bcrypt": "^5.0.2",
     "@types/bs58": "^4.0.4",

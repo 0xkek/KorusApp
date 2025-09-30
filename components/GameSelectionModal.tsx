@@ -8,7 +8,7 @@ import { useTheme } from '../context/ThemeContext';
 import { Fonts, FontSizes } from '../constants/Fonts';
 import { config } from '../config/environment';
 
-type GameType = 'tictactoe' | 'connect4' | 'rps' | 'coinflip';
+type GameType = 'tictactoe' | 'connect4' | 'rps';
 
 interface Game {
   id: GameType;
@@ -43,16 +43,6 @@ const GAMES: Game[] = [
     difficulty: 'Easy'
   },
   {
-    id: 'coinflip',
-    name: 'Coin Flip',
-    icon: 'disc-outline',
-    description: 'Simple heads or tails',
-    minWager: config.minWagerAmount,
-    maxWager: config.maxWagerAmount,
-    duration: 'Instant',
-    difficulty: 'Easy'
-  },
-  {
     id: 'connect4',
     name: 'Connect 4',
     icon: 'apps-outline',
@@ -79,8 +69,9 @@ export default function GameSelectionModal({
 }: GameSelectionModalProps) {
   const { colors, gradients, isDarkMode } = useTheme();
   const [selectedGame, setSelectedGame] = useState<GameType | null>(null);
-  const [wager, setWager] = useState('100');
+  const [wager, setWager] = useState('0.01');
   const [showWagerInput, setShowWagerInput] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleGameSelect = (game: Game) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -92,15 +83,28 @@ export default function GameSelectionModal({
   const handleCreateGame = () => {
     if (!selectedGame) return;
     
-    const wagerAmount = parseInt(wager) || 0;
+    const wagerAmount = parseFloat(wager) || 0;
     const game = GAMES.find(g => g.id === selectedGame);
     
-    if (!game || wagerAmount < game.minWager || wagerAmount > game.maxWager) {
+    // Clear previous error
+    setErrorMessage('');
+    
+    if (!game) return;
+    
+    if (wagerAmount < game.minWager) {
+      setErrorMessage(`Minimum wager is ${game.minWager} SOL`);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+    
+    if (wagerAmount > game.maxWager) {
+      setErrorMessage(`Maximum wager is ${game.maxWager} SOL`);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
     if (wagerAmount > balance) {
+      setErrorMessage(`Insufficient balance. You have ${balance.toFixed(2)} SOL`);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
@@ -113,7 +117,8 @@ export default function GameSelectionModal({
   const resetModal = () => {
     setSelectedGame(null);
     setShowWagerInput(false);
-    setWager('100');
+    setWager('0.01');
+    setErrorMessage('');
     onClose();
   };
 
@@ -214,7 +219,7 @@ export default function GameSelectionModal({
 
                   <View style={styles.wagerInputContainer}>
                     <Text style={[styles.wagerLabel, { color: colors.textSecondary }]}>
-                      Wager Amount (ALLY)
+                      Wager Amount (SOL)
                     </Text>
                     
                     <View style={[styles.wagerInputWrapper, { backgroundColor: colors.surface }]}>
@@ -230,16 +235,16 @@ export default function GameSelectionModal({
                         placeholderTextColor={colors.textTertiary}
                       />
                       <Text style={[styles.currencyText, { color: colors.textSecondary }]}>
-                        ALLY
+                        SOL
                       </Text>
                     </View>
 
                     <View style={styles.wagerLimits}>
                       <Text style={[styles.limitText, { color: colors.textTertiary }]}>
-                        Min: {selectedGameData?.minWager} ALLY
+                        Min: {selectedGameData?.minWager} SOL
                       </Text>
                       <Text style={[styles.limitText, { color: colors.textTertiary }]}>
-                        Max: {selectedGameData?.maxWager} ALLY
+                        Max: {selectedGameData?.maxWager} SOL
                       </Text>
                     </View>
 
@@ -248,9 +253,18 @@ export default function GameSelectionModal({
                         Your Balance:
                       </Text>
                       <Text style={[styles.balanceAmount, { color: colors.primary }]}>
-                        {balance.toFixed(2)} ALLY
+                        {balance.toFixed(2)} SOL
                       </Text>
                     </View>
+                    
+                    {errorMessage ? (
+                      <View style={[styles.errorContainer, { backgroundColor: colors.error + '20' }]}>
+                        <Ionicons name="alert-circle" size={16} color={colors.error || '#ff4444'} />
+                        <Text style={[styles.errorText, { color: colors.error || '#ff4444' }]}>
+                          {errorMessage}
+                        </Text>
+                      </View>
+                    ) : null}
                   </View>
 
                   <View style={styles.actions}>
@@ -463,5 +477,18 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.base,
     fontFamily: Fonts.semiBold,
     color: '#000',
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  errorText: {
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.medium,
+    flex: 1,
   },
 });

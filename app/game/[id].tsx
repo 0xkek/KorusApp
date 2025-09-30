@@ -14,7 +14,6 @@ import { useGames } from '../../context/GameContext';
 import TicTacToeGame from '../../components/games/TicTacToeGame';
 import RockPaperScissorsGame from '../../components/games/RockPaperScissorsGame';
 import ConnectFourGame from '../../components/games/ConnectFourGame';
-import CoinFlipGame from '../../components/games/CoinFlipGameCompact';
 import { Fonts, FontSizes } from '../../constants/Fonts';
 import { userAPI } from '../../utils/api';
 import { logger } from '../../utils/logger';

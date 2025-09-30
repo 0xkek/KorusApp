@@ -282,7 +282,7 @@ export default function TicTacToeGame({
         <View style={styles.gameInfo}>
           <View style={[styles.wagerBadge, { backgroundColor: colors.primary + '20' }]}>
             <Text style={[styles.wagerText, { color: colors.primary }]}>
-              💰 {wager} ALLY
+              💰 {wager} SOL
             </Text>
           </View>
           
@@ -396,7 +396,7 @@ export default function TicTacToeGame({
                 
                 <View style={[styles.wagerInfo, { backgroundColor: colors.primary + '10' }]}>
                   <Text style={[styles.wagerLabel, { color: colors.textSecondary }]}>Wager Amount</Text>
-                  <Text style={[styles.wagerAmount, { color: colors.primary }]}>{wager} ALLY</Text>
+                  <Text style={[styles.wagerAmount, { color: colors.primary }]}>{wager} SOL</Text>
                 </View>
               </View>
               

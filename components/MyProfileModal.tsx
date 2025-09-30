@@ -23,7 +23,7 @@ export default function MyProfileModal({
   onClose,
   allPosts = [],
 }: MyProfileModalProps) {
-  const { walletAddress, balance, selectedAvatar, setSelectedAvatar, selectedNFTAvatar, setSelectedNFTAvatar, snsDomain, allSNSDomains, setFavoriteSNSDomain, isPremium, timeFunUsername, setTimeFunUsername } = useWallet();
+  const { walletAddress, balance, solBalance, selectedAvatar, setSelectedAvatar, selectedNFTAvatar, setSelectedNFTAvatar, snsDomain, allSNSDomains, setFavoriteSNSDomain, isPremium, timeFunUsername, setTimeFunUsername } = useWallet();
   const { colors, isDarkMode, gradients } = useTheme();
   const router = useRouter();
   const styles = createStyles(colors, isDarkMode);
@@ -68,7 +68,7 @@ export default function MyProfileModal({
       postsCount,
       tipsReceived,
       tipsGiven,
-      balance: balance.toFixed(2),
+      balance: (solBalance || 0).toFixed(2),
       favoriteCategories: favoriteCategories.length > 0 ? favoriteCategories : ['GENERAL', 'GAMES']
     };
   };
@@ -155,7 +155,7 @@ export default function MyProfileModal({
                         end={{ x: 1, y: 1 }}
                       >
                         <Text style={styles.smallBalanceAmount}>{profileData.balance}</Text>
-                        <Text style={styles.smallBalanceLabel}>$ALLY</Text>
+                        <Text style={styles.smallBalanceLabel}>SOL</Text>
                       </LinearGradient>
                     </BlurView>
                   </View>
