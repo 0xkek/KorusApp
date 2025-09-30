@@ -5,8 +5,8 @@ import { config } from '../../config/environment';
 import { logger } from '../logger';
 import { Platform } from 'react-native';
 
-// Program ID - Deployed to Solana Devnet
-export const GAME_ESCROW_PROGRAM_ID = new PublicKey('9jsNDSzvsRHH8KUhFwLdEeEKL6nTWhx4YgzmdkhEh1Te');
+// Program ID - Deployed to Solana Mainnet
+export const GAME_ESCROW_PROGRAM_ID = new PublicKey('4iUdAkPRmZLzUFXTLpt5QPGmUUtP6yfgpPpF3sLD9xtd');
 
 // Constants matching the contract
 const MINIMUM_WAGER = 0.01 * LAMPORTS_PER_SOL; // 0.01 SOL
@@ -169,9 +169,10 @@ export class GameEscrowCompleteService {
           logger.log('MWA transact callback started');
 
           try {
-            logger.log('Calling wallet.authorize...');
+            logger.log('🚀🚀🚀 WALLET AUTHORIZE - Cluster:', config.solanaCluster);
+            logger.log('🚀🚀🚀 WALLET AUTHORIZE - Environment:', process.env.EXPO_PUBLIC_ENVIRONMENT);
             const authResult = await wallet.authorize({
-              cluster: 'solana:devnet',
+              cluster: config.solanaCluster,
               identity: {
                 name: config.appName || 'Korus',
                 uri: config.appUrl || 'https://korus.app',
@@ -313,7 +314,7 @@ export class GameEscrowCompleteService {
 
         signature = await transact(async (wallet: any) => {
           await wallet.authorize({
-            cluster: 'solana:devnet',
+            cluster: config.solanaCluster,
             identity: {
               name: config.appName || 'Korus',
               uri: config.appUrl || 'https://korus.app',
@@ -437,7 +438,7 @@ export class GameEscrowCompleteService {
 
         signature = await transact(async (wallet: any) => {
           await wallet.authorize({
-            cluster: 'solana:devnet',
+            cluster: config.solanaCluster,
             identity: {
               name: config.appName || 'Korus',
               uri: config.appUrl || 'https://korus.app',
@@ -578,7 +579,7 @@ export class GameEscrowCompleteService {
 
         signature = await transact(async (wallet: any) => {
           await wallet.authorize({
-            cluster: 'solana:devnet',
+            cluster: config.solanaCluster,
             identity: {
               name: config.appName || 'Korus',
               uri: config.appUrl || 'https://korus.app',

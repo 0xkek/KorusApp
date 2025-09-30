@@ -11,7 +11,7 @@ interface EnvironmentConfig {
   apiUrl: string;
   
   // Solana Configuration
-  solanaCluster: 'solana:devnet' | 'solana:testnet' | 'solana:mainnet-beta';
+  solanaCluster: 'solana:devnet' | 'solana:testnet' | 'solana:mainnet';
   solanaRpcUrl: string;
   gameEscrowProgramId: string;
   
@@ -115,7 +115,7 @@ const configs: Record<Environment, EnvironmentConfig> = {
     apiUrl: process.env.EXPO_PUBLIC_API_URL || '',
 
     // Solana - MAINNET
-    solanaCluster: 'solana:mainnet-beta',
+    solanaCluster: 'solana:mainnet',
     solanaRpcUrl: process.env.EXPO_PUBLIC_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com',
     gameEscrowProgramId: '4iUdAkPRmZLzUFXTLpt5QPGmUUtP6yfgpPpF3sLD9xtd',
     

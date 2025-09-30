@@ -5,8 +5,8 @@ import { config } from '../../config/environment';
 import { logger } from '../logger';
 import { Platform } from 'react-native';
 
-// Program ID - Deployed to Solana Devnet
-export const GAME_ESCROW_PROGRAM_ID = new PublicKey('9jsNDSzvsRHH8KUhFwLdEeEKL6nTWhx4YgzmdkhEh1Te');
+// Program ID - Deployed to Solana Mainnet
+export const GAME_ESCROW_PROGRAM_ID = new PublicKey('4iUdAkPRmZLzUFXTLpt5QPGmUUtP6yfgpPpF3sLD9xtd');
 
 // Constants matching the contract
 const MINIMUM_WAGER = 0.01 * LAMPORTS_PER_SOL; // 0.01 SOL
@@ -128,7 +128,7 @@ export class GameEscrowDirectService {
 
           // Authorize
           await wallet.authorize({
-            cluster: 'devnet',
+            cluster: config.solanaCluster.replace('solana:', ''),
             identity: {
               name: config.appName || 'Korus',
               uri: config.appUrl || 'https://korus.app',
@@ -352,7 +352,7 @@ export class GameEscrowDirectService {
 
         signature = await transact(async (wallet: any) => {
           await wallet.authorize({
-            cluster: 'devnet',
+            cluster: config.solanaCluster.replace('solana:', ''),
             identity: {
               name: config.appName || 'Korus',
               uri: config.appUrl || 'https://korus.app',

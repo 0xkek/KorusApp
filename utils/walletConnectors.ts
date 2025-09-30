@@ -116,23 +116,26 @@ export const connectAndSignWithMWA = async (message: string): Promise<{ address:
         logger.log('Wallet type:', wallet?.constructor?.name || 'unknown');
       // Authorize in the same session
       logger.log('Authorizing wallet...');
-      logger.log('Requesting authorization with:', {
-        cluster: config.network === 'mainnet-beta' ? 'solana:mainnet' : 'solana:devnet',
-        identity: APP_IDENTITY,
-      });
 
-      // Try simpler authorization first for better compatibility
+      // MWA 2.0 spec: Use 'solana:mainnet', 'solana:devnet', 'solana:testnet'
+      // Legacy: 'mainnet-beta', 'devnet', 'testnet'
+      logger.log('🔍 Using cluster:', config.solanaCluster);
+
+      // Try with the full 'solana:mainnet' format (MWA 2.0)
       let authResult;
       try {
+        logger.log('🚀 Calling wallet.authorize with:', config.solanaCluster);
         authResult = await wallet.authorize({
-          cluster: config.network === 'mainnet-beta' ? 'mainnet' : 'devnet',
+          cluster: config.solanaCluster,
           identity: APP_IDENTITY,
         });
       } catch (firstError) {
-        logger.log('First auth attempt failed, trying with solana: prefix');
-        // Some wallets need the 'solana:' prefix
+        logger.log('MWA 2.0 format failed, trying legacy format');
+        // Try legacy format: 'mainnet-beta' instead of 'solana:mainnet-beta'
+        const legacyCluster = config.solanaCluster.replace('solana:', '');
+        logger.log('🚀 Trying legacy cluster:', legacyCluster);
         authResult = await wallet.authorize({
-          cluster: config.network === 'mainnet-beta' ? 'solana:mainnet' : 'solana:devnet',
+          cluster: legacyCluster,
           identity: APP_IDENTITY,
         });
       }
