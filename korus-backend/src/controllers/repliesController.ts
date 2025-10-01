@@ -68,7 +68,7 @@ export const createReply = async (req: AuthRequest, res: Response) => {
     // Run auto-moderation on the new reply
     await autoModerate('reply', reply.id, content)
 
-    // Record interaction for $ALLY calculation (fixed with upsert)
+    // Record interaction for reputation calculation (fixed with upsert)
     // Each reply to a post gives the post author 3 points
     await prisma.interaction.upsert({
       where: {

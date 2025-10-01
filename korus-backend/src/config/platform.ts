@@ -9,8 +9,8 @@ export const PLATFORM_CONFIG = {
   // Platform wallet private key for distributions (keep secure!)
   PLATFORM_WALLET_PRIVATE_KEY: process.env.PLATFORM_WALLET_PRIVATE_KEY,
   
-  // ALLY token mint address
-  ALLY_TOKEN_MINT: process.env.ALLY_TOKEN_MINT || '',
+  // SOL is native, no token mint needed
+  // ALLY_TOKEN_MINT: process.env.ALLY_TOKEN_MINT || '',
   
   // Distribution settings
   PLATFORM_FEE_PERCENT: 50, // Platform keeps 50% total
@@ -22,8 +22,8 @@ export const PLATFORM_CONFIG = {
   TEAM_WALLET_ADDRESS: process.env.TEAM_WALLET_ADDRESS || '',
   
   // Minimum amounts
-  MIN_POOL_SIZE: 1000, // Minimum 1000 ALLY to trigger distribution
-  MIN_USER_EARNING: 10, // Users must earn at least 10 ALLY to receive distribution
+  MIN_POOL_SIZE: 1, // Minimum 1 SOL to trigger distribution
+  MIN_USER_EARNING: 0.01, // Users must earn at least 0.01 SOL to receive distribution
 };
 
 /**

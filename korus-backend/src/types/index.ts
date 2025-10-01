@@ -8,7 +8,7 @@ export interface User {
   tier: 'standard' | 'premium';
   walletSource: 'app' | 'seeker';
   genesisVerified: boolean;
-  allyBalance: bigint;
+  solBalance: bigint;
   createdAt: Date;
   updatedAt: Date;
 }

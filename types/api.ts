@@ -25,7 +25,7 @@ export interface AuthResponse {
     walletAddress: string;
     tier: 'standard' | 'premium';
     genesisVerified: boolean;
-    allyBalance: string;
+    solBalance: string;
     createdAt: string;
   };
 }

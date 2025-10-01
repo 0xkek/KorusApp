@@ -92,9 +92,9 @@ const swaggerOptions: swaggerJsdoc.Options = {
               type: 'boolean',
               example: false,
             },
-            allyBalance: {
+            solBalance: {
               type: 'string',
-              example: '5000',
+              example: '5',
             },
             snsUsername: {
               type: 'string',

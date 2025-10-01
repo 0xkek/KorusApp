@@ -111,7 +111,7 @@ export default function TipSuccessModal({ visible, onClose, amount, username }: 
             </Text>
             
             <Text style={[styles.message, { color: colors.textSecondary }]}>
-              You sent {amount} $ALLY to
+              You sent {amount} SOL to
             </Text>
             
             <Text style={[styles.username, { color: colors.primary }]}>

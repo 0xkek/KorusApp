@@ -83,7 +83,6 @@ const connection = new Connection(clusterApiUrl(SOLANA_NETWORK as any), 'confirm
 
 export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [balance, setBalance] = useState(0);
   const [solBalance, setSolBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
@@ -135,7 +134,6 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
             logger.log('checkExistingSession - Session is valid, loading preferences...');
             setWalletAddress(storedAddress);
             setIsConnected(true);
-            setBalance(parseFloat(profile.user.allyBalance || '0'));
             setIsPremium(profile.user.tier === 'premium');
             
             // Load user preferences
@@ -248,8 +246,6 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       setWalletAddress(publicKey);
       setIsConnected(true);
       setCurrentProvider(provider);
-      const backendBalance = parseFloat(authResult.user?.allyBalance || '0');
-      setBalance(isNaN(backendBalance) ? 0 : backendBalance);
       setIsPremium(authResult.user?.tier === 'premium');
       
       // Load user preferences
@@ -308,7 +304,6 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       setWalletAddress(null);
       setIsConnected(false);
       setCurrentProvider(null);
-      setBalance(0);
       setSolBalance(0);
       setIsPremium(false);
       setSelectedAvatarState(null);
@@ -424,12 +419,6 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     try {
       if (walletAddress) {
         await updateSolBalance(walletAddress);
-        
-        // Also refresh balance from backend
-        const profile = await authAPI.getProfile();
-        if (profile.user) {
-          setBalance(parseFloat(profile.user.allyBalance || '0'));
-        }
       }
     } catch (error) {
       logger.error('Error refreshing balance:', error);
@@ -437,7 +426,8 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   };
 
   const deductBalance = (amount: number) => {
-    setBalance(prev => Math.max(0, prev - amount));
+    // Deduct from SOL balance instead
+    setSolBalance(prev => Math.max(0, prev - amount));
   };
 
   const refreshSNSDomain = async () => {

@@ -40,7 +40,7 @@ describe('Authentication Endpoints', () => {
         walletAddress: mockWalletAddress,
         tier: 'standard',
         genesisVerified: false,
-        allyBalance: 5000n,
+        solBalance: 5000n,
         createdAt: new Date(),
       });
 
@@ -97,7 +97,7 @@ describe('Authentication Endpoints', () => {
         walletAddress: mockWalletAddress,
         tier: 'premium',
         genesisVerified: true,
-        allyBalance: 5000n,
+        solBalance: 5000n,
         createdAt: new Date(),
       });
 
@@ -119,7 +119,7 @@ describe('Authentication Endpoints', () => {
         walletAddress: mockWalletAddress,
         tier: 'standard',
         genesisVerified: false,
-        allyBalance: 10000n,
+        solBalance: 10000n,
         createdAt: new Date('2025-01-01'),
       };
 
@@ -135,7 +135,7 @@ describe('Authentication Endpoints', () => {
         });
 
       expect(response.status).toBe(200);
-      expect(response.body.user.allyBalance).toBe('10000');
+      expect(response.body.user.solBalance).toBe('10000');
       expect(prisma.user.create).not.toHaveBeenCalled();
     });
   });
@@ -146,7 +146,7 @@ describe('Authentication Endpoints', () => {
         walletAddress: mockWalletAddress,
         tier: 'standard',
         genesisVerified: false,
-        allyBalance: 5000n,
+        solBalance: 5000n,
         displayName: 'Test User',
         bio: 'Test bio',
         createdAt: new Date(),
@@ -176,7 +176,7 @@ describe('Authentication Endpoints', () => {
         res.json({
           user: {
             ...user,
-            allyBalance: user.allyBalance.toString(),
+            solBalance: user.solBalance.toString(),
           },
         });
       });
@@ -211,7 +211,7 @@ describe('Authentication Endpoints', () => {
         walletAddress: mockWalletAddress,
         ...updates,
         tier: 'standard',
-        allyBalance: 5000n,
+        solBalance: 5000n,
       });
 
       // Create authenticated request
@@ -233,7 +233,7 @@ describe('Authentication Endpoints', () => {
           success: true,
           user: {
             ...updatedUser,
-            allyBalance: updatedUser.allyBalance.toString(),
+            solBalance: updatedUser.solBalance.toString(),
           },
         });
       });

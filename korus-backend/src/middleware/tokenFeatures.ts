@@ -10,7 +10,7 @@ export function requireTokenFeatures(req: Request, res: Response, next: NextFunc
     return res.status(503).json({
       success: false,
       message: 'Token features are temporarily disabled',
-      info: 'ALLY token distribution coming soon!',
+      info: 'SOL tipping is now available!',
       comingSoon: true
     });
   }

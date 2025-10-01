@@ -4,7 +4,7 @@ CREATE TABLE "users" (
     "tier" TEXT NOT NULL DEFAULT 'standard',
     "walletSource" TEXT NOT NULL DEFAULT 'app',
     "genesisVerified" BOOLEAN NOT NULL DEFAULT false,
-    "allyBalance" DECIMAL(18,6) NOT NULL DEFAULT 0,
+    "solBalance" DECIMAL(18,6) NOT NULL DEFAULT 0,
     "totalInteractionScore" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,

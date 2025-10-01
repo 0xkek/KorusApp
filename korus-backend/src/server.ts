@@ -93,12 +93,23 @@ if (process.env.NODE_ENV === 'production') {
   app.use(morgan('dev'))
 }
 
-app.use(express.json())
+// Request size limits to prevent JSON bomb attacks
+app.use(express.json({ limit: '100kb' }))
 app.use(sanitizeBody) // Sanitize all inputs
 
 // Request/Response logging
 app.use(requestLogger)
 app.use(performanceLogger(1000)) // Log requests taking > 1 second
+
+// HTTPS enforcement in production
+if (process.env.NODE_ENV === 'production') {
+  app.use((req: any, res: any, next: any) => {
+    if (req.header('x-forwarded-proto') !== 'https') {
+      return res.redirect(301, `https://${req.header('host')}${req.url}`)
+    }
+    next()
+  })
+}
 
 // Swagger API documentation (only in development)
 if (process.env.NODE_ENV !== 'production') {
@@ -110,6 +121,10 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Apply rate limiting to all API routes
 app.use('/api', apiLimiter)
+
+// CSRF Protection for all state-changing API requests
+// Must come after express.json() and before routes
+app.use('/api', validateCSRFToken)
 
 // Routes
 app.use('/', healthRoutes)

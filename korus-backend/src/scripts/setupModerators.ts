@@ -30,7 +30,7 @@ async function setupModerators() {
         create: {
           walletAddress,
           tier: 'admin',
-          allyBalance: 0
+          solBalance: 0
         }
       })
       console.log(`✅ Set ${walletAddress} as admin`)
@@ -44,7 +44,7 @@ async function setupModerators() {
         create: {
           walletAddress,
           tier: 'moderator',
-          allyBalance: 0
+          solBalance: 0
         }
       })
       console.log(`✅ Set ${walletAddress} as moderator`)

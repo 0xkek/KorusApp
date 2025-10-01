@@ -44,7 +44,7 @@ const ACHIEVEMENT_DEFINITIONS: Achievement[] = [
   {
     id: 'diamond_hands',
     name: 'Diamond Hands',
-    description: 'Hold 10,000 $ALLY',
+    description: 'Hold 10 SOL',
     icon: '💎',
     points: 1000
   },
@@ -59,7 +59,7 @@ const ACHIEVEMENT_DEFINITIONS: Achievement[] = [
   {
     id: 'tip_generous',
     name: 'Generous Tipper',
-    description: 'Tip 5000 $ALLY total',
+    description: 'Tip 5 SOL total',
     icon: '💰',
     points: 600,
     maxProgress: 5000
@@ -317,25 +317,25 @@ class ReputationService {
   }
 
   async onTipSent(walletAddress: string, amount: number) {
-    const points = Math.floor(amount / 100) * 10; // 10 points per 100 ALLY
+    const points = Math.floor(amount * 1000) * 10; // 10 points per 0.001 SOL
     return this.addReputationPoints(
       walletAddress,
       'engagement',
       points,
       'tip',
-      `Tipped ${amount} $ALLY`,
+      `Tipped ${amount} SOL`,
       { amount }
     );
   }
 
   async onTipReceived(authorWallet: string, amount: number) {
-    const points = Math.floor(amount / 100) * 15; // 15 points per 100 ALLY
+    const points = Math.floor(amount * 1000) * 15; // 15 points per 0.001 SOL
     return this.addReputationPoints(
       authorWallet,
       'engagement',
       points,
       'tip',
-      `Received ${amount} $ALLY tip`,
+      `Received ${amount} SOL tip`,
       { amount }
     );
   }

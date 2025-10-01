@@ -539,13 +539,16 @@ export const interactionsAPI = {
     }
   },
   
-  async tipPost(postId: string, amount: number) {
+  async tipPost(postId: string, amount: number, transactionSignature: string) {
     // Tips require online connection (blockchain transaction)
     if (!offlineManager.getIsOnline()) {
       throw new Error('Tips require an internet connection');
     }
-    
-    const response = await api.post(`/interactions/posts/${postId}/tip`, { amount });
+
+    const response = await api.post(`/interactions/posts/${postId}/tip`, {
+      amount,
+      transactionSignature
+    });
     // Invalidate interactions cache
     offlineManager.invalidateCache(`interactions_${postId}`);
     return response.data;

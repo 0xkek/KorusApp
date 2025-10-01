@@ -158,7 +158,7 @@ export default function GameScreen() {
     
     showAlert({
       title: 'Game Joined!',
-      message: `You've joined the ${getGameName()} game with ${gameData.wager} ALLY wager.`,
+      message: `You've joined the ${getGameName()} game with ${gameData.wager} SOL wager.`,
       type: 'success'
     });
   };
@@ -353,7 +353,7 @@ export default function GameScreen() {
             end={{ x: 1, y: 1 }}
           >
             <Text style={styles.wagerAmount}>{gameData.wager}</Text>
-            <Text style={styles.wagerLabel}>ALLY</Text>
+            <Text style={styles.wagerLabel}>SOL</Text>
           </LinearGradient>
           
           {/* Timer/Status */}
@@ -579,7 +579,7 @@ export default function GameScreen() {
               end={{ x: 1, y: 1 }}
             >
               <Text style={[styles.joinText, { color: isDarkMode ? '#000' : '#fff' }]}>
-                Join Game • {gameData.wager} ALLY
+                Join Game • {gameData.wager} SOL
               </Text>
             </LinearGradient>
           </TouchableOpacity>

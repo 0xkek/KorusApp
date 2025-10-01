@@ -48,8 +48,8 @@ router.post('/posts/:id/like', authenticate, validateLike, likePost)
  * /api/interactions/posts/{id}/tip:
  *   post:
  *     tags: [Interactions]
- *     summary: Tip a post with $ALLY
- *     description: Send a tip to a post author using $ALLY tokens (requires token features enabled)
+ *     summary: Tip a post with SOL
+ *     description: Send a tip to a post author using SOL (requires blockchain transaction)
  *     security:
  *       - bearerAuth: []
  *       - csrfToken: []
@@ -69,7 +69,7 @@ router.post('/posts/:id/like', authenticate, validateLike, likePost)
  *                 minimum: 0.000001
  *                 maximum: 1000000
  *                 example: 100
- *                 description: Amount of $ALLY to tip
+ *                 description: Amount of SOL to tip
  *     responses:
  *       200:
  *         description: Tip sent successfully
@@ -93,7 +93,7 @@ router.post('/posts/:id/like', authenticate, validateLike, likePost)
  *                       type: string
  *                 newBalance:
  *                   type: string
- *                   description: Sender's new $ALLY balance
+ *                   description: Sender's new SOL balance
  *       400:
  *         description: Insufficient balance or invalid amount
  *       401:

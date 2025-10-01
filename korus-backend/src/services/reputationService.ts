@@ -27,12 +27,12 @@ class ReputationService {
     // Engagement given
     LIKE_GIVEN: 1,
     COMMENT_MADE: 5,
-    TIP_SENT_PER_100: 10, // 10 points per 100 ALLY tipped
+    TIP_SENT_PER_100: 10, // 10 points per 0.1 SOL tipped
     
     // Engagement received
     LIKE_RECEIVED: 2,
     COMMENT_RECEIVED: 3,
-    TIP_RECEIVED_PER_100: 15, // 15 points per 100 ALLY received
+    TIP_RECEIVED_PER_100: 15, // 15 points per 0.1 SOL received
     
     // Games
     GAME_WON: 20,
@@ -220,7 +220,7 @@ class ReputationService {
       eventType: 'tip_sent',
       category: 'engagement',
       points,
-      description: `Sent ${amount} ALLY tip`,
+      description: `Sent ${amount} SOL tip`,
       metadata: { amount },
     });
   }
@@ -237,7 +237,7 @@ class ReputationService {
       eventType: 'tip_received',
       category: 'engagement',
       points,
-      description: `Received ${amount} ALLY tip`,
+      description: `Received ${amount} SOL tip`,
       metadata: { amount },
     });
   }
@@ -261,7 +261,7 @@ class ReputationService {
       eventType: 'game_won',
       category: 'engagement',
       points: winnerPoints,
-      description: `Won ${gameType} game with ${wager} ALLY wager`,
+      description: `Won ${gameType} game with ${wager} SOL wager`,
       metadata: { gameType, wager },
     });
 

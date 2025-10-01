@@ -47,7 +47,7 @@ export default function EventsView() {
       description: 'Get early access to the next-gen AMM on Solana. Limited spots available.',
       startTime: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours from now
       imageUrl: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&q=80',
-      requirements: ['Hold 100+ $ALLY', 'Complete KYC', 'Active Korus user'],
+      requirements: ['Hold 1+ SOL', 'Complete KYC', 'Active Korus user'],
       allocation: '500 USDC',
       chain: 'Solana',
       participants: 234,

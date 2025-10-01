@@ -21,7 +21,6 @@ import { postAvatarCache } from '../../services/postAvatarCache';
 import { Fonts, FontSizes } from '../../constants/Fonts';
 import { useLoadPosts } from '../../hooks/useLoadPosts';
 import { postsAPI, interactionsAPI, repliesAPI, userAPI, gamesAPI } from '../../utils/api';
-import { testBackendConnection } from '../../utils/testApi';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { FeedSkeleton } from '../../components/SkeletonLoader';
 import { getErrorMessage } from '../../utils/errorHandler';
@@ -125,9 +124,6 @@ export default function HomeScreen() {
     
     // Load sponsored posts preference
     loadHideSponsoredPreference();
-    
-    // Test backend connection
-    testBackendConnection();
     
     // Test Cloudinary connection for image issues
     import('../../utils/imageUpload').then(({ testCloudinaryConnection }) => {
@@ -1081,40 +1077,82 @@ export default function HomeScreen() {
   };
 
   const handleTip = async (postId: number, amount: number) => {
-    // Check if user has sufficient balance
+    // Check if user has sufficient SOL balance
     if (amount > balance) {
       showAlert({
         title: 'Insufficient Funds',
-        message: `You only have ${balance.toFixed(2)} $ALLY in your wallet. Please enter a smaller amount.`,
+        message: `You only have ${balance.toFixed(4)} SOL in your wallet. Please enter a smaller amount.`,
         type: 'info'
       });
       return;
     }
 
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+
     try {
+      // Show loading state
+      showAlert({
+        title: 'Sending Tip',
+        message: `Sending ${amount} SOL to ${post.wallet.slice(0, 8)}...`,
+        type: 'info'
+      });
+
+      // Send SOL transaction using wallet adapter
+      if (!currentProvider || !signAndSendTransaction) {
+        throw new Error('Wallet not connected');
+      }
+
+      const { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } = await import('@solana/web3.js');
+      const { Connection, clusterApiUrl } = await import('@solana/web3.js');
+
+      const connection = new Connection(clusterApiUrl('mainnet-beta'), 'confirmed');
+      const recipientPubkey = new PublicKey(post.wallet);
+      const senderPubkey = new PublicKey(walletAddress!);
+
+      // Create transfer instruction
+      const transaction = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: senderPubkey,
+          toPubkey: recipientPubkey,
+          lamports: Math.floor(amount * LAMPORTS_PER_SOL),
+        })
+      );
+
+      // Set recent blockhash
+      const { blockhash } = await connection.getLatestBlockhash('confirmed');
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = senderPubkey;
+
+      // Sign and send transaction
+      const signature = await signAndSendTransaction(transaction);
+
+      if (!signature) {
+        throw new Error('Transaction failed');
+      }
+
+      logger.info('Tip transaction sent:', signature);
+
       // Optimistically update UI
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      
-      // Deduct from wallet balance
+
+      // Deduct from SOL wallet balance
       deductBalance(amount);
-      
+
       // Update post tips optimistically
-      setPosts(prevPosts => prevPosts.map(post =>
-        post.id === postId
-          ? { ...post, tips: post.tips + amount }
-          : post
+      setPosts(prevPosts => prevPosts.map(p =>
+        p.id === postId
+          ? { ...p, tips: p.tips + amount }
+          : p
       ));
 
       // Show tip success modal
-      const post = posts.find(p => p.id === postId);
-      if (post) {
-        setTipSuccessData({ amount, username: post.wallet });
-        setShowTipSuccessModal(true);
-        setShowTipModal(false); // Close the tip modal
-      }
+      setTipSuccessData({ amount, username: post.wallet });
+      setShowTipSuccessModal(true);
+      setShowTipModal(false); // Close the tip modal
 
-      // Call API in background
-      const response = await interactionsAPI.tipPost(String(postId), amount);
+      // Call API to record tip with transaction signature
+      const response = await interactionsAPI.tipPost(String(postId), amount, signature);
       
       // If API call fails, revert the changes
       if (!response.success) {

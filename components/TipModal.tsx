@@ -13,10 +13,10 @@ const validateTipAmount = (amount: number, balance: number) => {
     return { valid: false, error: 'Please enter an amount greater than 0' };
   }
   if (amount > balance) {
-    return { valid: false, error: `Insufficient balance. You have ${balance.toFixed(2)} $ALLY` };
+    return { valid: false, error: `Insufficient balance. You have ${balance.toFixed(4)} SOL` };
   }
-  if (amount > 10000) {
-    return { valid: false, error: 'Maximum tip amount is 10,000 $ALLY' };
+  if (amount > 10) {
+    return { valid: false, error: 'Maximum tip amount is 10 SOL' };
   }
   return { valid: true, error: '' };
 };
@@ -112,9 +112,9 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
                 <Ionicons name="cash-outline" size={28} color={colors.primary} style={{ marginRight: 8 }} />
                 <Text style={[styles.title, { color: colors.primary, textShadowColor: `${colors.primary}66` }]}>Tip {username}</Text>
               </View>
-              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Enter amount in $ALLY tokens</Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Enter amount in SOL</Text>
               <Text style={[styles.balanceText, { color: colors.primary, textShadowColor: `${colors.primary}66` }]}>
-                Balance: {safeBalance.toFixed(2)} $ALLY
+                Balance: {safeBalance.toFixed(4)} SOL
               </Text>
             </View>
 
@@ -127,7 +127,7 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
-                  <Text style={[styles.currencySymbol, { color: colors.primary, textShadowColor: `${colors.primary}66` }]}>$ALLY</Text>
+                  <Text style={[styles.currencySymbol, { color: colors.primary, textShadowColor: `${colors.primary}66` }]}>SOL</Text>
                   <TextInput
                     style={[
                       styles.amountInput,
@@ -154,7 +154,7 @@ export default function TipModal({ visible, onClose, onTip, username, walletBala
             {isInsufficient && tipAmount && (
               <View style={[styles.warningContainer, { backgroundColor: `${colors.error}1A`, borderColor: `${colors.error}4D` }]}>
                 <Text style={[styles.warningText, { color: colors.error }]}>
-                  ⚠️ Insufficient funds. You can tip up to {safeBalance.toFixed(2)} $ALLY
+                  ⚠️ Insufficient funds. You can tip up to {safeBalance.toFixed(4)} SOL
                 </Text>
               </View>
             )}

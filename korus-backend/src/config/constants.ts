@@ -5,7 +5,7 @@
 
 // Token configuration
 export const TOKEN_CONFIG = {
-  INITIAL_ALLY_BALANCE: Number(process.env.INITIAL_ALLY_BALANCE || 5000),
+  INITIAL_SOL_BALANCE: Number(process.env.INITIAL_SOL_BALANCE || 0),
   ENABLE_TOKEN_FEATURES: process.env.ENABLE_TOKEN_FEATURES === 'true'
 }
 

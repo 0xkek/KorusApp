@@ -130,7 +130,7 @@ export default function WalletScreen() {
                   <Ionicons name="refresh-outline" size={20} color={colors.textSecondary} />
                 </TouchableOpacity>
               </View>
-              <Text style={styles.balanceAmount}>{balance.toFixed(2)} ALLY</Text>
+              <Text style={styles.balanceAmount}>{balance.toFixed(4)} SOL</Text>
               
               {/* Action Buttons */}
               <View style={styles.balanceActions}>

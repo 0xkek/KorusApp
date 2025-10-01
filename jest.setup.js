@@ -2,7 +2,6 @@
 
 // Set required environment variables for tests
 process.env.EXPO_PUBLIC_SOLANA_NETWORK = 'devnet';
-process.env.EXPO_PUBLIC_ALLY_TOKEN_ADDRESS = 'test-token-address';
 process.env.EXPO_PUBLIC_API_URL = 'http://localhost:3000';
 
 // Mock Solana web3.js

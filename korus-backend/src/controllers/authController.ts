@@ -39,7 +39,47 @@ export const connectWallet = asyncHandler(async (req: Request, res: Response) =>
       logger.debug('Wallet address:', walletAddress)
       logger.debug('Timestamp:', new Date().toISOString())
     }
-    
+
+    // Validate timestamp to prevent replay attacks
+    const timestampMatch = message.match(/Timestamp:\s*(\d+)/);
+    if (timestampMatch) {
+      const messageTimestamp = parseInt(timestampMatch[1]);
+      const now = Date.now();
+      const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+      if (isNaN(messageTimestamp)) {
+        logger.error('Invalid timestamp format in message');
+        throw new AuthenticationError('Invalid message format');
+      }
+
+      // Check if message is too old
+      if (now - messageTimestamp > fiveMinutes) {
+        logger.error('Signature expired:', {
+          messageTime: new Date(messageTimestamp).toISOString(),
+          currentTime: new Date(now).toISOString(),
+          ageMinutes: Math.floor((now - messageTimestamp) / 60000)
+        });
+        throw new AuthenticationError('Signature expired. Please sign a new message.');
+      }
+
+      // Check if message is from the future (clock skew protection)
+      if (messageTimestamp > now + 60000) { // Allow 1 minute clock skew
+        logger.error('Signature timestamp from future:', {
+          messageTime: new Date(messageTimestamp).toISOString(),
+          currentTime: new Date(now).toISOString()
+        });
+        throw new AuthenticationError('Invalid signature timestamp');
+      }
+
+      logger.debug('Timestamp validation passed:', {
+        age: Math.floor((now - messageTimestamp) / 1000) + ' seconds'
+      });
+    } else {
+      // For backward compatibility, warn but don't reject messages without timestamps yet
+      logger.warn('Message does not contain timestamp - signature replay possible');
+      // TODO: Make timestamp required after all clients updated
+    }
+
     // Verify the signature
     logger.debug('About to verify signature...')
     let isValid = false
@@ -52,7 +92,7 @@ export const connectWallet = asyncHandler(async (req: Request, res: Response) =>
       logger.error('Error stack:', error?.stack)
       throw new AuthenticationError('Signature verification failed')
     }
-    
+
     // Check if signature is valid
     if (!isValid) {
       logger.error('Authentication failed: Invalid signature for wallet:', walletAddress)
@@ -123,7 +163,7 @@ export const connectWallet = asyncHandler(async (req: Request, res: Response) =>
           tier: hasGenesisToken ? 'premium' : 'standard',
           walletSource: hasGenesisToken ? 'seeker' : 'app',
           genesisVerified: hasGenesisToken,
-          allyBalance: TOKEN_CONFIG.INITIAL_ALLY_BALANCE,
+          solBalance: TOKEN_CONFIG.INITIAL_SOL_BALANCE,
           totalInteractionScore: 0
         }
         
@@ -138,7 +178,7 @@ export const connectWallet = asyncHandler(async (req: Request, res: Response) =>
           logger.debug('User details:', {
             wallet: user.walletAddress,
             tier: user.tier,
-            balance: user.allyBalance.toString(),
+            balance: user.solBalance.toString(),
             createdAt: user.createdAt
           })
         }
@@ -210,7 +250,7 @@ export const connectWallet = asyncHandler(async (req: Request, res: Response) =>
         walletAddress: user.walletAddress,
         tier: user.tier || 'standard',
         genesisVerified: user.genesisVerified || false,
-        allyBalance: user.allyBalance ? user.allyBalance.toString() : TOKEN_CONFIG.INITIAL_ALLY_BALANCE.toString(),
+        solBalance: user.solBalance ? user.solBalance.toString() : TOKEN_CONFIG.INITIAL_SOL_BALANCE.toString(),
         createdAt: user.createdAt ? user.createdAt.toISOString() : new Date().toISOString()
       },
       expiresIn: '7d'
@@ -244,14 +284,14 @@ export const getProfile = asyncHandler(async (req: AuthRequest, res: Response) =
     logger.debug('Profile found:', {
       wallet: user.walletAddress,
       tier: user.tier,
-      balance: user.allyBalance.toString()
+      balance: user.solBalance.toString()
     })
   }
 
   res.json({
     user: {
       ...user,
-      allyBalance: user.allyBalance.toString()
+      solBalance: user.solBalance.toString()
     }
   })
 })
@@ -290,7 +330,7 @@ export const updateProfile = asyncHandler(async (req: AuthRequest, res: Response
     success: true,
     user: {
       ...updatedUser,
-      allyBalance: updatedUser.allyBalance.toString()
+      solBalance: updatedUser.solBalance.toString()
     }
   })
 })

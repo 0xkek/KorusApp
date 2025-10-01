@@ -101,13 +101,13 @@ export default function WalletModal({ visible, onClose }: WalletModalProps) {
     setShowSwapModal(true);
   };
 
-  const handleAllyClick = () => {
-    const allyToken: Token = {
-      symbol: 'ALLY',
+  const handleSolClick = () => {
+    const solToken: Token = {
+      symbol: 'SOL',
       balance: balance,
-      usdValue: balance * 0.5, // Mock USD value
+      usdValue: balance * 150, // Approximate SOL USD value
     };
-    handleTokenClick(allyToken);
+    handleTokenClick(solToken);
   };
 
   return (
@@ -154,26 +154,26 @@ export default function WalletModal({ visible, onClose }: WalletModalProps) {
 
             {/* Balance Section */}
             <View style={styles.balanceSection}>
-              {/* ALLY Balance Card */}
-              <TouchableOpacity style={styles.allyCard} activeOpacity={0.8} onPress={handleAllyClick}>
+              {/* SOL Balance Card */}
+              <TouchableOpacity style={styles.solCard} activeOpacity={0.8} onPress={handleSolClick}>
                 <LinearGradient
                   colors={gradients.primary}
-                  style={styles.allyGradient}
+                  style={styles.solGradient}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
-                  <View style={styles.allyContent}>
-                    <View style={styles.allyLeft}>
+                  <View style={styles.solContent}>
+                    <View style={styles.solLeft}>
                       <View style={styles.tokenIcon}>
                         <Text style={styles.tokenIconText}>A</Text>
                       </View>
                       <View>
-                        <Text style={styles.allySymbol}>$ALLY</Text>
-                        <Text style={styles.allyLabel}>Main Token</Text>
+                        <Text style={styles.solSymbol}>SOL</Text>
+                        <Text style={styles.solLabel}>Main Token</Text>
                       </View>
                     </View>
-                    <View style={styles.allyRight}>
-                      <Text style={styles.allyBalance}>{balance.toFixed(2)}</Text>
+                    <View style={styles.solRight}>
+                      <Text style={styles.solBalance}>{balance.toFixed(2)}</Text>
                       <TouchableOpacity onPress={handleRefreshBalance} style={styles.refreshIcon}>
                         <Ionicons 
                           name="refresh-outline" 
@@ -375,7 +375,7 @@ export default function WalletModal({ visible, onClose }: WalletModalProps) {
       }}
       selectedToken={selectedTokenForSwap}
       tokens={[
-        { symbol: 'ALLY', balance: balance, usdValue: balance * 0.5 },
+        { symbol: 'SOL', balance: balance, usdValue: balance * 150 },
         ...otherTokens
       ]}
     />
@@ -453,7 +453,7 @@ const createStyles = (colors: any, isDarkMode: boolean) => {
   balanceSection: {
     marginBottom: 20,
   },
-  allyCard: {
+  solCard: {
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 12,
@@ -463,16 +463,16 @@ const createStyles = (colors: any, isDarkMode: boolean) => {
     shadowRadius: 8,
     elevation: 4,
   },
-  allyGradient: {
+  solGradient: {
     borderRadius: 16,
     padding: 16,
   },
-  allyContent: {
+  solContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  allyLeft: {
+  solLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
@@ -490,23 +490,23 @@ const createStyles = (colors: any, isDarkMode: boolean) => {
     fontFamily: Fonts.bold,
     color: isDarkMode ? '#000' : '#fff',
   },
-  allySymbol: {
+  solSymbol: {
     fontSize: FontSizes.base,
     fontFamily: Fonts.bold,
     color: isDarkMode ? '#000' : '#fff',
   },
-  allyLabel: {
+  solLabel: {
     fontSize: FontSizes.xs,
     fontFamily: Fonts.regular,
     color: isDarkMode ? '#000' : '#fff',
     opacity: 0.7,
   },
-  allyRight: {
+  solRight: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  allyBalance: {
+  solBalance: {
     fontSize: FontSizes.xl,
     fontFamily: Fonts.bold,
     color: isDarkMode ? '#000' : '#fff',

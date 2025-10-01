@@ -86,8 +86,17 @@ export const likePost = async (req: AuthRequest, res: Response) => {
 export const tipPost = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params
-    const { amount = 1 } = req.body // Default 1 $ALLY tip
+    const { amount, transactionSignature } = req.body
     const walletAddress = req.userWallet!
+
+    // Validate inputs
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ error: 'Invalid tip amount' })
+    }
+
+    if (!transactionSignature) {
+      return res.status(400).json({ error: 'Transaction signature required for SOL tips' })
+    }
 
     // Check if post exists
     const post = await prisma.post.findUnique({ where: { id } })
@@ -100,7 +109,15 @@ export const tipPost = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Cannot tip your own post' })
     }
 
-    // Create tip interaction
+    // TODO: Verify SOL transaction on-chain
+    // For now, we trust the frontend sent the transaction
+    // In production, you should:
+    // 1. Verify transaction signature exists on-chain
+    // 2. Verify transaction is from walletAddress → post.authorWallet
+    // 3. Verify transaction amount matches the amount parameter
+    // 4. Verify transaction hasn't been used before (prevent double-spending)
+
+    // Create tip interaction with transaction signature
     await prisma.interaction.create({
       data: {
         userWallet: walletAddress,
@@ -117,18 +134,12 @@ export const tipPost = async (req: AuthRequest, res: Response) => {
       data: { tipCount: { increment: 1 } }
     })
 
-    // Update author's ALLY balance (mock for now)
-    await prisma.user.update({
-      where: { walletAddress: post.authorWallet },
-      data: { allyBalance: { increment: amount } }
-    })
-
-    logger.debug(`${walletAddress} tipped ${amount} $ALLY to post ${id}`)
+    logger.info(`${walletAddress} tipped ${amount} SOL to post ${id} (tx: ${transactionSignature})`)
 
     // Award reputation points
     await reputationService.onTipSent(walletAddress, Number(amount))
     await reputationService.onTipReceived(post.authorWallet, Number(amount))
-    
+
     // Create notification
     await createNotification({
       userId: post.authorWallet,
@@ -140,8 +151,9 @@ export const tipPost = async (req: AuthRequest, res: Response) => {
 
     res.json({
       success: true,
-      message: `Tipped ${amount} $ALLY`,
-      amount
+      message: `Tipped ${amount} SOL`,
+      amount,
+      transactionSignature
     })
   } catch (error) {
     logger.error('Tip post error:', error)

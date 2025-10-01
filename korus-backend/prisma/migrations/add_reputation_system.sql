@@ -37,7 +37,7 @@ CREATE INDEX IF NOT EXISTS idx_users_daily_rep ON "users"("dailyRepEarned" DESC,
 CREATE TABLE IF NOT EXISTS "daily_rep_pools" (
   "id" TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
   "date" DATE NOT NULL UNIQUE,
-  "totalPoolSize" DECIMAL(18,6) DEFAULT 10000, -- 10k ALLY daily
+  "totalPoolSize" DECIMAL(18,6) DEFAULT 10, -- 10 SOL daily pool
   "totalRepGenerated" INTEGER DEFAULT 0,
   "participantCount" INTEGER DEFAULT 0,
   "distributed" BOOLEAN DEFAULT FALSE,

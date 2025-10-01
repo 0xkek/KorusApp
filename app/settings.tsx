@@ -819,8 +819,8 @@ export default function SettingsScreen() {
                         </View>
                         
                         <View style={styles.faqItem}>
-                          <Text style={[styles.faqQuestion, { color: colors.primary }]}>How do I earn $ALLY tokens?</Text>
-                          <Text style={[styles.faqAnswer, { color: colors.textSecondary }]}>You earn $ALLY tokens by receiving tips from other users who appreciate your content. Create valuable posts and engage meaningfully with the community.</Text>
+                          <Text style={[styles.faqQuestion, { color: colors.primary }]}>How do I earn SOL?</Text>
+                          <Text style={[styles.faqAnswer, { color: colors.textSecondary }]}>You earn SOL by receiving tips from other users who appreciate your content. Create valuable posts and engage meaningfully with the community.</Text>
                         </View>
                         
                         

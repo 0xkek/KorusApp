@@ -1008,7 +1008,7 @@ export default function ProfileScreen() {
             }))
           );
           
-          showAlert('success', `Successfully tipped ${amount} $ALLY!`);
+          showAlert('success', `Successfully tipped ${amount} SOL!`);
         }}
       />
       

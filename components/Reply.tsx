@@ -179,7 +179,7 @@ const Reply = memo<ReplyProps>(function Reply({
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <Text style={[styles.replyTipText, { color: isDarkMode ? '#000' : '#fff' }]}>+{replyTips} $ALLY</Text>
+              <Text style={[styles.replyTipText, { color: isDarkMode ? '#000' : '#fff' }]}>+{replyTips} SOL</Text>
             </LinearGradient>
           )}
 
