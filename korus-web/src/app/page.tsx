@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -12,6 +12,7 @@ import VideoPlayer from '@/components/VideoPlayer';
 export default function Home() {
   const { connected, publicKey } = useWallet();
   const router = useRouter();
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     if (!connected) {
@@ -175,19 +176,45 @@ export default function Home() {
         {/* Main Content Container */}
       <div className="flex min-h-screen">
         {/* Main Feed */}
-        <div className="flex-1 ml-80 mr-96 border-x border-korus-border bg-korus-surface/10 backdrop-blur-sm">
+        <div className="flex-1 lg:ml-80 lg:mr-96 md:ml-64 md:mr-80 sm:ml-0 sm:mr-0 md:border-x md:border-korus-border bg-korus-surface/10 backdrop-blur-sm max-w-full overflow-hidden">
         {/* Main app - only accessible when connected */}
-            {/* What's happening header */}
-            <div className="sticky top-0 bg-korus-dark-300/60 backdrop-blur-xl border-b border-korus-border px-4 py-3 z-10">
-              <div className="flex items-center justify-center gap-24">
-                <button className="text-white text-xl font-bold bg-korus-primary text-black px-6 py-2 rounded-full shadow-lg shadow-korus-primary/40 transition-all duration-200">
-                  Home
+            {/* Header Navigation */}
+            <div className="sticky top-0 bg-korus-dark-300/80 backdrop-blur-xl border-b border-korus-border z-10">
+              <div className="flex">
+                {/* Mobile menu button */}
+                <button className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
                 </button>
-                <button className="text-gray-400 text-xl font-bold hover:bg-korus-primary hover:text-black px-6 py-2 rounded-full transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/40">
-                  Games
-                </button>
-                <button className="text-gray-400 text-xl font-bold hover:bg-korus-primary hover:text-black px-6 py-2 rounded-full transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/40">
-                  Events
+
+                {/* Logo on mobile */}
+                <div className="md:hidden flex items-center px-4">
+                  <div className="w-6 h-6 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center">
+                    <span className="text-black font-bold text-xs">K</span>
+                  </div>
+                </div>
+
+                <div className="relative flex items-center justify-center w-full">
+                  <button className="relative px-4 py-4 text-white font-semibold hover:bg-korus-surface/20 transition-colors group">
+                    <span className="relative z-10">Home</span>
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-korus-primary rounded-full"></div>
+                  </button>
+                  <button className="relative px-4 py-4 text-gray-400 font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group">
+                    <span className="relative z-10">Games</span>
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
+                  </button>
+                  <button className="relative px-4 py-4 text-gray-400 font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group">
+                    <span className="relative z-10">Events</span>
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
+                  </button>
+                </div>
+
+                {/* Mobile search/menu */}
+                <button className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
                 </button>
               </div>
             </div>
@@ -407,8 +434,11 @@ export default function Home() {
       </div>
       </div>
 
-      <LeftSidebar />
-      <RightSidebar />
+      <LeftSidebar onNotificationsToggle={() => setShowNotifications(!showNotifications)} />
+      <RightSidebar
+        showNotifications={showNotifications}
+        onNotificationsClose={() => setShowNotifications(false)}
+      />
     </main>
   );
 }

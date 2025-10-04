@@ -6,12 +6,17 @@ import { useWallet } from '@solana/wallet-adapter-react';
 
 interface TabItem {
   name: string;
-  path: string;
+  path?: string;
   icon: React.ReactNode;
   badge?: number;
+  onClick?: () => void;
 }
 
-export default function LeftSidebar() {
+interface LeftSidebarProps {
+  onNotificationsToggle?: () => void;
+}
+
+export default function LeftSidebar({ onNotificationsToggle }: LeftSidebarProps) {
   const pathname = usePathname();
   const { connected, publicKey } = useWallet();
 
@@ -27,13 +32,13 @@ export default function LeftSidebar() {
     },
     {
       name: 'Notifications',
-      path: '/notifications',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9zM13.73 21a2 2 0 01-3.46 0" />
         </svg>
       ),
-      badge: 3,
+      badge: 2,
+      onClick: onNotificationsToggle,
     },
     {
       name: 'Messages',
@@ -75,7 +80,7 @@ export default function LeftSidebar() {
   ];
 
   return (
-    <nav className="fixed left-0 top-0 bottom-0 w-80 z-30 border-r border-korus-border bg-black px-4 flex flex-col">
+    <nav className="fixed left-0 top-0 bottom-0 lg:w-80 md:w-64 sm:w-16 z-30 border-r border-korus-border bg-black px-4 flex flex-col hidden md:flex">
       {/* Logo */}
       <div className="py-4">
         <Link href="/" className="flex items-center gap-3 p-3 rounded-full hover:bg-gray-800 transition-all duration-200">
@@ -90,17 +95,14 @@ export default function LeftSidebar() {
       <div className="flex flex-col gap-2 flex-1">
         {tabs.map((tab) => {
           const isActive = pathname === tab.path;
+          const className = `flex items-center gap-4 px-3 py-3 rounded-full transition-all duration-200 relative group ${
+            isActive
+              ? 'bg-korus-primary shadow-lg shadow-korus-primary/40'
+              : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+          }`;
 
-          return (
-            <Link
-              key={tab.path}
-              href={tab.path}
-              className={`flex items-center gap-4 px-3 py-3 rounded-full transition-all duration-200 relative group ${
-                isActive
-                  ? 'bg-korus-primary shadow-lg shadow-korus-primary/40'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-              }`}
-            >
+          const content = (
+            <>
               <div className={`transition-colors ${isActive ? 'text-black' : 'text-gray-300 group-hover:text-white'}`}>
                 {tab.icon}
               </div>
@@ -117,6 +119,28 @@ export default function LeftSidebar() {
                   {tab.badge > 9 ? '9+' : tab.badge}
                 </span>
               )}
+            </>
+          );
+
+          if (tab.onClick) {
+            return (
+              <button
+                key={tab.name}
+                onClick={tab.onClick}
+                className={className}
+              >
+                {content}
+              </button>
+            );
+          }
+
+          return (
+            <Link
+              key={tab.name}
+              href={tab.path || '#'}
+              className={className}
+            >
+              {content}
             </Link>
           );
         })}

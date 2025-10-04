@@ -287,15 +287,15 @@ body {
   }
 }
 
-/* Force black text on all gradient buttons */
-.bg-gradient-to-r,
-.bg-gradient-to-br,
-.bg-korus-primary {
+/* Force black text on gradient buttons - except those with white-text class */
+.bg-gradient-to-r:not(.white-text),
+.bg-gradient-to-br:not(.white-text),
+.bg-korus-primary:not(.white-text) {
   color: #000000 !important;
 }
 
-.bg-gradient-to-r *,
-.bg-gradient-to-br *,
-.bg-korus-primary * {
+.bg-gradient-to-r:not(.white-text) *,
+.bg-gradient-to-br:not(.white-text) *,
+.bg-korus-primary:not(.white-text) * {
   color: #000000 !important;
 }

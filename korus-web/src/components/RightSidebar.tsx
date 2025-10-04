@@ -1,11 +1,110 @@
 'use client';
 
+import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 
-export default function RightSidebar() {
+interface Notification {
+  id: number;
+  type: 'like' | 'reply' | 'tip' | 'follow' | 'mention' | 'game' | 'event';
+  message: string;
+  user?: string;
+  userAvatar?: string;
+  timestamp: number;
+  read: boolean;
+  actionIcon?: string;
+  actionColor?: string;
+  relatedData?: any;
+}
+
+interface RightSidebarProps {
+  showNotifications?: boolean;
+  onNotificationsClose?: () => void;
+}
+
+export default function RightSidebar({ showNotifications = false, onNotificationsClose }: RightSidebarProps) {
   const { connected } = useWallet();
 
   if (!connected) return null;
+
+  // Mock notifications data
+  const notifications: Notification[] = [
+    {
+      id: 1,
+      type: 'like',
+      message: 'liked your post about Solana DeFi',
+      user: 'cryptodev.sol',
+      userAvatar: '🚀',
+      timestamp: Date.now() - 300000, // 5 min ago
+      read: false,
+      actionIcon: '❤️',
+      actionColor: 'text-red-400'
+    },
+    {
+      id: 2,
+      type: 'tip',
+      message: 'sent you 0.1 SOL tip for your analysis',
+      user: 'alice.sol',
+      userAvatar: '🎨',
+      timestamp: Date.now() - 600000, // 10 min ago
+      read: false,
+      actionIcon: '💰',
+      actionColor: 'text-yellow-400',
+      relatedData: { amount: '0.1 SOL' }
+    },
+    {
+      id: 3,
+      type: 'reply',
+      message: 'replied to your post',
+      user: 'bob.sol',
+      userAvatar: '⚡',
+      timestamp: Date.now() - 900000, // 15 min ago
+      read: true,
+      actionIcon: '💬',
+      actionColor: 'text-blue-400'
+    },
+    {
+      id: 4,
+      type: 'follow',
+      message: 'started following you',
+      user: 'defi_master',
+      userAvatar: '🏆',
+      timestamp: Date.now() - 1800000, // 30 min ago
+      read: true,
+      actionIcon: '👤',
+      actionColor: 'text-green-400'
+    },
+    {
+      id: 5,
+      type: 'mention',
+      message: 'mentioned you in a post about Web3 gaming',
+      user: 'gamefi_guru',
+      userAvatar: '🎮',
+      timestamp: Date.now() - 3600000, // 1 hr ago
+      read: true,
+      actionIcon: '@',
+      actionColor: 'text-purple-400'
+    },
+    {
+      id: 6,
+      type: 'game',
+      message: 'challenged you to a Tic Tac Toe game',
+      user: 'player_one',
+      userAvatar: '🎯',
+      timestamp: Date.now() - 7200000, // 2 hrs ago
+      read: true,
+      actionIcon: '🎮',
+      actionColor: 'text-cyan-400'
+    },
+    {
+      id: 7,
+      type: 'event',
+      message: 'Your event "DeFi Workshop" has 50 new participants',
+      timestamp: Date.now() - 10800000, // 3 hrs ago
+      read: true,
+      actionIcon: '📅',
+      actionColor: 'text-orange-400'
+    }
+  ];
 
   const recentActivities = [
     {
@@ -88,6 +187,20 @@ export default function RightSidebar() {
     },
   ].sort((a, b) => b.timestamp - a.timestamp); // Sort by most recent first
 
+  // Helper function to format timestamps
+  const formatTimeAgo = (timestamp: number) => {
+    const now = Date.now();
+    const diff = now - timestamp;
+
+    if (diff < 60000) return 'now';
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
+    return `${Math.floor(diff / 86400000)}d`;
+  };
+
+  // Get unread notification count
+  const unreadCount = notifications.filter(n => !n.read).length;
+
   const getEventTypeIcon = (category: string) => {
     switch (category) {
       case 'whitelist': return '📋';
@@ -142,7 +255,7 @@ export default function RightSidebar() {
   ];
 
   return (
-    <div className="fixed right-0 top-0 bottom-0 w-96 bg-black border-l border-korus-border p-4 overflow-y-auto">
+    <div className="fixed right-0 top-0 bottom-0 lg:w-96 md:w-80 bg-black border-l border-korus-border p-4 overflow-y-auto hidden md:block">
       {/* Search */}
       <div className="mb-6">
         <div className="relative">
@@ -157,9 +270,102 @@ export default function RightSidebar() {
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="mb-6">
-        <h2 className="text-white text-xl font-bold mb-4 px-4">🎮 Recent Activity</h2>
+      {/* Content based on showNotifications prop */}
+      {showNotifications ? (
+        /* Notifications */
+        <div className="mb-6">
+          <div className="mb-4 px-4">
+            <h2 className="text-white text-xl font-bold">🔔 Notifications</h2>
+          </div>
+          <div>
+            {notifications.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                <div className="text-4xl mb-2">🔔</div>
+                <p>No notifications yet</p>
+              </div>
+            ) : (
+              notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className={`border-b border-korus-borderLight mx-[-1rem] px-4 py-4 hover:bg-korus-surface/40 hover:border-korus-border transition-all duration-200 cursor-pointer group ${
+                    !notification.read ? 'bg-korus-surface/30 backdrop-blur-sm' : 'bg-korus-surface/10 backdrop-blur-sm'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    {/* User Avatar or Action Icon */}
+                    <div className="flex-shrink-0">
+                      {notification.user ? (
+                        <div className="w-8 h-8 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center text-sm font-bold text-black">
+                          {notification.userAvatar || notification.user.slice(0, 2).toUpperCase()}
+                        </div>
+                      ) : (
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${notification.actionColor}`}>
+                          {notification.actionIcon}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Notification Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="text-white text-sm">
+                            {notification.user && (
+                              <span className="font-semibold">{notification.user} </span>
+                            )}
+                            <span className="text-gray-300">{notification.message}</span>
+                          </p>
+
+                          {/* Special data for tips */}
+                          {notification.type === 'tip' && notification.relatedData && (
+                            <div className="mt-1 text-xs text-yellow-400 font-medium">
+                              💰 {notification.relatedData.amount}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Unread indicator */}
+                        {!notification.read && (
+                          <div className="w-2 h-2 bg-korus-primary rounded-full ml-2 mt-1"></div>
+                        )}
+                      </div>
+
+                      {/* Timestamp */}
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-gray-400 text-xs">
+                          {formatTimeAgo(notification.timestamp)}
+                        </span>
+
+                        {/* Action buttons for specific notification types */}
+                        {(notification.type === 'game' || notification.type === 'follow') && (
+                          <button className={`text-xs px-2 py-1 rounded-full font-medium transition-colors ${
+                            notification.type === 'game'
+                              ? 'bg-korus-primary text-black hover:bg-korus-secondary'
+                              : 'bg-korus-surface/40 border border-korus-borderLight text-korus-primary hover:bg-korus-surface/60'
+                          }`}>
+                            {notification.type === 'game' ? 'Join Game' : 'Follow Back'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {notifications.length > 0 && (
+            <div className="px-4 pt-3">
+              <button className="text-korus-primary text-sm hover:underline">
+                Mark all as read
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Recent Activity */
+        <div className="mb-6">
+          <h2 className="text-white text-xl font-bold mb-4 px-4">🎮 Recent Activity</h2>
         <div>
           {recentActivities.map((activity) => (
             <div key={activity.id} className="border-b border-korus-borderLight bg-korus-surface/20 backdrop-blur-sm mx-[-1rem] px-4 py-4 hover:bg-korus-surface/40 hover:border-korus-border transition-all duration-200 cursor-pointer group">
@@ -232,12 +438,13 @@ export default function RightSidebar() {
             </div>
           ))}
         </div>
-        <div className="px-4 pt-3">
-          <button className="text-korus-primary text-sm hover:underline">
-            View all activity
-          </button>
+          <div className="px-4 pt-3">
+            <button className="text-korus-primary text-sm hover:underline">
+              View all activity
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Who to follow */}
       <div className="bg-gray-900 rounded-2xl p-4 mb-6">
