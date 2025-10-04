@@ -1,0 +1,301 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --korus-primary: #43e97b;
+  --korus-secondary: #38f9d7;
+  --korus-accent: #2dd4bf;
+}
+
+@theme inline {
+  --color-*: initial;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* Korus theme colors - matching mobile app */
+  --color-korus-primary: var(--korus-primary);
+  --color-korus-secondary: var(--korus-secondary);
+  --color-korus-accent: var(--korus-accent);
+  --color-korus-glow: #22c55e;
+
+  /* Background colors - slightly lighter */
+  --color-korus-dark-100: #111111;  /* background - lighter */
+  --color-korus-dark-200: #181818;  /* intermediate - lighter */
+  --color-korus-dark-300: #202020;  /* surface - lighter */
+  --color-korus-dark-400: #2a2a2a;  /* surfaceLight - lighter */
+  --color-korus-dark-500: #323232;  /* elevated - lighter */
+
+  /* Mobile app theme colors */
+  --color-korus-surface: #202020;  /* lighter surface */
+  --color-korus-surfaceLight: #2a2a2a;  /* lighter surface */
+  --color-korus-text: #ffffff;
+  --color-korus-textSecondary: rgba(255, 255, 255, 0.85);
+  --color-korus-textTertiary: rgba(255, 255, 255, 0.65);
+  --color-korus-border: rgba(67, 233, 123, 0.65);  /* much brighter border */
+  --color-korus-borderLight: rgba(67, 233, 123, 0.4);  /* much brighter light border */
+  --color-korus-success: #43e97b;
+  --color-korus-error: #ff3b30;
+  --color-korus-warning: #FFD700;
+  --color-korus-shadowColor: #43e97b;
+  --color-korus-overlayBackground: rgba(0, 0, 0, 0.85);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-poppins), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Wallet adapter styling */
+.wallet-adapter-button {
+  background: linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%) !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  color: #000000 !important;
+}
+
+.wallet-adapter-button:not([disabled]):hover {
+  box-shadow: 0 0 20px rgba(67, 233, 123, 0.3) !important;
+  transform: translateY(-1px);
+}
+
+.wallet-adapter-button-trigger {
+  background: linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%) !important;
+  color: #000000 !important;
+}
+
+.wallet-adapter-modal-wrapper {
+  background: rgba(10, 10, 10, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.wallet-adapter-modal-list {
+  gap: 12px !important;
+}
+
+.wallet-adapter-modal-list .wallet-adapter-button {
+  background: #0a0a0a !important;
+  border: 2px solid transparent !important;
+  background-image:
+    linear-gradient(#0a0a0a, #0a0a0a),
+    linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%) !important;
+  background-origin: border-box !important;
+  background-clip: padding-box, border-box !important;
+  position: relative !important;
+  padding: 16px !important;
+  transition: all 0.3s ease !important;
+}
+
+.wallet-adapter-modal-list .wallet-adapter-button:hover {
+  box-shadow: 0 0 30px rgba(67, 233, 123, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+.wallet-adapter-button-start-icon {
+  margin-right: 12px !important;
+}
+
+.wallet-adapter-modal-list .wallet-adapter-button {
+  justify-content: flex-start !important;
+}
+
+/* Wallet name styling with gradient */
+.wallet-adapter-button-start-icon + * {
+  background: linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+}
+
+/* Target the "Detected" badge and hide it or style differently */
+.wallet-adapter-modal-list .wallet-adapter-button .wallet-adapter-button-end-icon {
+  background: linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* Custom animations */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -30px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+@keyframes float-delayed {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(-40px, 30px) scale(1.05);
+  }
+  66% {
+    transform: translate(25px, -25px) scale(0.95);
+  }
+}
+
+@keyframes float-slow {
+  0%, 100% {
+    transform: translate(0px, 0px) rotate(0deg);
+  }
+  50% {
+    transform: translate(50px, -50px) rotate(5deg);
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg) scale(1);
+  }
+  to {
+    transform: rotate(360deg) scale(1.2);
+  }
+}
+
+@keyframes gradient {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes grid-move {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 40px 40px;
+  }
+}
+
+@keyframes spotlight {
+  0% {
+    transform: translate(-20%, -20%) scale(1);
+    opacity: 1;
+  }
+  15% {
+    transform: translate(120%, 30%) scale(1.2);
+    opacity: 0.7;
+  }
+  30% {
+    transform: translate(80%, 90%) scale(0.9);
+    opacity: 0.9;
+  }
+  45% {
+    transform: translate(30%, 60%) scale(1.1);
+    opacity: 0.8;
+  }
+  60% {
+    transform: translate(90%, -10%) scale(1);
+    opacity: 1;
+  }
+  75% {
+    transform: translate(10%, 80%) scale(1.15);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(-20%, -20%) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-float {
+  animation: float 15s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 18s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 22s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 30s linear infinite;
+}
+
+.animate-gradient {
+  animation: gradient 10s ease-in-out infinite;
+}
+
+.animate-grid-move {
+  animation: grid-move 20s linear infinite;
+}
+
+.animate-spotlight {
+  animation: spotlight 25s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Post card hover glow - mobile app style */
+.group:hover {
+  box-shadow: 0 4px 20px rgba(67, 233, 123, 0.15), 0 8px 40px rgba(56, 249, 215, 0.1);
+  backdrop-filter: blur(12px);
+}
+
+/* Override hover glow for shoutout posts */
+.shoutout-post.group:hover {
+  box-shadow: 0 4px 20px rgba(255, 215, 0, 0.25), 0 8px 40px rgba(255, 165, 0, 0.15) !important;
+}
+
+/* Action button hover effects */
+.action-button:hover {
+  box-shadow: 0 0 15px rgba(67, 233, 123, 0.3);
+  background: linear-gradient(#2d2d2d, #2d2d2d) padding-box, linear-gradient(135deg, rgba(67, 233, 123, 0.6) 0%, rgba(56, 249, 215, 0.6) 100%) border-box !important;
+}
+
+/* Heart animation for double-tap to like */
+@keyframes heartPop {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1) translateY(-20px);
+    opacity: 0;
+  }
+}
+
+/* Force black text on all gradient buttons */
+.bg-gradient-to-r,
+.bg-gradient-to-br,
+.bg-korus-primary {
+  color: #000000 !important;
+}
+
+.bg-gradient-to-r *,
+.bg-gradient-to-br *,
+.bg-korus-primary * {
+  color: #000000 !important;
+}

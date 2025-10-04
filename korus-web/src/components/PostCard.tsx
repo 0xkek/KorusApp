@@ -1,0 +1,62 @@
+'use client';
+
+import { useState } from 'react';
+
+interface PostCardProps {
+  post: {
+    id: number;
+    user: string;
+    content: string;
+    likes: number;
+    replies: number;
+    tips: number;
+    time: string;
+  };
+}
+
+export const PostCard = ({ post }: PostCardProps) => {
+  const [liked, setLiked] = useState(false);
+  const [likes, setLikes] = useState(post.likes);
+
+  const handleLike = () => {
+    setLiked(!liked);
+    setLikes(liked ? likes - 1 : likes + 1);
+  };
+
+  return (
+    <div className="bg-korus-dark-300 border border-korus-dark-400 rounded-xl p-4 mb-4 hover:border-korus-primary/30 transition-all">
+      {/* Post Header */}
+      <div className="flex items-start gap-3 mb-3">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-korus-primary to-korus-secondary flex-shrink-0"></div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-white font-semibold truncate">{post.user}</span>
+            <span className="text-gray-500 text-sm flex-shrink-0">{post.time}</span>
+          </div>
+          <p className="text-gray-300 mt-2 whitespace-pre-wrap break-words">{post.content}</p>
+        </div>
+      </div>
+
+      {/* Post Actions */}
+      <div className="flex items-center gap-6 mt-4 pt-3 border-t border-korus-dark-400 text-gray-400">
+        <button
+          onClick={handleLike}
+          className={`flex items-center gap-2 hover:text-korus-primary transition-colors ${
+            liked ? 'text-korus-primary' : ''
+          }`}
+        >
+          <span>{liked ? '❤️' : '🤍'}</span>
+          <span>{likes}</span>
+        </button>
+        <button className="flex items-center gap-2 hover:text-korus-primary transition-colors">
+          <span>💬</span>
+          <span>{post.replies}</span>
+        </button>
+        <button className="flex items-center gap-2 hover:text-korus-primary transition-colors">
+          <span>💰</span>
+          <span>{post.tips} SOL</span>
+        </button>
+      </div>
+    </div>
+  );
+};
