@@ -15,6 +15,7 @@ import ShoutoutModal from '@/components/ShoutoutModal';
 import TipModal from '@/components/TipModal';
 import ShareModal from '@/components/ShareModal';
 import RepostModal from '@/components/RepostModal';
+import ReplyModal from '@/components/ReplyModal';
 import { useToast } from '@/hooks/useToast';
 
 export default function Home() {
@@ -32,9 +33,11 @@ export default function Home() {
   const [showTipModal, setShowTipModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showRepostModal, setShowRepostModal] = useState(false);
+  const [showReplyModal, setShowReplyModal] = useState(false);
   const [postToTip, setPostToTip] = useState<any>(null);
   const [postToShare, setPostToShare] = useState<any>(null);
   const [postToRepost, setPostToRepost] = useState<any>(null);
+  const [postToReply, setPostToReply] = useState<any>(null);
   const [postInteractions, setPostInteractions] = useState<{[key: number]: {liked: boolean, reposted: boolean, replied: boolean, tipped: boolean}}>({});
 
   useEffect(() => {
@@ -426,6 +429,7 @@ export default function Home() {
                   ? 'shoutout-post border border-korus-primary bg-korus-primary/5 shadow-[0_4px_12px_rgba(var(--korus-primary-rgb),0.3)] hover:border-korus-primary hover:shadow-[0_8px_24px_rgba(var(--korus-primary-rgb),0.4)] hover:bg-korus-primary/10'
                   : 'border-b border-korus-borderLight bg-korus-surface/20 hover:bg-korus-surface/40 hover:border-korus-border'
               }`}
+              onClick={() => router.push(`/post/${post.id}`)}
             >
               {/* Shoutout Banner */}
               {post.isShoutout && (
@@ -466,9 +470,11 @@ export default function Home() {
 
                     {/* Premium Badge */}
                     {post.isPremium && (
-                      <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                      </svg>
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
+                        <svg className="w-3 h-3" fill="black" viewBox="0 0 24 24">
+                          <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
+                        </svg>
+                      </div>
                     )}
 
                     <span className="text-gray-500">@{post.user}</span>
@@ -562,13 +568,9 @@ export default function Home() {
                           : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
                       }`}
                       onClick={(e) => {
-                        markReplied(post.id);
-                        if ((window as any).createParticleExplosion) {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          const x = rect.left + rect.width / 2;
-                          const y = rect.top + rect.height / 2;
-                          (window as any).createParticleExplosion('reply', x, y);
-                        }
+                        e.stopPropagation();
+                        setPostToReply(post);
+                        setShowReplyModal(true);
                       }}
                     >
                       <svg className={`w-4 h-4 transition-colors ${
@@ -587,7 +589,8 @@ export default function Home() {
                           ? 'bg-korus-primary/20 border border-korus-primary/50'
                           : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
                       }`}
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setPostToRepost(post);
                         setShowRepostModal(true);
                       }}
@@ -609,6 +612,7 @@ export default function Home() {
                           : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
                       }`}
                       onClick={(e) => {
+                        e.stopPropagation();
                         toggleLike(post.id);
                         if ((window as any).createParticleExplosion) {
                           const rect = e.currentTarget.getBoundingClientRect();
@@ -635,6 +639,7 @@ export default function Home() {
                           : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
                       }`}
                       onClick={(e) => {
+                        e.stopPropagation();
                         setPostToTip(post);
                         setShowTipModal(true);
                       }}
@@ -651,7 +656,8 @@ export default function Home() {
 
                     <button
                       className="flex items-center justify-center w-9 h-9 rounded-full text-korus-textTertiary border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setPostToShare(post);
                         setShowShareModal(true);
                       }}
@@ -745,6 +751,33 @@ export default function Home() {
         onRepostSuccess={(comment) => {
           if (postToRepost?.id) {
             toggleRepost(postToRepost.id, comment);
+          }
+        }}
+      />
+
+      <ReplyModal
+        isOpen={showReplyModal}
+        onClose={() => {
+          setShowReplyModal(false);
+          setPostToReply(null);
+        }}
+        post={postToReply}
+        onReplySuccess={(reply) => {
+          // Add reply to the parent post's replies array
+          setPosts(prev => prev.map(p => {
+            if (p.id === postToReply?.id) {
+              return {
+                ...p,
+                replies: p.replies + 1,
+                replyThreads: [...(p.replyThreads || []), reply]
+              };
+            }
+            return p;
+          }));
+
+          // Mark the original post as replied
+          if (postToReply?.id) {
+            markReplied(postToReply.id);
           }
         }}
       />
