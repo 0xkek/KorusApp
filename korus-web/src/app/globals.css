@@ -202,6 +202,69 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* ========================================
+   ACCESSIBILITY ENHANCEMENTS
+   ======================================== */
+
+/* Focus-visible for keyboard navigation (not mouse clicks) */
+:focus-visible {
+  outline: 2px solid var(--korus-primary);
+  outline-offset: 2px;
+}
+
+/* Remove default focus outline for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ========================================
+   MODAL ANIMATIONS
+   ======================================== */
+
+/* Modal backdrop fade-in */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal content slide-up */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Apply to modal backdrops */
+.modal-backdrop {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Apply to modal content */
+.modal-content {
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ========================================
    WALLET ADAPTER STYLING
    ======================================== */
 .wallet-adapter-button {
