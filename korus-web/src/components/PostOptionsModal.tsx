@@ -64,7 +64,7 @@ export default function PostOptionsModal({ isOpen, onClose, postId, postUser, is
     return (
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-korus-surface/90 backdrop-blur-md rounded-3xl max-w-md w-full border-2 shadow-xl shadow-red-500/20" style={{borderColor: '#ef4444'}}>
-          <div className="p-8 text-center">
+          <div className="p-6 text-center">
             {/* Warning Icon */}
             <div className="mb-6 flex justify-center">
               <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">
@@ -116,7 +116,7 @@ export default function PostOptionsModal({ isOpen, onClose, postId, postUser, is
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-korus-surface/90 backdrop-blur-md rounded-3xl max-w-md w-full border-2 shadow-xl shadow-red-500/20" style={{borderColor: '#ef4444'}}>
-        <div className="p-8 text-center">
+        <div className="p-6 text-center">
           {/* Delete Icon */}
           <div className="mb-6 flex justify-center">
             <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">

@@ -44,15 +44,22 @@ export const PostCard = ({ post }: PostCardProps) => {
           className={`flex items-center gap-2 hover:text-korus-primary transition-colors ${
             liked ? 'text-korus-primary' : ''
           }`}
+          aria-label={liked ? `Unlike post (${likes} likes)` : `Like post (${likes} likes)`}
         >
           <span>{liked ? '❤️' : '🤍'}</span>
           <span>{likes}</span>
         </button>
-        <button className="flex items-center gap-2 hover:text-korus-primary transition-colors">
+        <button
+          className="flex items-center gap-2 hover:text-korus-primary transition-colors"
+          aria-label={`View ${post.replies} replies`}
+        >
           <span>💬</span>
           <span>{post.replies}</span>
         </button>
-        <button className="flex items-center gap-2 hover:text-korus-primary transition-colors">
+        <button
+          className="flex items-center gap-2 hover:text-korus-primary transition-colors"
+          aria-label={`Tip ${post.tips} SOL`}
+        >
           <span>💰</span>
           <span>{post.tips} SOL</span>
         </button>

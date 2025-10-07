@@ -140,7 +140,40 @@ body {
   letter-spacing: 0.01em;
 }
 
-/* Wallet adapter styling */
+/* ========================================
+   FORM INPUT STATES
+   ======================================== */
+
+/* Standard focus state for all inputs */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--korus-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--korus-primary) 20%, transparent);
+}
+
+/* Error state */
+.input-error {
+  border-color: #ef4444 !important;
+}
+
+.input-error:focus {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+}
+
+/* Success state */
+.input-success {
+  border-color: #10b981 !important;
+}
+
+.input-success:focus {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+}
+
+/* ========================================
+   WALLET ADAPTER STYLING
+   ======================================== */
 .wallet-adapter-button {
   background: linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%) !important;
   border-radius: 8px !important;

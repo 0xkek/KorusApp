@@ -38,7 +38,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
       />
 
       {/* Modal */}
-      <div className="relative z-10 bg-korus-dark-200 rounded-2xl p-8 max-w-md w-full mx-4 border border-korus-dark-400">
+      <div className="relative z-10 bg-korus-dark-200 rounded-2xl p-6 max-w-md w-full mx-4 border border-korus-dark-400">
         {/* Close button */}
         <button
           onClick={onClose}
