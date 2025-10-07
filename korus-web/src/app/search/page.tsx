@@ -271,7 +271,7 @@ export default function SearchPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </Link>
-                  <h1 className="text-xl font-bold text-white">Search</h1>
+                  <h1 className="text-3xl font-bold text-white">Search</h1>
                 </div>
               </div>
             </div>
@@ -428,11 +428,27 @@ export default function SearchPage() {
                     <div className="space-y-4">
                       {searchResults.length === 0 ? (
                         <div className="text-center py-12">
-                          <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-16 h-16 text-korus-textSecondary mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                           </svg>
-                          <h3 className="text-xl font-semibold mb-2">No posts found</h3>
-                          <p className="text-gray-400">Try adjusting your search terms or filters</p>
+                          <h3 className="text-xl font-semibold mb-2 text-korus-text">No posts found</h3>
+                          <p className="text-korus-textSecondary text-sm mb-6">
+                            Try different keywords, check for typos, or explore trending topics.
+                          </p>
+                          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                            <button
+                              onClick={() => setSearchQuery('')}
+                              className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-200 hover:scale-105"
+                            >
+                              Clear Search
+                            </button>
+                            <button
+                              onClick={() => setSelectedCategory('all')}
+                              className="bg-korus-surface/40 border border-korus-borderLight text-korus-text font-semibold px-6 py-3 rounded-xl hover:bg-korus-surface/60 transition-all duration-200"
+                            >
+                              Show All Categories
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         searchResults.map((post) => (
@@ -449,7 +465,7 @@ export default function SearchPage() {
                                     {post.isPremium && (
                                       <div className="w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
                                         <svg className="w-2.5 h-2.5 text-black" fill="currentColor" viewBox="0 0 24 24">
-                                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                          <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
                                         </svg>
                                       </div>
                                     )}
@@ -498,11 +514,27 @@ export default function SearchPage() {
                     <div className="space-y-4">
                       {userResults.length === 0 ? (
                         <div className="text-center py-12">
-                          <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-16 h-16 text-korus-textSecondary mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                           </svg>
-                          <h3 className="text-xl font-semibold mb-2">No users found</h3>
-                          <p className="text-gray-400">Try adjusting your search terms</p>
+                          <h3 className="text-xl font-semibold mb-2 text-korus-text">No users found</h3>
+                          <p className="text-korus-textSecondary text-sm mb-6">
+                            Try searching for usernames, wallet addresses, or SNS domains.
+                          </p>
+                          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                            <button
+                              onClick={() => setActiveTab('posts')}
+                              className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-200 hover:scale-105"
+                            >
+                              Search Posts Instead
+                            </button>
+                            <button
+                              onClick={() => setSearchQuery('')}
+                              className="bg-korus-surface/40 border border-korus-borderLight text-korus-text font-semibold px-6 py-3 rounded-xl hover:bg-korus-surface/60 transition-all duration-200"
+                            >
+                              Clear Search
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         userResults.map((user) => (
@@ -518,7 +550,7 @@ export default function SearchPage() {
                                     {user.isPremium && (
                                       <div className="w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
                                         <svg className="w-2.5 h-2.5 text-black" fill="currentColor" viewBox="0 0 24 24">
-                                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                          <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
                                         </svg>
                                       </div>
                                     )}

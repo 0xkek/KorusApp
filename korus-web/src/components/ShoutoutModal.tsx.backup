@@ -1,0 +1,441 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useToast } from '@/hooks/useToast';
+
+// Shoutout duration options and pricing
+const SHOUTOUT_OPTIONS = [
+  {
+    label: '30 minutes',
+    value: 30,
+    price: 0.05,
+    description: 'Quick boost',
+    recommended: false
+  },
+  {
+    label: '1 hour',
+    value: 60,
+    price: 0.08,
+    description: 'Standard promotion',
+    recommended: false
+  },
+  {
+    label: '3 hours',
+    value: 180,
+    price: 0.20,
+    description: 'Extended visibility',
+    recommended: true
+  },
+  {
+    label: '6 hours',
+    value: 360,
+    price: 0.35,
+    description: 'Maximum reach',
+    recommended: false
+  },
+];
+
+interface ShoutoutModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  postContent: string;
+  onConfirm?: (duration: number, price: number) => void;
+}
+
+export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm }: ShoutoutModalProps) {
+  const { connected, publicKey } = useWallet();
+  const { showSuccess, showError } = useToast();
+  const [selectedDuration, setSelectedDuration] = useState<number | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+
+  // Reset selection when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedDuration(null);
+      setWalletBalance(2.45); // TODO: Fetch real balance
+    }
+  }, [isOpen]);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen && !isProcessing) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isOpen, isProcessing, onClose]);
+
+  if (!isOpen) return null;
+
+  const selectedOption = SHOUTOUT_OPTIONS.find(opt => opt.value === selectedDuration);
+  const hasInsufficientFunds = selectedOption && walletBalance !== null && selectedOption.price > walletBalance;
+
+  const handleConfirm = async () => {
+    if (!connected) {
+      showError('Please connect your wallet to create a shoutout');
+      return;
+    }
+
+    if (!selectedDuration) {
+      showError('Please select a duration for your shoutout');
+      return;
+    }
+
+    if (hasInsufficientFunds) {
+      showError('Insufficient balance to create this shoutout');
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      // TODO: Implement actual Solana transaction
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      onConfirm?.(selectedDuration, selectedOption?.price || 0);
+      showSuccess(`Shoutout created! Your post will be featured for ${selectedOption?.label}.`);
+      onClose();
+    } catch (error) {
+      showError('Failed to create shoutout. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isProcessing) {
+          onClose();
+        }
+      }}
+    >
+      <div
+        className="backdrop-blur-xl rounded-2xl max-w-lg w-full border shadow-2xl max-h-[90vh] overflow-y-auto"
+        style={{
+          background: 'rgba(26, 26, 26, 0.95)',
+          borderColor: 'rgba(67, 233, 123, 0.3)',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+        }}
+      >
+        {/* Header */}
+        <div
+          className="flex items-center justify-between p-5 border-b"
+          style={{ borderColor: 'rgba(67, 233, 123, 0.3)' }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg"
+              style={{
+                background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+                boxShadow: '0 10px 15px -3px rgba(251, 191, 36, 0.4)'
+              }}
+            >
+              <span className="text-2xl">📢</span>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold" style={{ color: '#fde68a' }}>Boost Your Post</h2>
+              <p className="text-sm" style={{ color: 'rgba(252, 211, 77, 0.7)' }}>Premium featured placement</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            disabled={isProcessing}
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 disabled:opacity-50"
+            style={{
+              backgroundColor: 'rgba(251, 191, 36, 0.2)',
+              color: '#fde68a'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(251, 191, 36, 0.3)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(251, 191, 36, 0.2)'}
+            aria-label="Close modal"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-5 space-y-5 bg-korus-dark-100">
+          {/* Balance Display */}
+          {connected && walletBalance !== null && (
+            <div
+              className="flex items-center justify-between p-3 rounded-xl border"
+              style={{
+                backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                borderColor: 'rgba(251, 191, 36, 0.3)'
+              }}
+            >
+              <span className="text-sm" style={{ color: 'rgba(254, 240, 138, 0.8)' }}>Your Balance</span>
+              <span className="text-base font-bold" style={{ color: '#fef3c7' }}>{walletBalance.toFixed(3)} SOL</span>
+            </div>
+          )}
+
+          {/* Post Preview */}
+          <div>
+              <h3 className="text-sm font-semibold mb-3" style={{ color: '#fde68a' }}>Your Post Preview</h3>
+              <div
+                className="border-2 rounded-xl p-4 shadow-lg"
+                style={{
+                  background: 'linear-gradient(90deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.15))',
+                  borderColor: 'rgba(251, 191, 36, 0.3)',
+                  boxShadow: '0 10px 15px -3px rgba(251, 191, 36, 0.1)'
+                }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-black tracking-widest" style={{ color: '#fcd34d' }}>⭐ FEATURED</span>
+                  <svg className="w-3.5 h-3.5" fill="#fbbf24" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                  </svg>
+                </div>
+                <p className="text-sm leading-relaxed line-clamp-3" style={{ color: '#fffbeb' }}>{postContent}</p>
+              </div>
+            </div>
+
+            {/* Duration Options */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3" style={{ color: '#fde68a' }}>Choose Duration</h3>
+              <div className="grid grid-cols-2 gap-2.5">
+                {SHOUTOUT_OPTIONS.map((option) => {
+                  const isSelected = selectedDuration === option.value;
+                  const canAfford = !walletBalance || option.price <= walletBalance;
+
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => setSelectedDuration(option.value)}
+                      disabled={!canAfford}
+                      className="relative p-3.5 rounded-xl border-2 transition-all duration-200 text-left"
+                      style={{
+                        backgroundColor: isSelected
+                          ? 'rgba(251, 191, 36, 0.2)'
+                          : canAfford
+                          ? 'rgba(251, 191, 36, 0.05)'
+                          : 'rgba(251, 191, 36, 0.05)',
+                        borderColor: isSelected
+                          ? '#fbbf24'
+                          : canAfford
+                          ? 'rgba(251, 191, 36, 0.3)'
+                          : 'rgba(251, 191, 36, 0.2)',
+                        boxShadow: isSelected ? '0 10px 15px -3px rgba(251, 191, 36, 0.2)' : 'none',
+                        opacity: canAfford ? 1 : 0.5,
+                        cursor: canAfford ? 'pointer' : 'not-allowed'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (canAfford && !isSelected) {
+                          e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.5)';
+                          e.currentTarget.style.backgroundColor = 'rgba(251, 191, 36, 0.1)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (canAfford && !isSelected) {
+                          e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.3)';
+                          e.currentTarget.style.backgroundColor = 'rgba(251, 191, 36, 0.05)';
+                        }
+                      }}
+                    >
+                      {option.recommended && (
+                        <div
+                          className="absolute -top-2 -right-2 px-2 py-0.5 rounded-full text-[10px] font-black shadow-lg"
+                          style={{
+                            background: 'linear-gradient(90deg, #fbbf24, #f59e0b)',
+                            color: '#000000'
+                          }}
+                        >
+                          BEST VALUE
+                        </div>
+                      )}
+
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all"
+                            style={{
+                              borderColor: isSelected ? '#fbbf24' : 'rgba(251, 191, 36, 0.4)',
+                              backgroundColor: isSelected ? '#fbbf24' : 'transparent'
+                            }}
+                          >
+                            {isSelected && (
+                              <svg className="w-2.5 h-2.5" fill="#000000" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                              </svg>
+                            )}
+                          </div>
+                          <span className="font-bold text-base" style={{ color: isSelected ? '#fef3c7' : '#fde68a' }}>
+                            {option.label}
+                          </span>
+                        </div>
+                      </div>
+
+                      <p className="text-xs mb-2.5" style={{ color: 'rgba(252, 211, 77, 0.6)' }}>{option.description}</p>
+
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-lg font-bold" style={{ color: isSelected ? '#fcd34d' : '#fde68a' }}>
+                          {option.price.toFixed(2)}
+                        </span>
+                        <span className="text-xs" style={{ color: 'rgba(251, 191, 36, 0.7)' }}>SOL</span>
+                      </div>
+
+                      {!canAfford && (
+                        <div className="absolute inset-0 rounded-xl flex items-center justify-center backdrop-blur-sm" style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}>
+                          <span className="text-xs font-bold" style={{ color: '#f87171' }}>Insufficient Balance</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Summary */}
+            {selectedOption && (
+              <div
+                className="p-4 border-2 rounded-xl shadow-lg"
+                style={{
+                  background: 'linear-gradient(90deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.15))',
+                  borderColor: 'rgba(251, 191, 36, 0.3)',
+                  boxShadow: '0 10px 15px -3px rgba(251, 191, 36, 0.1)'
+                }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm" style={{ color: 'rgba(254, 240, 138, 0.7)' }}>Duration</span>
+                  <span className="text-sm font-bold" style={{ color: '#fef3c7' }}>{selectedOption.label}</span>
+                </div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm" style={{ color: 'rgba(254, 240, 138, 0.7)' }}>Cost</span>
+                  <span className="text-sm font-bold" style={{ color: '#fef3c7' }}>{selectedOption.price.toFixed(2)} SOL</span>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'rgba(251, 191, 36, 0.3)' }}>
+                  <span className="text-base font-bold" style={{ color: '#fde68a' }}>Total</span>
+                  <span className="text-2xl font-black" style={{ color: '#fcd34d', filter: 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.5))' }}>
+                    {selectedOption.price.toFixed(2)} SOL
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Insufficient Funds Warning */}
+            {hasInsufficientFunds && (
+              <div
+                className="p-3.5 border-2 rounded-xl"
+                style={{
+                  backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                  borderColor: 'rgba(239, 68, 68, 0.4)'
+                }}
+              >
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="#f87171" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
+                  </svg>
+                  <div>
+                    <p className="text-sm font-bold" style={{ color: '#f87171' }}>Insufficient Balance</p>
+                    <p className="text-xs mt-1" style={{ color: 'rgba(252, 165, 165, 0.8)' }}>
+                      You need {(selectedOption!.price - (walletBalance || 0)).toFixed(3)} more SOL.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* What You Get */}
+            <div
+              className="p-3.5 rounded-xl border"
+              style={{
+                backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                borderColor: 'rgba(251, 191, 36, 0.3)'
+              }}
+            >
+              <h4 className="text-sm font-bold mb-2.5" style={{ color: '#fde68a' }}>What you get:</h4>
+              <ul className="space-y-2">
+                <li className="flex items-start gap-2 text-xs" style={{ color: 'rgba(255, 251, 235, 0.8)' }}>
+                  <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="#fbbf24" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                  </svg>
+                  Featured at the top of all feeds
+                </li>
+                <li className="flex items-start gap-2 text-xs" style={{ color: 'rgba(255, 251, 235, 0.8)' }}>
+                  <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="#fbbf24" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                  </svg>
+                  Highlighted with special gold badge
+                </li>
+                <li className="flex items-start gap-2 text-xs" style={{ color: 'rgba(255, 251, 235, 0.8)' }}>
+                  <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="#fbbf24" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                  </svg>
+                  Maximum visibility to the community
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer Actions */}
+        <div className="flex gap-3 p-5 border-t bg-korus-dark-100" style={{ borderColor: 'rgba(67, 233, 123, 0.3)' }}>
+          <button
+            onClick={onClose}
+            disabled={isProcessing}
+            className="flex-1 px-5 py-3 border-2 rounded-xl font-bold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: 'rgba(251, 191, 36, 0.1)',
+              borderColor: 'rgba(251, 191, 36, 0.3)',
+              color: '#fde68a'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(251, 191, 36, 0.15)';
+              e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(251, 191, 36, 0.1)';
+              e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.3)';
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={!selectedDuration || isProcessing || hasInsufficientFunds || !connected}
+            className="flex-1 px-5 py-3 rounded-xl font-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] disabled:hover:scale-100"
+            style={{
+              background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+              color: '#000000',
+              boxShadow: '0 10px 15px -3px rgba(251, 191, 36, 0.3)'
+            }}
+            onMouseEnter={(e) => {
+              if (!e.currentTarget.disabled) {
+                e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(251, 191, 36, 0.5)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(251, 191, 36, 0.3)';
+            }}
+          >
+            {isProcessing ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 rounded-full animate-spin" style={{ borderColor: 'rgba(0, 0, 0, 0.3)', borderTopColor: '#000000' }}></div>
+                Processing...
+              </div>
+            ) : !connected ? (
+              'Connect Wallet'
+            ) : !selectedDuration ? (
+              'Select Duration'
+            ) : hasInsufficientFunds ? (
+              'Insufficient Balance'
+            ) : (
+              `Boost for ${selectedOption?.price.toFixed(2)} SOL`
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+

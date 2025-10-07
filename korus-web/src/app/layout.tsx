@@ -1,8 +1,11 @@
-import type { Metadata } from "next";
+'use client';
+
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import { WalletContextProvider } from "@/components/WalletProvider";
 import { ParticleSystem } from "@/components/ParticleSystem";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { ToastProvider } from "@/components/ToastProvider";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -10,23 +13,22 @@ const poppins = Poppins({
   variable: "--font-poppins",
 });
 
-export const metadata: Metadata = {
-  title: "Korus - Social Gaming on Solana",
-  description: "Challenge friends, play games, and win SOL on Korus",
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${poppins.variable} font-sans antialiased`}>
-        <WalletContextProvider>
-          {children}
-          <ParticleSystem />
-        </WalletContextProvider>
+        <ThemeProvider>
+          <WalletContextProvider>
+            <ToastProvider>
+              {children}
+              <ParticleSystem />
+            </ToastProvider>
+          </WalletContextProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

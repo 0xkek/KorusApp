@@ -12,6 +12,41 @@ export default function WelcomePage() {
   const router = useRouter();
   const [showDeveloperTools, setShowDeveloperTools] = useState(false);
 
+  // Add hardcoded mint colors for wallet button on welcome page
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .wallet-adapter-button {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important;
+      }
+      .wallet-adapter-button-trigger {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important;
+      }
+      .wallet-adapter-button-start-icon + * {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+      }
+      .wallet-adapter-modal-list .wallet-adapter-button .wallet-adapter-button-end-icon {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+      }
+      .wallet-adapter-modal-list .wallet-adapter-button {
+        background-image:
+          linear-gradient(#0a0a0a, #0a0a0a),
+          linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   useEffect(() => {
     // Add a small delay to prevent immediate redirect during development
     const timer = setTimeout(() => {
@@ -32,27 +67,29 @@ export default function WelcomePage() {
     <main className="min-h-screen bg-gradient-to-b from-black via-korus-dark-100 to-black relative overflow-hidden">
       {/* Animated gradient orbs */}
       <div className="fixed inset-0">
-        {/* Primary orb - top right */}
-        <div className="absolute -top-40 -right-40 w-[1000px] h-[1000px] bg-korus-primary/15 rounded-full blur-[140px] animate-float" />
+        {/* Primary orb - top right - hardcoded mint green */}
+        <div className="absolute -top-40 -right-40 w-[1000px] h-[1000px] rounded-full blur-[140px] animate-float" style={{ backgroundColor: 'rgba(67, 233, 123, 0.15)' }} />
 
-        {/* Secondary orb - bottom left */}
-        <div className="absolute -bottom-40 -left-40 w-[900px] h-[900px] bg-korus-secondary/12 rounded-full blur-[120px] animate-float-delayed" />
+        {/* Secondary orb - bottom left - hardcoded mint secondary */}
+        <div className="absolute -bottom-40 -left-40 w-[900px] h-[900px] rounded-full blur-[120px] animate-float-delayed" style={{ backgroundColor: 'rgba(56, 249, 215, 0.12)' }} />
 
-        {/* Accent orb - center moving */}
-        <div className="absolute top-1/3 left-1/3 w-[800px] h-[800px] bg-korus-accent/10 rounded-full blur-[100px] animate-float-slow" />
+        {/* Accent orb - center moving - hardcoded mint accent */}
+        <div className="absolute top-1/3 left-1/3 w-[800px] h-[800px] rounded-full blur-[100px] animate-float-slow" style={{ backgroundColor: 'rgba(45, 212, 191, 0.10)' }} />
 
-        {/* Additional accent orbs */}
-        <div className="absolute top-1/2 right-1/3 w-[600px] h-[600px] bg-korus-glow/8 rounded-full blur-[90px] animate-pulse-slow" />
+        {/* Additional accent orbs - hardcoded mint colors */}
+        <div className="absolute top-1/2 right-1/3 w-[600px] h-[600px] rounded-full blur-[90px] animate-pulse-slow" style={{ backgroundColor: 'rgba(34, 197, 94, 0.08)' }} />
 
-        <div className="absolute bottom-1/3 right-1/4 w-[500px] h-[500px] bg-korus-primary/6 rounded-full blur-[80px] animate-float-delayed" />
+        <div className="absolute bottom-1/3 right-1/4 w-[500px] h-[500px] rounded-full blur-[80px] animate-float-delayed" style={{ backgroundColor: 'rgba(67, 233, 123, 0.06)' }} />
       </div>
 
-      {/* Soft gradient overlay for depth */}
-      <div className="fixed inset-0 bg-gradient-to-br from-korus-primary/5 via-transparent to-korus-secondary/5 animate-gradient" />
+      {/* Soft gradient overlay for depth - hardcoded mint colors */}
+      <div className="fixed inset-0 bg-gradient-to-br animate-gradient" style={{
+        backgroundImage: 'linear-gradient(to bottom right, rgba(67, 233, 123, 0.05), transparent, rgba(56, 249, 215, 0.05))'
+      }} />
 
-      {/* Animated spotlight effect */}
+      {/* Animated spotlight effect - hardcoded mint primary */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute w-[600px] h-[600px] bg-korus-primary/30 rounded-full blur-[100px] animate-spotlight" />
+        <div className="absolute w-[600px] h-[600px] rounded-full blur-[100px] animate-spotlight" style={{ backgroundColor: 'rgba(67, 233, 123, 0.30)' }} />
       </div>
 
       {/* Developer Tools (Development only) */}
@@ -88,14 +125,26 @@ export default function WelcomePage() {
             <div className="mb-12">
               <div className="flex justify-center mb-8">
                 <div className="relative">
-                  <div className="w-32 h-32 bg-gradient-to-br from-korus-primary to-korus-secondary rounded-3xl flex items-center justify-center text-6xl font-extrabold text-black shadow-2xl shadow-korus-primary/30">
+                  <div className="w-32 h-32 rounded-3xl flex items-center justify-center text-8xl font-extrabold shadow-2xl relative z-10 font-sans" style={{
+                    background: 'linear-gradient(to bottom right, #43e97b, #38f9d7)',
+                    boxShadow: '0 25px 50px -12px rgba(67, 233, 123, 0.30)',
+                    color: '#000000',
+                    fontFamily: 'var(--font-poppins), sans-serif'
+                  }}>
                     K
                   </div>
-                  <div className="absolute inset-0 w-32 h-32 bg-gradient-to-br from-korus-primary to-korus-secondary rounded-3xl blur-xl opacity-50 animate-pulse-slow"></div>
+                  <div className="absolute inset-0 w-32 h-32 rounded-3xl blur-xl opacity-50 animate-pulse-slow z-0" style={{
+                    background: 'linear-gradient(to bottom right, #43e97b, #38f9d7)'
+                  }}></div>
                 </div>
               </div>
               <h1 className="text-8xl font-extrabold mb-6">
-                <span className="bg-gradient-to-r from-korus-primary to-korus-secondary bg-clip-text text-transparent">
+                <span style={{
+                  background: 'linear-gradient(to right, #43e97b, #38f9d7)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
                   Korus
                 </span>
               </h1>
@@ -123,7 +172,10 @@ export default function WelcomePage() {
                     href="https://phantom.app"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-korus-primary hover:text-korus-secondary transition-colors text-base font-medium hover:underline"
+                    className="transition-colors text-base font-medium hover:underline"
+                    style={{ color: '#43e97b' }}
+                    onMouseOver={(e) => e.target.style.color = '#38f9d7'}
+                    onMouseOut={(e) => e.target.style.color = '#43e97b'}
                   >
                     Download Phantom Wallet →
                   </a>
@@ -131,7 +183,10 @@ export default function WelcomePage() {
                     href="https://solflare.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-korus-primary hover:text-korus-secondary transition-colors text-base font-medium hover:underline"
+                    className="transition-colors text-base font-medium hover:underline"
+                    style={{ color: '#43e97b' }}
+                    onMouseOver={(e) => e.target.style.color = '#38f9d7'}
+                    onMouseOut={(e) => e.target.style.color = '#43e97b'}
                   >
                     Download Solflare Wallet →
                   </a>
@@ -165,7 +220,10 @@ export default function WelcomePage() {
               </p>
               <Link
                 href="/"
-                className="text-korus-primary hover:text-korus-secondary transition-colors text-sm font-medium hover:underline"
+                className="transition-colors text-sm font-medium hover:underline"
+                style={{ color: '#43e97b' }}
+                onMouseOver={(e) => e.target.style.color = '#38f9d7'}
+                onMouseOut={(e) => e.target.style.color = '#43e97b'}
               >
                 Continue to app →
               </Link>

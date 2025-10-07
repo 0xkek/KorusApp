@@ -67,7 +67,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
                   style={{
                     backgroundImage: `
                       linear-gradient(#0a0a0a, #0a0a0a),
-                      linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)
+                      linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)
                     `,
                     backgroundOrigin: 'border-box',
                     backgroundClip: 'padding-box, border-box',
@@ -86,7 +86,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
                   <span
                     className="text-lg font-semibold flex-1 text-left"
                     style={{
-                      background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                      background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text',
@@ -99,7 +99,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
                   <span
                     className="text-sm font-medium"
                     style={{
-                      background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                      background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text',
@@ -128,7 +128,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
                   style={{
                     backgroundImage: `
                       linear-gradient(#0a0a0a, #0a0a0a),
-                      linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)
+                      linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)
                     `,
                     backgroundOrigin: 'border-box',
                     backgroundClip: 'padding-box, border-box',
@@ -147,7 +147,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
                   <span
                     className="text-lg font-semibold flex-1 text-left"
                     style={{
-                      background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                      background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text',

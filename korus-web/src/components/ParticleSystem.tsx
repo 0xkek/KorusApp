@@ -16,22 +16,34 @@ interface Particle {
 
 type ParticleType = 'like' | 'tip' | 'reply';
 
-const particleConfigs: Record<ParticleType, { emojis: string[]; count: number; colors: string[] }> = {
-  like: {
-    emojis: ['❤️', '✨', '💖', '💫'],
-    count: 8,
-    colors: ['#ff6b6b', '#ff8e8e', '#ffa8a8'],
-  },
-  tip: {
-    emojis: ['💰', '⭐', '💎', '✨', '🪙'],
-    count: 10,
-    colors: ['#43e97b', '#38f9d7', '#FFD700'],
-  },
-  reply: {
-    emojis: ['💬', '✨', '💭', '💫'],
-    count: 5,
-    colors: ['#43e97b', '#38f9d7', '#ffffff'],
-  },
+const getThemeColors = () => {
+  if (typeof window === 'undefined') return { primary: '#43e97b', secondary: '#38f9d7' };
+  const root = document.documentElement;
+  return {
+    primary: getComputedStyle(root).getPropertyValue('--korus-primary').trim() || '#43e97b',
+    secondary: getComputedStyle(root).getPropertyValue('--korus-secondary').trim() || '#38f9d7',
+  };
+};
+
+const getParticleConfigs = (): Record<ParticleType, { emojis: string[]; count: number; colors: string[] }> => {
+  const themeColors = getThemeColors();
+  return {
+    like: {
+      emojis: ['❤️', '✨', '💖', '💫'],
+      count: 8,
+      colors: ['#ff6b6b', '#ff8e8e', '#ffa8a8'],
+    },
+    tip: {
+      emojis: ['💰', '⭐', '💎', '✨', '🪙'],
+      count: 10,
+      colors: [themeColors.primary, themeColors.secondary, '#FFD700'],
+    },
+    reply: {
+      emojis: ['💬', '✨', '💭', '💫'],
+      count: 5,
+      colors: [themeColors.primary, themeColors.secondary, '#ffffff'],
+    },
+  };
 };
 
 export const ParticleSystem = () => {
@@ -39,6 +51,7 @@ export const ParticleSystem = () => {
 
   useEffect(() => {
     const createExplosion = (type: ParticleType, x: number, y: number) => {
+      const particleConfigs = getParticleConfigs();
       const config = particleConfigs[type];
       const newParticles: Particle[] = [];
 

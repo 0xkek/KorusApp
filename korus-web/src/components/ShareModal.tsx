@@ -131,7 +131,7 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
         {/* Modal Header */}
         <div className="flex items-center justify-between p-5 border-b border-korus-border">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #43E97B, #38EF7D)', boxShadow: '0 10px 15px -3px rgba(67, 233, 123, 0.4)' }}>
+            <div className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 40%, transparent)' }}>
               <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
               </svg>
@@ -154,9 +154,9 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
 
         {/* Post Preview */}
         <div className="p-5">
-          <div className="p-4 rounded-xl border-2" style={{ background: 'linear-gradient(90deg, rgba(67, 233, 123, 0.1), rgba(56, 239, 125, 0.1))', borderColor: 'rgba(67, 233, 123, 0.3)' }}>
+          <div className="p-4 rounded-xl border-2" style={{ background: 'linear-gradient(90deg, color-mix(in srgb, var(--korus-primary) 10%, transparent), color-mix(in srgb, var(--korus-secondary) 10%, transparent))', borderColor: 'color-mix(in srgb, var(--korus-primary) 30%, transparent)' }}>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-black" style={{ background: 'linear-gradient(135deg, #43E97B, #38EF7D)' }}>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-black" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))' }}>
                 {postUser.slice(0, 2).toUpperCase()}
               </div>
               <span className="text-white font-medium">{postUser}</span>
@@ -179,7 +179,7 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
                   className="flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 hover:scale-[1.02]"
                   style={{
                     backgroundColor: 'rgba(26, 26, 26, 0.4)',
-                    borderColor: 'rgba(67, 233, 123, 0.2)'
+                    borderColor: 'color-mix(in srgb, var(--korus-primary) 20%, transparent)'
                   }}
                 >
                   <div className={`${option.color}`}>
@@ -215,7 +215,7 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
                   }
                 }}
                 className="px-4 py-2.5 rounded-lg font-semibold transition-all duration-200 hover:scale-[1.02]"
-                style={{ background: 'linear-gradient(135deg, #43E97B, #38EF7D)', color: '#000000' }}
+                style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))', color: '#000000' }}
               >
                 Copy
               </button>

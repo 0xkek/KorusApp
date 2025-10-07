@@ -3,7 +3,9 @@
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useTheme } from 'next-themes';
+import { useRouter } from 'next/navigation';
 
 interface HeaderProps {
   selectedCategory?: string | null;
@@ -20,12 +22,33 @@ export default function Header({
 }: HeaderProps) {
   const { connected, publicKey } = useWallet();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { theme } = useTheme();
+  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const categories = ['GENERAL', 'GAMES', 'EVENTS'];
 
   const handleCategoryClick = (category: string) => {
-    const newCategory = category === 'GENERAL' ? null : category;
-    onCategoryChange?.(newCategory);
+    if (category === 'GENERAL') {
+      router.push('/');
+    } else if (category === 'GAMES') {
+      router.push('/games');
+    } else if (category === 'EVENTS') {
+      router.push('/events');
+    } else {
+      const newCategory = category;
+      onCategoryChange?.(newCategory);
+    }
+  };
+
+  // Get text color based on current theme
+  const getTextColor = () => {
+    if (!theme) return '#ffffff'; // fallback to white
+    return theme.includes('Dark') ? '#ffffff' : '#1a1a1a';
   };
 
   return (
@@ -43,7 +66,15 @@ export default function Header({
               </button>
             )}
 
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-korus-primary to-korus-secondary bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(67,233,123,0.5)] flex-shrink-0">
+            <h1
+              className="text-2xl font-bold bg-gradient-to-r from-korus-primary to-korus-secondary bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(67,233,123,0.5)] flex-shrink-0"
+              style={{
+                background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}
+            >
               Korus
             </h1>
           </div>
@@ -62,9 +93,15 @@ export default function Header({
                   className={`px-6 py-2 rounded-lg font-bold text-sm transition-all border-2 ${
                     isActive
                       ? 'bg-gradient-to-r from-korus-primary to-korus-secondary border-transparent shadow-[0_0_15px_rgba(67,233,123,0.4)]'
-                      : 'bg-korus-dark-300 text-gray-400 border-korus-primary/30 hover:text-white hover:border-korus-primary/50 hover:bg-korus-dark-400'
+                      : 'border-korus-primary/30 hover:border-korus-primary/50'
                   }`}
-                  style={isActive ? { color: '#000000' } : undefined}
+                  style={isActive ?
+                    { color: '#000000' } :
+                    {
+                      backgroundColor: 'var(--color-surface)',
+                      color: 'var(--color-text)'
+                    }
+                  }
                 >
                   {category}
                 </button>
@@ -85,7 +122,9 @@ export default function Header({
                 </svg>
               </button>
             )}
-            <WalletMultiButton />
+            {mounted && (
+              <WalletMultiButton />
+            )}
           </div>
         </div>
       </div>

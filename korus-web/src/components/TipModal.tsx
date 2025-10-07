@@ -100,7 +100,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
         {/* Modal Header */}
         <div className="flex items-center justify-between p-5 border-b border-korus-border">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #43E97B, #38EF7D)', boxShadow: '0 10px 15px -3px rgba(67, 233, 123, 0.4)' }}>
+            <div className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 40%, transparent)' }}>
               <span className="text-2xl">💰</span>
             </div>
             <div>
@@ -124,7 +124,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
         <div className="p-5 space-y-5">
           {/* Balance Display */}
           {connected && (
-            <div className="flex items-center justify-between p-3 rounded-xl border" style={{ backgroundColor: 'rgba(67, 233, 123, 0.1)', borderColor: 'rgba(67, 233, 123, 0.3)' }}>
+            <div className="flex items-center justify-between p-3 rounded-xl border" style={{ backgroundColor: 'color-mix(in srgb, var(--korus-primary) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--korus-primary) 30%, transparent)' }}>
               <span className="text-sm text-korus-textSecondary">Your Balance</span>
               <span className="text-base font-bold text-korus-primary">{balance.toFixed(3)} SOL</span>
             </div>
@@ -140,8 +140,8 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
                   onClick={() => handleAmountSelect(amount)}
                   className="relative p-2.5 rounded-lg border transition-all duration-200"
                   style={{
-                    backgroundColor: selectedAmount === amount ? 'rgba(67, 233, 123, 0.2)' : 'rgba(26, 26, 26, 0.4)',
-                    borderColor: selectedAmount === amount ? '#43E97B' : 'rgba(67, 233, 123, 0.2)'
+                    backgroundColor: selectedAmount === amount ? 'color-mix(in srgb, var(--korus-primary) 20%, transparent)' : 'rgba(26, 26, 26, 0.4)',
+                    borderColor: selectedAmount === amount ? 'var(--korus-primary)' : 'color-mix(in srgb, var(--korus-primary) 20%, transparent)'
                   }}
                 >
                   <div className="text-xs font-medium text-white mb-1">{amount} SOL</div>
@@ -161,7 +161,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
                 onChange={handleCustomAmountChange}
                 placeholder="0.0"
                 className="w-full bg-korus-surface/40 text-white text-lg font-medium pl-4 pr-16 py-3 rounded-xl border border-korus-borderLight focus:outline-none transition-colors"
-                style={{ borderColor: customAmount ? '#43E97B' : '' }}
+                style={{ borderColor: customAmount ? 'var(--korus-primary)' : '' }}
               />
               <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-korus-textSecondary font-medium">
                 SOL
@@ -176,7 +176,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
 
           {/* Transaction Summary */}
           {finalAmount > 0 && (
-            <div className="p-4 border-2 rounded-xl shadow-lg" style={{ background: 'linear-gradient(90deg, rgba(67, 233, 123, 0.1), rgba(56, 239, 125, 0.1))', borderColor: 'rgba(67, 233, 123, 0.3)', boxShadow: '0 10px 15px -3px rgba(67, 233, 123, 0.1)' }}>
+            <div className="p-4 border-2 rounded-xl shadow-lg" style={{ background: 'linear-gradient(90deg, color-mix(in srgb, var(--korus-primary) 10%, transparent), color-mix(in srgb, var(--korus-secondary) 10%, transparent))', borderColor: 'color-mix(in srgb, var(--korus-primary) 30%, transparent)', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 10%, transparent)' }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-korus-textSecondary">Tip Amount</span>
                 <span className="text-sm font-bold text-white">{finalAmount.toFixed(3)} SOL</span>
@@ -185,9 +185,9 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
                 <span className="text-sm text-korus-textSecondary">Network Fee</span>
                 <span className="text-sm font-bold text-white">~0.0005 SOL</span>
               </div>
-              <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'rgba(67, 233, 123, 0.3)' }}>
+              <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'color-mix(in srgb, var(--korus-primary) 30%, transparent)' }}>
                 <span className="text-base font-bold text-korus-primary">Total</span>
-                <span className="text-2xl font-black text-korus-primary" style={{ filter: 'drop-shadow(0 0 8px rgba(67, 233, 123, 0.5))' }}>{(finalAmount + 0.0005).toFixed(4)} SOL</span>
+                <span className="text-2xl font-black text-korus-primary" style={{ filter: 'drop-shadow(0 0 8px color-mix(in srgb, var(--korus-primary) 50%, transparent))' }}>{(finalAmount + 0.0005).toFixed(4)} SOL</span>
               </div>
             </div>
           )}
@@ -219,7 +219,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
             onClick={handleSendTip}
             disabled={finalAmount <= 0 || isSending || isInsufficientFunds || !connected}
             className="flex-1 px-5 py-3 rounded-xl font-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] disabled:hover:scale-100"
-            style={{ background: 'linear-gradient(135deg, #43E97B 0%, #38EF7D 100%)', color: '#000000', boxShadow: '0 10px 15px -3px rgba(67, 233, 123, 0.3)' }}
+            style={{ background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)', color: '#000000', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 30%, transparent)' }}
           >
             {isSending ? (
               <div className="flex items-center justify-center gap-2">

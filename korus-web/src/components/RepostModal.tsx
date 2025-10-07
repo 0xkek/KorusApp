@@ -54,7 +54,7 @@ export default function RepostModal({ isOpen, onClose, postId, postContent, post
         {/* Modal Header */}
         <div className="flex items-center justify-between p-5 border-b border-korus-border">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #43E97B, #38EF7D)', boxShadow: '0 10px 15px -3px rgba(67, 233, 123, 0.4)' }}>
+            <div className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 40%, transparent)' }}>
               <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
@@ -81,9 +81,9 @@ export default function RepostModal({ isOpen, onClose, postId, postContent, post
           {/* Original Post Preview */}
           <div>
             <h3 className="text-sm font-semibold mb-3 text-korus-primary">Original Post</h3>
-            <div className="border-2 rounded-xl p-4" style={{ background: 'linear-gradient(90deg, rgba(67, 233, 123, 0.1), rgba(56, 239, 125, 0.1))', borderColor: 'rgba(67, 233, 123, 0.3)' }}>
+            <div className="border-2 rounded-xl p-4" style={{ background: 'linear-gradient(90deg, color-mix(in srgb, var(--korus-primary) 10%, transparent), color-mix(in srgb, var(--korus-secondary) 10%, transparent))', borderColor: 'color-mix(in srgb, var(--korus-primary) 30%, transparent)' }}>
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-black" style={{ background: 'linear-gradient(135deg, #43E97B, #38EF7D)' }}>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-black" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))' }}>
                   {postUser.slice(0, 2).toUpperCase()}
                 </div>
                 <span className="text-white font-medium">{postUser}</span>
@@ -101,7 +101,7 @@ export default function RepostModal({ isOpen, onClose, postId, postContent, post
               placeholder="Share your thoughts about this post..."
               maxLength={280}
               className="w-full bg-korus-surface/40 text-white pl-4 pr-4 py-3 rounded-xl border border-korus-borderLight focus:outline-none transition-colors resize-none"
-              style={{ borderColor: comment ? '#43E97B' : '' }}
+              style={{ borderColor: comment ? 'var(--korus-primary)' : '' }}
               rows={4}
             />
             <div className="flex justify-end mt-1">
@@ -123,7 +123,7 @@ export default function RepostModal({ isOpen, onClose, postId, postContent, post
             onClick={handleRepost}
             disabled={isProcessing || !connected}
             className="flex-1 px-5 py-3 rounded-xl font-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] disabled:hover:scale-100"
-            style={{ background: 'linear-gradient(135deg, #43E97B 0%, #38EF7D 100%)', color: '#000000', boxShadow: '0 10px 15px -3px rgba(67, 233, 123, 0.3)' }}
+            style={{ background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)', color: '#000000', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 30%, transparent)' }}
           >
             {isProcessing ? (
               <div className="flex items-center justify-center gap-2">

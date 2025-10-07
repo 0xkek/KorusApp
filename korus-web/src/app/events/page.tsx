@@ -5,6 +5,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
+import { useToast } from '@/hooks/useToast';
 
 interface Event {
   id: string;
@@ -28,6 +29,7 @@ interface Event {
 export default function EventsPage() {
   const { connected, publicKey } = useWallet();
   const router = useRouter();
+  const { showSuccess, showError } = useToast();
   const [showNotifications, setShowNotifications] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
@@ -174,7 +176,7 @@ export default function EventsPage() {
     setTimeout(() => {
       setIsParticipating(false);
       setShowEventModal(false);
-      alert(`Success! You've successfully joined the ${selectedEvent.title}`);
+      showSuccess(`Success! You've successfully joined the ${selectedEvent.title}`);
     }, 2000);
   };
 

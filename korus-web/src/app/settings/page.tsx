@@ -1,24 +1,114 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useTheme } from 'next-themes';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
+
+// TypeScript interfaces for better type safety
+interface ThemeOption {
+  id: string;
+  name: string;
+  colors: [string, string];
+  free: boolean;
+}
+
+interface ToastMessage {
+  message: string;
+  timestamp: number;
+}
+
+// Custom hook for debounced localStorage operations
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 export default function SettingsPage() {
   const { connected, disconnect } = useWallet();
   const router = useRouter();
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [hideSponsoredPosts, setHideSponsoredPosts] = useState(false);
   const [hideGamePosts, setHideGamePosts] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
+
+  // Prevent hydration mismatch and load saved settings
+  useEffect(() => {
+    setMounted(true);
+
+    // Load saved settings from localStorage with error handling
+    if (typeof window !== 'undefined') {
+      try {
+        const savedPremium = localStorage.getItem('korus-premium-status');
+        const savedHideShoutout = localStorage.getItem('korus-hide-shoutout');
+
+        if (savedPremium) {
+          setIsPremium(savedPremium === 'true');
+        }
+        if (savedHideShoutout) {
+          setHideSponsoredPosts(savedHideShoutout === 'true');
+        }
+      } catch (error) {
+        console.error('Failed to load settings from localStorage:', error);
+      }
+    }
+  }, []);
+
+  const isDarkMode = useMemo(() => {
+    return mounted ? resolvedTheme?.includes('Dark') : true;
+  }, [mounted, resolvedTheme]);
+
+  const currentColorScheme = useMemo(() => {
+    return mounted ? resolvedTheme?.replace('Dark', '').replace('Light', '') || 'mint' : 'mint';
+  }, [mounted, resolvedTheme]);
+
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showFAQModal, setShowFAQModal] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [showAdsModal, setShowAdsModal] = useState(false);
-  const [colorScheme, setColorScheme] = useState('mint');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  // Debounced values for localStorage optimization
+  const debouncedPremium = useDebounce(isPremium, 500);
+  const debouncedHideShoutout = useDebounce(hideSponsoredPosts, 500);
+
+  // Debounced localStorage saves to prevent excessive writes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && mounted) {
+      try {
+        localStorage.setItem('korus-premium-status', debouncedPremium.toString());
+      } catch (error) {
+        console.error('Failed to save premium status:', error);
+      }
+    }
+  }, [debouncedPremium, mounted]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && mounted) {
+      try {
+        localStorage.setItem('korus-hide-shoutout', debouncedHideShoutout.toString());
+      } catch (error) {
+        console.error('Failed to save shoutout preference:', error);
+      }
+    }
+  }, [debouncedHideShoutout, mounted]);
 
   useEffect(() => {
     if (!connected) {
@@ -26,35 +116,65 @@ export default function SettingsPage() {
     }
   }, [connected, router]);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
+    setIsLoggingOut(true);
     try {
       await disconnect();
       router.push('/welcome');
     } catch (error) {
       console.error('Logout error:', error);
+      // Still navigate even if disconnect fails
+      router.push('/welcome');
+    } finally {
+      setIsLoggingOut(false);
     }
-  };
+  }, [disconnect, router]);
 
-  const themes = [
+  const showSuccess = useCallback((message: string) => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(''), 3000);
+  }, []);
+
+  const handleThemeChange = useCallback((newTheme: string) => {
+    try {
+      if (mounted) {
+        setTheme(newTheme);
+        showSuccess('Theme updated successfully!');
+      }
+    } catch (error) {
+      console.error('Theme change error:', error);
+      // Could add user notification here
+    }
+  }, [mounted, setTheme, showSuccess]);
+
+  const themes: ThemeOption[] = useMemo(() => [
     { id: 'mint', name: 'Mint Fresh', colors: ['#43e97b', '#38f9d7'], free: true },
-    { id: 'purple', name: 'Royal Purple', colors: ['#BB73E0', '#A055D6'], free: false },
-    { id: 'blue', name: 'Ocean Blue', colors: ['#4A90E2', '#7B68EE'], free: false },
+    { id: 'purple', name: 'Royal Purple', colors: ['#9945FF', '#E935C1'], free: false },
+    { id: 'blue', name: 'Blue Sky', colors: ['#00D4FF', '#5B8DEF'], free: false },
     { id: 'gold', name: 'Premium Gold', colors: ['#FFD700', '#FFA500'], free: false },
     { id: 'cherry', name: 'Cherry Blossom', colors: ['#FF6B9D', '#FF8E9E'], free: false },
     { id: 'cyber', name: 'Cyber Neon', colors: ['#00FFF0', '#FF10F0'], free: false },
-  ];
+  ], []);
 
   if (!connected) {
     return null;
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-black via-korus-dark-100 to-black relative overflow-hidden">
-      {/* Background gradients */}
-      <div className="fixed inset-0">
-        <div className="absolute -top-40 -right-40 w-[1000px] h-[1000px] bg-korus-primary/15 rounded-full blur-[140px] animate-float" />
-        <div className="absolute -bottom-40 -left-40 w-[900px] h-[900px] bg-korus-secondary/12 rounded-full blur-[120px] animate-float-delayed" />
-        <div className="absolute top-1/3 left-1/3 w-[800px] h-[800px] bg-korus-accent/10 rounded-full blur-[100px] animate-float-slow" />
+    <main className="min-h-screen bg-korus-dark-100 relative overflow-hidden">
+      {/* Standardized static background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-korus-dark-100 via-korus-dark-200 to-korus-dark-100">
+        {/* Surface gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-korus-dark-300/25 to-korus-dark-200/35" />
+      </div>
+      {/* Static gradient orbs for visual depth */}
+      <div className="fixed inset-0 overflow-hidden">
+        {/* Primary gradient orb */}
+        <div className="absolute -top-32 -right-32 w-[600px] h-[600px] bg-gradient-to-br from-korus-primary/8 to-korus-secondary/6 rounded-full blur-[80px]" />
+        {/* Secondary gradient orb */}
+        <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-gradient-to-tr from-korus-secondary/6 to-korus-primary/8 rounded-full blur-[70px]" />
+        {/* Accent orb for depth */}
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-to-r from-korus-primary/4 to-korus-secondary/4 rounded-full blur-[60px]" />
       </div>
 
       {/* Content wrapper */}
@@ -64,7 +184,7 @@ export default function SettingsPage() {
           <div className="flex-1 lg:ml-80 lg:mr-96 md:ml-64 md:mr-80 sm:ml-0 sm:mr-0 md:border-x md:border-korus-border bg-korus-surface/10 backdrop-blur-sm max-w-full overflow-hidden">
 
             {/* Header */}
-            <div className="sticky top-0 bg-korus-dark-300/80 backdrop-blur-xl border-b border-korus-border z-10 p-4">
+            <div className="sticky top-0 bg-korus-surface/80 backdrop-blur-xl border-b border-korus-border z-10 p-4">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => router.back()}
@@ -72,7 +192,7 @@ export default function SettingsPage() {
                 >
                   ←
                 </button>
-                <h1 className="text-white text-2xl font-bold">Settings</h1>
+                <h1 className="text-3xl font-bold text-korus-text">Settings</h1>
               </div>
             </div>
 
@@ -81,50 +201,92 @@ export default function SettingsPage() {
 
               {/* Premium Section */}
               <div className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
-                <h2 className="text-white text-xl font-bold mb-4">Premium Status</h2>
-                {isPremium ? (
-                  <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-4 flex items-center gap-3">
-                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                <h2 className="text-2xl font-bold text-korus-text mb-4 flex items-center gap-2">
+                  Premium Status
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
+                    <svg className="w-4 h-4" fill="black" viewBox="0 0 24 24">
+                      <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
                     </svg>
-                    <span className="text-white font-bold text-lg">PREMIUM MEMBER</span>
+                  </div>
+                </h2>
+                {isPremium ? (
+                  <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-4 flex items-center gap-3 white-text">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
+                      <svg className="w-5 h-5" fill="black" viewBox="0 0 24 24">
+                        <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
+                      </svg>
+                    </div>
+                    <span className="font-bold text-lg" style={{ color: '#FFD700' }}>PREMIUM MEMBER</span>
                   </div>
                 ) : (
                   <div
-                    onClick={() => setShowPremiumModal(true)}
-                    className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-4 w-full font-bold hover:shadow-lg transition-all duration-200 cursor-pointer text-white white-text"
+                    className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-xl p-4"
+                    style={{
+                      boxShadow: '0 0 10px var(--korus-primary), 0 0 20px var(--korus-primary)'
+                    }}
                   >
-                    Upgrade to Premium - $4.99/month
+                    <div
+                      onClick={() => setShowPremiumModal(true)}
+                      className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-4 w-full font-bold hover:shadow-lg transition-all duration-200 cursor-pointer text-white white-text text-center flex items-center justify-center gap-3"
+                    >
+                      <div>
+                        <div>Upgrade to Premium</div>
+                        <div className="text-sm mt-1 opacity-90">0.1 SOL/month • 1 SOL/year</div>
+                      </div>
+                    </div>
                   </div>
                 )}
+
+                {/* Premium Benefits Description */}
+                <div className="mt-4 p-4 bg-korus-surface/20 rounded-xl border border-korus-borderLight">
+                  <div className="text-korus-textSecondary text-sm space-y-2">
+                    <p className="text-yellow-400 font-semibold mb-3">Premium Membership Includes:</p>
+                    <div className="space-y-1">
+                      <p>• Ad-free browsing with hidden shoutout posts</p>
+                      <p>• 5 exclusive color themes (Purple, Blue Sky, Gold, Cherry & Cyber)</p>
+                      <p>• Gold verified badge on your profile</p>
+                      <p>• Unlimited username changes</p>
+                      <p>• Custom SNS domain display names</p>
+                      <p>• Priority access to new features and events</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
 
               {/* Appearance Settings */}
               <div className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
-                <h2 className="text-white text-xl font-bold mb-4">Appearance</h2>
+                <h2 className="text-2xl font-bold text-korus-text mb-4">Appearance</h2>
                 <div className="space-y-4">
 
                   {/* Dark Mode */}
                   <div className="flex items-center justify-between p-4 bg-korus-surface/20 rounded-xl border border-korus-borderLight">
                     <div>
-                      <div className="text-white font-medium">Dark Mode</div>
-                      <div className="text-gray-400 text-sm">Available for all users</div>
+                      <div className="text-korus-text font-medium">Dark Mode</div>
+                      <div className="text-korus-textSecondary text-sm">Available for all users</div>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
                         checked={isDarkMode}
-                        onChange={(e) => setIsDarkMode(e.target.checked)}
-                        className="sr-only peer"
+                        onChange={(e) => {
+                          const newTheme = e.target.checked ? `${currentColorScheme}Dark` : `${currentColorScheme}Light`;
+                          handleThemeChange(newTheme);
+                        }}
+                        className="sr-only"
+                        aria-label="Toggle dark mode"
+                        role="switch"
+                        aria-checked={isDarkMode}
                       />
-                      <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-korus-primary"></div>
+                      <div className={`toggle-switch ${isDarkMode ? 'toggle-switch-active' : 'toggle-switch-inactive'}`}>
+                        <div className={`toggle-switch-thumb ${isDarkMode ? 'toggle-switch-thumb-active' : ''}`}></div>
+                      </div>
                     </label>
                   </div>
 
                   {/* Color Theme */}
                   <div className="p-4 bg-korus-surface/20 rounded-xl border border-korus-borderLight">
-                    <div className="text-white font-medium mb-3">Color Theme</div>
+                    <div className="text-korus-text font-medium mb-3">Color Theme</div>
                     <div className="grid grid-cols-2 gap-3">
                       {themes.map((theme) => (
                         <button
@@ -134,10 +296,11 @@ export default function SettingsPage() {
                               setShowPremiumModal(true);
                               return;
                             }
-                            setColorScheme(theme.id);
+                            const newTheme = isDarkMode ? `${theme.id}Dark` : `${theme.id}Light`;
+                            handleThemeChange(newTheme);
                           }}
                           className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 ${
-                            colorScheme === theme.id
+                            currentColorScheme === theme.id
                               ? 'border-korus-primary bg-korus-primary/10'
                               : 'border-korus-borderLight hover:border-korus-border'
                           }`}
@@ -149,12 +312,12 @@ export default function SettingsPage() {
                             }}
                           />
                           <div className="flex-1 text-left">
-                            <div className="text-white text-sm font-medium">{theme.name}</div>
+                            <div className="text-korus-text text-sm font-medium">{theme.name}</div>
                             {!theme.free && !isPremium && (
                               <div className="text-yellow-400 text-xs">PREMIUM</div>
                             )}
                           </div>
-                          {colorScheme === theme.id && (
+                          {currentColorScheme === theme.id && (
                             <svg className="w-5 h-5 text-korus-primary" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                             </svg>
@@ -168,12 +331,12 @@ export default function SettingsPage() {
 
               {/* Premium Features */}
               <div className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
-                <h2 className="text-white text-xl font-bold mb-4">Premium Features</h2>
+                <h2 className="text-2xl font-bold text-korus-text mb-4">Premium Features</h2>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 bg-korus-surface/20 rounded-xl border border-korus-borderLight">
                     <div>
-                      <div className="text-white font-medium">Hide Sponsored Posts</div>
-                      <div className="text-gray-400 text-sm">Remove sponsored content from your feed</div>
+                      <div className="text-korus-text font-medium">Hide Shoutout</div>
+                      <div className="text-korus-textSecondary text-sm">Remove shoutout content from your feed</div>
                     </div>
                     <div className="flex items-center gap-2">
                       {!isPremium && (
@@ -188,65 +351,64 @@ export default function SettingsPage() {
                               setShowPremiumModal(true);
                               return;
                             }
-                            setHideSponsoredPosts(e.target.checked);
+                            const newHideShoutoutStatus = e.target.checked;
+                            setHideSponsoredPosts(newHideShoutoutStatus);
+                            showSuccess(`Shoutout posts ${newHideShoutoutStatus ? 'hidden' : 'shown'}`);
                           }}
-                          className="sr-only peer"
+                          className="sr-only"
                           disabled={!isPremium}
+                          aria-label="Hide shoutout posts (Premium feature)"
+                          role="switch"
+                          aria-checked={hideSponsoredPosts && isPremium}
+                          aria-disabled={!isPremium}
                         />
-                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-korus-primary peer-disabled:opacity-50"></div>
+                        <div className={`toggle-switch ${
+                          (hideSponsoredPosts && isPremium) ? 'toggle-switch-active' : 'toggle-switch-inactive'
+                        } ${!isPremium ? 'toggle-switch-disabled' : ''}`}>
+                          <div className={`toggle-switch-thumb ${
+                            (hideSponsoredPosts && isPremium) ? 'toggle-switch-thumb-active' : ''
+                          } ${!isPremium ? 'toggle-switch-thumb-disabled' : ''}`}></div>
+                        </div>
                       </label>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Content Preferences */}
-              <div className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
-                <h2 className="text-white text-xl font-bold mb-4">Content Preferences</h2>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-korus-surface/20 rounded-xl border border-korus-borderLight">
-                    <div>
-                      <div className="text-white font-medium">Hide Game Posts</div>
-                      <div className="text-gray-400 text-sm">Remove mini game posts from your feed</div>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={hideGamePosts}
-                        onChange={(e) => setHideGamePosts(e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-korus-primary"></div>
-                    </label>
-                  </div>
-                </div>
-              </div>
 
-              {/* Debug Options */}
-              <div className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
-                <h2 className="text-white text-xl font-bold mb-4">Debug Options</h2>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-korus-surface/20 rounded-xl border border-korus-borderLight">
-                    <div>
-                      <div className="text-white font-medium">Toggle Premium Status</div>
-                      <div className="text-gray-400 text-sm">For testing premium features</div>
+              {/* Debug Options - Development Only */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
+                  <h2 className="text-korus-text text-xl font-bold mb-4">Debug Options</h2>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-korus-surface/20 rounded-xl border border-korus-borderLight">
+                      <div>
+                        <div className="text-korus-text font-medium">Toggle Premium Status</div>
+                        <div className="text-korus-textSecondary text-sm">For testing premium features</div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isPremium}
+                          onChange={(e) => {
+                            const newPremiumStatus = e.target.checked;
+                            setIsPremium(newPremiumStatus);
+                            showSuccess(`Premium status ${newPremiumStatus ? 'enabled' : 'disabled'}`);
+                          }}
+                          className="sr-only"
+                        />
+                        <div className={`toggle-switch ${isPremium ? 'toggle-switch-active' : 'toggle-switch-inactive'}`}>
+                          <div className={`toggle-switch-thumb ${isPremium ? 'toggle-switch-thumb-active' : ''}`}></div>
+                        </div>
+                      </label>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={isPremium}
-                        onChange={(e) => setIsPremium(e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-korus-primary"></div>
-                    </label>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Support & Information */}
               <div className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
-                <h2 className="text-white text-xl font-bold mb-4">Support & Information</h2>
+                <h2 className="text-korus-text text-xl font-bold mb-4">Support & Information</h2>
                 <div className="space-y-3">
                   <button
                     onClick={() => setShowFAQModal(true)}
@@ -256,7 +418,7 @@ export default function SettingsPage() {
                       <svg className="w-6 h-6 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span className="text-white font-medium">FAQ</span>
+                      <span className="text-korus-text font-medium">FAQ</span>
                     </div>
                     <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -271,7 +433,7 @@ export default function SettingsPage() {
                       <svg className="w-6 h-6 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                       </svg>
-                      <span className="text-white font-medium">Community Rules</span>
+                      <span className="text-korus-text font-medium">Community Rules</span>
                     </div>
                     <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -286,7 +448,7 @@ export default function SettingsPage() {
                       <svg className="w-6 h-6 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
                       </svg>
-                      <span className="text-white font-medium">Advertise with Korus</span>
+                      <span className="text-korus-text font-medium">Advertise with Korus</span>
                     </div>
                     <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -297,7 +459,7 @@ export default function SettingsPage() {
 
               {/* Account */}
               <div className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
-                <h2 className="text-white text-xl font-bold mb-4">Account</h2>
+                <h2 className="text-korus-text text-xl font-bold mb-4">Account</h2>
                 <button
                   onClick={() => setShowLogoutConfirm(true)}
                   className="flex items-center justify-between p-4 bg-korus-surface/20 rounded-xl border border-korus-borderLight hover:bg-red-500/20 transition-all duration-200 w-full"
@@ -326,20 +488,28 @@ export default function SettingsPage() {
               <svg className="w-12 h-12 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              <h3 className="text-white text-xl font-bold mb-2">Logout from Korus?</h3>
-              <p className="text-gray-400 mb-6">This will disconnect your wallet and you'll need to reconnect to use the app again.</p>
+              <h3 className="text-korus-text text-xl font-bold mb-2">Logout from Korus?</h3>
+              <p className="text-korus-textSecondary mb-6">This will disconnect your wallet and you'll need to reconnect to use the app again.</p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowLogoutConfirm(false)}
-                  className="flex-1 px-4 py-2 bg-korus-surface/40 text-white rounded-xl hover:bg-korus-surface/60 transition-colors"
+                  className="flex-1 px-4 py-2 bg-korus-surface/40 text-korus-text rounded-xl hover:bg-korus-surface/60 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors"
+                  disabled={isLoggingOut}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Logout
+                  {isLoggingOut ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Logging out...
+                    </div>
+                  ) : (
+                    'Logout'
+                  )}
                 </button>
               </div>
             </div>
@@ -358,56 +528,85 @@ export default function SettingsPage() {
           >
             <div className="text-center">
               <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 white-text">
-                {/* Outline Star - User's choice */}
-                <svg className="w-8 h-8" style={{ color: '#FFD700' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                {/* Filled Star - Consistent with premium branding */}
+                <svg className="w-8 h-8" style={{ color: '#FFD700' }} fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
                 </svg>
               </div>
               <h3 className="text-xl font-bold mb-2" style={{ color: '#FFD700' }}>Unlock Premium</h3>
-              <p className="text-gray-400 mb-6">Get exclusive features with Korus Premium</p>
+              <p className="text-korus-textSecondary mb-6">Get exclusive features with Korus Premium</p>
 
               <div className="space-y-3 mb-6 text-left">
                 <div className="flex items-center gap-3">
                   <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                   </svg>
-                  <span className="text-white">Hide sponsored posts</span>
+                  <span className="text-korus-text">Hide shoutout posts</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                   </svg>
-                  <span className="text-white">Exclusive color themes</span>
+                  <span className="text-korus-text">Exclusive color themes</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                   </svg>
-                  <span className="text-white">Gold verified badge</span>
+                  <span className="text-korus-text">Gold verified badge</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                   </svg>
-                  <span className="text-white">Early access to events</span>
+                  <span className="text-korus-text">Early access to events</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                  </svg>
+                  <span className="text-korus-text">+20% rep score</span>
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div className="space-y-3">
                 <button
-                  onClick={() => setShowPremiumModal(false)}
-                  className="flex-1 px-4 py-2 bg-korus-surface/40 text-white rounded-xl hover:bg-korus-surface/60 transition-colors"
+                  onClick={() => {
+                    setIsPremium(true);
+                    setShowPremiumModal(false);
+                  }}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 white-text border border-korus-border"
+                  style={{
+                    boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)'
+                  }}
                 >
-                  Maybe Later
+                  <div className="font-bold">Monthly - 0.1 SOL</div>
+                  <div className="text-sm opacity-90">Paid monthly</div>
                 </button>
                 <button
                   onClick={() => {
                     setIsPremium(true);
                     setShowPremiumModal(false);
                   }}
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 white-text"
+                  className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 white-text relative border border-korus-border"
+                  style={{
+                    boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)'
+                  }}
                 >
-                  Subscribe $4.99/month
+                  <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                    SAVE 2 MONTHS
+                  </div>
+                  <div className="font-bold">Yearly - 1 SOL</div>
+                  <div className="text-sm opacity-90">Paid annually</div>
+                </button>
+                <button
+                  onClick={() => setShowPremiumModal(false)}
+                  className="w-full px-4 py-2 bg-korus-surface/40 text-korus-text rounded-xl hover:bg-korus-surface/60 transition-colors border border-korus-border"
+                  style={{
+                    boxShadow: '0 0 3px var(--korus-primary), 0 0 6px var(--korus-primary)'
+                  }}
+                >
+                  Maybe Later
                 </button>
               </div>
             </div>
@@ -415,8 +614,247 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <LeftSidebar />
-      <RightSidebar />
+      {/* FAQ Modal */}
+      {showFAQModal && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+          onClick={() => setShowFAQModal(false)}
+        >
+          <div
+            className="bg-korus-surface/90 backdrop-blur-xl border border-korus-border rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-korus-text text-xl font-bold">Frequently Asked Questions</h3>
+              <button
+                onClick={() => setShowFAQModal(false)}
+                className="w-8 h-8 bg-korus-surface/40 rounded-full flex items-center justify-center hover:bg-korus-surface/60 transition-colors"
+              >
+                <svg className="w-5 h-5 text-korus-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="bg-korus-surface/20 rounded-xl p-4">
+                <h4 className="text-korus-text font-semibold mb-2">What is Korus?</h4>
+                <p className="text-korus-textSecondary text-sm">
+                  Korus is a Web3 social platform where authentic conversations meet blockchain innovation. Share thoughts, earn rewards, and connect with a community that values real engagement.
+                </p>
+              </div>
+
+              <div className="bg-korus-surface/20 rounded-xl p-4">
+                <h4 className="text-korus-text font-semibold mb-2">How do I earn SOL?</h4>
+                <p className="text-korus-textSecondary text-sm">
+                  You earn SOL by receiving tips from other users who appreciate your content. Create valuable posts and engage meaningfully with the community.
+                </p>
+              </div>
+
+              <div className="bg-korus-surface/20 rounded-xl p-4">
+                <h4 className="text-korus-text font-semibold mb-2">What's included in Premium?</h4>
+                <p className="text-korus-textSecondary text-sm">
+                  Premium members get exclusive color themes, gold verified badge, ability to use SNS domains as display names, and can hide sponsored posts for a cleaner feed.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Community Rules Modal */}
+      {showRulesModal && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+          onClick={() => setShowRulesModal(false)}
+        >
+          <div
+            className="bg-korus-surface/90 backdrop-blur-xl border border-korus-border rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-korus-text text-xl font-bold">Community Rules</h3>
+              <button
+                onClick={() => setShowRulesModal(false)}
+                className="w-8 h-8 bg-korus-surface/40 rounded-full flex items-center justify-center hover:bg-korus-surface/60 transition-colors"
+              >
+                <svg className="w-5 h-5 text-korus-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-korus-surface/20 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-korus-primary/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-korus-primary font-bold text-sm">1</span>
+                  </div>
+                  <div>
+                    <h4 className="text-korus-text font-semibold mb-1">Be Authentic</h4>
+                    <p className="text-korus-textSecondary text-sm">Share genuine thoughts and experiences. No fake accounts or impersonation.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-korus-surface/20 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-korus-primary/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-korus-primary font-bold text-sm">2</span>
+                  </div>
+                  <div>
+                    <h4 className="text-korus-text font-semibold mb-1">Respect Everyone</h4>
+                    <p className="text-korus-textSecondary text-sm">Treat all community members with kindness. No harassment, hate speech, or discrimination.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-korus-surface/20 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-korus-primary/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-korus-primary font-bold text-sm">3</span>
+                  </div>
+                  <div>
+                    <h4 className="text-korus-text font-semibold mb-1">Quality Over Quantity</h4>
+                    <p className="text-korus-textSecondary text-sm">Focus on meaningful contributions. Avoid spam, repetitive content, or low-effort posts.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-korus-surface/20 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-korus-primary/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-korus-primary font-bold text-sm">4</span>
+                  </div>
+                  <div>
+                    <h4 className="text-korus-text font-semibold mb-1">Protect Privacy</h4>
+                    <p className="text-korus-textSecondary text-sm">Never share personal information of others. Respect everyone's privacy and security.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-korus-surface/20 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-korus-primary/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-korus-primary font-bold text-sm">5</span>
+                  </div>
+                  <div>
+                    <h4 className="text-korus-text font-semibold mb-1">Stay On Topic</h4>
+                    <p className="text-korus-textSecondary text-sm">Post content in relevant categories. Keep discussions focused and constructive.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+                <p className="text-yellow-400 text-sm font-medium text-center">
+                  Violation of these rules may result in content removal or account suspension.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Advertise with Korus Modal */}
+      {showAdsModal && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+          onClick={() => setShowAdsModal(false)}
+        >
+          <div
+            className="bg-korus-surface/90 backdrop-blur-xl border border-korus-border rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-korus-text text-xl font-bold">Advertise with Korus</h3>
+              <button
+                onClick={() => setShowAdsModal(false)}
+                className="w-8 h-8 bg-korus-surface/40 rounded-full flex items-center justify-center hover:bg-korus-surface/60 transition-colors"
+              >
+                <svg className="w-5 h-5 text-korus-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-korus-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                </svg>
+              </div>
+              <h4 className="text-korus-text text-lg font-bold mb-2">Reach Your Audience</h4>
+              <p className="text-korus-textSecondary text-sm mb-6">
+                Connect with engaged Web3 users through sponsored posts on Korus.
+              </p>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div className="bg-korus-surface/20 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <svg className="w-6 h-6 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <span className="text-korus-text font-medium">Targeted reach to crypto-native audience</span>
+                </div>
+              </div>
+
+              <div className="bg-korus-surface/20 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <svg className="w-6 h-6 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                  <span className="text-korus-text font-medium">Performance analytics and insights</span>
+                </div>
+              </div>
+
+              <div className="bg-korus-surface/20 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <svg className="w-6 h-6 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  <span className="text-korus-text font-medium">Brand-safe environment</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-korus-surface/20 rounded-xl p-4">
+              <h4 className="text-korus-text font-semibold mb-3">Get Started</h4>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-korus-primary font-medium text-sm">max@korus.fun</span>
+                </div>
+                <p className="text-korus-textSecondary text-sm">
+                  Contact our advertising team to discuss your campaign goals and pricing.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Toast Notification */}
+      {successMessage && (
+        <div className="fixed bottom-4 right-4 z-50 max-w-sm">
+          <div className="bg-korus-surface/90 backdrop-blur-xl border border-korus-primary rounded-xl p-4 shadow-lg">
+            <div className="flex items-center gap-3">
+              <svg className="w-6 h-6 text-korus-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <span className="text-korus-text font-medium">{successMessage}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <LeftSidebar onNotificationsToggle={() => setShowNotifications(!showNotifications)} />
+      <RightSidebar
+        showNotifications={showNotifications}
+        onNotificationsClose={() => setShowNotifications(false)}
+      />
     </main>
   );
 }

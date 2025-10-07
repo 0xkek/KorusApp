@@ -84,7 +84,7 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm 
       <div className="bg-korus-surface/95 backdrop-blur-xl rounded-2xl max-w-lg w-full border border-korus-border shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-korus-border">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #43E97B, #38EF7D)', boxShadow: '0 10px 15px -3px rgba(67, 233, 123, 0.4)' }}>
+            <div className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 40%, transparent)' }}>
               <span className="text-2xl">📢</span>
             </div>
             <div>
@@ -98,17 +98,17 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm 
         </div>
         <div className="p-5 space-y-5">
           {connected && walletBalance !== null && (
-            <div className="flex items-center justify-between p-3 rounded-xl border" style={{ backgroundColor: 'rgba(67, 233, 123, 0.1)', borderColor: 'rgba(67, 233, 123, 0.3)' }}>
+            <div className="flex items-center justify-between p-3 rounded-xl border" style={{ backgroundColor: 'color-mix(in srgb, var(--korus-primary) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--korus-primary) 30%, transparent)' }}>
               <span className="text-sm text-korus-textSecondary">Your Balance</span>
               <span className="text-base font-bold text-korus-primary">{walletBalance.toFixed(3)} SOL</span>
             </div>
           )}
           <div>
             <h3 className="text-sm font-semibold mb-3 text-korus-primary">Your Post Preview</h3>
-            <div className="border-2 rounded-xl p-4 shadow-lg" style={{ background: 'linear-gradient(90deg, rgba(67, 233, 123, 0.1), rgba(56, 239, 125, 0.1))', borderColor: 'rgba(67, 233, 123, 0.3)', boxShadow: '0 10px 15px -3px rgba(67, 233, 123, 0.1)' }}>
+            <div className="border-2 rounded-xl p-4 shadow-lg" style={{ background: 'linear-gradient(90deg, color-mix(in srgb, var(--korus-primary) 10%, transparent), color-mix(in srgb, var(--korus-secondary) 10%, transparent))', borderColor: 'color-mix(in srgb, var(--korus-primary) 30%, transparent)', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 10%, transparent)' }}>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xs font-black tracking-widest text-korus-primary">⭐ FEATURED</span>
-                <svg className="w-3.5 h-3.5" fill="#43E97B" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                <svg className="w-3.5 h-3.5" fill="var(--korus-primary)" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
               </div>
               <p className="text-sm leading-relaxed line-clamp-3 text-korus-text">{postContent}</p>
             </div>
@@ -120,8 +120,8 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm 
                 const isSelected = selectedDuration === option.value;
                 const canAfford = !walletBalance || option.price <= walletBalance;
                 return (
-                  <button key={option.value} onClick={() => setSelectedDuration(option.value)} disabled={!canAfford} className="relative p-2.5 rounded-lg border transition-all duration-200" style={{ backgroundColor: isSelected ? 'rgba(67, 233, 123, 0.2)' : 'rgba(26, 26, 26, 0.4)', borderColor: isSelected ? '#43E97B' : 'rgba(67, 233, 123, 0.2)', opacity: canAfford ? 1 : 0.5, cursor: canAfford ? 'pointer' : 'not-allowed' }}>
-                    {option.recommended && (<div className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-black" style={{ background: 'linear-gradient(90deg, #43E97B, #38EF7D)', color: '#000000' }}>BEST</div>)}
+                  <button key={option.value} onClick={() => setSelectedDuration(option.value)} disabled={!canAfford} className="relative p-2.5 rounded-lg border transition-all duration-200" style={{ backgroundColor: isSelected ? 'color-mix(in srgb, var(--korus-primary) 20%, transparent)' : 'rgba(26, 26, 26, 0.4)', borderColor: isSelected ? 'var(--korus-primary)' : 'color-mix(in srgb, var(--korus-primary) 20%, transparent)', opacity: canAfford ? 1 : 0.5, cursor: canAfford ? 'pointer' : 'not-allowed' }}>
+                    {option.recommended && (<div className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-black" style={{ background: 'linear-gradient(90deg, var(--korus-primary), var(--korus-secondary))', color: '#000000' }}>BEST</div>)}
                     <div className="text-xs font-medium text-white mb-1">{option.label}</div>
                     <div className="text-sm font-bold text-korus-primary">{option.price.toFixed(2)} SOL</div>
                     {!canAfford && (<div className="absolute inset-0 rounded-lg flex items-center justify-center backdrop-blur-sm" style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}><span className="text-[10px] font-bold" style={{ color: '#f87171' }}>Low Balance</span></div>)}
@@ -131,7 +131,7 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm 
             </div>
           </div>
           {selectedOption && (
-            <div className="p-4 border-2 rounded-xl shadow-lg" style={{ background: 'linear-gradient(90deg, rgba(67, 233, 123, 0.1), rgba(56, 239, 125, 0.1))', borderColor: 'rgba(67, 233, 123, 0.3)', boxShadow: '0 10px 15px -3px rgba(67, 233, 123, 0.1)' }}>
+            <div className="p-4 border-2 rounded-xl shadow-lg" style={{ background: 'linear-gradient(90deg, color-mix(in srgb, var(--korus-primary) 10%, transparent), color-mix(in srgb, var(--korus-secondary) 10%, transparent))', borderColor: 'color-mix(in srgb, var(--korus-primary) 30%, transparent)', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 10%, transparent)' }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-korus-textSecondary">Duration</span>
                 <span className="text-sm font-bold text-white">{selectedOption.label}</span>
@@ -140,9 +140,9 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm 
                 <span className="text-sm text-korus-textSecondary">Cost</span>
                 <span className="text-sm font-bold text-white">{selectedOption.price.toFixed(2)} SOL</span>
               </div>
-              <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'rgba(67, 233, 123, 0.3)' }}>
+              <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'color-mix(in srgb, var(--korus-primary) 30%, transparent)' }}>
                 <span className="text-base font-bold text-korus-primary">Total</span>
-                <span className="text-2xl font-black text-korus-primary" style={{ filter: 'drop-shadow(0 0 8px rgba(67, 233, 123, 0.5))' }}>{selectedOption.price.toFixed(2)} SOL</span>
+                <span className="text-2xl font-black text-korus-primary" style={{ filter: 'drop-shadow(0 0 8px color-mix(in srgb, var(--korus-primary) 50%, transparent))' }}>{selectedOption.price.toFixed(2)} SOL</span>
               </div>
             </div>
           )}
@@ -160,7 +160,7 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm 
         </div>
         <div className="flex gap-3 p-5 border-t border-korus-border">
           <button onClick={onClose} disabled={isProcessing} className="flex-1 px-5 py-3 bg-korus-surface/60 border border-korus-borderLight text-korus-text font-semibold rounded-xl hover:bg-korus-surface/80 hover:border-korus-border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">Cancel</button>
-          <button onClick={handleConfirm} disabled={!selectedDuration || isProcessing || hasInsufficientFunds || !connected} className="flex-1 px-5 py-3 rounded-xl font-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] disabled:hover:scale-100" style={{ background: 'linear-gradient(135deg, #43E97B 0%, #38EF7D 100%)', color: '#000000', boxShadow: '0 10px 15px -3px rgba(67, 233, 123, 0.3)' }}>
+          <button onClick={handleConfirm} disabled={!selectedDuration || isProcessing || hasInsufficientFunds || !connected} className="flex-1 px-5 py-3 rounded-xl font-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] disabled:hover:scale-100" style={{ background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)', color: '#000000', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 30%, transparent)' }}>
             {isProcessing ? (
               <div className="flex items-center justify-center gap-2">
                 <div className="w-4 h-4 border-2 rounded-full animate-spin" style={{ borderColor: 'rgba(0, 0, 0, 0.3)', borderTopColor: '#000000' }}></div>

@@ -1,44 +1,63 @@
 @import "tailwindcss";
 
+/* Default fallback values - will be overridden by ThemeProvider */
 :root {
   --background: #0a0a0a;
-  --foreground: #ededed;
+  --foreground: #ffffff;
   --korus-primary: #43e97b;
   --korus-secondary: #38f9d7;
   --korus-accent: #2dd4bf;
+
+  /* Theme color placeholders - dynamically set by ThemeProvider */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--korus-primary);
+  --color-secondary: var(--korus-secondary);
+  --color-surface: #1a1a1a;
+  --color-surface-light: #252525;
+  --color-text: #ffffff;
+  --color-text-secondary: rgba(255, 255, 255, 0.85);
+  --color-text-tertiary: rgba(255, 255, 255, 0.65);
+  --color-border: rgba(67, 233, 123, 0.3);
+  --color-border-light: rgba(67, 233, 123, 0.15);
+  --color-success: #43e97b;
+  --color-error: #ff3b30;
+  --color-warning: #FFD700;
+  --color-shadow-color: #43e97b;
+  --color-overlay-background: rgba(0, 0, 0, 0.85);
 }
 
 @theme inline {
   --color-*: initial;
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-foreground);
 
-  /* Korus theme colors - matching mobile app */
-  --color-korus-primary: var(--korus-primary);
-  --color-korus-secondary: var(--korus-secondary);
+  /* Korus theme colors - dynamically updated by ThemeProvider */
+  --color-korus-primary: var(--color-primary);
+  --color-korus-secondary: var(--color-secondary);
   --color-korus-accent: var(--korus-accent);
   --color-korus-glow: #22c55e;
 
-  /* Background colors - slightly lighter */
-  --color-korus-dark-100: #111111;  /* background - lighter */
-  --color-korus-dark-200: #181818;  /* intermediate - lighter */
-  --color-korus-dark-300: #202020;  /* surface - lighter */
-  --color-korus-dark-400: #2a2a2a;  /* surfaceLight - lighter */
-  --color-korus-dark-500: #323232;  /* elevated - lighter */
+  /* Dynamic background colors */
+  --color-korus-dark-100: var(--color-background);
+  --color-korus-dark-200: var(--color-surface);
+  --color-korus-dark-300: var(--color-surface);
+  --color-korus-dark-400: var(--color-surface-light);
+  --color-korus-dark-500: var(--color-surface-light);
 
-  /* Mobile app theme colors */
-  --color-korus-surface: #202020;  /* lighter surface */
-  --color-korus-surfaceLight: #2a2a2a;  /* lighter surface */
-  --color-korus-text: #ffffff;
-  --color-korus-textSecondary: rgba(255, 255, 255, 0.85);
-  --color-korus-textTertiary: rgba(255, 255, 255, 0.65);
-  --color-korus-border: rgba(67, 233, 123, 0.65);  /* much brighter border */
-  --color-korus-borderLight: rgba(67, 233, 123, 0.4);  /* much brighter light border */
-  --color-korus-success: #43e97b;
-  --color-korus-error: #ff3b30;
-  --color-korus-warning: #FFD700;
-  --color-korus-shadowColor: #43e97b;
-  --color-korus-overlayBackground: rgba(0, 0, 0, 0.85);
+  /* Mobile app theme colors - dynamically updated */
+  --color-korus-surface: var(--color-surface);
+  --color-korus-surfaceLight: var(--color-surface-light);
+  --color-korus-text: var(--color-text);
+  --color-korus-textSecondary: var(--color-text-secondary);
+  --color-korus-textTertiary: var(--color-text-tertiary);
+  --color-korus-border: var(--color-border);
+  --color-korus-borderLight: var(--color-border-light);
+  --color-korus-success: var(--color-success);
+  --color-korus-error: var(--color-error);
+  --color-korus-warning: var(--color-warning);
+  --color-korus-shadowColor: var(--color-shadow-color);
+  --color-korus-overlayBackground: var(--color-overlay-background);
 }
 
 body {
@@ -59,7 +78,7 @@ body {
 }
 
 .wallet-adapter-button:not([disabled]):hover {
-  box-shadow: 0 0 20px rgba(67, 233, 123, 0.3) !important;
+  box-shadow: 0 0 20px var(--color-shadow-color) !important;
   transform: translateY(-1px);
 }
 
@@ -91,7 +110,7 @@ body {
 }
 
 .wallet-adapter-modal-list .wallet-adapter-button:hover {
-  box-shadow: 0 0 30px rgba(67, 233, 123, 0.4) !important;
+  box-shadow: 0 0 30px var(--color-shadow-color) !important;
   transform: translateY(-2px) !important;
 }
 
@@ -256,19 +275,19 @@ body {
 
 /* Post card hover glow - mobile app style */
 .group:hover {
-  box-shadow: 0 4px 20px rgba(67, 233, 123, 0.15), 0 8px 40px rgba(56, 249, 215, 0.1);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--color-primary) 15%, transparent), 0 8px 40px color-mix(in srgb, var(--color-secondary) 10%, transparent);
   backdrop-filter: blur(12px);
 }
 
 /* Override hover glow for shoutout posts */
 .shoutout-post.group:hover {
-  box-shadow: 0 4px 20px rgba(255, 215, 0, 0.25), 0 8px 40px rgba(255, 165, 0, 0.15) !important;
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--color-primary) 25%, transparent), 0 8px 40px color-mix(in srgb, var(--color-secondary) 15%, transparent) !important;
 }
 
 /* Action button hover effects */
 .action-button:hover {
-  box-shadow: 0 0 15px rgba(67, 233, 123, 0.3);
-  background: linear-gradient(#2d2d2d, #2d2d2d) padding-box, linear-gradient(135deg, rgba(67, 233, 123, 0.6) 0%, rgba(56, 249, 215, 0.6) 100%) border-box !important;
+  box-shadow: 0 0 15px var(--color-shadow-color);
+  background: linear-gradient(#2d2d2d, #2d2d2d) padding-box, linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 60%, transparent) 0%, color-mix(in srgb, var(--color-secondary) 60%, transparent) 100%) border-box !important;
 }
 
 /* Heart animation for double-tap to like */
@@ -298,4 +317,56 @@ body {
 .bg-gradient-to-br:not(.white-text) *,
 .bg-korus-primary:not(.white-text) * {
   color: #000000 !important;
+}
+
+/* Force white text for specific buttons */
+.force-white-text {
+  color: #ffffff !important;
+}
+
+/* Force theme-aware text */
+.force-theme-text {
+  color: var(--color-text) !important;
+}
+
+/* Settings Toggle Switches - Optimized CSS classes */
+.toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 9999px;
+  transition: all 300ms ease;
+}
+
+.toggle-switch-active {
+  background-color: var(--color-primary);
+}
+
+.toggle-switch-inactive {
+  background-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
+.toggle-switch-disabled {
+  opacity: 0.5;
+}
+
+.toggle-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background-color: #ffffff;
+  border-radius: 9999px;
+  transition: all 300ms ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.toggle-switch-thumb-active {
+  transform: translateX(20px);
+}
+
+.toggle-switch-thumb-disabled {
+  opacity: 0.5;
 }

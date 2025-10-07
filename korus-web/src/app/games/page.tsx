@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import Header from '@/components/Header';
+import { useToast } from '@/hooks/useToast';
 
 export default function GamesPage() {
   const { connected, publicKey } = useWallet();
   const router = useRouter();
+  const { showSuccess, showError } = useToast();
   const [showNotifications, setShowNotifications] = useState(false);
   const [activeTab, setActiveTab] = useState<'created' | 'active'>('created');
   const [showCreateGameModal, setShowCreateGameModal] = useState(false);
@@ -171,13 +173,13 @@ export default function GamesPage() {
     setShowCreateGameModal(false);
 
     // Show success message
-    alert('Game created successfully!');
+    showSuccess('Game created successfully!');
   };
 
   // Click handler for game actions
   const handleJoinGame = async (gameId: number) => {
     if (!connected) {
-      alert('Please connect your wallet to join games');
+      showError('Please connect your wallet to join games');
       return;
     }
 
@@ -191,9 +193,9 @@ export default function GamesPage() {
         newSet.add(gameId);
         return newSet;
       });
-      alert('Joined game successfully!');
+      showSuccess('Joined game successfully!');
     } catch (error) {
-      alert('Failed to join game. Please try again.');
+      showError('Failed to join game. Please try again.');
     } finally {
       setJoiningGame(null);
     }
@@ -491,7 +493,7 @@ export default function GamesPage() {
                   className="w-full bg-korus-surface/60 border border-korus-borderLight rounded-xl px-4 py-3 force-theme-text focus:border-korus-primary focus:outline-none transition-all"
                   placeholder="0.1"
                 />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-korus-textSecondary text-sm">
+                <div className="absolute right-12 top-1/2 transform -translate-y-1/2 text-korus-textSecondary text-sm pointer-events-none">
                   SOL
                 </div>
               </div>

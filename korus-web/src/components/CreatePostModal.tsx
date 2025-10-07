@@ -1,85 +1,75 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useToast } from '@/hooks/useToast';
 
-interface Post {
-  id: number;
-  user: string;
-  content: string;
-  likes: number;
-  replies: number;
-  tips: number;
-  time: string;
-  isPremium?: boolean;
-  isShoutout?: boolean;
-  image?: string;
-  video?: string;
-}
 
-interface ReplyModalProps {
+interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
-  post: Post | null;
-  onReplySuccess?: (reply: any) => void;
+  initialContent?: string;
+  onPostCreate?: (post: any) => void;
 }
 
-export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: ReplyModalProps) {
+export default function CreatePostModal({ isOpen, onClose, initialContent = '', onPostCreate }: CreatePostModalProps) {
   const { connected, publicKey } = useWallet();
   const { showSuccess, showError } = useToast();
-  const [replyContent, setReplyContent] = useState('');
+  const [content, setContent] = useState(initialContent);
   const [isPosting, setIsPosting] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-  if (!isOpen || !post) return null;
+  // Update content when initialContent changes
+  useEffect(() => {
+    if (isOpen && initialContent) {
+      setContent(initialContent);
+    }
+  }, [isOpen, initialContent]);
 
-  const handleReply = async () => {
+  if (!isOpen) return null;
+
+  const handlePost = async () => {
     if (!connected) {
-      showError('Please connect your wallet to reply');
+      showError('Please connect your wallet to post');
       return;
     }
 
-    if (!replyContent.trim()) {
-      showError('Please write your reply');
+    if (!content.trim()) {
+      showError('Please write some content before posting');
       return;
     }
 
     setIsPosting(true);
 
     try {
-      // TODO: Implement actual API call to create reply
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Create reply object
-      const reply = {
+      // Create new post
+      const newPost = {
         id: Date.now(),
-        user: publicKey?.toBase58().slice(0, 15) || 'current_user',
-        content: replyContent,
+        user: publicKey?.toBase58() || 'Unknown',
+        content: content.trim(),
         likes: 0,
         replies: 0,
         tips: 0,
         time: 'now',
         isPremium: false,
         isShoutout: false,
-        isSponsored: false,
-        image: selectedFiles.length > 0 && selectedFiles[0].type.startsWith('image/') ? URL.createObjectURL(selectedFiles[0]) : null,
-        avatar: null,
-        isReply: true,
-        replyToPost: post
       };
 
-      // Call success callback
-      if (onReplySuccess) {
-        onReplySuccess(reply);
+      // Call the parent's post creation function
+      if (onPostCreate) {
+        onPostCreate(newPost);
       }
 
-      showSuccess('Reply posted successfully!');
-      setReplyContent('');
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      showSuccess('Post created successfully!');
+      setContent('');
       setSelectedFiles([]);
       onClose();
     } catch (error) {
-      showError('Failed to post reply. Please try again.');
+      showError('Failed to create post. Please try again.');
     } finally {
       setIsPosting(false);
     }
@@ -97,23 +87,28 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
       return true;
     });
 
-    setSelectedFiles(prev => [...prev, ...validFiles].slice(0, 4));
+    setSelectedFiles(prev => [...prev, ...validFiles].slice(0, 4)); // Max 4 files
   };
 
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const characterCount = replyContent.length;
+  const handleEmojiSelect = (emoji: string) => {
+    setContent(prev => prev + emoji);
+    setShowEmojiPicker(false);
+  };
+
+  const characterCount = content.length;
   const maxCharacters = 280;
   const isOverLimit = characterCount > maxCharacters;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-korus-surface/90 backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-korus-border shadow-xl">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget && !isPosting) onClose(); }}>
+      <div className="bg-korus-surface/90 backdrop-blur-md rounded-2xl max-w-2xl w-full border border-korus-border shadow-xl">
         {/* Modal Header */}
-        <div className="sticky top-0 bg-korus-surface/90 backdrop-blur-md flex items-center justify-between p-6 border-b border-korus-border">
-          <h2 className="text-xl font-bold text-white">Reply</h2>
+        <div className="flex items-center justify-between p-6 border-b border-korus-border">
+          <h2 className="text-xl font-bold text-white">Create Post</h2>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center bg-korus-surface/40 border border-korus-borderLight text-korus-textSecondary hover:bg-korus-surface/60 hover:text-white transition-all duration-200"
@@ -124,43 +119,9 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
           </button>
         </div>
 
-        {/* Original Post */}
-        <div className="p-6 border-b border-korus-border">
-          <div className="flex gap-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-lg font-bold text-black flex-shrink-0">
-              {post.user.slice(0, 2).toUpperCase()}
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="font-bold text-white">{post.user}</span>
-                {post.isPremium && (
-                  <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
-                    <svg className="w-3 h-3" fill="black" viewBox="0 0 24 24">
-                      <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
-                    </svg>
-                  </div>
-                )}
-                <span className="text-gray-500">@{post.user}</span>
-                <span className="text-gray-500">·</span>
-                <span className="text-gray-500">{post.time}</span>
-              </div>
-              <div className="text-white text-base leading-normal mb-3 whitespace-pre-wrap break-words">
-                {post.content}
-              </div>
-              {post.image && (
-                <div className="mb-3 rounded-2xl overflow-hidden border border-gray-800 w-2/3">
-                  <img src={post.image} alt="Post content" className="w-full h-auto" />
-                </div>
-              )}
-              <div className="text-korus-textSecondary text-sm">
-                Replying to <span className="text-korus-primary">@{post.user}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Reply Compose */}
+        {/* Modal Content */}
         <div className="p-6">
+          {/* User Avatar and Content */}
           <div className="flex gap-4">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0 shadow-lg shadow-korus-primary/20">
               <span className="text-black font-bold">
@@ -169,12 +130,13 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
             </div>
 
             <div className="flex-1">
+              {/* Text Area */}
               <textarea
-                value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
-                placeholder="Post your reply"
-                className="w-full bg-transparent text-white text-lg resize-none outline-none placeholder-korus-textTertiary min-h-[80px] max-h-[120px]"
-                rows={3}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="What's on your mind? Share your experience, ask for advice, or offer support..."
+                className="w-full bg-transparent text-white text-base resize-none outline-none placeholder-korus-textTertiary min-h-[150px] max-h-[300px]"
+                rows={6}
                 autoFocus
               />
 
@@ -213,7 +175,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                 </div>
               )}
 
-              {/* Reply Actions */}
+              {/* Character Count */}
               <div className="flex items-center justify-between mt-4">
                 <div className="flex items-center gap-2">
                   {/* Media Upload */}
@@ -238,7 +200,14 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                   </button>
 
                   {/* Emoji Button */}
-                  <button className="flex items-center justify-center w-10 h-10 bg-korus-surface/40 backdrop-blur-sm border border-korus-borderLight rounded-xl text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10">
+                  <button
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10 ${
+                      showEmojiPicker
+                        ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
+                        : 'bg-korus-surface/40 border-korus-borderLight text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border'
+                    }`}
+                  >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M16 10h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -286,25 +255,25 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                     </svg>
                   </div>
 
-                  {/* Reply Button */}
+                  {/* Post Button */}
                   <button
-                    onClick={handleReply}
-                    disabled={!replyContent.trim() || isOverLimit || isPosting || !connected}
+                    onClick={handlePost}
+                    disabled={!content.trim() || isOverLimit || isPosting || !connected}
                     className="px-6 py-2 bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 backdrop-blur-sm"
                   >
                     {isPosting ? (
                       <div className="flex items-center justify-center gap-2">
                         <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin"></div>
-                        Replying...
+                        Posting...
                       </div>
                     ) : !connected ? (
                       'Connect Wallet'
-                    ) : !replyContent.trim() ? (
-                      'Write a reply...'
+                    ) : !content.trim() ? (
+                      'Write something...'
                     ) : isOverLimit ? (
                       'Too long'
                     ) : (
-                      'Reply'
+                      'Post'
                     )}
                   </button>
                 </div>
@@ -313,6 +282,49 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
           </div>
         </div>
       </div>
+
+      {/* Emoji Picker Modal */}
+      {showEmojiPicker && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[99999] flex items-center justify-center p-4">
+          <div className="bg-korus-surface/95 backdrop-blur-md rounded-2xl max-w-md w-full max-h-[80vh] border border-korus-border shadow-xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-korus-border">
+              <h3 className="text-lg font-bold text-white">Choose Emoji</h3>
+              <button
+                onClick={() => setShowEmojiPicker(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-korus-surface/40 border border-korus-borderLight text-korus-textSecondary hover:bg-korus-surface/60 hover:text-white transition-all duration-200"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Scrollable Emoji Grid */}
+            <div className="p-4 overflow-y-auto max-h-[60vh]">
+              <div className="grid grid-cols-8 gap-2">
+                {/* Popular Emojis */}
+                {['😀', '😂', '🤣', '😊', '😍', '🥰', '😘', '🤔', '😎', '😢', '😭', '😡', '🤯', '🥳', '😴', '🤤',
+                  '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '👋', '🤚', '🖐️', '✋', '👏', '🙌', '🤝', '🙏', '✊',
+                  '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘',
+                  '🎉', '🎊', '🎈', '🎁', '🎂', '🎄', '🎃', '✨', '🎯', '🎪', '🎨', '🎭', '🎬', '🎮', '🎵', '🎶',
+                  '🔥', '💯', '💫', '⭐', '🌟', '⚡', '💥', '💨', '🌈', '☀️', '🌙', '⭐', '🌊', '🌍', '🌎', '🌏',
+                  '💰', '💸', '💵', '💎', '🚀', '📈', '📉', '💹', '🏦', '💳', '⚖️', '🎯', '✅', '❌', '⚠️', '💯',
+                  '🍕', '🍔', '🍟', '🌭', '🍿', '🧂', '🥓', '🍳', '🧀', '🥞', '🧇', '🍞', '🥖', '🥨', '🥯', '🥐',
+                  '☕', '🍵', '🧃', '🥤', '🍻', '🍷', '🥂', '🍾', '🍸', '🍹', '🍺', '🥃', '🥛', '🧋', '🧊', '🍯'].map((emoji, index) => (
+                  <button
+                    key={`emoji-${index}-${emoji}`}
+                    onClick={() => handleEmojiSelect(emoji)}
+                    className="w-10 h-10 text-xl hover:bg-korus-surface/60 rounded-lg transition-colors flex items-center justify-center hover:scale-110 transform"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

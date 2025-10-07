@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import Link from 'next/link';
+import { useToastContext } from '@/components/ToastProvider';
+import ConfirmModal from '@/components/ConfirmModal';
 
 interface NFTAvatar {
   id: string;
@@ -15,6 +17,7 @@ interface NFTAvatar {
 
 export default function EditProfilePage() {
   const { connected, publicKey } = useWallet();
+  const { showSuccess, showError } = useToastContext();
   const router = useRouter();
 
   // Mock wallet and user data (replace with actual context/API later)
@@ -37,6 +40,7 @@ export default function EditProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [showAvatarSelection, setShowAvatarSelection] = useState(false);
   const [showThemeSelector, setShowThemeSelector] = useState(false);
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
 
   // Theme color options
   const themeColors = [
@@ -99,7 +103,7 @@ export default function EditProfilePage() {
 
     // Validate inputs
     if (website && !website.startsWith('http')) {
-      alert('Website URL must start with http:// or https://');
+      showError('Website URL must start with http:// or https://');
       return;
     }
 
@@ -111,11 +115,11 @@ export default function EditProfilePage() {
       await new Promise(resolve => setTimeout(resolve, 1000)); // Mock API delay
 
       console.log('Profile saved successfully');
-      alert('Profile updated successfully!');
+      showSuccess('Profile updated successfully!');
       router.back();
     } catch (error) {
       console.error('Failed to save profile:', error);
-      alert('Failed to save profile. Please try again.');
+      showError('Failed to save profile. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -127,13 +131,14 @@ export default function EditProfilePage() {
 
   const handleDiscardChanges = () => {
     if (hasChanges) {
-      const confirmed = confirm('Are you sure you want to discard your changes?');
-      if (confirmed) {
-        router.back();
-      }
+      setShowDiscardModal(true);
     } else {
       router.back();
     }
+  };
+
+  const confirmDiscard = () => {
+    router.back();
   };
 
   if (!connected) {
@@ -201,7 +206,7 @@ export default function EditProfilePage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                       </svg>
                     </button>
-                    <h1 className="text-xl font-bold text-white">Edit Profile</h1>
+                    <h1 className="text-3xl font-bold text-white">Edit Profile</h1>
                   </div>
                   <button
                     onClick={handleSave}
@@ -351,9 +356,11 @@ export default function EditProfilePage() {
             {!isPremium && (
               <div className="bg-gradient-to-r from-yellow-400/20 to-orange-400/20 border border-yellow-400/30 rounded-xl p-4">
                 <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-yellow-400 mt-0.5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                  </svg>
+                  <div className="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center mt-0.5">
+                    <svg className="w-3.5 h-3.5 text-black" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
+                    </svg>
+                  </div>
                   <div>
                     <h3 className="text-yellow-400 font-semibold mb-1">Unlock Premium Features</h3>
                     <p className="text-gray-300 text-sm mb-3">
@@ -379,7 +386,7 @@ export default function EditProfilePage() {
                   </svg>
                   <div>
                     <p className="text-korus-primary font-medium text-sm">You have unsaved changes</p>
-                    <p className="text-korus-primary/80 text-xs">Don't forget to save your profile updates</p>
+                    <p className="text-korus-primary/80 text-xs">Don&apos;t forget to save your profile updates</p>
                   </div>
                 </div>
               </div>
@@ -424,6 +431,19 @@ export default function EditProfilePage() {
           </div>
         </div>
       )}
+
+      {/* Discard Changes Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDiscardModal}
+        onClose={() => setShowDiscardModal(false)}
+        onConfirm={confirmDiscard}
+        title="Discard Changes?"
+        message="Are you sure you want to discard your changes? This action cannot be undone."
+        confirmText="Discard"
+        cancelText="Keep Editing"
+        confirmVariant="danger"
+      />
+      </div>
     </main>
   );
 }
