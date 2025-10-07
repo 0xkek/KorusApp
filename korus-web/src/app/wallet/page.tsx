@@ -143,7 +143,7 @@ export default function WalletPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
                   activeTab === tab
                     ? 'bg-gradient-to-r from-korus-primary to-korus-secondary'
-                    : 'bg-korus-surface/30 hover:bg-korus-surface/50 border border-korus-borderLight'
+                    : 'bg-korus-surface/20 hover:bg-korus-surface/40 border border-korus-borderLight'
                 }`}
                 style={activeTab === tab ? { color: '#000000' } : { color: 'var(--color-text)' }}
               >

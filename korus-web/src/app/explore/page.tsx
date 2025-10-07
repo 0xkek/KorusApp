@@ -31,7 +31,7 @@ export default function ExplorePage() {
 
           {/* Coming Soon */}
           <div className="text-center py-20">
-            <p className="text-gray-400 text-lg">Search & Explore - Coming Soon</p>
+            <p className="text-korus-textSecondary text-lg">Search & Explore - Coming Soon</p>
           </div>
         </div>
 

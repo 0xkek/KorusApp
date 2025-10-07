@@ -108,7 +108,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
       <div className="bg-korus-surface/90 backdrop-blur-md rounded-2xl max-w-2xl w-full border border-korus-border shadow-xl">
         {/* Modal Header */}
         <div className="flex items-center justify-between p-6 border-b border-korus-border">
-          <h2 className="text-xl font-bold text-white">Create Post</h2>
+          <h2 className="heading-2 text-white">Create Post</h2>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center bg-korus-surface/40 border border-korus-borderLight text-korus-textSecondary hover:bg-korus-surface/60 hover:text-white transition-all duration-200"

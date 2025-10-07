@@ -151,7 +151,7 @@ export default function WelcomePage() {
               <p className="text-gray-300 text-2xl font-medium mb-4">
                 Where community meets crypto
               </p>
-              <p className="text-gray-400 text-lg max-w-xl mx-auto">
+              <p className="text-korus-textSecondary text-lg max-w-xl mx-auto">
                 Join the revolution of radical authenticity. Create, connect, and earn with the power of Solana blockchain.
               </p>
             </div>
@@ -166,7 +166,7 @@ export default function WelcomePage() {
               </div>
 
               <div className="pt-8 border-t border-korus-dark-400">
-                <p className="text-gray-500 text-base mb-6">New to Solana?</p>
+                <p className="text-korus-textSecondary text-base mb-6">New to Solana?</p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <a
                     href="https://phantom.app"
@@ -199,23 +199,23 @@ export default function WelcomePage() {
               <div className="bg-korus-dark-300/30 border border-korus-dark-400 rounded-2xl p-8 backdrop-blur-sm hover:bg-korus-dark-300/50 transition-all">
                 <div className="text-4xl mb-4">💬</div>
                 <h3 className="text-white text-xl font-bold mb-2">Social Feed</h3>
-                <p className="text-gray-400 text-base">Share thoughts, engage with community, and build meaningful connections</p>
+                <p className="text-korus-textSecondary text-base">Share thoughts, engage with community, and build meaningful connections</p>
               </div>
               <div className="bg-korus-dark-300/30 border border-korus-dark-400 rounded-2xl p-8 backdrop-blur-sm hover:bg-korus-dark-300/50 transition-all">
                 <div className="text-4xl mb-4">🎮</div>
                 <h3 className="text-white text-xl font-bold mb-2">Play & Earn</h3>
-                <p className="text-gray-400 text-base">Challenge friends in games with SOL wagering and real rewards</p>
+                <p className="text-korus-textSecondary text-base">Challenge friends in games with SOL wagering and real rewards</p>
               </div>
               <div className="bg-korus-dark-300/30 border border-korus-dark-400 rounded-2xl p-8 backdrop-blur-sm hover:bg-korus-dark-300/50 transition-all">
                 <div className="text-4xl mb-4">💰</div>
                 <h3 className="text-white text-xl font-bold mb-2">Tip & Reward</h3>
-                <p className="text-gray-400 text-base">Support creators directly with SOL tips and participate in weekly rewards</p>
+                <p className="text-korus-textSecondary text-base">Support creators directly with SOL tips and participate in weekly rewards</p>
               </div>
             </div>
 
             {/* Footer Links */}
             <div className="text-center">
-              <p className="text-gray-500 text-sm mb-4">
+              <p className="text-korus-textSecondary text-sm mb-4">
                 Already have an account? Your wallet is your login.
               </p>
               <Link

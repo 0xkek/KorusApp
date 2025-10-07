@@ -88,7 +88,7 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm 
               <span className="text-2xl">📢</span>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Boost Your Post</h2>
+              <h2 className="heading-2 text-white">Boost Your Post</h2>
               <p className="text-sm text-korus-textSecondary">Get your message seen by everyone - pin to the top of the feed!</p>
             </div>
           </div>
@@ -114,7 +114,7 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm 
             </div>
           </div>
           <div>
-            <h3 className="text-sm font-medium text-white mb-3">Choose Duration</h3>
+            <h3 className="label text-white mb-3">Choose Duration</h3>
             <div className="grid grid-cols-3 gap-2">
               {SHOUTOUT_OPTIONS.map((option) => {
                 const isSelected = selectedDuration === option.value;

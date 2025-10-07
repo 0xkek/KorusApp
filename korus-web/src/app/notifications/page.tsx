@@ -28,8 +28,8 @@ export default function NotificationsPage() {
           {/* Empty State */}
           <div className="text-center py-20">
             <div className="text-6xl mb-4">🔔</div>
-            <p className="text-gray-400 text-lg">No notifications yet</p>
-            <p className="text-gray-500 text-sm mt-2">When you get likes, replies, or tips, they&apos;ll show up here</p>
+            <p className="text-korus-textSecondary text-lg">No notifications yet</p>
+            <p className="text-korus-textSecondary text-sm mt-2">When you get likes, replies, or tips, they&apos;ll show up here</p>
           </div>
         </div>
 

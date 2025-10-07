@@ -47,7 +47,7 @@ export function ToastComponent({ toast, onRemove }: ToastProps) {
       case 'info':
         return `${baseStyles} bg-blue-500/10 border-blue-500/20 text-blue-100`;
       default:
-        return `${baseStyles} bg-korus-surface/30 border-korus-border text-korus-text`;
+        return `${baseStyles} bg-korus-surface/20 border-korus-border text-korus-text`;
     }
   };
 

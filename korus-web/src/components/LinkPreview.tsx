@@ -116,7 +116,7 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
   return (
     <button
       onClick={handlePress}
-      className="my-3 w-full rounded-xl overflow-hidden border border-korus-dark-400 bg-gradient-to-br from-korus-dark-300/40 to-korus-dark-400/20 hover:border-korus-primary/50 transition-all group"
+      className="my-3 w-full rounded-xl overflow-hidden border border-korus-dark-400 bg-gradient-to-br from-korus-dark-300/40 to-korus-dark-400/20 hover:border-korus-primary/40 transition-all group"
     >
       {previewData.image && (
         <div className="relative w-full h-[180px] bg-black">
@@ -145,7 +145,7 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
         {previewData.siteName && (
           <div className="flex items-center gap-1.5 mb-2">
             <svg
-              className="w-3 h-3 text-gray-500"
+              className="w-3 h-3 text-korus-textSecondary"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -156,7 +156,7 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
               )}
             </svg>
-            <span className="text-xs text-gray-500 uppercase font-medium tracking-wider">
+            <span className="text-xs text-korus-textSecondary uppercase font-medium tracking-wider">
               {previewData.siteName}
             </span>
           </div>
@@ -169,7 +169,7 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
         )}
 
         {previewData.description && (
-          <p className="text-gray-400 text-sm mb-2.5 line-clamp-2">
+          <p className="text-korus-textSecondary text-sm mb-2.5 line-clamp-2">
             {previewData.description}
           </p>
         )}

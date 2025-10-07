@@ -224,14 +224,14 @@ export default function EventsPage() {
                 <div className="relative flex items-center justify-center w-full">
                   <button
                     onClick={() => router.push('/')}
-                    className="relative px-4 py-4 text-gray-400 font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
                   >
                     <span className="relative z-10">Home</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
                   </button>
                   <button
                     onClick={() => router.push('/games')}
-                    className="relative px-4 py-4 text-gray-400 font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
                   >
                     <span className="relative z-10">Games</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
@@ -471,14 +471,14 @@ export default function EventsPage() {
 
               {/* Event Details Grid */}
               <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-korus-surface/50 p-4 rounded-xl text-center">
+                <div className="bg-korus-surface/40 p-4 rounded-xl text-center">
                   <div className="text-korus-primary text-xl mb-1">⏰</div>
                   <div className="text-xs text-korus-textTertiary">Starts In</div>
                   <div className="font-bold force-theme-text">{formatTimeRemaining(selectedEvent.startTime)}</div>
                 </div>
 
                 {selectedEvent.price && (
-                  <div className="bg-korus-surface/50 p-4 rounded-xl text-center">
+                  <div className="bg-korus-surface/40 p-4 rounded-xl text-center">
                     <div className="text-korus-primary text-xl mb-1">💰</div>
                     <div className="text-xs text-korus-textTertiary">Price</div>
                     <div className="font-bold force-theme-text">{selectedEvent.price}</div>
@@ -486,14 +486,14 @@ export default function EventsPage() {
                 )}
 
                 {selectedEvent.allocation && (
-                  <div className="bg-korus-surface/50 p-4 rounded-xl text-center">
+                  <div className="bg-korus-surface/40 p-4 rounded-xl text-center">
                     <div className="text-korus-primary text-xl mb-1">💼</div>
                     <div className="text-xs text-korus-textTertiary">Max Allocation</div>
                     <div className="font-bold force-theme-text">{selectedEvent.allocation}</div>
                   </div>
                 )}
 
-                <div className="bg-korus-surface/50 p-4 rounded-xl text-center">
+                <div className="bg-korus-surface/40 p-4 rounded-xl text-center">
                   <div className="text-korus-primary text-xl mb-1">🔗</div>
                   <div className="text-xs text-korus-textTertiary">Chain</div>
                   <div className="font-bold force-theme-text">{selectedEvent.chain}</div>

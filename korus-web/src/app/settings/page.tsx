@@ -200,7 +200,7 @@ export default function SettingsPage() {
             <div className="p-6 space-y-6">
 
               {/* Premium Section */}
-              <div className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
+              <div className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
                 <h2 className="text-2xl font-bold text-korus-text mb-4 flex items-center gap-2">
                   Premium Status
                   <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
@@ -220,7 +220,7 @@ export default function SettingsPage() {
                   </div>
                 ) : (
                   <div
-                    className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-xl p-4"
+                    className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-xl p-4"
                     style={{
                       boxShadow: '0 0 10px var(--korus-primary), 0 0 20px var(--korus-primary)'
                     }}
@@ -255,7 +255,7 @@ export default function SettingsPage() {
 
 
               {/* Appearance Settings */}
-              <div className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
+              <div className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
                 <h2 className="text-2xl font-bold text-korus-text mb-4">Appearance</h2>
                 <div className="space-y-4">
 
@@ -330,7 +330,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Premium Features */}
-              <div className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
+              <div className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
                 <h2 className="text-2xl font-bold text-korus-text mb-4">Premium Features</h2>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 bg-korus-surface/20 rounded-xl border border-korus-borderLight">
@@ -378,7 +378,7 @@ export default function SettingsPage() {
 
               {/* Debug Options - Development Only */}
               {process.env.NODE_ENV === 'development' && (
-                <div className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
+                <div className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
                   <h2 className="text-korus-text text-xl font-bold mb-4">Debug Options</h2>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-4 bg-korus-surface/20 rounded-xl border border-korus-borderLight">
@@ -407,7 +407,7 @@ export default function SettingsPage() {
               )}
 
               {/* Support & Information */}
-              <div className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
+              <div className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
                 <h2 className="text-korus-text text-xl font-bold mb-4">Support & Information</h2>
                 <div className="space-y-3">
                   <button
@@ -420,7 +420,7 @@ export default function SettingsPage() {
                       </svg>
                       <span className="text-korus-text font-medium">FAQ</span>
                     </div>
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-korus-textSecondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
@@ -435,7 +435,7 @@ export default function SettingsPage() {
                       </svg>
                       <span className="text-korus-text font-medium">Community Rules</span>
                     </div>
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-korus-textSecondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
@@ -450,7 +450,7 @@ export default function SettingsPage() {
                       </svg>
                       <span className="text-korus-text font-medium">Advertise with Korus</span>
                     </div>
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-korus-textSecondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
@@ -458,7 +458,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Account */}
-              <div className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
+              <div className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
                 <h2 className="text-korus-text text-xl font-bold mb-4">Account</h2>
                 <button
                   onClick={() => setShowLogoutConfirm(true)}
@@ -470,7 +470,7 @@ export default function SettingsPage() {
                     </svg>
                     <span className="text-red-400 font-medium">Logout</span>
                   </div>
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-korus-textSecondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>

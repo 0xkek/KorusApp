@@ -283,9 +283,9 @@ export default function PostDetailPage() {
                     </svg>
                   </div>
                 )}
-                <span className="text-gray-500">@{reply.user}</span>
-                <span className="text-gray-500">·</span>
-                <span className="text-gray-500">{reply.time}</span>
+                <span className="text-korus-textSecondary">@{reply.user}</span>
+                <span className="text-korus-textSecondary">·</span>
+                <span className="text-korus-textSecondary">{reply.time}</span>
               </div>
 
               {/* Content */}
@@ -439,14 +439,14 @@ export default function PostDetailPage() {
                   </button>
                   <button
                     onClick={() => router.push('/games')}
-                    className="relative px-4 py-4 text-gray-400 font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
                   >
                     <span className="relative z-10">Games</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
                   </button>
                   <button
                     onClick={() => router.push('/events')}
-                    className="relative px-4 py-4 text-gray-400 font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
                   >
                     <span className="relative z-10">Events</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
@@ -504,13 +504,13 @@ export default function PostDetailPage() {
                       </div>
                     )}
 
-                    <span className="text-gray-500">@{post.user}</span>
-                    <span className="text-gray-500">·</span>
-                    <span className="text-gray-500 hover:underline cursor-pointer">{post.time}</span>
+                    <span className="text-korus-textSecondary">@{post.user}</span>
+                    <span className="text-korus-textSecondary">·</span>
+                    <span className="text-korus-textSecondary hover:underline cursor-pointer">{post.time}</span>
 
                     {/* More button */}
                     <div className="ml-auto">
-                      <button className="text-gray-500 hover:text-white hover:bg-gray-800 rounded-full p-1 transition-colors">
+                      <button className="text-korus-textSecondary hover:text-white hover:bg-korus-surface/60 rounded-full p-1 transition-colors">
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
                         </svg>
@@ -525,7 +525,7 @@ export default function PostDetailPage() {
 
                   {/* Post Image */}
                   {post.image && (
-                    <div className="mb-3 rounded-2xl overflow-hidden border border-gray-800">
+                    <div className="mb-3 rounded-2xl overflow-hidden border border-korus-border">
                       <img src={post.image} alt="Post content" className="w-full h-auto" />
                     </div>
                   )}
@@ -585,7 +585,7 @@ export default function PostDetailPage() {
             </div>
 
             {/* Replies Section */}
-            <div className="border-l-2 border-korus-primary/30 ml-6">
+            <div className="border-l-2 border-korus-primary/20 ml-6">
               {replies.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-korus-textTertiary">No replies yet. Be the first to reply!</p>

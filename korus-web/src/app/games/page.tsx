@@ -136,7 +136,7 @@ export default function GamesPage() {
       case 'waiting': return 'border-yellow-400 bg-yellow-400/10 text-yellow-400';
       case 'active': return 'border-green-400 bg-green-400/10 text-green-400';
       case 'completed': return 'border-blue-400 bg-blue-400/10 text-blue-400';
-      default: return 'border-gray-400 bg-gray-400/10 text-gray-400';
+      default: return 'border-gray-400 bg-gray-400/10 text-korus-textSecondary';
     }
   };
 
@@ -247,7 +247,7 @@ export default function GamesPage() {
                 <div className="relative flex items-center justify-center w-full">
                   <button
                     onClick={() => router.push('/')}
-                    className="relative px-4 py-4 text-gray-400 font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
                   >
                     <span className="relative z-10">Home</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
@@ -261,7 +261,7 @@ export default function GamesPage() {
                   </button>
                   <button
                     onClick={() => router.push('/events')}
-                    className="relative px-4 py-4 text-gray-400 font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
                   >
                     <span className="relative z-10">Events</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
@@ -534,7 +534,7 @@ export default function GamesPage() {
                 className={`flex-1 font-bold py-3 rounded-xl transition-all ${
                   connected
                     ? 'bg-gradient-to-r from-korus-primary to-korus-secondary text-black hover:shadow-lg hover:shadow-korus-primary/20'
-                    : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                    : 'bg-gray-600 text-korus-textSecondary cursor-not-allowed'
                 }`}
               >
                 {connected ? `Create Game (${newGame.wager} SOL)` : 'Connect Wallet'}

@@ -340,14 +340,14 @@ export default function Home() {
                   </button>
                   <button
                     onClick={() => router.push('/games')}
-                    className="relative px-4 py-4 text-gray-400 font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
                   >
                     <span className="relative z-10">Games</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
                   </button>
                   <button
                     onClick={() => router.push('/events')}
-                    className="relative px-4 py-4 text-gray-400 font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
                   >
                     <span className="relative z-10">Events</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
@@ -364,7 +364,7 @@ export default function Home() {
             </div>
 
             {/* Compose Post */}
-            <div className="border-b border-korus-border bg-korus-surface/30 backdrop-blur-sm p-4">
+            <div className="border-b border-korus-border bg-korus-surface/20 backdrop-blur-sm p-4">
               <div className="flex gap-3">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0 shadow-lg shadow-korus-primary/20">
                   <span className="text-black font-bold">
@@ -477,9 +477,9 @@ export default function Home() {
                       </div>
                     )}
 
-                    <span className="text-gray-500">@{post.user}</span>
-                    <span className="text-gray-500">·</span>
-                    <span className="text-gray-500 hover:underline cursor-pointer">{post.time}</span>
+                    <span className="text-korus-textSecondary">@{post.user}</span>
+                    <span className="text-korus-textSecondary">·</span>
+                    <span className="text-korus-textSecondary hover:underline cursor-pointer">{post.time}</span>
 
                     {/* Sponsored Badge */}
                     {post.isSponsored && (
@@ -495,7 +495,7 @@ export default function Home() {
                           e.stopPropagation();
                           handlePostOptionsClick(post);
                         }}
-                        className="text-gray-500 hover:text-white hover:bg-gray-800 rounded-full p-1 transition-colors"
+                        className="text-korus-textSecondary hover:text-white hover:bg-korus-surface/60 rounded-full p-1 transition-colors"
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
@@ -554,7 +554,7 @@ export default function Home() {
 
                   {/* Post Image */}
                   {!((post as any).isRepost) && post.image && (
-                    <div className="mb-3 rounded-2xl overflow-hidden border border-gray-800">
+                    <div className="mb-3 rounded-2xl overflow-hidden border border-korus-border">
                       <img src={post.image} alt="Post content" className="w-full h-auto" />
                     </div>
                   )}
@@ -564,7 +564,7 @@ export default function Home() {
                     <button
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
                         postInteractions[post.id]?.replied
-                          ? 'bg-korus-primary/20 border border-korus-primary/50'
+                          ? 'bg-korus-primary/20 border border-korus-primary/40'
                           : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
                       }`}
                       onClick={(e) => {
@@ -586,7 +586,7 @@ export default function Home() {
                     <button
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
                         postInteractions[post.id]?.reposted
-                          ? 'bg-korus-primary/20 border border-korus-primary/50'
+                          ? 'bg-korus-primary/20 border border-korus-primary/40'
                           : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
                       }`}
                       onClick={(e) => {
@@ -608,7 +608,7 @@ export default function Home() {
                     <button
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
                         postInteractions[post.id]?.liked
-                          ? 'bg-korus-primary/20 border border-korus-primary/50'
+                          ? 'bg-korus-primary/20 border border-korus-primary/40'
                           : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
                       }`}
                       onClick={(e) => {
@@ -635,7 +635,7 @@ export default function Home() {
                     <button
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
                         postInteractions[post.id]?.tipped
-                          ? 'bg-korus-primary/20 border border-korus-primary/50'
+                          ? 'bg-korus-primary/20 border border-korus-primary/40'
                           : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
                       }`}
                       onClick={(e) => {

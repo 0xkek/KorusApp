@@ -352,7 +352,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Identity Options Section */}
-                <div className="mb-6 bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
+                <div className="mb-6 bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
                   <h3 className="text-lg font-bold text-white mb-4">Your Identity</h3>
 
                   {/* Current Display Name */}
@@ -585,7 +585,7 @@ export default function ProfilePage() {
                                     console.error('Failed to update SNS domain:', error);
                                   }
                                 }}
-                                className="w-full px-4 py-3 text-left hover:bg-korus-surface/50 transition-colors border-b border-korus-borderLight last:border-b-0"
+                                className="w-full px-4 py-3 text-left hover:bg-korus-surface/40 transition-colors border-b border-korus-borderLight last:border-b-0"
                               >
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
@@ -642,7 +642,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Tabs */}
-                <div className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-1 mb-6">
+                <div className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-1 mb-6">
                   <div className="flex">
                     <button
                       onClick={() => setActiveTab('posts')}
@@ -668,7 +668,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Reputation Score Card */}
-                <div className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6 mb-6">
+                <div className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6 mb-6">
                   <div className="text-center mb-6">
                     <div className="flex items-center justify-center gap-3 mb-2">
                       <div className="w-9 h-9 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center shadow-lg shadow-korus-primary/20">

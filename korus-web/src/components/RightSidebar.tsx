@@ -326,7 +326,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
                 <div
                   key={notification.id}
                   className={`border-b border-korus-borderLight mx-[-1rem] px-4 py-4 hover:bg-korus-surface/40 hover:border-korus-border transition-all duration-200 cursor-pointer group ${
-                    !notification.read ? 'bg-korus-surface/30 backdrop-blur-sm' : 'bg-korus-surface/10 backdrop-blur-sm'
+                    !notification.read ? 'bg-korus-surface/20 backdrop-blur-sm' : 'bg-korus-surface/10 backdrop-blur-sm'
                   }`}
                   role="listitem"
                   aria-label={`${notification.type} notification from ${notification.user || 'system'}`}

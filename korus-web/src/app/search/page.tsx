@@ -281,7 +281,7 @@ export default function SearchPage() {
           <div className="relative mb-6">
             <form onSubmit={handleSearch}>
               <div className="relative">
-                <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-korus-textSecondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input
@@ -292,7 +292,7 @@ export default function SearchPage() {
                   onFocus={handleInputFocus}
                   onBlur={handleInputBlur}
                   placeholder="Search Korus..."
-                  className="w-full bg-korus-surface/30 backdrop-blur-sm text-white pl-12 pr-4 py-3 rounded-2xl border border-korus-borderLight focus:outline-none focus:border-korus-primary transition-colors"
+                  className="w-full bg-korus-surface/20 backdrop-blur-sm text-white pl-12 pr-4 py-3 rounded-2xl border border-korus-borderLight focus:outline-none focus:border-korus-primary transition-colors"
                 />
                 {searchQuery && (
                   <button
@@ -304,7 +304,7 @@ export default function SearchPage() {
                     }}
                     className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-700 rounded-full transition-colors"
                   >
-                    <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-korus-textSecondary" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
                     </svg>
                   </button>
@@ -314,7 +314,7 @@ export default function SearchPage() {
 
             {/* Search Suggestions */}
             {showSuggestions && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl overflow-hidden z-20">
+              <div className="absolute top-full left-0 right-0 mt-2 bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl overflow-hidden z-20">
                 {recentSearches.length > 0 && (
                   <div className="p-4 border-b border-korus-borderLight">
                     <div className="flex items-center justify-between mb-3">
@@ -333,7 +333,7 @@ export default function SearchPage() {
                           onClick={() => selectSuggestion(search)}
                           className="flex items-center gap-3 w-full text-left p-2 hover:bg-korus-surface/60 rounded-lg transition-colors"
                         >
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-korus-textSecondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                           </svg>
                           <span className="text-gray-300">{search}</span>
@@ -378,7 +378,7 @@ export default function SearchPage() {
                 className={`px-4 py-2 rounded-full whitespace-nowrap transition-colors ${
                   selectedCategory === category
                     ? 'bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-medium'
-                    : 'bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight text-gray-300 hover:border-korus-border'
+                    : 'bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight text-gray-300 hover:border-korus-border'
                 }`}
               >
                 {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -396,7 +396,7 @@ export default function SearchPage() {
                   className={`pb-3 px-1 transition-colors ${
                     activeTab === 'posts'
                       ? 'text-korus-primary border-b-2 border-korus-primary'
-                      : 'text-gray-400 hover:text-white'
+                      : 'text-korus-textSecondary hover:text-white'
                   }`}
                 >
                   Posts ({searchResults.length})
@@ -406,7 +406,7 @@ export default function SearchPage() {
                   className={`pb-3 px-1 transition-colors ${
                     activeTab === 'users'
                       ? 'text-korus-primary border-b-2 border-korus-primary'
-                      : 'text-gray-400 hover:text-white'
+                      : 'text-korus-textSecondary hover:text-white'
                   }`}
                 >
                   Users ({userResults.length})
@@ -417,7 +417,7 @@ export default function SearchPage() {
               {isLoading && (
                 <div className="text-center py-12">
                   <div className="w-8 h-8 border-4 border-korus-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-gray-400">Searching...</p>
+                  <p className="text-korus-textSecondary">Searching...</p>
                 </div>
               )}
 
@@ -453,7 +453,7 @@ export default function SearchPage() {
                       ) : (
                         searchResults.map((post) => (
                           <Link key={post.id} href={`/post/${post.id}`}>
-                            <div className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6 hover:border-korus-border transition-all cursor-pointer">
+                            <div className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6 hover:border-korus-border transition-all cursor-pointer">
                               {/* Post Header */}
                               <div className="flex items-start gap-4 mb-4">
                                 <div className="w-10 h-10 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center text-sm font-bold text-black flex-shrink-0">
@@ -469,7 +469,7 @@ export default function SearchPage() {
                                         </svg>
                                       </div>
                                     )}
-                                    <span className="text-gray-400 text-sm">{post.timeAgo}</span>
+                                    <span className="text-korus-textSecondary text-sm">{post.timeAgo}</span>
                                   </div>
                                   <p className="text-gray-300">{post.content}</p>
                                 </div>
@@ -483,7 +483,7 @@ export default function SearchPage() {
                               )}
 
                               {/* Post Stats */}
-                              <div className="flex items-center gap-6 text-gray-400 text-sm">
+                              <div className="flex items-center gap-6 text-korus-textSecondary text-sm">
                                 <span className="flex items-center gap-1">
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
@@ -539,7 +539,7 @@ export default function SearchPage() {
                       ) : (
                         userResults.map((user) => (
                           <Link key={user.wallet} href={`/profile?wallet=${user.wallet}`}>
-                            <div className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6 hover:border-korus-border transition-all cursor-pointer">
+                            <div className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6 hover:border-korus-border transition-all cursor-pointer">
                               <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center text-lg font-bold text-black">
                                   {user.avatar || user.wallet.slice(0, 2).toUpperCase()}
@@ -555,8 +555,8 @@ export default function SearchPage() {
                                       </div>
                                     )}
                                   </div>
-                                  <p className="text-gray-400 text-sm font-mono">{user.wallet}</p>
-                                  <div className="flex items-center gap-4 mt-2 text-gray-400 text-sm">
+                                  <p className="text-korus-textSecondary text-sm font-mono">{user.wallet}</p>
+                                  <div className="flex items-center gap-4 mt-2 text-korus-textSecondary text-sm">
                                     <span>{user.followers.toLocaleString()} followers</span>
                                     <span>{user.reputation.toLocaleString()} reputation</span>
                                   </div>
@@ -579,11 +579,11 @@ export default function SearchPage() {
           {/* Empty State for no search */}
           {!hasSearched && !isLoading && (
             <div className="text-center py-12">
-              <svg className="w-20 h-20 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-20 h-20 text-korus-textSecondary mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
               <h2 className="text-2xl font-bold mb-4">Search Korus</h2>
-              <p className="text-gray-400 mb-8">Find posts, users, and topics you're interested in</p>
+              <p className="text-korus-textSecondary mb-8">Find posts, users, and topics you're interested in</p>
 
               {/* Trending Topics */}
               <div className="max-w-md mx-auto">
@@ -593,7 +593,7 @@ export default function SearchPage() {
                     <button
                       key={index}
                       onClick={() => selectSuggestion(topic)}
-                      className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight px-3 py-1 rounded-full text-sm hover:border-korus-border transition-colors"
+                      className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight px-3 py-1 rounded-full text-sm hover:border-korus-border transition-colors"
                     >
                       #{topic}
                     </button>

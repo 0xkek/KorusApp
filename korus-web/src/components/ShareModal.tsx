@@ -137,7 +137,7 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
               </svg>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Share Post</h2>
+              <h2 className="heading-2 text-white">Share Post</h2>
               <p className="text-sm text-korus-textSecondary">by {postUser}</p>
             </div>
           </div>
@@ -170,7 +170,7 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
         {/* Share Options */}
         <div className="p-5 space-y-5">
           <div>
-            <h3 className="text-sm font-medium text-white mb-3">Share to</h3>
+            <h3 className="label text-white mb-3">Share to</h3>
             <div className="grid grid-cols-2 gap-2">
               {shareOptions.map((option) => (
                 <button
@@ -195,7 +195,7 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
 
           {/* Direct Link */}
           <div>
-            <h4 className="text-sm font-medium text-white mb-3">Direct Link</h4>
+            <h4 className="label text-white mb-3">Direct Link</h4>
             <div className="flex items-center gap-2">
               <input
                 type="text"

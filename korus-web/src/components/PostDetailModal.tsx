@@ -144,7 +144,7 @@ export default function PostDetailModal({
       <div className="bg-korus-surface/90 backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[90vh] mx-4 border border-korus-border shadow-xl overflow-hidden">
         {/* Modal Header */}
         <div className="sticky top-0 bg-korus-surface/90 backdrop-blur-md flex items-center justify-between p-4 border-b border-korus-border">
-          <h2 className="text-xl font-bold text-white">Post</h2>
+          <h2 className="heading-2 text-white">Post</h2>
           <button
             onClick={handleClose}
             className="w-8 h-8 rounded-full flex items-center justify-center bg-korus-surface/40 border border-korus-borderLight text-korus-textSecondary hover:bg-korus-surface/60 hover:text-white transition-all duration-200"
@@ -191,9 +191,9 @@ export default function PostDetailModal({
                       </svg>
                     </div>
                   )}
-                  <span className="text-gray-500">@{post.user}</span>
-                  <span className="text-gray-500">·</span>
-                  <span className="text-gray-500">{post.time}</span>
+                  <span className="text-korus-textSecondary">@{post.user}</span>
+                  <span className="text-korus-textSecondary">·</span>
+                  <span className="text-korus-textSecondary">{post.time}</span>
                 </div>
 
                 {/* Post Text */}
@@ -203,13 +203,13 @@ export default function PostDetailModal({
 
                 {/* Post Image */}
                 {post.image && (
-                  <div className="mb-4 rounded-2xl overflow-hidden border border-gray-800">
+                  <div className="mb-4 rounded-2xl overflow-hidden border border-korus-border">
                     <img src={post.image} alt="Post content" className="w-full h-auto" />
                   </div>
                 )}
 
                 {/* Post Stats */}
-                <div className="flex items-center gap-6 text-gray-400 text-sm mb-4 py-3 border-y border-korus-borderLight">
+                <div className="flex items-center gap-6 text-korus-textSecondary text-sm mb-4 py-3 border-y border-korus-borderLight">
                   <span className="flex items-center gap-1">
                     <strong className="text-white">{post.replies}</strong>
                     <span>Replies</span>
@@ -243,7 +243,7 @@ export default function PostDetailModal({
                   <button
                     onClick={() => onRepost?.(post.originalId || post.id)}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-full border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group ${
-                      repostedPosts.has(post.originalId || post.id) ? 'bg-korus-primary/10 border-korus-primary/30' : ''
+                      repostedPosts.has(post.originalId || post.id) ? 'bg-korus-primary/10 border-korus-primary/20' : ''
                     }`}
                   >
                     <svg className={`w-5 h-5 transition-colors ${
@@ -324,12 +324,12 @@ export default function PostDetailModal({
                             </svg>
                           </div>
                         )}
-                        <span className="text-gray-500 text-sm">@{reply.user}</span>
-                        <span className="text-gray-500 text-sm">·</span>
-                        <span className="text-gray-500 text-sm">{reply.time}</span>
+                        <span className="text-korus-textSecondary text-sm">@{reply.user}</span>
+                        <span className="text-korus-textSecondary text-sm">·</span>
+                        <span className="text-korus-textSecondary text-sm">{reply.time}</span>
                       </div>
                       <p className="text-white text-sm leading-relaxed mb-2">{reply.content}</p>
-                      <div className="flex items-center gap-4 text-gray-400 text-xs">
+                      <div className="flex items-center gap-4 text-korus-textSecondary text-xs">
                         <span className="flex items-center gap-1">
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />

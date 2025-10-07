@@ -104,7 +104,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
               <span className="text-2xl">💰</span>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Send Tip</h2>
+              <h2 className="heading-2 text-white">Send Tip</h2>
               <p className="text-sm text-korus-textSecondary">to {recipientUser}</p>
             </div>
           </div>
@@ -132,7 +132,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
 
           {/* Preset Amounts */}
           <div>
-            <h3 className="text-sm font-medium text-white mb-3">Quick Amounts</h3>
+            <h3 className="label text-white mb-3">Quick Amounts</h3>
             <div className="grid grid-cols-3 gap-2">
               {presetAmounts.map((amount) => (
                 <button
@@ -153,7 +153,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
 
           {/* Custom Amount */}
           <div>
-            <h3 className="text-sm font-medium text-white mb-3">Custom Amount</h3>
+            <h3 className="label text-white mb-3">Custom Amount</h3>
             <div className="relative">
               <input
                 type="text"

@@ -113,7 +113,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
       <div className="bg-korus-surface/90 backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-korus-border shadow-xl">
         {/* Modal Header */}
         <div className="sticky top-0 bg-korus-surface/90 backdrop-blur-md flex items-center justify-between p-6 border-b border-korus-border">
-          <h2 className="text-xl font-bold text-white">Reply</h2>
+          <h2 className="heading-2 text-white">Reply</h2>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center bg-korus-surface/40 border border-korus-borderLight text-korus-textSecondary hover:bg-korus-surface/60 hover:text-white transition-all duration-200"
@@ -140,15 +140,15 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                     </svg>
                   </div>
                 )}
-                <span className="text-gray-500">@{post.user}</span>
-                <span className="text-gray-500">·</span>
-                <span className="text-gray-500">{post.time}</span>
+                <span className="text-korus-textSecondary">@{post.user}</span>
+                <span className="text-korus-textSecondary">·</span>
+                <span className="text-korus-textSecondary">{post.time}</span>
               </div>
               <div className="text-white text-base leading-normal mb-3 whitespace-pre-wrap break-words">
                 {post.content}
               </div>
               {post.image && (
-                <div className="mb-3 rounded-2xl overflow-hidden border border-gray-800 w-2/3">
+                <div className="mb-3 rounded-2xl overflow-hidden border border-korus-border w-2/3">
                   <img src={post.image} alt="Post content" className="w-full h-auto" />
                 </div>
               )}

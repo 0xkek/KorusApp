@@ -146,7 +146,7 @@ export default function EditProfilePage() {
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Connect Your Wallet</h2>
-          <p className="text-gray-400 mb-8">Please connect your wallet to edit your profile</p>
+          <p className="text-korus-textSecondary mb-8">Please connect your wallet to edit your profile</p>
           <Link
             href="/"
             className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-lg hover:shadow-lg transition-all"
@@ -248,7 +248,7 @@ export default function EditProfilePage() {
                 </div>
               </button>
             </div>
-            <p className="text-gray-400 text-sm">Click to change your avatar</p>
+            <p className="text-korus-textSecondary text-sm">Click to change your avatar</p>
           </div>
 
           {/* Form Fields */}
@@ -261,10 +261,10 @@ export default function EditProfilePage() {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Enter your display name"
-                className="w-full bg-korus-surface/30 backdrop-blur-sm text-white border border-korus-borderLight rounded-xl px-4 py-3 placeholder-gray-400 focus:outline-none focus:border-korus-primary transition-colors"
+                className="w-full bg-korus-surface/20 backdrop-blur-sm text-white border border-korus-borderLight rounded-xl px-4 py-3 placeholder-gray-400 focus:outline-none focus:border-korus-primary transition-colors"
                 maxLength={50}
               />
-              <p className="text-gray-400 text-xs mt-1">This is how other users will see your name</p>
+              <p className="text-korus-textSecondary text-xs mt-1">This is how other users will see your name</p>
             </div>
 
             {/* Bio */}
@@ -274,13 +274,13 @@ export default function EditProfilePage() {
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="Tell us about yourself..."
-                className="w-full bg-korus-surface/30 backdrop-blur-sm text-white border border-korus-borderLight rounded-xl px-4 py-3 placeholder-gray-400 focus:outline-none focus:border-korus-primary transition-colors resize-none"
+                className="w-full bg-korus-surface/20 backdrop-blur-sm text-white border border-korus-borderLight rounded-xl px-4 py-3 placeholder-gray-400 focus:outline-none focus:border-korus-primary transition-colors resize-none"
                 rows={4}
                 maxLength={200}
               />
               <div className="flex justify-between items-center mt-1">
-                <p className="text-gray-400 text-xs">Share a bit about yourself</p>
-                <span className="text-gray-400 text-xs">{bio.length}/200</span>
+                <p className="text-korus-textSecondary text-xs">Share a bit about yourself</p>
+                <span className="text-korus-textSecondary text-xs">{bio.length}/200</span>
               </div>
             </div>
 
@@ -292,7 +292,7 @@ export default function EditProfilePage() {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="Where are you based?"
-                className="w-full bg-korus-surface/30 backdrop-blur-sm text-white border border-korus-borderLight rounded-xl px-4 py-3 placeholder-gray-400 focus:outline-none focus:border-korus-primary transition-colors"
+                className="w-full bg-korus-surface/20 backdrop-blur-sm text-white border border-korus-borderLight rounded-xl px-4 py-3 placeholder-gray-400 focus:outline-none focus:border-korus-primary transition-colors"
                 maxLength={50}
               />
             </div>
@@ -305,7 +305,7 @@ export default function EditProfilePage() {
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
                 placeholder="https://yourwebsite.com"
-                className="w-full bg-korus-surface/30 backdrop-blur-sm text-white border border-korus-borderLight rounded-xl px-4 py-3 placeholder-gray-400 focus:outline-none focus:border-korus-primary transition-colors"
+                className="w-full bg-korus-surface/20 backdrop-blur-sm text-white border border-korus-borderLight rounded-xl px-4 py-3 placeholder-gray-400 focus:outline-none focus:border-korus-primary transition-colors"
               />
             </div>
 
@@ -313,13 +313,13 @@ export default function EditProfilePage() {
             <div>
               <label className="block text-sm font-medium mb-2">Twitter</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">@</span>
+                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-korus-textSecondary">@</span>
                 <input
                   type="text"
                   value={twitter}
                   onChange={(e) => setTwitter(e.target.value.replace('@', ''))}
                   placeholder="username"
-                  className="w-full bg-korus-surface/30 backdrop-blur-sm text-white border border-korus-borderLight rounded-xl pl-8 pr-4 py-3 placeholder-gray-400 focus:outline-none focus:border-korus-primary transition-colors"
+                  className="w-full bg-korus-surface/20 backdrop-blur-sm text-white border border-korus-borderLight rounded-xl pl-8 pr-4 py-3 placeholder-gray-400 focus:outline-none focus:border-korus-primary transition-colors"
                   maxLength={15}
                 />
               </div>
@@ -349,7 +349,7 @@ export default function EditProfilePage() {
                   </button>
                 ))}
               </div>
-              <p className="text-gray-400 text-xs mt-2">Choose your personal theme color</p>
+              <p className="text-korus-textSecondary text-xs mt-2">Choose your personal theme color</p>
             </div>
 
             {/* Premium Features */}
@@ -379,7 +379,7 @@ export default function EditProfilePage() {
 
             {/* Save Changes Notice */}
             {hasChanges && (
-              <div className="bg-korus-primary/20 border border-korus-primary/30 rounded-xl p-4">
+              <div className="bg-korus-primary/20 border border-korus-primary/20 rounded-xl p-4">
                 <div className="flex items-center gap-3">
                   <svg className="w-5 h-5 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.854-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/>
@@ -404,12 +404,12 @@ export default function EditProfilePage() {
       {/* Avatar Selection Modal (placeholder) */}
       {showAvatarSelection && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-korus-surface/30 backdrop-blur-sm border border-korus-borderLight rounded-2xl w-full max-w-md p-6">
+          <div className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold">Change Avatar</h3>
               <button
                 onClick={() => setShowAvatarSelection(false)}
-                className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+                className="p-2 hover:bg-korus-surface/60 rounded-full transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
@@ -418,8 +418,8 @@ export default function EditProfilePage() {
             </div>
 
             <div className="text-center py-8">
-              <p className="text-gray-400">Avatar selection coming soon!</p>
-              <p className="text-gray-400 text-sm mt-2">Choose from emojis or upload your NFT avatar</p>
+              <p className="text-korus-textSecondary">Avatar selection coming soon!</p>
+              <p className="text-korus-textSecondary text-sm mt-2">Choose from emojis or upload your NFT avatar</p>
             </div>
 
             <button

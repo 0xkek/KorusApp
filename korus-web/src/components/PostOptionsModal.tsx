@@ -75,7 +75,7 @@ export default function PostOptionsModal({ isOpen, onClose, postId, postUser, is
             </div>
 
             {/* Title */}
-            <h2 className="text-2xl font-bold text-white mb-4">Report Post?</h2>
+            <h2 className="heading-1 text-white mb-4">Report Post?</h2>
 
             {/* Message */}
             <p className="text-korus-textSecondary text-base leading-relaxed mb-8">
@@ -127,7 +127,7 @@ export default function PostOptionsModal({ isOpen, onClose, postId, postUser, is
           </div>
 
           {/* Title */}
-          <h2 className="text-2xl font-bold text-white mb-4">Delete Post?</h2>
+          <h2 className="heading-1 text-white mb-4">Delete Post?</h2>
 
           {/* Message */}
           <p className="text-korus-textSecondary text-base leading-relaxed mb-8">

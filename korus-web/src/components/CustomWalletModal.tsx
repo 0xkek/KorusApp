@@ -42,7 +42,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+          className="absolute top-4 right-4 text-korus-textSecondary hover:text-white transition-colors"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -50,14 +50,14 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
         </button>
 
         {/* Title */}
-        <h2 className="text-2xl font-bold text-white mb-2">
+        <h2 className="heading-1 text-white mb-2">
           Connect a wallet on Solana to continue
         </h2>
 
         {/* Installed Wallets Section */}
         {installedWallets.length > 0 && (
           <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-400 mb-3">Installed</h3>
+            <h3 className="label text-korus-textSecondary mb-3">Installed</h3>
             <div className="space-y-3">
               {installedWallets.map((wallet) => (
                 <button
@@ -117,7 +117,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
         {notInstalledWallets.length > 0 && (
           <div className="mt-6">
             {installedWallets.length > 0 && (
-              <h3 className="text-sm font-medium text-gray-400 mb-3">Available Wallets</h3>
+              <h3 className="label text-korus-textSecondary mb-3">Available Wallets</h3>
             )}
             <div className="space-y-3">
               {notInstalledWallets.map((wallet) => (
@@ -163,7 +163,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
 
         {/* Footer */}
         <div className="mt-6 pt-6 border-t border-korus-dark-400 text-center">
-          <p className="text-gray-500 text-sm mb-3">New to Solana?</p>
+          <p className="text-korus-textSecondary text-sm mb-3">New to Solana?</p>
           <a
             href="https://phantom.app"
             target="_blank"

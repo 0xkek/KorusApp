@@ -60,7 +60,7 @@ export default function RepostModal({ isOpen, onClose, postId, postContent, post
               </svg>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Repost</h2>
+              <h2 className="heading-2 text-white">Repost</h2>
               <p className="text-sm text-korus-textSecondary">Share this post with your followers</p>
             </div>
           </div>
@@ -94,7 +94,7 @@ export default function RepostModal({ isOpen, onClose, postId, postContent, post
 
           {/* Comment Input */}
           <div>
-            <h3 className="text-sm font-medium text-white mb-3">Add your thoughts (optional)</h3>
+            <h3 className="label text-white mb-3">Add your thoughts (optional)</h3>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
