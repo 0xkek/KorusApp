@@ -92,7 +92,7 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm 
               <p className="text-sm text-korus-textSecondary">Get your message seen by everyone - pin to the top of the feed!</p>
             </div>
           </div>
-          <button onClick={onClose} disabled={isProcessing} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-korus-surface/60 text-korus-textSecondary hover:text-white transition-all duration-200 disabled:opacity-50" aria-label="Close modal">
+          <button onClick={onClose} disabled={isProcessing} className="w-8 h-8 rounded-full flex items-center justify-center bg-korus-surface/40 border border-korus-borderLight text-korus-textSecondary hover:bg-korus-surface/60 hover:text-white transition-all duration-200 disabled:opacity-50" aria-label="Close modal">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
@@ -163,7 +163,7 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm 
           <button onClick={handleConfirm} disabled={!selectedDuration || isProcessing || hasInsufficientFunds || !connected} className="flex-1 px-5 py-3 rounded-xl font-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] disabled:hover:scale-100" style={{ background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)', color: '#000000', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 30%, transparent)' }}>
             {isProcessing ? (
               <div className="flex items-center justify-center gap-2">
-                <div className="w-4 h-4 border-2 rounded-full animate-spin" style={{ borderColor: 'rgba(0, 0, 0, 0.3)', borderTopColor: '#000000' }}></div>
+                <div className="spinner-dark"></div>
                 Processing...
               </div>
             ) : !connected ? (

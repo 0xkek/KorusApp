@@ -172,6 +172,36 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* ========================================
+   LOADING SPINNERS
+   ======================================== */
+
+/* Standard spinner for dark buttons (gradient primary buttons) */
+.spinner-dark {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-top-color: #000000;
+  border-radius: 9999px;
+  animation: spin 0.6s linear infinite;
+}
+
+/* Standard spinner for light/white buttons */
+.spinner-light {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 9999px;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========================================
    WALLET ADAPTER STYLING
    ======================================== */
 .wallet-adapter-button {

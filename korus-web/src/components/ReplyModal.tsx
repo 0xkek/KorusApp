@@ -294,7 +294,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                   >
                     {isPosting ? (
                       <div className="flex items-center justify-center gap-2">
-                        <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin"></div>
+                        <div className="spinner-dark"></div>
                         Replying...
                       </div>
                     ) : !connected ? (
