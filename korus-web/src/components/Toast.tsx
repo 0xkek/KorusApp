@@ -116,12 +116,25 @@ export function ToastContainer({ toasts, onRemove }: ToastContainerProps) {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
-      <div className="space-y-2 pointer-events-auto">
-        {toasts.map((toast) => (
-          <ToastComponent key={toast.id} toast={toast} onRemove={onRemove} />
-        ))}
+    <>
+      {/* Screen reader announcements */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {toasts.length > 0 && toasts[toasts.length - 1].message}
       </div>
-    </div>
+
+      {/* Visual toasts */}
+      <div className="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
+        <div className="space-y-2 pointer-events-auto">
+          {toasts.map((toast) => (
+            <ToastComponent key={toast.id} toast={toast} onRemove={onRemove} />
+          ))}
+        </div>
+      </div>
+    </>
   );
 }
