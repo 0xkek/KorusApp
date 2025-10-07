@@ -8,11 +8,34 @@ import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import LinkPreview from '@/components/LinkPreview';
 import VideoPlayer from '@/components/VideoPlayer';
+import CreatePostModal from '@/components/CreatePostModal';
+import PostOptionsModal from '@/components/PostOptionsModal';
+import MobileMenuModal from '@/components/MobileMenuModal';
+import ShoutoutModal from '@/components/ShoutoutModal';
+import TipModal from '@/components/TipModal';
+import ShareModal from '@/components/ShareModal';
+import RepostModal from '@/components/RepostModal';
+import { useToast } from '@/hooks/useToast';
 
 export default function Home() {
   const { connected, publicKey } = useWallet();
   const router = useRouter();
+  const { showSuccess, showError } = useToast();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showCreatePostModal, setShowCreatePostModal] = useState(false);
+  const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [posts, setPosts] = useState<any[]>([]); // Initialize empty
+  const [composeText, setComposeText] = useState('');
+  const [showShoutoutModal, setShowShoutoutModal] = useState(false);
+  const [showTipModal, setShowTipModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showRepostModal, setShowRepostModal] = useState(false);
+  const [postToTip, setPostToTip] = useState<any>(null);
+  const [postToShare, setPostToShare] = useState<any>(null);
+  const [postToRepost, setPostToRepost] = useState<any>(null);
+  const [postInteractions, setPostInteractions] = useState<{[key: number]: {liked: boolean, reposted: boolean, replied: boolean, tipped: boolean}}>({});
 
   useEffect(() => {
     if (!connected) {
@@ -20,10 +43,215 @@ export default function Home() {
     }
   }, [connected, router]);
 
+  // Initialize posts when component mounts
+  useEffect(() => {
+    if (posts.length === 0) {
+      // Define mock posts inline
+      const allPosts = [
+        {
+          id: 1,
+          user: 'solana_dev',
+          content: 'Just deployed my first smart contract on Solana! The speed is insane ⚡',
+          likes: 42,
+          replies: 8,
+          tips: 0.5,
+          time: '2h ago',
+          isPremium: true,
+          isShoutout: false,
+          isSponsored: false,
+          image: null,
+          avatar: null
+        },
+        {
+          id: 2,
+          user: 'nft_collector',
+          content: 'Check out this new NFT collection I found! The art is incredible 🎨',
+          likes: 28,
+          replies: 5,
+          tips: 0.3,
+          time: '4h ago',
+          isPremium: false,
+          isShoutout: true,
+          isSponsored: false,
+          image: 'https://picsum.photos/600/400?random=1',
+          avatar: null
+        },
+        {
+          id: 3,
+          user: 'game_master',
+          content: 'Who wants to play Tic Tac Toe? 0.1 SOL wager 🎮',
+          likes: 15,
+          replies: 3,
+          tips: 0.1,
+          time: '6h ago',
+          isPremium: false,
+          isShoutout: false,
+          isSponsored: true,
+          image: null,
+          avatar: null
+        },
+        {
+          id: 4,
+          user: 'crypto_news',
+          content: 'Amazing tutorial on building with Solana! Check it out: https://solana.com',
+          likes: 67,
+          replies: 12,
+          tips: 1.2,
+          time: '8h ago',
+          isPremium: true,
+          isShoutout: false,
+          isSponsored: false,
+          image: null,
+          avatar: null
+        },
+        {
+          id: 5,
+          user: 'tech_explorer',
+          content: 'Just found this awesome video https://youtube.com/watch?v=dQw4w9WgXcQ',
+          likes: 34,
+          replies: 7,
+          tips: 0.4,
+          time: '10h ago',
+          isPremium: false,
+          isShoutout: false,
+          isSponsored: false,
+          image: null,
+          avatar: null
+        },
+        {
+          id: 6,
+          user: 'video_creator',
+          content: 'Check out my latest tutorial on Solana development! 🎥',
+          likes: 89,
+          replies: 15,
+          tips: 2.5,
+          time: '12h ago',
+          isPremium: true,
+          isShoutout: false,
+          isSponsored: false,
+          image: null,
+          video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+          avatar: null
+        }
+      ];
+
+      // Sort posts: shoutouts first, then regular posts
+      const mockPosts = [...allPosts].sort((a, b) => {
+        if (a.isShoutout && !b.isShoutout) return -1;
+        if (!a.isShoutout && b.isShoutout) return 1;
+        return 0;
+      });
+
+      setPosts(mockPosts);
+    }
+  }, [posts]);
+
   // Helper function to extract URLs from text
   const extractUrls = (text: string): string[] => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     return text.match(urlRegex) || [];
+  };
+
+  // Modal handlers
+  const handlePostCreate = (post: any) => {
+    setPosts(prev => [post, ...prev]);
+    showSuccess('Post created successfully!');
+  };
+
+  const handlePostOptionsClick = (post: any) => {
+    setSelectedPost(post);
+    setShowPostOptionsModal(true);
+  };
+
+  const handleNotificationsToggle = () => {
+    setShowNotifications(!showNotifications);
+  };
+
+  // Interaction handlers
+  const toggleLike = (postId: number) => {
+    setPostInteractions(prev => ({
+      ...prev,
+      [postId]: {
+        ...prev[postId],
+        liked: !prev[postId]?.liked
+      }
+    }));
+  };
+
+  const toggleRepost = (postId: number, comment?: string) => {
+    const originalPost = posts.find(p => p.id === postId);
+    if (!originalPost) return;
+
+    const isCurrentlyReposted = postInteractions[postId]?.reposted;
+
+    if (!isCurrentlyReposted) {
+      // If the post being reposted is itself a repost, use the original post
+      const postToRepost = (originalPost as any).isRepost && (originalPost as any).repostedPost
+        ? (originalPost as any).repostedPost
+        : originalPost;
+
+      // Create a repost
+      const repost = {
+        id: Date.now(),
+        user: publicKey?.toBase58().slice(0, 15) || 'current_user',
+        content: comment || '',
+        likes: 0,
+        replies: 0,
+        tips: 0,
+        time: 'now',
+        isPremium: false,
+        isShoutout: false,
+        isSponsored: false,
+        image: null,
+        avatar: null,
+        isRepost: true,
+        repostedPost: postToRepost,
+        repostedBy: publicKey?.toBase58().slice(0, 15) || 'current_user'
+      };
+
+      // Add repost and maintain shoutout priority
+      setPosts(prev => {
+        const updatedPosts = [repost, ...prev];
+        // Sort to keep shoutouts at the top
+        return updatedPosts.sort((a, b) => {
+          if (a.isShoutout && !b.isShoutout) return -1;
+          if (!a.isShoutout && b.isShoutout) return 1;
+          return 0;
+        });
+      });
+    } else {
+      // Remove the repost from feed
+      setPosts(prev => prev.filter(p => !(p.isRepost && p.repostedPost?.id === postId)));
+    }
+
+    // Toggle repost state
+    setPostInteractions(prev => ({
+      ...prev,
+      [postId]: {
+        ...prev[postId],
+        reposted: !isCurrentlyReposted
+      }
+    }));
+  };
+
+  const markReplied = (postId: number) => {
+    setPostInteractions(prev => ({
+      ...prev,
+      [postId]: {
+        ...prev[postId],
+        replied: true
+      }
+    }));
+  };
+
+  const markTipped = (postId: number) => {
+    setPostInteractions(prev => ({
+      ...prev,
+      [postId]: {
+        ...prev[postId],
+        tipped: true
+      }
+    }));
   };
 
   // Helper function for double-tap to like
@@ -54,102 +282,6 @@ export default function Home() {
 
     setTimeout(() => heart.remove(), 600);
   };
-
-  // Mock posts for preview
-  const allPosts = [
-    {
-      id: 1,
-      user: 'solana_dev',
-      content: 'Just deployed my first smart contract on Solana! The speed is insane ⚡',
-      likes: 42,
-      replies: 8,
-      tips: 0.5,
-      time: '2h ago',
-      isPremium: true,
-      isShoutout: false,
-      isSponsored: false,
-      image: null,
-      avatar: null
-    },
-    {
-      id: 2,
-      user: 'nft_collector',
-      content: 'Check out this new NFT collection I found! The art is incredible 🎨',
-      likes: 28,
-      replies: 5,
-      tips: 0.3,
-      time: '4h ago',
-      isPremium: false,
-      isShoutout: true,
-      isSponsored: false,
-      image: 'https://picsum.photos/600/400?random=1',
-      avatar: null
-    },
-    {
-      id: 3,
-      user: 'game_master',
-      content: 'Who wants to play Tic Tac Toe? 0.1 SOL wager 🎮',
-      likes: 15,
-      replies: 3,
-      tips: 0.1,
-      time: '6h ago',
-      isPremium: false,
-      isShoutout: false,
-      isSponsored: true,
-      image: null,
-      avatar: null
-    },
-    {
-      id: 4,
-      user: 'crypto_news',
-      content: 'Amazing tutorial on building with Solana! Check it out: https://solana.com',
-      likes: 67,
-      replies: 12,
-      tips: 1.2,
-      time: '8h ago',
-      isPremium: true,
-      isShoutout: false,
-      isSponsored: false,
-      image: null,
-      avatar: null
-    },
-    {
-      id: 5,
-      user: 'tech_explorer',
-      content: 'Just found this awesome video https://youtube.com/watch?v=dQw4w9WgXcQ',
-      likes: 34,
-      replies: 7,
-      tips: 0.4,
-      time: '10h ago',
-      isPremium: false,
-      isShoutout: false,
-      isSponsored: false,
-      image: null,
-      avatar: null
-    },
-    {
-      id: 6,
-      user: 'video_creator',
-      content: 'Check out my latest tutorial on Solana development! 🎥',
-      likes: 89,
-      replies: 15,
-      tips: 2.5,
-      time: '12h ago',
-      isPremium: true,
-      isShoutout: false,
-      isSponsored: false,
-      image: null,
-      video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-      avatar: null
-    }
-  ];
-
-  // Sort posts: shoutouts first, then regular posts
-  const mockPosts = [...allPosts].sort((a, b) => {
-    if (a.isShoutout && !b.isShoutout) return -1;
-    if (!a.isShoutout && b.isShoutout) return 1;
-    return 0;
-  });
 
   return (
     <main className="min-h-screen bg-korus-dark-100 relative overflow-hidden">
@@ -196,15 +328,24 @@ export default function Home() {
                 </div>
 
                 <div className="relative flex items-center justify-center w-full">
-                  <button className="relative px-4 py-4 text-white font-semibold hover:bg-korus-surface/20 transition-colors group">
+                  <button
+                    onClick={() => router.push('/')}
+                    className="relative px-4 py-4 text-white font-semibold hover:bg-korus-surface/20 transition-colors group"
+                  >
                     <span className="relative z-10">Home</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-korus-primary rounded-full"></div>
                   </button>
-                  <button className="relative px-4 py-4 text-gray-400 font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group">
+                  <button
+                    onClick={() => router.push('/games')}
+                    className="relative px-4 py-4 text-gray-400 font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                  >
                     <span className="relative z-10">Games</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
                   </button>
-                  <button className="relative px-4 py-4 text-gray-400 font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group">
+                  <button
+                    onClick={() => router.push('/events')}
+                    className="relative px-4 py-4 text-gray-400 font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                  >
                     <span className="relative z-10">Events</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
                   </button>
@@ -229,6 +370,8 @@ export default function Home() {
                 </div>
                 <div className="flex-1">
                   <textarea
+                    value={composeText}
+                    onChange={(e) => setComposeText(e.target.value)}
                     placeholder="What's on your mind? Share your experience, ask for advice, or offer support..."
                     className="w-full bg-transparent text-white text-xl resize-none outline-none placeholder-korus-textTertiary min-h-[120px]"
                     rows={3}
@@ -252,10 +395,15 @@ export default function Home() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M16 10h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </button>
-                      <button className="flex items-center gap-2 px-3 py-2 bg-korus-surface/40 backdrop-blur-sm border border-korus-borderLight rounded-xl text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10">
-                        <span className="text-sm font-medium">🎮 Game</span>
-                      </button>
-                      <button className="flex items-center gap-2 px-3 py-2 bg-korus-surface/40 backdrop-blur-sm border border-korus-borderLight rounded-xl text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10">
+                      <button
+                        onClick={() => composeText.trim() && setShowShoutoutModal(true)}
+                        disabled={!composeText.trim()}
+                        className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm border rounded-xl transition-all duration-200 ${
+                          composeText.trim()
+                            ? 'bg-korus-surface/40 border-korus-borderLight text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer'
+                            : 'bg-korus-surface/20 border-korus-borderLight/50 text-korus-textTertiary cursor-not-allowed opacity-50'
+                        }`}
+                      >
                         <span className="text-sm font-medium">📢 Shoutout</span>
                       </button>
                     </div>
@@ -270,24 +418,24 @@ export default function Home() {
 
             {/* Feed Posts */}
             <div>
-          {mockPosts.map((post) => (
+          {posts.map((post) => (
             <div
               key={post.id}
               className={`backdrop-blur-sm p-0 transition-all duration-200 cursor-pointer group ${
                 post.isShoutout
-                  ? 'shoutout-post border border-[#FFD700] bg-[rgba(255,215,0,0.03)] shadow-[0_4px_12px_rgba(255,215,0,0.3)] hover:border-[#FFD700] hover:shadow-[0_8px_24px_rgba(255,215,0,0.4)] hover:bg-[rgba(255,215,0,0.05)]'
+                  ? 'shoutout-post border border-korus-primary bg-korus-primary/5 shadow-[0_4px_12px_rgba(var(--korus-primary-rgb),0.3)] hover:border-korus-primary hover:shadow-[0_8px_24px_rgba(var(--korus-primary-rgb),0.4)] hover:bg-korus-primary/10'
                   : 'border-b border-korus-borderLight bg-korus-surface/20 hover:bg-korus-surface/40 hover:border-korus-border'
               }`}
             >
               {/* Shoutout Banner */}
               {post.isShoutout && (
-                <div className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] px-5 py-3 flex items-center justify-center gap-3">
-                  <span className="text-white text-lg">📢</span>
-                  <span className="text-white font-black text-lg tracking-[3px]">SHOUTOUT</span>
+                <div className="bg-gradient-to-r from-korus-primary to-korus-secondary px-5 py-3 flex items-center justify-center gap-3">
+                  <span className="text-black text-lg">📢</span>
+                  <span className="text-black font-black text-lg tracking-[3px]">SHOUTOUT</span>
                   <div className="flex gap-1">
-                    <span className="text-white text-sm">⭐</span>
-                    <span className="text-white text-sm">⭐</span>
-                    <span className="text-white text-sm">⭐</span>
+                    <span className="text-black text-sm">⭐</span>
+                    <span className="text-black text-sm">⭐</span>
+                    <span className="text-black text-sm">⭐</span>
                   </div>
                 </div>
               )}
@@ -300,9 +448,21 @@ export default function Home() {
 
                 {/* Post Content */}
                 <div className="flex-1 min-w-0">
+                  {/* Reposted By Indicator */}
+                  {(post as any).isRepost && (post as any).repostedBy && (
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <svg className="w-3.5 h-3.5 text-korus-textSecondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      <span className="text-xs text-korus-textSecondary font-medium">
+                        {(post as any).repostedBy} reposted
+                      </span>
+                    </div>
+                  )}
+
                   {/* Post Header */}
                   <div className="flex items-center gap-2 mb-2">
-                    <span className={`font-bold hover:underline cursor-pointer ${post.isShoutout ? 'text-[#FFD700]' : 'text-white'}`}>{post.user}</span>
+                    <span className={`font-bold hover:underline cursor-pointer ${post.isShoutout ? 'text-korus-primary' : 'text-white'}`}>{post.user}</span>
 
                     {/* Premium Badge */}
                     {post.isPremium && (
@@ -324,7 +484,13 @@ export default function Home() {
 
                     {/* More button */}
                     <div className="ml-auto">
-                      <button className="text-gray-500 hover:text-white hover:bg-gray-800 rounded-full p-1 transition-colors">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePostOptionsClick(post);
+                        }}
+                        className="text-gray-500 hover:text-white hover:bg-gray-800 rounded-full p-1 transition-colors"
+                      >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
                         </svg>
@@ -332,27 +498,56 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Post Text */}
-                  <div className="text-white text-base leading-normal mb-3 whitespace-pre-wrap break-words">
-                    {post.content}
-                  </div>
+                  {/* Reposted Post */}
+                  {(post as any).isRepost && (post as any).repostedPost ? (
+                    <>
+                      {/* User's comment on the repost (if any) */}
+                      {post.content && (
+                        <div className="text-white text-base leading-normal mb-3 whitespace-pre-wrap break-words">
+                          {post.content}
+                        </div>
+                      )}
+
+                      {/* Original Post in green box */}
+                      <div className="mb-3 border-2 rounded-xl p-4" style={{ background: 'linear-gradient(90deg, rgba(67, 233, 123, 0.1), rgba(56, 239, 125, 0.1))', borderColor: 'rgba(67, 233, 123, 0.3)' }}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-black" style={{ background: 'linear-gradient(135deg, #43E97B, #38EF7D)' }}>
+                            {(post as any).repostedPost.user.slice(0, 2).toUpperCase()}
+                          </div>
+                          <span className="text-white font-medium">{(post as any).repostedPost.user}</span>
+                          <span className="text-korus-textSecondary text-sm">· {(post as any).repostedPost.time}</span>
+                        </div>
+                        <p className="text-korus-text text-sm leading-relaxed">{(post as any).repostedPost.content}</p>
+                        {(post as any).repostedPost.image && (
+                          <img src={(post as any).repostedPost.image} alt="Reposted content" className="mt-3 w-full rounded-lg" />
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    /* Regular Post Text */
+                    post.content && (
+                      <div className="text-white text-base leading-normal mb-3 whitespace-pre-wrap break-words">
+                        {post.content}
+                      </div>
+                    )
+                  )}
 
                   {/* Link Preview */}
-                  {extractUrls(post.content).map((url, index) => (
+                  {!((post as any).isRepost) && extractUrls(post.content).map((url, index) => (
                     <div key={index} className="mb-3">
                       <LinkPreview url={url} />
                     </div>
                   ))}
 
                   {/* Video Player */}
-                  {(post as any).video && (
+                  {!((post as any).isRepost) && (post as any).video && (
                     <div className="mb-3">
                       <VideoPlayer videoUrl={(post as any).video} />
                     </div>
                   )}
 
                   {/* Post Image */}
-                  {post.image && (
+                  {!((post as any).isRepost) && post.image && (
                     <div className="mb-3 rounded-2xl overflow-hidden border border-gray-800">
                       <img src={post.image} alt="Post content" className="w-full h-auto" />
                     </div>
@@ -361,8 +556,13 @@ export default function Home() {
                   {/* Post Actions */}
                   <div className="flex items-center justify-between max-w-md mt-3">
                     <button
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-full text-korus-textTertiary border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group"
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
+                        postInteractions[post.id]?.replied
+                          ? 'bg-korus-primary/20 border border-korus-primary/50'
+                          : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
+                      }`}
                       onClick={(e) => {
+                        markReplied(post.id);
                         if ((window as any).createParticleExplosion) {
                           const rect = e.currentTarget.getBoundingClientRect();
                           const x = rect.left + rect.width / 2;
@@ -371,22 +571,45 @@ export default function Home() {
                         }
                       }}
                     >
-                      <svg className="w-4 h-4 text-korus-textTertiary group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className={`w-4 h-4 transition-colors ${
+                        postInteractions[post.id]?.replied ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                      }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                       </svg>
-                      <span className="text-korus-textTertiary text-sm group-hover:text-blue-400 transition-colors font-medium">{post.replies}</span>
-                    </button>
-
-                    <button className="flex items-center gap-2 px-3 py-1.5 rounded-full text-korus-textTertiary border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group">
-                      <svg className="w-4 h-4 text-korus-textTertiary group-hover:text-green-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      <span className="text-korus-textTertiary text-sm group-hover:text-green-400 transition-colors font-medium">12</span>
+                      <span className={`text-sm transition-colors font-medium ${
+                        postInteractions[post.id]?.replied ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                      }`}>{post.replies}</span>
                     </button>
 
                     <button
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-full text-korus-textTertiary border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group"
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
+                        postInteractions[post.id]?.reposted
+                          ? 'bg-korus-primary/20 border border-korus-primary/50'
+                          : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
+                      }`}
+                      onClick={() => {
+                        setPostToRepost(post);
+                        setShowRepostModal(true);
+                      }}
+                    >
+                      <svg className={`w-4 h-4 transition-colors ${
+                        postInteractions[post.id]?.reposted ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                      }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      <span className={`text-sm transition-colors font-medium ${
+                        postInteractions[post.id]?.reposted ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                      }`}>12</span>
+                    </button>
+
+                    <button
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
+                        postInteractions[post.id]?.liked
+                          ? 'bg-korus-primary/20 border border-korus-primary/50'
+                          : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
+                      }`}
                       onClick={(e) => {
+                        toggleLike(post.id);
                         if ((window as any).createParticleExplosion) {
                           const rect = e.currentTarget.getBoundingClientRect();
                           const x = rect.left + rect.width / 2;
@@ -395,31 +618,45 @@ export default function Home() {
                         }
                       }}
                     >
-                      <svg className="w-4 h-4 text-korus-textTertiary group-hover:text-red-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className={`w-4 h-4 transition-colors ${
+                        postInteractions[post.id]?.liked ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                      }`} fill={postInteractions[post.id]?.liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
-                      <span className="text-korus-textTertiary text-sm group-hover:text-red-400 transition-colors font-medium">{post.likes}</span>
+                      <span className={`text-sm transition-colors font-medium ${
+                        postInteractions[post.id]?.liked ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                      }`}>{post.likes}</span>
                     </button>
 
                     <button
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-full text-korus-textTertiary border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group"
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
+                        postInteractions[post.id]?.tipped
+                          ? 'bg-korus-primary/20 border border-korus-primary/50'
+                          : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
+                      }`}
                       onClick={(e) => {
-                        if ((window as any).createParticleExplosion) {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          const x = rect.left + rect.width / 2;
-                          const y = rect.top + rect.height / 2;
-                          (window as any).createParticleExplosion('tip', x, y);
-                        }
+                        setPostToTip(post);
+                        setShowTipModal(true);
+                      }}
+                    >
+                      <svg className={`w-4 h-4 transition-colors ${
+                        postInteractions[post.id]?.tipped ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                      }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className={`text-sm transition-colors font-medium ${
+                        postInteractions[post.id]?.tipped ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                      }`}>{post.tips} SOL</span>
+                    </button>
+
+                    <button
+                      className="flex items-center justify-center w-9 h-9 rounded-full text-korus-textTertiary border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group"
+                      onClick={() => {
+                        setPostToShare(post);
+                        setShowShareModal(true);
                       }}
                     >
                       <svg className="w-4 h-4 text-korus-textTertiary group-hover:text-korus-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="text-korus-textTertiary text-sm group-hover:text-korus-primary transition-colors font-medium">{post.tips} SOL</span>
-                    </button>
-
-                    <button className="flex items-center justify-center w-9 h-9 rounded-full text-korus-textTertiary border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group">
-                      <svg className="w-4 h-4 text-korus-textTertiary group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                       </svg>
                     </button>
@@ -434,10 +671,87 @@ export default function Home() {
       </div>
       </div>
 
-      <LeftSidebar onNotificationsToggle={() => setShowNotifications(!showNotifications)} />
+      <LeftSidebar
+        onNotificationsToggle={() => setShowNotifications(!showNotifications)}
+        onPostButtonClick={() => setShowCreatePostModal(true)}
+      />
       <RightSidebar
         showNotifications={showNotifications}
         onNotificationsClose={() => setShowNotifications(false)}
+      />
+
+      {/* Modals */}
+      <CreatePostModal
+        isOpen={showCreatePostModal}
+        onClose={() => setShowCreatePostModal(false)}
+        onPostCreate={handlePostCreate}
+      />
+
+      <PostOptionsModal
+        isOpen={showPostOptionsModal}
+        onClose={() => setShowPostOptionsModal(false)}
+        postId={selectedPost?.id || 0}
+        postUser={selectedPost?.user || ''}
+        isOwnPost={selectedPost?.user === publicKey?.toBase58()}
+      />
+
+
+      <ShoutoutModal
+        isOpen={showShoutoutModal}
+        onClose={() => setShowShoutoutModal(false)}
+        postContent={composeText}
+        onConfirm={(duration, price) => {
+          // Handle shoutout creation
+          showSuccess(`Shoutout created for ${duration} minutes at ${price} SOL!`);
+          setComposeText(''); // Clear compose text after shoutout
+        }}
+      />
+
+      <TipModal
+        isOpen={showTipModal}
+        onClose={() => {
+          setShowTipModal(false);
+          setPostToTip(null);
+        }}
+        recipientUser={postToTip?.user || ''}
+        postId={postToTip?.id}
+        onTipSuccess={() => {
+          if (postToTip?.id) {
+            markTipped(postToTip.id);
+          }
+        }}
+      />
+
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => {
+          setShowShareModal(false);
+          setPostToShare(null);
+        }}
+        postId={postToShare?.id || 0}
+        postContent={postToShare?.content || ''}
+        postUser={postToShare?.user || ''}
+      />
+
+      <RepostModal
+        isOpen={showRepostModal}
+        onClose={() => {
+          setShowRepostModal(false);
+          setPostToRepost(null);
+        }}
+        postId={postToRepost?.id || 0}
+        postContent={postToRepost?.content || ''}
+        postUser={postToRepost?.user || ''}
+        onRepostSuccess={(comment) => {
+          if (postToRepost?.id) {
+            toggleRepost(postToRepost.id, comment);
+          }
+        }}
+      />
+
+      <MobileMenuModal
+        isOpen={showMobileMenu}
+        onClose={() => setShowMobileMenu(false)}
       />
     </main>
   );
