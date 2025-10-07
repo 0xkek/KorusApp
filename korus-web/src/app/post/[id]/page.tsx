@@ -4,10 +4,13 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import Header from '@/components/Header';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
-import ReplyModal from '@/components/ReplyModal';
+
+// Dynamically import modal for code splitting
+const ReplyModal = dynamic(() => import('@/components/ReplyModal'), { ssr: false });
 
 interface Reply {
   id: number;

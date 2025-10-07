@@ -403,6 +403,15 @@ input:focus, textarea:focus, select:focus {
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 @keyframes gradient {
   0%, 100% {
     opacity: 0.3;

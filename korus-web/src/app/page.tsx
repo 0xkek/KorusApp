@@ -4,19 +4,22 @@ import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import LinkPreview from '@/components/LinkPreview';
 import VideoPlayer from '@/components/VideoPlayer';
-import CreatePostModal from '@/components/CreatePostModal';
-import PostOptionsModal from '@/components/PostOptionsModal';
-import MobileMenuModal from '@/components/MobileMenuModal';
-import ShoutoutModal from '@/components/ShoutoutModal';
-import TipModal from '@/components/TipModal';
-import ShareModal from '@/components/ShareModal';
-import RepostModal from '@/components/RepostModal';
-import ReplyModal from '@/components/ReplyModal';
 import { useToast } from '@/hooks/useToast';
+
+// Dynamically import modals for code splitting
+const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { ssr: false });
+const PostOptionsModal = dynamic(() => import('@/components/PostOptionsModal'), { ssr: false });
+const MobileMenuModal = dynamic(() => import('@/components/MobileMenuModal'), { ssr: false });
+const ShoutoutModal = dynamic(() => import('@/components/ShoutoutModal'), { ssr: false });
+const TipModal = dynamic(() => import('@/components/TipModal'), { ssr: false });
+const ShareModal = dynamic(() => import('@/components/ShareModal'), { ssr: false });
+const RepostModal = dynamic(() => import('@/components/RepostModal'), { ssr: false });
+const ReplyModal = dynamic(() => import('@/components/ReplyModal'), { ssr: false });
 
 export default function Home() {
   const { connected, publicKey } = useWallet();

@@ -112,6 +112,23 @@ import { Textarea } from '@/components/ui';
 />
 ```
 
+### Skeleton Component
+
+Loading skeletons for better perceived performance:
+
+```tsx
+import { Skeleton, PostSkeleton, FeedSkeleton } from '@/components/ui';
+
+// Basic skeleton
+<Skeleton variant="text" width="60%" />
+<Skeleton variant="circular" width={40} height={40} />
+<Skeleton variant="rectangular" width="100%" height={200} />
+
+// Pre-built skeletons
+<PostSkeleton />
+<FeedSkeleton count={3} />
+```
+
 ## Utility Classes
 
 ### Typography
@@ -206,6 +223,63 @@ Features:
 - Tab cycles through focusable elements within modal
 - Shift+Tab cycles backwards
 - Escape key dispatches 'modal-escape' event
+
+### useModal
+
+Simplifies modal state management:
+
+```tsx
+import { useModal, useModalWithData } from '@/hooks/useModal';
+
+// Simple modal (boolean state)
+function MyComponent() {
+  const createPostModal = useModal();
+  const confirmModal = useModal(false); // Initial state
+
+  return (
+    <>
+      <button onClick={createPostModal.open}>Create Post</button>
+      <CreatePostModal
+        isOpen={createPostModal.isOpen}
+        onClose={createPostModal.close}
+      />
+    </>
+  );
+}
+
+// Modal with data (e.g., editing a post)
+function PostList() {
+  const editModal = useModalWithData<Post>();
+
+  return (
+    <>
+      {posts.map(post => (
+        <div key={post.id}>
+          <button onClick={() => editModal.open(post)}>Edit</button>
+        </div>
+      ))}
+
+      <EditPostModal
+        isOpen={editModal.isOpen}
+        post={editModal.data}
+        onClose={editModal.close}
+      />
+    </>
+  );
+}
+```
+
+**useModal API:**
+- `isOpen`: boolean - Current modal state
+- `open()`: Opens the modal
+- `close()`: Closes the modal
+- `toggle()`: Toggles modal state
+
+**useModalWithData API:**
+- `isOpen`: boolean - Current modal state
+- `data`: T | null - Data passed to modal
+- `open(item: T)`: Opens modal with data
+- `close()`: Closes modal and clears data after animation
 
 ## Accessibility Features
 

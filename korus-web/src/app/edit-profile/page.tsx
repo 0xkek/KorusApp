@@ -4,8 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useToastContext } from '@/components/ToastProvider';
-import ConfirmModal from '@/components/ConfirmModal';
+
+// Dynamically import modal for code splitting
+const ConfirmModal = dynamic(() => import('@/components/ConfirmModal'), { ssr: false });
 
 interface NFTAvatar {
   id: string;
