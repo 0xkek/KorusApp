@@ -1,11 +1,15 @@
 'use client';
 
 import { Poppins } from "next/font/google";
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import "./globals.css";
 import { WalletContextProvider } from "@/components/WalletProvider";
 import { ParticleSystem } from "@/components/ParticleSystem";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastProvider } from "@/components/ToastProvider";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { reportWebVitals, analytics } from "@/utils/analytics";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -18,17 +22,42 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+
+  // Track page views
+  useEffect(() => {
+    if (pathname) {
+      analytics.pageView(pathname);
+    }
+  }, [pathname]);
+
+  // Report Web Vitals
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      import('web-vitals').then(({ onCLS, onFID, onFCP, onLCP, onTTFB, onINP }) => {
+        onCLS(reportWebVitals);
+        onFID(reportWebVitals);
+        onFCP(reportWebVitals);
+        onLCP(reportWebVitals);
+        onTTFB(reportWebVitals);
+        onINP(reportWebVitals);
+      });
+    }
+  }, []);
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${poppins.variable} font-sans antialiased`}>
-        <ThemeProvider>
-          <WalletContextProvider>
-            <ToastProvider>
-              {children}
-              <ParticleSystem />
-            </ToastProvider>
-          </WalletContextProvider>
-        </ThemeProvider>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <WalletContextProvider>
+              <ToastProvider>
+                {children}
+                <ParticleSystem />
+              </ToastProvider>
+            </WalletContextProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
