@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useToast } from '@/hooks/useToast';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { Button } from '@/components/ui';
 
 
 interface CreatePostModalProps {
@@ -19,6 +21,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
   const [isPosting, setIsPosting] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const modalRef = useFocusTrap(isOpen);
 
   // Update content when initialContent changes
   useEffect(() => {
@@ -104,8 +107,8 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
   const isOverLimit = characterCount > maxCharacters;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget && !isPosting) onClose(); }}>
-      <div className="bg-korus-surface/90 backdrop-blur-md rounded-2xl max-w-2xl w-full border border-korus-border shadow-xl">
+    <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget && !isPosting) onClose(); }}>
+      <div ref={modalRef} className="modal-content bg-korus-surface/90 backdrop-blur-md rounded-2xl max-w-2xl w-full border border-korus-border shadow-xl">
         {/* Modal Header */}
         <div className="flex items-center justify-between p-6 border-b border-korus-border">
           <h2 className="heading-2 text-white">Create Post</h2>
@@ -256,26 +259,20 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                   </div>
 
                   {/* Post Button */}
-                  <button
+                  <Button
                     onClick={handlePost}
                     disabled={!content.trim() || isOverLimit || isPosting || !connected}
-                    className="px-6 py-2 bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 backdrop-blur-sm"
+                    variant="primary"
+                    size="md"
+                    isLoading={isPosting}
                   >
-                    {isPosting ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="spinner-dark"></div>
-                        Posting...
-                      </div>
-                    ) : !connected ? (
-                      'Connect Wallet'
-                    ) : !content.trim() ? (
-                      'Write something...'
-                    ) : isOverLimit ? (
-                      'Too long'
-                    ) : (
+                    {!isPosting && (
+                      !connected ? 'Connect Wallet' :
+                      !content.trim() ? 'Write something...' :
+                      isOverLimit ? 'Too long' :
                       'Post'
                     )}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

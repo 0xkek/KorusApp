@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useToast } from '@/hooks/useToast';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { Button } from '@/components/ui';
 
 interface TipModalProps {
   isOpen: boolean;
@@ -19,6 +21,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const modalRef = useFocusTrap(isOpen);
 
   if (!isOpen) return null;
 
@@ -95,8 +98,8 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
   const isInsufficientFunds = finalAmount > balance;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget && !isSending) onClose(); }}>
-      <div className="bg-korus-surface/95 backdrop-blur-xl rounded-2xl max-w-md w-full border border-korus-border shadow-2xl">
+    <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget && !isSending) onClose(); }}>
+      <div ref={modalRef} className="modal-content bg-korus-surface/95 backdrop-blur-xl rounded-2xl max-w-md w-full border border-korus-border shadow-2xl">
         {/* Modal Header */}
         <div className="flex items-center justify-between p-6 border-b border-korus-border">
           <div className="flex items-center gap-3">
@@ -208,34 +211,28 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
 
         {/* Action Buttons */}
         <div className="flex gap-3 p-6 border-t border-korus-border">
-          <button
+          <Button
             onClick={onClose}
             disabled={isSending}
-            className="flex-1 px-5 py-3 bg-korus-surface/60 border border-korus-borderLight text-korus-text font-semibold rounded-xl hover:bg-korus-surface/80 hover:border-korus-border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="secondary"
+            className="flex-1"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleSendTip}
             disabled={finalAmount <= 0 || isSending || isInsufficientFunds || !connected}
-            className="flex-1 px-5 py-3 rounded-xl font-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] disabled:hover:scale-100"
-            style={{ background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)', color: '#000000', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 30%, transparent)' }}
+            variant="primary"
+            isLoading={isSending}
+            className="flex-1"
           >
-            {isSending ? (
-              <div className="flex items-center justify-center gap-2">
-                <div className="spinner-dark"></div>
-                Processing...
-              </div>
-            ) : !connected ? (
-              'Connect Wallet'
-            ) : finalAmount <= 0 ? (
-              'Select Amount'
-            ) : isInsufficientFunds ? (
-              'Insufficient Balance'
-            ) : (
-              'Send Tip for ' + finalAmount.toFixed(3) + ' SOL'
+            {!isSending && (
+              !connected ? 'Connect Wallet' :
+              finalAmount <= 0 ? 'Select Amount' :
+              isInsufficientFunds ? 'Insufficient Balance' :
+              `Send Tip for ${finalAmount.toFixed(3)} SOL`
             )}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
