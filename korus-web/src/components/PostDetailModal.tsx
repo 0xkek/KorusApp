@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface Post {
   id: number;
@@ -61,6 +62,7 @@ export default function PostDetailModal({
   const { connected } = useWallet();
   const router = useRouter();
   const [replies, setReplies] = useState<Reply[]>([]);
+  const modalRef = useFocusTrap(isOpen);
 
   // Mock replies data
   useEffect(() => {
@@ -139,9 +141,9 @@ export default function PostDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+    <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
       {/* Modal Container */}
-      <div className="bg-korus-surface/90 backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[90vh] mx-4 border border-korus-border shadow-xl overflow-hidden">
+      <div ref={modalRef} className="modal-content bg-korus-surface/90 backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[90vh] mx-4 border border-korus-border shadow-xl overflow-hidden">
         {/* Modal Header */}
         <div className="sticky top-0 bg-korus-surface/90 backdrop-blur-md flex items-center justify-between p-4 border-b border-korus-border">
           <h2 className="heading-2 text-white">Post</h2>

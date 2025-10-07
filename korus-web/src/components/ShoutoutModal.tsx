@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useToast } from '@/hooks/useToast';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 const SHOUTOUT_OPTIONS = [
   { label: '10 min', value: 10, price: 0.10, recommended: false },
@@ -28,6 +29,7 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm 
   const [selectedDuration, setSelectedDuration] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const modalRef = useFocusTrap(isOpen);
 
   useEffect(() => {
     if (isOpen) {
@@ -80,8 +82,8 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget && !isProcessing) onClose(); }}>
-      <div className="bg-korus-surface/95 backdrop-blur-xl rounded-2xl max-w-lg w-full border border-korus-border shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget && !isProcessing) onClose(); }}>
+      <div ref={modalRef} className="modal-content bg-korus-surface/95 backdrop-blur-xl rounded-2xl max-w-lg w-full border border-korus-border shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-korus-border">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 40%, transparent)' }}>

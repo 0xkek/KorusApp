@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/useToast';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface ShareModalProps {
 export default function ShareModal({ isOpen, onClose, postId, postContent, postUser }: ShareModalProps) {
   const { showSuccess, showError } = useToast();
   const [copied, setCopied] = useState(false);
+  const modalRef = useFocusTrap(isOpen);
 
   if (!isOpen) return null;
 
@@ -126,8 +128,8 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="bg-korus-surface/95 backdrop-blur-xl rounded-2xl max-w-md w-full border border-korus-border shadow-2xl">
+    <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div ref={modalRef} className="modal-content bg-korus-surface/95 backdrop-blur-xl rounded-2xl max-w-md w-full border border-korus-border shadow-2xl">
         {/* Modal Header */}
         <div className="flex items-center justify-between p-6 border-b border-korus-border">
           <div className="flex items-center gap-3">

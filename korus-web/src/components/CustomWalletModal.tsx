@@ -4,9 +4,11 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletReadyState } from '@solana/wallet-adapter-base';
 import { useState } from 'react';
 import Image from 'next/image';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
   const { wallets, select } = useWallet();
+  const modalRef = useFocusTrap(open);
 
   if (!open) return null;
 
@@ -30,7 +32,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/95 backdrop-blur-lg"
@@ -38,7 +40,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
       />
 
       {/* Modal */}
-      <div className="relative z-10 bg-korus-dark-200 rounded-2xl p-6 max-w-md w-full mx-4 border border-korus-dark-400">
+      <div ref={modalRef} className="modal-content relative z-10 bg-korus-dark-200 rounded-2xl p-6 max-w-md w-full mx-4 border border-korus-dark-400">
         {/* Close button */}
         <button
           onClick={onClose}

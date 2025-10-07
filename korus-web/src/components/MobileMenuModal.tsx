@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useEffect } from 'react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface TabItem {
   name: string;
@@ -23,6 +24,7 @@ export default function MobileMenuModal({ isOpen, onClose, onNotificationsToggle
   const pathname = usePathname();
   const router = useRouter();
   const { connected, publicKey } = useWallet();
+  const modalRef = useFocusTrap(isOpen);
 
   // Close modal when route changes
   useEffect(() => {
@@ -125,12 +127,12 @@ export default function MobileMenuModal({ isOpen, onClose, onNotificationsToggle
     <>
       {/* Overlay */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+        className="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
         onClick={onClose}
       />
 
       {/* Mobile Menu */}
-      <div className="fixed top-0 left-0 bottom-0 w-80 bg-korus-dark-200 border-r border-korus-border z-50 md:hidden overflow-y-auto">
+      <div ref={modalRef} className="modal-content fixed top-0 left-0 bottom-0 w-80 bg-korus-dark-200 border-r border-korus-border z-50 md:hidden overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-korus-border">
           <div className="flex items-center gap-3">

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useToast } from '@/hooks/useToast';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface PostOptionsModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export default function PostOptionsModal({ isOpen, onClose, postId, postUser, is
   const { connected } = useWallet();
   const { showSuccess, showError } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const modalRef = useFocusTrap(isOpen);
 
   if (!isOpen) return null;
 
@@ -62,8 +64,8 @@ export default function PostOptionsModal({ isOpen, onClose, postId, postUser, is
   // Render report confirmation modal (similar to mobile app)
   if (!isOwnPost) {
     return (
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-korus-surface/90 backdrop-blur-md rounded-3xl max-w-md w-full border-2 shadow-xl shadow-red-500/20" style={{borderColor: '#ef4444'}}>
+      <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div ref={modalRef} className="modal-content bg-korus-surface/90 backdrop-blur-md rounded-3xl max-w-md w-full border-2 shadow-xl shadow-red-500/20" style={{borderColor: '#ef4444'}}>
           <div className="p-6 text-center">
             {/* Warning Icon */}
             <div className="mb-6 flex justify-center">
@@ -114,8 +116,8 @@ export default function PostOptionsModal({ isOpen, onClose, postId, postUser, is
 
   // Render delete confirmation modal for own posts
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-korus-surface/90 backdrop-blur-md rounded-3xl max-w-md w-full border-2 shadow-xl shadow-red-500/20" style={{borderColor: '#ef4444'}}>
+    <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div ref={modalRef} className="modal-content bg-korus-surface/90 backdrop-blur-md rounded-3xl max-w-md w-full border-2 shadow-xl shadow-red-500/20" style={{borderColor: '#ef4444'}}>
         <div className="p-6 text-center">
           {/* Delete Icon */}
           <div className="mb-6 flex justify-center">

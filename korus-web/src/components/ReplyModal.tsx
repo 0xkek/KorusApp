@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useToast } from '@/hooks/useToast';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { Button } from '@/components/ui';
 
 interface Post {
   id: number;
@@ -31,6 +33,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
   const [replyContent, setReplyContent] = useState('');
   const [isPosting, setIsPosting] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const modalRef = useFocusTrap(isOpen);
 
   if (!isOpen || !post) return null;
 
@@ -109,8 +112,8 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
   const isOverLimit = characterCount > maxCharacters;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-korus-surface/90 backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-korus-border shadow-xl">
+    <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div ref={modalRef} className="modal-content bg-korus-surface/90 backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-korus-border shadow-xl">
         {/* Modal Header */}
         <div className="sticky top-0 bg-korus-surface/90 backdrop-blur-md flex items-center justify-between p-6 border-b border-korus-border">
           <h2 className="heading-2 text-white">Reply</h2>
