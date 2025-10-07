@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 
 interface PostCardProps {
   post: {
@@ -14,7 +14,7 @@ interface PostCardProps {
   };
 }
 
-export const PostCard = ({ post }: PostCardProps) => {
+const PostCardComponent = ({ post }: PostCardProps) => {
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(post.likes);
 
@@ -67,3 +67,9 @@ export const PostCard = ({ post }: PostCardProps) => {
     </div>
   );
 };
+
+// Memoize component to prevent unnecessary re-renders
+// Only re-renders when post.id changes
+export const PostCard = memo(PostCardComponent, (prevProps, nextProps) => {
+  return prevProps.post.id === nextProps.post.id;
+});

@@ -227,14 +227,73 @@ Users with `prefers-reduced-motion` enabled automatically get:
 - No transitions
 - Instant state changes
 
+## Performance Utilities
+
+### Debounce & Throttle
+
+Optimize expensive operations like search or scroll handlers:
+
+```tsx
+import { debounce, throttle } from '@/utils/performance';
+
+// Debounce search (waits until user stops typing)
+const handleSearch = debounce((query: string) => {
+  fetchResults(query);
+}, 300);
+
+// Throttle scroll (limits execution frequency)
+const handleScroll = throttle(() => {
+  updateScrollPosition();
+}, 100);
+```
+
+### Optimistic UI Updates
+
+Improve perceived performance with optimistic updates:
+
+```tsx
+import { withOptimisticUpdate } from '@/utils/performance';
+
+async function handleLike() {
+  await withOptimisticUpdate(
+    // Optimistic update (runs immediately)
+    () => setLiked(true),
+    // API call
+    () => api.likePost(postId),
+    // Rollback on error
+    () => setLiked(false)
+  );
+}
+```
+
+### React.memo
+
+Prevent unnecessary re-renders:
+
+```tsx
+import { memo } from 'react';
+
+const MyComponent = memo(({ data }) => {
+  return <div>{data.name}</div>;
+}, (prevProps, nextProps) => {
+  // Only re-render if id changes
+  return prevProps.data.id === nextProps.data.id;
+});
+```
+
+Example: `PostCard` component is memoized to prevent re-renders when parent updates.
+
 ## Best Practices
 
 1. **Always use the component library** instead of creating custom buttons/inputs
 2. **Use typography classes** instead of manual font sizing
 3. **Apply modal-backdrop and modal-content classes** to all modals
 4. **Use useFocusTrap** for all modal components
-5. **Test with keyboard navigation** (Tab, Shift+Tab, Escape, Enter)
-6. **Test with screen reader** to ensure announcements work
+5. **Memoize components** that render lists or update frequently
+6. **Use debounce/throttle** for expensive operations
+7. **Implement optimistic updates** for better UX
+8. **Test with keyboard navigation** (Tab, Shift+Tab, Escape, Enter)
+9. **Test with screen reader** to ensure announcements work
 
 ## Theme Colors
 
