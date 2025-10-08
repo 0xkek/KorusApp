@@ -180,7 +180,7 @@ export default function PostDetailPage() {
         setReplies(mockReplies);
       }
     } catch (error) {
-      console.error('Failed to load post:', error);
+      // Failed to load post
     } finally {
       setLoading(false);
     }

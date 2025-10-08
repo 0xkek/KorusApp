@@ -285,9 +285,6 @@ function applyTheme(themeName: string) {
   // Set the key variables that the header component needs
   root.style.setProperty('--color-surface', theme.colors.surface);
   root.style.setProperty('--color-text', theme.colors.text);
-
-  // Debug logging
-  console.log('Applied theme:', theme.name, 'text color:', theme.colors.text);
 }
 
 interface ThemeProviderProps {

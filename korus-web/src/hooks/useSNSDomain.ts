@@ -31,7 +31,9 @@ export function useSNSDomain(walletAddress: string | null) {
       .catch(error => {
         domainCache.set(walletAddress, null);
         setDomain(null);
-        console.error('Error fetching SNS domain:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching SNS domain:', error);
+        }
       })
       .finally(() => {
         setLoading(false);
@@ -59,7 +61,9 @@ export function useAllSNSDomains(walletAddress: string | null) {
       })
       .catch(error => {
         setDomains([]);
-        console.error('Error fetching all SNS domains:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching all SNS domains:', error);
+        }
       })
       .finally(() => {
         setLoading(false);

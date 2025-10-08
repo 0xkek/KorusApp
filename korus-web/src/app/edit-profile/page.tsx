@@ -79,7 +79,7 @@ export default function EditProfilePage() {
         setTwitter('');
         setSelectedThemeColor('#43e97b');
       } catch (error) {
-        console.error('Failed to load profile:', error);
+        // Failed to load profile
       } finally {
         setIsLoading(false);
       }
@@ -112,16 +112,12 @@ export default function EditProfilePage() {
 
     setIsSaving(true);
     try {
-      console.log('Saving profile to backend...');
-
       // TODO: Implement API call to save profile
       await new Promise(resolve => setTimeout(resolve, 1000)); // Mock API delay
 
-      console.log('Profile saved successfully');
       showSuccess('Profile updated successfully!');
       router.back();
     } catch (error) {
-      console.error('Failed to save profile:', error);
       showError('Failed to save profile. Please try again.');
     } finally {
       setIsSaving(false);

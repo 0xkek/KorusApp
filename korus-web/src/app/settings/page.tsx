@@ -63,7 +63,7 @@ export default function SettingsPage() {
           setHideSponsoredPosts(savedHideShoutout === 'true');
         }
       } catch (error) {
-        console.error('Failed to load settings from localStorage:', error);
+        // Failed to load settings from localStorage
       }
     }
   }, []);
@@ -94,7 +94,7 @@ export default function SettingsPage() {
       try {
         localStorage.setItem('korus-premium-status', debouncedPremium.toString());
       } catch (error) {
-        console.error('Failed to save premium status:', error);
+        // Failed to save premium status
       }
     }
   }, [debouncedPremium, mounted]);
@@ -104,7 +104,7 @@ export default function SettingsPage() {
       try {
         localStorage.setItem('korus-hide-shoutout', debouncedHideShoutout.toString());
       } catch (error) {
-        console.error('Failed to save shoutout preference:', error);
+        // Failed to save shoutout preference
       }
     }
   }, [debouncedHideShoutout, mounted]);
@@ -121,7 +121,6 @@ export default function SettingsPage() {
       await disconnect();
       router.push('/welcome');
     } catch (error) {
-      console.error('Logout error:', error);
       // Still navigate even if disconnect fails
       router.push('/welcome');
     } finally {
@@ -141,7 +140,6 @@ export default function SettingsPage() {
         showSuccess('Theme updated successfully!');
       }
     } catch (error) {
-      console.error('Theme change error:', error);
       // Could add user notification here
     }
   }, [mounted, setTheme, showSuccess]);

@@ -169,7 +169,7 @@ export default function GamesPage() {
     }
 
     // Here you would typically call an API to create the game
-    console.log('Creating game:', newGame);
+    // TODO: Implement API call
 
     // Reset form and close modal
     setNewGame({

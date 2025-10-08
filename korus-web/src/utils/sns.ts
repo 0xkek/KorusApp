@@ -72,7 +72,9 @@ export async function fetchSNSDomains(walletAddress: string): Promise<SNSDomain[
     // Get API URL from environment or use default
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
     if (!API_URL) {
-      console.log('No API URL configured, using mock SNS domains');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('No API URL configured, using mock SNS domains');
+      }
     } else {
       try {
         // Try to fetch real SNS domains from our backend
@@ -88,7 +90,9 @@ export async function fetchSNSDomains(walletAddress: string): Promise<SNSDomain[
           }
         }
       } catch (error) {
-        console.log('SNS API call failed, using fallback:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('SNS API call failed, using fallback:', error);
+        }
       }
     }
 
@@ -156,7 +160,9 @@ export async function setFavoriteSNSDomain(walletAddress: string, domain: string
           body: JSON.stringify({ walletAddress, domain })
         });
       } catch (error) {
-        console.log('Failed to save favorite domain to backend:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Failed to save favorite domain to backend:', error);
+        }
       }
     }
 
@@ -175,7 +181,9 @@ export async function resolveSNSDomain(domain: string): Promise<string | null> {
     // Get API URL from environment or use default
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
     if (!API_URL) {
-      console.log('No API URL configured for SNS resolution');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('No API URL configured for SNS resolution');
+      }
     } else {
       try {
         // Try to resolve domain using real SNS API
@@ -189,7 +197,9 @@ export async function resolveSNSDomain(domain: string): Promise<string | null> {
           }
         }
       } catch (error) {
-        console.log('SNS resolve API failed, using fallback:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('SNS resolve API failed, using fallback:', error);
+        }
       }
     }
 

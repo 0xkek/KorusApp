@@ -25,11 +25,8 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade }: Prem
     onClose();
     if (onUpgrade) {
       onUpgrade(plan);
-    } else {
-      // Default behavior: log to console
-      console.log(`Initiating premium upgrade payment flow - ${plan === 'monthly' ? 'Monthly' : 'Yearly'}`);
-      // TODO: Implement actual payment flow
     }
+    // TODO: Implement actual payment flow when onUpgrade not provided
   };
 
   return (

@@ -112,15 +112,13 @@ export default function ProfilePage() {
             setHasSetUsername(true);
           }
         } catch (storageError) {
-          console.error('Failed to load from localStorage:', storageError);
           // Continue without saved data
         }
       }
 
       // TODO: Implement API call to load user profile
-      console.log('Loading user profile...');
     } catch (error) {
-      console.error('Failed to load user profile:', error);
+      // Handle error silently or show user notification
     }
   }, []);
 
@@ -219,7 +217,6 @@ export default function ProfilePage() {
         try {
           localStorage.setItem('korus_username', usernameToSave);
         } catch (storageError) {
-          console.error('Failed to save to localStorage:', storageError);
           // Continue anyway - don't block the operation
         }
       }
@@ -230,11 +227,8 @@ export default function ProfilePage() {
       setEditingUsername(false);
       setTempUsernameValue('');
       // TODO: Replace with toast notification
-      console.log('Username updated successfully!');
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to update username';
-      console.error('Username update error:', errorMessage);
-      // TODO: Replace with toast notification
+      // TODO: Replace with toast notification showing error
     } finally {
       setSavingUsername(false);
     }
@@ -250,7 +244,6 @@ export default function ProfilePage() {
 
   const handleChangeAvatar = () => {
     // TODO: Implement avatar change modal
-    console.log('Change avatar clicked');
   };
 
   return (
@@ -605,9 +598,9 @@ export default function ProfilePage() {
                                   try {
                                     await setFavoriteSNSDomain(walletAddress, domain.domain);
                                     setShowSNSDropdown(false);
-                                    console.log('SNS domain updated successfully!');
+                                    // TODO: Show success toast
                                   } catch (error) {
-                                    console.error('Failed to update SNS domain:', error);
+                                    // TODO: Show error toast
                                   }
                                 }}
                                 className="w-full px-4 py-3 text-left hover:bg-korus-surface/40 transition-colors border-b border-korus-borderLight last:border-b-0"

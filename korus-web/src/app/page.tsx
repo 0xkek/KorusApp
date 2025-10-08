@@ -352,7 +352,6 @@ export default function Home() {
       })
       .catch(err => {
         showError('Failed to save drawing');
-        console.error(err);
       });
   };
 
@@ -445,8 +444,8 @@ export default function Home() {
 
   // Helper function for double-tap to like
   const handleDoubleTap = (e: React.MouseEvent, postId: number) => {
-    // Trigger particle animation at click position
-    if ((window as any).createParticleExplosion) {
+    // Trigger particle animation at click position (SSR-safe)
+    if (typeof window !== 'undefined' && (window as any).createParticleExplosion) {
       const x = e.clientX;
       const y = e.clientY;
       (window as any).createParticleExplosion('like', x, y);
@@ -932,7 +931,7 @@ export default function Home() {
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleLike(post.id);
-                        if ((window as any).createParticleExplosion) {
+                        if (typeof window !== 'undefined' && (window as any).createParticleExplosion) {
                           const rect = e.currentTarget.getBoundingClientRect();
                           const x = rect.left + rect.width / 2;
                           const y = rect.top + rect.height / 2;

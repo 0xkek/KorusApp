@@ -41,6 +41,17 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
     }
   }, [isOpen, initialContent]);
 
+  // Cleanup object URLs to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      selectedFiles.forEach(file => {
+        if (file instanceof File) {
+          URL.revokeObjectURL(URL.createObjectURL(file));
+        }
+      });
+    };
+  }, [selectedFiles]);
+
   if (!isOpen) return null;
 
   const handlePost = async () => {

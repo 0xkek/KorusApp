@@ -58,7 +58,6 @@ export default function WalletPage() {
         showSuccess('Balance refreshed successfully');
       }
     } catch (error) {
-      console.error('Failed to fetch balance:', error);
       setHasError(true);
       showError('Unable to fetch wallet balance. Please check your connection and try again.');
       setBalance(null); // Don't show misleading 0.0

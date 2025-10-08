@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
-import { Button } from '@/components/Button';
+import { Button } from '@/components/ui';
 
 interface Post {
   id: number;

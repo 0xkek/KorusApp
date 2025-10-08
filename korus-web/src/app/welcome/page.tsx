@@ -14,6 +14,9 @@ export default function WelcomePage() {
 
   // Add hardcoded mint colors for wallet button on welcome page
   useEffect(() => {
+    // SSR-safe: only runs on client
+    if (typeof document === 'undefined') return;
+
     const style = document.createElement('style');
     style.innerHTML = `
       .wallet-adapter-button {
@@ -43,7 +46,9 @@ export default function WelcomePage() {
     document.head.appendChild(style);
 
     return () => {
-      document.head.removeChild(style);
+      if (style.parentNode) {
+        document.head.removeChild(style);
+      }
     };
   }, []);
 
