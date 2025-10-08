@@ -77,10 +77,12 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
                 >
                   {/* Wallet icon */}
                   {wallet.adapter.icon && (
-                    <img
+                    <Image
                       src={wallet.adapter.icon}
                       alt={wallet.adapter.name}
-                      className="w-10 h-10 rounded-lg"
+                      width={40}
+                      height={40}
+                      className="rounded-lg"
                     />
                   )}
 
@@ -138,10 +140,12 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
                 >
                   {/* Wallet icon */}
                   {wallet.adapter.icon && (
-                    <img
+                    <Image
                       src={wallet.adapter.icon}
                       alt={wallet.adapter.name}
-                      className="w-10 h-10 rounded-lg"
+                      width={40}
+                      height={40}
+                      className="rounded-lg"
                     />
                   )}
 

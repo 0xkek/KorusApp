@@ -121,9 +121,11 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
     >
       {previewData.image && (
         <div className="relative w-full h-[180px] bg-black">
-          <img
+          <Image
             src={previewData.image}
             alt={previewData.title || 'Link preview'}
+            width={600}
+            height={180}
             className="w-full h-full object-cover"
           />
           {previewData.type === 'video' && (

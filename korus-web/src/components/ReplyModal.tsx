@@ -161,7 +161,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
               </div>
               {post.image && (
                 <div className="mb-3 rounded-2xl overflow-hidden border border-korus-border w-2/3">
-                  <img src={post.image} alt="Post content" className="w-full h-auto" />
+                  <Image src={post.image} alt="Post content" width={400} height={300} className="w-full h-auto" />
                 </div>
               )}
               <div className="text-korus-textSecondary text-sm">
@@ -196,10 +196,12 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                   {selectedFiles.map((file, index) => (
                     <div key={index} className="relative group">
                       {file.type.startsWith('image/') ? (
-                        <img
+                        <Image
                           src={URL.createObjectURL(file)}
                           alt="Upload preview"
-                          className="w-full h-32 object-cover rounded-xl border border-korus-border"
+                          width={200}
+                          height={128}
+                          className="w-full object-cover rounded-xl border border-korus-border"
                         />
                       ) : (
                         <div className="w-full h-32 bg-korus-surface/40 border border-korus-border rounded-xl flex items-center justify-center">
