@@ -15,11 +15,6 @@ interface ThemeOption {
   free: boolean;
 }
 
-interface ToastMessage {
-  message: string;
-  timestamp: number;
-}
-
 // Custom hook for debounced localStorage operations
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -40,10 +35,9 @@ function useDebounce<T>(value: T, delay: number): T {
 export default function SettingsPage() {
   const { connected, disconnect } = useWallet();
   const router = useRouter();
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [hideSponsoredPosts, setHideSponsoredPosts] = useState(false);
-  const [hideGamePosts, setHideGamePosts] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
 
   // Prevent hydration mismatch and load saved settings
@@ -62,7 +56,7 @@ export default function SettingsPage() {
         if (savedHideShoutout) {
           setHideSponsoredPosts(savedHideShoutout === 'true');
         }
-      } catch (error) {
+      } catch {
         // Failed to load settings from localStorage
       }
     }
@@ -93,7 +87,7 @@ export default function SettingsPage() {
     if (typeof window !== 'undefined' && mounted) {
       try {
         localStorage.setItem('korus-premium-status', debouncedPremium.toString());
-      } catch (error) {
+      } catch {
         // Failed to save premium status
       }
     }
@@ -103,7 +97,7 @@ export default function SettingsPage() {
     if (typeof window !== 'undefined' && mounted) {
       try {
         localStorage.setItem('korus-hide-shoutout', debouncedHideShoutout.toString());
-      } catch (error) {
+      } catch {
         // Failed to save shoutout preference
       }
     }
@@ -120,7 +114,7 @@ export default function SettingsPage() {
     try {
       await disconnect();
       router.push('/welcome');
-    } catch (error) {
+    } catch {
       // Still navigate even if disconnect fails
       router.push('/welcome');
     } finally {
@@ -139,7 +133,7 @@ export default function SettingsPage() {
         setTheme(newTheme);
         showSuccess('Theme updated successfully!');
       }
-    } catch (error) {
+    } catch {
       // Could add user notification here
     }
   }, [mounted, setTheme, showSuccess]);
