@@ -7,19 +7,29 @@ import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { Button } from '@/components/ui';
 import { MAX_POST_LENGTH, MAX_FILE_SIZE, MAX_FILES_PER_POST } from '@/constants';
+import type { Post } from '@/types';
 
 const DrawingCanvasInline = dynamic(() => import('@/components/DrawingCanvasInline'), { ssr: false });
 const ShoutoutModal = dynamic(() => import('@/components/ShoutoutModal'), { ssr: false });
 
+interface ShoutoutInfo {
+  id: number;
+  user: string;
+  content: string;
+  duration: number;
+  startTime: number;
+  endTime: number;
+  price: number;
+}
 
 interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialContent?: string;
-  onPostCreate?: (post: any) => void;
+  onPostCreate?: (post: Post) => void;
   queueInfo?: {
-    activeShoutout: any | null;
-    queuedShoutouts: any[];
+    activeShoutout: ShoutoutInfo | null;
+    queuedShoutouts: ShoutoutInfo[];
   };
 }
 

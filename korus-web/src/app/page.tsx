@@ -220,7 +220,7 @@ export default function Home() {
   };
 
   // Modal handlers
-  const handlePostCreate = (post: any) => {
+  const handlePostCreate = (post: Post) => {
     if (post.isShoutout) {
       // Check if there's already an active shoutout
       const hasActiveShoutout = posts.some(p => p.isShoutout);
@@ -301,7 +301,7 @@ export default function Home() {
     showSuccess('Post created successfully!');
   };
 
-  const handlePostOptionsClick = (post: any) => {
+  const handlePostOptionsClick = (post: Post) => {
     setSelectedPost(post);
     setShowPostOptionsModal(true);
   };

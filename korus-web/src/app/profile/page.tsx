@@ -32,12 +32,14 @@ interface UserStats {
   repScore: number;
 }
 
+import type { Reply } from '@/types';
+
 interface Post {
   id: number;
   content: string;
   likes: number;
   tips: number;
-  replies?: any[];
+  replies?: Reply[];
   imageUrl?: string;
   videoUrl?: string;
 }
@@ -227,7 +229,7 @@ export default function ProfilePage() {
       setEditingUsername(false);
       setTempUsernameValue('');
       // TODO: Replace with toast notification
-    } catch (error: any) {
+    } catch (error) {
       // TODO: Replace with toast notification showing error
     } finally {
       setSavingUsername(false);
