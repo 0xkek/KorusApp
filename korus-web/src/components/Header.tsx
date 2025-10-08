@@ -3,7 +3,6 @@
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useState, useEffect } from 'react';
-import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
 
 interface HeaderProps {
