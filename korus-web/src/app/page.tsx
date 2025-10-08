@@ -24,6 +24,7 @@ const RepostModal = dynamic(() => import('@/components/RepostModal'), { ssr: fal
 const ReplyModal = dynamic(() => import('@/components/ReplyModal'), { ssr: false });
 const DrawingCanvasInline = dynamic(() => import('@/components/DrawingCanvasInline'), { ssr: false });
 const ShoutoutCountdown = dynamic(() => import('@/components/ShoutoutCountdown'), { ssr: false });
+const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
 
 export default function Home() {
   const { connected, publicKey } = useWallet();
@@ -52,6 +53,7 @@ export default function Home() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showDrawCanvas, setShowDrawCanvas] = useState(false);
   const [shoutoutQueue, setShoutoutQueue] = useState<any[]>([]); // Queue for pending shoutouts
+  const [showSearchModal, setShowSearchModal] = useState(false);
 
   useEffect(() => {
     if (!connected) {
@@ -959,6 +961,7 @@ export default function Home() {
       <LeftSidebar
         onNotificationsToggle={() => setShowNotifications(!showNotifications)}
         onPostButtonClick={() => setShowCreatePostModal(true)}
+        onSearchClick={() => setShowSearchModal(true)}
       />
       <RightSidebar
         showNotifications={showNotifications}
@@ -1067,6 +1070,13 @@ export default function Home() {
             markReplied(postToReply.id);
           }
         }}
+      />
+
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+        allPosts={posts}
       />
 
       {/* Emoji Picker Modal */}

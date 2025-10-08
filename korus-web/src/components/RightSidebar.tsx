@@ -1,8 +1,6 @@
 'use client';
 
-import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useRouter } from 'next/navigation';
 
 interface Notification {
   id: number;
@@ -24,27 +22,8 @@ interface RightSidebarProps {
 
 export default function RightSidebar({ showNotifications = false, onNotificationsClose }: RightSidebarProps) {
   const { connected } = useWallet();
-  const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
 
   if (!connected) return null;
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  };
-
-  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSearch(e as any);
-    }
-  };
 
   // Mock notifications data
   const notifications: Notification[] = [
@@ -276,38 +255,6 @@ export default function RightSidebar({ showNotifications = false, onNotification
 
   return (
     <div className="fixed right-0 top-0 bottom-0 lg:w-96 md:w-80 bg-black border-l border-korus-border p-4 overflow-y-auto hidden md:block">
-      {/* Search */}
-      <div className="mb-6">
-        <form onSubmit={handleSearch}>
-          <div className="relative">
-            <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-korus-textSecondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={handleSearchInputChange}
-              onKeyDown={handleSearchKeyDown}
-              placeholder="Search Korus"
-              className="w-full bg-korus-surface/40 text-korus-text pl-12 pr-4 py-3 rounded-full outline-none focus:ring-2 focus:ring-korus-primary focus:bg-korus-surface/60 transition-colors"
-              aria-label="Search posts and users"
-              role="searchbox"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 hover:bg-korus-surface/60 rounded-full transition-colors"
-              >
-                <svg className="w-4 h-4 text-korus-textSecondary" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                </svg>
-              </button>
-            )}
-          </div>
-        </form>
-      </div>
-
       {/* Content based on showNotifications prop */}
       {showNotifications ? (
         /* Notifications */
@@ -412,7 +359,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
       ) : (
         /* Recent Activity */
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-korus-text mb-4 px-4">🎮 Recent Activity</h2>
+          <h2 className="text-2xl font-bold text-korus-text mb-4 px-4">Recent Activity</h2>
         <div>
           {recentActivities.map((activity) => (
             <div key={activity.id} className="border-b border-korus-borderLight bg-korus-surface/20 backdrop-blur-sm mx-[-1rem] px-4 py-4 hover:bg-korus-surface/40 hover:border-korus-border transition-all duration-200 cursor-pointer group">
