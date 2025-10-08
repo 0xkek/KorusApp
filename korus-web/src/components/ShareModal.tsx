@@ -88,7 +88,7 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
         try {
           await navigator.clipboard.writeText(`Check out this post by ${postUser}: "${truncatedContent}" ${postUrl}`);
           showSuccess('Message copied! Paste it in Discord.');
-        } catch (error) {
+        } catch {
           showError('Failed to copy message');
         }
       },

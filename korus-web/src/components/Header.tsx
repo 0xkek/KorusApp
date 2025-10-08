@@ -2,7 +2,6 @@
 
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
@@ -21,7 +20,6 @@ export default function Header({
   onSettingsClick
 }: HeaderProps) {
   const { connected, publicKey } = useWallet();
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const { theme } = useTheme();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -45,11 +43,6 @@ export default function Header({
     }
   };
 
-  // Get text color based on current theme
-  const getTextColor = () => {
-    if (!theme) return '#ffffff'; // fallback to white
-    return theme.includes('Dark') ? '#ffffff' : '#1a1a1a';
-  };
 
   return (
     <header className="sticky top-0 left-0 right-0 z-50 border-b border-korus-primary/20 bg-gradient-to-r from-black/80 via-korus-dark-100/80 to-black/80 backdrop-blur-md shadow-[0_4px_20px_rgba(67,233,123,0.1)] w-full">

@@ -79,7 +79,7 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
 
       setPreviewData(mockData);
       setLoading(false);
-    } catch (err) {
+    } catch {
       setError(true);
       setLoading(false);
     }

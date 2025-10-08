@@ -42,7 +42,6 @@ export default function EditProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showAvatarSelection, setShowAvatarSelection] = useState(false);
-  const [showThemeSelector] = useState(false);
   const [showDiscardModal, setShowDiscardModal] = useState(false);
 
   // Theme color options

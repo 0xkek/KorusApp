@@ -14,7 +14,7 @@ interface TipModalProps {
   onTipSuccess?: () => void;
 }
 
-export default function TipModal({ isOpen, onClose, recipientUser, postId, onTipSuccess }: TipModalProps) {
+export default function TipModal({ isOpen, onClose, recipientUser, onTipSuccess }: TipModalProps) {
   const { connected } = useWallet();
   const { showSuccess, showError } = useToast();
   const [customAmount, setCustomAmount] = useState('');

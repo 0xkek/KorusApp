@@ -341,34 +341,6 @@ export default function Home() {
     }));
   };
 
-  // Helper function for double-tap to like
-  const handleDoubleTap = (e: React.MouseEvent) => {
-    // Trigger particle animation at click position (SSR-safe)
-    if (typeof window !== 'undefined' && (window as any).createParticleExplosion) {
-      const x = e.clientX;
-      const y = e.clientY;
-      (window as any).createParticleExplosion('like', x, y);
-    }
-
-    // Show a heart animation overlay
-    const target = e.currentTarget as HTMLElement;
-    const heart = document.createElement('div');
-    heart.innerHTML = '❤️';
-    heart.style.cssText = `
-      position: absolute;
-      font-size: 80px;
-      pointer-events: none;
-      z-index: 100;
-      animation: heartPop 0.6s ease-out forwards;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%) scale(0);
-    `;
-    target.style.position = 'relative';
-    target.appendChild(heart);
-
-    setTimeout(() => heart.remove(), 600);
-  };
 
   return (
     <main className="min-h-screen bg-korus-dark-100 relative overflow-hidden">

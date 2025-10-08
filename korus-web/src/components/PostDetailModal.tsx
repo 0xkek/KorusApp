@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useRouter } from 'next/navigation';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface Post {

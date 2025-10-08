@@ -31,16 +31,6 @@ interface UserStats {
   repScore: number;
 }
 
-interface Post {
-  id: number;
-  content: string;
-  likes: number;
-  tips: number;
-  replies?: Reply[];
-  imageUrl?: string;
-  videoUrl?: string;
-}
-
 export default function ProfilePage() {
   const { connected, publicKey } = useWallet();
   const { showWarning, showSuccess } = useToastContext();
