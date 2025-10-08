@@ -34,13 +34,12 @@ export default function RootLayout({
   // Report Web Vitals
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      import('web-vitals').then(({ onCLS, onFID, onFCP, onLCP, onTTFB, onINP }) => {
+      import('web-vitals').then(({ onCLS, onFCP, onLCP, onTTFB, onINP }) => {
         onCLS(reportWebVitals);
-        onFID(reportWebVitals);
         onFCP(reportWebVitals);
         onLCP(reportWebVitals);
         onTTFB(reportWebVitals);
-        onINP(reportWebVitals);
+        onINP(reportWebVitals); // INP replaces FID in web-vitals v3+
       });
     }
   }, []);

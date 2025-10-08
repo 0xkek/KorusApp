@@ -220,11 +220,12 @@ Monitor Core Web Vitals and track user events.
 
 Automatically monitored (already setup in `layout.tsx`):
 - **LCP** (Largest Contentful Paint) - Loading performance
-- **FID** (First Input Delay) - Interactivity
+- **INP** (Interaction to Next Paint) - Responsiveness (replaces FID)
 - **CLS** (Cumulative Layout Shift) - Visual stability
 - **FCP** (First Contentful Paint) - Perceived load speed
 - **TTFB** (Time to First Byte) - Server response time
-- **INP** (Interaction to Next Paint) - Responsiveness
+
+Note: INP replaced FID in web-vitals v3+
 
 Results are logged to console in development.
 
