@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 interface LinkPreviewData {
   url: string;
@@ -20,11 +20,7 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  useEffect(() => {
-    fetchPreviewData();
-  }, [url]);
-
-  const fetchPreviewData = async () => {
+  const fetchPreviewData = useCallback(async () => {
     try {
       let mockData: LinkPreviewData = {
         url: url,
@@ -82,7 +78,11 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
       setError(true);
       setLoading(false);
     }
-  };
+  }, [url]);
+
+  useEffect(() => {
+    fetchPreviewData();
+  }, [fetchPreviewData]);
 
   const extractYouTubeId = (url: string): string | null => {
     const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);

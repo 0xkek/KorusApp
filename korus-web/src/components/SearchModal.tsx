@@ -33,9 +33,14 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
   // Load search history from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('searchHistory');
-      if (saved) {
-        setSearchHistory(JSON.parse(saved));
+      try {
+        const saved = localStorage.getItem('searchHistory');
+        if (saved) {
+          setSearchHistory(JSON.parse(saved));
+        }
+      } catch (error) {
+        // If localStorage is unavailable or data is corrupted, silently fail
+        setSearchHistory([]);
       }
     }
   }, []);
@@ -96,7 +101,11 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
       const newHistory = [query.trim(), ...searchHistory.slice(0, 9)];
       setSearchHistory(newHistory);
       if (typeof window !== 'undefined') {
-        localStorage.setItem('searchHistory', JSON.stringify(newHistory));
+        try {
+          localStorage.setItem('searchHistory', JSON.stringify(newHistory));
+        } catch (error) {
+          // Silently fail if localStorage is unavailable
+        }
       }
     }
 
@@ -158,7 +167,11 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
   const clearSearchHistory = () => {
     setSearchHistory([]);
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('searchHistory');
+      try {
+        localStorage.removeItem('searchHistory');
+      } catch (error) {
+        // Silently fail if localStorage is unavailable
+      }
     }
   };
 
