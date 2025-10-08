@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext } from 'react';
 import { useToast } from '@/hooks/useToast';
-import { ToastContainer, Toast } from '@/components/Toast';
+import { ToastContainer } from '@/components/Toast';
 
 interface ToastContextType {
   showSuccess: (message: string, duration?: number) => string;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useWallet } from '@solana/wallet-adapter-react';
-import { MOCK_TRENDING_TOPICS, MOCK_TRENDING_CREATORS, MOCK_ACTIVE_USERS, MOCK_NOTIFICATIONS, MOCK_RECENT_ACTIVITIES } from '@/data/mockData';
+import { MOCK_NOTIFICATIONS, MOCK_RECENT_ACTIVITIES } from '@/data/mockData';
 
 interface Notification {
   id: number;
@@ -21,7 +21,7 @@ interface RightSidebarProps {
   onNotificationsClose?: () => void;
 }
 
-export default function RightSidebar({ showNotifications = false, onNotificationsClose }: RightSidebarProps) {
+export default function RightSidebar({ showNotifications = false }: RightSidebarProps) {
   const { connected } = useWallet();
 
   if (!connected) return null;
@@ -40,8 +40,6 @@ export default function RightSidebar({ showNotifications = false, onNotification
     return `${Math.floor(diff / 86400000)}d`;
   };
 
-  // Get unread notification count
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   const getEventTypeIcon = (category: string) => {
     switch (category) {

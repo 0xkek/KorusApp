@@ -40,7 +40,7 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
           setCopied(true);
           showSuccess('Link copied to clipboard!');
           setTimeout(() => setCopied(false), 2000);
-        } catch (error) {
+        } catch {
           showError('Failed to copy link');
         }
       },
@@ -212,7 +212,7 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
                     setCopied(true);
                     showSuccess('Link copied!');
                     setTimeout(() => setCopied(false), 2000);
-                  } catch (error) {
+                  } catch {
                     showError('Failed to copy');
                   }
                 }}

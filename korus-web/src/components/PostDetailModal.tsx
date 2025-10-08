@@ -62,7 +62,7 @@ export default function PostDetailModal({
   repostedPosts = new Set()
 }: PostDetailModalProps) {
   const { connected } = useWallet();
-  const router = useRouter();
+  
   const [replies, setReplies] = useState<Reply[]>([]);
   const modalRef = useFocusTrap(isOpen);
 

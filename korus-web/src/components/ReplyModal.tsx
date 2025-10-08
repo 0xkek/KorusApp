@@ -83,7 +83,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
       setReplyContent('');
       setSelectedFiles([]);
       onClose();
-    } catch (error) {
+    } catch {
       showError('Failed to post reply. Please try again.');
     } finally {
       setIsPosting(false);
@@ -114,10 +114,6 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
     setShowEmojiPicker(false);
   };
 
-  const handleGifSelect = (gifUrl: string) => {
-    setReplyContent(prev => prev + ` ${gifUrl}`);
-    setShowGifPicker(false);
-  };
 
   const characterCount = replyContent.length;
   const maxCharacters = 280;

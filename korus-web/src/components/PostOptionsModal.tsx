@@ -13,7 +13,7 @@ interface PostOptionsModalProps {
   isOwnPost: boolean;
 }
 
-export default function PostOptionsModal({ isOpen, onClose, postId, postUser, isOwnPost }: PostOptionsModalProps) {
+export default function PostOptionsModal({ isOpen, onClose, isOwnPost }: PostOptionsModalProps) {
   const { connected } = useWallet();
   const { showSuccess, showError } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -34,7 +34,7 @@ export default function PostOptionsModal({ isOpen, onClose, postId, postUser, is
 
       showSuccess('Post reported successfully. Our moderation team will review it.');
       onClose();
-    } catch (error) {
+    } catch {
       showError('Failed to report post. Please try again.');
     } finally {
       setIsProcessing(false);
@@ -54,7 +54,7 @@ export default function PostOptionsModal({ isOpen, onClose, postId, postUser, is
 
       showSuccess('Post deleted successfully');
       onClose();
-    } catch (error) {
+    } catch {
       showError('Failed to delete post. Please try again.');
     } finally {
       setIsProcessing(false);

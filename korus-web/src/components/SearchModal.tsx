@@ -38,7 +38,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
         if (saved) {
           setSearchHistory(JSON.parse(saved));
         }
-      } catch (error) {
+      } catch {
         // If localStorage is unavailable or data is corrupted, silently fail
         setSearchHistory([]);
       }
@@ -103,7 +103,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
       if (typeof window !== 'undefined') {
         try {
           localStorage.setItem('searchHistory', JSON.stringify(newHistory));
-        } catch (error) {
+        } catch {
           // Silently fail if localStorage is unavailable
         }
       }
@@ -169,7 +169,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
     if (typeof window !== 'undefined') {
       try {
         localStorage.removeItem('searchHistory');
-      } catch (error) {
+      } catch {
         // Silently fail if localStorage is unavailable
       }
     }

@@ -107,7 +107,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
       setSelectedFiles([]);
       setShowDrawCanvas(false);
       onClose();
-    } catch (error) {
+    } catch {
       showError('Failed to create post. Please try again.');
     } finally {
       setIsPosting(false);
@@ -410,7 +410,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
           onClose={() => setShowShoutoutModal(false)}
           postContent={content}
           queueInfo={queueInfo}
-          onConfirm={(duration, price) => {
+          onConfirm={(duration) => {
             // Create shoutout post
             const shoutoutPost = {
               id: Date.now(),

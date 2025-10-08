@@ -14,8 +14,8 @@ interface RepostModalProps {
   onRepostSuccess?: (comment?: string) => void;
 }
 
-export default function RepostModal({ isOpen, onClose, postId, postContent, postUser, onRepostSuccess }: RepostModalProps) {
-  const { connected, publicKey } = useWallet();
+export default function RepostModal({ isOpen, onClose, postContent, postUser, onRepostSuccess }: RepostModalProps) {
+  const { connected } = useWallet();
   const { showSuccess, showError } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [comment, setComment] = useState('');
@@ -43,7 +43,7 @@ export default function RepostModal({ isOpen, onClose, postId, postContent, post
       showSuccess(comment.trim() ? 'Quote reposted successfully!' : 'Reposted successfully!');
       setComment('');
       onClose();
-    } catch (error) {
+    } catch {
       showError('Failed to repost. Please try again.');
     } finally {
       setIsProcessing(false);

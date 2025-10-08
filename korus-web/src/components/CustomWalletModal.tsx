@@ -2,8 +2,6 @@
 
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletReadyState } from '@solana/wallet-adapter-base';
-import { useState } from 'react';
-import Image from 'next/image';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {

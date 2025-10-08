@@ -15,11 +15,11 @@ interface TipModalProps {
 }
 
 export default function TipModal({ isOpen, onClose, recipientUser, postId, onTipSuccess }: TipModalProps) {
-  const { connected, publicKey } = useWallet();
+  const { connected } = useWallet();
   const { showSuccess, showError } = useToast();
   const [customAmount, setCustomAmount] = useState('');
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
-  const [message, setMessage] = useState('');
+  const [message] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [validationError, setValidationError] = useState<string>('');
   const modalRef = useFocusTrap(isOpen);
@@ -94,7 +94,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
       setCustomAmount('');
       setMessage('');
       onClose();
-    } catch (error) {
+    } catch {
       showError('Failed to send tip. Please try again.');
     } finally {
       setIsSending(false);

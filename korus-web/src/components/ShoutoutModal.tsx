@@ -28,15 +28,12 @@ interface ShoutoutModalProps {
 }
 
 export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm, queueInfo }: ShoutoutModalProps) {
-  const { connected, publicKey } = useWallet();
+  const { connected } = useWallet();
   const { showSuccess, showError } = useToast();
   const [selectedDuration, setSelectedDuration] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const modalRef = useFocusTrap(isOpen);
-
-  // Get SOL to USD rate from environment or use fallback
-  const solToUsd = parseFloat(process.env.NEXT_PUBLIC_SOL_USD_FALLBACK || '200');
 
   useEffect(() => {
     if (isOpen) {
@@ -116,7 +113,7 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm,
       onConfirm?.(selectedDuration, selectedOption?.price || 0);
       showSuccess('Shoutout created! Your post will be featured for ' + selectedOption?.label + '.');
       onClose();
-    } catch (error) {
+    } catch {
       showError('Failed to create shoutout. Please try again.');
     } finally {
       setIsProcessing(false);
