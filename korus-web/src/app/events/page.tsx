@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/useToast';
 // Dynamically import modals
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
 const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { ssr: false });
+const MobileMenuModal = dynamic(() => import('@/components/MobileMenuModal'), { ssr: false });
 
 interface Event {
   id: string;
@@ -40,6 +41,7 @@ export default function EventsPage() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [isParticipating, setIsParticipating] = useState(false);
@@ -222,7 +224,11 @@ export default function EventsPage() {
             <div className="sticky top-0 bg-korus-dark-300/80 backdrop-blur-xl border-b border-korus-border z-10">
               <div className="flex">
                 {/* Mobile menu button */}
-                <button className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors">
+                <button
+                  onClick={() => setShowMobileMenu(true)}
+                  aria-label="Open mobile menu"
+                  className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors"
+                >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
@@ -260,7 +266,11 @@ export default function EventsPage() {
                 </div>
 
                 {/* Mobile search/menu */}
-                <button className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors">
+                <button
+                  onClick={() => setShowSearchModal(true)}
+                  aria-label="Open search"
+                  className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors"
+                >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
@@ -608,6 +618,12 @@ export default function EventsPage() {
       <PremiumUpgradeModal
         isOpen={showPremiumModal}
         onClose={() => setShowPremiumModal(false)}
+      />
+
+      {/* Mobile Menu Modal */}
+      <MobileMenuModal
+        isOpen={showMobileMenu}
+        onClose={() => setShowMobileMenu(false)}
       />
     </main>
   );
