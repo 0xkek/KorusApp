@@ -1,7 +1,6 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import Header from '@/components/Header';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -57,7 +56,7 @@ export default function WalletPage() {
       if (hasError) {
         showSuccess('Balance refreshed successfully');
       }
-    } catch (error) {
+    } catch {
       setHasError(true);
       showError('Unable to fetch wallet balance. Please check your connection and try again.');
       setBalance(null); // Don't show misleading 0.0
@@ -307,7 +306,7 @@ export default function WalletPage() {
       <CreatePostModal
         isOpen={showCreatePostModal}
         onClose={() => setShowCreatePostModal(false)}
-        onPostCreate={(post) => {
+        onPostCreate={() => {
           showSuccess('Post created successfully!');
           setShowCreatePostModal(false);
         }}

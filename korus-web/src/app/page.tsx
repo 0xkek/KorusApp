@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
@@ -214,9 +213,6 @@ export default function Home() {
     setShowPostOptionsModal(true);
   };
 
-  const handleNotificationsToggle = () => {
-    setShowNotifications(!showNotifications);
-  };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -242,11 +238,6 @@ export default function Home() {
     setShowEmojiPicker(false);
   };
 
-  const handleGifSelect = (gifUrl: string) => {
-    // For now, just insert the GIF URL into the text
-    setComposeText(prev => prev + ` ${gifUrl}`);
-    setShowGifPicker(false);
-  };
 
   const handleDrawingSave = (drawingDataUrl: string) => {
     // Convert data URL to File and add to selectedFiles
@@ -258,7 +249,7 @@ export default function Home() {
         setShowDrawCanvas(false);
         showSuccess('Drawing added to your post!');
       })
-      .catch(err => {
+      .catch(() => {
         showError('Failed to save drawing');
       });
   };
@@ -351,7 +342,7 @@ export default function Home() {
   };
 
   // Helper function for double-tap to like
-  const handleDoubleTap = (e: React.MouseEvent, postId: number) => {
+  const handleDoubleTap = (e: React.MouseEvent) => {
     // Trigger particle animation at click position (SSR-safe)
     if (typeof window !== 'undefined' && (window as any).createParticleExplosion) {
       const x = e.clientX;

@@ -42,7 +42,7 @@ export default function EditProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showAvatarSelection, setShowAvatarSelection] = useState(false);
-  const [showThemeSelector, setShowThemeSelector] = useState(false);
+  const [showThemeSelector] = useState(false);
   const [showDiscardModal, setShowDiscardModal] = useState(false);
 
   // Theme color options
@@ -78,7 +78,7 @@ export default function EditProfilePage() {
         setWebsite('');
         setTwitter('');
         setSelectedThemeColor('#43e97b');
-      } catch (error) {
+      } catch {
         // Failed to load profile
       } finally {
         setIsLoading(false);
@@ -117,7 +117,7 @@ export default function EditProfilePage() {
 
       showSuccess('Profile updated successfully!');
       router.back();
-    } catch (error) {
+    } catch {
       showError('Failed to save profile. Please try again.');
     } finally {
       setIsSaving(false);

@@ -31,8 +31,6 @@ interface UserStats {
   repScore: number;
 }
 
-import type { Reply } from '@/types';
-
 interface Post {
   id: number;
   content: string;
@@ -109,7 +107,7 @@ export default function ProfilePage() {
             setCurrentUsername(savedUsername);
             setHasSetUsername(true);
           }
-        } catch (storageError) {
+        } catch {
           // Continue without saved data
         }
       }

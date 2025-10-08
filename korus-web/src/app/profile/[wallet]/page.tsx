@@ -30,12 +30,12 @@ interface Post {
 }
 
 export default function UserProfilePage() {
-  const { connected, publicKey } = useWallet();
+  const { connected } = useWallet();
   const router = useRouter();
   const params = useParams();
   const profileWallet = params.wallet as string;
 
-  const [userPosts, setUserPosts] = useState<Post[]>([]);
+  const [userPosts] = useState<Post[]>([]);
   const [showTipModal, setShowTipModal] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -331,7 +331,7 @@ export default function UserProfilePage() {
       <CreatePostModal
         isOpen={showCreatePostModal}
         onClose={() => setShowCreatePostModal(false)}
-        onPostCreate={(post) => {
+        onPostCreate={() => {
           setShowCreatePostModal(false);
         }}
       />
