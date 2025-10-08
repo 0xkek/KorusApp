@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
@@ -8,7 +8,6 @@ import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import PremiumUpgradeModal from '@/components/PremiumUpgradeModal';
 import { useToast } from '@/hooks/useToast';
-import { MOCK_EVENTS } from '@/data/mockData';
 
 // Dynamically import modals
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
@@ -34,9 +33,9 @@ interface Event {
 }
 
 export default function EventsPage() {
-  const { connected, publicKey } = useWallet();
+  const { connected } = useWallet();
   const router = useRouter();
-  const { showSuccess, showError } = useToast();
+  const { showSuccess } = useToast();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
@@ -451,7 +450,7 @@ export default function EventsPage() {
       <CreatePostModal
         isOpen={showCreatePostModal}
         onClose={() => setShowCreatePostModal(false)}
-        onPostCreate={(post) => {
+        onPostCreate={() => {
           showSuccess('Post created successfully!');
           setShowCreatePostModal(false);
         }}

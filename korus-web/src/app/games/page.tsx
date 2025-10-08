@@ -1,21 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
-import Header from '@/components/Header';
 import { useToast } from '@/hooks/useToast';
-import { MOCK_GAMES } from '@/data/mockData';
 
 // Dynamically import modals
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
 const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { ssr: false });
 
 export default function GamesPage() {
-  const { connected, publicKey } = useWallet();
+  const { connected } = useWallet();
   const router = useRouter();
   const { showSuccess, showError } = useToast();
   const [showNotifications, setShowNotifications] = useState(false);
@@ -130,15 +128,6 @@ export default function GamesPage() {
     }
   };
 
-  const getGameColor = (gameType: string) => {
-    switch (gameType) {
-      case 'tictactoe': return 'text-blue-400';
-      case 'rps': return 'text-purple-400';
-      case 'connect4': return 'text-red-400';
-      default: return 'text-korus-primary';
-    }
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'waiting': return 'border-yellow-400 bg-yellow-400/10 text-yellow-400';
@@ -202,7 +191,7 @@ export default function GamesPage() {
         return newSet;
       });
       showSuccess('Joined game successfully!');
-    } catch (error) {
+    } catch {
       showError('Failed to join game. Please try again.');
     } finally {
       setJoiningGame(null);
@@ -446,7 +435,7 @@ export default function GamesPage() {
       <CreatePostModal
         isOpen={showCreatePostModal}
         onClose={() => setShowCreatePostModal(false)}
-        onPostCreate={(post) => {
+        onPostCreate={() => {
           showSuccess('Post created successfully!');
           setShowCreatePostModal(false);
         }}
