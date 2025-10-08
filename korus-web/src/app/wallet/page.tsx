@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import Header from '@/components/Header';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
@@ -8,6 +9,10 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Connection, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useToastContext } from '@/components/ToastProvider';
+
+// Dynamically import modals
+const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
+const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { ssr: false });
 
 export default function WalletPage() {
   const { connected, publicKey } = useWallet();
@@ -18,6 +23,8 @@ export default function WalletPage() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('All');
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [showCreatePostModal, setShowCreatePostModal] = useState(false);
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
@@ -96,7 +103,11 @@ export default function WalletPage() {
 
       <div className="relative z-10">
         <div className="flex min-h-screen">
-          <LeftSidebar onNotificationsToggle={() => setShowNotifications(!showNotifications)} />
+          <LeftSidebar
+            onNotificationsToggle={() => setShowNotifications(!showNotifications)}
+            onPostButtonClick={() => setShowCreatePostModal(true)}
+            onSearchClick={() => setShowSearchModal(true)}
+          />
 
           <div className="flex-1 lg:ml-80 lg:mr-96 md:ml-64 md:mr-80 sm:ml-0 sm:mr-0 md:border-x md:border-korus-border bg-korus-surface/10 backdrop-blur-sm max-w-full overflow-hidden">
             {/* Feed Navigation */}
@@ -285,6 +296,23 @@ export default function WalletPage() {
           />
         </div>
       </div>
+
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+        allPosts={[]}
+      />
+
+      {/* Create Post Modal */}
+      <CreatePostModal
+        isOpen={showCreatePostModal}
+        onClose={() => setShowCreatePostModal(false)}
+        onPostCreate={(post) => {
+          showSuccess('Post created successfully!');
+          setShowCreatePostModal(false);
+        }}
+      />
     </main>
   );
 }

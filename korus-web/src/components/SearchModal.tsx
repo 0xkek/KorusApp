@@ -3,21 +3,11 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import type { Post as BasePost } from '@/types';
 
-interface Post {
-  id: number;
-  user: string;
-  wallet: string;
-  time: string;
-  content: string;
-  likes: number;
+// SearchModal needs to handle both formats during migration
+interface Post extends Omit<BasePost, 'replies'> {
   replies: number | any[];
-  tips: number;
-  liked?: boolean;
-  imageUrl?: string;
-  videoUrl?: string;
-  category?: string;
-  isShoutout?: boolean;
   replyThreads?: any[];
 }
 

@@ -9,6 +9,8 @@ import dynamic from 'next/dynamic';
 import { fetchSNSDomains, getFavoriteSNSDomain, SNSDomain } from '@/utils/sns';
 
 const TipModal = dynamic(() => import('@/components/TipModal'), { ssr: false });
+const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
+const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { ssr: false });
 
 interface UserStats {
   posts: number;
@@ -39,6 +41,8 @@ export default function UserProfilePage() {
   const [copied, setCopied] = useState(false);
   const [snsDomains, setSnsDomains] = useState<SNSDomain[]>([]);
   const [favoriteDomain, setFavoriteDomain] = useState<string | null>(null);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [showCreatePostModal, setShowCreatePostModal] = useState(false);
 
   // Mock user data for the profile being viewed
   const userInfo = {
@@ -316,7 +320,27 @@ export default function UserProfilePage() {
         recipientAddress={profileWallet}
       />
 
-      <LeftSidebar onNotificationsToggle={() => setShowNotifications(!showNotifications)} />
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+        allPosts={userPosts}
+      />
+
+      {/* Create Post Modal */}
+      <CreatePostModal
+        isOpen={showCreatePostModal}
+        onClose={() => setShowCreatePostModal(false)}
+        onPostCreate={(post) => {
+          setShowCreatePostModal(false);
+        }}
+      />
+
+      <LeftSidebar
+        onNotificationsToggle={() => setShowNotifications(!showNotifications)}
+        onPostButtonClick={() => setShowCreatePostModal(true)}
+        onSearchClick={() => setShowSearchModal(true)}
+      />
       <RightSidebar
         showNotifications={showNotifications}
         onNotificationsClose={() => setShowNotifications(false)}

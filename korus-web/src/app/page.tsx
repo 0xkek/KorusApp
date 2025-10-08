@@ -12,6 +12,8 @@ import LinkPreview from '@/components/LinkPreview';
 import VideoPlayer from '@/components/VideoPlayer';
 import { FeedSkeleton } from '@/components/Skeleton';
 import { useToast } from '@/hooks/useToast';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import type { Post } from '@/types';
 
 // Dynamically import modals for code splitting
 const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { ssr: false });
@@ -33,9 +35,9 @@ export default function Home() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
   const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
-  const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [posts, setPosts] = useState<any[]>([]); // Initialize empty
+  const [posts, setPosts] = useState<Post[]>([]); // Initialize empty
   const [composeText, setComposeText] = useState('');
   const [showShoutoutModal, setShowShoutoutModal] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
@@ -175,6 +177,41 @@ export default function Home() {
       }, 500);
     }
   }, [posts]);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: 'n',
+      callback: () => {
+        if (connected) {
+          setShowCreatePostModal(true);
+        }
+      },
+      description: 'New post',
+    },
+    {
+      key: '/',
+      callback: () => {
+        setShowSearchModal(true);
+      },
+      description: 'Search',
+    },
+    {
+      key: 'Escape',
+      callback: () => {
+        // Close any open modal
+        if (showCreatePostModal) setShowCreatePostModal(false);
+        if (showSearchModal) setShowSearchModal(false);
+        if (showTipModal) setShowTipModal(false);
+        if (showShareModal) setShowShareModal(false);
+        if (showRepostModal) setShowRepostModal(false);
+        if (showReplyModal) setShowReplyModal(false);
+        if (showPostOptionsModal) setShowPostOptionsModal(false);
+        if (showMobileMenu) setShowMobileMenu(false);
+      },
+      description: 'Close modal',
+    },
+  ], { enabled: connected });
 
   // Helper function to extract URLs from text
   const extractUrls = (text: string): string[] => {

@@ -10,34 +10,7 @@ import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/Button';
-
-// Dynamically import modals for code splitting
-const ReplyModal = dynamic(() => import('@/components/ReplyModal'), { ssr: false });
-const PostOptionsModal = dynamic(() => import('@/components/PostOptionsModal'), { ssr: false });
-
-interface Reply {
-  id: number;
-  user: string;
-  content: string;
-  likes: number;
-  replies: Reply[];
-  time: string;
-  isPremium?: boolean;
-  isExpanded?: boolean;
-}
-
-interface Post {
-  id: number;
-  user: string;
-  content: string;
-  likes: number;
-  replies: number;
-  tips: number;
-  time: string;
-  isPremium?: boolean;
-  isShoutout?: boolean;
-  image?: string;
-}
+import type { Post, Reply } from '@/types';
 
 export default function PostDetailPage() {
   const params = useParams();

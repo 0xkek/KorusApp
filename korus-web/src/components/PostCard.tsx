@@ -1,17 +1,10 @@
 'use client';
 
 import { useState, memo } from 'react';
+import type { Post } from '@/types';
 
 interface PostCardProps {
-  post: {
-    id: number;
-    user: string;
-    content: string;
-    likes: number;
-    replies: number;
-    tips: number;
-    time: string;
-  };
+  post: Post;
 }
 
 const PostCardComponent = ({ post }: PostCardProps) => {

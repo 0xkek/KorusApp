@@ -6,6 +6,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { Button } from '@/components/ui';
+import { MAX_POST_LENGTH, MAX_FILE_SIZE, MAX_FILES_PER_POST } from '@/constants';
 
 const DrawingCanvasInline = dynamic(() => import('@/components/DrawingCanvasInline'), { ssr: false });
 const ShoutoutModal = dynamic(() => import('@/components/ShoutoutModal'), { ssr: false });
@@ -94,17 +95,16 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    const maxFileSize = 10 * 1024 * 1024; // 10MB in bytes
 
     const validFiles = files.filter(file => {
-      if (file.size > maxFileSize) {
-        showError(`File "${file.name}" is too large. Maximum size is 10MB.`);
+      if (file.size > MAX_FILE_SIZE) {
+        showError(`File "${file.name}" is too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB.`);
         return false;
       }
       return true;
     });
 
-    setSelectedFiles(prev => [...prev, ...validFiles].slice(0, 4)); // Max 4 files
+    setSelectedFiles(prev => [...prev, ...validFiles].slice(0, MAX_FILES_PER_POST));
   };
 
   const removeFile = (index: number) => {
@@ -129,8 +129,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
   };
 
   const characterCount = content.length;
-  const maxCharacters = 280;
-  const isOverLimit = characterCount > maxCharacters;
+  const isOverLimit = characterCount > MAX_POST_LENGTH;
 
   return (
     <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget && !isPosting) onClose(); }}>
@@ -284,12 +283,12 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                     <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
                       isOverLimit
                         ? 'border-red-500 text-red-500'
-                        : characterCount > maxCharacters * 0.8
+                        : characterCount > MAX_POST_LENGTH * 0.8
                         ? 'border-yellow-500 text-yellow-500'
                         : 'border-korus-border text-korus-textSecondary'
                     }`}>
                       <span className="text-xs font-medium">
-                        {isOverLimit ? `-${characterCount - maxCharacters}` : maxCharacters - characterCount}
+                        {isOverLimit ? `-${characterCount - MAX_POST_LENGTH}` : MAX_POST_LENGTH - characterCount}
                       </span>
                     </div>
 
@@ -311,9 +310,9 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                         stroke="currentColor"
                         strokeWidth="2"
                         fill="none"
-                        className={isOverLimit ? 'text-red-500' : characterCount > maxCharacters * 0.8 ? 'text-yellow-500' : 'text-korus-primary'}
+                        className={isOverLimit ? 'text-red-500' : characterCount > MAX_POST_LENGTH * 0.8 ? 'text-yellow-500' : 'text-korus-primary'}
                         strokeDasharray={`${2 * Math.PI * 10}`}
-                        strokeDashoffset={`${2 * Math.PI * 10 * (1 - Math.min(characterCount / maxCharacters, 1))}`}
+                        strokeDashoffset={`${2 * Math.PI * 10 * (1 - Math.min(characterCount / MAX_POST_LENGTH, 1))}`}
                         strokeLinecap="round"
                       />
                     </svg>

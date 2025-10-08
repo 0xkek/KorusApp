@@ -3,16 +3,23 @@
 import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import Header from '@/components/Header';
 import { useToast } from '@/hooks/useToast';
+
+// Dynamically import modals
+const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
+const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { ssr: false });
 
 export default function GamesPage() {
   const { connected, publicKey } = useWallet();
   const router = useRouter();
   const { showSuccess, showError } = useToast();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [showCreatePostModal, setShowCreatePostModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'created' | 'active'>('created');
   const [showCreateGameModal, setShowCreateGameModal] = useState(false);
   const [newGame, setNewGame] = useState({
@@ -222,7 +229,11 @@ export default function GamesPage() {
 
       <div className="relative z-10">
         <div className="flex">
-          <LeftSidebar onNotificationsToggle={() => setShowNotifications(!showNotifications)} />
+          <LeftSidebar
+            onNotificationsToggle={() => setShowNotifications(!showNotifications)}
+            onPostButtonClick={() => setShowCreatePostModal(true)}
+            onSearchClick={() => setShowSearchModal(true)}
+          />
 
           {/* Main Content */}
           <div className="flex-1 lg:ml-80 lg:mr-96 md:ml-64 md:mr-80 sm:ml-0 sm:mr-0 md:border-x md:border-korus-border bg-korus-surface/10 backdrop-blur-sm max-w-full overflow-hidden">
@@ -422,6 +433,23 @@ export default function GamesPage() {
           />
         </div>
       </div>
+
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+        allPosts={[]}
+      />
+
+      {/* Create Post Modal */}
+      <CreatePostModal
+        isOpen={showCreatePostModal}
+        onClose={() => setShowCreatePostModal(false)}
+        onPostCreate={(post) => {
+          showSuccess('Post created successfully!');
+          setShowCreatePostModal(false);
+        }}
+      />
 
       {/* Create Game Modal */}
       {showCreateGameModal && (

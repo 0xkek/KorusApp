@@ -80,7 +80,6 @@ export default function SettingsPage() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showFAQModal, setShowFAQModal] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
-  const [showAdsModal, setShowAdsModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -439,21 +438,6 @@ export default function SettingsPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
-
-                  <button
-                    onClick={() => setShowAdsModal(true)}
-                    className="flex items-center justify-between p-4 bg-korus-surface/20 rounded-xl border border-korus-borderLight hover:bg-korus-surface/40 transition-all duration-200 w-full"
-                  >
-                    <div className="flex items-center gap-3">
-                      <svg className="w-6 h-6 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-                      </svg>
-                      <span className="text-korus-text font-medium">Advertise with Korus</span>
-                    </div>
-                    <svg className="w-5 h-5 text-korus-textSecondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
                 </div>
               </div>
 
@@ -748,87 +732,6 @@ export default function SettingsPage() {
               <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
                 <p className="text-yellow-400 text-sm font-medium text-center">
                   Violation of these rules may result in content removal or account suspension.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Advertise with Korus Modal */}
-      {showAdsModal && (
-        <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
-          onClick={() => setShowAdsModal(false)}
-        >
-          <div
-            className="bg-korus-surface/90 backdrop-blur-xl border border-korus-border rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-korus-text text-xl font-bold">Advertise with Korus</h3>
-              <button
-                onClick={() => setShowAdsModal(false)}
-                className="w-8 h-8 bg-korus-surface/40 rounded-full flex items-center justify-center hover:bg-korus-surface/60 transition-colors"
-              >
-                <svg className="w-5 h-5 text-korus-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-korus-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-                </svg>
-              </div>
-              <h4 className="text-korus-text text-lg font-bold mb-2">Reach Your Audience</h4>
-              <p className="text-korus-textSecondary text-sm mb-6">
-                Connect with engaged Web3 users through sponsored posts on Korus.
-              </p>
-            </div>
-
-            <div className="space-y-4 mb-6">
-              <div className="bg-korus-surface/20 rounded-xl p-4">
-                <div className="flex items-center gap-3">
-                  <svg className="w-6 h-6 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  <span className="text-korus-text font-medium">Targeted reach to crypto-native audience</span>
-                </div>
-              </div>
-
-              <div className="bg-korus-surface/20 rounded-xl p-4">
-                <div className="flex items-center gap-3">
-                  <svg className="w-6 h-6 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
-                  <span className="text-korus-text font-medium">Performance analytics and insights</span>
-                </div>
-              </div>
-
-              <div className="bg-korus-surface/20 rounded-xl p-4">
-                <div className="flex items-center gap-3">
-                  <svg className="w-6 h-6 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                  <span className="text-korus-text font-medium">Brand-safe environment</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-korus-surface/20 rounded-xl p-4">
-              <h4 className="text-korus-text font-semibold mb-3">Get Started</h4>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  <span className="text-korus-primary font-medium text-sm">max@korus.fun</span>
-                </div>
-                <p className="text-korus-textSecondary text-sm">
-                  Contact our advertising team to discuss your campaign goals and pricing.
                 </p>
               </div>
             </div>
