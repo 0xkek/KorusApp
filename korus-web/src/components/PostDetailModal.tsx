@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 
 import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -222,9 +223,11 @@ export default function PostDetailModal({
                 {/* Post Image */}
                 {post.image && (
                   <div className="mb-4 rounded-2xl overflow-hidden border border-korus-border">
-                    <img
+                    <Image
                       src={post.image}
                       alt="Post content"
+                      width={600}
+                      height={400}
                       className="w-full h-auto"
                       onError={(e) => {
                         // Hide broken image on error

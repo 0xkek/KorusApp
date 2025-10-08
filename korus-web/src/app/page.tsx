@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 
 import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -452,10 +453,12 @@ export default function Home() {
                       {selectedFiles.map((file, index) => (
                         <div key={index} className="relative group">
                           {file.type.startsWith('image/') ? (
-                            <img
+                            <Image
                               src={URL.createObjectURL(file)}
                               alt="Upload preview"
-                              className="w-full h-32 object-cover rounded-xl border border-korus-border"
+                              width={200}
+                              height={128}
+                              className="w-full object-cover rounded-xl border border-korus-border"
                             />
                           ) : (
                             <div className="w-full h-32 bg-korus-surface/40 border border-korus-border rounded-xl flex items-center justify-center">
@@ -705,7 +708,7 @@ export default function Home() {
                         </div>
                         <p className="text-korus-text text-sm leading-relaxed">{(post as any).repostedPost.content}</p>
                         {(post as any).repostedPost.image && (
-                          <img src={(post as any).repostedPost.image} alt="Reposted content" className="mt-3 w-full rounded-lg" />
+                          <Image src={(post as any).repostedPost.image} alt="Reposted content" width={600} height={400} className="mt-3 w-full rounded-lg" />
                         )}
                       </div>
                     </>
@@ -735,9 +738,11 @@ export default function Home() {
                   {/* Post Image */}
                   {!((post as any).isRepost) && post.image && (
                     <div className="mb-3 rounded-2xl overflow-hidden border border-korus-border">
-                      <img
+                      <Image
                         src={post.image}
                         alt="Post content"
+                        width={600}
+                        height={400}
                         className="w-full h-auto"
                         onError={(e) => {
                           // Hide broken image on error

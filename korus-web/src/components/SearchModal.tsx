@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -356,7 +357,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
                           </div>
                           <p className="text-korus-text text-sm mb-3 line-clamp-3">{post.content}</p>
                           {post.imageUrl && (
-                            <img src={post.imageUrl} alt="Post" className="rounded-xl mb-3 max-h-40 object-cover" />
+                            <Image src={post.imageUrl} alt="Post" width={300} height={160} className="rounded-xl mb-3 max-h-40 object-cover" />
                           )}
                           <div className="flex items-center gap-4 text-korus-textSecondary text-sm">
                             <span className="flex items-center gap-1">

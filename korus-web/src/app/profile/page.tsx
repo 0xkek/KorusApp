@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -301,10 +302,12 @@ export default function ProfilePage() {
                     >
                       <div className="w-32 h-32 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center text-5xl font-bold text-black shadow-lg shadow-korus-primary/20 group-hover:shadow-xl group-hover:shadow-korus-primary/30 transition-all duration-200 border-4 border-transparent">
                         {selectedNFTAvatar ? (
-                          <img
+                          <Image
                             src={selectedNFTAvatar.image || selectedNFTAvatar.uri}
                             alt="NFT Avatar"
-                            className="w-28 h-28 rounded-full object-cover"
+                            width={112}
+                            height={112}
+                            className="rounded-full object-cover"
                           />
                         ) : selectedAvatar ? (
                           <span>{selectedAvatar}</span>
@@ -778,7 +781,7 @@ export default function ProfilePage() {
                     <div key={post.id} className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6 hover:border-korus-border transition-all group">
                       <p className="text-white mb-4">{post.content}</p>
                       {post.imageUrl && (
-                        <img src={post.imageUrl} alt="Post image" className="w-full rounded-lg mb-4" />
+                        <Image src={post.imageUrl} alt="Post image" width={600} height={400} className="w-full rounded-lg mb-4" />
                       )}
                       <div className="flex items-center gap-6 text-korus-textTertiary text-sm">
                         <span>{post.likes} likes</span>
