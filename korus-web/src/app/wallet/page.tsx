@@ -5,7 +5,7 @@ import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Connection, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useToastContext } from '@/components/ToastProvider';
 
@@ -40,9 +40,9 @@ export default function WalletPage() {
     if (mounted && connected && publicKey) {
       fetchBalance();
     }
-  }, [mounted, connected, publicKey]);
+  }, [mounted, connected, publicKey, fetchBalance]);
 
-  const fetchBalance = async () => {
+  const fetchBalance = useCallback(async () => {
     if (!publicKey || !mounted) return;
 
     setLoading(true);
@@ -63,7 +63,7 @@ export default function WalletPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [publicKey, mounted, hasError, showSuccess, showError]);
 
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {

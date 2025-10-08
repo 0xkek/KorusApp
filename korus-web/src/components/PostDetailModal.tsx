@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 
@@ -110,13 +110,13 @@ export default function PostDetailModal({
   }, [isOpen, post, postId]);
 
   // Handle modal close and URL cleanup
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     // Restore previous URL using replaceState (doesn't break back button)
     if (typeof window !== 'undefined') {
       window.history.replaceState({ ...window.history.state, as: '/', url: '/' }, '', '/');
     }
     onClose();
-  };
+  }, [onClose]);
 
   // Handle ESC key
   useEffect(() => {
@@ -135,7 +135,7 @@ export default function PostDetailModal({
       document.removeEventListener('keydown', handleEsc);
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen]);
+  }, [isOpen, handleClose]);
 
   if (!isOpen || !post) return null;
 

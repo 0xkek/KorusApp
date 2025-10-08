@@ -36,6 +36,7 @@ export default function DrawingCanvas({ isOpen, onClose, onSave }: DrawingCanvas
         saveToHistory();
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const saveToHistory = () => {

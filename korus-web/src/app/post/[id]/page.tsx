@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import Link from 'next/link';
@@ -41,9 +41,9 @@ export default function PostDetailPage() {
       return;
     }
     loadPost();
-  }, [postId, connected, router]);
+  }, [postId, connected, router, loadPost]);
 
-  const loadPost = async () => {
+  const loadPost = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -58,7 +58,7 @@ export default function PostDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [postId]);
 
   const handleLike = () => {
     if (!post) return;

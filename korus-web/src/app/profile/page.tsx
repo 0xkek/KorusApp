@@ -86,7 +86,7 @@ export default function ProfilePage() {
     }
 
     return baseStats;
-  }, [userPosts, isPremium]);
+  }, [isPremium]);
 
   const loadUserProfile = useCallback(async () => {
     try {
