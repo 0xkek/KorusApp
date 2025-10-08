@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { useToastContext } from '@/components/ToastProvider';
 
@@ -227,10 +228,12 @@ export default function EditProfilePage() {
               >
                 <div className="w-24 h-24 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center text-3xl font-bold text-black border-4 border-transparent">
                   {selectedNFTAvatar ? (
-                    <img
+                    <Image
                       src={selectedNFTAvatar.image || selectedNFTAvatar.uri}
                       alt="NFT Avatar"
-                      className="w-20 h-20 rounded-full object-cover"
+                      width={80}
+                      height={80}
+                      className="rounded-full object-cover"
                     />
                   ) : selectedAvatar ? (
                     <span>{selectedAvatar}</span>

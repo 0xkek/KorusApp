@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletReadyState } from '@solana/wallet-adapter-base';

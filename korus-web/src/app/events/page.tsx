@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
@@ -338,10 +339,12 @@ export default function EventsPage() {
                         {/* Event Image */}
                         {event.imageUrl && (
                           <div className="w-32 h-24 rounded-xl overflow-hidden flex-shrink-0">
-                            <img
+                            <Image
                               src={event.imageUrl}
                               alt={event.title}
-                              className="w-full h-full object-cover"
+                              width={128}
+                              height={96}
+                              className="object-cover"
                             />
                           </div>
                         )}
@@ -484,10 +487,12 @@ export default function EventsPage() {
 
             {/* Event Image */}
             {selectedEvent.imageUrl && (
-              <img
+              <Image
                 src={selectedEvent.imageUrl}
                 alt={selectedEvent.title}
-                className="w-full h-48 object-cover rounded-xl mb-6"
+                width={600}
+                height={192}
+                className="w-full object-cover rounded-xl mb-6"
               />
             )}
 

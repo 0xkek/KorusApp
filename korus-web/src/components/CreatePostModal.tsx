@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
@@ -205,10 +206,12 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                   {selectedFiles.map((file, index) => (
                     <div key={index} className="relative group">
                       {file.type.startsWith('image/') ? (
-                        <img
+                        <Image
                           src={URL.createObjectURL(file)}
                           alt="Upload preview"
-                          className="w-full h-32 object-cover rounded-xl border border-korus-border"
+                          width={200}
+                          height={128}
+                          className="w-full object-cover rounded-xl border border-korus-border"
                         />
                       ) : (
                         <div className="w-full h-32 bg-korus-surface/40 border border-korus-border rounded-xl flex items-center justify-center">
