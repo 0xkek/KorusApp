@@ -4,14 +4,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
-import Header from '@/components/Header';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import ReplyModal from '@/components/ReplyModal';
 import PostOptionsModal from '@/components/PostOptionsModal';
 import { useToast } from '@/hooks/useToast';
-import { Button } from '@/components/Button';
 import type { Post, Reply } from '@/types';
 import { MOCK_POSTS, MOCK_REPLIES } from '@/data/mockData';
 
@@ -29,7 +26,6 @@ export default function PostDetailPage() {
   const [likedReplies, setLikedReplies] = useState<Set<number>>(new Set());
   const [showReplyModal, setShowReplyModal] = useState(false);
   const [replyToPost, setReplyToPost] = useState<any>(null);
-  const [replyContent, setReplyContent] = useState('');
   const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [inlineReplyContent, setInlineReplyContent] = useState('');
@@ -56,7 +52,7 @@ export default function PostDetailPage() {
         setPost(foundPost);
         setReplies(MOCK_REPLIES);
       }
-    } catch (error) {
+    } catch {
       // Failed to load post
     } finally {
       setLoading(false);
@@ -169,7 +165,7 @@ export default function PostDetailPage() {
       showSuccess('Reply posted successfully!');
       setInlineReplyContent('');
       setSelectedFiles([]);
-    } catch (error) {
+    } catch {
       showError('Failed to post reply. Please try again.');
     } finally {
       setIsPostingReply(false);
@@ -200,12 +196,7 @@ export default function PostDetailPage() {
     setShowEmojiPicker(false);
   };
 
-  const handleGifSelect = (gifUrl: string) => {
-    setInlineReplyContent(prev => prev + ` ${gifUrl}`);
-    setShowGifPicker(false);
-  };
-
-  const renderReply = (reply: Reply, level: number = 0, isTopLevel: boolean = true) => {
+  const renderReply = (reply: Reply, level: number = 0) => {
     const hasReplies = reply.replies && reply.replies.length > 0;
 
     return (
@@ -303,7 +294,7 @@ export default function PostDetailPage() {
         {/* Nested Replies */}
         {hasReplies && reply.isExpanded && (
           <div className="ml-8">
-            {reply.replies.map(nestedReply => renderReply(nestedReply, level + 1, false))}
+            {reply.replies.map(nestedReply => renderReply(nestedReply, level + 1))}
           </div>
         )}
       </div>

@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
@@ -46,13 +45,11 @@ interface Post {
 
 export default function ProfilePage() {
   const { connected, publicKey } = useWallet();
-  const { showWarning } = useToastContext();
+  const { showWarning, showSuccess } = useToastContext();
   const router = useRouter();
 
   // All hooks must be called before any conditional logic
   const [activeTab, setActiveTab] = useState<'posts' | 'replies'>('posts');
-  const [userPosts, setUserPosts] = useState<Post[]>([]);
-  const [expandedPosts, setExpandedPosts] = useState<Set<number>>(new Set());
   const [copied, setCopied] = useState(false);
   const [editingUsername, setEditingUsername] = useState(false);
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
@@ -60,7 +57,6 @@ export default function ProfilePage() {
   const [savingUsername, setSavingUsername] = useState(false);
   const [showSNSDropdown, setShowSNSDropdown] = useState(false);
   const [hasSetUsername, setHasSetUsername] = useState(false);
-  const [userTier, setUserTier] = useState<string>('standard');
   const [hasLoadedProfile, setHasLoadedProfile] = useState(false);
   const [showUsernameWarning, setShowUsernameWarning] = useState(false);
   const [tempUsernameValue, setTempUsernameValue] = useState('');
@@ -119,7 +115,7 @@ export default function ProfilePage() {
       }
 
       // TODO: Implement API call to load user profile
-    } catch (error) {
+    } catch {
       // Handle error silently or show user notification
     }
   }, []);
@@ -218,7 +214,7 @@ export default function ProfilePage() {
       if (typeof window !== 'undefined') {
         try {
           localStorage.setItem('korus_username', usernameToSave);
-        } catch (storageError) {
+        } catch {
           // Continue anyway - don't block the operation
         }
       }
@@ -229,7 +225,7 @@ export default function ProfilePage() {
       setEditingUsername(false);
       setTempUsernameValue('');
       // TODO: Replace with toast notification
-    } catch (error) {
+    } catch {
       // TODO: Replace with toast notification showing error
     } finally {
       setSavingUsername(false);
@@ -601,7 +597,7 @@ export default function ProfilePage() {
                                     await setFavoriteSNSDomain(walletAddress, domain.domain);
                                     setShowSNSDropdown(false);
                                     // TODO: Show success toast
-                                  } catch (error) {
+                                  } catch {
                                     // TODO: Show error toast
                                   }
                                 }}
@@ -869,14 +865,14 @@ export default function ProfilePage() {
       <SearchModal
         isOpen={showSearchModal}
         onClose={() => setShowSearchModal(false)}
-        allPosts={userPosts}
+        allPosts={[]}
       />
 
       {/* Create Post Modal */}
       <CreatePostModal
         isOpen={showCreatePostModal}
         onClose={() => setShowCreatePostModal(false)}
-        onPostCreate={(post) => {
+        onPostCreate={() => {
           showSuccess('Post created successfully!');
           setShowCreatePostModal(false);
         }}
