@@ -61,7 +61,6 @@ export default function PostDetailModal({
   likedPosts = new Set(),
   repostedPosts = new Set()
 }: PostDetailModalProps) {
-  const { connected } = useWallet();
   
   const [replies, setReplies] = useState<Reply[]>([]);
   const modalRef = useFocusTrap(isOpen);

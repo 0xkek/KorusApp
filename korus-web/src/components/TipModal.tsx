@@ -19,7 +19,6 @@ export default function TipModal({ isOpen, onClose, recipientUser, onTipSuccess 
   const { showSuccess, showError } = useToast();
   const [customAmount, setCustomAmount] = useState('');
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
-  const [message] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [validationError, setValidationError] = useState<string>('');
   const modalRef = useFocusTrap(isOpen);

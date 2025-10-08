@@ -30,7 +30,6 @@ interface Post {
 }
 
 export default function UserProfilePage() {
-  const { connected } = useWallet();
   const router = useRouter();
   const params = useParams();
   const profileWallet = params.wallet as string;

@@ -20,7 +20,6 @@ export default function Header({
   onSettingsClick
 }: HeaderProps) {
   const { connected, publicKey } = useWallet();
-  const { theme } = useTheme();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
