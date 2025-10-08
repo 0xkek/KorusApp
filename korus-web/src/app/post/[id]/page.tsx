@@ -731,7 +731,9 @@ export default function PostDetailPage() {
           setShowPostOptionsModal(false);
           setSelectedPost(null);
         }}
-        post={selectedPost}
+        postId={selectedPost?.id || 0}
+        postUser={selectedPost?.user || ''}
+        isOwnPost={selectedPost?.user === publicKey?.toBase58()}
       />
 
       <LeftSidebar />
@@ -741,6 +743,7 @@ export default function PostDetailPage() {
       <SearchModal
         isOpen={showSearchModal}
         onClose={() => setShowSearchModal(false)}
+        allPosts={MOCK_POSTS}
       />
 
       {/* Mobile Menu Modal */}

@@ -92,7 +92,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
         isShoutout: false,
         image: selectedFiles.length > 0 && selectedFiles[0].type.startsWith('image/')
           ? URL.createObjectURL(selectedFiles[0])
-          : null,
+          : undefined,
       };
 
       // Call the parent's post creation function
@@ -436,7 +436,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
               shoutoutStartTime: Date.now(),
               image: selectedFiles.length > 0 && selectedFiles[0].type.startsWith('image/')
                 ? URL.createObjectURL(selectedFiles[0])
-                : null,
+                : undefined,
             };
 
             // Call the parent's post creation function

@@ -91,7 +91,6 @@ export default function TipModal({ isOpen, onClose, recipientUser, onTipSuccess 
       // Reset form
       setSelectedAmount(null);
       setCustomAmount('');
-      setMessage('');
       onClose();
     } catch {
       showError('Failed to send tip. Please try again.');

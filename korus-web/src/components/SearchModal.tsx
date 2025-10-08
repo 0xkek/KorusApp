@@ -69,7 +69,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
 
     // User/wallet matches
     if (post.user.toLowerCase().includes(lowerQuery) ||
-        post.wallet.toLowerCase().includes(lowerQuery)) {
+        post.wallet?.toLowerCase().includes(lowerQuery)) {
       score += 8;
     }
 
@@ -126,7 +126,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
           return (
             post.content.toLowerCase().includes(lowerQuery) ||
             post.user.toLowerCase().includes(lowerQuery) ||
-            post.wallet.toLowerCase().includes(lowerQuery) ||
+            post.wallet?.toLowerCase().includes(lowerQuery) ||
             post.category?.toLowerCase().includes(lowerQuery) ||
             hasReplyMatch
           );

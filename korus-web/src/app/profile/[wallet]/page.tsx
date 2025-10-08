@@ -40,6 +40,8 @@ export default function UserProfilePage() {
     const tipsReceived = userPosts.reduce((sum, post) => sum + post.tips, 0);
     // Mock tips given based on activity (would come from actual data)
     const tipsGiven = Math.max(1, Math.floor(postsCount * 2.5));
+    // Calculate replies count (sum of reply counts from all posts)
+    const repliesCount = userPosts.reduce((sum, post) => sum + post.replies, 0);
 
     // Calculate reputation score
     let repScore = 0;
@@ -53,6 +55,7 @@ export default function UserProfilePage() {
 
     return {
       posts: postsCount,
+      replies: repliesCount,
       tipsReceived,
       tipsGiven,
       repScore
@@ -299,7 +302,6 @@ export default function UserProfilePage() {
         isOpen={showTipModal}
         onClose={() => setShowTipModal(false)}
         recipientUser={displayName}
-        recipientAddress={profileWallet}
       />
 
       {/* Search Modal */}

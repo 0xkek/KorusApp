@@ -70,11 +70,11 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm,
 
     // Calculate remaining time for active shoutout
     const now = Date.now();
-    const activeEndTime = activeShoutout.shoutoutStartTime + (activeShoutout.shoutoutDuration * 60 * 1000);
+    const activeEndTime = activeShoutout.startTime + (activeShoutout.duration * 60 * 1000);
     const activeRemainingMinutes = Math.max(0, Math.ceil((activeEndTime - now) / (60 * 1000)));
 
     // Sum up all queued shoutouts durations
-    const queuedTotalMinutes = queuedShoutouts.reduce((sum, shoutout) => sum + shoutout.shoutoutDuration, 0);
+    const queuedTotalMinutes = queuedShoutouts.reduce((sum, shoutout) => sum + shoutout.duration, 0);
 
     return activeRemainingMinutes + queuedTotalMinutes;
   };

@@ -178,8 +178,8 @@ export default function WelcomePage() {
                     rel="noopener noreferrer"
                     className="transition-colors text-base font-medium hover:underline"
                     style={{ color: '#43e97b' }}
-                    onMouseOver={(e) => e.target.style.color = '#38f9d7'}
-                    onMouseOut={(e) => e.target.style.color = '#43e97b'}
+                    onMouseOver={(e) => (e.target as HTMLAnchorElement).style.color = '#38f9d7'}
+                    onMouseOut={(e) => (e.target as HTMLAnchorElement).style.color = '#43e97b'}
                   >
                     Download Phantom Wallet →
                   </a>
@@ -189,8 +189,8 @@ export default function WelcomePage() {
                     rel="noopener noreferrer"
                     className="transition-colors text-base font-medium hover:underline"
                     style={{ color: '#43e97b' }}
-                    onMouseOver={(e) => e.target.style.color = '#38f9d7'}
-                    onMouseOut={(e) => e.target.style.color = '#43e97b'}
+                    onMouseOver={(e) => (e.target as HTMLAnchorElement).style.color = '#38f9d7'}
+                    onMouseOut={(e) => (e.target as HTMLAnchorElement).style.color = '#43e97b'}
                   >
                     Download Solflare Wallet →
                   </a>
@@ -226,8 +226,8 @@ export default function WelcomePage() {
                 href="/"
                 className="transition-colors text-sm font-medium hover:underline"
                 style={{ color: '#43e97b' }}
-                onMouseOver={(e) => e.target.style.color = '#38f9d7'}
-                onMouseOut={(e) => e.target.style.color = '#43e97b'}
+                onMouseOver={(e) => (e.target as HTMLAnchorElement).style.color = '#38f9d7'}
+                onMouseOut={(e) => (e.target as HTMLAnchorElement).style.color = '#43e97b'}
               >
                 Continue to app →
               </Link>

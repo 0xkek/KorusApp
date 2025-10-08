@@ -154,7 +154,7 @@ export default function RightSidebar({ showNotifications = false }: RightSidebar
                           {/* Special data for tips */}
                           {notification.type === 'tip' && notification.relatedData && (
                             <div className="mt-1 text-xs text-yellow-400 font-medium">
-                              💰 {notification.relatedData.amount}
+                              💰 {String(notification.relatedData.amount)}
                             </div>
                           )}
                         </div>
@@ -207,7 +207,7 @@ export default function RightSidebar({ showNotifications = false }: RightSidebar
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">
-                    {activity.type === 'game' ? getGameIcon(activity.title) : getEventTypeIcon(activity.category)}
+                    {activity.type === 'game' ? getGameIcon(activity.title) : getEventTypeIcon(activity.category || 'Other')}
                   </span>
                   <div className="text-korus-text font-semibold">{activity.title}</div>
                   {activity.type === 'event' && activity.premiumOnly && (
@@ -219,8 +219,8 @@ export default function RightSidebar({ showNotifications = false }: RightSidebar
                 {activity.type === 'game' ? (
                   <div className="text-korus-primary text-sm font-medium">{activity.wager}</div>
                 ) : (
-                  <div className={`text-xs px-2 py-1 rounded-full font-medium ${getEventTypeColor(activity.category)} bg-opacity-20`} style={{backgroundColor: `${getEventTypeColor(activity.category).replace('text-', '')}20`}}>
-                    {activity.category.replace('_', ' ').toUpperCase()}
+                  <div className={`text-xs px-2 py-1 rounded-full font-medium ${getEventTypeColor(activity.category || 'Other')} bg-opacity-20`} style={{backgroundColor: `${getEventTypeColor(activity.category || 'Other').replace('text-', '')}20`}}>
+                    {(activity.category || 'Other').replace('_', ' ').toUpperCase()}
                   </div>
                 )}
               </div>

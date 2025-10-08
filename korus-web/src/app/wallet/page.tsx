@@ -38,12 +38,6 @@ export default function WalletPage() {
     }
   }, [mounted, connected, router]);
 
-  useEffect(() => {
-    if (mounted && connected && publicKey) {
-      fetchBalance();
-    }
-  }, [mounted, connected, publicKey, fetchBalance]);
-
   const fetchBalance = useCallback(async () => {
     if (!publicKey || !mounted) return;
 
@@ -66,6 +60,12 @@ export default function WalletPage() {
       setLoading(false);
     }
   }, [publicKey, mounted, hasError, showSuccess, showError]);
+
+  useEffect(() => {
+    if (mounted && connected && publicKey) {
+      fetchBalance();
+    }
+  }, [mounted, connected, publicKey, fetchBalance]);
 
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {
@@ -307,7 +307,7 @@ export default function WalletPage() {
 
           <RightSidebar
             showNotifications={showNotifications}
-            onToggleNotifications={() => setShowNotifications(!showNotifications)}
+            onNotificationsClose={() => setShowNotifications(false)}
           />
         </div>
       </div>

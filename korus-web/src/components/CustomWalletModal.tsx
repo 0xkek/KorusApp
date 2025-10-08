@@ -2,7 +2,7 @@
 import Image from 'next/image';
 
 import { useWallet } from '@solana/wallet-adapter-react';
-import { WalletReadyState } from '@solana/wallet-adapter-base';
+import { WalletReadyState, type WalletName } from '@solana/wallet-adapter-base';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
@@ -25,7 +25,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
     wallet => wallet.readyState !== WalletReadyState.Installed
   );
 
-  const handleWalletClick = async (walletName: string) => {
+  const handleWalletClick = async (walletName: WalletName) => {
     select(walletName);
     onClose();
   };

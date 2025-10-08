@@ -50,16 +50,10 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
         user: publicKey?.toBase58().slice(0, 15) || 'current_user',
         content: replyContent,
         likes: 0,
-        replies: 0,
-        tips: 0,
+        replies: [],
         time: 'now',
         isPremium: false,
-        isShoutout: false,
-        isSponsored: false,
-        image: selectedFiles.length > 0 && selectedFiles[0].type.startsWith('image/') ? URL.createObjectURL(selectedFiles[0]) : null,
-        avatar: null,
-        isReply: true,
-        replyToPost: post
+        image: selectedFiles.length > 0 && selectedFiles[0].type.startsWith('image/') ? URL.createObjectURL(selectedFiles[0]) : undefined,
       };
 
       // Call success callback

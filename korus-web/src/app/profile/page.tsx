@@ -11,6 +11,7 @@ import PremiumUpgradeModal from '@/components/PremiumUpgradeModal';
 import { useAllSNSDomains, useSNSDomain } from '@/hooks/useSNSDomain';
 import { setFavoriteSNSDomain } from '@/utils/sns';
 import { useToastContext } from '@/components/ToastProvider';
+import type { Post } from '@/types/post';
 
 // Dynamically import modals
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
@@ -53,11 +54,12 @@ export default function ProfilePage() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
+  const [userPosts] = useState<Post[]>([]); // Mock user posts (would come from API)
+  const [selectedNFTAvatar] = useState<NFTAvatar | null>(null); // NFT avatar (would come from API)
 
   // Mock wallet and user data (must be before hooks that depend on it)
   const walletAddress = publicKey?.toBase58() || '';
   const selectedAvatar = '🎮'; // Mock avatar
-  const selectedNFTAvatar: NFTAvatar | null = null;
   const isPremium = false; // Mock premium status
   const balance = 2.45; // Mock balance
 
@@ -73,7 +75,7 @@ export default function ProfilePage() {
   const stats: UserStats = useMemo(() => {
     const baseStats = {
       posts: userPosts.length,
-      replies: userPosts.reduce((sum, post) => sum + (post.replies?.length || 0), 0),
+      replies: userPosts.reduce((sum, post) => sum + post.replies, 0),
       likes: userPosts.reduce((sum, post) => sum + post.likes, 0),
       tips: userPosts.reduce((sum, post) => sum + post.tips, 0),
       repScore: 0
@@ -86,7 +88,7 @@ export default function ProfilePage() {
     }
 
     return baseStats;
-  }, [isPremium]);
+  }, [userPosts, isPremium]);
 
   const loadUserProfile = useCallback(async () => {
     try {
@@ -477,7 +479,7 @@ export default function ProfilePage() {
                               return;
                             }
 
-                            if (!currentUsername && !isActuallyPremium) {
+                            if (!currentUsername && !isPremium) {
                               setShowUsernameWarning(true);
                               return;
                             }
@@ -788,7 +790,7 @@ export default function ProfilePage() {
                       <div className="flex items-center gap-6 text-korus-textTertiary text-sm">
                         <span>{post.likes} likes</span>
                         <span>{post.tips} tips</span>
-                        <span>{post.replies?.length || 0} replies</span>
+                        <span>{post.replies || 0} replies</span>
                       </div>
                     </div>
                   ))
