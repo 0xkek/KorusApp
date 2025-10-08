@@ -28,8 +28,12 @@ export interface Post {
   isPremium?: boolean;
   isShoutout?: boolean;
   isSponsored?: boolean;
+  isRepost?: boolean;
+  repostedPost?: Post;
+  repostedBy?: string;
   image?: string;
   imageUrl?: string;
+  video?: string;
   videoUrl?: string;
   shoutoutDuration?: number;
   shoutoutStartTime?: number;

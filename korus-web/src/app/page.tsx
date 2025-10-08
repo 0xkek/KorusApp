@@ -274,8 +274,8 @@ export default function Home() {
 
     if (!isCurrentlyReposted) {
       // If the post being reposted is itself a repost, use the original post
-      const postToRepost = (originalPost as any).isRepost && (originalPost as any).repostedPost
-        ? (originalPost as any).repostedPost
+      const postToRepost = originalPost.isRepost && originalPost.repostedPost
+        ? originalPost.repostedPost
         : originalPost;
 
       // Create a repost
@@ -630,13 +630,13 @@ export default function Home() {
                 {/* Post Content */}
                 <div className="flex-1 min-w-0">
                   {/* Reposted By Indicator */}
-                  {(post as any).isRepost && (post as any).repostedBy && (
+                  {post.isRepost && post.repostedBy && (
                     <div className="flex items-center gap-1.5 mb-2">
                       <svg className="w-3.5 h-3.5 text-korus-textSecondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
                       <span className="text-xs text-korus-textSecondary font-medium">
-                        {(post as any).repostedBy} reposted
+                        {post.repostedBy} reposted
                       </span>
                     </div>
                   )}
@@ -688,7 +688,7 @@ export default function Home() {
                   </div>
 
                   {/* Reposted Post */}
-                  {(post as any).isRepost && (post as any).repostedPost ? (
+                  {post.isRepost && post.repostedPost ? (
                     <>
                       {/* User's comment on the repost (if any) */}
                       {post.content && (
@@ -701,14 +701,14 @@ export default function Home() {
                       <div className="mb-3 border-2 rounded-xl p-4" style={{ background: 'linear-gradient(90deg, rgba(67, 233, 123, 0.1), rgba(56, 239, 125, 0.1))', borderColor: 'rgba(67, 233, 123, 0.3)' }}>
                         <div className="flex items-center gap-2 mb-2">
                           <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-black" style={{ background: 'linear-gradient(135deg, #43E97B, #38EF7D)' }}>
-                            {(post as any).repostedPost.user.slice(0, 2).toUpperCase()}
+                            {post.repostedPost.user.slice(0, 2).toUpperCase()}
                           </div>
-                          <span className="text-white font-medium">{(post as any).repostedPost.user}</span>
-                          <span className="text-korus-textSecondary text-sm">· {(post as any).repostedPost.time}</span>
+                          <span className="text-white font-medium">{post.repostedPost.user}</span>
+                          <span className="text-korus-textSecondary text-sm">· {post.repostedPost.time}</span>
                         </div>
-                        <p className="text-korus-text text-sm leading-relaxed">{(post as any).repostedPost.content}</p>
-                        {(post as any).repostedPost.image && (
-                          <Image src={(post as any).repostedPost.image} alt="Reposted content" width={600} height={400} className="mt-3 w-full rounded-lg" />
+                        <p className="text-korus-text text-sm leading-relaxed">{post.repostedPost.content}</p>
+                        {post.repostedPost.image && (
+                          <Image src={post.repostedPost.image} alt="Reposted content" width={600} height={400} className="mt-3 w-full rounded-lg" />
                         )}
                       </div>
                     </>
@@ -722,21 +722,21 @@ export default function Home() {
                   )}
 
                   {/* Link Preview */}
-                  {!((post as any).isRepost) && extractUrls(post.content).map((url, index) => (
+                  {!post.isRepost && extractUrls(post.content).map((url, index) => (
                     <div key={index} className="mb-3">
                       <LinkPreview url={url} />
                     </div>
                   ))}
 
                   {/* Video Player */}
-                  {!((post as any).isRepost) && (post as any).video && (
+                  {!post.isRepost && post.video && (
                     <div className="mb-3">
-                      <VideoPlayer videoUrl={(post as any).video} />
+                      <VideoPlayer videoUrl={post.video} />
                     </div>
                   )}
 
                   {/* Post Image */}
-                  {!((post as any).isRepost) && post.image && (
+                  {!post.isRepost && post.image && (
                     <div className="mb-3 rounded-2xl overflow-hidden border border-korus-border">
                       <Image
                         src={post.image}
@@ -807,11 +807,11 @@ export default function Home() {
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleLike(post.id);
-                        if (typeof window !== 'undefined' && (window as any).createParticleExplosion) {
+                        if (typeof window !== 'undefined' && 'createParticleExplosion' in window) {
                           const rect = e.currentTarget.getBoundingClientRect();
                           const x = rect.left + rect.width / 2;
                           const y = rect.top + rect.height / 2;
-                          (window as any).createParticleExplosion('like', x, y);
+                          (window as Window & { createParticleExplosion: (type: string, x: number, y: number) => void }).createParticleExplosion('like', x, y);
                         }
                       }}
                     >
