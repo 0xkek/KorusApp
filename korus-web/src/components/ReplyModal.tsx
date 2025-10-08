@@ -6,26 +6,13 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { Button } from '@/components/ui';
-
-interface Post {
-  id: number;
-  user: string;
-  content: string;
-  likes: number;
-  replies: number;
-  tips: number;
-  time: string;
-  isPremium?: boolean;
-  isShoutout?: boolean;
-  image?: string;
-  video?: string;
-}
+import type { Post, Reply } from '@/types/post';
 
 interface ReplyModalProps {
   isOpen: boolean;
   onClose: () => void;
   post: Post | null;
-  onReplySuccess?: (reply: any) => void;
+  onReplySuccess?: (reply: Reply) => void;
 }
 
 export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: ReplyModalProps) {

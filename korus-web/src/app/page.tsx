@@ -55,7 +55,7 @@ export default function Home() {
   const [showGifPicker, setShowGifPicker] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showDrawCanvas, setShowDrawCanvas] = useState(false);
-  const [shoutoutQueue, setShoutoutQueue] = useState<any[]>([]); // Queue for pending shoutouts
+  const [shoutoutQueue, setShoutoutQueue] = useState<{ duration: number; content: string; postId: number }[]>([]); // Queue for pending shoutouts
   const [showSearchModal, setShowSearchModal] = useState(false);
 
   useEffect(() => {

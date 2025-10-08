@@ -4,12 +4,12 @@ import Image from 'next/image';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import type { Post as BasePost } from '@/types';
+import type { Post as BasePost, Reply } from '@/types';
 
 // SearchModal needs to handle both formats during migration
 interface Post extends Omit<BasePost, 'replies'> {
-  replies: number | any[];
-  replyThreads?: any[];
+  replies: number | Reply[];
+  replyThreads?: Reply[];
 }
 
 interface SearchModalProps {

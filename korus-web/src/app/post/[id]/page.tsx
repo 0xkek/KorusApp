@@ -113,7 +113,7 @@ export default function PostDetailPage() {
     setReplies(toggleExpansion(replies));
   };
 
-  const handleReply = (post: any) => {
+  const handleReply = (post: Post) => {
     setReplyToPost(post);
     setShowReplyModal(true);
   };

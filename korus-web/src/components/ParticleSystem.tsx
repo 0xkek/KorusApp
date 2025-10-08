@@ -81,10 +81,10 @@ export const ParticleSystem = () => {
       }, Math.max(...newParticles.map(p => p.duration + p.delay)) + 100);
     };
 
-    (window as any).createParticleExplosion = createExplosion;
+    (window as Window & { createParticleExplosion?: typeof createExplosion }).createParticleExplosion = createExplosion;
 
     return () => {
-      delete (window as any).createParticleExplosion;
+      delete (window as Window & { createParticleExplosion?: typeof createExplosion }).createParticleExplosion;
     };
   }, []);
 

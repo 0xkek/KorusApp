@@ -6,15 +6,11 @@ import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import dynamic from 'next/dynamic';
 import { fetchSNSDomains, getFavoriteSNSDomain, SNSDomain } from '@/utils/sns';
-import type { Post, Reply, UserStats } from '@/types/post';
+import type { Post, UserStats } from '@/types/post';
 
 const TipModal = dynamic(() => import('@/components/TipModal'), { ssr: false });
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
 const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { ssr: false });
-
-interface LocalPost extends Post {
-  replies?: Reply[];
-}
 
 export default function UserProfilePage() {
   const router = useRouter();

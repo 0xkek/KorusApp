@@ -22,8 +22,8 @@ interface ShoutoutModalProps {
   postContent: string;
   onConfirm?: (duration: number, price: number) => void;
   queueInfo?: {
-    activeShoutout: any | null;
-    queuedShoutouts: any[];
+    activeShoutout: { duration: number; startTime: number; content: string } | null;
+    queuedShoutouts: { duration: number; content: string }[];
   };
 }
 

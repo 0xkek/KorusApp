@@ -13,7 +13,7 @@ interface Notification {
   read: boolean;
   actionIcon?: string;
   actionColor?: string;
-  relatedData?: any;
+  relatedData?: Record<string, unknown>;
 }
 
 interface RightSidebarProps {
