@@ -8,6 +8,7 @@ import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import Header from '@/components/Header';
 import { useToast } from '@/hooks/useToast';
+import { MOCK_GAMES } from '@/data/mockData';
 
 // Dynamically import modals
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });

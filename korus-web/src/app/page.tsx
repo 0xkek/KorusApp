@@ -14,6 +14,7 @@ import { FeedSkeleton } from '@/components/Skeleton';
 import { useToast } from '@/hooks/useToast';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import type { Post } from '@/types';
+import { MOCK_POSTS } from '@/data/mockData';
 
 // Dynamically import modals for code splitting
 const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { ssr: false });
@@ -67,101 +68,8 @@ export default function Home() {
   useEffect(() => {
     if (posts.length === 0) {
       // Define mock posts inline
-      const allPosts = [
-        {
-          id: 1,
-          user: 'solana_dev',
-          wallet: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU',
-          content: 'Just deployed my first smart contract on Solana! The speed is insane ⚡',
-          likes: 42,
-          replies: 8,
-          tips: 0.5,
-          time: '2h ago',
-          isPremium: true,
-          isShoutout: false,
-          isSponsored: false,
-          image: null,
-          avatar: null
-        },
-        {
-          id: 2,
-          user: 'nft_collector',
-          wallet: '8yBJKB8pDXw5gKvKx8pTTqGHLpP9R1vK3YFDqN5eXYzB',
-          content: 'Check out this new NFT collection I found! The art is incredible 🎨',
-          likes: 28,
-          replies: 5,
-          tips: 0.3,
-          time: '4h ago',
-          isPremium: false,
-          isShoutout: true,
-          isSponsored: false,
-          shoutoutDuration: 120, // 2 hours in minutes
-          shoutoutStartTime: Date.now(), // Start time for countdown
-          image: 'https://picsum.photos/600/400?random=1',
-          avatar: null
-        },
-        {
-          id: 3,
-          user: 'game_master',
-          wallet: '3qRZ5vQXJT4KxEfvN8P2mH7g9kW5dLsYbU8VFxRjCzXa',
-          content: 'Who wants to play Tic Tac Toe? 0.1 SOL wager 🎮',
-          likes: 15,
-          replies: 3,
-          tips: 0.1,
-          time: '6h ago',
-          isPremium: false,
-          isShoutout: false,
-          isSponsored: true,
-          image: null,
-          avatar: null
-        },
-        {
-          id: 4,
-          user: 'crypto_news',
-          wallet: '9mWRAB2SNxPgTK5v8NhYfE3Xz7QJ6kRsL4DUwPbCyHFa',
-          content: 'Amazing tutorial on building with Solana! Check it out: https://solana.com',
-          likes: 67,
-          replies: 12,
-          tips: 1.2,
-          time: '8h ago',
-          isPremium: true,
-          isShoutout: false,
-          isSponsored: false,
-          image: null,
-          avatar: null
-        },
-        {
-          id: 5,
-          user: 'tech_explorer',
-          wallet: '5kLPMx8gVTbN2zQw9RYjE6FuXcH7pKsDv4WaUyJnBxTg',
-          content: 'Just found this awesome video https://youtube.com/watch?v=dQw4w9WgXcQ',
-          likes: 34,
-          replies: 7,
-          tips: 0.4,
-          time: '10h ago',
-          isPremium: false,
-          isShoutout: false,
-          isSponsored: false,
-          image: null,
-          avatar: null
-        },
-        {
-          id: 6,
-          user: 'video_creator',
-          wallet: '4tNXZq7vQBw3kP9jW5LrE8xYgFHsDuM6TcRUaKpVyJbN',
-          content: 'Check out my latest tutorial on Solana development! 🎥',
-          likes: 89,
-          replies: 15,
-          tips: 2.5,
-          time: '12h ago',
-          isPremium: true,
-          isShoutout: false,
-          isSponsored: false,
-          image: null,
-          video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-          avatar: null
-        }
-      ];
+      // Use mock data from centralized location
+      const allPosts = MOCK_POSTS;
 
       // Sort posts: shoutouts first, then regular posts
       const mockPosts = [...allPosts].sort((a, b) => {

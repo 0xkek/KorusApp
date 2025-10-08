@@ -1,6 +1,7 @@
 'use client';
 
 import { useWallet } from '@solana/wallet-adapter-react';
+import { MOCK_TRENDING_TOPICS, MOCK_TRENDING_CREATORS, MOCK_ACTIVE_USERS } from '@/data/mockData';
 
 interface Notification {
   id: number;
