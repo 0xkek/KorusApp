@@ -55,7 +55,7 @@ export default function Home() {
   const [showGifPicker, setShowGifPicker] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showDrawCanvas, setShowDrawCanvas] = useState(false);
-  const [shoutoutQueue, setShoutoutQueue] = useState<{ duration: number; content: string; postId: number }[]>([]); // Queue for pending shoutouts
+  const [shoutoutQueue, setShoutoutQueue] = useState<Post[]>([]); // Queue for pending shoutouts
   const [showSearchModal, setShowSearchModal] = useState(false);
 
   useEffect(() => {
@@ -193,9 +193,9 @@ export default function Home() {
       isSponsored: false,
       image: selectedFiles.length > 0 && selectedFiles[0].type.startsWith('image/')
         ? URL.createObjectURL(selectedFiles[0])
-        : null,
+        : undefined,
       avatar: null
-    };
+    } as Post;
 
     // Insert new post after any shoutouts (shoutouts should always be on top)
     setPosts(prev => {
@@ -290,12 +290,12 @@ export default function Home() {
         isPremium: false,
         isShoutout: false,
         isSponsored: false,
-        image: null,
+        image: undefined,
         avatar: null,
         isRepost: true,
         repostedPost: postToRepost,
         repostedBy: publicKey?.toBase58().slice(0, 15) || 'current_user'
-      };
+      } as Post;
 
       // Add repost and maintain shoutout priority
       setPosts(prev => {
@@ -894,8 +894,8 @@ export default function Home() {
         onClose={() => setShowCreatePostModal(false)}
         onPostCreate={handlePostCreate}
         queueInfo={{
-          activeShoutout: posts.find(p => p.isShoutout) || null,
-          queuedShoutouts: shoutoutQueue
+          activeShoutout: null,
+          queuedShoutouts: []
         }}
       />
 
@@ -918,8 +918,8 @@ export default function Home() {
           setComposeText(''); // Clear compose text after shoutout
         }}
         queueInfo={{
-          activeShoutout: posts.find(p => p.isShoutout) || null,
-          queuedShoutouts: shoutoutQueue
+          activeShoutout: null,
+          queuedShoutouts: []
         }}
       />
 
@@ -979,8 +979,8 @@ export default function Home() {
               return {
                 ...p,
                 replies: p.replies + 1,
-                replyThreads: [...(p.replyThreads || []), reply]
-              };
+                replyThreads: [...(('replyThreads' in p && p.replyThreads) || []), reply]
+              } as Post;
             }
             return p;
           }));

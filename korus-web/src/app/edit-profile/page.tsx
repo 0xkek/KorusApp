@@ -27,7 +27,7 @@ export default function EditProfilePage() {
   // Mock wallet and user data (replace with actual context/API later)
   const walletAddress = publicKey?.toBase58() || '';
   const selectedAvatar = '🎮'; // Mock avatar
-  const selectedNFTAvatar: NFTAvatar | null = null;
+  const selectedNFTAvatar = null as NFTAvatar | null;
   const snsDomain = null; // Mock SNS domain
   const timeFunUsername = null;
   const isPremium = false; // Mock premium status
@@ -227,9 +227,9 @@ export default function EditProfilePage() {
                 className="relative group"
               >
                 <div className="w-24 h-24 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center text-3xl font-bold text-black border-4 border-transparent">
-                  {selectedNFTAvatar ? (
+                  {selectedNFTAvatar && (selectedNFTAvatar.image || selectedNFTAvatar.uri) ? (
                     <Image
-                      src={selectedNFTAvatar.image || selectedNFTAvatar.uri}
+                      src={(selectedNFTAvatar.image || selectedNFTAvatar.uri) as string}
                       alt="NFT Avatar"
                       width={80}
                       height={80}

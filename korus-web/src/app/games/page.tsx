@@ -348,9 +348,9 @@ export default function GamesPage() {
                           </span>
                           <span className="text-korus-textSecondary">•</span>
                           <span className="text-korus-textSecondary">
-                            {activeTab === 'created' ? game.timeLeft :
+                            {(activeTab === 'created' ? game.timeLeft :
                              activeTab === 'active' ? game.timeLeft :
-                             game.endTime}
+                             'endTime' in game ? game.endTime : game.timeLeft) as string}
                           </span>
                           <div className={`px-2 py-1 rounded-full text-xs font-semibold border ${getStatusColor(game.status)} ml-auto`}>
                             {game.status}
@@ -365,10 +365,10 @@ export default function GamesPage() {
                               Players: <span className="font-semibold">{game.players}</span>
                             </span>
                           )}
-                          {activeTab === 'active' && (
+                          {activeTab === 'active' && 'opponent' in game && (
                             <span>
                               Game in progress between <span className="font-semibold text-korus-primary">@{game.creator}</span> and <span className="font-semibold text-korus-secondary">@{game.opponent}</span>.
-                              Current turn: <span className="font-semibold text-green-400">@{game.currentTurn}</span>
+                              {' Current turn: '}<span className="font-semibold text-green-400">@{'currentTurn' in game ? game.currentTurn : ''}</span>
                             </span>
                           )}
                         </div>
