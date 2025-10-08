@@ -976,10 +976,11 @@ export default function Home() {
           // Add reply to the parent post's replies array
           setPosts(prev => prev.map(p => {
             if (p.id === postToReply?.id) {
+              const existingReplies = ('replyThreads' in p && Array.isArray(p.replyThreads)) ? p.replyThreads : [];
               return {
                 ...p,
                 replies: p.replies + 1,
-                replyThreads: [...(('replyThreads' in p && p.replyThreads) || []), reply]
+                replyThreads: [...existingReplies, reply]
               } as Post;
             }
             return p;

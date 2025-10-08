@@ -42,14 +42,6 @@ export default function PostDetailPage() {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
-  useEffect(() => {
-    if (!connected) {
-      router.push('/welcome');
-      return;
-    }
-    loadPost();
-  }, [postId, connected, router, loadPost]);
-
   const loadPost = useCallback(async () => {
     try {
       setLoading(true);
@@ -66,6 +58,14 @@ export default function PostDetailPage() {
       setLoading(false);
     }
   }, [postId]);
+
+  useEffect(() => {
+    if (!connected) {
+      router.push('/welcome');
+      return;
+    }
+    loadPost();
+  }, [postId, connected, router, loadPost]);
 
   const handleLike = () => {
     if (!post) return;
@@ -120,8 +120,8 @@ export default function PostDetailPage() {
     setReplies(toggleExpansion(replies));
   };
 
-  const handleReply = (post: Post) => {
-    setReplyToPost(post);
+  const handleReply = (post: Post | Reply) => {
+    setReplyToPost(post as Post);
     setShowReplyModal(true);
   };
 
