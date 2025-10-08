@@ -20,6 +20,11 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  const extractYouTubeId = (url: string): string | null => {
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+    return match ? match[1] : null;
+  };
+
   const fetchPreviewData = useCallback(async () => {
     try {
       let mockData: LinkPreviewData = {
@@ -83,11 +88,6 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
   useEffect(() => {
     fetchPreviewData();
   }, [fetchPreviewData]);
-
-  const extractYouTubeId = (url: string): string | null => {
-    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
-    return match ? match[1] : null;
-  };
 
   const handlePress = () => {
     window.open(url, '_blank', 'noopener,noreferrer');

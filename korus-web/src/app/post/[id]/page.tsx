@@ -8,9 +8,12 @@ import dynamic from 'next/dynamic';
 import Header from '@/components/Header';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
+import ReplyModal from '@/components/ReplyModal';
+import PostOptionsModal from '@/components/PostOptionsModal';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/Button';
 import type { Post, Reply } from '@/types';
+import { MOCK_POSTS, MOCK_REPLIES } from '@/data/mockData';
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -47,137 +50,11 @@ export default function PostDetailPage() {
     try {
       setLoading(true);
 
-      // Mock data matching homepage
-      const mockPosts = [
-        {
-          id: 1,
-          user: 'solana_dev',
-          content: 'Just deployed my first smart contract on Solana! The speed is insane ⚡',
-          likes: 42,
-          replies: 8,
-          tips: 0.5,
-          time: '2h ago',
-          isPremium: true,
-          isShoutout: false,
-          image: null,
-        },
-        {
-          id: 2,
-          user: 'nft_collector',
-          content: 'Check out this new NFT collection I found! The art is incredible 🎨',
-          likes: 28,
-          replies: 5,
-          tips: 0.3,
-          time: '4h ago',
-          isPremium: false,
-          isShoutout: true,
-          image: 'https://picsum.photos/600/400?random=1',
-        },
-        {
-          id: 3,
-          user: 'game_master',
-          content: 'Who wants to play Tic Tac Toe? 0.1 SOL wager 🎮',
-          likes: 15,
-          replies: 3,
-          tips: 0.1,
-          time: '6h ago',
-          isPremium: false,
-          isShoutout: false,
-          image: null,
-        },
-        {
-          id: 4,
-          user: 'crypto_news',
-          content: 'Amazing tutorial on building with Solana! Check it out: https://solana.com',
-          likes: 67,
-          replies: 12,
-          tips: 1.2,
-          time: '8h ago',
-          isPremium: true,
-          isShoutout: false,
-          image: null,
-        }
-      ];
-
-      const foundPost = mockPosts.find(p => p.id === parseInt(postId));
+      const foundPost = MOCK_POSTS.find(p => p.id === parseInt(postId));
 
       if (foundPost) {
         setPost(foundPost);
-
-        // Mock threaded replies in chronological order
-        const mockReplies: Reply[] = [
-          {
-            id: 1,
-            user: 'alice_sol',
-            content: 'This is amazing! Congrats on the deployment 🎉',
-            likes: 12,
-            replies: [
-              {
-                id: 11,
-                user: 'bob_crypto',
-                content: 'Totally agree! Solana is the future',
-                likes: 5,
-                replies: [],
-                time: '1h ago',
-                isPremium: false,
-              },
-              {
-                id: 12,
-                user: 'charlie_dev',
-                content: 'What kind of contract did you deploy?',
-                likes: 3,
-                replies: [],
-                time: '55m ago',
-                isPremium: true,
-              }
-            ],
-            time: '1h 30m ago',
-            isPremium: false,
-            isExpanded: false,
-          },
-          {
-            id: 2,
-            user: 'dev_master',
-            content: 'Can you share the code? Would love to learn!',
-            likes: 8,
-            replies: [],
-            time: '1h 15m ago',
-            isPremium: true,
-            isExpanded: false,
-          },
-          {
-            id: 3,
-            user: 'solana_fan',
-            content: 'Welcome to the Solana ecosystem! 🚀',
-            likes: 15,
-            replies: [
-              {
-                id: 31,
-                user: 'ecosystem_guide',
-                content: 'Make sure to check out the developer docs!',
-                likes: 2,
-                replies: [],
-                time: '45m ago',
-                isPremium: false,
-              }
-            ],
-            time: '1h ago',
-            isPremium: false,
-            isExpanded: false,
-          },
-          {
-            id: 4,
-            user: 'new_builder',
-            content: 'This gives me motivation to start building too!',
-            likes: 6,
-            replies: [],
-            time: '30m ago',
-            isPremium: false,
-            isExpanded: false,
-          }
-        ];
-
-        setReplies(mockReplies);
+        setReplies(MOCK_REPLIES);
       }
     } catch (error) {
       // Failed to load post
