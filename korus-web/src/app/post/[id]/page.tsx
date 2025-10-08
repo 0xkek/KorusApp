@@ -8,9 +8,12 @@ import dynamic from 'next/dynamic';
 import Header from '@/components/Header';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
+import { useToast } from '@/hooks/useToast';
+import { Button } from '@/components/Button';
 
-// Dynamically import modal for code splitting
+// Dynamically import modals for code splitting
 const ReplyModal = dynamic(() => import('@/components/ReplyModal'), { ssr: false });
+const PostOptionsModal = dynamic(() => import('@/components/PostOptionsModal'), { ssr: false });
 
 interface Reply {
   id: number;
@@ -40,6 +43,7 @@ export default function PostDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { connected, publicKey } = useWallet();
+  const { showSuccess, showError } = useToast();
   const postId = params.id as string;
 
   const [post, setPost] = useState<Post | null>(null);
@@ -50,6 +54,13 @@ export default function PostDetailPage() {
   const [showReplyModal, setShowReplyModal] = useState(false);
   const [replyToPost, setReplyToPost] = useState<any>(null);
   const [replyContent, setReplyContent] = useState('');
+  const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [inlineReplyContent, setInlineReplyContent] = useState('');
+  const [isPostingReply, setIsPostingReply] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showGifPicker, setShowGifPicker] = useState(false);
 
   useEffect(() => {
     if (!connected) {
@@ -260,6 +271,90 @@ export default function PostDetailPage() {
     setShowReplyModal(true);
   };
 
+  const handleInlineReply = async () => {
+    if (!connected) {
+      showError('Please connect your wallet to reply');
+      return;
+    }
+
+    if (!inlineReplyContent.trim()) {
+      showError('Please write your reply');
+      return;
+    }
+
+    if (inlineReplyContent.length > 280) {
+      showError('Reply is too long. Maximum 280 characters.');
+      return;
+    }
+
+    setIsPostingReply(true);
+
+    try {
+      // TODO: Implement actual API call to create reply
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Create new reply object
+      const newReply: Reply = {
+        id: Date.now(),
+        user: publicKey?.toBase58().slice(0, 15) || 'current_user',
+        content: inlineReplyContent,
+        likes: 0,
+        replies: [],
+        time: 'now',
+        isPremium: false,
+        isExpanded: false,
+      };
+
+      // Add reply to the list
+      setReplies([newReply, ...replies]);
+
+      // Update post reply count
+      if (post) {
+        setPost({
+          ...post,
+          replies: post.replies + 1
+        });
+      }
+
+      showSuccess('Reply posted successfully!');
+      setInlineReplyContent('');
+      setSelectedFiles([]);
+    } catch (error) {
+      showError('Failed to post reply. Please try again.');
+    } finally {
+      setIsPostingReply(false);
+    }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    const maxFileSize = 10 * 1024 * 1024; // 10MB
+
+    const validFiles = files.filter(file => {
+      if (file.size > maxFileSize) {
+        showError(`File "${file.name}" is too large. Maximum size is 10MB.`);
+        return false;
+      }
+      return true;
+    });
+
+    setSelectedFiles(prev => [...prev, ...validFiles].slice(0, 4));
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    setInlineReplyContent(prev => prev + emoji);
+    setShowEmojiPicker(false);
+  };
+
+  const handleGifSelect = (gifUrl: string) => {
+    setInlineReplyContent(prev => prev + ` ${gifUrl}`);
+    setShowGifPicker(false);
+  };
+
   const renderReply = (reply: Reply, level: number = 0, isTopLevel: boolean = true) => {
     const hasReplies = reply.replies && reply.replies.length > 0;
 
@@ -278,7 +373,12 @@ export default function PostDetailPage() {
             <div className="flex-1 min-w-0">
               {/* Header */}
               <div className="flex items-center gap-2 mb-1">
-                <span className="font-bold text-white">{reply.user}</span>
+                <Link
+                  href={`/profile/${reply.wallet || reply.user}`}
+                  className="font-bold text-white hover:underline"
+                >
+                  {reply.user}
+                </Link>
                 {reply.isPremium && (
                   <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
                     <svg className="w-2.5 h-2.5" fill="black" viewBox="0 0 24 24">
@@ -496,7 +596,12 @@ export default function PostDetailPage() {
                 <div className="flex-1 min-w-0">
                   {/* Post Header */}
                   <div className="flex items-center gap-2 mb-2">
-                    <span className={`font-bold hover:underline cursor-pointer ${post.isShoutout ? 'text-korus-primary' : 'text-white'}`}>{post.user}</span>
+                    <Link
+                      href={`/profile/${post.wallet || post.user}`}
+                      className={`font-bold hover:underline cursor-pointer ${post.isShoutout ? 'text-korus-primary' : 'text-white'}`}
+                    >
+                      {post.user}
+                    </Link>
 
                     {/* Premium Badge */}
                     {post.isPremium && (
@@ -513,7 +618,15 @@ export default function PostDetailPage() {
 
                     {/* More button */}
                     <div className="ml-auto">
-                      <button className="text-korus-textSecondary hover:text-white hover:bg-korus-surface/60 rounded-full p-1 transition-colors">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedPost(post);
+                          setShowPostOptionsModal(true);
+                        }}
+                        className="text-korus-textSecondary hover:text-white hover:bg-korus-surface/60 rounded-full p-1 transition-colors"
+                        aria-label="Post options"
+                      >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
                         </svg>
@@ -587,6 +700,140 @@ export default function PostDetailPage() {
               </div>
             </div>
 
+            {/* Inline Reply Composer */}
+            <div className="border-b border-korus-border/50">
+              <div className="px-6 py-4">
+                <div className="flex gap-3">
+                  {/* Avatar */}
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0">
+                    <span className="text-black font-bold text-sm">
+                      {publicKey?.toBase58().slice(0, 2).toUpperCase() || 'U'}
+                    </span>
+                  </div>
+
+                  <div className="flex-1">
+                    <textarea
+                      value={inlineReplyContent}
+                      onChange={(e) => setInlineReplyContent(e.target.value)}
+                      placeholder="Post your reply..."
+                      className="w-full bg-transparent text-white text-sm resize-none placeholder-korus-textTertiary min-h-[60px] pb-2"
+                      style={{ border: 'none', outline: 'none' }}
+                      rows={2}
+                    />
+
+                    {/* File Previews */}
+                    {selectedFiles.length > 0 && (
+                      <div className="grid grid-cols-2 gap-3 mt-3">
+                        {selectedFiles.map((file, index) => (
+                          <div key={index} className="relative group">
+                            {file.type.startsWith('image/') ? (
+                              <img
+                                src={URL.createObjectURL(file)}
+                                alt="Upload preview"
+                                className="w-full h-32 object-cover rounded-xl border border-korus-border"
+                              />
+                            ) : (
+                              <div className="w-full h-32 bg-korus-surface/40 border border-korus-border rounded-xl flex items-center justify-center">
+                                <div className="text-center">
+                                  <svg className="w-8 h-8 mx-auto mb-2 text-korus-textSecondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                  </svg>
+                                  <p className="text-xs text-korus-textSecondary truncate px-2">{file.name}</p>
+                                </div>
+                              </div>
+                            )}
+
+                            <button
+                              onClick={() => removeFile(index)}
+                              className="absolute top-2 right-2 w-6 h-6 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Reply Actions */}
+                    <div className="flex items-center justify-between mt-2">
+                      <div className="flex items-center gap-1">
+                        {/* Media Upload */}
+                        <label className="flex items-center justify-center w-8 h-8 rounded-full text-korus-primary/60 hover:text-korus-primary hover:bg-korus-surface/20 transition-all duration-200 cursor-pointer">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*,video/*"
+                            multiple
+                            onChange={handleFileSelect}
+                          />
+                        </label>
+
+                        {/* GIF Button */}
+                        <button
+                          onClick={() => setShowGifPicker(!showGifPicker)}
+                          className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${
+                            showGifPicker
+                              ? 'text-korus-primary bg-korus-primary/20'
+                              : 'text-korus-primary/60 hover:text-korus-primary hover:bg-korus-surface/20'
+                          }`}
+                        >
+                          <span className="text-xs font-bold">GIF</span>
+                        </button>
+
+                        {/* Emoji Button */}
+                        <button
+                          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                          className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${
+                            showEmojiPicker
+                              ? 'text-korus-primary bg-korus-primary/20'
+                              : 'text-korus-primary/60 hover:text-korus-primary hover:bg-korus-surface/20'
+                          }`}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M16 10h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {/* Character Counter - only show when typing */}
+                        {inlineReplyContent.length > 0 && (
+                          <div className={`text-xs font-medium ${
+                            inlineReplyContent.length > 280
+                              ? 'text-red-400'
+                              : inlineReplyContent.length > 224
+                              ? 'text-yellow-400'
+                              : 'text-korus-textSecondary/60'
+                          }`}>
+                            {inlineReplyContent.length > 280 && `-${inlineReplyContent.length - 280}`}
+                            {inlineReplyContent.length <= 280 && `${280 - inlineReplyContent.length}`}
+                          </div>
+                        )}
+
+                        {/* Reply Button */}
+                        <button
+                          onClick={handleInlineReply}
+                          disabled={!inlineReplyContent.trim() || inlineReplyContent.length > 280 || isPostingReply || !connected}
+                          className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${
+                            !inlineReplyContent.trim() || inlineReplyContent.length > 280 || isPostingReply || !connected
+                              ? 'bg-korus-primary/20 text-korus-primary/40 cursor-not-allowed'
+                              : 'bg-gradient-to-r from-korus-primary to-korus-secondary text-black hover:shadow-lg hover:shadow-korus-primary/20'
+                          }`}
+                        >
+                          {isPostingReply ? 'Posting...' : !connected ? 'Connect' : 'Reply'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Replies Section */}
             <div className="border-l-2 border-korus-primary/20 ml-6">
               {replies.length === 0 ? (
@@ -611,8 +858,85 @@ export default function PostDetailPage() {
         post={replyToPost}
       />
 
+      {/* Post Options Modal */}
+      <PostOptionsModal
+        isOpen={showPostOptionsModal}
+        onClose={() => {
+          setShowPostOptionsModal(false);
+          setSelectedPost(null);
+        }}
+        post={selectedPost}
+      />
+
       <LeftSidebar />
       <RightSidebar />
+
+      {/* Emoji Picker Modal */}
+      {showEmojiPicker && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowEmojiPicker(false)}>
+          <div className="bg-korus-surface/95 backdrop-blur-md rounded-2xl max-w-md w-full max-h-[80vh] border border-korus-border shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-korus-border">
+              <h3 className="text-lg font-bold text-white">Choose Emoji</h3>
+              <button
+                onClick={() => setShowEmojiPicker(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-korus-surface/40 border border-korus-borderLight text-korus-textSecondary hover:bg-korus-surface/60 hover:text-white transition-all duration-200"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[60vh]">
+              <div className="grid grid-cols-8 gap-2">
+                {['😀', '😂', '🤣', '😊', '😍', '🥰', '😘', '🤔', '😎', '😢', '😭', '😡', '🤯', '🥳', '😴', '🤤',
+                  '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '👋', '🤚', '🖐️', '✋', '👏', '🙌', '🤝', '🙏', '✊',
+                  '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘',
+                  '🎉', '🎊', '🎈', '🎁', '🎂', '🎄', '🎃', '✨', '🎯', '🎪', '🎨', '🎭', '🎬', '🎮', '🎵', '🎶',
+                  '🔥', '💯', '💫', '⭐', '🌟', '⚡', '💥', '💨', '🌈', '☀️', '🌙', '⭐', '🌊', '🌍', '🌎', '🌏',
+                  '💰', '💸', '💵', '💎', '🚀', '📈', '📉', '💹', '🏦', '💳', '⚖️', '🎯', '✅', '❌', '⚠️', '💯',
+                  '🍕', '🍔', '🍟', '🌭', '🍿', '🧂', '🥓', '🍳', '🧀', '🥞', '🧇', '🍞', '🥖', '🥨', '🥯', '🥐',
+                  '☕', '🍵', '🧃', '🥤', '🍻', '🍷', '🥂', '🍾', '🍸', '🍹', '🍺', '🥃', '🥛', '🧋', '🧊', '🍯'].map((emoji, index) => (
+                  <button
+                    key={`emoji-${index}-${emoji}`}
+                    onClick={() => handleEmojiSelect(emoji)}
+                    className="w-10 h-10 text-xl hover:bg-korus-surface/60 rounded-lg transition-colors flex items-center justify-center hover:scale-110 transform"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* GIF Picker Modal */}
+      {showGifPicker && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowGifPicker(false)}>
+          <div className="bg-korus-surface/95 backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[80vh] border border-korus-border shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-korus-border">
+              <h3 className="text-lg font-bold text-white">Choose GIF</h3>
+              <button
+                onClick={() => setShowGifPicker(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-korus-surface/40 border border-korus-borderLight text-korus-textSecondary hover:bg-korus-surface/60 hover:text-white transition-all duration-200"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[60vh]">
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🎬</div>
+                <p className="text-korus-text text-lg font-medium">GIF Integration Coming Soon</p>
+                <p className="text-korus-textSecondary text-sm mt-2">
+                  We'll integrate with Tenor or Giphy API to bring you the best GIFs
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

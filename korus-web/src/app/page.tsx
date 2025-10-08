@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import LinkPreview from '@/components/LinkPreview';
 import VideoPlayer from '@/components/VideoPlayer';
+import { FeedSkeleton } from '@/components/Skeleton';
 import { useToast } from '@/hooks/useToast';
 
 // Dynamically import modals for code splitting
@@ -20,6 +22,8 @@ const TipModal = dynamic(() => import('@/components/TipModal'), { ssr: false });
 const ShareModal = dynamic(() => import('@/components/ShareModal'), { ssr: false });
 const RepostModal = dynamic(() => import('@/components/RepostModal'), { ssr: false });
 const ReplyModal = dynamic(() => import('@/components/ReplyModal'), { ssr: false });
+const DrawingCanvasInline = dynamic(() => import('@/components/DrawingCanvasInline'), { ssr: false });
+const ShoutoutCountdown = dynamic(() => import('@/components/ShoutoutCountdown'), { ssr: false });
 
 export default function Home() {
   const { connected, publicKey } = useWallet();
@@ -42,6 +46,12 @@ export default function Home() {
   const [postToRepost, setPostToRepost] = useState<any>(null);
   const [postToReply, setPostToReply] = useState<any>(null);
   const [postInteractions, setPostInteractions] = useState<{[key: number]: {liked: boolean, reposted: boolean, replied: boolean, tipped: boolean}}>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showGifPicker, setShowGifPicker] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [showDrawCanvas, setShowDrawCanvas] = useState(false);
+  const [shoutoutQueue, setShoutoutQueue] = useState<any[]>([]); // Queue for pending shoutouts
 
   useEffect(() => {
     if (!connected) {
@@ -57,6 +67,7 @@ export default function Home() {
         {
           id: 1,
           user: 'solana_dev',
+          wallet: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU',
           content: 'Just deployed my first smart contract on Solana! The speed is insane ⚡',
           likes: 42,
           replies: 8,
@@ -71,6 +82,7 @@ export default function Home() {
         {
           id: 2,
           user: 'nft_collector',
+          wallet: '8yBJKB8pDXw5gKvKx8pTTqGHLpP9R1vK3YFDqN5eXYzB',
           content: 'Check out this new NFT collection I found! The art is incredible 🎨',
           likes: 28,
           replies: 5,
@@ -79,12 +91,15 @@ export default function Home() {
           isPremium: false,
           isShoutout: true,
           isSponsored: false,
+          shoutoutDuration: 120, // 2 hours in minutes
+          shoutoutStartTime: Date.now(), // Start time for countdown
           image: 'https://picsum.photos/600/400?random=1',
           avatar: null
         },
         {
           id: 3,
           user: 'game_master',
+          wallet: '3qRZ5vQXJT4KxEfvN8P2mH7g9kW5dLsYbU8VFxRjCzXa',
           content: 'Who wants to play Tic Tac Toe? 0.1 SOL wager 🎮',
           likes: 15,
           replies: 3,
@@ -99,6 +114,7 @@ export default function Home() {
         {
           id: 4,
           user: 'crypto_news',
+          wallet: '9mWRAB2SNxPgTK5v8NhYfE3Xz7QJ6kRsL4DUwPbCyHFa',
           content: 'Amazing tutorial on building with Solana! Check it out: https://solana.com',
           likes: 67,
           replies: 12,
@@ -113,6 +129,7 @@ export default function Home() {
         {
           id: 5,
           user: 'tech_explorer',
+          wallet: '5kLPMx8gVTbN2zQw9RYjE6FuXcH7pKsDv4WaUyJnBxTg',
           content: 'Just found this awesome video https://youtube.com/watch?v=dQw4w9WgXcQ',
           likes: 34,
           replies: 7,
@@ -127,6 +144,7 @@ export default function Home() {
         {
           id: 6,
           user: 'video_creator',
+          wallet: '4tNXZq7vQBw3kP9jW5LrE8xYgFHsDuM6TcRUaKpVyJbN',
           content: 'Check out my latest tutorial on Solana development! 🎥',
           likes: 89,
           replies: 15,
@@ -148,7 +166,11 @@ export default function Home() {
         return 0;
       });
 
-      setPosts(mockPosts);
+      // Simulate API loading delay
+      setTimeout(() => {
+        setPosts(mockPosts);
+        setIsLoading(false);
+      }, 500);
     }
   }, [posts]);
 
@@ -160,7 +182,83 @@ export default function Home() {
 
   // Modal handlers
   const handlePostCreate = (post: any) => {
-    setPosts(prev => [post, ...prev]);
+    if (post.isShoutout) {
+      // Check if there's already an active shoutout
+      const hasActiveShoutout = posts.some(p => p.isShoutout);
+
+      if (hasActiveShoutout) {
+        // Add to queue instead of replacing
+        setShoutoutQueue(prev => [...prev, post]);
+        showSuccess(`Shoutout queued! Position in queue: ${shoutoutQueue.length + 1}`);
+      } else {
+        // No active shoutout, display immediately
+        setPosts(prev => {
+          const regularPosts = prev.filter(p => !p.isShoutout);
+          return [post, ...regularPosts];
+        });
+        showSuccess('Shoutout created successfully!');
+      }
+    } else {
+      // Regular post: insert after shoutouts
+      setPosts(prev => {
+        const shoutouts = prev.filter(p => p.isShoutout);
+        const regularPosts = prev.filter(p => !p.isShoutout);
+        return [...shoutouts, post, ...regularPosts];
+      });
+      showSuccess('Post created successfully!');
+    }
+  };
+
+  // Function to activate the next shoutout in queue
+  const activateNextShoutout = () => {
+    if (shoutoutQueue.length > 0) {
+      const [nextShoutout, ...remainingQueue] = shoutoutQueue;
+
+      // Update the start time to now (when it actually starts)
+      const activatedShoutout = {
+        ...nextShoutout,
+        shoutoutStartTime: Date.now()
+      };
+
+      setPosts(prev => {
+        const regularPosts = prev.filter(p => !p.isShoutout);
+        return [activatedShoutout, ...regularPosts];
+      });
+
+      setShoutoutQueue(remainingQueue);
+      showSuccess('Next shoutout is now active!');
+    }
+  };
+
+  const handleRegularPost = () => {
+    if (!composeText.trim() && selectedFiles.length === 0) return;
+
+    const newPost = {
+      id: Date.now(),
+      user: publicKey?.toBase58().slice(0, 8) || 'anonymous',
+      content: composeText,
+      likes: 0,
+      replies: 0,
+      tips: 0,
+      time: 'Just now',
+      isPremium: false,
+      isShoutout: false,
+      isSponsored: false,
+      image: selectedFiles.length > 0 && selectedFiles[0].type.startsWith('image/')
+        ? URL.createObjectURL(selectedFiles[0])
+        : null,
+      avatar: null
+    };
+
+    // Insert new post after any shoutouts (shoutouts should always be on top)
+    setPosts(prev => {
+      const shoutouts = prev.filter(p => p.isShoutout);
+      const regularPosts = prev.filter(p => !p.isShoutout);
+      return [...shoutouts, newPost, ...regularPosts];
+    });
+    setComposeText('');
+    setSelectedFiles([]);
+    setShowDrawCanvas(false);
     showSuccess('Post created successfully!');
   };
 
@@ -171,6 +269,52 @@ export default function Home() {
 
   const handleNotificationsToggle = () => {
     setShowNotifications(!showNotifications);
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    const maxFileSize = 10 * 1024 * 1024; // 10MB
+
+    const validFiles = files.filter(file => {
+      if (file.size > maxFileSize) {
+        showError(`File "${file.name}" is too large. Maximum size is 10MB.`);
+        return false;
+      }
+      return true;
+    });
+
+    setSelectedFiles(prev => [...prev, ...validFiles].slice(0, 4));
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    setComposeText(prev => prev + emoji);
+    setShowEmojiPicker(false);
+  };
+
+  const handleGifSelect = (gifUrl: string) => {
+    // For now, just insert the GIF URL into the text
+    setComposeText(prev => prev + ` ${gifUrl}`);
+    setShowGifPicker(false);
+  };
+
+  const handleDrawingSave = (drawingDataUrl: string) => {
+    // Convert data URL to File and add to selectedFiles
+    fetch(drawingDataUrl)
+      .then(res => res.blob())
+      .then(blob => {
+        const file = new File([blob], `drawing-${Date.now()}.png`, { type: 'image/png' });
+        setSelectedFiles(prev => [...prev, file].slice(0, 4));
+        setShowDrawCanvas(false);
+        showSuccess('Drawing added to your post!');
+      })
+      .catch(err => {
+        showError('Failed to save drawing');
+        console.error(err);
+      });
   };
 
   // Interaction handlers
@@ -379,33 +523,113 @@ export default function Home() {
                     value={composeText}
                     onChange={(e) => setComposeText(e.target.value)}
                     placeholder="What's on your mind? Share your experience, ask for advice, or offer support..."
-                    className="w-full bg-transparent text-white text-xl resize-none outline-none placeholder-korus-textTertiary min-h-[120px]"
-                    rows={3}
+                    className={`w-full bg-transparent text-white text-xl resize-none outline-none placeholder-korus-textTertiary ${showDrawCanvas ? 'min-h-[60px]' : 'min-h-[120px]'}`}
+                    rows={showDrawCanvas ? 2 : 3}
                   />
+
+                  {/* Inline Drawing Canvas */}
+                  {showDrawCanvas && (
+                    <div className="mt-3 p-3 bg-korus-surface/20 border border-korus-borderLight rounded-xl">
+                      <DrawingCanvasInline
+                        onSave={handleDrawingSave}
+                        onClose={() => setShowDrawCanvas(false)}
+                      />
+                    </div>
+                  )}
+
+                  {/* File Previews */}
+                  {selectedFiles.length > 0 && (
+                    <div className="grid grid-cols-2 gap-3 mt-4">
+                      {selectedFiles.map((file, index) => (
+                        <div key={index} className="relative group">
+                          {file.type.startsWith('image/') ? (
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt="Upload preview"
+                              className="w-full h-32 object-cover rounded-xl border border-korus-border"
+                            />
+                          ) : (
+                            <div className="w-full h-32 bg-korus-surface/40 border border-korus-border rounded-xl flex items-center justify-center">
+                              <div className="text-center">
+                                <svg className="w-8 h-8 mx-auto mb-2 text-korus-textSecondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <p className="text-xs text-korus-textSecondary truncate px-2">{file.name}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          <button
+                            onClick={() => removeFile(index)}
+                            className="absolute top-2 right-2 w-6 h-6 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Post Options */}
                   <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center gap-2">
-                      <button className="flex items-center justify-center w-10 h-10 bg-korus-surface/40 backdrop-blur-sm border border-korus-borderLight rounded-xl text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10">
+                      {/* Image Upload */}
+                      <label className="flex items-center justify-center w-10 h-10 bg-korus-surface/40 backdrop-blur-sm border border-korus-borderLight rounded-xl text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/*,video/*"
+                          multiple
+                          onChange={handleFileSelect}
+                        />
+                      </label>
+                      {/* GIF Button */}
+                      <button
+                        onClick={() => setShowGifPicker(!showGifPicker)}
+                        className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10 ${
+                          showGifPicker
+                            ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
+                            : 'bg-korus-surface/40 border-korus-borderLight text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border'
+                        }`}
+                      >
+                        <span className="text-xs font-bold">GIF</span>
                       </button>
-                      <button className="flex items-center justify-center w-10 h-10 bg-korus-surface/40 backdrop-blur-sm border border-korus-borderLight rounded-xl text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10">
+                      {/* Draw/Pen Button */}
+                      <button
+                        onClick={() => setShowDrawCanvas(!showDrawCanvas)}
+                        className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10 ${
+                          showDrawCanvas
+                            ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
+                            : 'bg-korus-surface/40 border-korus-borderLight text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border'
+                        }`}
+                      >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                         </svg>
                       </button>
-                      <button className="flex items-center justify-center w-10 h-10 bg-korus-surface/40 backdrop-blur-sm border border-korus-borderLight rounded-xl text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10">
+                      {/* Emoji Button */}
+                      <button
+                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10 ${
+                          showEmojiPicker
+                            ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
+                            : 'bg-korus-surface/40 border-korus-borderLight text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border'
+                        }`}
+                      >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M16 10h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </button>
                       <button
-                        onClick={() => composeText.trim() && setShowShoutoutModal(true)}
-                        disabled={!composeText.trim()}
+                        onClick={() => (composeText.trim() || selectedFiles.length > 0) && setShowShoutoutModal(true)}
+                        disabled={!composeText.trim() && selectedFiles.length === 0}
                         className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm border rounded-xl transition-all duration-200 ${
-                          composeText.trim()
+                          composeText.trim() || selectedFiles.length > 0
                             ? 'bg-korus-surface/40 border-korus-borderLight text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer'
                             : 'bg-korus-surface/20 border-korus-borderLight/50 text-korus-textTertiary cursor-not-allowed opacity-50'
                         }`}
@@ -414,7 +638,11 @@ export default function Home() {
                       </button>
                     </div>
 
-                    <button className="px-6 py-2 bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm">
+                    <button
+                      onClick={handleRegularPost}
+                      disabled={!composeText.trim() && selectedFiles.length === 0}
+                      className="px-6 py-2 bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
+                    >
                       Post
                     </button>
                   </div>
@@ -422,9 +650,29 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Shoutout Queue Indicator */}
+            {shoutoutQueue.length > 0 && (
+              <div className="bg-korus-surface/40 border border-korus-border rounded-xl p-4 mb-4 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 text-korus-primary">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="font-bold">Shoutout Queue:</span>
+                  </div>
+                  <span className="text-white">
+                    {shoutoutQueue.length} shoutout{shoutoutQueue.length > 1 ? 's' : ''} waiting
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* Feed Posts */}
             <div>
-          {posts.map((post) => (
+          {isLoading ? (
+            <FeedSkeleton count={5} />
+          ) : (
+            posts.map((post) => (
             <div
               key={post.id}
               className={`backdrop-blur-sm p-0 transition-all duration-200 cursor-pointer group ${
@@ -436,14 +684,28 @@ export default function Home() {
             >
               {/* Shoutout Banner */}
               {post.isShoutout && (
-                <div className="bg-gradient-to-r from-korus-primary to-korus-secondary px-5 py-3 flex items-center justify-center gap-3">
-                  <span className="text-black text-lg">📢</span>
-                  <span className="text-black font-black text-lg tracking-[3px]">SHOUTOUT</span>
-                  <div className="flex gap-1">
-                    <span className="text-black text-sm">⭐</span>
-                    <span className="text-black text-sm">⭐</span>
-                    <span className="text-black text-sm">⭐</span>
+                <div className="bg-gradient-to-r from-korus-primary to-korus-secondary px-5 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-black text-lg">📢</span>
+                    <span className="text-black font-black text-lg tracking-[3px]">SHOUTOUT</span>
+                    <div className="flex gap-1">
+                      <span className="text-black text-sm">⭐</span>
+                      <span className="text-black text-sm">⭐</span>
+                      <span className="text-black text-sm">⭐</span>
+                    </div>
                   </div>
+                  {post.shoutoutStartTime && post.shoutoutDuration && (
+                    <ShoutoutCountdown
+                      startTime={post.shoutoutStartTime}
+                      duration={post.shoutoutDuration}
+                      onExpire={() => {
+                        // Remove the expired shoutout
+                        setPosts(prev => prev.filter(p => p.id !== post.id));
+                        // Activate next shoutout in queue
+                        activateNextShoutout();
+                      }}
+                    />
+                  )}
                 </div>
               )}
 
@@ -469,7 +731,13 @@ export default function Home() {
 
                   {/* Post Header */}
                   <div className="flex items-center gap-2 mb-2">
-                    <span className={`font-bold hover:underline cursor-pointer ${post.isShoutout ? 'text-korus-primary' : 'text-white'}`}>{post.user}</span>
+                    <Link
+                      href={`/profile/${post.wallet || post.user}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className={`font-bold hover:underline cursor-pointer ${post.isShoutout ? 'text-korus-primary' : 'text-white'}`}
+                    >
+                      {post.user}
+                    </Link>
 
                     {/* Premium Badge */}
                     {post.isPremium && (
@@ -558,7 +826,15 @@ export default function Home() {
                   {/* Post Image */}
                   {!((post as any).isRepost) && post.image && (
                     <div className="mb-3 rounded-2xl overflow-hidden border border-korus-border">
-                      <img src={post.image} alt="Post content" className="w-full h-auto" />
+                      <img
+                        src={post.image}
+                        alt="Post content"
+                        className="w-full h-auto"
+                        onError={(e) => {
+                          // Hide broken image on error
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
                     </div>
                   )}
 
@@ -673,8 +949,8 @@ export default function Home() {
                 </div>
               </div>
             </div>
-          ))}
-
+          ))
+          )}
             </div>
         </div>
       </div>
@@ -694,6 +970,10 @@ export default function Home() {
         isOpen={showCreatePostModal}
         onClose={() => setShowCreatePostModal(false)}
         onPostCreate={handlePostCreate}
+        queueInfo={{
+          activeShoutout: posts.find(p => p.isShoutout) || null,
+          queuedShoutouts: shoutoutQueue
+        }}
       />
 
       <PostOptionsModal
@@ -713,6 +993,10 @@ export default function Home() {
           // Handle shoutout creation
           showSuccess(`Shoutout created for ${duration} minutes at ${price} SOL!`);
           setComposeText(''); // Clear compose text after shoutout
+        }}
+        queueInfo={{
+          activeShoutout: posts.find(p => p.isShoutout) || null,
+          queuedShoutouts: shoutoutQueue
         }}
       />
 
@@ -784,6 +1068,79 @@ export default function Home() {
           }
         }}
       />
+
+      {/* Emoji Picker Modal */}
+      {showEmojiPicker && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowEmojiPicker(false)}>
+          <div className="bg-korus-surface/95 backdrop-blur-md rounded-2xl max-w-md w-full max-h-[80vh] border border-korus-border shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-korus-border">
+              <h3 className="text-lg font-bold text-white">Choose Emoji</h3>
+              <button
+                onClick={() => setShowEmojiPicker(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-korus-surface/40 border border-korus-borderLight text-korus-textSecondary hover:bg-korus-surface/60 hover:text-white transition-all duration-200"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Scrollable Emoji Grid */}
+            <div className="p-4 overflow-y-auto max-h-[60vh]">
+              <div className="grid grid-cols-8 gap-2">
+                {['😀', '😂', '🤣', '😊', '😍', '🥰', '😘', '🤔', '😎', '😢', '😭', '😡', '🤯', '🥳', '😴', '🤤',
+                  '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '👋', '🤚', '🖐️', '✋', '👏', '🙌', '🤝', '🙏', '✊',
+                  '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘',
+                  '🎉', '🎊', '🎈', '🎁', '🎂', '🎄', '🎃', '✨', '🎯', '🎪', '🎨', '🎭', '🎬', '🎮', '🎵', '🎶',
+                  '🔥', '💯', '💫', '⭐', '🌟', '⚡', '💥', '💨', '🌈', '☀️', '🌙', '⭐', '🌊', '🌍', '🌎', '🌏',
+                  '💰', '💸', '💵', '💎', '🚀', '📈', '📉', '💹', '🏦', '💳', '⚖️', '🎯', '✅', '❌', '⚠️', '💯',
+                  '🍕', '🍔', '🍟', '🌭', '🍿', '🧂', '🥓', '🍳', '🧀', '🥞', '🧇', '🍞', '🥖', '🥨', '🥯', '🥐',
+                  '☕', '🍵', '🧃', '🥤', '🍻', '🍷', '🥂', '🍾', '🍸', '🍹', '🍺', '🥃', '🥛', '🧋', '🧊', '🍯'].map((emoji, index) => (
+                  <button
+                    key={`emoji-${index}-${emoji}`}
+                    onClick={() => handleEmojiSelect(emoji)}
+                    className="w-10 h-10 text-xl hover:bg-korus-surface/60 rounded-lg transition-colors flex items-center justify-center hover:scale-110 transform"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* GIF Picker Modal */}
+      {showGifPicker && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowGifPicker(false)}>
+          <div className="bg-korus-surface/95 backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[80vh] border border-korus-border shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-korus-border">
+              <h3 className="text-lg font-bold text-white">Choose GIF</h3>
+              <button
+                onClick={() => setShowGifPicker(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-korus-surface/40 border border-korus-borderLight text-korus-textSecondary hover:bg-korus-surface/60 hover:text-white transition-all duration-200"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* GIF Grid - Placeholder for now */}
+            <div className="p-4 overflow-y-auto max-h-[60vh]">
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🎬</div>
+                <p className="text-korus-text text-lg font-medium">GIF Integration Coming Soon</p>
+                <p className="text-korus-textSecondary text-sm mt-2">
+                  We'll integrate with Tenor or Giphy API to bring you the best GIFs
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <MobileMenuModal
         isOpen={showMobileMenu}

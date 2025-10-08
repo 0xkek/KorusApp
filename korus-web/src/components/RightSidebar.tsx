@@ -497,8 +497,8 @@ export default function RightSidebar({ showNotifications = false, onNotification
       <div className="bg-korus-surface/40 rounded-2xl p-4 mb-6">
         <h2 className="text-2xl font-bold text-korus-text mb-4">Who to follow</h2>
         <div className="space-y-4">
-          {whoToFollow.map((user, index) => (
-            <div key={index} className="flex items-center justify-between">
+          {whoToFollow.map((user) => (
+            <div key={user.username} className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center">
                   <span className="text-black font-bold text-sm">

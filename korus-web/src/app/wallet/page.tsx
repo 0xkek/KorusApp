@@ -42,8 +42,9 @@ export default function WalletPage() {
     setLoading(true);
     setHasError(false);
     try {
-      // Use a free RPC endpoint that allows more requests
-      const connection = new Connection('https://api.devnet.solana.com');
+      // Use RPC endpoint from environment variables
+      const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com';
+      const connection = new Connection(rpcUrl);
       const bal = await connection.getBalance(publicKey);
       setBalance(bal / LAMPORTS_PER_SOL);
       if (hasError) {
@@ -94,15 +95,60 @@ export default function WalletPage() {
       </div>
 
       <div className="relative z-10">
-        <Header
-          onProfileClick={() => window.location.href = '/profile'}
-          onSettingsClick={() => window.location.href = '/settings'}
-        />
-
         <div className="flex min-h-screen">
           <LeftSidebar onNotificationsToggle={() => setShowNotifications(!showNotifications)} />
 
           <div className="flex-1 lg:ml-80 lg:mr-96 md:ml-64 md:mr-80 sm:ml-0 sm:mr-0 md:border-x md:border-korus-border bg-korus-surface/10 backdrop-blur-sm max-w-full overflow-hidden">
+            {/* Feed Navigation */}
+            <div className="sticky top-0 bg-korus-dark-300/80 backdrop-blur-xl border-b border-korus-border z-10">
+              <div className="flex">
+                {/* Mobile menu button */}
+                <button className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+
+                {/* Logo on mobile */}
+                <div className="md:hidden flex items-center px-4">
+                  <div className="w-6 h-6 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center">
+                    <span className="text-black font-bold text-xs">K</span>
+                  </div>
+                </div>
+
+                <div className="relative flex items-center justify-center w-full">
+                  <button
+                    onClick={() => router.push('/')}
+                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                  >
+                    <span className="relative z-10">Home</span>
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
+                  </button>
+                  <button
+                    onClick={() => router.push('/games')}
+                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                  >
+                    <span className="relative z-10">Games</span>
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
+                  </button>
+                  <button
+                    onClick={() => router.push('/events')}
+                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                  >
+                    <span className="relative z-10">Events</span>
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
+                  </button>
+                </div>
+
+                {/* Mobile search/menu */}
+                <button className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
             <div className="max-w-3xl mx-auto px-4 py-6 pb-24">
           <h2 className="text-3xl font-bold text-korus-text mb-6">Wallet</h2>
 

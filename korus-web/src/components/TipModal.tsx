@@ -21,7 +21,11 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [validationError, setValidationError] = useState<string>('');
   const modalRef = useFocusTrap(isOpen);
+
+  // Get SOL to USD rate from environment or use fallback
+  const solToUsd = parseFloat(process.env.NEXT_PUBLIC_SOL_USD_FALLBACK || '200');
 
   if (!isOpen) return null;
 
@@ -37,6 +41,15 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
     if (value === '' || /^\d*\.?\d*$/.test(value)) {
       setCustomAmount(value);
       setSelectedAmount(null);
+      setValidationError(''); // Clear error on change
+
+      // Validate amount
+      const amount = parseFloat(value);
+      if (value && amount < 0.001) {
+        setValidationError('Minimum tip amount is 0.001 SOL');
+      } else if (value && amount > balance) {
+        setValidationError(`Insufficient balance. You have ${balance.toFixed(3)} SOL`);
+      }
     }
   };
 
@@ -148,7 +161,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
                   }}
                 >
                   <div className="text-xs font-medium text-white mb-1">{amount} SOL</div>
-                  <div className="text-[10px] text-korus-textSecondary">${(amount * 200).toFixed(0)}</div>
+                  <div className="text-[10px] text-korus-textSecondary">${(amount * solToUsd).toFixed(0)}</div>
                 </button>
               ))}
             </div>
@@ -170,9 +183,17 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
                 SOL
               </span>
             </div>
-            {customAmount && (
+            {customAmount && !validationError && (
               <p className="text-xs text-korus-textSecondary mt-1">
-                ≈ ${(parseFloat(customAmount) * 200).toFixed(2)} USD
+                ≈ ${(parseFloat(customAmount) * solToUsd).toFixed(2)} USD
+              </p>
+            )}
+            {validationError && (
+              <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                </svg>
+                {validationError}
               </p>
             )}
           </div>
@@ -221,13 +242,14 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
           </Button>
           <Button
             onClick={handleSendTip}
-            disabled={finalAmount <= 0 || isSending || isInsufficientFunds || !connected}
+            disabled={finalAmount <= 0 || isSending || isInsufficientFunds || !connected || !!validationError}
             variant="primary"
             isLoading={isSending}
             className="flex-1"
           >
             {!isSending && (
               !connected ? 'Connect Wallet' :
+              validationError ? 'Invalid Amount' :
               finalAmount <= 0 ? 'Select Amount' :
               isInsufficientFunds ? 'Insufficient Balance' :
               `Send Tip for ${finalAmount.toFixed(3)} SOL`

@@ -42,6 +42,7 @@ interface PostDetailModalProps {
   onTip?: (user: string, postId: number) => void;
   onShare?: (post: Post) => void;
   onReply?: (post: Post) => void;
+  onOptionsClick?: (post: Post) => void;
   likedPosts?: Set<number>;
   repostedPosts?: Set<number>;
 }
@@ -56,6 +57,7 @@ export default function PostDetailModal({
   onTip,
   onShare,
   onReply,
+  onOptionsClick,
   likedPosts = new Set(),
   repostedPosts = new Set()
 }: PostDetailModalProps) {
@@ -99,18 +101,20 @@ export default function PostDetailModal({
       ];
       setReplies(mockReplies);
 
-      // Update URL for sharing
-      if (postId) {
+      // Update URL for sharing (shallow routing - doesn't affect history)
+      if (postId && typeof window !== 'undefined') {
         const newUrl = `/post/${postId}`;
-        window.history.pushState({}, '', newUrl);
+        window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
       }
     }
   }, [isOpen, post, postId]);
 
   // Handle modal close and URL cleanup
   const handleClose = () => {
-    // Restore previous URL
-    window.history.back();
+    // Restore previous URL using replaceState (doesn't break back button)
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({ ...window.history.state, as: '/', url: '/' }, '', '/');
+    }
     onClose();
   };
 
@@ -134,11 +138,6 @@ export default function PostDetailModal({
   }, [isOpen]);
 
   if (!isOpen || !post) return null;
-
-  const extractUrls = (text: string): string[] => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return text.match(urlRegex) || [];
-  };
 
   return (
     <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -184,18 +183,36 @@ export default function PostDetailModal({
               {/* Post Content */}
               <div className="flex-1 min-w-0">
                 {/* Post Header */}
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="font-bold text-white">{post.user}</span>
-                  {post.isPremium && (
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
-                      <svg className="w-3 h-3" fill="black" viewBox="0 0 24 24">
-                        <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
-                      </svg>
-                    </div>
-                  )}
-                  <span className="text-korus-textSecondary">@{post.user}</span>
-                  <span className="text-korus-textSecondary">·</span>
-                  <span className="text-korus-textSecondary">{post.time}</span>
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-white">{post.user}</span>
+                    {post.isPremium && (
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
+                        <svg className="w-3 h-3" fill="black" viewBox="0 0 24 24">
+                          <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
+                        </svg>
+                      </div>
+                    )}
+                    <span className="text-korus-textSecondary">@{post.user}</span>
+                    <span className="text-korus-textSecondary">·</span>
+                    <span className="text-korus-textSecondary">{post.time}</span>
+                  </div>
+
+                  {/* Three dots menu */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onOptionsClick) {
+                        onOptionsClick(post);
+                      }
+                    }}
+                    className="flex items-center justify-center w-8 h-8 rounded-full text-korus-textSecondary hover:bg-korus-surface/40 hover:text-korus-text transition-all"
+                    aria-label="Post options"
+                  >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                    </svg>
+                  </button>
                 </div>
 
                 {/* Post Text */}
@@ -206,7 +223,15 @@ export default function PostDetailModal({
                 {/* Post Image */}
                 {post.image && (
                   <div className="mb-4 rounded-2xl overflow-hidden border border-korus-border">
-                    <img src={post.image} alt="Post content" className="w-full h-auto" />
+                    <img
+                      src={post.image}
+                      alt="Post content"
+                      className="w-full h-auto"
+                      onError={(e) => {
+                        // Hide broken image on error
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
                   </div>
                 )}
 

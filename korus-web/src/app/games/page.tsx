@@ -157,7 +157,7 @@ export default function GamesPage() {
 
   const handleCreateGame = () => {
     if (!connected) {
-      alert('Please connect your wallet to create a game');
+      showError('Please connect your wallet to create a game');
       return;
     }
 

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
-import { Button } from '@/components/ui';
+import { Button } from '@/components/Button';
 
 interface Post {
   id: number;
@@ -33,6 +33,8 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
   const [replyContent, setReplyContent] = useState('');
   const [isPosting, setIsPosting] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showGifPicker, setShowGifPicker] = useState(false);
   const modalRef = useFocusTrap(isOpen);
 
   if (!isOpen || !post) return null;
@@ -105,6 +107,16 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
 
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    setReplyContent(prev => prev + emoji);
+    setShowEmojiPicker(false);
+  };
+
+  const handleGifSelect = (gifUrl: string) => {
+    setReplyContent(prev => prev + ` ${gifUrl}`);
+    setShowGifPicker(false);
   };
 
   const characterCount = replyContent.length;
@@ -234,14 +246,26 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                   </label>
 
                   {/* GIF Button */}
-                  <button className="flex items-center justify-center w-10 h-10 bg-korus-surface/40 backdrop-blur-sm border border-korus-borderLight rounded-xl text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M16 10h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                  <button
+                    onClick={() => setShowGifPicker(!showGifPicker)}
+                    className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10 ${
+                      showGifPicker
+                        ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
+                        : 'bg-korus-surface/40 border-korus-borderLight text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border'
+                    }`}
+                  >
+                    <span className="text-xs font-bold">GIF</span>
                   </button>
 
                   {/* Emoji Button */}
-                  <button className="flex items-center justify-center w-10 h-10 bg-korus-surface/40 backdrop-blur-sm border border-korus-borderLight rounded-xl text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10">
+                  <button
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10 ${
+                      showEmojiPicker
+                        ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
+                        : 'bg-korus-surface/40 border-korus-borderLight text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border'
+                    }`}
+                  >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M16 10h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -290,17 +314,13 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                   </div>
 
                   {/* Reply Button */}
-                  <button
+                  <Button
                     onClick={handleReply}
                     disabled={!replyContent.trim() || isOverLimit || isPosting || !connected}
-                    className="px-6 py-2 bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 backdrop-blur-sm"
+                    variant="primary"
+                    isLoading={isPosting}
                   >
-                    {isPosting ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="spinner-dark"></div>
-                        Replying...
-                      </div>
-                    ) : !connected ? (
+                    {!connected ? (
                       'Connect Wallet'
                     ) : !replyContent.trim() ? (
                       'Write a reply...'
@@ -309,13 +329,80 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                     ) : (
                       'Reply'
                     )}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Emoji Picker - Nested within backdrop */}
+      {showEmojiPicker && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setShowEmojiPicker(false)}>
+          <div className="bg-korus-surface/95 backdrop-blur-md rounded-2xl max-w-md w-full max-h-[80vh] border border-korus-border shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-korus-border">
+              <h3 className="text-lg font-bold text-white">Choose Emoji</h3>
+              <button
+                onClick={() => setShowEmojiPicker(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-korus-surface/40 border border-korus-borderLight text-korus-textSecondary hover:bg-korus-surface/60 hover:text-white transition-all duration-200"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[60vh]">
+              <div className="grid grid-cols-8 gap-2">
+                {['😀', '😂', '🤣', '😊', '😍', '🥰', '😘', '🤔', '😎', '😢', '😭', '😡', '🤯', '🥳', '😴', '🤤',
+                  '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '👋', '🤚', '🖐️', '✋', '👏', '🙌', '🤝', '🙏', '✊',
+                  '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘',
+                  '🎉', '🎊', '🎈', '🎁', '🎂', '🎄', '🎃', '✨', '🎯', '🎪', '🎨', '🎭', '🎬', '🎮', '🎵', '🎶',
+                  '🔥', '💯', '💫', '⭐', '🌟', '⚡', '💥', '💨', '🌈', '☀️', '🌙', '⭐', '🌊', '🌍', '🌎', '🌏',
+                  '💰', '💸', '💵', '💎', '🚀', '📈', '📉', '💹', '🏦', '💳', '⚖️', '🎯', '✅', '❌', '⚠️', '💯',
+                  '🍕', '🍔', '🍟', '🌭', '🍿', '🧂', '🥓', '🍳', '🧀', '🥞', '🧇', '🍞', '🥖', '🥨', '🥯', '🥐',
+                  '☕', '🍵', '🧃', '🥤', '🍻', '🍷', '🥂', '🍾', '🍸', '🍹', '🍺', '🥃', '🥛', '🧋', '🧊', '🍯'].map((emoji, index) => (
+                  <button
+                    key={`emoji-${index}-${emoji}`}
+                    onClick={() => handleEmojiSelect(emoji)}
+                    className="w-10 h-10 text-xl hover:bg-korus-surface/60 rounded-lg transition-colors flex items-center justify-center hover:scale-110 transform"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* GIF Picker - Nested within backdrop */}
+      {showGifPicker && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setShowGifPicker(false)}>
+          <div className="bg-korus-surface/95 backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[80vh] border border-korus-border shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-korus-border">
+              <h3 className="text-lg font-bold text-white">Choose GIF</h3>
+              <button
+                onClick={() => setShowGifPicker(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-korus-surface/40 border border-korus-borderLight text-korus-textSecondary hover:bg-korus-surface/60 hover:text-white transition-all duration-200"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[60vh]">
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🎬</div>
+                <p className="text-korus-text text-lg font-medium">GIF Integration Coming Soon</p>
+                <p className="text-korus-textSecondary text-sm mt-2">
+                  We'll integrate with Tenor or Giphy API to bring you the best GIFs
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

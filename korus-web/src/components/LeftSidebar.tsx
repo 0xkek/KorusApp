@@ -16,9 +16,10 @@ interface TabItem {
 interface LeftSidebarProps {
   onNotificationsToggle?: () => void;
   onPostButtonClick?: () => void;
+  notificationCount?: number; // Add prop for dynamic notification count
 }
 
-export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick }: LeftSidebarProps) {
+export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, notificationCount = 0 }: LeftSidebarProps) {
   const pathname = usePathname();
   const { connected, publicKey } = useWallet();
 
@@ -39,7 +40,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick }
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9zM13.73 21a2 2 0 01-3.46 0" />
         </svg>
       ),
-      badge: 2,
+      badge: notificationCount > 0 ? notificationCount : undefined, // Use dynamic count, hide if 0
       onClick: onNotificationsToggle,
     },
     {

@@ -1,10 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { Button } from '@/components/ui';
+
+const DrawingCanvasInline = dynamic(() => import('@/components/DrawingCanvasInline'), { ssr: false });
+const ShoutoutModal = dynamic(() => import('@/components/ShoutoutModal'), { ssr: false });
 
 
 interface CreatePostModalProps {
@@ -12,15 +16,21 @@ interface CreatePostModalProps {
   onClose: () => void;
   initialContent?: string;
   onPostCreate?: (post: any) => void;
+  queueInfo?: {
+    activeShoutout: any | null;
+    queuedShoutouts: any[];
+  };
 }
 
-export default function CreatePostModal({ isOpen, onClose, initialContent = '', onPostCreate }: CreatePostModalProps) {
+export default function CreatePostModal({ isOpen, onClose, initialContent = '', onPostCreate, queueInfo }: CreatePostModalProps) {
   const { connected, publicKey } = useWallet();
   const { showSuccess, showError } = useToast();
   const [content, setContent] = useState(initialContent);
   const [isPosting, setIsPosting] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showDrawCanvas, setShowDrawCanvas] = useState(false);
+  const [showShoutoutModal, setShowShoutoutModal] = useState(false);
   const modalRef = useFocusTrap(isOpen);
 
   // Update content when initialContent changes
@@ -38,8 +48,8 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
       return;
     }
 
-    if (!content.trim()) {
-      showError('Please write some content before posting');
+    if (!content.trim() && selectedFiles.length === 0) {
+      showError('Please write some content or add media before posting');
       return;
     }
 
@@ -57,6 +67,9 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
         time: 'now',
         isPremium: false,
         isShoutout: false,
+        image: selectedFiles.length > 0 && selectedFiles[0].type.startsWith('image/')
+          ? URL.createObjectURL(selectedFiles[0])
+          : null,
       };
 
       // Call the parent's post creation function
@@ -70,6 +83,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
       showSuccess('Post created successfully!');
       setContent('');
       setSelectedFiles([]);
+      setShowDrawCanvas(false);
       onClose();
     } catch (error) {
       showError('Failed to create post. Please try again.');
@@ -100,6 +114,18 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
   const handleEmojiSelect = (emoji: string) => {
     setContent(prev => prev + emoji);
     setShowEmojiPicker(false);
+  };
+
+  const handleDrawingSave = (dataUrl: string) => {
+    // Convert data URL to File
+    fetch(dataUrl)
+      .then(res => res.blob())
+      .then(blob => {
+        const file = new File([blob], `drawing-${Date.now()}.png`, { type: 'image/png' });
+        setSelectedFiles(prev => [...prev, file].slice(0, 4));
+        setShowDrawCanvas(false);
+        showSuccess('Drawing added!');
+      });
   };
 
   const characterCount = content.length;
@@ -138,10 +164,20 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="What's on your mind? Share your experience, ask for advice, or offer support..."
-                className="w-full bg-transparent text-white text-base resize-none outline-none placeholder-korus-textTertiary min-h-[150px] max-h-[300px]"
-                rows={6}
+                className={`w-full bg-transparent text-white text-base resize-none outline-none placeholder-korus-textTertiary max-h-[300px] ${showDrawCanvas ? 'min-h-[80px]' : 'min-h-[150px]'}`}
+                rows={showDrawCanvas ? 3 : 6}
                 autoFocus
               />
+
+              {/* Inline Drawing Canvas */}
+              {showDrawCanvas && (
+                <div className="mt-3 p-3 bg-korus-surface/20 border border-korus-borderLight rounded-xl">
+                  <DrawingCanvasInline
+                    onSave={handleDrawingSave}
+                    onClose={() => setShowDrawCanvas(false)}
+                  />
+                </div>
+              )}
 
               {/* File Previews */}
               {selectedFiles.length > 0 && (
@@ -197,9 +233,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
 
                   {/* GIF Button */}
                   <button className="flex items-center justify-center w-10 h-10 bg-korus-surface/40 backdrop-blur-sm border border-korus-borderLight rounded-xl text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M16 10h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <span className="text-xs font-bold">GIF</span>
                   </button>
 
                   {/* Emoji Button */}
@@ -215,9 +249,36 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M16 10h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </button>
+
+                  {/* Pen/Draw Button */}
+                  <button
+                    onClick={() => setShowDrawCanvas(!showDrawCanvas)}
+                    className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10 ${
+                      showDrawCanvas
+                        ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
+                        : 'bg-korus-surface/40 border-korus-borderLight text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border'
+                    }`}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
+                  {/* Shoutout Button */}
+                  <button
+                    onClick={() => (content.trim() || selectedFiles.length > 0) && setShowShoutoutModal(true)}
+                    disabled={!content.trim() && selectedFiles.length === 0}
+                    className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm border rounded-xl transition-all duration-200 ${
+                      content.trim() || selectedFiles.length > 0
+                        ? 'bg-korus-surface/40 border-korus-borderLight text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer'
+                        : 'bg-korus-surface/20 border-korus-borderLight/50 text-korus-textTertiary cursor-not-allowed opacity-50'
+                    }`}
+                  >
+                    <span className="text-sm font-medium">📢 Shoutout</span>
+                  </button>
+
                   {/* Character Counter */}
                   <div className="flex items-center gap-2">
                     <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
@@ -261,14 +322,13 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                   {/* Post Button */}
                   <Button
                     onClick={handlePost}
-                    disabled={!content.trim() || isOverLimit || isPosting || !connected}
+                    disabled={(!content.trim() && selectedFiles.length === 0) || isOverLimit || isPosting || !connected}
                     variant="primary"
                     size="md"
                     isLoading={isPosting}
                   >
                     {!isPosting && (
                       !connected ? 'Connect Wallet' :
-                      !content.trim() ? 'Write something...' :
                       isOverLimit ? 'Too long' :
                       'Post'
                     )}
@@ -321,6 +381,49 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
             </div>
           </div>
         </div>
+      )}
+
+      {/* Shoutout Modal */}
+      {showShoutoutModal && (
+        <ShoutoutModal
+          isOpen={showShoutoutModal}
+          onClose={() => setShowShoutoutModal(false)}
+          postContent={content}
+          queueInfo={queueInfo}
+          onConfirm={(duration, price) => {
+            // Create shoutout post
+            const shoutoutPost = {
+              id: Date.now(),
+              user: publicKey?.toBase58() || 'Unknown',
+              content: content.trim(),
+              likes: 0,
+              replies: 0,
+              tips: 0,
+              time: 'now',
+              isPremium: false,
+              isShoutout: true,
+              isSponsored: false,
+              shoutoutDuration: duration,
+              shoutoutStartTime: Date.now(),
+              image: selectedFiles.length > 0 && selectedFiles[0].type.startsWith('image/')
+                ? URL.createObjectURL(selectedFiles[0])
+                : null,
+            };
+
+            // Call the parent's post creation function
+            // This will handle removing any existing shoutout
+            if (onPostCreate) {
+              onPostCreate(shoutoutPost);
+            }
+
+            showSuccess(`Shoutout created for ${duration} minutes!`);
+            setShowShoutoutModal(false);
+            setContent('');
+            setSelectedFiles([]);
+            setShowDrawCanvas(false);
+            onClose(); // Close the CreatePostModal too
+          }}
+        />
       )}
     </div>
   );

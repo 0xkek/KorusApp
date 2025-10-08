@@ -21,15 +21,22 @@ interface ShoutoutModalProps {
   onClose: () => void;
   postContent: string;
   onConfirm?: (duration: number, price: number) => void;
+  queueInfo?: {
+    activeShoutout: any | null;
+    queuedShoutouts: any[];
+  };
 }
 
-export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm }: ShoutoutModalProps) {
+export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm, queueInfo }: ShoutoutModalProps) {
   const { connected, publicKey } = useWallet();
   const { showSuccess, showError } = useToast();
   const [selectedDuration, setSelectedDuration] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const modalRef = useFocusTrap(isOpen);
+
+  // Get SOL to USD rate from environment or use fallback
+  const solToUsd = parseFloat(process.env.NEXT_PUBLIC_SOL_USD_FALLBACK || '200');
 
   useEffect(() => {
     if (isOpen) {
@@ -54,6 +61,41 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm 
 
   const selectedOption = SHOUTOUT_OPTIONS.find(opt => opt.value === selectedDuration);
   const hasInsufficientFunds = selectedOption && walletBalance !== null && selectedOption.price > walletBalance;
+
+  // Calculate wait time until shoutout will be posted
+  const calculateWaitTime = () => {
+    if (!queueInfo) return null;
+
+    const { activeShoutout, queuedShoutouts } = queueInfo;
+
+    // If no active shoutout, posts immediately
+    if (!activeShoutout) return 0;
+
+    // Calculate remaining time for active shoutout
+    const now = Date.now();
+    const activeEndTime = activeShoutout.shoutoutStartTime + (activeShoutout.shoutoutDuration * 60 * 1000);
+    const activeRemainingMinutes = Math.max(0, Math.ceil((activeEndTime - now) / (60 * 1000)));
+
+    // Sum up all queued shoutouts durations
+    const queuedTotalMinutes = queuedShoutouts.reduce((sum, shoutout) => sum + shoutout.shoutoutDuration, 0);
+
+    return activeRemainingMinutes + queuedTotalMinutes;
+  };
+
+  const waitTimeMinutes = calculateWaitTime();
+
+  const formatWaitTime = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+
+    if (hours > 0 && mins > 0) {
+      return `${hours}h ${mins}m`;
+    } else if (hours > 0) {
+      return `${hours}h`;
+    } else {
+      return `${mins}m`;
+    }
+  };
 
   const handleConfirm = async () => {
     if (!connected) {
@@ -103,6 +145,50 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm 
             <div className="flex items-center justify-between p-3 rounded-xl border" style={{ backgroundColor: 'color-mix(in srgb, var(--korus-primary) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--korus-primary) 30%, transparent)' }}>
               <span className="text-sm text-korus-textSecondary">Your Balance</span>
               <span className="text-base font-bold text-korus-primary">{walletBalance.toFixed(3)} SOL</span>
+            </div>
+          )}
+
+          {/* Wait Time Indicator */}
+          {waitTimeMinutes !== null && waitTimeMinutes > 0 && (
+            <div className="flex items-center gap-3 p-4 rounded-xl border" style={{
+              backgroundColor: 'rgba(234, 179, 8, 0.1)',
+              borderColor: 'rgba(234, 179, 8, 0.3)'
+            }}>
+              <div className="flex-shrink-0">
+                <svg className="w-6 h-6" style={{ color: '#eab308' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <div className="text-sm font-semibold mb-1" style={{ color: '#eab308' }}>Queue Active</div>
+                <div className="text-xs" style={{ color: '#fef08a' }}>
+                  Your shoutout will be posted in approximately <span className="font-bold">{formatWaitTime(waitTimeMinutes)}</span>
+                </div>
+                {queueInfo && queueInfo.queuedShoutouts.length > 0 && (
+                  <div className="text-xs mt-1" style={{ color: '#fde047' }}>
+                    {queueInfo.queuedShoutouts.length} shoutout{queueInfo.queuedShoutouts.length > 1 ? 's' : ''} ahead of you
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {waitTimeMinutes === 0 && (
+            <div className="flex items-center gap-3 p-4 rounded-xl border" style={{
+              backgroundColor: 'rgba(34, 197, 94, 0.1)',
+              borderColor: 'rgba(34, 197, 94, 0.3)'
+            }}>
+              <div className="flex-shrink-0">
+                <svg className="w-6 h-6" style={{ color: '#22c55e' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <div className="text-sm font-semibold mb-1" style={{ color: '#22c55e' }}>Post Immediately</div>
+                <div className="text-xs" style={{ color: '#bbf7d0' }}>
+                  No queue! Your shoutout will be posted right away
+                </div>
+              </div>
             </div>
           )}
           <div>

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
+import PremiumUpgradeModal from '@/components/PremiumUpgradeModal';
 import { useAllSNSDomains, useSNSDomain } from '@/hooks/useSNSDomain';
 import { setFavoriteSNSDomain } from '@/utils/sns';
 import { useToastContext } from '@/components/ToastProvider';
@@ -64,6 +65,7 @@ export default function ProfilePage() {
   const selectedAvatar = '🎮'; // Mock avatar
   const selectedNFTAvatar: NFTAvatar | null = null;
   const isPremium = false; // Mock premium status
+  const balance = 2.45; // Mock balance
 
   // SNS Domain hooks - must be called before any conditional returns
   const { domain: snsDomain, loading: snsLoading } = useSNSDomain(walletAddress);
@@ -287,7 +289,14 @@ export default function ProfilePage() {
             {/* Profile Content */}
             <div className="p-6">
               {/* Profile Header */}
-              <div className="mb-8">
+              <div className="mb-8 relative">
+                {/* Balance Card - Top Right */}
+                <div className="absolute top-0 right-0 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-xl px-4 py-2 shadow-lg shadow-korus-primary/20">
+                  <div className="text-black font-bold text-lg">
+                    {balance.toFixed(2)} SOL
+                  </div>
+                </div>
+
                 {/* Avatar and Basic Info */}
                 <div className="flex flex-col items-center mb-8">
                   <div className="relative mb-4">
@@ -295,12 +304,12 @@ export default function ProfilePage() {
                       onClick={handleChangeAvatar}
                       className="relative group rounded-full"
                     >
-                      <div className="w-24 h-24 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center text-3xl font-bold text-black shadow-lg shadow-korus-primary/20 group-hover:shadow-xl group-hover:shadow-korus-primary/30 transition-all duration-200">
+                      <div className="w-32 h-32 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center text-5xl font-bold text-black shadow-lg shadow-korus-primary/20 group-hover:shadow-xl group-hover:shadow-korus-primary/30 transition-all duration-200 border-4 border-transparent">
                         {selectedNFTAvatar ? (
                           <img
                             src={selectedNFTAvatar.image || selectedNFTAvatar.uri}
                             alt="NFT Avatar"
-                            className="w-20 h-20 rounded-full object-cover"
+                            className="w-28 h-28 rounded-full object-cover"
                           />
                         ) : selectedAvatar ? (
                           <span>{selectedAvatar}</span>
@@ -308,7 +317,7 @@ export default function ProfilePage() {
                           <span>{walletAddress.slice(0, 2).toUpperCase()}</span>
                         )}
                       </div>
-                      <div className="absolute bottom-0 right-0 w-7 h-7 bg-korus-primary rounded-full flex items-center justify-center shadow-lg shadow-korus-primary/30 group-hover:scale-110 transition-transform">
+                      <div className="absolute bottom-0 right-0 w-8 h-8 bg-korus-primary rounded-full flex items-center justify-center shadow-lg shadow-korus-primary/30 group-hover:scale-110 transition-transform">
                         <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -830,105 +839,10 @@ export default function ProfilePage() {
       )}
 
       {/* Premium Upgrade Modal */}
-      {showPremiumModal && (
-        <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
-          onClick={() => setShowPremiumModal(false)}
-        >
-          <div
-            ref={premiumModalRef}
-            className="bg-korus-surface/90 backdrop-blur-xl border border-korus-primary rounded-2xl p-6 max-w-md w-full mx-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 white-text">
-                {/* Filled Star - Consistent with premium branding */}
-                <svg className="w-8 h-8" style={{ color: '#FFD700' }} fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold mb-2" style={{ color: '#FFD700' }}>Unlock Premium</h3>
-              <p className="text-korus-textSecondary mb-6">Get exclusive features with Korus Premium</p>
-
-              <div className="space-y-3 mb-6 text-left">
-                <div className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                  </svg>
-                  <span className="text-korus-text">Hide shoutout posts</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                  </svg>
-                  <span className="text-korus-text">Exclusive color themes</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                  </svg>
-                  <span className="text-korus-text">Gold verified badge</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                  </svg>
-                  <span className="text-korus-text">Early access to events</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                  </svg>
-                  <span className="text-korus-text">+20% rep score</span>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <button
-                  onClick={() => {
-                    setShowPremiumModal(false);
-                    // TODO: Implement payment flow
-                    console.log('Initiating premium upgrade payment flow - Monthly');
-                  }}
-                  className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 white-text border border-korus-border"
-                  style={{
-                    boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)'
-                  }}
-                >
-                  <div className="font-bold">Monthly - 0.1 SOL</div>
-                  <div className="text-sm opacity-90">Paid monthly</div>
-                </button>
-                <button
-                  onClick={() => {
-                    setShowPremiumModal(false);
-                    // TODO: Implement payment flow
-                    console.log('Initiating premium upgrade payment flow - Yearly');
-                  }}
-                  className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 white-text relative border border-korus-border"
-                  style={{
-                    boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)'
-                  }}
-                >
-                  <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">
-                    SAVE 2 MONTHS
-                  </div>
-                  <div className="font-bold">Yearly - 1 SOL</div>
-                  <div className="text-sm opacity-90">Paid annually</div>
-                </button>
-                <button
-                  onClick={() => setShowPremiumModal(false)}
-                  className="w-full px-4 py-2 bg-korus-surface/40 text-korus-text rounded-xl hover:bg-korus-surface/60 transition-colors border border-korus-border"
-                  style={{
-                    boxShadow: '0 0 3px var(--korus-primary), 0 0 6px var(--korus-primary)'
-                  }}
-                >
-                  Maybe Later
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <PremiumUpgradeModal
+        isOpen={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+      />
 
       <LeftSidebar onNotificationsToggle={() => setShowNotifications(!showNotifications)} />
       <RightSidebar
