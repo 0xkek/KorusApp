@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface VideoPlayerProps {
   videoUrl: string;
@@ -10,6 +10,16 @@ export default function VideoPlayer({ videoUrl }: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hideControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hideControlsTimeoutRef.current) {
+        clearTimeout(hideControlsTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handlePlayPause = () => {
     if (!videoRef.current) return;
@@ -27,7 +37,11 @@ export default function VideoPlayer({ videoUrl }: VideoPlayerProps) {
     setShowControls(true);
     // Hide controls after 3 seconds if playing
     if (!isPlaying) {
-      setTimeout(() => {
+      // Clear existing timeout before setting new one
+      if (hideControlsTimeoutRef.current) {
+        clearTimeout(hideControlsTimeoutRef.current);
+      }
+      hideControlsTimeoutRef.current = setTimeout(() => {
         if (videoRef.current && !videoRef.current.paused) {
           setShowControls(false);
         }
@@ -56,7 +70,11 @@ export default function VideoPlayer({ videoUrl }: VideoPlayerProps) {
         onMouseEnter={() => setShowControls(true)}
         onMouseLeave={() => {
           if (isPlaying) {
-            setTimeout(() => setShowControls(false), 2000);
+            // Clear existing timeout before setting new one
+            if (hideControlsTimeoutRef.current) {
+              clearTimeout(hideControlsTimeoutRef.current);
+            }
+            hideControlsTimeoutRef.current = setTimeout(() => setShowControls(false), 2000);
           }
         }}
       >

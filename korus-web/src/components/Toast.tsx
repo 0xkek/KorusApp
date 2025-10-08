@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 export interface Toast {
   id: string;
@@ -17,6 +17,7 @@ interface ToastProps {
 export function ToastComponent({ toast, onRemove }: ToastProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
+  const exitTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Trigger entrance animation
@@ -28,10 +29,15 @@ export function ToastComponent({ toast, onRemove }: ToastProps) {
     const duration = toast.duration || 5000;
     const timer = setTimeout(() => {
       setIsExiting(true);
-      setTimeout(() => onRemove(toast.id), 300);
+      exitTimeoutRef.current = setTimeout(() => onRemove(toast.id), 300);
     }, duration);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      if (exitTimeoutRef.current) {
+        clearTimeout(exitTimeoutRef.current);
+      }
+    };
   }, [toast.id, toast.duration, onRemove]);
 
   const getToastStyles = () => {
@@ -95,7 +101,10 @@ export function ToastComponent({ toast, onRemove }: ToastProps) {
       <button
         onClick={() => {
           setIsExiting(true);
-          setTimeout(() => onRemove(toast.id), 300);
+          if (exitTimeoutRef.current) {
+            clearTimeout(exitTimeoutRef.current);
+          }
+          exitTimeoutRef.current = setTimeout(() => onRemove(toast.id), 300);
         }}
         className="text-current hover:text-white/80 transition-colors p-1 -m-1"
       >

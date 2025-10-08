@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 /**
  * Custom hook for managing modal state
@@ -26,6 +26,16 @@ export function useModal(initialState = false) {
 export function useModalWithData<T = any>() {
   const [isOpen, setIsOpen] = useState(false);
   const [data, setData] = useState<T | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const open = useCallback((item: T) => {
     setData(item);
@@ -35,7 +45,10 @@ export function useModalWithData<T = any>() {
   const close = useCallback(() => {
     setIsOpen(false);
     // Delay clearing data to allow for exit animations
-    setTimeout(() => setData(null), 300);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => setData(null), 300);
   }, []);
 
   return {
