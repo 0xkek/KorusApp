@@ -773,7 +773,7 @@ export default function ProfilePage() {
                         <div className="text-6xl mb-4 opacity-60">💬</div>
                         <p className="text-korus-text text-lg font-medium mb-2">No replies yet</p>
                         <p className="text-korus-textSecondary text-sm mb-6">
-                          Engage with other users' posts to start building your reputation.<br/>
+                          Engage with other users&apos; posts to start building your reputation.<br/>
                           Thoughtful replies can earn tips and grow your network!
                         </p>
                         <button

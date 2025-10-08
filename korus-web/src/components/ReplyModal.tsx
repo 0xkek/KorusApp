@@ -396,7 +396,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                 <div className="text-6xl mb-4">🎬</div>
                 <p className="text-korus-text text-lg font-medium">GIF Integration Coming Soon</p>
                 <p className="text-korus-textSecondary text-sm mt-2">
-                  We'll integrate with Tenor or Giphy API to bring you the best GIFs
+                  We&apos;ll integrate with Tenor or Giphy API to bring you the best GIFs
                 </p>
               </div>
             </div>

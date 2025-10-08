@@ -465,7 +465,7 @@ export default function SettingsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
               <h3 className="text-korus-text text-xl font-bold mb-2">Logout from Korus?</h3>
-              <p className="text-korus-textSecondary mb-6">This will disconnect your wallet and you'll need to reconnect to use the app again.</p>
+              <p className="text-korus-textSecondary mb-6">This will disconnect your wallet and you&apos;ll need to reconnect to use the app again.</p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowLogoutConfirm(false)}
@@ -628,7 +628,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="bg-korus-surface/20 rounded-xl p-4">
-                <h4 className="text-korus-text font-semibold mb-2">What's included in Premium?</h4>
+                <h4 className="text-korus-text font-semibold mb-2">What&apos;s included in Premium?</h4>
                 <p className="text-korus-textSecondary text-sm">
                   Premium members get exclusive color themes, gold verified badge, ability to use SNS domains as display names, and can hide sponsored posts for a cleaner feed.
                 </p>
@@ -704,7 +704,7 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <h4 className="text-korus-text font-semibold mb-1">Protect Privacy</h4>
-                    <p className="text-korus-textSecondary text-sm">Never share personal information of others. Respect everyone's privacy and security.</p>
+                    <p className="text-korus-textSecondary text-sm">Never share personal information of others. Respect everyone&apos;s privacy and security.</p>
                   </div>
                 </div>
               </div>

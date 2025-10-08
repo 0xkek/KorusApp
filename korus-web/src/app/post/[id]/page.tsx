@@ -330,7 +330,7 @@ export default function PostDetailPage() {
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-4 text-white">Post Not Found</h2>
-            <p className="text-korus-textTertiary mb-8">The post you're looking for doesn't exist.</p>
+            <p className="text-korus-textTertiary mb-8">The post you&apos;re looking for doesn&apos;t exist.</p>
             <Link
               href="/"
               className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-200 hover:scale-[1.02]"
@@ -771,7 +771,7 @@ export default function PostDetailPage() {
                 <div className="text-6xl mb-4">🎬</div>
                 <p className="text-korus-text text-lg font-medium">GIF Integration Coming Soon</p>
                 <p className="text-korus-textSecondary text-sm mt-2">
-                  We'll integrate with Tenor or Giphy API to bring you the best GIFs
+                  We&apos;ll integrate with Tenor or Giphy API to bring you the best GIFs
                 </p>
               </div>
             </div>

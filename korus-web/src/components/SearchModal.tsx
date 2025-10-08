@@ -303,7 +303,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
               <p className="text-sm text-korus-textSecondary">
                 {searchQuery ? (
                   <>
-                    <span className="font-semibold text-korus-primary">{searchResults.length}</span> results for "{searchQuery}"
+                    <span className="font-semibold text-korus-primary">{searchResults.length}</span> results for &quot;{searchQuery}&quot;
                     {selectedCategory && <span className="ml-2">in <span className="font-semibold text-korus-primary capitalize">{selectedCategory}</span></span>}
                   </>
                 ) : (
