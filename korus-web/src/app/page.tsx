@@ -803,7 +803,7 @@ export default function Home() {
                       </svg>
                       <span className={`text-sm transition-colors font-medium ${
                         postInteractions[post.id]?.reposted ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
-                      }`}>12</span>
+                      }`}>{posts.filter(p => p.repostedPost?.id === post.id).length || 0}</span>
                     </button>
 
                     <button

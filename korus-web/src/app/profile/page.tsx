@@ -467,8 +467,7 @@ export default function ProfilePage() {
                       {!editingUsername ? (
                         <button
                           onClick={() => {
-                            const isActuallyPremium = isPremium || userTier === 'premium' || userTier === 'vip';
-                            const canEdit = !hasSetUsername || isActuallyPremium;
+                            const canEdit = !hasSetUsername || isPremium;
 
                             if (!canEdit) {
                               showWarning('You have already set your username. Upgrade to Premium to change it anytime!');

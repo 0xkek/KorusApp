@@ -178,7 +178,12 @@ export default function WalletPage() {
               {loading ? (
                 <span className="text-korus-primary animate-pulse">Loading...</span>
               ) : hasError ? (
-                <span className="text-red-400">Unable to load</span>
+                <div className="flex flex-col gap-2">
+                  <span className="text-red-400">Unable to load balance</span>
+                  <span className="text-korus-textSecondary text-sm">
+                    Check your connection or try again
+                  </span>
+                </div>
               ) : balance !== null ? (
                 <span className="text-korus-text">
                   {balance.toFixed(4)} SOL
@@ -192,10 +197,12 @@ export default function WalletPage() {
             </div>
             <button
               onClick={fetchBalance}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-korus-primary to-korus-secondary font-semibold hover:shadow-[0_0_20px_var(--korus-primary)] transition-all duration-300 transform hover:scale-105"
+              disabled={loading}
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-korus-primary to-korus-secondary font-semibold hover:shadow-[0_0_20px_var(--korus-primary)] transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               style={{ color: '#000000' }}
+              aria-label={hasError ? 'Retry loading balance' : 'Refresh balance'}
             >
-              Refresh Balance
+              {hasError ? 'Retry' : 'Refresh Balance'}
             </button>
           </div>
 
