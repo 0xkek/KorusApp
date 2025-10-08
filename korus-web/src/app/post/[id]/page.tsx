@@ -26,7 +26,7 @@ export default function PostDetailPage() {
   const [liked, setLiked] = useState(false);
   const [likedReplies, setLikedReplies] = useState<Set<number>>(new Set());
   const [showReplyModal, setShowReplyModal] = useState(false);
-  const [replyToPost, setReplyToPost] = useState<any>(null);
+  const [replyToPost, setReplyToPost] = useState<Post | null>(null);
   const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [inlineReplyContent, setInlineReplyContent] = useState('');

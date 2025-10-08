@@ -26,7 +26,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
   );
 
   const handleWalletClick = async (walletName: string) => {
-    select(walletName as any);
+    select(walletName);
     onClose();
   };
 

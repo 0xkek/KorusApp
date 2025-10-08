@@ -45,10 +45,10 @@ export default function Home() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showRepostModal, setShowRepostModal] = useState(false);
   const [showReplyModal, setShowReplyModal] = useState(false);
-  const [postToTip, setPostToTip] = useState<any>(null);
-  const [postToShare, setPostToShare] = useState<any>(null);
-  const [postToRepost, setPostToRepost] = useState<any>(null);
-  const [postToReply, setPostToReply] = useState<any>(null);
+  const [postToTip, setPostToTip] = useState<Post | null>(null);
+  const [postToShare, setPostToShare] = useState<Post | null>(null);
+  const [postToRepost, setPostToRepost] = useState<Post | null>(null);
+  const [postToReply, setPostToReply] = useState<Post | null>(null);
   const [postInteractions, setPostInteractions] = useState<{[key: number]: {liked: boolean, reposted: boolean, replied: boolean, tipped: boolean}}>({});
   const [isLoading, setIsLoading] = useState(true);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);

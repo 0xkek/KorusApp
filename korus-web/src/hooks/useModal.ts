@@ -23,7 +23,7 @@ export function useModal(initialState = false) {
  * Custom hook for managing modal with data
  * Useful for modals that need to display specific item data (e.g., post, user)
  */
-export function useModalWithData<T = any>() {
+export function useModalWithData<T = Record<string, unknown>>() {
   const [isOpen, setIsOpen] = useState(false);
   const [data, setData] = useState<T | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);

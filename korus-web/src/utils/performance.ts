@@ -7,7 +7,7 @@
  * Debounce function calls to reduce expensive operations
  * Usage: const debouncedSearch = debounce(handleSearch, 300);
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -30,7 +30,7 @@ export function debounce<T extends (...args: any[]) => any>(
  * Throttle function calls to limit execution frequency
  * Usage: const throttledScroll = throttle(handleScroll, 100);
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
@@ -72,7 +72,7 @@ export async function withOptimisticUpdate<T>(
  * Lazy load a component with loading state
  * Usage: const LazyModal = lazyLoadComponent(() => import('./Modal'));
  */
-export function lazyLoadComponent<T extends React.ComponentType<any>>(
+export function lazyLoadComponent<T extends React.ComponentType<Record<string, unknown>>>(
   importFunc: () => Promise<{ default: T }>
 ) {
   return React.lazy(importFunc);
@@ -81,7 +81,7 @@ export function lazyLoadComponent<T extends React.ComponentType<any>>(
 /**
  * Check if value has changed (for React.memo comparison)
  */
-export function shallowEqual(obj1: any, obj2: any): boolean {
+export function shallowEqual(obj1: Record<string, unknown>, obj2: Record<string, unknown>): boolean {
   const keys1 = Object.keys(obj1);
   const keys2 = Object.keys(obj2);
 
