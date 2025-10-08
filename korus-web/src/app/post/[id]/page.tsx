@@ -249,6 +249,7 @@ export default function PostDetailPage() {
               <div className="flex items-center gap-6 text-korus-textTertiary">
                 <button
                   onClick={() => handleReply(reply)}
+                  aria-label="Reply to comment"
                   className="flex items-center gap-1 hover:text-korus-primary transition-colors group"
                 >
                   <div className="w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-korus-primary/10 transition-colors">
@@ -261,6 +262,7 @@ export default function PostDetailPage() {
 
                 <button
                   onClick={() => handleLikeReply(reply.id)}
+                  aria-label={likedReplies.has(reply.id) ? "Unlike reply" : "Like reply"}
                   className={`flex items-center gap-1 hover:text-red-400 transition-colors group ${
                     likedReplies.has(reply.id) ? 'text-red-400' : ''
                   }`}
@@ -273,7 +275,7 @@ export default function PostDetailPage() {
                   <span className="text-sm">{reply.likes}</span>
                 </button>
 
-                <button className="flex items-center gap-1 hover:text-korus-primary transition-colors group">
+                <button aria-label="Share reply" className="flex items-center gap-1 hover:text-korus-primary transition-colors group">
                   <div className="w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-korus-primary/10 transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
@@ -507,6 +509,7 @@ export default function PostDetailPage() {
                   <div className="flex items-center justify-between max-w-md mt-3">
                     <button
                       onClick={() => handleReply(post)}
+                      aria-label="Reply to post"
                       className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group"
                     >
                       <svg className="w-4 h-4 transition-colors text-korus-textTertiary group-hover:text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -515,7 +518,7 @@ export default function PostDetailPage() {
                       <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">{post.replies}</span>
                     </button>
 
-                    <button className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group">
+                    <button aria-label="Repost" className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group">
                       <svg className="w-4 h-4 transition-colors text-korus-textTertiary group-hover:text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
@@ -524,6 +527,7 @@ export default function PostDetailPage() {
 
                     <button
                       onClick={handleLike}
+                      aria-label={liked ? "Unlike post" : "Like post"}
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-full border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group ${
                         liked ? 'bg-red-500/10 border-red-500/30' : ''
                       }`}
@@ -538,14 +542,14 @@ export default function PostDetailPage() {
                       }`}>{post.likes}</span>
                     </button>
 
-                    <button className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group">
+                    <button aria-label={`Send tip (${post.tips} SOL)`} className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group">
                       <svg className="w-4 h-4 transition-colors text-korus-textTertiary group-hover:text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
                       </svg>
                       <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">{post.tips}</span>
                     </button>
 
-                    <button className="flex items-center justify-center w-9 h-9 rounded-full text-korus-textTertiary border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group">
+                    <button aria-label="Share post" className="flex items-center justify-center w-9 h-9 rounded-full text-korus-textTertiary border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group">
                       <svg className="w-4 h-4 transition-colors text-korus-textTertiary group-hover:text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
                       </svg>
@@ -604,6 +608,7 @@ export default function PostDetailPage() {
 
                             <button
                               onClick={() => removeFile(index)}
+                              aria-label="Remove file"
                               className="absolute top-2 right-2 w-6 h-6 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -635,6 +640,7 @@ export default function PostDetailPage() {
                         {/* GIF Button */}
                         <button
                           onClick={() => setShowGifPicker(!showGifPicker)}
+                          aria-label="Add GIF"
                           className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${
                             showGifPicker
                               ? 'text-korus-primary bg-korus-primary/20'
@@ -647,6 +653,7 @@ export default function PostDetailPage() {
                         {/* Emoji Button */}
                         <button
                           onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                          aria-label="Add emoji"
                           className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${
                             showEmojiPicker
                               ? 'text-korus-primary bg-korus-primary/20'
@@ -750,6 +757,7 @@ export default function PostDetailPage() {
               <h3 className="text-lg font-bold text-white">Choose Emoji</h3>
               <button
                 onClick={() => setShowEmojiPicker(false)}
+                aria-label="Close emoji picker"
                 className="w-8 h-8 rounded-full flex items-center justify-center bg-korus-surface/40 border border-korus-borderLight text-korus-textSecondary hover:bg-korus-surface/60 hover:text-white transition-all duration-200"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -770,6 +778,7 @@ export default function PostDetailPage() {
                   <button
                     key={`emoji-${index}-${emoji}`}
                     onClick={() => handleEmojiSelect(emoji)}
+                    aria-label={`Insert ${emoji}`}
                     className="w-10 h-10 text-xl hover:bg-korus-surface/60 rounded-lg transition-colors flex items-center justify-center hover:scale-110 transform"
                   >
                     {emoji}
@@ -789,6 +798,7 @@ export default function PostDetailPage() {
               <h3 className="text-lg font-bold text-white">Choose GIF</h3>
               <button
                 onClick={() => setShowGifPicker(false)}
+                aria-label="Close GIF picker"
                 className="w-8 h-8 rounded-full flex items-center justify-center bg-korus-surface/40 border border-korus-borderLight text-korus-textSecondary hover:bg-korus-surface/60 hover:text-white transition-all duration-200"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

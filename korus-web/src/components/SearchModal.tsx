@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import type { Post as BasePost, Reply } from '@/types';
 
 // SearchModal needs to handle both formats during migration
@@ -28,6 +29,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const modalRef = useFocusTrap(isOpen);
 
   const categories = ['All', 'General', 'Games', 'Events'];
 
@@ -190,7 +192,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/80 backdrop-blur-sm overflow-y-auto pt-20 pb-20">
-      <div className="relative w-full max-w-2xl mx-4">
+      <div ref={modalRef} className="relative w-full max-w-2xl mx-4">
         <div className="bg-korus-dark-200/95 backdrop-blur-xl border-2 border-korus-primary/30 rounded-3xl shadow-2xl shadow-korus-primary/20 overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-korus-border">

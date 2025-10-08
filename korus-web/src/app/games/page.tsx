@@ -460,6 +460,7 @@ export default function GamesPage() {
               <h2 className="text-2xl font-bold force-theme-text">Create New Game</h2>
               <button
                 onClick={() => setShowCreateGameModal(false)}
+                aria-label="Close modal"
                 className="w-8 h-8 rounded-full bg-korus-surface/60 flex items-center justify-center hover:bg-korus-surface/80 transition-all"
               >
                 <svg className="w-5 h-5 force-theme-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">

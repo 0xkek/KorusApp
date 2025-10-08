@@ -117,6 +117,7 @@ export default function VideoPlayer({ videoUrl }: VideoPlayerProps) {
           <div className="flex items-center gap-3">
             <button
               onClick={handlePlayPause}
+              aria-label={isPlaying ? "Pause video" : "Play video"}
               className="text-white hover:text-korus-primary transition-colors"
             >
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -132,13 +133,13 @@ export default function VideoPlayer({ videoUrl }: VideoPlayerProps) {
               <div className="h-full bg-korus-primary rounded-full" style={{ width: '0%' }}></div>
             </div>
 
-            <button className="text-white hover:text-korus-primary transition-colors">
+            <button aria-label="Mute" className="text-white hover:text-korus-primary transition-colors">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
               </svg>
             </button>
 
-            <button className="text-white hover:text-korus-primary transition-colors">
+            <button aria-label="Enter fullscreen" className="text-white hover:text-korus-primary transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
               </svg>

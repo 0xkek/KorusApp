@@ -161,6 +161,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
           <h2 className="heading-2 text-white">Create Post</h2>
           <button
             onClick={onClose}
+            aria-label="Close create post modal"
             className="w-8 h-8 rounded-full flex items-center justify-center bg-korus-surface/40 border border-korus-borderLight text-korus-textSecondary hover:bg-korus-surface/60 hover:text-white transition-all duration-200"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,6 +227,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
 
                       <button
                         onClick={() => removeFile(index)}
+                        aria-label="Remove file"
                         className="absolute top-2 right-2 w-6 h-6 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -262,6 +264,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                   {/* Emoji Button */}
                   <button
                     onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    aria-label="Add emoji"
                     className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10 ${
                       showEmojiPicker
                         ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
@@ -276,6 +279,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                   {/* Pen/Draw Button */}
                   <button
                     onClick={() => setShowDrawCanvas(!showDrawCanvas)}
+                    aria-label="Add drawing"
                     className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10 ${
                       showDrawCanvas
                         ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
@@ -372,6 +376,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
               <h3 className="text-lg font-bold text-white">Choose Emoji</h3>
               <button
                 onClick={() => setShowEmojiPicker(false)}
+                aria-label="Close emoji picker"
                 className="w-8 h-8 rounded-full flex items-center justify-center bg-korus-surface/40 border border-korus-borderLight text-korus-textSecondary hover:bg-korus-surface/60 hover:text-white transition-all duration-200"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -395,6 +400,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                   <button
                     key={`emoji-${index}-${emoji}`}
                     onClick={() => handleEmojiSelect(emoji)}
+                    aria-label={`Insert ${emoji}`}
                     className="w-10 h-10 text-xl hover:bg-korus-surface/60 rounded-lg transition-colors flex items-center justify-center hover:scale-110 transform"
                   >
                     {emoji}

@@ -256,13 +256,14 @@ export default function ProfilePage() {
             {/* Header */}
             <div className="sticky top-0 bg-korus-dark-300/80 backdrop-blur-xl border-b border-korus-border z-10">
               <div className="flex items-center px-4 py-4">
-                <button className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors mr-2">
+                <button aria-label="Open mobile menu" className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors mr-2">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 </button>
                 <button
                   onClick={() => router.back()}
+                  aria-label="Go back"
                   className="p-2 hover:bg-korus-surface/20 rounded-full transition-colors mr-3"
                 >
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -298,6 +299,7 @@ export default function ProfilePage() {
                   <div className="relative mb-4">
                     <button
                       onClick={handleChangeAvatar}
+                      aria-label="Change avatar"
                       className="relative group rounded-full"
                     >
                       <div className="w-32 h-32 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center text-5xl font-bold text-black shadow-lg shadow-korus-primary/20 group-hover:shadow-xl group-hover:shadow-korus-primary/30 transition-all duration-200 border-4 border-transparent">
@@ -342,6 +344,7 @@ export default function ProfilePage() {
                       <span className="text-korus-textTertiary text-sm font-mono">{walletAddress}</span>
                       <button
                         onClick={handleCopyWallet}
+                        aria-label={copied ? "Copied!" : "Copy wallet address"}
                         className="p-1 hover:bg-korus-surface/20 rounded transition-colors"
                       >
                         {copied ? (
