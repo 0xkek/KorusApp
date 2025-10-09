@@ -26,7 +26,7 @@ export const authAPI = {
    * Authenticate with wallet signature
    */
   async loginWithWallet(data: WalletAuthData): Promise<AuthResponse> {
-    return api.post<AuthResponse>('/api/auth/wallet', data);
+    return api.post<AuthResponse>('/api/auth/connect', data);
   },
 
   /**

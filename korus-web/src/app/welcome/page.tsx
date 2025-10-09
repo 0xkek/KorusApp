@@ -5,10 +5,12 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import WalletButton from '@/components/WalletButton';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 
 export default function WelcomePage() {
   const { connected, disconnect } = useWallet();
   const router = useRouter();
+  const { isAuthenticated, authenticate, isAuthenticating } = useWalletAuth();
   const [showDeveloperTools, setShowDeveloperTools] = useState(false);
 
   // Add hardcoded mint colors for wallet button on welcome page
@@ -51,16 +53,19 @@ export default function WelcomePage() {
     };
   }, []);
 
+  // Authenticate with backend when wallet connects
   useEffect(() => {
-    // Add a small delay to prevent immediate redirect during development
-    const timer = setTimeout(() => {
-      if (connected) {
-        router.push('/');
-      }
-    }, 1000); // 1 second delay
+    if (connected && !isAuthenticated && !isAuthenticating) {
+      authenticate();
+    }
+  }, [connected, isAuthenticated, isAuthenticating, authenticate]);
 
-    return () => clearTimeout(timer);
-  }, [connected, router]);
+  // Redirect to home only after successful authentication
+  useEffect(() => {
+    if (connected && isAuthenticated) {
+      router.push('/');
+    }
+  }, [connected, isAuthenticated, router]);
 
   const handleDisconnect = () => {
     disconnect();

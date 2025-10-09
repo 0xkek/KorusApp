@@ -4,7 +4,7 @@
  */
 
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { authAPI } from '@/lib/api';
 import bs58 from 'bs58';
 
@@ -23,6 +23,7 @@ export function useWalletAuth() {
     isAuthenticating: false,
     error: null,
   });
+  const authInProgressRef = useRef(false);
 
   // Authenticate with backend when wallet connects
   const authenticate = useCallback(async () => {
@@ -31,8 +32,16 @@ export function useWalletAuth() {
       return;
     }
 
+    // Prevent multiple simultaneous authentication attempts
+    if (authInProgressRef.current) {
+      console.log('Authentication already in progress, skipping...');
+      return;
+    }
+
+    authInProgressRef.current = true;
+    setAuthState(prev => ({ ...prev, isAuthenticating: true, error: null }));
+
     try {
-      setAuthState(prev => ({ ...prev, isAuthenticating: true, error: null }));
 
       // Create a message to sign
       const message = `Sign this message to authenticate with Korus.\n\nWallet: ${publicKey.toBase58()}\nTimestamp: ${Date.now()}`;
@@ -60,6 +69,7 @@ export function useWalletAuth() {
         isAuthenticating: false,
         error: null,
       });
+      authInProgressRef.current = false;
     } catch (error) {
       console.error('Authentication failed:', error);
       setAuthState({
@@ -68,6 +78,7 @@ export function useWalletAuth() {
         isAuthenticating: false,
         error: error instanceof Error ? error.message : 'Authentication failed',
       });
+      authInProgressRef.current = false;
     }
   }, [publicKey, signMessage, connected]);
 

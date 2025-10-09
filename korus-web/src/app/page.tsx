@@ -13,6 +13,7 @@ import VideoPlayer from '@/components/VideoPlayer';
 import { FeedSkeleton } from '@/components/Skeleton';
 import { useToast } from '@/hooks/useToast';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import type { Post } from '@/types';
 import { MOCK_POSTS } from '@/data/mockData';
 import { postsAPI } from '@/lib/api';
@@ -34,6 +35,7 @@ export default function Home() {
   const { connected, publicKey } = useWallet();
   const router = useRouter();
   const { showSuccess, showError } = useToast();
+  const { token, isAuthenticated, authenticate, isAuthenticating } = useWalletAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
   const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
