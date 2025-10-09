@@ -18,11 +18,14 @@ interface Props {
 }
 
 export const WalletContextProvider: FC<Props> = ({ children }) => {
-  // Use mainnet-beta for production
-  const network = WalletAdapterNetwork.Mainnet;
+  // Use devnet for development, mainnet for production
+  const network = WalletAdapterNetwork.Devnet;
 
-  // You can also use custom RPC endpoint
-  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+  // Use custom RPC endpoint from env or fallback to default
+  const endpoint = useMemo(
+    () => process.env.NEXT_PUBLIC_SOLANA_RPC_URL || clusterApiUrl(network),
+    [network]
+  );
 
   const wallets = useMemo(
     () => [
@@ -34,7 +37,7 @@ export const WalletContextProvider: FC<Props> = ({ children }) => {
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
+      <WalletProvider wallets={wallets} autoConnect={false}>
         <WalletModalProvider>
           {children}
         </WalletModalProvider>

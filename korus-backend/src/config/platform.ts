@@ -8,10 +8,11 @@ export const PLATFORM_CONFIG = {
   
   // Platform wallet private key for distributions (keep secure!)
   PLATFORM_WALLET_PRIVATE_KEY: process.env.PLATFORM_WALLET_PRIVATE_KEY,
-  
+
   // SOL is native, no token mint needed
-  // ALLY_TOKEN_MINT: process.env.ALLY_TOKEN_MINT || '',
-  
+  // Temporary placeholder - will be replaced with actual SPL token mint later
+  ALLY_TOKEN_MINT: process.env.ALLY_TOKEN_MINT || 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+
   // Distribution settings
   PLATFORM_FEE_PERCENT: 50, // Platform keeps 50% total
   DISTRIBUTION_PERCENT: 50, // 50% distributed to users

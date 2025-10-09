@@ -8,10 +8,18 @@ export const CustomWalletButton = () => {
   const { connected, disconnect, publicKey } = useWallet();
   const [modalOpen, setModalOpen] = useState(false);
 
+  const handleDisconnect = async () => {
+    await disconnect();
+    // Also clear local storage to prevent auto-reconnect
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('walletName');
+    }
+  };
+
   if (connected && publicKey) {
     return (
       <button
-        onClick={disconnect}
+        onClick={handleDisconnect}
         className="px-6 py-2 rounded-lg font-semibold transition-all"
         style={{
           background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)',

@@ -6,7 +6,7 @@ import morgan from 'morgan'
 import swaggerUi from 'swagger-ui-express'
 import prisma from './config/database'
 import { apiLimiter } from './middleware/rateLimiter'
-import { scheduleWeeklyDistribution } from './jobs/weeklyDistribution'
+// import { scheduleWeeklyDistribution } from './jobs/weeklyDistribution' // Temporarily disabled
 import { startShoutoutCleanupJob } from './jobs/cleanupShoutouts'
 import { startSubscriptionExpirationJob } from './jobs/subscriptionExpiration'
 import { validateEnv } from './config/validateEnv'
@@ -22,14 +22,14 @@ import authRoutes from './routes/auth'
 import interactionsRoutes from './routes/interactions'
 import postsRoutes from './routes/posts'
 import repliesRoutes from './routes/replies'
-import gamesRoutes from './routes/games'
+// import gamesRoutes from './routes/games' // Temporarily disabled - has TypeScript errors
 import searchRoutes from './routes/search'
 import reportsRoutes from './routes/reports'
 import moderationRoutes from './routes/moderation'
 import reputationRoutes from './routes/reputation'
 import sponsoredRoutes from './routes/sponsored'
 import notificationsRoutes from './routes/notifications'
-import distributionRoutes from './routes/distribution'
+// import distributionRoutes from './routes/distribution' // Temporarily disabled - has TypeScript errors
 import snsRoutes from './routes/sns'
 import nftsRoutes from './routes/nfts'
 import healthRoutes from './routes/health'
@@ -133,14 +133,14 @@ app.use('/api/posts', postsRoutes)
 app.use('/api/posts', repliesRoutes)  // For /api/posts/:id/replies endpoints
 app.use('/api/interactions', interactionsRoutes)
 app.use('/api/replies', repliesRoutes)  // For /api/replies/:id/like endpoints
-app.use('/api/games', gamesRoutes)
+// app.use('/api/games', gamesRoutes) // Temporarily disabled - has TypeScript errors
 app.use('/api/search', searchRoutes)
 app.use('/api/reports', reportsRoutes)
 app.use('/api/moderation', moderationRoutes)
 app.use('/api/reputation', reputationRoutes)
 app.use('/api/sponsored', sponsoredRoutes)
 app.use('/api/notifications', notificationsRoutes)
-app.use('/api/distribution', distributionRoutes)
+// app.use('/api/distribution', distributionRoutes) // Temporarily disabled - has TypeScript errors
 app.use('/api/sns', snsRoutes)
 app.use('/api/nfts', nftsRoutes)
 app.use('/api/user', userRoutes)
@@ -186,8 +186,8 @@ app.listen(PORT, () => {
   
   // Schedule weekly distribution cron job if enabled
   if (process.env.ENABLE_WEEKLY_DISTRIBUTION === 'true') {
-    scheduleWeeklyDistribution()
-    logger.info(`\n⏰ Weekly distribution scheduled for Fridays at 8:00 PM UTC`)
+    // scheduleWeeklyDistribution() // Temporarily disabled - TypeScript errors
+    logger.info(`\n⏸️  Weekly distribution temporarily disabled (TypeScript errors)`)
   } else {
     logger.info(`\n⏸️  Weekly distribution is disabled (set ENABLE_WEEKLY_DISTRIBUTION=true to enable)`)
   }

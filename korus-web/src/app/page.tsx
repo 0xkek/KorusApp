@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/useToast';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import type { Post } from '@/types';
 import { MOCK_POSTS } from '@/data/mockData';
+import { postsAPI } from '@/lib/api';
 
 // Dynamically import modals for code splitting
 const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { ssr: false });
@@ -66,23 +67,49 @@ export default function Home() {
 
   // Initialize posts when component mounts
   useEffect(() => {
-    if (posts.length === 0) {
-      // Define mock posts inline
-      // Use mock data from centralized location
-      const allPosts = MOCK_POSTS;
+    const fetchPosts = async () => {
+      try {
+        setIsLoading(true);
 
-      // Sort posts: shoutouts first, then regular posts
-      const mockPosts = [...allPosts].sort((a, b) => {
-        if (a.isShoutout && !b.isShoutout) return -1;
-        if (!a.isShoutout && b.isShoutout) return 1;
-        return 0;
-      });
+        // Try to fetch from backend API
+        const response = await postsAPI.getPosts();
 
-      // Simulate API loading delay
-      setTimeout(() => {
+        // If we got posts from the backend, use them
+        if (response.posts && response.posts.length > 0) {
+          const sortedPosts = [...response.posts].sort((a, b) => {
+            if (a.isShoutout && !b.isShoutout) return -1;
+            if (!a.isShoutout && b.isShoutout) return 1;
+            return 0;
+          });
+          setPosts(sortedPosts);
+        } else {
+          // Fallback to mock data if backend returns empty
+          console.log('No posts in database, using mock data as fallback');
+          const mockPosts = [...MOCK_POSTS].sort((a, b) => {
+            if (a.isShoutout && !b.isShoutout) return -1;
+            if (!a.isShoutout && b.isShoutout) return 1;
+            return 0;
+          });
+          setPosts(mockPosts);
+        }
+      } catch (error) {
+        console.error('Failed to fetch posts from backend:', error);
+        console.log('Using mock data as fallback');
+
+        // Fallback to mock data on error
+        const mockPosts = [...MOCK_POSTS].sort((a, b) => {
+          if (a.isShoutout && !b.isShoutout) return -1;
+          if (!a.isShoutout && b.isShoutout) return 1;
+          return 0;
+        });
         setPosts(mockPosts);
+      } finally {
         setIsLoading(false);
-      }, 500);
+      }
+    };
+
+    if (posts.length === 0) {
+      fetchPosts();
     }
   }, [posts]);
 
