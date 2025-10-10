@@ -43,6 +43,7 @@ export default function Home() {
     return `${address.slice(0, 8)}...${address.slice(-6)}`;
   };
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
   const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
@@ -1088,10 +1089,12 @@ export default function Home() {
         onNotificationsToggle={() => setShowNotifications(!showNotifications)}
         onPostButtonClick={() => setShowCreatePostModal(true)}
         onSearchClick={() => setShowSearchModal(true)}
+        notificationCount={notificationCount}
       />
       <RightSidebar
         showNotifications={showNotifications}
         onNotificationsClose={() => setShowNotifications(false)}
+        onNotificationCountChange={setNotificationCount}
       />
 
       {/* Modals */}

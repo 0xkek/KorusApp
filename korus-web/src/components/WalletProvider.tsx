@@ -32,7 +32,8 @@ export const WalletContextProvider: FC<Props> = ({ children }) => {
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
     ],
-    []
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [network]
   );
 
   return (

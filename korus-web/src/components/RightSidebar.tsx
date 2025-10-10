@@ -1,43 +1,101 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { MOCK_NOTIFICATIONS, MOCK_RECENT_ACTIVITIES } from '@/data/mockData';
-
-interface Notification {
-  id: number;
-  type: 'like' | 'reply' | 'tip' | 'follow' | 'mention' | 'game' | 'event';
-  message: string;
-  user?: string;
-  userAvatar?: string;
-  timestamp: number;
-  read: boolean;
-  actionIcon?: string;
-  actionColor?: string;
-  relatedData?: Record<string, unknown>;
-}
+import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { notificationsAPI, type Notification as APINotification } from '@/lib/api';
+import { MOCK_RECENT_ACTIVITIES } from '@/data/mockData';
 
 interface RightSidebarProps {
   showNotifications?: boolean;
   onNotificationsClose?: () => void;
+  onNotificationCountChange?: (count: number) => void;
 }
 
-export default function RightSidebar({ showNotifications = false }: RightSidebarProps) {
+export default function RightSidebar({ showNotifications = false, onNotificationCountChange }: RightSidebarProps) {
   const { connected } = useWallet();
-
-  if (!connected) return null;
-
-  const notifications: Notification[] = MOCK_NOTIFICATIONS;
+  const { token, isAuthenticated } = useWalletAuth();
+  const [notifications, setNotifications] = useState<APINotification[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const recentActivities = MOCK_RECENT_ACTIVITIES;
 
+  // Fetch notifications when connected and authenticated
+  useEffect(() => {
+    if (connected && isAuthenticated && token) {
+      fetchNotifications();
+    }
+  }, [connected, isAuthenticated, token]);
+
+  const fetchNotifications = async () => {
+    if (!token) return;
+
+    setIsLoading(true);
+    try {
+      const response = await notificationsAPI.getNotifications(token);
+      setNotifications(response.notifications);
+
+      // Update unread count
+      const unreadCount = response.notifications.filter(n => !n.read).length;
+      if (onNotificationCountChange) {
+        onNotificationCountChange(unreadCount);
+      }
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMarkAsRead = async (notificationId: string) => {
+    if (!token) return;
+
+    try {
+      await notificationsAPI.markAsRead(notificationId, token);
+      setNotifications(prev =>
+        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+      );
+
+      // Update unread count
+      const unreadCount = notifications.filter(n => !n.read && n.id !== notificationId).length;
+      if (onNotificationCountChange) {
+        onNotificationCountChange(unreadCount);
+      }
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    if (!token) return;
+
+    try {
+      await notificationsAPI.markAllAsRead(token);
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+
+      if (onNotificationCountChange) {
+        onNotificationCountChange(0);
+      }
+    } catch (error) {
+      console.error('Failed to mark all as read:', error);
+    }
+  };
+
   // Helper function to format timestamps
-  const formatTimeAgo = (timestamp: number) => {
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
     const now = Date.now();
-    const diff = now - timestamp;
+    const diff = now - date.getTime();
 
     if (diff < 60000) return 'now';
     if (diff < 3600000) return `${Math.floor(diff / 60000)}m`;
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
     return `${Math.floor(diff / 86400000)}d`;
+  };
+
+  // Truncate wallet address for display
+  const truncateAddress = (address: string) => {
+    if (!address || address.length <= 20) return address;
+    return `${address.slice(0, 8)}...${address.slice(-6)}`;
   };
 
 
@@ -95,16 +153,28 @@ export default function RightSidebar({ showNotifications = false }: RightSidebar
   ];
 
   return (
-    <div className="fixed right-0 top-0 bottom-0 lg:w-96 md:w-80 bg-black border-l border-korus-border p-4 overflow-y-auto hidden md:block">
+    <div
+      className="fixed right-0 top-0 bottom-0 lg:w-96 md:w-80 bg-black border-l border-korus-border overflow-y-scroll hidden md:block z-10"
+      style={{
+        overscrollBehavior: 'contain',
+        WebkitOverflowScrolling: 'touch',
+        pointerEvents: 'auto'
+      }}
+    >
       {/* Content based on showNotifications prop */}
       {showNotifications ? (
         /* Notifications */
-        <div className="mb-6">
-          <div className="mb-4 px-4">
+        <div className="mb-6 p-4">
+          <div className="mb-4">
             <h2 className="text-2xl font-bold text-korus-text">🔔 Notifications</h2>
           </div>
           <div role="list" aria-label="Notifications">
-            {notifications.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-8 text-korus-textSecondary">
+                <div className="spinner mx-auto mb-2"></div>
+                <p>Loading notifications...</p>
+              </div>
+            ) : notifications.length === 0 ? (
               <div className="text-center py-8 text-korus-textSecondary">
                 <div className="text-4xl mb-2">🔔</div>
                 <p>No notifications yet</p>
@@ -117,25 +187,26 @@ export default function RightSidebar({ showNotifications = false }: RightSidebar
                     !notification.read ? 'bg-korus-surface/20 backdrop-blur-sm' : 'bg-korus-surface/10 backdrop-blur-sm'
                   }`}
                   role="listitem"
-                  aria-label={`${notification.type} notification from ${notification.user || 'system'}`}
+                  aria-label={`${notification.type} notification`}
                   tabIndex={0}
+                  onClick={() => handleMarkAsRead(notification.id)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      // Handle notification click
+                      handleMarkAsRead(notification.id);
                     }
                   }}
                 >
                   <div className="flex items-start gap-3">
-                    {/* User Avatar or Action Icon */}
+                    {/* User Avatar */}
                     <div className="flex-shrink-0">
-                      {notification.user ? (
+                      {notification.fromUser ? (
                         <div className="w-8 h-8 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center text-sm font-bold text-black">
-                          {notification.userAvatar || notification.user.slice(0, 2).toUpperCase()}
+                          {notification.fromUser.walletAddress.slice(0, 2).toUpperCase()}
                         </div>
                       ) : (
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${notification.actionColor}`}>
-                          {notification.actionIcon}
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm bg-korus-surface/60">
+                          🔔
                         </div>
                       )}
                     </div>
@@ -144,17 +215,24 @@ export default function RightSidebar({ showNotifications = false }: RightSidebar
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="text-korus-text text-sm">
-                            {notification.user && (
-                              <span className="font-semibold">{notification.user} </span>
-                            )}
-                            <span className="text-korus-textSecondary">{notification.message}</span>
+                          <p className="text-korus-text text-sm font-semibold mb-1">
+                            {notification.title}
+                          </p>
+                          <p className="text-korus-textSecondary text-sm">
+                            {notification.message}
                           </p>
 
+                          {/* Show from user if present */}
+                          {notification.fromUser && (
+                            <div className="mt-1 text-xs text-korus-primary">
+                              from {truncateAddress(notification.fromUser.walletAddress)}
+                            </div>
+                          )}
+
                           {/* Special data for tips */}
-                          {notification.type === 'tip' && notification.relatedData && (
+                          {notification.amount && (
                             <div className="mt-1 text-xs text-yellow-400 font-medium">
-                              💰 {String(notification.relatedData.amount)}
+                              💰 {notification.amount} SOL
                             </div>
                           )}
                         </div>
@@ -168,19 +246,8 @@ export default function RightSidebar({ showNotifications = false }: RightSidebar
                       {/* Timestamp */}
                       <div className="flex items-center justify-between mt-2">
                         <span className="text-korus-textTertiary text-xs">
-                          {formatTimeAgo(notification.timestamp)}
+                          {formatTimeAgo(notification.createdAt)}
                         </span>
-
-                        {/* Action buttons for specific notification types */}
-                        {(notification.type === 'game' || notification.type === 'follow') && (
-                          <button className={`text-xs px-2 py-1 rounded-full font-medium transition-colors ${
-                            notification.type === 'game'
-                              ? 'bg-korus-primary text-black hover:bg-korus-secondary'
-                              : 'bg-korus-surface/40 border border-korus-borderLight text-korus-primary hover:bg-korus-surface/60'
-                          }`}>
-                            {notification.type === 'game' ? 'Join Game' : 'Follow Back'}
-                          </button>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -191,7 +258,10 @@ export default function RightSidebar({ showNotifications = false }: RightSidebar
 
           {notifications.length > 0 && (
             <div className="px-4 pt-3">
-              <button className="text-korus-primary text-sm hover:underline">
+              <button
+                onClick={handleMarkAllAsRead}
+                className="text-korus-primary text-sm hover:underline"
+              >
                 Mark all as read
               </button>
             </div>
@@ -199,8 +269,8 @@ export default function RightSidebar({ showNotifications = false }: RightSidebar
         </div>
       ) : (
         /* Recent Activity */
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-korus-text mb-4 px-4">Recent Activity</h2>
+        <div className="mb-6 p-4">
+          <h2 className="text-2xl font-bold text-korus-text mb-4">Recent Activity</h2>
         <div>
           {recentActivities.map((activity) => (
             <div key={activity.id} className="border-b border-korus-borderLight bg-korus-surface/20 backdrop-blur-sm mx-[-1rem] px-4 py-4 hover:bg-korus-surface/40 hover:border-korus-border transition-all duration-200 cursor-pointer group">
@@ -297,8 +367,8 @@ export default function RightSidebar({ showNotifications = false }: RightSidebar
                   <div className="flex items-center gap-1">
                     <span className="text-korus-text font-medium text-sm">{user.name}</span>
                     {user.verified && (
-                      <div className="w-5 h-5 bg-korus-primary rounded-full flex items-center justify-center">
-                        <svg className="w-3 h-3 text-black" fill="currentColor" viewBox="0 0 24 24">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
+                        <svg className="w-3 h-3" fill="black" viewBox="0 0 24 24">
                           <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
                         </svg>
                       </div>
