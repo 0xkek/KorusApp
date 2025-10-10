@@ -627,9 +627,9 @@ export default function PostDetailPage() {
                       value={inlineReplyContent}
                       onChange={(e) => setInlineReplyContent(e.target.value)}
                       placeholder="Post your reply..."
-                      className="w-full bg-transparent text-white text-sm resize-none placeholder-korus-textTertiary min-h-[60px] pb-2"
+                      className="w-full bg-transparent text-white text-base resize-none placeholder-korus-textTertiary min-h-[150px] max-h-[300px] pb-2"
                       style={{ border: 'none', outline: 'none' }}
-                      rows={2}
+                      rows={6}
                     />
 
                     {/* File Previews */}
