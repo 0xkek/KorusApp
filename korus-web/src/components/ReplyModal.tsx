@@ -3,9 +3,11 @@ import Image from 'next/image';
 
 import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { Button } from '@/components/ui';
+import { repliesAPI, uploadAPI } from '@/lib/api';
 import type { Post, Reply } from '@/types/post';
 
 interface ReplyModalProps {
@@ -17,6 +19,7 @@ interface ReplyModalProps {
 
 export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: ReplyModalProps) {
   const { connected, publicKey } = useWallet();
+  const { token, isAuthenticated } = useWalletAuth();
   const { showSuccess, showError } = useToast();
   const [replyContent, setReplyContent] = useState('');
   const [isPosting, setIsPosting] = useState(false);
@@ -28,8 +31,8 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
   if (!isOpen || !post) return null;
 
   const handleReply = async () => {
-    if (!connected) {
-      showError('Please connect your wallet to reply');
+    if (!connected || !isAuthenticated || !token) {
+      showError('Please connect your wallet and sign in to reply');
       return;
     }
 
@@ -41,19 +44,40 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
     setIsPosting(true);
 
     try {
-      // TODO: Implement actual API call to create reply
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Upload image if present
+      let imageUrl: string | undefined;
+      if (selectedFiles.length > 0) {
+        const imageFile = selectedFiles[0];
+        if (imageFile.type.startsWith('image/')) {
+          console.log('Uploading reply image...');
+          const uploadResponse = await uploadAPI.uploadImage(imageFile, token);
+          imageUrl = uploadResponse.url;
+          console.log('Reply image uploaded:', imageUrl);
+        }
+      }
 
-      // Create reply object
-      const reply = {
-        id: Date.now(),
-        user: publicKey?.toBase58().slice(0, 15) || 'current_user',
-        content: replyContent,
-        likes: 0,
+      // Create reply via backend API
+      const response = await repliesAPI.createReply(
+        String(post.id),
+        {
+          content: replyContent.trim(),
+          imageUrl
+        },
+        token
+      );
+
+      console.log('Reply created:', response);
+
+      // Transform backend reply to match frontend type
+      const reply: Reply = {
+        id: response.reply.id as any,
+        user: response.reply.author.walletAddress,
+        content: response.reply.content,
+        likes: response.reply.likeCount || 0,
         replies: [],
-        time: 'now',
+        time: 'Just now',
         isPremium: false,
-        image: selectedFiles.length > 0 && selectedFiles[0].type.startsWith('image/') ? URL.createObjectURL(selectedFiles[0]) : undefined,
+        image: response.reply.imageUrl
       };
 
       // Call success callback
@@ -65,7 +89,8 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
       setReplyContent('');
       setSelectedFiles([]);
       onClose();
-    } catch {
+    } catch (error) {
+      console.error('Failed to post reply:', error);
       showError('Failed to post reply. Please try again.');
     } finally {
       setIsPosting(false);
@@ -98,7 +123,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
 
 
   const characterCount = replyContent.length;
-  const maxCharacters = 280;
+  const maxCharacters = 300;
   const isOverLimit = characterCount > maxCharacters;
 
   return (
