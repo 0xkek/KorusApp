@@ -172,7 +172,7 @@ router.get('/check-username', async (req, res) => {
 router.get('/by-username/:username', async (req, res) => {
   try {
     const { username } = req.params;
-    
+
     const normalizedUsername = normalizeUsername(username);
 
     const user = await prisma.user.findFirst({
@@ -196,6 +196,61 @@ router.get('/by-username/:username', async (req, res) => {
   } catch (error) {
     logger.error('Error fetching user by username:', error);
     res.status(500).json({ error: 'Failed to fetch user' });
+  }
+});
+
+/**
+ * PUT /api/user/profile
+ * Update user profile
+ */
+router.put('/profile', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userWallet = req.userWallet!;
+    const { displayName, bio, location, website, twitter, themeColor } = req.body;
+
+    // Validate website URL if provided
+    if (website && !website.match(/^https?:\/\/.+/)) {
+      return res.status(400).json({ error: 'Website URL must start with http:// or https://' });
+    }
+
+    // Update user profile
+    const updatedUser = await prisma.user.update({
+      where: { walletAddress: userWallet },
+      data: {
+        displayName: displayName || undefined,
+        bio: bio || undefined,
+        location: location || undefined,
+        website: website || undefined,
+        twitter: twitter || undefined,
+        themeColor: themeColor || undefined
+      },
+      select: {
+        walletAddress: true,
+        username: true,
+        hasSetUsername: true,
+        snsUsername: true,
+        displayName: true,
+        bio: true,
+        location: true,
+        website: true,
+        twitter: true,
+        nftAvatar: true,
+        themeColor: true,
+        tier: true,
+        reputationScore: true,
+        createdAt: true
+      }
+    });
+
+    logger.log(`Profile updated for ${userWallet}`);
+
+    res.json({
+      success: true,
+      user: updatedUser
+    });
+  } catch (error) {
+    logger.error('Error updating profile:', error);
+    res.status(500).json({ error: 'Failed to update profile' });
   }
 });
 

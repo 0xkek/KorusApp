@@ -144,7 +144,8 @@ export const getPosts = async (req: Request, res: Response) => {
             genesisVerified: true,
             snsUsername: true,
             username: true,
-            nftAvatar: true
+            nftAvatar: true,
+            themeColor: true
           }
         }
       },
@@ -175,7 +176,23 @@ export const getPosts = async (req: Request, res: Response) => {
               genesisVerified: true,
               snsUsername: true,
               username: true,
-              nftAvatar: true
+              nftAvatar: true,
+              themeColor: true
+            }
+          },
+          originalPost: {
+            include: {
+              author: {
+                select: {
+                  walletAddress: true,
+                  tier: true,
+                  genesisVerified: true,
+                  snsUsername: true,
+                  username: true,
+                  nftAvatar: true,
+                  themeColor: true
+                }
+              }
             }
           }
         },
@@ -271,5 +288,41 @@ export const getSinglePost = async (req: Request, res: Response<ApiResponse<Post
   } catch (error) {
     logger.error('Get single post error:', error)
     res.status(500).json({ success: false, error: 'Failed to get post' })
+  }
+}
+
+export const deletePost = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params
+    const walletAddress = req.userWallet!
+
+    // Check if post exists
+    const post = await prisma.post.findUnique({
+      where: { id }
+    })
+
+    if (!post) {
+      return res.status(404).json({ success: false, error: 'Post not found' })
+    }
+
+    // Check if user owns the post
+    if (post.authorWallet !== walletAddress) {
+      return res.status(403).json({ success: false, error: 'You can only delete your own posts' })
+    }
+
+    // Delete the post (cascade will delete related records)
+    await prisma.post.delete({
+      where: { id }
+    })
+
+    logger.debug(`Post deleted by ${walletAddress}: ${id}`)
+
+    res.json({
+      success: true,
+      message: 'Post deleted successfully'
+    })
+  } catch (error) {
+    logger.error('Delete post error:', error)
+    res.status(500).json({ success: false, error: 'Failed to delete post' })
   }
 }

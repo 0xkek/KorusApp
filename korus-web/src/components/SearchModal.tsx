@@ -94,7 +94,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
   }, []);
 
   // Perform search
-  const performSearch = useCallback((query: string) => {
+  const performSearch = useCallback(async (query: string) => {
     setSearchQuery(query);
     setIsLoading(true);
     setHasSearched(true);
@@ -112,14 +112,44 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
       }
     }
 
-    setTimeout(() => {
+    try {
+      // Use backend search API
+      const { searchAPI } = await import('@/lib/api');
+      const results = await searchAPI.search({
+        query: query.trim(),
+        limit: 50
+      });
+
+      // Transform backend results to match expected format
+      const transformedPosts = results.posts.map((post: any) => ({
+        ...post,
+        user: post.author?.username || post.author?.snsUsername || post.authorWallet,
+        wallet: post.authorWallet,
+        category: post.topic,
+        likes: post.likeCount || 0,
+        tips: post.tipCount || 0,
+        replies: post.replyCount || 0,
+        timestamp: post.createdAt
+      }));
+
+      // Filter by category if selected
+      let finalResults = transformedPosts;
+      if (selectedCategory) {
+        finalResults = transformedPosts.filter((post: any) =>
+          post.category?.toLowerCase() === selectedCategory.toLowerCase()
+        );
+      }
+
+      setSearchResults(finalResults);
+      setShowHistory(false);
+    } catch (error) {
+      console.error('Search failed:', error);
+      // Fallback to local search if API fails
       let results = [...allPosts];
 
-      // Filter by query
       if (query.trim()) {
         const lowerQuery = query.toLowerCase();
         results = results.filter(post => {
-          // Check replyThreads if replies is a number
           const replyArray = Array.isArray(post.replies) ? post.replies : (post.replyThreads || []);
           const hasReplyMatch = replyArray.some(r => r.content?.toLowerCase().includes(lowerQuery));
 
@@ -133,14 +163,12 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
         });
       }
 
-      // Filter by category
       if (selectedCategory) {
         results = results.filter(post =>
           post.category?.toLowerCase() === selectedCategory.toLowerCase()
         );
       }
 
-      // Sort by relevance
       results.sort((a, b) => {
         const aScore = calculateRelevanceScore(a, query);
         const bScore = calculateRelevanceScore(b, query);
@@ -148,9 +176,9 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
       });
 
       setSearchResults(results);
+    } finally {
       setIsLoading(false);
-      setShowHistory(false);
-    }, 300);
+    }
   }, [allPosts, selectedCategory, searchHistory, calculateRelevanceScore]);
 
   const handleSubmit = (e: React.FormEvent) => {

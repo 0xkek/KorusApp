@@ -4,6 +4,7 @@
 
 export interface Reply {
   id: number;
+  postId?: string; // The original post ID this reply belongs to
   user: string;
   wallet?: string;
   content: string;

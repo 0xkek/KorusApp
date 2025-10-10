@@ -151,6 +151,12 @@ input:focus, textarea:focus, select:focus {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--korus-primary) 20%, transparent);
 }
 
+/* Override focus styles for transparent textareas (post composer, reply composer) */
+textarea.bg-transparent:focus {
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
 /* Error state */
 .input-error {
   border-color: #ef4444 !important;

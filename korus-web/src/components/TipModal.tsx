@@ -1,30 +1,70 @@
 'use client';
 
-import { useState } from 'react';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useState, useEffect } from 'react';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { Button } from '@/components/ui';
+import { interactionsAPI } from '@/lib/api';
 
 interface TipModalProps {
   isOpen: boolean;
   onClose: () => void;
   recipientUser: string;
-  postId?: number;
-  onTipSuccess?: () => void;
+  postId?: number | string;
+  onTipSuccess?: (amount: number) => void;
 }
 
-export default function TipModal({ isOpen, onClose, recipientUser, onTipSuccess }: TipModalProps) {
-  const { connected } = useWallet();
+export default function TipModal({ isOpen, onClose, recipientUser, postId, onTipSuccess }: TipModalProps) {
+  const { connected, publicKey, sendTransaction } = useWallet();
+  const { connection } = useConnection();
+  const { token, isAuthenticated } = useWalletAuth();
   const { showSuccess, showError } = useToast();
   const [customAmount, setCustomAmount] = useState('');
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [validationError, setValidationError] = useState<string>('');
+  const [balance, setBalance] = useState<number>(0);
+  const [showSuccessScreen, setShowSuccessScreen] = useState(false);
+  const [successAmount, setSuccessAmount] = useState(0);
+  const [txSignature, setTxSignature] = useState('');
   const modalRef = useFocusTrap(isOpen);
 
   // Get SOL to USD rate from environment or use fallback
   const solToUsd = parseFloat(process.env.NEXT_PUBLIC_SOL_USD_FALLBACK || '200');
+
+  // Fetch wallet balance
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (isOpen && connected && publicKey) {
+        try {
+          console.log('Fetching balance for:', publicKey.toBase58());
+          const lamports = await connection.getBalance(publicKey);
+          console.log('Balance in lamports:', lamports);
+          const solBalance = lamports / LAMPORTS_PER_SOL;
+          console.log('Balance in SOL:', solBalance);
+          setBalance(solBalance);
+        } catch (error) {
+          console.error('Failed to fetch balance:', error);
+        }
+      } else {
+        console.log('Cannot fetch balance:', { isOpen, connected, publicKey: publicKey?.toBase58() });
+      }
+    };
+
+    fetchBalance();
+  }, [isOpen, connected, publicKey, connection]);
+
+  // Reset success screen when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setShowSuccessScreen(false);
+      setSuccessAmount(0);
+      setTxSignature('');
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -66,8 +106,18 @@ export default function TipModal({ isOpen, onClose, recipientUser, onTipSuccess 
   };
 
   const handleSendTip = async () => {
-    if (!connected) {
+    if (!connected || !publicKey || !sendTransaction) {
       showError('Please connect your wallet to send tips');
+      return;
+    }
+
+    if (!token || !isAuthenticated) {
+      showError('Please authenticate to send tips');
+      return;
+    }
+
+    if (!postId) {
+      showError('Invalid post ID');
       return;
     }
 
@@ -85,34 +135,67 @@ export default function TipModal({ isOpen, onClose, recipientUser, onTipSuccess 
     setIsSending(true);
 
     try {
-      // TODO: Implement actual Solana transaction
-      // For now, just simulate the tip sending
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Create recipient public key
+      const recipientPubkey = new PublicKey(recipientUser);
 
-      showSuccess(`Successfully sent ${amount} SOL tip to ${recipientUser}!`);
+      // Create transaction
+      const transaction = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: recipientPubkey,
+          lamports: Math.floor(amount * LAMPORTS_PER_SOL),
+        })
+      );
 
-      // Call the success callback to mark post as tipped
+      // Get latest blockhash
+      const { blockhash } = await connection.getLatestBlockhash();
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = publicKey;
+
+      // Send transaction
+      const signature = await sendTransaction(transaction, connection);
+
+      // Wait for confirmation
+      await connection.confirmTransaction(signature, 'confirmed');
+
+      // Record tip in backend
+      await interactionsAPI.tipPost(
+        String(postId),
+        amount,
+        signature,
+        token
+      );
+
+      // Refresh balance
+      const lamports = await connection.getBalance(publicKey);
+      setBalance(lamports / LAMPORTS_PER_SOL);
+
+      // Call the success callback with the amount
       if (onTipSuccess) {
-        onTipSuccess();
+        onTipSuccess(amount);
       }
+
+      // Show success screen
+      setSuccessAmount(amount);
+      setTxSignature(signature);
+      setShowSuccessScreen(true);
 
       // Reset form
       setSelectedAmount(null);
       setCustomAmount('');
-      onClose();
-    } catch {
-      showError('Failed to send tip. Please try again.');
+    } catch (error: any) {
+      console.error('Failed to send tip:', error);
+      console.error('Error details:', error.data || error.message);
+      if (error instanceof Error) {
+        showError(`Failed to send tip: ${error.message}`);
+      } else {
+        showError('Failed to send tip. Please try again.');
+      }
     } finally {
       setIsSending(false);
     }
   };
 
-  const getCurrentBalance = () => {
-    // TODO: Implement actual balance fetching
-    return 2.45; // Mock balance
-  };
-
-  const balance = getCurrentBalance();
   const finalAmount = getFinalAmount();
   const isInsufficientFunds = finalAmount > balance;
 
@@ -143,6 +226,49 @@ export default function TipModal({ isOpen, onClose, recipientUser, onTipSuccess 
         </div>
 
         {/* Modal Content */}
+        {showSuccessScreen ? (
+          /* Success Screen */
+          <div className="p-8 text-center">
+            <div className="w-20 h-20 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce-once shadow-2xl" style={{ boxShadow: '0 20px 40px -10px color-mix(in srgb, var(--korus-primary) 60%, transparent)' }}>
+              <svg className="w-10 h-10 text-black" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+              </svg>
+            </div>
+
+            <h3 className="text-2xl font-bold text-white mb-2">Tip Sent Successfully!</h3>
+            <p className="text-korus-textSecondary mb-6">
+              You sent <span className="text-korus-primary font-bold">{successAmount.toFixed(3)} SOL</span> to {truncateAddress(recipientUser)}
+            </p>
+
+            <div className="bg-korus-surface/40 border border-korus-borderLight rounded-xl p-4 mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-korus-textSecondary">Transaction</span>
+                <a
+                  href={`https://solscan.io/tx/${txSignature}?cluster=devnet`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-korus-primary hover:text-korus-secondary transition-colors flex items-center gap-1"
+                >
+                  View on Solscan
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </div>
+              <div className="text-xs text-korus-textTertiary font-mono break-all">
+                {txSignature}
+              </div>
+            </div>
+
+            <Button
+              onClick={onClose}
+              variant="primary"
+              className="w-full"
+            >
+              Close
+            </Button>
+          </div>
+        ) : (
         <div className="p-5 space-y-5">
           {/* Balance Display */}
           {connected && (
@@ -234,34 +360,35 @@ export default function TipModal({ isOpen, onClose, recipientUser, onTipSuccess 
               </div>
             </div>
           )}
-        </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-3 p-6 border-t border-korus-border">
-          <Button
-            onClick={onClose}
-            disabled={isSending}
-            variant="secondary"
-            className="flex-1"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSendTip}
-            disabled={finalAmount <= 0 || isSending || isInsufficientFunds || !connected || !!validationError}
-            variant="primary"
-            isLoading={isSending}
-            className="flex-1"
-          >
-            {!isSending && (
-              !connected ? 'Connect Wallet' :
-              validationError ? 'Invalid Amount' :
-              finalAmount <= 0 ? 'Select Amount' :
-              isInsufficientFunds ? 'Insufficient Balance' :
-              `Send Tip for ${finalAmount.toFixed(3)} SOL`
-            )}
-          </Button>
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-6 mt-6 border-t border-korus-border">
+            <Button
+              onClick={onClose}
+              disabled={isSending}
+              variant="secondary"
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSendTip}
+              disabled={finalAmount <= 0 || isSending || isInsufficientFunds || !connected || !!validationError}
+              variant="primary"
+              isLoading={isSending}
+              className="flex-1"
+            >
+              {!isSending && (
+                !connected ? 'Connect Wallet' :
+                validationError ? 'Invalid Amount' :
+                finalAmount <= 0 ? 'Select Amount' :
+                isInsufficientFunds ? 'Insufficient Balance' :
+                `Send Tip for ${finalAmount.toFixed(3)} SOL`
+              )}
+            </Button>
+          </div>
         </div>
+        )}
       </div>
     </div>
   );

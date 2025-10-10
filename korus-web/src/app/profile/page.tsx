@@ -92,7 +92,29 @@ export default function ProfilePage() {
 
   const loadUserProfile = useCallback(async () => {
     try {
-      // Load username from localStorage with SSR safety
+      // Get auth token
+      const token = localStorage.getItem('korus_auth_token');
+      if (!token) return;
+
+      // Load profile from API
+      const { usersAPI } = await import('@/lib/api');
+      const { user } = await usersAPI.getProfile(token);
+
+      if (user.username) {
+        setCurrentUsername(user.username);
+        setHasSetUsername(user.hasSetUsername || false);
+      }
+
+      // Also save to localStorage as backup
+      if (user.username && typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('korus_username', user.username);
+        } catch {
+          // Continue without saved data
+        }
+      }
+    } catch {
+      // Handle error silently or load from localStorage as fallback
       if (typeof window !== 'undefined') {
         try {
           const savedUsername = localStorage.getItem('korus_username');
@@ -104,10 +126,6 @@ export default function ProfilePage() {
           // Continue without saved data
         }
       }
-
-      // TODO: Implement API call to load user profile
-    } catch {
-      // Handle error silently or show user notification
     }
   }, []);
 
@@ -201,23 +219,36 @@ export default function ProfilePage() {
 
     setSavingUsername(true);
     try {
-      // Save username to localStorage with SSR safety and error handling
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem('korus_username', usernameToSave);
-        } catch {
-          // Continue anyway - don't block the operation
-        }
+      // Get auth token
+      const token = localStorage.getItem('korus_auth_token');
+      if (!token) {
+        showError('Please reconnect your wallet to set username');
+        return;
       }
 
-      // TODO: Implement API call to save username
-      setCurrentUsername(usernameToSave);
+      // Save username via API
+      const { usersAPI } = await import('@/lib/api');
+      const result = await usersAPI.setUsername({ username: usernameToSave }, token);
+
+      setCurrentUsername(result.username);
       setHasSetUsername(true);
       setEditingUsername(false);
       setTempUsernameValue('');
-      // TODO: Replace with toast notification
-    } catch {
-      // TODO: Replace with toast notification showing error
+
+      // Also save to localStorage as backup
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('korus_username', result.username);
+        } catch {
+          // Continue anyway
+        }
+      }
+
+      showSuccess('Username set successfully!');
+    } catch (error: any) {
+      const errorMessage = error?.data?.error || error?.message || 'Failed to set username';
+      showError(errorMessage);
+      setUsernameError(errorMessage);
     } finally {
       setSavingUsername(false);
     }

@@ -54,6 +54,12 @@ export default function PostDetailPage() {
   const [postToTip, setPostToTip] = useState<Post | null>(null);
   const [postToShare, setPostToShare] = useState<Post | null>(null);
 
+  // Truncate wallet address for display
+  const truncateAddress = (address: string) => {
+    if (!address || address.length <= 20) return address;
+    return `${address.slice(0, 8)}...${address.slice(-6)}`;
+  };
+
   const loadPost = useCallback(async () => {
     try {
       setLoading(true);
@@ -346,7 +352,7 @@ export default function PostDetailPage() {
                   href={`/profile/${reply.wallet || reply.user}`}
                   className="font-bold text-white hover:underline"
                 >
-                  {reply.user}
+                  {truncateAddress(reply.user)}
                 </Link>
                 {reply.isPremium && (
                   <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
@@ -355,7 +361,7 @@ export default function PostDetailPage() {
                     </svg>
                   </div>
                 )}
-                <span className="text-korus-textSecondary">@{reply.user}</span>
+                <span className="text-korus-textSecondary">@{truncateAddress(reply.user)}</span>
                 <span className="text-korus-textSecondary">·</span>
                 <span className="text-korus-textSecondary">{reply.time}</span>
               </div>
@@ -612,7 +618,7 @@ export default function PostDetailPage() {
                       href={`/profile/${post.wallet || post.user}`}
                       className={`font-bold hover:underline cursor-pointer ${post.isShoutout ? 'text-korus-primary' : 'text-white'}`}
                     >
-                      {post.user}
+                      {truncateAddress(post.user)}
                     </Link>
 
                     {/* Premium Badge */}
@@ -624,7 +630,7 @@ export default function PostDetailPage() {
                       </div>
                     )}
 
-                    <span className="text-korus-textSecondary">@{post.user}</span>
+                    <span className="text-korus-textSecondary">@{truncateAddress(post.user)}</span>
                     <span className="text-korus-textSecondary">·</span>
                     <span className="text-korus-textSecondary hover:underline cursor-pointer">{post.time}</span>
 

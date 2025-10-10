@@ -67,26 +67,34 @@ export default function EditProfilePage() {
 
     const loadProfile = async () => {
       try {
-        // TODO: Implement API call to load user profile
-        // Mock loading delay
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Get auth token
+        const token = localStorage.getItem('korus_auth_token');
+        if (!token) {
+          setIsLoading(false);
+          return;
+        }
 
-        // Mock existing profile data
-        setDisplayName('');
-        setBio('');
-        setLocation('');
-        setWebsite('');
-        setTwitter('');
-        setSelectedThemeColor('#43e97b');
-      } catch {
-        // Failed to load profile
+        // Load profile from API
+        const { usersAPI } = await import('@/lib/api');
+        const { user } = await usersAPI.getProfile(token);
+
+        // Populate form with existing data
+        setDisplayName(user.displayName || '');
+        setBio(user.bio || '');
+        setLocation(user.location || '');
+        setWebsite(user.website || '');
+        setTwitter(user.twitter || '');
+        setSelectedThemeColor(user.themeColor || '#43e97b');
+      } catch (error) {
+        console.error('Failed to load profile:', error);
+        showError('Failed to load profile');
       } finally {
         setIsLoading(false);
       }
     };
 
     loadProfile();
-  }, [connected, router]);
+  }, [connected, router, showError]);
 
   // Track changes
   useEffect(() => {
@@ -112,13 +120,29 @@ export default function EditProfilePage() {
 
     setIsSaving(true);
     try {
-      // TODO: Implement API call to save profile
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Mock API delay
+      // Get auth token
+      const token = localStorage.getItem('korus_auth_token');
+      if (!token) {
+        showError('Please reconnect your wallet to save profile');
+        return;
+      }
+
+      // Save profile via API
+      const { usersAPI } = await import('@/lib/api');
+      await usersAPI.updateProfile({
+        displayName,
+        bio,
+        location,
+        website,
+        twitter,
+        themeColor: selectedThemeColor
+      }, token);
 
       showSuccess('Profile updated successfully!');
       router.back();
-    } catch {
-      showError('Failed to save profile. Please try again.');
+    } catch (error: any) {
+      const errorMessage = error?.data?.error || error?.message || 'Failed to save profile';
+      showError(errorMessage);
     } finally {
       setIsSaving(false);
     }

@@ -59,9 +59,10 @@ model User {
   moderationActions        ModerationAction[]  @relation("ModeratedUser")
   sentNotifications        Notification[]      @relation("NotificationSender")
   notifications            Notification[]
-  posts                    Post[]
+  posts                    Post[]              @relation("AuthoredPosts")
   repEvents                RepEvent[]
   replies                  Reply[]
+  reposts                  Repost[]
   reports                  Report[]
   tokenDistributions       TokenDistribution[]
   subscriptionPayments     SubscriptionPayment[]
@@ -83,7 +84,9 @@ model Post {
   subtopic         String?        @db.VarChar(100)
   likeCount        Int            @default(0)
   replyCount       Int            @default(0)
+  repostCount      Int            @default(0)
   tipCount         Int            @default(0)
+  tipAmount        Decimal        @default(0) @db.Decimal(18, 6) // Total SOL tipped
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   flaggedCount     Int            @default(0)
@@ -95,11 +98,16 @@ model Post {
   shoutoutDuration Int?           // Duration in minutes
   shoutoutExpiresAt DateTime?     // When the shoutout expires
   shoutoutPrice    Decimal?       @db.Decimal(18, 6) // Price paid in SOL
+  isRepost         Boolean        @default(false)
+  originalPostId   String?        // ID of the original post if this is a repost
   game             Game?
   notifications    Notification[]
-  author           User           @relation(fields: [authorWallet], references: [walletAddress])
+  author           User           @relation("AuthoredPosts", fields: [authorWallet], references: [walletAddress])
   replies          Reply[]
+  reposts          Repost[]
   sponsoredPost    SponsoredPost?
+  originalPost     Post?          @relation("RepostedPosts", fields: [originalPostId], references: [id])
+  repostedPosts    Post[]         @relation("RepostedPosts")
 
   @@index([createdAt(sort: Desc)])
   @@index([authorWallet, createdAt(sort: Desc)])
@@ -109,6 +117,8 @@ model Post {
   @@index([isHidden, createdAt(sort: Desc)])
   @@index([flaggedCount(sort: Desc)])
   @@index([isShoutout, shoutoutExpiresAt(sort: Desc)])
+  @@index([isRepost, createdAt(sort: Desc)])
+  @@index([originalPostId])
   @@map("posts")
 }
 
@@ -155,6 +165,20 @@ model Interaction {
   @@index([userWallet, createdAt(sort: Desc)])
   @@index([createdAt(sort: Desc)])
   @@map("interactions")
+}
+
+model Repost {
+  id           String   @id @default(cuid())
+  userWallet   String   @db.VarChar(44)
+  postId       String
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userWallet], references: [walletAddress])
+  post         Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userWallet, postId])
+  @@index([postId, createdAt(sort: Desc)])
+  @@index([userWallet, createdAt(sort: Desc)])
+  @@map("reposts")
 }
 
 model Game {

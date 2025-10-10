@@ -4,16 +4,18 @@ import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { postsAPI } from '@/lib/api/posts';
 
 interface PostOptionsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  postId: number;
+  postId: number | string;
   postUser: string;
   isOwnPost: boolean;
+  onDelete?: () => void;
 }
 
-export default function PostOptionsModal({ isOpen, onClose, isOwnPost }: PostOptionsModalProps) {
+export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, onDelete }: PostOptionsModalProps) {
   const { connected } = useWallet();
   const { showSuccess, showError } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,12 +51,25 @@ export default function PostOptionsModal({ isOpen, onClose, isOwnPost }: PostOpt
 
     setIsProcessing(true);
     try {
-      // TODO: Implement actual API call to delete post
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        showError('Please sign in to delete posts');
+        return;
+      }
+
+      // Call backend API to delete post
+      await postsAPI.deletePost(String(postId), token);
 
       showSuccess('Post deleted successfully');
+
+      // Call the onDelete callback to update the UI
+      if (onDelete) {
+        onDelete();
+      }
+
       onClose();
-    } catch {
+    } catch (error) {
+      console.error('Failed to delete post:', error);
       showError('Failed to delete post. Please try again.');
     } finally {
       setIsProcessing(false);

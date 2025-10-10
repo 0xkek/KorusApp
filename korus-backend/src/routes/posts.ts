@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { createPost, getPosts, getSinglePost } from '../controllers/postsController'
+import { createPost, getPosts, getSinglePost, deletePost } from '../controllers/postsController'
 import { authenticate } from '../middleware/auth'
 import { validateCreatePost, validateGetPosts } from '../middleware/validation'
 import { checkSuspension, checkWarnings } from '../middleware/moderationCheck'
@@ -163,5 +163,39 @@ router.get('/:id', readPostsRateLimiter, getSinglePost)
  *                   example: 30
  */
 router.post('/', authenticate, checkSuspension, checkWarnings, burstProtection, createPostRateLimiter, validateCreatePost, createPost)
+
+/**
+ * @swagger
+ * /api/posts/{id}:
+ *   delete:
+ *     tags: [Posts]
+ *     summary: Delete a post
+ *     description: Delete a post. Only the post author can delete their own posts.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/postId'
+ *     responses:
+ *       200:
+ *         description: Post deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Post deleted successfully
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         description: User is not the author of the post
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ */
+router.delete('/:id', authenticate, deletePost)
 
 export default router

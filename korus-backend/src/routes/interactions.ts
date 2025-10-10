@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { getPostInteractions, likePost, tipPost, getUserInteractions } from '../controllers/interactionsController'
+import { repostPost, getUserReposts } from '../controllers/repostController'
 import { authenticate } from '../middleware/auth'
 import { requireTokenFeatures } from '../middleware/tokenFeatures'
 import { validateLike, validateTip, validateBatchInteractions } from '../middleware/validation'
@@ -42,6 +43,42 @@ const router = Router()
  *         $ref: '#/components/responses/NotFoundError'
  */
 router.post('/posts/:id/like', authenticate, validateLike, likePost)
+
+/**
+ * @swagger
+ * /api/interactions/posts/{id}/repost:
+ *   post:
+ *     tags: [Interactions]
+ *     summary: Repost/unrepost a post
+ *     description: Toggle repost status on a post
+ *     security:
+ *       - bearerAuth: []
+ *       - csrfToken: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/postId'
+ *     responses:
+ *       200:
+ *         description: Repost status toggled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 reposted:
+ *                   type: boolean
+ *                   description: New repost status
+ *                 repostCount:
+ *                   type: integer
+ *                   description: Updated repost count
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ */
+router.post('/posts/:id/repost', authenticate, validateLike, repostPost)
 
 /**
  * @swagger
@@ -197,5 +234,52 @@ router.get('/posts/:id', validateLike, interactionLimiter, getPostInteractions)
  *         $ref: '#/components/responses/UnauthorizedError'
  */
 router.post('/user', authenticate, validateBatchInteractions, getUserInteractions)
+
+/**
+ * @swagger
+ * /api/interactions/user/reposts:
+ *   post:
+ *     tags: [Interactions]
+ *     summary: Get user reposts batch
+ *     description: Get authenticated user's reposts for multiple posts
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - postIds
+ *             properties:
+ *               postIds:
+ *                 type: array
+ *                 minItems: 1
+ *                 maxItems: 100
+ *                 items:
+ *                   type: string
+ *                 description: Array of post IDs to check reposts for
+ *     responses:
+ *       200:
+ *         description: User reposts retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 reposts:
+ *                   type: object
+ *                   additionalProperties:
+ *                     type: boolean
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ */
+router.post('/user/reposts', authenticate, validateBatchInteractions, getUserReposts)
 
 export default router

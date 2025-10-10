@@ -76,7 +76,7 @@ export const postsAPI = {
   /**
    * Delete a post
    */
-  async deletePost(id: number, token: string): Promise<void> {
+  async deletePost(id: string | number, token: string): Promise<void> {
     return api.delete(`/api/posts/${id}`, token);
   },
 

@@ -235,7 +235,8 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="What's on your mind? Share your experience, ask for advice, or offer support..."
-                className={`w-full bg-transparent text-white text-base resize-none outline-none placeholder-korus-textTertiary max-h-[300px] ${showDrawCanvas ? 'min-h-[80px]' : 'min-h-[150px]'}`}
+                className={`w-full bg-transparent text-white text-base resize-none placeholder-korus-textTertiary max-h-[300px] ${showDrawCanvas ? 'min-h-[80px]' : 'min-h-[150px]'}`}
+                style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
                 rows={showDrawCanvas ? 3 : 6}
                 autoFocus
               />

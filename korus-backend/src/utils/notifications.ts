@@ -11,7 +11,7 @@ export async function createNotification({
   amount,
 }: {
   userId: string;
-  type: 'like' | 'reply' | 'tip' | 'mention';
+  type: 'like' | 'reply' | 'tip' | 'mention' | 'repost';
   fromUserId: string;
   postId?: string;
   amount?: number;
@@ -27,6 +27,7 @@ export async function createNotification({
     reply: 'New reply to your post',
     tip: 'You received a tip!',
     mention: 'You were mentioned',
+    repost: 'Your post was reposted',
   };
 
   const messages: Record<string, string> = {

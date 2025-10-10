@@ -26,11 +26,13 @@ class ReputationService {
     
     // Engagement given
     LIKE_GIVEN: 1,
+    REPOST_GIVEN: 2,
     COMMENT_MADE: 5,
     TIP_SENT_PER_100: 10, // 10 points per 0.1 SOL tipped
-    
+
     // Engagement received
     LIKE_RECEIVED: 2,
+    REPOST_RECEIVED: 3,
     COMMENT_RECEIVED: 3,
     TIP_RECEIVED_PER_100: 15, // 15 points per 0.1 SOL received
     
@@ -177,6 +179,34 @@ class ReputationService {
       category: 'engagement',
       points: this.POINTS.LIKE_RECEIVED,
       description: `Received like on ${targetType}`,
+    });
+  }
+
+  /**
+   * Handle repost given
+   */
+  async onRepostGiven(walletAddress: string): Promise<void> {
+    if (!isReputationEnabled()) return;
+    await this.addReputation({
+      userWallet: walletAddress,
+      eventType: 'repost_given',
+      category: 'engagement',
+      points: this.POINTS.REPOST_GIVEN,
+      description: 'Reposted a post',
+    });
+  }
+
+  /**
+   * Handle repost received
+   */
+  async onRepostReceived(authorWallet: string): Promise<void> {
+    if (!isReputationEnabled()) return;
+    await this.addReputation({
+      userWallet: authorWallet,
+      eventType: 'repost_received',
+      category: 'engagement',
+      points: this.POINTS.REPOST_RECEIVED,
+      description: 'Received repost on post',
     });
   }
 

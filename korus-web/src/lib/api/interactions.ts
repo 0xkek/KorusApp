@@ -45,12 +45,31 @@ export interface UserInteractionsResponse {
   }>;
 }
 
+export interface RepostResponse {
+  success: boolean;
+  reposted: boolean;
+  message: string;
+  repostPost?: any; // Full repost post object with original post data
+}
+
+export interface UserRepostsResponse {
+  success: boolean;
+  reposts: Record<string, boolean>;
+}
+
 export const interactionsAPI = {
   /**
    * Like or unlike a post
    */
   async likePost(postId: string, token: string): Promise<LikeResponse> {
     return api.post(`/api/interactions/posts/${postId}/like`, {}, token);
+  },
+
+  /**
+   * Repost or unrepost a post
+   */
+  async repostPost(postId: string, token: string, comment?: string): Promise<RepostResponse> {
+    return api.post(`/api/interactions/posts/${postId}/repost`, comment ? { comment } : {}, token);
   },
 
   /**
@@ -75,5 +94,12 @@ export const interactionsAPI = {
    */
   async getUserInteractions(postIds: string[], token: string): Promise<UserInteractionsResponse> {
     return api.post('/api/interactions/user', { postIds }, token);
+  },
+
+  /**
+   * Get user's reposts for multiple posts (batch request)
+   */
+  async getUserReposts(postIds: string[], token: string): Promise<UserRepostsResponse> {
+    return api.post('/api/interactions/user/reposts', { postIds }, token);
   }
 };

@@ -16,7 +16,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import type { Post } from '@/types';
 import { MOCK_POSTS } from '@/data/mockData';
-import { postsAPI, uploadAPI, interactionsAPI } from '@/lib/api';
+import { postsAPI, uploadAPI, interactionsAPI, usersAPI } from '@/lib/api';
 
 // Dynamically import modals for code splitting
 const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { ssr: false });
@@ -30,6 +30,7 @@ const ReplyModal = dynamic(() => import('@/components/ReplyModal'), { ssr: false
 const DrawingCanvasInline = dynamic(() => import('@/components/DrawingCanvasInline'), { ssr: false });
 const ShoutoutCountdown = dynamic(() => import('@/components/ShoutoutCountdown'), { ssr: false });
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
+const GifPicker = dynamic(() => import('@/components/GifPicker'), { ssr: false });
 
 export default function Home() {
   const { connected, publicKey } = useWallet();
@@ -64,15 +65,34 @@ export default function Home() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedGif, setSelectedGif] = useState<string | null>(null);
   const [showDrawCanvas, setShowDrawCanvas] = useState(false);
   const [shoutoutQueue, setShoutoutQueue] = useState<Post[]>([]); // Queue for pending shoutouts
   const [showSearchModal, setShowSearchModal] = useState(false);
+  const [currentUserTheme, setCurrentUserTheme] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (!connected) {
       router.push('/welcome');
     }
   }, [connected, router]);
+
+  // Fetch current user's profile to get theme color
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (token && connected) {
+        try {
+          const response = await usersAPI.getProfile(token);
+          if (response.user && response.user.themeColor) {
+            setCurrentUserTheme(response.user.themeColor);
+          }
+        } catch (error) {
+          console.error('Failed to fetch user profile:', error);
+        }
+      }
+    };
+    fetchUserProfile();
+  }, [token, connected]);
 
   // Fetch posts function
   const fetchPosts = async () => {
@@ -87,14 +107,34 @@ export default function Home() {
         // Transform backend posts to match frontend format
         const transformedPosts = response.posts.map(post => ({
           ...post,
-          user: post.authorWallet || post.author?.walletAddress || 'Unknown',
+          user: post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15) || 'Unknown',
           wallet: post.authorWallet,
+          userTheme: post.author?.themeColor,
           time: new Date(post.createdAt).toLocaleString(),
           likes: post.likeCount || 0,
           comments: post.replyCount || 0,
-          reposts: 0,
-          tips: post.tipCount || 0,
+          reposts: post.repostCount || 0,
+          tips: Number(post.tipAmount) || 0,
           image: post.imageUrl,
+          avatar: post.author?.nftAvatar || null,
+          isPremium: post.author?.tier === 'premium',
+          // Map originalPost to repostedPost for reposts
+          repostedPost: post.isRepost && post.originalPost ? {
+            id: post.originalPost.id,
+            user: post.originalPost.author?.username || post.originalPost.author?.snsUsername || post.originalPost.authorWallet?.slice(0, 15) || 'Unknown',
+            wallet: post.originalPost.authorWallet,
+            userTheme: post.originalPost.author?.themeColor,
+            content: post.originalPost.content || '',
+            likes: post.originalPost.likeCount || 0,
+            replies: post.originalPost.replyCount || 0,
+            tips: Number(post.originalPost.tipAmount) || 0,
+            comments: post.originalPost.replyCount || 0,
+            reposts: post.originalPost.repostCount || 0,
+            time: new Date(post.originalPost.createdAt).toLocaleString(),
+            isPremium: post.originalPost.author?.tier === 'premium',
+            image: post.originalPost.imageUrl,
+            avatar: post.originalPost.author?.nftAvatar || null,
+          } : undefined,
         }));
 
         const sortedPosts = [...transformedPosts].sort((a, b) => {
@@ -283,7 +323,7 @@ export default function Home() {
       return;
     }
 
-    if (!composeText.trim() && selectedFiles.length === 0) return;
+    if (!composeText.trim() && selectedFiles.length === 0 && !selectedGif) return;
 
     try {
       console.log('Creating post with token:', token);
@@ -316,8 +356,10 @@ export default function Home() {
         postData.content = composeText.trim();
       }
 
-      // Add image URL if uploaded
-      if (imageUrl) {
+      // Add image URL if uploaded or GIF if selected
+      if (selectedGif) {
+        postData.imageUrl = selectedGif; // GIFs are treated as images
+      } else if (imageUrl) {
         postData.imageUrl = imageUrl;
       }
 
@@ -340,7 +382,7 @@ export default function Home() {
         likes: post.likeCount || 0,
         comments: post.replyCount || 0,
         reposts: 0,
-        tips: post.tipCount || 0,
+        tips: Number(post.tipAmount) || 0,
         image: post.imageUrl,
       };
 
@@ -353,6 +395,7 @@ export default function Home() {
 
       setComposeText('');
       setSelectedFiles([]);
+      setSelectedGif(null);
       setShowDrawCanvas(false);
       showSuccess('Post created successfully!');
     } catch (error) {
@@ -430,14 +473,14 @@ export default function Home() {
       }));
 
       // Update post like count optimistically
-      setPosts(prev => prev.map(post => {
-        if (String(post.id) === postIdStr) {
+      setPosts(prev => prev.map(p => {
+        if (String(p.id) === postIdStr) {
           return {
-            ...post,
-            likes: currentlyLiked ? post.likes - 1 : post.likes + 1
+            ...p,
+            likes: currentlyLiked ? p.likes - 1 : p.likes + 1
           };
         }
-        return post;
+        return p;
       }));
 
       // Call backend API
@@ -457,75 +500,104 @@ export default function Home() {
         }
       }));
 
-      setPosts(prev => prev.map(post => {
-        if (String(post.id) === postIdStr) {
+      setPosts(prev => prev.map(p => {
+        if (String(p.id) === postIdStr) {
           const wasLiked = postInteractions[postIdStr]?.liked || false;
           return {
-            ...post,
-            likes: wasLiked ? post.likes + 1 : post.likes - 1
+            ...p,
+            likes: wasLiked ? p.likes + 1 : p.likes - 1
           };
         }
-        return post;
+        return p;
       }));
 
       showError('Failed to like post. Please try again.');
     }
   };
 
-  const toggleRepost = (postId: number, comment?: string) => {
+  const toggleRepost = async (postId: number, comment?: string) => {
     const originalPost = posts.find(p => p.id === postId);
     if (!originalPost) return;
 
     const isCurrentlyReposted = postInteractions[postId]?.reposted;
 
-    if (!isCurrentlyReposted) {
-      // If the post being reposted is itself a repost, use the original post
-      const postToRepost = originalPost.isRepost && originalPost.repostedPost
-        ? originalPost.repostedPost
-        : originalPost;
+    try {
+      // Call backend API to toggle repost (pass comment if provided)
+      const response = await interactionsAPI.repostPost(String(postId), token || '', comment);
 
-      // Create a repost
-      const repost = {
-        id: Date.now(),
-        user: publicKey?.toBase58().slice(0, 15) || 'current_user',
-        content: comment || '',
-        likes: 0,
-        replies: 0,
-        tips: 0,
-        time: 'now',
-        isPremium: false,
-        isShoutout: false,
-        isSponsored: false,
-        image: undefined,
-        avatar: null,
-        isRepost: true,
-        repostedPost: postToRepost,
-        repostedBy: publicKey?.toBase58().slice(0, 15) || 'current_user'
-      } as Post;
+      if (response.success) {
+        if (!isCurrentlyReposted && response.repostPost) {
+          // Backend returns the full repost post with originalPost included
+          const backendPost = response.repostPost;
 
-      // Add repost and maintain shoutout priority
-      setPosts(prev => {
-        const updatedPosts = [repost, ...prev];
-        // Sort to keep shoutouts at the top
-        return updatedPosts.sort((a, b) => {
-          if (a.isShoutout && !b.isShoutout) return -1;
-          if (!a.isShoutout && b.isShoutout) return 1;
-          return 0;
-        });
-      });
-    } else {
-      // Remove the repost from feed
-      setPosts(prev => prev.filter(p => !(p.isRepost && p.repostedPost?.id === postId)));
-    }
+          // Map backend post data to frontend Post format
+          const repost = {
+            id: backendPost.id,
+            user: backendPost.author?.username || backendPost.author?.snsUsername || backendPost.authorWallet.slice(0, 15),
+            wallet: backendPost.authorWallet,
+            userTheme: backendPost.author?.themeColor || currentUserTheme,
+            content: backendPost.content || '',
+            likes: backendPost.likeCount || 0,
+            replies: backendPost.replyCount || 0,
+            tips: backendPost.tipCount || 0,
+            comments: backendPost.replyCount || 0,
+            reposts: backendPost.repostCount || 0,
+            time: 'now',
+            isPremium: backendPost.author?.tier === 'premium',
+            isShoutout: backendPost.isShoutout || false,
+            isSponsored: false,
+            image: backendPost.imageUrl,
+            avatar: backendPost.author?.nftAvatar || null,
+            isRepost: true,
+            repostedPost: backendPost.originalPost ? {
+              id: backendPost.originalPost.id,
+              user: backendPost.originalPost.author?.username || backendPost.originalPost.author?.snsUsername || backendPost.originalPost.authorWallet.slice(0, 15),
+              wallet: backendPost.originalPost.authorWallet,
+              userTheme: backendPost.originalPost.author?.themeColor,
+              content: backendPost.originalPost.content || '',
+              likes: backendPost.originalPost.likeCount || 0,
+              replies: backendPost.originalPost.replyCount || 0,
+              tips: backendPost.originalPost.tipCount || 0,
+              comments: backendPost.originalPost.replyCount || 0,
+              reposts: backendPost.originalPost.repostCount || 0,
+              time: new Date(backendPost.originalPost.createdAt).toLocaleString(),
+              isPremium: backendPost.originalPost.author?.tier === 'premium',
+              image: backendPost.originalPost.imageUrl,
+              avatar: backendPost.originalPost.author?.nftAvatar || null,
+            } : undefined,
+            repostedBy: backendPost.author?.username || backendPost.author?.snsUsername || backendPost.authorWallet.slice(0, 15)
+          } as Post;
 
-    // Toggle repost state
-    setPostInteractions(prev => ({
-      ...prev,
-      [postId]: {
-        ...prev[postId],
-        reposted: !isCurrentlyReposted
+          // Add repost and maintain shoutout priority
+          setPosts(prev => {
+            const updatedPosts = [repost, ...prev];
+            // Sort to keep shoutouts at the top
+            return updatedPosts.sort((a, b) => {
+              if (a.isShoutout && !b.isShoutout) return -1;
+              if (!a.isShoutout && b.isShoutout) return 1;
+              return 0;
+            });
+          });
+          showSuccess('Post reposted successfully!');
+        } else {
+          // Remove the repost from feed
+          setPosts(prev => prev.filter(p => !(p.isRepost && p.repostedPost?.id === postId)));
+          showSuccess('Repost removed!');
+        }
+
+        // Toggle repost state
+        setPostInteractions(prev => ({
+          ...prev,
+          [postId]: {
+            ...prev[postId],
+            reposted: !isCurrentlyReposted
+          }
+        }));
       }
-    }));
+    } catch (error) {
+      console.error('Failed to toggle repost:', error);
+      showError('Failed to repost. Please try again.');
+    }
   };
 
   const markReplied = (postId: number) => {
@@ -911,13 +983,21 @@ export default function Home() {
                         </div>
                       )}
 
-                      {/* Original Post in green box */}
-                      <div className="mb-3 border-2 rounded-xl p-4" style={{ background: 'linear-gradient(90deg, rgba(67, 233, 123, 0.1), rgba(56, 239, 125, 0.1))', borderColor: 'rgba(67, 233, 123, 0.3)' }}>
+                      {/* Original Post in box with reposter's theme color */}
+                      <div className="mb-3 border-2 rounded-xl p-4" style={{ background: 'linear-gradient(90deg, rgba(67, 233, 123, 0.1), rgba(56, 239, 125, 0.1))', borderColor: post.userTheme || 'rgba(67, 233, 123, 0.3)' }}>
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-black" style={{ background: 'linear-gradient(135deg, #43E97B, #38EF7D)' }}>
-                            {post.repostedPost.user.slice(0, 2).toUpperCase()}
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden" style={{ background: `linear-gradient(135deg, ${post.userTheme || '#43E97B'}, ${post.userTheme || '#38EF7D'})`, color: '#000' }}>
+                            {post.repostedPost.avatar ? (
+                              post.repostedPost.avatar.startsWith('http') || post.repostedPost.avatar.startsWith('data:') ? (
+                                <Image src={post.repostedPost.avatar} alt={post.repostedPost.user} width={32} height={32} className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="text-lg">{post.repostedPost.avatar}</span>
+                              )
+                            ) : (
+                              <span>{post.repostedPost.user.slice(0, 2).toUpperCase()}</span>
+                            )}
                           </div>
-                          <span className="text-white font-medium">{post.repostedPost.user}</span>
+                          <span className="text-white font-medium">{truncateAddress(post.repostedPost.wallet || post.repostedPost.user)}</span>
                           <span className="text-korus-textSecondary text-sm">· {post.repostedPost.time}</span>
                         </div>
                         <p className="text-korus-text text-sm leading-relaxed">{post.repostedPost.content}</p>
@@ -1113,7 +1193,13 @@ export default function Home() {
         onClose={() => setShowPostOptionsModal(false)}
         postId={selectedPost?.id || 0}
         postUser={selectedPost?.user || ''}
-        isOwnPost={selectedPost?.user === publicKey?.toBase58()}
+        isOwnPost={selectedPost?.wallet === publicKey?.toBase58()}
+        onDelete={() => {
+          // Remove the post from the UI
+          if (selectedPost) {
+            setPosts(prev => prev.filter(p => p.id !== selectedPost.id));
+          }
+        }}
       />
 
 
@@ -1140,9 +1226,15 @@ export default function Home() {
         }}
         recipientUser={postToTip?.user || ''}
         postId={postToTip?.id}
-        onTipSuccess={() => {
+        onTipSuccess={(amount: number) => {
           if (postToTip?.id) {
             markTipped(postToTip.id);
+            // Update the post's tip count
+            setPosts(prev => prev.map(p =>
+              p.id === postToTip.id
+                ? { ...p, tips: (p.tips || 0) + amount, tipCount: (p.tipCount || 0) + 1 }
+                : p
+            ));
           }
         }}
       />
@@ -1253,33 +1345,13 @@ export default function Home() {
 
       {/* GIF Picker Modal */}
       {showGifPicker && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowGifPicker(false)}>
-          <div className="bg-korus-surface/95 backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[80vh] border border-korus-border shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-korus-border">
-              <h3 className="text-lg font-bold text-white">Choose GIF</h3>
-              <button
-                onClick={() => setShowGifPicker(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center bg-korus-surface/40 border border-korus-borderLight text-korus-textSecondary hover:bg-korus-surface/60 hover:text-white transition-all duration-200"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* GIF Grid - Placeholder for now */}
-            <div className="p-4 overflow-y-auto max-h-[60vh]">
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">🎬</div>
-                <p className="text-korus-text text-lg font-medium">GIF Integration Coming Soon</p>
-                <p className="text-korus-textSecondary text-sm mt-2">
-                  We&apos;ll integrate with Tenor or Giphy API to bring you the best GIFs
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <GifPicker
+          onSelect={(gifUrl) => {
+            setSelectedGif(gifUrl);
+            setSelectedFiles([]); // Clear any selected files when GIF is chosen
+          }}
+          onClose={() => setShowGifPicker(false)}
+        />
       )}
 
       <MobileMenuModal

@@ -117,21 +117,51 @@ export const tipPost = async (req: AuthRequest, res: Response) => {
     // 3. Verify transaction amount matches the amount parameter
     // 4. Verify transaction hasn't been used before (prevent double-spending)
 
-    // Create tip interaction with transaction signature
-    await prisma.interaction.create({
-      data: {
+    // Create or update tip interaction with transaction signature
+    // Use upsert to allow multiple tips from the same user
+    const existingTip = await prisma.interaction.findFirst({
+      where: {
         userWallet: walletAddress,
         targetType: 'post',
         targetId: id,
-        interactionType: 'tip',
-        amount: amount
+        interactionType: 'tip'
       }
-    })
+    });
 
-    // Update post tip count
+    if (existingTip) {
+      // Update existing tip - increment the amount
+      // Convert existingTip.amount from Decimal/string to number first
+      const existingAmount = typeof existingTip.amount === 'string'
+        ? parseFloat(existingTip.amount)
+        : Number(existingTip.amount || 0);
+      const newAmount = existingAmount + amount;
+
+      await prisma.interaction.update({
+        where: { id: existingTip.id },
+        data: {
+          amount: newAmount
+        }
+      });
+    } else {
+      // Create new tip interaction
+      await prisma.interaction.create({
+        data: {
+          userWallet: walletAddress,
+          targetType: 'post',
+          targetId: id,
+          interactionType: 'tip',
+          amount: amount
+        }
+      });
+    }
+
+    // Update post tip count and amount
     await prisma.post.update({
       where: { id },
-      data: { tipCount: { increment: 1 } }
+      data: {
+        tipCount: { increment: 1 },
+        tipAmount: { increment: amount }
+      }
     })
 
     logger.info(`${walletAddress} tipped ${amount} SOL to post ${id} (tx: ${transactionSignature})`)
