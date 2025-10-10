@@ -16,7 +16,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import type { Post } from '@/types';
 import { MOCK_POSTS } from '@/data/mockData';
-import { postsAPI, uploadAPI } from '@/lib/api';
+import { postsAPI, uploadAPI, interactionsAPI } from '@/lib/api';
 
 // Dynamically import modals for code splitting
 const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { ssr: false });
@@ -127,6 +127,29 @@ export default function Home() {
       fetchPosts();
     }
   }, [posts]);
+
+  // Fetch user interactions for loaded posts
+  useEffect(() => {
+    const fetchUserInteractions = async () => {
+      if (!connected || !isAuthenticated || !token || posts.length === 0) {
+        return;
+      }
+
+      try {
+        const postIds = posts.map(post => String(post.id));
+        const response = await interactionsAPI.getUserInteractions(postIds, token);
+
+        if (response.success) {
+          setPostInteractions(response.interactions);
+          console.log('User interactions loaded:', response.interactions);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user interactions:', error);
+      }
+    };
+
+    fetchUserInteractions();
+  }, [posts, connected, isAuthenticated, token]);
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
@@ -356,14 +379,66 @@ export default function Home() {
   };
 
   // Interaction handlers
-  const toggleLike = (postId: number) => {
-    setPostInteractions(prev => ({
-      ...prev,
-      [postId]: {
-        ...prev[postId],
-        liked: !prev[postId]?.liked
-      }
-    }));
+  const toggleLike = async (postId: number | string) => {
+    if (!connected || !isAuthenticated || !token) {
+      showError('Please connect your wallet and sign in to like posts');
+      return;
+    }
+
+    try {
+      const postIdStr = String(postId);
+      const currentlyLiked = postInteractions[postIdStr]?.liked || false;
+
+      // Optimistically update UI
+      setPostInteractions(prev => ({
+        ...prev,
+        [postIdStr]: {
+          ...prev[postIdStr],
+          liked: !currentlyLiked
+        }
+      }));
+
+      // Update post like count optimistically
+      setPosts(prev => prev.map(post => {
+        if (String(post.id) === postIdStr) {
+          return {
+            ...post,
+            likes: currentlyLiked ? post.likes - 1 : post.likes + 1
+          };
+        }
+        return post;
+      }));
+
+      // Call backend API
+      const response = await interactionsAPI.likePost(postIdStr, token);
+      console.log('Like response:', response);
+
+    } catch (error) {
+      console.error('Failed to like post:', error);
+
+      // Revert on error
+      const postIdStr = String(postId);
+      setPostInteractions(prev => ({
+        ...prev,
+        [postIdStr]: {
+          ...prev[postIdStr],
+          liked: prev[postIdStr]?.liked || false
+        }
+      }));
+
+      setPosts(prev => prev.map(post => {
+        if (String(post.id) === postIdStr) {
+          const wasLiked = postInteractions[postIdStr]?.liked || false;
+          return {
+            ...post,
+            likes: wasLiked ? post.likes + 1 : post.likes - 1
+          };
+        }
+        return post;
+      }));
+
+      showError('Failed to like post. Please try again.');
+    }
   };
 
   const toggleRepost = (postId: number, comment?: string) => {
