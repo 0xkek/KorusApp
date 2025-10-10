@@ -50,14 +50,14 @@ export const interactionsAPI = {
    * Like or unlike a post
    */
   async likePost(postId: string, token: string): Promise<LikeResponse> {
-    return api.post(`/interactions/posts/${postId}/like`, {}, token);
+    return api.post(`/api/interactions/posts/${postId}/like`, {}, token);
   },
 
   /**
    * Tip a post with SOL
    */
   async tipPost(postId: string, amount: number, transactionSignature: string, token: string): Promise<TipResponse> {
-    return api.post(`/interactions/posts/${postId}/tip`, {
+    return api.post(`/api/interactions/posts/${postId}/tip`, {
       amount,
       transactionSignature
     }, token);
@@ -67,13 +67,13 @@ export const interactionsAPI = {
    * Get all interactions for a post
    */
   async getPostInteractions(postId: string): Promise<PostInteractionsResponse> {
-    return api.get(`/interactions/posts/${postId}`);
+    return api.get(`/api/interactions/posts/${postId}`);
   },
 
   /**
    * Get user's interactions for multiple posts (batch request)
    */
   async getUserInteractions(postIds: string[], token: string): Promise<UserInteractionsResponse> {
-    return api.post('/interactions/user', { postIds }, token);
+    return api.post('/api/interactions/user', { postIds }, token);
   }
 };
