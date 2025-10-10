@@ -37,35 +37,43 @@ export const handleValidationErrors = (req: Request, res: Response, next: NextFu
 // Post validations
 export const validateCreatePost = [
   body('content')
+    .optional()
     .trim()
-    .notEmpty().withMessage('Content is required')
     .isLength({ min: 1, max: 500 }).withMessage('Content must be between 1 and 500 characters')
     .customSanitizer(value => sanitizeHtml(value)),
-  
+
   body('topic')
     .optional()
     .trim()
     .isLength({ min: 1, max: 50 }).withMessage('Topic must be between 1 and 50 characters')
     .matches(/^[a-zA-Z0-9\s-]+$/).withMessage('Topic can only contain letters, numbers, spaces, and hyphens')
     .customSanitizer(value => value?.toUpperCase()),
-  
+
   body('subtopic')
     .optional()
     .trim()
     .isLength({ min: 1, max: 50 }).withMessage('Subtopic must be between 1 and 50 characters')
     .matches(/^[a-zA-Z0-9\s-]+$/).withMessage('Subtopic can only contain letters, numbers, spaces, and hyphens')
     .customSanitizer(value => value?.toLowerCase()),
-  
+
   body('imageUrl')
     .optional()
     .trim()
     .isURL().withMessage('Invalid image URL'),
-  
+
   body('videoUrl')
     .optional()
     .trim()
     .isURL().withMessage('Invalid video URL'),
-  
+
+  // Custom validation: must have either content or media
+  body().custom((value, { req }) => {
+    if (!req.body.content && !req.body.imageUrl && !req.body.videoUrl) {
+      throw new Error('Post must have either content or media (image/video)');
+    }
+    return true;
+  }),
+
   handleValidationErrors
 ];
 
