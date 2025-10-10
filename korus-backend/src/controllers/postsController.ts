@@ -12,15 +12,15 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
     const walletAddress = req.userWallet!
     const { content, imageUrl, videoUrl, shoutoutDuration, transactionSignature } = req.body
 
-    // Validate input
-    if (!content) {
+    // Validate input - require either content or media
+    if (!content && !imageUrl && !videoUrl) {
       return res.status(400).json({
         success: false,
-        error: 'Missing required field: content'
+        error: 'Post must have either content or media (image/video)'
       } as any)
     }
 
-    if (content.length > 500) {
+    if (content && content.length > 500) {
       return res.status(400).json({
         success: false,
         error: 'Content must be 500 characters or less'
@@ -82,7 +82,7 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
     const post = await prisma.post.create({
       data: {
         authorWallet: walletAddress,
-        content: content.trim(),
+        content: content ? content.trim() : '',
         imageUrl: imageUrl || undefined,
         videoUrl: videoUrl || undefined,
         ...shoutoutData
@@ -101,7 +101,7 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
       }
     })
 
-    logger.debug(`New post created by ${walletAddress}: ${content.substring(0, 50)}...`)
+    logger.debug(`New post created by ${walletAddress}: ${content ? content.substring(0, 50) : '[image/video only]'}...`)
 
     // Run auto-moderation on the new post
     // TODO: Re-enable after fixing deployment

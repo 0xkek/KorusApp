@@ -6,8 +6,10 @@ import dynamic from 'next/dynamic';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { Button } from '@/components/ui';
 import { MAX_POST_LENGTH, MAX_FILE_SIZE, MAX_FILES_PER_POST } from '@/constants';
+import { postsAPI, uploadAPI } from '@/lib/api';
 import type { Post } from '@/types';
 
 const DrawingCanvasInline = dynamic(() => import('@/components/DrawingCanvasInline'), { ssr: false });
@@ -36,6 +38,7 @@ interface CreatePostModalProps {
 
 export default function CreatePostModal({ isOpen, onClose, initialContent = '', onPostCreate, queueInfo }: CreatePostModalProps) {
   const { connected, publicKey } = useWallet();
+  const { token, isAuthenticated } = useWalletAuth();
   const { showSuccess, showError } = useToast();
   const [content, setContent] = useState(initialContent);
   const [isPosting, setIsPosting] = useState(false);
@@ -66,10 +69,15 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
   if (!isOpen) return null;
 
   const handlePost = async () => {
-    if (!connected) {
-      showError('Please connect your wallet to post');
+    console.log('handlePost called - connected:', connected, 'isAuthenticated:', isAuthenticated, 'token:', !!token);
+
+    if (!connected || !isAuthenticated || !token) {
+      console.log('Authentication check failed');
+      showError('Please connect your wallet and sign in to post');
       return;
     }
+
+    console.log('Authentication check passed');
 
     if (!content.trim() && selectedFiles.length === 0) {
       showError('Please write some content or add media before posting');
@@ -79,36 +87,77 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
     setIsPosting(true);
 
     try {
-      // Create new post
-      const newPost = {
-        id: Date.now(),
-        user: publicKey?.toBase58() || 'Unknown',
-        content: content.trim(),
-        likes: 0,
-        replies: 0,
-        tips: 0,
-        time: 'now',
-        isPremium: false,
-        isShoutout: false,
-        image: selectedFiles.length > 0 && selectedFiles[0].type.startsWith('image/')
-          ? URL.createObjectURL(selectedFiles[0])
-          : undefined,
+      console.log('Creating post with token:', token);
+
+      // Upload images first if there are any
+      let imageUrl: string | undefined;
+      if (selectedFiles.length > 0) {
+        const imageFile = selectedFiles[0]; // For now, support only one image
+        if (imageFile.type.startsWith('image/')) {
+          console.log('Uploading image...');
+          try {
+            const uploadResponse = await uploadAPI.uploadImage(imageFile, token);
+            imageUrl = uploadResponse.url;
+            console.log('Image uploaded successfully:', imageUrl);
+          } catch (uploadError) {
+            console.error('Failed to upload image:', uploadError);
+            showError('Failed to upload image. Please try again.');
+            setIsPosting(false);
+            return;
+          }
+        }
+      }
+
+      // Prepare post data
+      const postData: any = {
+        topic: 'General', // You can add a category selector later
+      };
+
+      // Add content if present
+      if (content.trim()) {
+        postData.content = content.trim();
+      }
+
+      // Add image URL if uploaded
+      if (imageUrl) {
+        postData.imageUrl = imageUrl;
+      }
+
+      console.log('Post data:', postData);
+
+      // Create post via backend API
+      const newPost = await postsAPI.createPost(postData, token);
+
+      console.log('Post created successfully:', newPost);
+
+      // Extract the post from the response (backend returns {success: true, post: {...}})
+      const post = (newPost as any).post || newPost;
+
+      // Transform the backend response to match the frontend Post type
+      const transformedPost = {
+        ...post,
+        user: post.authorWallet || post.author?.walletAddress || publicKey?.toBase58() || 'Unknown',
+        wallet: post.authorWallet,
+        time: 'Just now',
+        likes: post.likeCount || 0,
+        comments: post.replyCount || 0,
+        reposts: 0,
+        tips: post.tipCount || 0,
+        image: post.imageUrl,
       };
 
       // Call the parent's post creation function
       if (onPostCreate) {
-        onPostCreate(newPost);
+        onPostCreate(transformedPost as any);
       }
-
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
       showSuccess('Post created successfully!');
       setContent('');
       setSelectedFiles([]);
       setShowDrawCanvas(false);
       onClose();
-    } catch {
+    } catch (error) {
+      console.error('Failed to create post:', error);
       showError('Failed to create post. Please try again.');
     } finally {
       setIsPosting(false);

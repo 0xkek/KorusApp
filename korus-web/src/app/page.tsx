@@ -16,7 +16,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import type { Post } from '@/types';
 import { MOCK_POSTS } from '@/data/mockData';
-import { postsAPI } from '@/lib/api';
+import { postsAPI, uploadAPI } from '@/lib/api';
 
 // Dynamically import modals for code splitting
 const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { ssr: false });
@@ -78,12 +78,25 @@ export default function Home() {
 
         // If we got posts from the backend, use them
         if (response.posts && response.posts.length > 0) {
-          const sortedPosts = [...response.posts].sort((a, b) => {
+          // Transform backend posts to match frontend format
+          const transformedPosts = response.posts.map(post => ({
+            ...post,
+            user: post.authorWallet || post.author?.walletAddress || 'Unknown',
+            wallet: post.authorWallet,
+            time: new Date(post.createdAt).toLocaleString(),
+            likes: post.likeCount || 0,
+            comments: post.replyCount || 0,
+            reposts: 0,
+            tips: post.tipCount || 0,
+            image: post.imageUrl,
+          }));
+
+          const sortedPosts = [...transformedPosts].sort((a, b) => {
             if (a.isShoutout && !b.isShoutout) return -1;
             if (!a.isShoutout && b.isShoutout) return 1;
             return 0;
           });
-          setPosts(sortedPosts);
+          setPosts(sortedPosts as any);
         } else {
           // Fallback to mock data if backend returns empty
           console.log('No posts in database, using mock data as fallback');
@@ -152,6 +165,7 @@ export default function Home() {
 
   // Helper function to extract URLs from text
   const extractUrls = (text: string): string[] => {
+    if (!text) return [];
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     return text.match(urlRegex) || [];
   };
@@ -206,36 +220,91 @@ export default function Home() {
     }
   };
 
-  const handleRegularPost = () => {
+  const handleRegularPost = async () => {
+    console.log('handleRegularPost called - connected:', connected, 'isAuthenticated:', isAuthenticated, 'token:', !!token);
+
+    if (!connected || !isAuthenticated || !token) {
+      console.log('Authentication check failed');
+      showError('Please connect your wallet and sign in to post');
+      return;
+    }
+
     if (!composeText.trim() && selectedFiles.length === 0) return;
 
-    const newPost = {
-      id: Date.now(),
-      user: publicKey?.toBase58().slice(0, 8) || 'anonymous',
-      content: composeText,
-      likes: 0,
-      replies: 0,
-      tips: 0,
-      time: 'Just now',
-      isPremium: false,
-      isShoutout: false,
-      isSponsored: false,
-      image: selectedFiles.length > 0 && selectedFiles[0].type.startsWith('image/')
-        ? URL.createObjectURL(selectedFiles[0])
-        : undefined,
-      avatar: null
-    } as Post;
+    try {
+      console.log('Creating post with token:', token);
 
-    // Insert new post after any shoutouts (shoutouts should always be on top)
-    setPosts(prev => {
-      const shoutouts = prev.filter(p => p.isShoutout);
-      const regularPosts = prev.filter(p => !p.isShoutout);
-      return [...shoutouts, newPost, ...regularPosts];
-    });
-    setComposeText('');
-    setSelectedFiles([]);
-    setShowDrawCanvas(false);
-    showSuccess('Post created successfully!');
+      // Upload images first if there are any
+      let imageUrl: string | undefined;
+      if (selectedFiles.length > 0) {
+        const imageFile = selectedFiles[0]; // For now, support only one image
+        if (imageFile.type.startsWith('image/')) {
+          console.log('Uploading image...');
+          try {
+            const uploadResponse = await uploadAPI.uploadImage(imageFile, token);
+            imageUrl = uploadResponse.url;
+            console.log('Image uploaded successfully:', imageUrl);
+          } catch (uploadError) {
+            console.error('Failed to upload image:', uploadError);
+            showError('Failed to upload image. Please try again.');
+            return;
+          }
+        }
+      }
+
+      // Prepare post data
+      const postData: any = {
+        topic: 'General',
+      };
+
+      // Add content if present
+      if (composeText.trim()) {
+        postData.content = composeText.trim();
+      }
+
+      // Add image URL if uploaded
+      if (imageUrl) {
+        postData.imageUrl = imageUrl;
+      }
+
+      console.log('Post data:', postData);
+
+      // Create post via backend API
+      const newPost = await postsAPI.createPost(postData, token);
+
+      console.log('Post created successfully:', newPost);
+
+      // Extract the post from the response (backend returns {success: true, post: {...}})
+      const post = (newPost as any).post || newPost;
+
+      // Transform the backend response to match the frontend Post type
+      const transformedPost = {
+        ...post,
+        user: post.authorWallet || post.author?.walletAddress || publicKey?.toBase58() || 'Unknown',
+        wallet: post.authorWallet,
+        time: 'Just now',
+        likes: post.likeCount || 0,
+        comments: post.replyCount || 0,
+        reposts: 0,
+        tips: post.tipCount || 0,
+        image: post.imageUrl,
+      };
+
+      // Insert new post after any shoutouts (shoutouts should always be on top)
+      setPosts(prev => {
+        const shoutouts = prev.filter(p => p.isShoutout);
+        const regularPosts = prev.filter(p => !p.isShoutout);
+        return [...shoutouts, transformedPost as any, ...regularPosts];
+      });
+
+      setComposeText('');
+      setSelectedFiles([]);
+      setShowDrawCanvas(false);
+      showSuccess('Post created successfully!');
+    } catch (error) {
+      console.error('Failed to create post:', error);
+      showError('Failed to create post. Please try again.');
+    }
   };
 
   const handlePostOptionsClick = (post: Post) => {
@@ -246,6 +315,7 @@ export default function Home() {
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
+    console.log('Files selected:', files.length, files);
     const maxFileSize = 10 * 1024 * 1024; // 10MB
 
     const validFiles = files.filter(file => {
@@ -256,6 +326,7 @@ export default function Home() {
       return true;
     });
 
+    console.log('Valid files:', validFiles.length, validFiles);
     setSelectedFiles(prev => [...prev, ...validFiles].slice(0, 4));
   };
 
@@ -780,7 +851,8 @@ export default function Home() {
                         alt="Post content"
                         width={600}
                         height={400}
-                        className="w-full h-auto"
+                        className="w-full h-auto object-cover"
+                        style={{ maxHeight: '500px' }}
                         onError={(e) => {
                           // Hide broken image on error
                           e.currentTarget.style.display = 'none';

@@ -24,10 +24,15 @@ export const validateCSRFToken = (req: Request, res: Response, next: NextFunctio
   if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') {
     return next()
   }
-  
+
   // Skip CSRF for public auth endpoint (wallet connection doesn't need CSRF)
   // Note: Since this middleware is mounted on /api, req.path will be /auth/connect
   if (req.path === '/auth/connect') {
+    return next()
+  }
+
+  // Skip CSRF in development mode for easier testing
+  if (process.env.NODE_ENV === 'development') {
     return next()
   }
 

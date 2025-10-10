@@ -35,6 +35,7 @@ import nftsRoutes from './routes/nfts'
 import healthRoutes from './routes/health'
 import userRoutes from './routes/user'
 import subscriptionRoutes from './routes/subscription'
+import uploadRoutes from './routes/upload'
 
 dotenv.config()
 
@@ -145,6 +146,7 @@ app.use('/api/sns', snsRoutes)
 app.use('/api/nfts', nftsRoutes)
 app.use('/api/user', userRoutes)
 app.use('/api/subscription', subscriptionRoutes)
+app.use('/api/upload', uploadRoutes)
 
 // Debug endpoints removed for production security
 

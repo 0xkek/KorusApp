@@ -27,8 +27,8 @@ export interface Post {
 
 export interface CreatePostData {
   content: string;
-  category: string;
-  subcategory: string;
+  topic: string;
+  subtopic: string;
   imageUrl?: string;
 }
 
