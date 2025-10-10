@@ -772,6 +772,19 @@ export default function PostDetailPage() {
           setReplyToPost(null);
         }}
         post={replyToPost}
+        onReplySuccess={(reply) => {
+          // Add the new reply to the list
+          setReplies(prev => [reply, ...prev]);
+          // Update post reply count
+          if (post) {
+            setPost({
+              ...post,
+              comments: post.comments + 1
+            });
+          }
+          // Alternatively, reload all replies from backend to get the latest
+          loadPost();
+        }}
       />
 
       {/* Post Options Modal */}
