@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import LeftSidebar from '@/components/LeftSidebar';
@@ -11,6 +12,7 @@ import RightSidebar from '@/components/RightSidebar';
 import ReplyModal from '@/components/ReplyModal';
 import PostOptionsModal from '@/components/PostOptionsModal';
 import { useToast } from '@/hooks/useToast';
+import { postsAPI, repliesAPI } from '@/lib/api';
 import type { Post, Reply } from '@/types';
 import { MOCK_POSTS, MOCK_REPLIES } from '@/data/mockData';
 
@@ -46,14 +48,62 @@ export default function PostDetailPage() {
     try {
       setLoading(true);
 
-      const foundPost = MOCK_POSTS.find(p => p.id === parseInt(postId));
+      // Try to fetch from backend
+      try {
+        const response = await postsAPI.getPost(postId);
 
-      if (foundPost) {
-        setPost(foundPost);
-        setReplies(MOCK_REPLIES);
+        if (response.success && response.post) {
+          // Transform backend post to frontend format
+          const transformedPost = {
+            ...response.post,
+            user: response.post.authorWallet || response.post.author?.walletAddress || 'Unknown',
+            wallet: response.post.authorWallet,
+            time: new Date(response.post.createdAt).toLocaleString(),
+            likes: response.post.likeCount || 0,
+            comments: response.post.replyCount || 0,
+            reposts: 0,
+            tips: response.post.tipCount || 0,
+            image: response.post.imageUrl,
+          };
+
+          setPost(transformedPost as any);
+
+          // Fetch replies
+          const repliesResponse = await repliesAPI.getReplies(postId);
+          if (repliesResponse.success) {
+            // Transform replies to frontend format
+            const transformedReplies = repliesResponse.replies.map(reply => ({
+              id: reply.id as any,
+              user: reply.author.walletAddress,
+              content: reply.content,
+              likes: reply.likeCount || 0,
+              replies: reply.childReplies?.map(child => ({
+                id: child.id as any,
+                user: child.author.walletAddress,
+                content: child.content,
+                likes: child.likeCount || 0,
+                replies: [],
+                time: new Date(child.createdAt).toLocaleString(),
+                isPremium: false
+              })) || [],
+              time: new Date(reply.createdAt).toLocaleString(),
+              isPremium: false,
+              image: reply.imageUrl
+            }));
+            setReplies(transformedReplies);
+          }
+        }
+      } catch (backendError) {
+        console.error('Backend fetch failed, trying mock data:', backendError);
+        // Fallback to mock data
+        const foundPost = MOCK_POSTS.find(p => String(p.id) === postId);
+        if (foundPost) {
+          setPost(foundPost);
+          setReplies(MOCK_REPLIES);
+        }
       }
-    } catch {
-      // Failed to load post
+    } catch (error) {
+      console.error('Failed to load post:', error);
     } finally {
       setLoading(false);
     }
