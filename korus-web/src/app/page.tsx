@@ -36,6 +36,12 @@ export default function Home() {
   const router = useRouter();
   const { showSuccess, showError } = useToast();
   const { token, isAuthenticated, authenticate, isAuthenticating } = useWalletAuth();
+
+  // Truncate wallet address for display
+  const truncateAddress = (address: string) => {
+    if (!address || address.length <= 20) return address;
+    return `${address.slice(0, 8)}...${address.slice(-6)}`;
+  };
   const [showNotifications, setShowNotifications] = useState(false);
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
   const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
@@ -67,66 +73,90 @@ export default function Home() {
     }
   }, [connected, router]);
 
-  // Initialize posts when component mounts
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        setIsLoading(true);
+  // Fetch posts function
+  const fetchPosts = async () => {
+    try {
+      setIsLoading(true);
 
-        // Try to fetch from backend API
-        const response = await postsAPI.getPosts();
+      // Try to fetch from backend API
+      const response = await postsAPI.getPosts();
 
-        // If we got posts from the backend, use them
-        if (response.posts && response.posts.length > 0) {
-          // Transform backend posts to match frontend format
-          const transformedPosts = response.posts.map(post => ({
-            ...post,
-            user: post.authorWallet || post.author?.walletAddress || 'Unknown',
-            wallet: post.authorWallet,
-            time: new Date(post.createdAt).toLocaleString(),
-            likes: post.likeCount || 0,
-            comments: post.replyCount || 0,
-            reposts: 0,
-            tips: post.tipCount || 0,
-            image: post.imageUrl,
-          }));
+      // If we got posts from the backend, use them
+      if (response.posts && response.posts.length > 0) {
+        // Transform backend posts to match frontend format
+        const transformedPosts = response.posts.map(post => ({
+          ...post,
+          user: post.authorWallet || post.author?.walletAddress || 'Unknown',
+          wallet: post.authorWallet,
+          time: new Date(post.createdAt).toLocaleString(),
+          likes: post.likeCount || 0,
+          comments: post.replyCount || 0,
+          reposts: 0,
+          tips: post.tipCount || 0,
+          image: post.imageUrl,
+        }));
 
-          const sortedPosts = [...transformedPosts].sort((a, b) => {
-            if (a.isShoutout && !b.isShoutout) return -1;
-            if (!a.isShoutout && b.isShoutout) return 1;
-            return 0;
-          });
-          setPosts(sortedPosts as any);
-        } else {
-          // Fallback to mock data if backend returns empty
-          console.log('No posts in database, using mock data as fallback');
-          const mockPosts = [...MOCK_POSTS].sort((a, b) => {
-            if (a.isShoutout && !b.isShoutout) return -1;
-            if (!a.isShoutout && b.isShoutout) return 1;
-            return 0;
-          });
-          setPosts(mockPosts);
-        }
-      } catch (error) {
-        console.error('Failed to fetch posts from backend:', error);
-        console.log('Using mock data as fallback');
-
-        // Fallback to mock data on error
+        const sortedPosts = [...transformedPosts].sort((a, b) => {
+          if (a.isShoutout && !b.isShoutout) return -1;
+          if (!a.isShoutout && b.isShoutout) return 1;
+          return 0;
+        });
+        setPosts(sortedPosts as any);
+      } else {
+        // Fallback to mock data if backend returns empty
+        console.log('No posts in database, using mock data as fallback');
         const mockPosts = [...MOCK_POSTS].sort((a, b) => {
           if (a.isShoutout && !b.isShoutout) return -1;
           if (!a.isShoutout && b.isShoutout) return 1;
           return 0;
         });
         setPosts(mockPosts);
-      } finally {
-        setIsLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Failed to fetch posts from backend:', error);
+      console.log('Using mock data as fallback');
 
+      // Fallback to mock data on error
+      const mockPosts = [...MOCK_POSTS].sort((a, b) => {
+        if (a.isShoutout && !b.isShoutout) return -1;
+        if (!a.isShoutout && b.isShoutout) return 1;
+        return 0;
+      });
+      setPosts(mockPosts);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Initialize posts when component mounts
+  useEffect(() => {
     if (posts.length === 0) {
       fetchPosts();
     }
   }, [posts]);
+
+  // Refetch posts when page becomes visible (user navigates back from post detail)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('Page visible, refetching posts...');
+        fetchPosts();
+      }
+    };
+
+    const handleFocus = () => {
+      console.log('Window focused, refetching posts...');
+      fetchPosts();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
 
   // Fetch user interactions for loaded posts
   useEffect(() => {
@@ -819,7 +849,7 @@ export default function Home() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
                       <span className="text-xs text-korus-textSecondary font-medium">
-                        {post.repostedBy} reposted
+                        {truncateAddress(post.repostedBy)} reposted
                       </span>
                     </div>
                   )}
@@ -831,7 +861,7 @@ export default function Home() {
                       onClick={(e) => e.stopPropagation()}
                       className={`font-bold hover:underline cursor-pointer ${post.isShoutout ? 'text-korus-primary' : 'text-white'}`}
                     >
-                      {post.user}
+                      {truncateAddress(post.user)}
                     </Link>
 
                     {/* Premium Badge */}
@@ -843,7 +873,7 @@ export default function Home() {
                       </div>
                     )}
 
-                    <span className="text-korus-textSecondary">@{post.user}</span>
+                    <span className="text-korus-textSecondary">@{truncateAddress(post.user)}</span>
                     <span className="text-korus-textSecondary">·</span>
                     <span className="text-korus-textSecondary hover:underline cursor-pointer">{post.time}</span>
 
@@ -957,7 +987,7 @@ export default function Home() {
                       </svg>
                       <span className={`text-sm transition-colors font-medium ${
                         postInteractions[post.id]?.replied ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
-                      }`}>{post.replies}</span>
+                      }`}>{post.comments}</span>
                     </button>
 
                     <button

@@ -21,10 +21,18 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
 
   const postUrl = `${window.location.origin}/post/${postId}`;
 
+  // Truncate wallet address for display
+  const truncateAddress = (address: string) => {
+    if (address.length <= 20) return address;
+    return `${address.slice(0, 8)}...${address.slice(-6)}`;
+  };
+
+  const displayUser = truncateAddress(postUser);
+
   // Truncate content for sharing
-  const truncatedContent = postContent.length > 100
+  const truncatedContent = postContent && postContent.length > 100
     ? postContent.substring(0, 100) + '...'
-    : postContent;
+    : postContent || '';
 
   const shareOptions = [
     {
@@ -134,13 +142,13 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
         <div className="flex items-center justify-between p-6 border-b border-korus-border">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 40%, transparent)' }}>
-              <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              <svg className="w-6 h-6" fill="none" stroke="#000000" strokeWidth={2.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
               </svg>
             </div>
             <div>
               <h2 className="heading-2 text-white">Share Post</h2>
-              <p className="text-sm text-korus-textSecondary">by {postUser}</p>
+              <p className="text-sm text-korus-textSecondary">by {displayUser}</p>
             </div>
           </div>
           <button
@@ -158,10 +166,10 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
         <div className="p-5">
           <div className="p-4 rounded-xl border-2" style={{ background: 'linear-gradient(90deg, color-mix(in srgb, var(--korus-primary) 10%, transparent), color-mix(in srgb, var(--korus-secondary) 10%, transparent))', borderColor: 'color-mix(in srgb, var(--korus-primary) 30%, transparent)' }}>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-black" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))' }}>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))', color: '#000000' }}>
                 {postUser.slice(0, 2).toUpperCase()}
               </div>
-              <span className="text-white font-medium">{postUser}</span>
+              <span className="text-white font-medium truncate">{displayUser}</span>
             </div>
             <p className="text-korus-text text-sm leading-relaxed line-clamp-3">
               {truncatedContent}

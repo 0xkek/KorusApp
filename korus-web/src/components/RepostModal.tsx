@@ -23,6 +23,14 @@ export default function RepostModal({ isOpen, onClose, postContent, postUser, on
 
   if (!isOpen) return null;
 
+  // Truncate wallet address for display
+  const truncateAddress = (address: string) => {
+    if (address.length <= 20) return address;
+    return `${address.slice(0, 8)}...${address.slice(-6)}`;
+  };
+
+  const displayUser = truncateAddress(postUser);
+
   const handleRepost = async () => {
     if (!connected) {
       showError('Please connect your wallet to repost');
@@ -57,8 +65,8 @@ export default function RepostModal({ isOpen, onClose, postContent, postUser, on
         <div className="flex items-center justify-between p-6 border-b border-korus-border">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 40%, transparent)' }}>
-              <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              <svg className="w-6 h-6" fill="none" stroke="#000000" strokeWidth={2.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </div>
             <div>
@@ -85,10 +93,10 @@ export default function RepostModal({ isOpen, onClose, postContent, postUser, on
             <h3 className="text-sm font-semibold mb-3 text-korus-primary">Original Post</h3>
             <div className="border-2 rounded-xl p-4" style={{ background: 'linear-gradient(90deg, color-mix(in srgb, var(--korus-primary) 10%, transparent), color-mix(in srgb, var(--korus-secondary) 10%, transparent))', borderColor: 'color-mix(in srgb, var(--korus-primary) 30%, transparent)' }}>
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-black" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))' }}>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))', color: '#000000' }}>
                   {postUser.slice(0, 2).toUpperCase()}
                 </div>
-                <span className="text-white font-medium">{postUser}</span>
+                <span className="text-white font-medium truncate">{displayUser}</span>
               </div>
               <p className="text-sm leading-relaxed line-clamp-3 text-korus-text">{postContent}</p>
             </div>

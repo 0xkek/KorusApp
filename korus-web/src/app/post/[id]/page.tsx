@@ -12,18 +12,22 @@ import RightSidebar from '@/components/RightSidebar';
 import ReplyModal from '@/components/ReplyModal';
 import PostOptionsModal from '@/components/PostOptionsModal';
 import { useToast } from '@/hooks/useToast';
-import { postsAPI, repliesAPI } from '@/lib/api';
+import { postsAPI, repliesAPI, uploadAPI, interactionsAPI } from '@/lib/api';
 import type { Post, Reply } from '@/types';
 import { MOCK_POSTS, MOCK_REPLIES } from '@/data/mockData';
 
 // Dynamically import modals
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
 const MobileMenuModal = dynamic(() => import('@/components/MobileMenuModal'), { ssr: false });
+const RepostModal = dynamic(() => import('@/components/RepostModal'), { ssr: false });
+const TipModal = dynamic(() => import('@/components/TipModal'), { ssr: false });
+const ShareModal = dynamic(() => import('@/components/ShareModal'), { ssr: false });
 
 export default function PostDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { connected, publicKey } = useWallet();
+  const { token, isAuthenticated } = useWalletAuth();
   const { showSuccess, showError } = useToast();
   const postId = params.id as string;
 
@@ -43,6 +47,12 @@ export default function PostDetailPage() {
   const [showGifPicker, setShowGifPicker] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showRepostModal, setShowRepostModal] = useState(false);
+  const [showTipModal, setShowTipModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [postToRepost, setPostToRepost] = useState<Post | null>(null);
+  const [postToTip, setPostToTip] = useState<Post | null>(null);
+  const [postToShare, setPostToShare] = useState<Post | null>(null);
 
   const loadPost = useCallback(async () => {
     try {
@@ -68,28 +78,51 @@ export default function PostDetailPage() {
 
           setPost(transformedPost as any);
 
+          // Fetch user's like status if authenticated
+          if (isAuthenticated && token) {
+            try {
+              const interactionsResponse = await interactionsAPI.getUserInteractions([postId], token);
+              if (interactionsResponse.success && interactionsResponse.interactions[postId]) {
+                setLiked(interactionsResponse.interactions[postId].liked);
+              }
+            } catch (error) {
+              console.error('Failed to fetch user interactions:', error);
+            }
+          }
+
           // Fetch replies
           const repliesResponse = await repliesAPI.getReplies(postId);
           if (repliesResponse.success) {
+            console.log('Raw replies from backend:', repliesResponse.replies);
             // Transform replies to frontend format
-            const transformedReplies = repliesResponse.replies.map(reply => ({
-              id: reply.id as any,
-              user: reply.author.walletAddress,
-              content: reply.content,
-              likes: reply.likeCount || 0,
-              replies: reply.childReplies?.map(child => ({
-                id: child.id as any,
-                user: child.author.walletAddress,
-                content: child.content,
-                likes: child.likeCount || 0,
-                replies: [],
-                time: new Date(child.createdAt).toLocaleString(),
-                isPremium: false
-              })) || [],
-              time: new Date(reply.createdAt).toLocaleString(),
-              isPremium: false,
-              image: reply.imageUrl
-            }));
+            const transformedReplies = repliesResponse.replies.map(reply => {
+              const transformed = {
+                id: reply.id as any,
+                postId: postId, // Include the post ID for nested replies
+                user: reply.author?.walletAddress || reply.authorWallet || 'Unknown',
+                wallet: reply.authorWallet,
+                content: reply.content,
+                likes: reply.likeCount || 0,
+                replies: reply.childReplies?.map(child => ({
+                  id: child.id as any,
+                  postId: postId, // Include the post ID for nested replies
+                  user: child.author?.walletAddress || child.authorWallet || 'Unknown',
+                  wallet: child.authorWallet,
+                  content: child.content,
+                  likes: child.likeCount || 0,
+                  replies: [],
+                  time: new Date(child.createdAt).toLocaleString(),
+                  isPremium: false,
+                  image: child.imageUrl
+                })) || [],
+                time: new Date(reply.createdAt).toLocaleString(),
+                isPremium: false,
+                image: reply.imageUrl
+              };
+              console.log('Transformed reply:', transformed);
+              return transformed;
+            });
+            console.log('Setting transformed replies:', transformedReplies);
             setReplies(transformedReplies);
           }
         }
@@ -107,7 +140,7 @@ export default function PostDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [postId]);
+  }, [postId, isAuthenticated, token]);
 
   useEffect(() => {
     if (!connected) {
@@ -117,13 +150,33 @@ export default function PostDetailPage() {
     loadPost();
   }, [postId, connected, router, loadPost]);
 
-  const handleLike = () => {
-    if (!post) return;
+  const handleLike = async () => {
+    if (!post || !isAuthenticated || !token) {
+      showError('Please connect your wallet and sign in to like posts');
+      return;
+    }
+
+    // Optimistic update
+    const previousLiked = liked;
+    const previousLikes = post.likes;
     setLiked(!liked);
     setPost({
       ...post,
       likes: liked ? post.likes - 1 : post.likes + 1
     });
+
+    try {
+      await interactionsAPI.likePost(postId, token);
+    } catch (error) {
+      console.error('Failed to like post:', error);
+      // Revert on error
+      setLiked(previousLiked);
+      setPost({
+        ...post,
+        likes: previousLikes
+      });
+      showError('Failed to like post. Please try again.');
+    }
   };
 
   const handleLikeReply = (replyId: number) => {
@@ -175,9 +228,26 @@ export default function PostDetailPage() {
     setShowReplyModal(true);
   };
 
+  // Helper function to convert Reply to Post-like object for modals
+  const convertReplyToPost = (reply: Reply): Post => {
+    return {
+      id: reply.id,
+      user: reply.user,
+      wallet: reply.wallet,
+      content: reply.content,
+      likes: reply.likes,
+      replies: reply.replies?.length || 0,
+      tips: 0,
+      time: reply.time,
+      isPremium: reply.isPremium,
+      image: reply.image,
+      videoUrl: reply.videoUrl
+    } as Post;
+  };
+
   const handleInlineReply = async () => {
-    if (!connected) {
-      showError('Please connect your wallet to reply');
+    if (!connected || !isAuthenticated || !token) {
+      showError('Please connect your wallet and sign in to reply');
       return;
     }
 
@@ -186,44 +256,44 @@ export default function PostDetailPage() {
       return;
     }
 
-    if (inlineReplyContent.length > 280) {
-      showError('Reply is too long. Maximum 280 characters.');
+    if (inlineReplyContent.length > 300) {
+      showError('Reply is too long. Maximum 300 characters.');
       return;
     }
 
     setIsPostingReply(true);
 
     try {
-      // TODO: Implement actual API call to create reply
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Create new reply object
-      const newReply: Reply = {
-        id: Date.now(),
-        user: publicKey?.toBase58().slice(0, 15) || 'current_user',
-        content: inlineReplyContent,
-        likes: 0,
-        replies: [],
-        time: 'now',
-        isPremium: false,
-        isExpanded: false,
-      };
-
-      // Add reply to the list
-      setReplies([newReply, ...replies]);
-
-      // Update post reply count
-      if (post) {
-        setPost({
-          ...post,
-          replies: post.replies + 1
-        });
+      // Upload image if present
+      let imageUrl: string | undefined;
+      if (selectedFiles.length > 0) {
+        const imageFile = selectedFiles[0];
+        if (imageFile.type.startsWith('image/')) {
+          console.log('Uploading reply image...');
+          const uploadResponse = await uploadAPI.uploadImage(imageFile, token);
+          imageUrl = uploadResponse.url;
+          console.log('Reply image uploaded:', imageUrl);
+        }
       }
+
+      // Create reply via backend API
+      const response = await repliesAPI.createReply(
+        postId,
+        {
+          content: inlineReplyContent.trim(),
+          imageUrl
+        },
+        token
+      );
 
       showSuccess('Reply posted successfully!');
       setInlineReplyContent('');
       setSelectedFiles([]);
-    } catch {
+
+      // Reload post to get latest data from backend
+      await loadPost();
+    } catch (error) {
+      console.error('Failed to post reply:', error);
       showError('Failed to post reply. Please try again.');
     } finally {
       setIsPostingReply(false);
@@ -296,41 +366,74 @@ export default function PostDetailPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-6 text-korus-textTertiary">
+              <div className="flex items-center justify-between max-w-md">
                 <button
                   onClick={() => handleReply(reply)}
                   aria-label="Reply to comment"
-                  className="flex items-center gap-1 hover:text-korus-primary transition-colors group"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight"
                 >
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-korus-primary/10 transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                    </svg>
-                  </div>
-                  {hasReplies && <span className="text-sm">{reply.replies.length}</span>}
+                  <svg className="w-4 h-4 transition-colors text-korus-textTertiary group-hover:text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                  </svg>
+                  {hasReplies && <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">{reply.replies.length}</span>}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setPostToRepost(convertReplyToPost(reply));
+                    setShowRepostModal(true);
+                  }}
+                  aria-label="Repost"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight"
+                >
+                  <svg className="w-4 h-4 transition-colors text-korus-textTertiary group-hover:text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">0</span>
                 </button>
 
                 <button
                   onClick={() => handleLikeReply(reply.id)}
                   aria-label={likedReplies.has(reply.id) ? "Unlike reply" : "Like reply"}
-                  className={`flex items-center gap-1 hover:text-red-400 transition-colors group ${
-                    likedReplies.has(reply.id) ? 'text-red-400' : ''
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
+                    likedReplies.has(reply.id)
+                      ? 'bg-korus-primary/20 border border-korus-primary/40'
+                      : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
                   }`}
                 >
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-red-400/10 transition-colors">
-                    <svg className="w-4 h-4" fill={likedReplies.has(reply.id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                    </svg>
-                  </div>
-                  <span className="text-sm">{reply.likes}</span>
+                  <svg className={`w-4 h-4 transition-colors ${
+                    likedReplies.has(reply.id) ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                  }`} fill={likedReplies.has(reply.id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                  </svg>
+                  <span className={`text-sm transition-colors font-medium ${
+                    likedReplies.has(reply.id) ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                  }`}>{reply.likes}</span>
                 </button>
 
-                <button aria-label="Share reply" className="flex items-center gap-1 hover:text-korus-primary transition-colors group">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-korus-primary/10 transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-                    </svg>
-                  </div>
+                <button
+                  onClick={() => {
+                    setPostToTip(convertReplyToPost(reply));
+                    setShowTipModal(true);
+                  }}
+                  aria-label="Send tip (0 SOL)"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight"
+                >
+                  <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">$</span>
+                  <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">0 SOL</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setPostToShare(convertReplyToPost(reply));
+                    setShowShareModal(true);
+                  }}
+                  aria-label="Share reply"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight"
+                >
+                  <svg className="w-4 h-4 transition-colors text-korus-textTertiary group-hover:text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                  </svg>
                 </button>
               </div>
 
@@ -560,15 +663,22 @@ export default function PostDetailPage() {
                     <button
                       onClick={() => handleReply(post)}
                       aria-label="Reply to post"
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight"
                     >
                       <svg className="w-4 h-4 transition-colors text-korus-textTertiary group-hover:text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                       </svg>
-                      <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">{post.replies}</span>
+                      <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">{post.comments}</span>
                     </button>
 
-                    <button aria-label="Repost" className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group">
+                    <button
+                      onClick={() => {
+                        setPostToRepost(post);
+                        setShowRepostModal(true);
+                      }}
+                      aria-label="Repost"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight"
+                    >
                       <svg className="w-4 h-4 transition-colors text-korus-textTertiary group-hover:text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
@@ -578,28 +688,42 @@ export default function PostDetailPage() {
                     <button
                       onClick={handleLike}
                       aria-label={liked ? "Unlike post" : "Like post"}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group ${
-                        liked ? 'bg-red-500/10 border-red-500/30' : ''
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
+                        liked
+                          ? 'bg-korus-primary/20 border border-korus-primary/40'
+                          : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
                       }`}
                     >
                       <svg className={`w-4 h-4 transition-colors ${
-                        liked ? 'text-red-500' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                        liked ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
                       }`} fill={liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                       </svg>
                       <span className={`text-sm transition-colors font-medium ${
-                        liked ? 'text-red-500' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                        liked ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
                       }`}>{post.likes}</span>
                     </button>
 
-                    <button aria-label={`Send tip (${post.tips} SOL)`} className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group">
-                      <svg className="w-4 h-4 transition-colors text-korus-textTertiary group-hover:text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
-                      </svg>
-                      <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">{post.tips}</span>
+                    <button
+                      onClick={() => {
+                        setPostToTip(post);
+                        setShowTipModal(true);
+                      }}
+                      aria-label={`Send tip (${post.tips} SOL)`}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight"
+                    >
+                      <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">$</span>
+                      <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">{post.tips} SOL</span>
                     </button>
 
-                    <button aria-label="Share post" className="flex items-center justify-center w-9 h-9 rounded-full text-korus-textTertiary border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight transition-all duration-200 group">
+                    <button
+                      onClick={() => {
+                        setPostToShare(post);
+                        setShowShareModal(true);
+                      }}
+                      aria-label="Share post"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight"
+                    >
                       <svg className="w-4 h-4 transition-colors text-korus-textTertiary group-hover:text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
                       </svg>
@@ -614,10 +738,10 @@ export default function PostDetailPage() {
             {/* Inline Reply Composer */}
             <div className="border-b border-korus-border/50">
               <div className="px-6 py-4">
-                <div className="flex gap-3">
+                <div className="flex gap-3 items-start">
                   {/* Avatar */}
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0">
-                    <span className="text-black font-bold text-sm">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0">
+                    <span className="text-black font-bold text-base">
                       {publicKey?.toBase58().slice(0, 2).toUpperCase() || 'U'}
                     </span>
                   </div>
@@ -627,9 +751,9 @@ export default function PostDetailPage() {
                       value={inlineReplyContent}
                       onChange={(e) => setInlineReplyContent(e.target.value)}
                       placeholder="Post your reply..."
-                      className="w-full bg-transparent text-white text-base resize-none placeholder-korus-textTertiary min-h-[150px] max-h-[300px] pb-2"
-                      style={{ border: 'none', outline: 'none' }}
-                      rows={6}
+                      className="w-full bg-transparent text-white text-base resize-none placeholder-korus-textSecondary min-h-[28px] max-h-[300px] leading-6"
+                      style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
+                      rows={1}
                     />
 
                     {/* File Previews */}
@@ -671,7 +795,7 @@ export default function PostDetailPage() {
                     )}
 
                     {/* Reply Actions */}
-                    <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center justify-between mt-3">
                       <div className="flex items-center gap-1">
                         {/* Media Upload */}
                         <label className="flex items-center justify-center w-8 h-8 rounded-full text-korus-primary/60 hover:text-korus-primary hover:bg-korus-surface/20 transition-all duration-200 cursor-pointer">
@@ -772,17 +896,8 @@ export default function PostDetailPage() {
           setReplyToPost(null);
         }}
         post={replyToPost}
-        onReplySuccess={(reply) => {
-          // Add the new reply to the list
-          setReplies(prev => [reply, ...prev]);
-          // Update post reply count
-          if (post) {
-            setPost({
-              ...post,
-              comments: post.comments + 1
-            });
-          }
-          // Alternatively, reload all replies from backend to get the latest
+        onReplySuccess={() => {
+          // Reload all data from backend to get the latest
           loadPost();
         }}
       />
@@ -813,6 +928,38 @@ export default function PostDetailPage() {
       <MobileMenuModal
         isOpen={showMobileMenu}
         onClose={() => setShowMobileMenu(false)}
+      />
+
+      {/* Repost Modal */}
+      <RepostModal
+        isOpen={showRepostModal}
+        onClose={() => {
+          setShowRepostModal(false);
+          setPostToRepost(null);
+        }}
+        post={postToRepost}
+      />
+
+      {/* Tip Modal */}
+      <TipModal
+        isOpen={showTipModal}
+        onClose={() => {
+          setShowTipModal(false);
+          setPostToTip(null);
+        }}
+        post={postToTip}
+      />
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => {
+          setShowShareModal(false);
+          setPostToShare(null);
+        }}
+        postId={postToShare?.id || 0}
+        postContent={postToShare?.content || ''}
+        postUser={postToShare?.user || ''}
       />
 
       {/* Emoji Picker Modal */}

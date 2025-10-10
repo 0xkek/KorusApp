@@ -28,6 +28,14 @@ export default function TipModal({ isOpen, onClose, recipientUser, onTipSuccess 
 
   if (!isOpen) return null;
 
+  // Truncate wallet address for display
+  const truncateAddress = (address: string) => {
+    if (address.length <= 20) return address;
+    return `${address.slice(0, 8)}...${address.slice(-6)}`;
+  };
+
+  const displayUser = truncateAddress(recipientUser);
+
   const presetAmounts = [0.01, 0.05, 0.1, 0.25, 0.5, 1.0];
 
   const handleAmountSelect = (amount: number) => {
@@ -119,7 +127,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, onTipSuccess 
             </div>
             <div>
               <h2 className="heading-2 text-white">Send Tip</h2>
-              <p className="text-sm text-korus-textSecondary">to {recipientUser}</p>
+              <p className="text-sm text-korus-textSecondary">to {displayUser}</p>
             </div>
           </div>
           <button

@@ -30,6 +30,12 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
 
   if (!isOpen || !post) return null;
 
+  // Truncate wallet address for display
+  const truncateAddress = (address: string) => {
+    if (!address || address.length <= 20) return address;
+    return `${address.slice(0, 8)}...${address.slice(-6)}`;
+  };
+
   const handleReply = async () => {
     if (!connected || !isAuthenticated || !token) {
       showError('Please connect your wallet and sign in to reply');
@@ -57,11 +63,17 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
       }
 
       // Create reply via backend API
+      // Check if we're replying to a post or a reply
+      const isReplyToReply = 'postId' in post && post.postId;
+      const targetPostId = isReplyToReply ? post.postId : String(post.id);
+      const parentReplyId = isReplyToReply ? String(post.id) : undefined;
+
       const response = await repliesAPI.createReply(
-        String(post.id),
+        targetPostId!,
         {
           content: replyContent.trim(),
-          imageUrl
+          imageUrl,
+          parentReplyId
         },
         token
       );
@@ -150,7 +162,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <span className="font-bold text-white">{post.user}</span>
+                <span className="font-bold text-white">{truncateAddress(post.user)}</span>
                 {post.isPremium && (
                   <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
                     <svg className="w-3 h-3" fill="black" viewBox="0 0 24 24">
@@ -158,7 +170,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                     </svg>
                   </div>
                 )}
-                <span className="text-korus-textSecondary">@{post.user}</span>
+                <span className="text-korus-textSecondary">@{truncateAddress(post.user)}</span>
                 <span className="text-korus-textSecondary">·</span>
                 <span className="text-korus-textSecondary">{post.time}</span>
               </div>
@@ -171,7 +183,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                 </div>
               )}
               <div className="text-korus-textSecondary text-sm">
-                Replying to <span className="text-korus-primary">@{post.user}</span>
+                Replying to <span className="text-korus-primary">@{truncateAddress(post.user)}</span>
               </div>
             </div>
           </div>
