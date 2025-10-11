@@ -167,7 +167,9 @@ export function GamesPage() {
       }
 
       showSuccess('Joined game successfully!');
-      loadGames();
+
+      // Navigate to the game play page
+      router.push(`/games/${game.id}`);
     } catch (error) {
       console.error('Failed to join game:', error);
       showError(error instanceof Error ? error.message : 'Failed to join game. Please try again.');

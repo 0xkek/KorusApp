@@ -315,34 +315,10 @@ export function useGameEscrow() {
         statePda: statePda.toString(),
       });
 
-      // Check if player state already exists and has an active game
+      // Check if player state exists (for informational purposes only - blockchain allows multiple games)
       const playerStateAccount = await connection.getAccountInfo(playerStatePda);
       if (playerStateAccount) {
-        console.log('Player state exists!');
-        console.log('Player state data length:', playerStateAccount.data.length);
-        console.log('Player state data (hex):', playerStateAccount.data.toString('hex'));
-
-        // PlayerState structure after discriminator(8): player(32) + current_game_id(Option<u64> = 1 + 8) + padding(1)
-        // Total: 8 + 32 + 9 + 1 = 50 bytes
-        if (playerStateAccount.data.length >= 42) {
-          const discriminatorEnd = 8;
-          const playerPubkey = new PublicKey(playerStateAccount.data.slice(discriminatorEnd, discriminatorEnd + 32));
-          console.log('Stored player pubkey:', playerPubkey.toString());
-          console.log('Current player pubkey:', publicKey.toString());
-
-          const hasGameFlag = playerStateAccount.data.readUInt8(discriminatorEnd + 32);
-          console.log('Has game flag:', hasGameFlag);
-
-          if (hasGameFlag === 1) {
-            const currentGameId = playerStateAccount.data.readBigUInt64LE(discriminatorEnd + 33);
-            console.warn('⚠️ Player already has an active game:', currentGameId.toString());
-            throw new Error(`You already have an active game (ID: ${currentGameId}). Please complete or cancel it before joining another game.`);
-          } else {
-            console.log('✅ Player state exists but no active game (flag = 0)');
-          }
-        } else {
-          console.log('⚠️ Player state account exists but data is too small');
-        }
+        console.log('✅ Player state exists - user can join multiple games');
       } else {
         console.log('Player state does not exist yet (will be created with init_if_needed)');
       }

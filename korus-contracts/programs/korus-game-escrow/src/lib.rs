@@ -33,13 +33,6 @@ pub mod korus_game_escrow {
             ErrorCode::InvalidWagerAmount
         );
 
-        // Check if player already has an active game
-        let player_state = &ctx.accounts.player_state;
-        require!(
-            !player_state.has_active_game,
-            ErrorCode::PlayerAlreadyInGame
-        );
-
         let state = &mut ctx.accounts.state;
         let game = &mut ctx.accounts.game;
         let clock = Clock::get()?;
@@ -66,10 +59,9 @@ pub mod korus_game_escrow {
             ErrorCode::InsufficientEscrowBalance
         );
 
-        // Update player state
+        // Update player state to track game
         let player_state = &mut ctx.accounts.player_state;
         player_state.player = ctx.accounts.player1.key();
-        player_state.has_active_game = true;
         player_state.current_game_id = Some(state.total_games);
 
         state.total_games += 1;
@@ -96,13 +88,6 @@ pub mod korus_game_escrow {
             ErrorCode::InvalidWagerAmount
         );
 
-        // Check if player already has an active game
-        let player_state = &ctx.accounts.player_state;
-        require!(
-            !player_state.has_active_game,
-            ErrorCode::PlayerAlreadyInGame
-        );
-
         let state = &mut ctx.accounts.state;
         let game = &mut ctx.accounts.game;
         let clock = Clock::get()?;
@@ -122,10 +107,9 @@ pub mod korus_game_escrow {
 
         // No CPI transfer here - player deposits directly to escrow beforehand
 
-        // Update player state
+        // Update player state to track game
         let player_state = &mut ctx.accounts.player_state;
         player_state.player = ctx.accounts.player1.key();
-        player_state.has_active_game = true;
         player_state.current_game_id = Some(state.total_games);
 
         state.total_games += 1;
@@ -150,13 +134,6 @@ pub mod korus_game_escrow {
         require!(game.player2 == Pubkey::default(), ErrorCode::GameAlreadyJoined);
         require!(game.player1 != ctx.accounts.player2.key(), ErrorCode::CannotJoinOwnGame);
 
-        // Check if player2 already has an active game
-        let player2_state = &ctx.accounts.player2_state;
-        require!(
-            !player2_state.has_active_game,
-            ErrorCode::PlayerAlreadyInGame
-        );
-
         game.player2 = ctx.accounts.player2.key();
         game.status = 1; // Active
         game.player2_deposited = game.wager_amount;
@@ -176,10 +153,9 @@ pub mod korus_game_escrow {
             ],
         )?;
 
-        // Update player2 state
+        // Update player2 state to track game
         let player2_state = &mut ctx.accounts.player2_state;
         player2_state.player = ctx.accounts.player2.key();
-        player2_state.has_active_game = true;
         player2_state.current_game_id = Some(game.game_id);
 
         let state = &mut ctx.accounts.state;
@@ -195,7 +171,7 @@ pub mod korus_game_escrow {
 
     pub fn cancel_game(ctx: Context<CancelGame>) -> Result<()> {
         let game = &mut ctx.accounts.game;
-        
+
         // Only player1 can cancel and only if waiting for player2
         require!(game.status == 0, ErrorCode::GameNotWaiting);
         require!(game.player1 == ctx.accounts.player1.key(), ErrorCode::NotGameCreator);
@@ -225,9 +201,8 @@ pub mod korus_game_escrow {
             signer_seeds,
         )?;
 
-        // Update player state
+        // Clear player state game tracking
         let player_state = &mut ctx.accounts.player_state;
-        player_state.has_active_game = false;
         player_state.current_game_id = None;
 
         // Update global state
@@ -346,10 +321,8 @@ pub mod korus_game_escrow {
             )?;
         }
 
-        // Update player states
-        ctx.accounts.player1_state.has_active_game = false;
+        // Clear player states game tracking
         ctx.accounts.player1_state.current_game_id = None;
-        ctx.accounts.player2_state.has_active_game = false;
         ctx.accounts.player2_state.current_game_id = None;
 
         // Update global state
@@ -456,10 +429,8 @@ pub mod korus_game_escrow {
             signer_seeds,
         )?;
 
-        // Update player states
-        ctx.accounts.player1_state.has_active_game = false;
+        // Clear player states game tracking
         ctx.accounts.player1_state.current_game_id = None;
-        ctx.accounts.player2_state.has_active_game = false;
         ctx.accounts.player2_state.current_game_id = None;
 
         // Update global state
@@ -537,12 +508,12 @@ impl Game {
 #[account]
 pub struct PlayerState {
     pub player: Pubkey,
-    pub has_active_game: bool,
     pub current_game_id: Option<u64>,
+    pub _padding: u8, // Keep same size as before (was has_active_game)
 }
 
 impl PlayerState {
-    pub const LEN: usize = 32 + 1 + 9; // Option<u64> = 1 + 8
+    pub const LEN: usize = 32 + 9 + 1; // Pubkey + Option<u64> + padding = 42 bytes
 }
 
 // Contexts

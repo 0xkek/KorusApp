@@ -29,7 +29,13 @@ export default function GamePlayPage() {
       setLoading(true);
       setError(null);
       const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+
+      console.log('📥 Loading game:', gameId);
+      console.log('Auth token present:', !!token);
+
       const response = await gamesAPI.getGame(parseInt(gameId), token || undefined);
+
+      console.log('📦 Game response:', response);
 
       if (response.success && response.game) {
         setGame(response.game);
@@ -37,7 +43,7 @@ export default function GamePlayPage() {
         setError('Game not found');
       }
     } catch (err) {
-      console.error('Failed to load game:', err);
+      console.error('❌ Failed to load game:', err);
       setError(err instanceof Error ? err.message : 'Failed to load game');
     } finally {
       setLoading(false);

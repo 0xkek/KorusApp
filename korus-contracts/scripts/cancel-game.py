@@ -91,9 +91,8 @@ def main():
 
     # Create and send transaction
     recent_blockhash = client.get_latest_blockhash().value.blockhash
-    transaction = Transaction.new_with_payer([instruction], player_pubkey)
-    transaction.recent_blockhash = recent_blockhash
-    transaction.sign([player_keypair])
+    transaction = Transaction([instruction], player_pubkey, recent_blockhash)
+    transaction.sign([player_keypair], recent_blockhash)
 
     try:
         print("\n📤 Sending cancel transaction...")
