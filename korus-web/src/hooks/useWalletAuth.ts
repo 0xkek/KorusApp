@@ -72,11 +72,19 @@ export function useWalletAuth() {
       authInProgressRef.current = false;
     } catch (error) {
       console.error('Authentication failed:', error);
+
+      // Handle wallet rejection gracefully
+      const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
+      const isUserRejection = errorMessage.includes('closed') ||
+                              errorMessage.includes('rejected') ||
+                              errorMessage.includes('cancelled') ||
+                              errorMessage.includes('User rejected');
+
       setAuthState({
         token: null,
         isAuthenticated: false,
         isAuthenticating: false,
-        error: error instanceof Error ? error.message : 'Authentication failed',
+        error: isUserRejection ? null : errorMessage, // Don't show error for user cancellation
       });
       authInProgressRef.current = false;
     }

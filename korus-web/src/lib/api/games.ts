@@ -93,4 +93,11 @@ export const gamesAPI = {
     const params = status ? `?status=${status}` : '';
     return api.get<GamesListResponse>(`/api/games${params}`, token);
   },
+
+  /**
+   * Delete/cancel a game
+   */
+  async deleteGame(gameId: number, token: string): Promise<{ success: boolean }> {
+    return api.delete<{ success: boolean }>(`/api/games/${gameId}`, token);
+  },
 };

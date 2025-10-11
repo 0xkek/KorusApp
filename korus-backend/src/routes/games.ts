@@ -5,7 +5,8 @@ import {
   makeMove,
   getGame,
   getGameByPostId,
-  getAllGames
+  getAllGames,
+  deleteGame
 } from '../controllers/gamesController'
 import { authenticate } from '../middleware/auth'
 import { gameLimiter } from '../middleware/rateLimiter'
@@ -34,5 +35,8 @@ router.get('/:id', getGame)
 
 // GET /api/games/post/:postId - Get game by post ID
 router.get('/post/:postId', getGameByPostId)
+
+// DELETE /api/games/:id - Delete/cancel a game
+router.delete('/:id', authenticate, deleteGame)
 
 export default router

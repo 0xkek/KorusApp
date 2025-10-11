@@ -166,9 +166,16 @@ export const createGame = async (req: AuthRequest, res: Response) => {
       }
     })
 
+    // Convert BigInt to string for JSON serialization
+    const serializedGame = {
+      ...game,
+      onChainGameId: game.onChainGameId ? game.onChainGameId.toString() : null,
+      wager: game.wager.toString()
+    }
+
     res.json({
       success: true,
-      game
+      game: serializedGame
     })
   } catch (error) {
     logger.error('Create game error:', error)
@@ -212,9 +219,16 @@ export const joinGame = async (req: AuthRequest, res: Response) => {
       }
     })
 
+    // Convert BigInt to string for JSON serialization
+    const serializedGame = {
+      ...updatedGame,
+      onChainGameId: updatedGame.onChainGameId ? updatedGame.onChainGameId.toString() : null,
+      wager: updatedGame.wager.toString()
+    }
+
     res.json({
       success: true,
-      game: updatedGame
+      game: serializedGame
     })
   } catch (error) {
     logger.error('Join game error:', error)
@@ -347,9 +361,16 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
       }
     })
 
+    // Convert BigInt to string for JSON serialization
+    const serializedGame = {
+      ...updatedGame,
+      onChainGameId: updatedGame.onChainGameId ? updatedGame.onChainGameId.toString() : null,
+      wager: updatedGame.wager.toString()
+    }
+
     res.json({
       success: true,
-      game: updatedGame
+      game: serializedGame
     })
   } catch (error) {
     logger.error('Make move error:', error)
@@ -380,9 +401,16 @@ export const getGame = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, error: 'Game not found' })
     }
 
+    // Convert BigInt to string for JSON serialization
+    const serializedGame = {
+      ...game,
+      onChainGameId: game.onChainGameId ? game.onChainGameId.toString() : null,
+      wager: game.wager.toString()
+    }
+
     res.json({
       success: true,
-      game
+      game: serializedGame
     })
   } catch (error) {
     logger.error('Get game error:', error)
@@ -408,9 +436,16 @@ export const getGameByPostId = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, error: 'Game not found' })
     }
 
+    // Convert BigInt to string for JSON serialization
+    const serializedGame = {
+      ...game,
+      onChainGameId: game.onChainGameId ? game.onChainGameId.toString() : null,
+      wager: game.wager.toString()
+    }
+
     res.json({
       success: true,
-      game
+      game: serializedGame
     })
   } catch (error) {
     logger.error('Get game by post error:', error)
@@ -619,15 +654,78 @@ export const getAllGames = async (req: Request, res: Response) => {
       take: 100 // Limit to 100 games
     })
 
+    // Convert BigInt to string for JSON serialization
+    const serializedGames = games.map(game => ({
+      ...game,
+      onChainGameId: game.onChainGameId ? game.onChainGameId.toString() : null,
+      wager: game.wager.toString()
+    }))
+
     res.json({
       success: true,
-      games
+      games: serializedGames
     })
   } catch (error) {
     logger.error('Error fetching games:', error)
     res.status(500).json({
       success: false,
       error: 'Failed to fetch games'
+    })
+  }
+}
+
+/**
+ * Delete/cancel a game
+ * Only the creator (player1) can delete a waiting game
+ */
+export async function deleteGame(req: AuthRequest, res: Response) {
+  try {
+    const gameId = req.params.id
+    const playerWallet = req.userWallet!
+
+    // Get the game
+    const game = await prisma.game.findUnique({
+      where: { id: gameId }
+    })
+
+    if (!game) {
+      return res.status(404).json({
+        success: false,
+        error: 'Game not found'
+      })
+    }
+
+    // Only player1 (creator) can delete the game
+    if (game.player1 !== playerWallet) {
+      return res.status(403).json({
+        success: false,
+        error: 'Only the game creator can cancel it'
+      })
+    }
+
+    // Only allow deleting waiting games
+    if (game.status !== 'waiting') {
+      return res.status(400).json({
+        success: false,
+        error: 'Can only cancel waiting games'
+      })
+    }
+
+    // Delete the game
+    await prisma.game.delete({
+      where: { id: gameId }
+    })
+
+    logger.info(`Game ${gameId} cancelled by ${playerWallet}`)
+
+    res.json({
+      success: true
+    })
+  } catch (error) {
+    logger.error('Error deleting game:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete game'
     })
   }
 }

@@ -10,7 +10,7 @@ import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 export function GamesPage() {
   const { connected, publicKey } = useWallet();
-  const { createGame, cancelGame, isProcessing } = useGameEscrow();
+  const { createGame, joinGame, cancelGame, isProcessing } = useGameEscrow();
   const { isAuthenticated, authenticate, isAuthenticating } = useWalletAuth();
   const { showSuccess, showError } = useToast();
   const [activeTab, setActiveTab] = useState<'waiting' | 'active'>('waiting');
@@ -138,18 +138,37 @@ export function GamesPage() {
       const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
       if (!token) {
         showError('Not authenticated. Please sign in with your wallet.');
+        setJoiningGame(null);
         return;
       }
 
-      // For wagered games, user needs to deposit escrow on blockchain first
-      // This will be handled by the join modal / flow
-      await gamesAPI.joinGame(game.id, {}, token);
+      // For wagered games, join on blockchain first
+      if (game.wager && parseFloat(game.wager) > 0) {
+        if (!game.onChainGameId) {
+          showError('This game is not properly initialized on the blockchain');
+          setJoiningGame(null);
+          return;
+        }
+
+        console.log('💰 Wagered game - joining on blockchain first...');
+        console.log('On-chain game ID:', game.onChainGameId);
+
+        // Join game on blockchain (deposits wager into escrow)
+        const { signature } = await joinGame(parseInt(game.onChainGameId));
+        console.log('✅ Blockchain join successful:', signature);
+
+        // Then update backend with signature
+        await gamesAPI.joinGame(game.id, { onChainTxSignature: signature }, token);
+      } else {
+        // No wager - just join in backend
+        await gamesAPI.joinGame(game.id, {}, token);
+      }
 
       showSuccess('Joined game successfully!');
       loadGames();
     } catch (error) {
       console.error('Failed to join game:', error);
-      showError('Failed to join game. Please try again.');
+      showError(error instanceof Error ? error.message : 'Failed to join game. Please try again.');
     } finally {
       setJoiningGame(null);
     }
@@ -161,15 +180,18 @@ export function GamesPage() {
       return;
     }
 
-    if (!game.onChainGameId) {
-      showError('This game has no blockchain transaction');
-      return;
-    }
-
     setCancellingGame(game.id);
     try {
-      // Cancel on blockchain first
-      await cancelGame(Number(game.onChainGameId));
+      // If game has blockchain component, cancel on-chain first
+      if (game.onChainGameId) {
+        await cancelGame(Number(game.onChainGameId));
+      }
+
+      // Then delete from backend database
+      const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+      if (token) {
+        await gamesAPI.deleteGame(game.id, token);
+      }
 
       showSuccess('Game cancelled successfully!');
       loadGames();
@@ -352,22 +374,20 @@ export function GamesPage() {
                         >
                           Waiting for opponent
                         </button>
-                        {game.onChainGameId && (
-                          <button
-                            onClick={() => handleCancelGame(game)}
-                            disabled={cancellingGame === game.id}
-                            className="bg-red-600 text-white font-bold px-4 py-1.5 rounded-full hover:bg-red-700 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {cancellingGame === game.id ? (
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                                Cancelling...
-                              </div>
-                            ) : (
-                              'Cancel'
-                            )}
-                          </button>
-                        )}
+                        <button
+                          onClick={() => handleCancelGame(game)}
+                          disabled={cancellingGame === game.id}
+                          className="bg-red-600 text-white font-bold px-4 py-1.5 rounded-full hover:bg-red-700 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {cancellingGame === game.id ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                              Cancelling...
+                            </div>
+                          ) : (
+                            'Cancel'
+                          )}
+                        </button>
                       </div>
                     )}
                     {activeTab === 'active' && (publicKey?.toBase58() === game.player1 || publicKey?.toBase58() === game.player2) && (
