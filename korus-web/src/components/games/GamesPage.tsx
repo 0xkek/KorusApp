@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { gamesAPI, type Game, type GameStatus, type GameType } from '@/lib/api/games';
 import { useGameEscrow } from '@/hooks/useGameEscrow';
@@ -9,6 +10,7 @@ import { useToast } from '@/hooks/useToast';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 export function GamesPage() {
+  const router = useRouter();
   const { connected, publicKey } = useWallet();
   const { createGame, joinGame, cancelGame, isProcessing } = useGameEscrow();
   const { isAuthenticated, authenticate, isAuthenticating } = useWalletAuth();
@@ -289,6 +291,12 @@ export function GamesPage() {
           {games.map((game) => (
             <div
               key={game.id}
+              onClick={() => {
+                // Navigate to game page if it's active or if current user is a participant
+                if (game.status === 'active' || publicKey?.toBase58() === game.player1 || publicKey?.toBase58() === game.player2) {
+                  router.push(`/games/${game.id}`);
+                }
+              }}
               className="border-b border-korus-border bg-korus-surface/20 hover:bg-korus-surface/40 hover:border-korus-primary/50 transition-all duration-200 cursor-pointer group"
             >
               <div className="flex gap-4 p-6">
@@ -352,7 +360,10 @@ export function GamesPage() {
                   <div className="flex items-center justify-end mt-3">
                     {activeTab === 'waiting' && !game.player2 && publicKey?.toBase58() !== game.player1 && (
                       <button
-                        onClick={() => handleJoinGame(game)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleJoinGame(game);
+                        }}
                         disabled={joiningGame === game.id}
                         className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-4 py-1.5 rounded-full hover:shadow-lg hover:shadow-korus-primary/20 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -369,13 +380,17 @@ export function GamesPage() {
                     {activeTab === 'waiting' && publicKey?.toBase58() === game.player1 && (
                       <div className="flex items-center gap-2">
                         <button
+                          onClick={(e) => e.stopPropagation()}
                           disabled
                           className="bg-blue-600 text-white font-bold px-4 py-1.5 rounded-full text-sm opacity-80 cursor-not-allowed"
                         >
                           Waiting for opponent
                         </button>
                         <button
-                          onClick={() => handleCancelGame(game)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCancelGame(game);
+                          }}
                           disabled={cancellingGame === game.id}
                           className="bg-red-600 text-white font-bold px-4 py-1.5 rounded-full hover:bg-red-700 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -391,8 +406,14 @@ export function GamesPage() {
                       </div>
                     )}
                     {activeTab === 'active' && (publicKey?.toBase58() === game.player1 || publicKey?.toBase58() === game.player2) && (
-                      <button className="bg-green-600 text-white font-bold px-4 py-1.5 rounded-full hover:bg-green-700 transition-all text-sm">
-                        Play Game
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/games/${game.id}`);
+                        }}
+                        className="bg-green-600 text-white font-bold px-4 py-1.5 rounded-full hover:bg-green-700 transition-all text-sm"
+                      >
+                        Play Game →
                       </button>
                     )}
                   </div>
