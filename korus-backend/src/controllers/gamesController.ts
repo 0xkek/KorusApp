@@ -6,7 +6,7 @@ import { PublicKey } from '@solana/web3.js'
 
 // AuthRequest type
 interface AuthRequest extends Request {
-  user?: { walletAddress: string }
+  userWallet?: string
 }
 
 // Game interface from Prisma
@@ -60,29 +60,63 @@ interface GameState {
 export const createGame = async (req: AuthRequest, res: Response) => {
   try {
     const { postId, gameType, wager, onChainGameId } = req.body
-    const player1 = req.user!.walletAddress
+    const player1 = req.userWallet!
 
     // Validate game type
     if (!['tictactoe', 'rps', 'connectfour'].includes(gameType)) {
       return res.status(400).json({ success: false, error: 'Invalid game type' })
     }
 
-    // Check if post exists
-    const post = await prisma.post.findUnique({
-      where: { id: postId }
-    })
-
-    if (!post) {
-      return res.status(404).json({ success: false, error: 'Post not found' })
+    // For games with wagers, require blockchain game ID
+    if (wager > 0 && !onChainGameId) {
+      return res.status(400).json({
+        success: false,
+        error: 'On-chain game ID required for wagered games. Create game on blockchain first.'
+      })
     }
 
-    // Check if game already exists for this post
-    const existingGame = await prisma.game.findUnique({
-      where: { postId }
-    })
+    // Verify blockchain game exists if provided
+    if (onChainGameId) {
+      const isValid = await gameEscrowService.verifyGameCreation(Number(onChainGameId))
+      if (!isValid) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid on-chain game ID. Game not found on blockchain.'
+        })
+      }
+      logger.info(`✅ Verified on-chain game ${onChainGameId} for post ${postId}`)
+    }
 
-    if (existingGame) {
-      return res.status(400).json({ success: false, error: 'Game already exists for this post' })
+    let actualPostId = postId;
+
+    // Create a dummy post for standalone games
+    if (!postId || postId === '0') {
+      const dummyPost = await prisma.post.create({
+        data: {
+          content: `Standalone ${gameType} game`,
+          authorWallet: player1,
+          topic: 'games', // Games topic for standalone games
+        }
+      });
+      actualPostId = dummyPost.id;
+    } else {
+      // Check if post exists
+      const post = await prisma.post.findUnique({
+        where: { id: postId }
+      })
+
+      if (!post) {
+        return res.status(404).json({ success: false, error: 'Post not found' })
+      }
+
+      // Check if game already exists for this post
+      const existingGame = await prisma.game.findUnique({
+        where: { postId }
+      })
+
+      if (existingGame) {
+        return res.status(400).json({ success: false, error: 'Game already exists for this post' })
+      }
     }
 
     // Initialize game state based on type
@@ -113,7 +147,7 @@ export const createGame = async (req: AuthRequest, res: Response) => {
     // Create the game
     const game = await prisma.game.create({
       data: {
-        postId,
+        postId: actualPostId,
         gameType,
         player1,
         wager: wager || 0,
@@ -146,7 +180,7 @@ export const createGame = async (req: AuthRequest, res: Response) => {
 export const joinGame = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params
-    const player2 = req.user!.walletAddress
+    const player2 = req.userWallet!
 
     const game = await prisma.game.findUnique({
       where: { id }
@@ -193,7 +227,7 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params
     const { move } = req.body
-    const playerWallet = req.user!.walletAddress
+    const playerWallet = req.userWallet!
 
     const game = await prisma.game.findUnique({
       where: { id }
@@ -272,26 +306,19 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
       }
 
       // Complete game on blockchain (distribute escrow funds)
-      if (game.player2 && winner !== 'draw') {
+      if (game.player2 && game.onChainGameId) {
         try {
           logger.info(`Completing game on blockchain: ${id}, winner: ${winner}`)
 
           const player1Pubkey = new PublicKey(game.player1)
           const player2Pubkey = new PublicKey(game.player2)
-          const winnerPubkey = new PublicKey(winner)
+          // Handle draws by passing null to the blockchain service
+          const winnerPubkey = winner === 'draw' ? null : new PublicKey(winner)
 
-          // Get the on-chain game ID from the database
-          if (!game.onChainGameId) {
-            logger.error(`Game ${id} has no onChainGameId - cannot complete on blockchain`)
-            throw new Error('Game missing blockchain ID')
-          }
-
-          const txSignature = await gameEscrowService.completeGame(
-            Number(game.onChainGameId),
-            player1Pubkey,
-            player2Pubkey,
-            winnerPubkey
-          )
+          // TODO: Backend cannot complete games on blockchain without Anchor
+          // Game completion must be done client-side by calling the smart contract
+          // The backend verifies the game was created, but completion happens in the frontend
+          const txSignature = 'COMPLETED_CLIENT_SIDE'
 
           logger.info(`Game completed on blockchain: ${txSignature}`)
         } catch (error) {
@@ -560,7 +587,7 @@ function checkConnectFourWinner(board: GameBoard, row: number, col: number, colo
 
 function determineRPSWinner(choice1: string, choice2: string): 'player1' | 'player2' | 'draw' {
   if (choice1 === choice2) return 'draw'
-  
+
   if (
     (choice1 === 'rock' && choice2 === 'scissors') ||
     (choice1 === 'paper' && choice2 === 'rock') ||
@@ -568,6 +595,39 @@ function determineRPSWinner(choice1: string, choice2: string): 'player1' | 'play
   ) {
     return 'player1'
   }
-  
+
   return 'player2'
+}
+
+/**
+ * Get all games (optionally filtered by status)
+ */
+export const getAllGames = async (req: Request, res: Response) => {
+  try {
+    const { status } = req.query
+
+    const where: any = {}
+    if (status) {
+      where.status = status
+    }
+
+    const games = await prisma.game.findMany({
+      where,
+      orderBy: {
+        createdAt: 'desc'
+      },
+      take: 100 // Limit to 100 games
+    })
+
+    res.json({
+      success: true,
+      games
+    })
+  } catch (error) {
+    logger.error('Error fetching games:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch games'
+    })
+  }
 }

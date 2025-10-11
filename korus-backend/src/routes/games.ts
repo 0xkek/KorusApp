@@ -4,7 +4,8 @@ import {
   joinGame,
   makeMove,
   getGame,
-  getGameByPostId
+  getGameByPostId,
+  getAllGames
 } from '../controllers/gamesController'
 import { authenticate } from '../middleware/auth'
 import { gameLimiter } from '../middleware/rateLimiter'
@@ -15,6 +16,9 @@ const router = Router()
 router.use(gameLimiter)
 
 // All game routes require authentication
+
+// GET /api/games - Get all games (must be before /:id route)
+router.get('/', getAllGames)
 
 // POST /api/games - Create a new game
 router.post('/', authenticate, createGame)

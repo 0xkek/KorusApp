@@ -22,7 +22,7 @@ import authRoutes from './routes/auth'
 import interactionsRoutes from './routes/interactions'
 import postsRoutes from './routes/posts'
 import repliesRoutes from './routes/replies'
-// import gamesRoutes from './routes/games' // Temporarily disabled - has TypeScript errors
+import gamesRoutes from './routes/games'
 import searchRoutes from './routes/search'
 import reportsRoutes from './routes/reports'
 import moderationRoutes from './routes/moderation'
@@ -134,7 +134,7 @@ app.use('/api/posts', postsRoutes)
 app.use('/api/posts', repliesRoutes)  // For /api/posts/:id/replies endpoints
 app.use('/api/interactions', interactionsRoutes)
 app.use('/api/replies', repliesRoutes)  // For /api/replies/:id/like endpoints
-// app.use('/api/games', gamesRoutes) // Temporarily disabled - has TypeScript errors
+app.use('/api/games', gamesRoutes)
 app.use('/api/search', searchRoutes)
 app.use('/api/reports', reportsRoutes)
 app.use('/api/moderation', moderationRoutes)

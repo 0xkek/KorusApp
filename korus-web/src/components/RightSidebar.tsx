@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { notificationsAPI, type Notification as APINotification } from '@/lib/api';
@@ -13,6 +14,7 @@ interface RightSidebarProps {
 }
 
 export default function RightSidebar({ showNotifications = false, onNotificationCountChange }: RightSidebarProps) {
+  const router = useRouter();
   const { connected } = useWallet();
   const { token, isAuthenticated } = useWalletAuth();
   const [notifications, setNotifications] = useState<APINotification[]>([]);
@@ -46,22 +48,28 @@ export default function RightSidebar({ showNotifications = false, onNotification
     }
   };
 
-  const handleMarkAsRead = async (notificationId: string) => {
+  const handleNotificationClick = async (notification: APINotification) => {
     if (!token) return;
 
     try {
-      await notificationsAPI.markAsRead(notificationId, token);
+      // Mark as read
+      await notificationsAPI.markAsRead(notification.id, token);
       setNotifications(prev =>
-        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+        prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
       );
 
       // Update unread count
-      const unreadCount = notifications.filter(n => !n.read && n.id !== notificationId).length;
+      const unreadCount = notifications.filter(n => !n.read && n.id !== notification.id).length;
       if (onNotificationCountChange) {
         onNotificationCountChange(unreadCount);
       }
+
+      // Navigate to post if postId exists
+      if (notification.postId) {
+        router.push(`/post/${notification.postId}`);
+      }
     } catch (error) {
-      console.error('Failed to mark notification as read:', error);
+      console.error('Failed to handle notification click:', error);
     }
   };
 
@@ -189,11 +197,11 @@ export default function RightSidebar({ showNotifications = false, onNotification
                   role="listitem"
                   aria-label={`${notification.type} notification`}
                   tabIndex={0}
-                  onClick={() => handleMarkAsRead(notification.id)}
+                  onClick={() => handleNotificationClick(notification)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      handleMarkAsRead(notification.id);
+                      handleNotificationClick(notification);
                     }
                   }}
                 >
