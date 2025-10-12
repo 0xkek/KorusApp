@@ -125,7 +125,7 @@ export const createGame = async (req: AuthRequest, res: Response) => {
     switch (gameType) {
       case 'tictactoe':
         initialState = {
-          board: Array(3).fill(null).map(() => Array(3).fill(null)),
+          board: Array(9).fill(null), // Flat 1D array for 3x3 grid
           moves: []
         }
         break
@@ -477,23 +477,32 @@ export const getGameByPostId = async (req: Request, res: Response) => {
 }
 
 // Game logic helpers
-function processTicTacToeMove(game: GameRecord, gameState: GameState, move: { row: number; col: number }, playerWallet: string): string | null {
-  const { row, col } = move
-  const board = gameState.board!
-  
+function processTicTacToeMove(game: GameRecord, gameState: GameState, move: { index: number }, playerWallet: string): string | null {
+  const { index } = move
+  const board = gameState.board! as BoardCell[]
+
   // Check if it's player's turn
   if (game.currentTurn !== playerWallet) {
     throw new Error('Not your turn')
   }
 
+  // Validate index
+  if (index < 0 || index > 8) {
+    throw new Error('Invalid cell index')
+  }
+
   // Check if cell is empty
-  if (board[row][col] !== null) {
+  if (board[index] !== null) {
     throw new Error('Cell already occupied')
   }
 
   // Make the move
   const symbol = playerWallet === game.player1 ? 'X' : 'O'
-  board[row][col] = symbol
+  board[index] = symbol
+
+  // Calculate row/col for move history
+  const row = Math.floor(index / 3)
+  const col = index % 3
   gameState.moves!.push({ player: playerWallet, position: { row, col }, timestamp: new Date() } as Move)
 
   // Check for winner
@@ -582,29 +591,29 @@ function processRPSMove(game: GameRecord, gameState: GameState, move: { choice: 
 
 
 // Winner checking functions
-function checkTicTacToeWinner(board: GameBoard, player1: string, player2: string): string | null {
-  // Check rows, columns, and diagonals
-  for (let i = 0; i < 3; i++) {
-    // Check rows
-    if (board[i][0] && board[i][0] === board[i][1] && board[i][1] === board[i][2]) {
-      return board[i][0] === 'X' ? player1 : player2
+function checkTicTacToeWinner(board: BoardCell[], player1: string, player2: string): string | null {
+  // Winning combinations for flat 1D array (indices 0-8)
+  const winPatterns = [
+    [0, 1, 2], // Top row
+    [3, 4, 5], // Middle row
+    [6, 7, 8], // Bottom row
+    [0, 3, 6], // Left column
+    [1, 4, 7], // Middle column
+    [2, 5, 8], // Right column
+    [0, 4, 8], // Diagonal \
+    [2, 4, 6]  // Diagonal /
+  ]
+
+  // Check each winning pattern
+  for (const pattern of winPatterns) {
+    const [a, b, c] = pattern
+    if (board[a] && board[a] === board[b] && board[b] === board[c]) {
+      return board[a] === 'X' ? player1 : player2
     }
-    // Check columns
-    if (board[0][i] && board[0][i] === board[1][i] && board[1][i] === board[2][i]) {
-      return board[0][i] === 'X' ? player1 : player2
-    }
-  }
-  
-  // Check diagonals
-  if (board[0][0] && board[0][0] === board[1][1] && board[1][1] === board[2][2]) {
-    return board[0][0] === 'X' ? player1 : player2
-  }
-  if (board[0][2] && board[0][2] === board[1][1] && board[1][1] === board[2][0]) {
-    return board[0][2] === 'X' ? player1 : player2
   }
 
-  // Check for draw
-  const isDraw = board.every(row => row.every(cell => cell !== null))
+  // Check for draw (all cells filled)
+  const isDraw = board.every(cell => cell !== null)
   if (isDraw) return 'draw'
 
   return null
