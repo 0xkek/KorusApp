@@ -227,14 +227,20 @@ export function GamesPage() {
 
   const handleMove = async (gameId: string, move: any) => {
     try {
+      console.log('handleMove called:', { gameId, move });
       const token = localStorage.getItem('authToken');
       if (!token) {
         showError('Not authenticated');
         return;
       }
-      await gamesAPI.makeMove(gameId, { move }, token);
+      console.log('Sending move to API...');
+      const response = await gamesAPI.makeMove(gameId, { move }, token);
+      console.log('Move API response:', response);
+      console.log('Reloading games...');
       await loadGames(); // Reload to get updated state
+      console.log('Games reloaded');
     } catch (error) {
+      console.error('Failed to make move:', error);
       showError('Failed to make move');
     }
   };
