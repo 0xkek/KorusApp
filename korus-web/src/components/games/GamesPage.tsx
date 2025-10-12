@@ -304,6 +304,12 @@ export function GamesPage() {
         isGameOver={isGameOver}
         winner={game.winner}
         playerSymbol={playerSymbol}
+        player1Address={game.player1}
+        player2Address={game.player2 || undefined}
+        player1DisplayName={game.player1DisplayName}
+        player2DisplayName={game.player2DisplayName}
+        wager={game.wager?.toString()}
+        gameCreatedAt={game.createdAt}
       />
     );
   };
