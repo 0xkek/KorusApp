@@ -335,7 +335,12 @@ export function GamesPage() {
     const isPlayer1 = publicKey?.toBase58() === game.player1;
     const opponentAddress = isPlayer1 ? game.player2 : game.player1;
     const opponentMove = game.gameState?.playerMoves?.[opponentAddress || ''] || null;
-    const isMyTurn = publicKey?.toBase58() === game.currentTurn;
+
+    // For RPS, both players can make moves simultaneously (not turn-based)
+    // A player can move if: game is active AND they haven't made a move this round
+    const isGameActive = game.status === 'active';
+    const isMyTurn = isGameActive && !playerMove; // Can move if active and haven't moved this round
+
     const isGameOver = game.status === 'completed' || game.status === 'cancelled';
 
     const handleMoveSelected = (move: RPSMove) => {
@@ -357,6 +362,7 @@ export function GamesPage() {
         currentTurnAddress={game.currentTurn || undefined}
         gameCreatedAt={game.createdAt}
         wager={game.wager}
+        gameState={game.gameState}
       />
     );
   };

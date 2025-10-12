@@ -18,6 +18,7 @@ interface RPSGameProps {
   currentTurnAddress?: string;
   gameCreatedAt?: string;
   wager?: string; // SOL amount
+  gameState?: any; // Full game state with score and round info
 }
 
 const CHOICES = [
@@ -40,11 +41,32 @@ export function RockPaperScissorsGame({
   currentTurnAddress,
   gameCreatedAt,
   wager,
+  gameState,
 }: RPSGameProps) {
   const [selectedChoice, setSelectedChoice] = useState<RPSMove | null>(playerMove);
   const [timeLeft, setTimeLeft] = useState<string>('');
   const [showTimerInfo, setShowTimerInfo] = useState(false);
-  const canMakeChoice = isMyTurn && !playerMove && !isGameOver;
+  // Use selectedChoice OR playerMove to prevent double-clicking
+  const canMakeChoice = isMyTurn && !playerMove && !selectedChoice && !isGameOver;
+
+  // Extract round info from gameState
+  const currentRound = gameState?.round || 1;
+
+  // Sync selectedChoice with playerMove when it updates from backend
+  useEffect(() => {
+    setSelectedChoice(playerMove);
+  }, [playerMove]);
+
+  // Debug logging
+  console.log('RPS Game State:', {
+    isMyTurn,
+    playerMove,
+    isGameOver,
+    canMakeChoice,
+    currentTurnAddress,
+    player1Address,
+    player2Address
+  });
 
   // Calculate Korus fee (2% of wager)
   const KORUS_FEE_PERCENTAGE = 0.02;
@@ -95,7 +117,7 @@ export function RockPaperScissorsGame({
   return (
     <div className="w-full pt-3 pb-1">
       {/* Game Info Bar - Players */}
-      <div className="flex items-center justify-between mb-3 px-2 text-xs">
+      <div className="flex items-center justify-between mb-2 px-2 text-xs">
         <div className="flex items-center gap-2">
           <span className="text-korus-textSecondary">Players:</span>
           <span className="font-semibold text-korus-primary">
@@ -127,6 +149,17 @@ export function RockPaperScissorsGame({
           </div>
         )}
       </div>
+
+      {/* Round Info */}
+      {!isGameOver && currentRound > 1 && (
+        <div className="flex items-center justify-center mb-3 px-2 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-korus-textSecondary">Round:</span>
+            <span className="font-bold text-white">{currentRound}</span>
+            <span className="text-korus-textSecondary text-[10px]">(Draw - play again!)</span>
+          </div>
+        </div>
+      )}
 
       {/* Status Message - Compact */}
       <div className="mb-3 text-center">

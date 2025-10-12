@@ -138,8 +138,8 @@ export const createGame = async (req: AuthRequest, res: Response) => {
       case 'rps':
         initialState = {
           round: 1,
-          score: { player1: 0, player2: 0 },
-          moves: []
+          moves: [],
+          playerMoves: {} // Track current round moves by wallet address
         }
         break
     }
@@ -510,45 +510,47 @@ function processConnectFourMove(game: GameRecord, gameState: GameState, move: { 
 
 function processRPSMove(game: GameRecord, gameState: GameState, move: { choice: string }, playerWallet: string): string | null {
   const { choice } = move // 'rock', 'paper', or 'scissors'
-  
-  if (playerWallet === game.player1) {
-    gameState.player1Choice = choice
-  } else {
-    gameState.player2Choice = choice
+
+  // Initialize playerMoves if it doesn't exist
+  if (!gameState.playerMoves) {
+    gameState.playerMoves = {}
   }
 
-  // If both players have made their choice
-  if (gameState.player1Choice && gameState.player2Choice) {
-    const winner = determineRPSWinner(gameState.player1Choice, gameState.player2Choice)
-    
-    if (winner === 'player1') {
-      gameState.score!.player1++
-    } else if (winner === 'player2') {
-      gameState.score!.player2++
-    }
+  // Store the player's move for this round
+  const playerMoves = gameState.playerMoves as Record<string, string>
+  playerMoves[playerWallet] = choice
 
-    // Store the round result in a different property
+  // Check if both players have made their choice
+  const player1Choice = playerMoves[game.player1]
+  const player2Choice = game.player2 ? playerMoves[game.player2] : undefined
+
+  if (player1Choice && player2Choice) {
+    const winner = determineRPSWinner(player1Choice, player2Choice)
+
+    // Store the round result
     if (!gameState.roundResults) {
       gameState.roundResults = []
     }
     const results = gameState.roundResults as any[]
     results.push({
       round: gameState.round,
-      player1Choice: gameState.player1Choice,
-      player2Choice: gameState.player2Choice,
+      player1Choice: player1Choice,
+      player2Choice: player2Choice,
       winner
     })
 
-    // Reset choices for next round
-    gameState.player1Choice = undefined
-    gameState.player2Choice = undefined
-    gameState.round!++
+    // If it's a draw, reset for next round
+    if (winner === 'draw') {
+      gameState.playerMoves = {}
+      gameState.round!++
+      return null
+    }
 
-    // Check if someone won (best of 3)
-    if (gameState.score!.player1 >= 2) {
+    // Someone won! End the game
+    if (winner === 'player1') {
       return game.player1
-    } else if (gameState.score!.player2 >= 2) {
-      return game.player2
+    } else if (winner === 'player2') {
+      return game.player2!
     }
   }
 
@@ -678,7 +680,7 @@ export const getAllGames = async (req: Request, res: Response) => {
  * Delete/cancel a game
  * Only the creator (player1) can delete a waiting game
  */
-export async function deleteGame(req: AuthRequest, res: Response) {
+export const deleteGame = async (req: AuthRequest, res: Response) => {
   try {
     const gameId = req.params.id
     const playerWallet = req.userWallet!
