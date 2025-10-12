@@ -230,30 +230,115 @@ export function RockPaperScissorsGame({
         </div>
       )}
 
-      {/* Status Message - Compact */}
-      <div className="mb-3 text-center">
-        {!isGameOver && !playerMove && (
-          <p className={`text-xs font-semibold ${
-            canMakeChoice ? 'text-korus-primary' : 'text-korus-textSecondary'
-          }`}>
-            {canMakeChoice ? '👉 Make your choice!' : '⏳ Waiting for your turn...'}
-          </p>
-        )}
+      {/* Status Message or Game Result */}
+      {!isGameOver ? (
+        <div className="mb-3 text-center">
+          {!playerMove && (
+            <p className={`text-xs font-semibold ${
+              canMakeChoice ? 'text-korus-primary' : 'text-korus-textSecondary'
+            }`}>
+              {canMakeChoice ? '👉 Make your choice!' : '⏳ Waiting for your turn...'}
+            </p>
+          )}
 
-        {!isGameOver && playerMove && (
-          <p className="text-xs font-semibold text-korus-textSecondary">
-            ⏳ Waiting for opponent...
-          </p>
-        )}
-
-        {isGameOver && (
-          <p className={`text-sm font-bold ${
-            winner === 'draw' ? 'text-korus-textSecondary' : winner === 'you' ? 'text-green-400' : 'text-red-400'
+          {playerMove && (
+            <p className="text-xs font-semibold text-korus-textSecondary">
+              ⏳ Waiting for opponent...
+            </p>
+          )}
+        </div>
+      ) : (
+        /* Game Over - Show Results */
+        <div className="mb-3">
+          {/* Winner/Loser Banner */}
+          <div className={`rounded-xl p-4 text-center mb-3 ${
+            winner === 'you'
+              ? 'bg-gradient-to-r from-green-500 to-emerald-500'
+              : winner === 'opponent'
+              ? 'bg-gradient-to-r from-red-500 to-orange-500'
+              : 'bg-gradient-to-r from-gray-500 to-gray-600'
           }`}>
-            {winner === 'draw' ? '🤝 Draw!' : winner === 'you' ? '🎉 You win!' : '😔 You lose'}
-          </p>
-        )}
-      </div>
+            <div
+              className="text-3xl font-bold mb-2"
+              style={{ color: 'white', WebkitTextFillColor: 'white' }}
+            >
+              {winner === 'you' ? '🎉 YOU WIN!' : winner === 'opponent' ? '💔 YOU LOSE' : '🤝 DRAW'}
+            </div>
+
+            {wagerAmount > 0 && winner === 'you' && (
+              <div
+                className="text-lg font-semibold mb-1"
+                style={{ color: 'white', WebkitTextFillColor: 'white' }}
+              >
+                +{winnerPayout.toFixed(4)} SOL
+              </div>
+            )}
+
+            {wagerAmount > 0 && (
+              <div
+                className="text-xs opacity-90"
+                style={{ color: 'white', WebkitTextFillColor: 'white' }}
+              >
+                {winner === 'you'
+                  ? `Won ${(wagerAmount * 2).toFixed(4)} SOL (${korusFee.toFixed(4)} SOL fee)`
+                  : winner === 'opponent'
+                  ? `Lost ${wagerAmount} SOL wager`
+                  : 'Wagers returned'}
+              </div>
+            )}
+          </div>
+
+          {/* Show both players' choices */}
+          {opponentMove && (
+            <div className="bg-korus-surface/50 rounded-lg p-3">
+              <div className="flex items-center justify-center gap-6">
+                <div className="flex flex-col items-center">
+                  <div
+                    className="text-xs mb-1 font-medium"
+                    style={{ color: 'white', WebkitTextFillColor: 'white' }}
+                  >
+                    You
+                  </div>
+                  <span className="text-4xl mb-1">
+                    {CHOICES.find(c => c.id === playerMove)?.icon}
+                  </span>
+                  <div
+                    className="text-xs font-semibold"
+                    style={{ color: 'white', WebkitTextFillColor: 'white' }}
+                  >
+                    {CHOICES.find(c => c.id === playerMove)?.name}
+                  </div>
+                </div>
+
+                <div
+                  className="text-2xl font-bold"
+                  style={{ color: 'white', WebkitTextFillColor: 'white' }}
+                >
+                  VS
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <div
+                    className="text-xs mb-1 font-medium"
+                    style={{ color: 'white', WebkitTextFillColor: 'white' }}
+                  >
+                    Opponent
+                  </div>
+                  <span className="text-4xl mb-1">
+                    {CHOICES.find(c => c.id === opponentMove)?.icon}
+                  </span>
+                  <div
+                    className="text-xs font-semibold"
+                    style={{ color: 'white', WebkitTextFillColor: 'white' }}
+                  >
+                    {CHOICES.find(c => c.id === opponentMove)?.name}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Choice Buttons - All in one row */}
       <div className="flex justify-center gap-3 mb-3">
@@ -317,20 +402,6 @@ export function RockPaperScissorsGame({
         </div>
       )}
 
-      {/* Show opponent's choice when game is over - Compact */}
-      {isGameOver && opponentMove && (
-        <div className="text-center">
-          <p className="text-xs text-korus-textSecondary mb-1">Opponent chose:</p>
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-2xl">
-              {CHOICES.find(c => c.id === opponentMove)?.icon}
-            </span>
-            <span className="text-sm font-semibold text-korus-text">
-              {CHOICES.find(c => c.id === opponentMove)?.name}
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
