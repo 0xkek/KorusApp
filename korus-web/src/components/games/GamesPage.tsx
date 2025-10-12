@@ -273,16 +273,27 @@ export function GamesPage() {
 
   // Render Tic Tac Toe
   const renderTicTacToe = (game: Game) => {
-    const board: TicTacToeCell[] = game.gameState?.board || Array(9).fill(null);
+    // Handle both 1D (new) and 2D (old) array formats
+    let board: TicTacToeCell[];
+    const rawBoard = game.gameState?.board;
+
+    if (!rawBoard) {
+      board = Array(9).fill(null);
+    } else if (Array.isArray(rawBoard[0])) {
+      // Old 2D format - flatten it
+      board = (rawBoard as any[][]).flat();
+    } else {
+      // New 1D format
+      board = rawBoard as TicTacToeCell[];
+    }
+
     const isPlayer1 = publicKey?.toBase58() === game.player1;
     const playerSymbol: 'X' | 'O' = isPlayer1 ? 'X' : 'O';
     const isMyTurn = publicKey?.toBase58() === game.currentTurn;
     const isGameOver = game.status === 'completed' || game.status === 'cancelled';
 
     const handleCellClick = (index: number) => {
-      const row = Math.floor(index / 3);
-      const col = index % 3;
-      handleMove(game.id, { row, col });
+      handleMove(game.id, { index });
     };
 
     return (
