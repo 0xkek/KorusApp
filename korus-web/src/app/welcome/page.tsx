@@ -53,13 +53,6 @@ export default function WelcomePage() {
     };
   }, []);
 
-  // Authenticate with backend when wallet connects
-  useEffect(() => {
-    if (connected && !isAuthenticated && !isAuthenticating) {
-      authenticate();
-    }
-  }, [connected, isAuthenticated, isAuthenticating, authenticate]);
-
   // Redirect to home only after successful authentication
   useEffect(() => {
     if (connected && isAuthenticated) {

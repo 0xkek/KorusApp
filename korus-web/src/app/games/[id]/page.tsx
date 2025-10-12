@@ -33,7 +33,7 @@ export default function GamePlayPage() {
       console.log('📥 Loading game:', gameId);
       console.log('Auth token present:', !!token);
 
-      const response = await gamesAPI.getGame(parseInt(gameId), token || undefined);
+      const response = await gamesAPI.getGame(gameId, token || undefined);
 
       console.log('📦 Game response:', response);
 

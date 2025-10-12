@@ -37,7 +37,7 @@ interface ApiResponse {
 // Game type definitions
 type GameType = 'tictactoe' | 'rps' | 'coinflip' | 'connectfour'
 type BoardCell = string | null
-type GameBoard = BoardCell[][]
+type GameBoard = BoardCell[] | BoardCell[][] // 1D for tic-tac-toe, 2D for connect four
 
 interface Move {
   player: string
@@ -511,7 +511,7 @@ function processTicTacToeMove(game: GameRecord, gameState: GameState, move: { in
 
 function processConnectFourMove(game: GameRecord, gameState: GameState, move: { column: number }, playerWallet: string): string | null {
   const { column } = move
-  const board = gameState.board!
+  const board = gameState.board! as BoardCell[][]
   
   // Check if it's player's turn
   if (game.currentTurn !== playerWallet) {
@@ -620,6 +620,7 @@ function checkTicTacToeWinner(board: BoardCell[], player1: string, player2: stri
 }
 
 function checkConnectFourWinner(board: GameBoard, row: number, col: number, color: string, player1: string, player2: string): string | null {
+  const board2D = board as BoardCell[][]
   // Check horizontal, vertical, and both diagonals
   const directions = [
     [[0, 1], [0, -1]], // Horizontal
@@ -630,12 +631,12 @@ function checkConnectFourWinner(board: GameBoard, row: number, col: number, colo
 
   for (const direction of directions) {
     let count = 1 // Include the current piece
-    
+
     for (const [dr, dc] of direction) {
       let r = row + dr
       let c = col + dc
-      
-      while (r >= 0 && r < 6 && c >= 0 && c < 7 && board[r][c] === color) {
+
+      while (r >= 0 && r < 6 && c >= 0 && c < 7 && board2D[r][c] === color) {
         count++
         r += dr
         c += dc
@@ -648,7 +649,7 @@ function checkConnectFourWinner(board: GameBoard, row: number, col: number, colo
   }
 
   // Check for draw
-  const isDraw = board.every(row => row.every(cell => cell !== null))
+  const isDraw = board2D.every((row: BoardCell[]) => row.every((cell: BoardCell) => cell !== null))
   if (isDraw) return 'draw'
 
   return null

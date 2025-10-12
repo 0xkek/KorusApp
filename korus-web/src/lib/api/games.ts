@@ -9,10 +9,10 @@ export type GameType = 'tictactoe' | 'rps' | 'connectfour';
 export type GameStatus = 'waiting' | 'active' | 'completed' | 'cancelled';
 
 export interface Game {
-  id: number;
-  postId: number;
+  id: string; // CUID string from database
+  postId: string;
   gameType: GameType;
-  wager: number;
+  wager: string; // Decimal as string
   player1: string;
   player2: string | null;
   gameState: any;
@@ -25,7 +25,7 @@ export interface Game {
 }
 
 export interface CreateGameData {
-  postId: number;
+  postId: string | number; // Can be string (existing) or number (new)
   gameType: GameType;
   wager: number;
   onChainGameId?: number;
@@ -61,28 +61,28 @@ export const gamesAPI = {
   /**
    * Join an existing game
    */
-  async joinGame(gameId: number, data: JoinGameData, token: string): Promise<GameResponse> {
+  async joinGame(gameId: string, data: JoinGameData, token: string): Promise<GameResponse> {
     return api.post<GameResponse>(`/api/games/${gameId}/join`, data, token);
   },
 
   /**
    * Make a move in a game
    */
-  async makeMove(gameId: number, data: MakeMoveData, token: string): Promise<GameResponse> {
+  async makeMove(gameId: string, data: MakeMoveData, token: string): Promise<GameResponse> {
     return api.post<GameResponse>(`/api/games/${gameId}/move`, data, token);
   },
 
   /**
    * Get a game by ID
    */
-  async getGame(gameId: number, token?: string): Promise<GameResponse> {
+  async getGame(gameId: string, token?: string): Promise<GameResponse> {
     return api.get<GameResponse>(`/api/games/${gameId}`, token);
   },
 
   /**
    * Get a game by post ID
    */
-  async getGameByPostId(postId: number, token?: string): Promise<GameResponse> {
+  async getGameByPostId(postId: string, token?: string): Promise<GameResponse> {
     return api.get<GameResponse>(`/api/games/post/${postId}`, token);
   },
 

@@ -90,19 +90,23 @@ export function useWalletAuth() {
     }
   }, [publicKey, signMessage, connected]);
 
-  // Load token from storage on mount
+  // Load token from storage on mount and check if still valid
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && connected && publicKey) {
       const storedToken = localStorage.getItem('authToken');
-      if (storedToken && connected) {
+      if (storedToken) {
+        // Token exists, mark as authenticated
         setAuthState(prev => ({
           ...prev,
           token: storedToken,
           isAuthenticated: true,
         }));
+      } else if (!authInProgressRef.current) {
+        // No token exists, trigger authentication
+        authenticate();
       }
     }
-  }, [connected]);
+  }, [connected, publicKey, authenticate]);
 
   // Clear auth when wallet disconnects
   useEffect(() => {
