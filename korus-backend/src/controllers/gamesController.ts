@@ -361,6 +361,29 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
       }
     })
 
+    // If game is completed and has an on-chain game ID, complete it on-chain
+    if (newStatus === 'completed' && game.onChainGameId) {
+      try {
+        logger.info(`Game completed, triggering on-chain payout for game ID: ${game.onChainGameId}`);
+
+        // Call smart contract to distribute funds
+        const result = await gameEscrowService.completeGame(
+          Number(game.onChainGameId),
+          winner // winner wallet address or null for draw
+        );
+
+        if (result.success) {
+          logger.info(`✅ On-chain payout successful! Signature: ${result.signature}`);
+        } else {
+          logger.error(`❌ On-chain payout failed: ${result.error}`);
+          // Don't fail the whole request - game is still completed in database
+        }
+      } catch (error) {
+        logger.error('Error processing on-chain payout:', error);
+        // Don't fail the whole request - game is still completed in database
+      }
+    }
+
     // Convert BigInt to string for JSON serialization
     const serializedGame = {
       ...updatedGame,
