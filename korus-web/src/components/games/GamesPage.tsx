@@ -1,16 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { gamesAPI, type Game, type GameStatus, type GameType } from '@/lib/api/games';
+import { gamesAPI, type Game, type GameType } from '@/lib/api/games';
 import { useGameEscrow } from '@/hooks/useGameEscrow';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useToast } from '@/hooks/useToast';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { TicTacToeBoard, type TicTacToeCell } from './TicTacToeBoard';
+import { ConnectFourBoard, type ConnectFourCell } from './ConnectFourBoard';
+import { RockPaperScissorsGame, type RPSMove } from './RockPaperScissorsGame';
 
 export function GamesPage() {
-  const router = useRouter();
   const { connected, publicKey } = useWallet();
   const { createGame, joinGame, cancelGame, isProcessing } = useGameEscrow();
   const { isAuthenticated, authenticate, isAuthenticating } = useWalletAuth();
@@ -19,13 +20,32 @@ export function GamesPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [joiningGame, setJoiningGame] = useState<number | null>(null);
+  const [joiningGame, setJoiningGame] = useState<string | null>(null);
   const [cancellingGame, setCancellingGame] = useState<string | null>(null);
+  const [expandedGameId, setExpandedGameId] = useState<string | null>(null);
   const [newGame, setNewGame] = useState({
     type: 'tictactoe' as GameType,
     wager: 0,
     timeLimit: '2h'
   });
+
+  const loadGames = useCallback(async () => {
+    // Don't show loading spinner when polling for updates
+    if (!expandedGameId) {
+      setLoading(true);
+    }
+    try {
+      const response = await gamesAPI.getAllGames(activeTab);
+      setGames(response.games);
+    } catch (error) {
+      console.error('Failed to load games:', error);
+      showError('Failed to load games');
+    } finally {
+      if (!expandedGameId) {
+        setLoading(false);
+      }
+    }
+  }, [activeTab, expandedGameId, showError]);
 
   // Authenticate with backend when wallet connects
   useEffect(() => {
@@ -38,20 +58,18 @@ export function GamesPage() {
   // Fetch games based on active tab
   useEffect(() => {
     loadGames();
-  }, [activeTab]);
+  }, [loadGames]);
 
-  const loadGames = async () => {
-    setLoading(true);
-    try {
-      const response = await gamesAPI.getAllGames(activeTab);
-      setGames(response.games);
-    } catch (error) {
-      console.error('Failed to load games:', error);
-      showError('Failed to load games');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Poll for expanded game updates every 3 seconds
+  useEffect(() => {
+    if (!expandedGameId) return;
+
+    const interval = setInterval(() => {
+      loadGames();
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [expandedGameId, loadGames]);
 
   const handleCreateGame = async () => {
     console.log('🎮 handleCreateGame called');
@@ -168,8 +186,8 @@ export function GamesPage() {
 
       showSuccess('Joined game successfully!');
 
-      // Navigate to the game play page
-      router.push(`/games/${game.id}`);
+      // Expand the game to show the game board
+      setExpandedGameId(game.id);
     } catch (error) {
       console.error('Failed to join game:', error);
       showError(error instanceof Error ? error.message : 'Failed to join game. Please try again.');
@@ -194,7 +212,7 @@ export function GamesPage() {
       // Then delete from backend database
       const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
       if (token) {
-        await gamesAPI.deleteGame(game.id, token);
+        await gamesAPI.deleteGame(Number(game.id), token);
       }
 
       showSuccess('Game cancelled successfully!');
@@ -204,6 +222,20 @@ export function GamesPage() {
       showError(error instanceof Error ? error.message : 'Failed to cancel game');
     } finally {
       setCancellingGame(null);
+    }
+  };
+
+  const handleMove = async (gameId: string, move: any) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        showError('Not authenticated');
+        return;
+      }
+      await gamesAPI.makeMove(gameId, { move }, token);
+      await loadGames(); // Reload to get updated state
+    } catch (error) {
+      showError('Failed to make move');
     }
   };
 
@@ -237,6 +269,96 @@ export function GamesPage() {
     if (hours > 0) return `${hours}h ago`;
     if (minutes > 0) return `${minutes}m ago`;
     return 'just now';
+  };
+
+  // Render Tic Tac Toe
+  const renderTicTacToe = (game: Game) => {
+    const board: TicTacToeCell[] = game.gameState?.board || Array(9).fill(null);
+    const isPlayer1 = publicKey?.toBase58() === game.player1;
+    const playerSymbol: 'X' | 'O' = isPlayer1 ? 'X' : 'O';
+    const isMyTurn = publicKey?.toBase58() === game.currentTurn;
+    const isGameOver = game.status === 'completed' || game.status === 'cancelled';
+
+    const handleCellClick = (index: number) => {
+      const row = Math.floor(index / 3);
+      const col = index % 3;
+      handleMove(game.id, { row, col });
+    };
+
+    return (
+      <TicTacToeBoard
+        board={board}
+        onCellClick={handleCellClick}
+        isMyTurn={isMyTurn}
+        isGameOver={isGameOver}
+        winner={game.winner}
+        playerSymbol={playerSymbol}
+      />
+    );
+  };
+
+  // Render Connect Four
+  const renderConnectFour = (game: Game) => {
+    const board: ConnectFourCell[][] = game.gameState?.board ||
+      Array(6).fill(null).map(() => Array(7).fill(null));
+    const isPlayer1 = publicKey?.toBase58() === game.player1;
+    const playerColor: 'red' | 'yellow' = isPlayer1 ? 'red' : 'yellow';
+    const isMyTurn = publicKey?.toBase58() === game.currentTurn;
+    const isGameOver = game.status === 'completed' || game.status === 'cancelled';
+
+    const handleColumnClick = (col: number) => {
+      handleMove(game.id, { column: col });
+    };
+
+    return (
+      <ConnectFourBoard
+        board={board}
+        onColumnClick={handleColumnClick}
+        isMyTurn={isMyTurn}
+        isGameOver={isGameOver}
+        winner={game.winner}
+        playerColor={playerColor}
+      />
+    );
+  };
+
+  // Helper to format display name (TODO: fetch from backend with user data)
+  const getPlayerDisplayName = (address: string) => {
+    // For now, just return truncated address
+    // In the future, this should fetch username/SNS from backend
+    return `${address.slice(0, 4)}...${address.slice(-4)}`;
+  };
+
+  // Render Rock Paper Scissors
+  const renderRPS = (game: Game) => {
+    const playerMove = game.gameState?.playerMoves?.[publicKey?.toBase58() || ''] || null;
+    const isPlayer1 = publicKey?.toBase58() === game.player1;
+    const opponentAddress = isPlayer1 ? game.player2 : game.player1;
+    const opponentMove = game.gameState?.playerMoves?.[opponentAddress || ''] || null;
+    const isMyTurn = publicKey?.toBase58() === game.currentTurn;
+    const isGameOver = game.status === 'completed' || game.status === 'cancelled';
+
+    const handleMoveSelected = (move: RPSMove) => {
+      handleMove(game.id, { choice: move });
+    };
+
+    return (
+      <RockPaperScissorsGame
+        onMoveSelected={handleMoveSelected}
+        playerMove={playerMove}
+        opponentMove={opponentMove}
+        isMyTurn={isMyTurn}
+        isGameOver={isGameOver}
+        winner={game.winner}
+        player1Address={game.player1}
+        player2Address={game.player2 || undefined}
+        player1DisplayName={getPlayerDisplayName(game.player1)}
+        player2DisplayName={game.player2 ? getPlayerDisplayName(game.player2) : undefined}
+        currentTurnAddress={game.currentTurn || undefined}
+        gameCreatedAt={game.createdAt}
+        wager={game.wager}
+      />
+    );
   };
 
   return (
@@ -293,134 +415,88 @@ export function GamesPage() {
           {games.map((game) => (
             <div
               key={game.id}
-              onClick={() => {
-                // Navigate to game page if it's active or if current user is a participant
-                if (game.status === 'active' || publicKey?.toBase58() === game.player1 || publicKey?.toBase58() === game.player2) {
-                  router.push(`/games/${game.id}`);
-                }
-              }}
-              className="border-b border-korus-border bg-korus-surface/20 hover:bg-korus-surface/40 hover:border-korus-primary/50 transition-all duration-200 cursor-pointer group"
+              className="border-b border-korus-border bg-korus-surface/20"
             >
-              <div className="flex gap-4 p-6">
+              <div className="flex items-center gap-3 p-3">
                 {/* Game Icon */}
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-2xl flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-xl flex-shrink-0">
                   {getGameIcon(game.gameType)}
                 </div>
 
                 {/* Game Content */}
                 <div className="flex-1 min-w-0">
-                  {/* Header */}
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    <span className="font-bold text-white capitalize">
-                      {game.gameType.replace('_', ' ')}
-                    </span>
-                    <span className="text-korus-textSecondary">•</span>
-                    <span className="text-korus-textSecondary">
-                      💰 {game.wager} SOL
-                    </span>
-                    <span className="text-korus-textSecondary">•</span>
-                    <span className="text-korus-textSecondary">
-                      {formatTimeAgo(game.createdAt)}
-                    </span>
-                    <div className={`px-2 py-1 rounded-full text-xs font-semibold border ${getStatusColor(game.status)} ml-auto`}>
-                      {game.status}
+                  <div className="flex items-center justify-between gap-3">
+                    {/* Left: Game info */}
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="font-bold text-white capitalize">
+                        {game.gameType.replace('_', ' ')}
+                      </span>
+                      <span className="text-korus-textSecondary">•</span>
+                      <span className="text-korus-textSecondary">
+                        💰 {game.wager} SOL
+                      </span>
+                      <span className="text-korus-textSecondary">•</span>
+                      <span className="text-korus-textSecondary">
+                        {formatTimeAgo(game.createdAt)}
+                      </span>
                     </div>
-                  </div>
 
-                  {/* Description */}
-                  <div className="text-gray-300 text-base leading-normal mb-3">
-                    {activeTab === 'waiting' && (
-                      <span>
-                        <span className="font-semibold text-korus-primary">
-                          {game.player1.slice(0, 4)}...{game.player1.slice(-4)}
-                        </span> created a {game.gameType} game.
-                        Players: <span className="font-semibold">{game.player2 ? '2/2' : '1/2'}</span>
-                      </span>
-                    )}
-                    {activeTab === 'active' && game.player2 && (
-                      <span>
-                        Game in progress between{' '}
-                        <span className="font-semibold text-korus-primary">
-                          {game.player1.slice(0, 4)}...{game.player1.slice(-4)}
-                        </span> and{' '}
-                        <span className="font-semibold text-korus-secondary">
-                          {game.player2.slice(0, 4)}...{game.player2.slice(-4)}
-                        </span>
-                        {game.currentTurn && (
-                          <span>
-                            {' • Current turn: '}
-                            <span className="font-semibold text-green-400">
-                              {game.currentTurn.slice(0, 4)}...{game.currentTurn.slice(-4)}
-                            </span>
-                          </span>
-                        )}
-                      </span>
-                    )}
-                  </div>
+                    {/* Right: Status + Action */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${getStatusColor(game.status)}`}>
+                        {game.status}
+                      </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center justify-end mt-3">
-                    {activeTab === 'waiting' && !game.player2 && publicKey?.toBase58() !== game.player1 && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleJoinGame(game);
-                        }}
-                        disabled={joiningGame === game.id}
-                        className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-4 py-1.5 rounded-full hover:shadow-lg hover:shadow-korus-primary/20 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {joiningGame === game.id ? (
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 border-2 border-black/20 border-t-black rounded-full animate-spin"></div>
-                            Joining...
-                          </div>
-                        ) : (
-                          'Join Game'
-                        )}
-                      </button>
-                    )}
-                    {activeTab === 'waiting' && publicKey?.toBase58() === game.player1 && (
-                      <div className="flex items-center gap-2">
+                      {activeTab === 'waiting' && !game.player2 && publicKey?.toBase58() !== game.player1 && (
                         <button
-                          onClick={(e) => e.stopPropagation()}
-                          disabled
-                          className="bg-blue-600 text-white font-bold px-4 py-1.5 rounded-full text-sm opacity-80 cursor-not-allowed"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleJoinGame(game);
+                          }}
+                          disabled={joiningGame === game.id}
+                          className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-3 py-1 rounded-full hover:shadow-lg hover:shadow-korus-primary/20 transition-all text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Waiting for opponent
+                          {joiningGame === game.id ? 'Joining...' : 'Join'}
                         </button>
+                      )}
+                      {activeTab === 'waiting' && publicKey?.toBase58() === game.player1 && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleCancelGame(game);
                           }}
                           disabled={cancellingGame === game.id}
-                          className="bg-red-600 text-white font-bold px-4 py-1.5 rounded-full hover:bg-red-700 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="bg-red-600 text-white font-bold px-3 py-1 rounded-full hover:bg-red-700 transition-all text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {cancellingGame === game.id ? (
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                              Cancelling...
-                            </div>
-                          ) : (
-                            'Cancel'
-                          )}
+                          {cancellingGame === game.id ? 'Cancelling...' : 'Cancel'}
                         </button>
-                      </div>
-                    )}
-                    {activeTab === 'active' && (publicKey?.toBase58() === game.player1 || publicKey?.toBase58() === game.player2) && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/games/${game.id}`);
-                        }}
-                        className="bg-green-600 text-white font-bold px-4 py-1.5 rounded-full hover:bg-green-700 transition-all text-sm"
-                      >
-                        Play Game →
-                      </button>
-                    )}
+                      )}
+                      {activeTab === 'active' && (publicKey?.toBase58() === game.player1 || publicKey?.toBase58() === game.player2) && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedGameId(expandedGameId === game.id ? null : game.id);
+                          }}
+                          className="bg-green-600 text-white font-bold px-3 py-1 rounded-full hover:bg-green-700 transition-all text-xs"
+                        >
+                          {expandedGameId === game.id ? 'Close' : 'Play →'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* Inline Game Board */}
+              {expandedGameId === game.id && (
+                <div className="px-6 pb-3 bg-korus-cardBackground border-t border-korus-border">
+                  <div className="py-3">
+                    {game.gameType === 'tictactoe' && renderTicTacToe(game)}
+                    {game.gameType === 'connectfour' && renderConnectFour(game)}
+                    {game.gameType === 'rps' && renderRPS(game)}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>

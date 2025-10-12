@@ -21,7 +21,7 @@ export const createPostLimiter = rateLimit({
 // General API rate limiter
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // Increased to 300 requests per 15 minutes (more lenient)
+  max: process.env.NODE_ENV === 'development' ? 10000 : 500, // Very high limit for development
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -30,7 +30,7 @@ export const apiLimiter = rateLimit({
 // Strict rate limiter for auth endpoints
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // Temporarily increased for testing - Limit each IP to 20 auth requests per 15 minutes
+  max: process.env.NODE_ENV === 'development' ? 1000 : 20, // Very high limit for development
   message: 'Too many authentication attempts, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -39,7 +39,7 @@ export const authLimiter = rateLimit({
 // Rate limiter for game endpoints
 export const gameLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 10, // Limit each IP to 10 game requests per minute
+  max: process.env.NODE_ENV === 'development' ? 10000 : 100, // Very high limit for development (polling)
   message: 'Too many game requests, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
