@@ -46,11 +46,39 @@ export function RockPaperScissorsGame({
   const [selectedChoice, setSelectedChoice] = useState<RPSMove | null>(playerMove);
   const [timeLeft, setTimeLeft] = useState<string>('');
   const [showTimerInfo, setShowTimerInfo] = useState(false);
+  const [showDrawNotification, setShowDrawNotification] = useState(false);
+  const [previousRound, setPreviousRound] = useState<number>(1);
+  const [lastDrawResult, setLastDrawResult] = useState<{ player1: RPSMove; player2: RPSMove } | null>(null);
+
   // Use selectedChoice OR playerMove to prevent double-clicking
   const canMakeChoice = isMyTurn && !playerMove && !selectedChoice && !isGameOver;
 
   // Extract round info from gameState
   const currentRound = gameState?.round || 1;
+
+  // Detect when a draw occurred (round increased)
+  useEffect(() => {
+    if (currentRound > previousRound && !isGameOver) {
+      // A draw just occurred - get the last round result
+      const roundResults = gameState?.roundResults as any[] | undefined;
+      const lastResult = roundResults?.[roundResults.length - 1];
+
+      if (lastResult && lastResult.winner === 'draw') {
+        setLastDrawResult({
+          player1: lastResult.player1Choice,
+          player2: lastResult.player2Choice
+        });
+        setShowDrawNotification(true);
+
+        // Hide notification after 3 seconds
+        setTimeout(() => {
+          setShowDrawNotification(false);
+        }, 3000);
+      }
+
+      setPreviousRound(currentRound);
+    }
+  }, [currentRound, previousRound, isGameOver, gameState]);
 
   // Sync selectedChoice with playerMove when it updates from backend
   useEffect(() => {
@@ -115,7 +143,48 @@ export function RockPaperScissorsGame({
   };
 
   return (
-    <div className="w-full pt-3 pb-1">
+    <div className="w-full pt-3 pb-1 relative">
+      {/* Draw Notification - Inline */}
+      {showDrawNotification && lastDrawResult && (
+        <div className="mb-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg p-3 text-center">
+          <div
+            className="text-xl font-bold mb-2"
+            style={{
+              color: 'white',
+              WebkitTextFillColor: 'white'
+            }}
+          >
+            🤝 DRAW!
+          </div>
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <span className="text-3xl">
+              {CHOICES.find(c => c.id === lastDrawResult.player1)?.icon}
+            </span>
+            <span
+              className="text-xl font-bold"
+              style={{
+                color: 'white',
+                WebkitTextFillColor: 'white'
+              }}
+            >
+              =
+            </span>
+            <span className="text-3xl">
+              {CHOICES.find(c => c.id === lastDrawResult.player2)?.icon}
+            </span>
+          </div>
+          <div
+            className="text-xs font-medium"
+            style={{
+              color: 'white',
+              WebkitTextFillColor: 'white'
+            }}
+          >
+            Starting Round {currentRound}...
+          </div>
+        </div>
+      )}
+
       {/* Game Info Bar - Players */}
       <div className="flex items-center justify-between mb-2 px-2 text-xs">
         <div className="flex items-center gap-2">
