@@ -15,6 +15,14 @@ interface AuthState {
   error: string | null;
 }
 
+// Global flag to prevent multiple simultaneous auth attempts across all instances
+// This persists across React StrictMode re-renders
+let globalAuthInProgress = false;
+
+// Track last successful auth to avoid re-prompting too quickly
+let lastAuthTime: number | null = null;
+const AUTH_COOLDOWN_MS = 5000; // Don't re-auth within 5 seconds
+
 export function useWalletAuth() {
   const { publicKey, signMessage, connected } = useWallet();
   const [authState, setAuthState] = useState<AuthState>({
@@ -32,25 +40,48 @@ export function useWalletAuth() {
       return;
     }
 
-    // Prevent multiple simultaneous authentication attempts
-    if (authInProgressRef.current) {
+    // Prevent multiple simultaneous authentication attempts using global flag
+    if (globalAuthInProgress || authInProgressRef.current) {
       console.log('Authentication already in progress, skipping...');
       return;
     }
 
+    // Check if we recently authenticated (cooldown period)
+    if (lastAuthTime && (Date.now() - lastAuthTime) < AUTH_COOLDOWN_MS) {
+      console.log('⏸️ Recently authenticated, skipping to prevent popup spam');
+      return;
+    }
+
+    globalAuthInProgress = true;
     authInProgressRef.current = true;
     setAuthState(prev => ({ ...prev, isAuthenticating: true, error: null }));
 
+    // Set a timeout to force reset if wallet signature takes too long
+    const timeoutId = setTimeout(() => {
+      console.log('⏱️ Authentication timeout - resetting state');
+      globalAuthInProgress = false;
+      authInProgressRef.current = false;
+      setAuthState({
+        token: null,
+        isAuthenticated: false,
+        isAuthenticating: false,
+        error: 'Authentication timed out. Please try again.',
+      });
+    }, 30000); // 30 second timeout
+
     try {
+      console.log('🔐 Starting wallet authentication...');
 
       // Create a message to sign
       const message = `Sign this message to authenticate with Korus.\n\nWallet: ${publicKey.toBase58()}\nTimestamp: ${Date.now()}`;
       const messageBytes = new TextEncoder().encode(message);
 
+      console.log('📝 Requesting signature from wallet...');
       // Request signature from wallet
       const signature = await signMessage(messageBytes);
       const signatureBase58 = bs58.encode(signature);
 
+      console.log('✅ Signature received, verifying with backend...');
       // Send to backend for verification
       const response = await authAPI.loginWithWallet({
         walletAddress: publicKey.toBase58(),
@@ -58,10 +89,17 @@ export function useWalletAuth() {
         message,
       });
 
+      // Clear timeout on success
+      clearTimeout(timeoutId);
+
+      console.log('✅ Authentication successful!');
       // Store token
       if (typeof window !== 'undefined') {
         localStorage.setItem('authToken', response.token);
       }
+
+      // Record successful auth time
+      lastAuthTime = Date.now();
 
       setAuthState({
         token: response.token,
@@ -69,16 +107,26 @@ export function useWalletAuth() {
         isAuthenticating: false,
         error: null,
       });
+      globalAuthInProgress = false;
       authInProgressRef.current = false;
     } catch (error) {
-      console.error('Authentication failed:', error);
+      // Clear timeout on error
+      clearTimeout(timeoutId);
 
       // Handle wallet rejection gracefully
       const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
       const isUserRejection = errorMessage.includes('closed') ||
                               errorMessage.includes('rejected') ||
                               errorMessage.includes('cancelled') ||
+                              errorMessage.includes('Plugin Closed') ||
                               errorMessage.includes('User rejected');
+
+      // Silently fail for user cancellations - don't log errors
+      if (!isUserRejection) {
+        console.error('❌ Authentication failed:', error);
+      } else {
+        console.log('🚫 User cancelled authentication');
+      }
 
       setAuthState({
         token: null,
@@ -86,6 +134,7 @@ export function useWalletAuth() {
         isAuthenticating: false,
         error: isUserRejection ? null : errorMessage, // Don't show error for user cancellation
       });
+      globalAuthInProgress = false;
       authInProgressRef.current = false;
     }
   }, [publicKey, signMessage, connected]);
@@ -96,17 +145,19 @@ export function useWalletAuth() {
       const storedToken = localStorage.getItem('authToken');
       if (storedToken) {
         // Token exists, mark as authenticated
+        console.log('📦 Found stored auth token');
         setAuthState(prev => ({
           ...prev,
           token: storedToken,
           isAuthenticated: true,
         }));
-      } else if (!authInProgressRef.current) {
-        // No token exists, trigger authentication
+      } else if (!globalAuthInProgress && !authInProgressRef.current && !authState.isAuthenticating) {
+        // No token exists, trigger authentication only once
+        console.log('🔓 No stored token found, triggering authentication...');
         authenticate();
       }
     }
-  }, [connected, publicKey, authenticate]);
+  }, [connected, publicKey]); // Removed authenticate from deps to prevent multiple triggers
 
   // Clear auth when wallet disconnects
   useEffect(() => {

@@ -137,7 +137,7 @@ export function useGameEscrow() {
       );
 
       const [playerStatePda] = PublicKey.findProgramAddressSync(
-        [Buffer.from('player'), publicKey.toBuffer()],
+        [Buffer.from('player_game_state'), publicKey.toBuffer(), gameIdBuffer],
         GAME_ESCROW_PROGRAM_ID
       );
 
@@ -164,15 +164,10 @@ export function useGameEscrow() {
       }
 
       // Build transaction manually without Anchor Program helper
+      // NOTE: The smart contract handles the SOL transfer via CPI after initializing accounts
+      // This ensures the player has enough SOL for rent before transferring the wager
 
-      // First, create a transfer instruction to deposit wager into escrow
-      const transferIx = SystemProgram.transfer({
-        fromPubkey: publicKey,
-        toPubkey: escrowPda,
-        lamports: wagerLamports,
-      });
-
-      // Then create the create_game_with_deposit instruction
+      // Create the create_game_with_deposit instruction
       // Instruction discriminator: SHA256("global:create_game_with_deposit")[:8]
       const discriminator = Buffer.from([128, 144, 19, 1, 81, 102, 47, 103]);
 
@@ -206,9 +201,7 @@ export function useGameEscrow() {
         feePayer: publicKey,
         blockhash,
         lastValidBlockHeight,
-      })
-        .add(transferIx)  // First deposit to escrow
-        .add(createGameIx); // Then create game
+      }).add(createGameIx); // Contract handles SOL transfer via CPI
 
       // Simulate transaction first to get better error messages
       try {
@@ -217,7 +210,17 @@ export function useGameEscrow() {
         if (simulation.value.err) {
           console.error('Simulation failed:', simulation.value);
           console.error('Full simulation:', JSON.stringify(simulation.value, null, 2));
-          throw new Error(`Simulation failed: ${JSON.stringify(simulation.value.err)}`);
+
+          // Check for insufficient funds error (Custom error 1)
+          const errStr = JSON.stringify(simulation.value.err);
+          if (errStr.includes('"Custom":1')) {
+            const balance = await connection.getBalance(publicKey);
+            const requiredSOL = (wagerLamports + 5000 + 5000) / LAMPORTS_PER_SOL; // wager + tx fee + rent
+            const currentSOL = balance / LAMPORTS_PER_SOL;
+            throw new Error(`Insufficient funds. You need at least ${requiredSOL.toFixed(4)} SOL but only have ${currentSOL.toFixed(4)} SOL. Please add more SOL to your wallet.`);
+          }
+
+          throw new Error(`Simulation failed: ${errStr}`);
         }
         console.log('Simulation succeeded!');
       } catch (simError: any) {
@@ -294,7 +297,7 @@ export function useGameEscrow() {
       );
 
       const [playerStatePda] = PublicKey.findProgramAddressSync(
-        [Buffer.from('player'), publicKey.toBuffer()],
+        [Buffer.from('player_game_state'), publicKey.toBuffer(), gameIdBuffer],
         GAME_ESCROW_PROGRAM_ID
       );
 
@@ -376,6 +379,15 @@ export function useGameEscrow() {
 
           // Parse the error to provide better context
           const errStr = JSON.stringify(simulation.value.err);
+
+          // Check for insufficient funds error (Custom error 1)
+          if (errStr.includes('"Custom":1')) {
+            const balance = await connection.getBalance(publicKey);
+            const requiredSOL = (wagerLamports + 5000 + 5000) / LAMPORTS_PER_SOL; // wager + tx fee + rent
+            const currentSOL = balance / LAMPORTS_PER_SOL;
+            throw new Error(`Insufficient funds. You need at least ${requiredSOL.toFixed(4)} SOL but only have ${currentSOL.toFixed(4)} SOL. Please add more SOL to your wallet.`);
+          }
+
           if (errStr.includes('101')) {
             console.error('Error 101: This might be PlayerAlreadyInGame error');
             console.error('Check if the player_state account has current_game_id set');
@@ -459,7 +471,7 @@ export function useGameEscrow() {
       );
 
       const [playerStatePda] = PublicKey.findProgramAddressSync(
-        [Buffer.from('player'), publicKey.toBuffer()],
+        [Buffer.from('player_game_state'), publicKey.toBuffer(), gameIdBuffer],
         GAME_ESCROW_PROGRAM_ID
       );
 

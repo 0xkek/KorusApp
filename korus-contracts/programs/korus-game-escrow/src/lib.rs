@@ -105,7 +105,19 @@ pub mod korus_game_escrow {
         game.last_move_time = clock.unix_timestamp;
         game.current_turn = ctx.accounts.player1.key();
 
-        // No CPI transfer here - player deposits directly to escrow beforehand
+        // Transfer wager from player to escrow (AFTER accounts are initialized)
+        let transfer_ix = anchor_lang::solana_program::system_instruction::transfer(
+            &ctx.accounts.player1.key(),
+            &ctx.accounts.escrow.key(),
+            wager_amount,
+        );
+        anchor_lang::solana_program::program::invoke(
+            &transfer_ix,
+            &[
+                ctx.accounts.player1.to_account_info(),
+                ctx.accounts.escrow.to_account_info(),
+            ],
+        )?;
 
         // Update player state to track game
         let player_state = &mut ctx.accounts.player_state;
@@ -139,7 +151,15 @@ pub mod korus_game_escrow {
         game.player2_deposited = game.wager_amount;
         game.last_move_time = clock.unix_timestamp;
 
-        // Transfer SOL from player2 to escrow
+        // Update player2 state to track game (BEFORE transfer to ensure account exists)
+        let player2_state = &mut ctx.accounts.player2_state;
+        player2_state.player = ctx.accounts.player2.key();
+        player2_state.current_game_id = Some(game.game_id);
+
+        let state = &mut ctx.accounts.state;
+        state.total_volume += game.wager_amount;
+
+        // Transfer SOL from player2 to escrow (AFTER accounts are initialized)
         let ix = system_instruction::transfer(
             &ctx.accounts.player2.key(),
             &ctx.accounts.escrow.key(),
@@ -152,14 +172,6 @@ pub mod korus_game_escrow {
                 ctx.accounts.escrow.to_account_info(),
             ],
         )?;
-
-        // Update player2 state to track game
-        let player2_state = &mut ctx.accounts.player2_state;
-        player2_state.player = ctx.accounts.player2.key();
-        player2_state.current_game_id = Some(game.game_id);
-
-        let state = &mut ctx.accounts.state;
-        state.total_volume += game.wager_amount;
 
         emit!(GameJoined {
             game_id: game.game_id,
@@ -577,10 +589,10 @@ pub struct CreateGameWithDeposit<'info> {
     )]
     pub game: Account<'info, Game>,
     #[account(
-        init_if_needed,
+        init,
         payer = player1,
         space = 8 + PlayerState::LEN,
-        seeds = [b"player", player1.key().as_ref()],
+        seeds = [b"player_game_state", player1.key().as_ref(), state.total_games.to_le_bytes().as_ref()],
         bump
     )]
     pub player_state: Account<'info, PlayerState>,
@@ -603,10 +615,10 @@ pub struct JoinGame<'info> {
     #[account(mut)]
     pub game: Account<'info, Game>,
     #[account(
-        init_if_needed,
+        init,
         payer = player2,
         space = 8 + PlayerState::LEN,
-        seeds = [b"player", player2.key().as_ref()],
+        seeds = [b"player_game_state", player2.key().as_ref(), game.game_id.to_le_bytes().as_ref()],
         bump
     )]
     pub player2_state: Account<'info, PlayerState>,
@@ -653,13 +665,13 @@ pub struct CompleteGame<'info> {
     pub game: Account<'info, Game>,
     #[account(
         mut,
-        seeds = [b"player", game.player1.as_ref()],
+        seeds = [b"player_game_state", game.player1.as_ref(), game.game_id.to_le_bytes().as_ref()],
         bump
     )]
     pub player1_state: Account<'info, PlayerState>,
     #[account(
         mut,
-        seeds = [b"player", game.player2.as_ref()],
+        seeds = [b"player_game_state", game.player2.as_ref(), game.game_id.to_le_bytes().as_ref()],
         bump
     )]
     pub player2_state: Account<'info, PlayerState>,
@@ -691,13 +703,13 @@ pub struct ClaimTimeoutWin<'info> {
     pub game: Account<'info, Game>,
     #[account(
         mut,
-        seeds = [b"player", game.player1.as_ref()],
+        seeds = [b"player_game_state", game.player1.as_ref(), game.game_id.to_le_bytes().as_ref()],
         bump
     )]
     pub player1_state: Account<'info, PlayerState>,
     #[account(
         mut,
-        seeds = [b"player", game.player2.as_ref()],
+        seeds = [b"player_game_state", game.player2.as_ref(), game.game_id.to_le_bytes().as_ref()],
         bump
     )]
     pub player2_state: Account<'info, PlayerState>,

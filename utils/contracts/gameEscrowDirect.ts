@@ -93,8 +93,9 @@ export class GameEscrowDirectService {
         GAME_ESCROW_PROGRAM_ID
       );
 
+      // Use per-game player state PDA (player_game_state seed with game ID)
       const [playerStatePda] = PublicKey.findProgramAddressSync(
-        [Buffer.from('player'), walletPublicKey.toBuffer()],
+        [Buffer.from('player_game_state'), walletPublicKey.toBuffer(), gameId.toArrayLike(Buffer, 'le', 8)],
         GAME_ESCROW_PROGRAM_ID
       );
 
@@ -149,16 +150,8 @@ export class GameEscrowDirectService {
           });
           transaction.add(priorityFeeIx);
 
-          // Step 1: Transfer SOL to escrow
-          const transferIx = SystemProgram.transfer({
-            fromPubkey: walletPublicKey,
-            toPubkey: escrowPda,
-            lamports: wagerLamports,
-          });
-          transaction.add(transferIx);
-
-          // Step 2: Create the game on-chain
-          const discriminator = Buffer.from([124, 69, 75, 66, 184, 220, 72, 206]); // create_game
+          // Create the game on-chain (includes deposit transfer via CPI)
+          const discriminator = Buffer.from([128, 144, 19, 1, 81, 102, 47, 103]); // create_game_with_deposit
           const gameTypeBuffer = Buffer.alloc(1);
           gameTypeBuffer.writeUInt8(gameType);
           const wagerBuffer = Buffer.alloc(8);
@@ -184,7 +177,7 @@ export class GameEscrowDirectService {
           });
           transaction.add(createGameIx);
 
-          logger.log('Transaction created with transfer and create_game');
+          logger.log('Transaction created with create_game_with_deposit');
 
           // Sign and send
           const signedTxs = await wallet.signAndSendTransactions({
@@ -217,16 +210,8 @@ export class GameEscrowDirectService {
         });
         transaction.add(priorityFeeIx);
 
-        // Step 1: Transfer SOL to escrow
-        const transferIx = SystemProgram.transfer({
-          fromPubkey: walletPublicKey,
-          toPubkey: escrowPda,
-          lamports: wagerLamports,
-        });
-        transaction.add(transferIx);
-
-        // Step 2: Create the game on-chain
-        const discriminator = Buffer.from([124, 69, 75, 66, 184, 220, 72, 206]); // create_game
+        // Create the game on-chain (includes deposit transfer via CPI)
+        const discriminator = Buffer.from([128, 144, 19, 1, 81, 102, 47, 103]); // create_game_with_deposit
         const gameTypeBuffer = Buffer.alloc(1);
         gameTypeBuffer.writeUInt8(gameType);
         const wagerBuffer = Buffer.alloc(8);

@@ -10,7 +10,7 @@ interface TicTacToeBoardProps {
   onCellClick: (index: number) => void;
   isMyTurn: boolean;
   isGameOver: boolean;
-  winner: string | null;
+  winner: string | null; // Wallet address of winner
   playerSymbol: 'X' | 'O';
   player1Address?: string;
   player2Address?: string;
@@ -18,6 +18,8 @@ interface TicTacToeBoardProps {
   player2DisplayName?: string;
   wager?: string;
   gameCreatedAt?: string;
+  currentPlayerAddress?: string; // Current user's wallet address
+  payoutTxSignature?: string | null; // Payout transaction signature
 }
 
 export function TicTacToeBoard({
@@ -33,6 +35,8 @@ export function TicTacToeBoard({
   player2DisplayName,
   wager,
   gameCreatedAt,
+  currentPlayerAddress,
+  payoutTxSignature,
 }: TicTacToeBoardProps) {
   const getCellClassName = (cell: TicTacToeCell, index: number) => {
     const baseClasses = 'w-24 h-24 flex items-center justify-center text-4xl font-bold rounded-lg transition-all';
@@ -97,7 +101,7 @@ export function TicTacToeBoard({
           <div className="text-xl font-bold">
             {winner === 'draw' ? (
               <span className="text-korus-textSecondary">Game ended in a draw!</span>
-            ) : winner === playerSymbol ? (
+            ) : winner === currentPlayerAddress ? (
               <span className="text-korus-primary">You won! 🎉</span>
             ) : (
               <span className="text-red-500">You lost</span>
@@ -145,6 +149,20 @@ export function TicTacToeBoard({
             <span className="text-korus-textSecondary">Winner gets:</span>
             <span className="font-bold text-green-400">{winnerPayout.toFixed(4)} SOL</span>
           </div>
+        </div>
+      )}
+
+      {/* Payout Transaction Link */}
+      {isGameOver && payoutTxSignature && (
+        <div className="mt-2 px-2 text-xs text-center">
+          <a
+            href={`https://explorer.solana.com/tx/${payoutTxSignature}?cluster=devnet`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-korus-primary hover:text-korus-secondary underline"
+          >
+            View Payout Transaction →
+          </a>
         </div>
       )}
     </div>

@@ -19,6 +19,7 @@ interface RPSGameProps {
   gameCreatedAt?: string;
   wager?: string; // SOL amount
   gameState?: any; // Full game state with score and round info
+  payoutTxSignature?: string; // Transaction signature for blockchain payout
 }
 
 const CHOICES = [
@@ -42,6 +43,7 @@ export function RockPaperScissorsGame({
   gameCreatedAt,
   wager,
   gameState,
+  payoutTxSignature,
 }: RPSGameProps) {
   const [selectedChoice, setSelectedChoice] = useState<RPSMove | null>(playerMove);
   const [timeLeft, setTimeLeft] = useState<string>('');
@@ -285,6 +287,19 @@ export function RockPaperScissorsGame({
                   ? `Lost ${wagerAmount} SOL wager`
                   : 'Wagers returned'}
               </div>
+            )}
+
+            {/* Transaction Link */}
+            {payoutTxSignature && wagerAmount > 0 && (
+              <a
+                href={`https://explorer.solana.com/tx/${payoutTxSignature}?cluster=devnet`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-block text-xs underline hover:opacity-80 transition-opacity"
+                style={{ color: 'white', WebkitTextFillColor: 'white' }}
+              >
+                View payout on Solana Explorer →
+              </a>
             )}
           </div>
 

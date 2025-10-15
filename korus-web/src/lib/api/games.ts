@@ -8,6 +8,16 @@ import { api } from './client';
 export type GameType = 'tictactoe' | 'rps' | 'connectfour';
 export type GameStatus = 'waiting' | 'active' | 'completed' | 'cancelled';
 
+export interface GameEscrow {
+  id: string;
+  gameId: string;
+  status: string;
+  payoutTxSig: string | null;
+  escrowPda: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Game {
   id: string; // CUID string from database
   postId: string;
@@ -15,6 +25,8 @@ export interface Game {
   wager: string; // Decimal as string
   player1: string;
   player2: string | null;
+  player1DisplayName?: string;
+  player2DisplayName?: string;
   gameState: any;
   status: GameStatus;
   winner: string | null;
@@ -22,6 +34,7 @@ export interface Game {
   createdAt: string;
   updatedAt: string;
   onChainGameId: string | null;
+  escrow?: GameEscrow;
 }
 
 export interface CreateGameData {

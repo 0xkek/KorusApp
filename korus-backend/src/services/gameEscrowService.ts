@@ -143,17 +143,34 @@ export class GameEscrowService {
 
       logger.info(`Players: ${player1.toString()} vs ${player2.toString()}`);
 
-      // Build complete_game instruction manually (since we don't have the IDL)
+      // Derive player state PDAs (per-game state accounts) - reuse gameIdBuffer from above
+      const [player1StatePda] = await PublicKey.findProgramAddress(
+        [Buffer.from('player_game_state'), player1.toBuffer(), gameIdBuffer],
+        GAME_ESCROW_PROGRAM_ID
+      );
+
+      const [player2StatePda] = await PublicKey.findProgramAddress(
+        [Buffer.from('player_game_state'), player2.toBuffer(), gameIdBuffer],
+        GAME_ESCROW_PROGRAM_ID
+      );
+
+      logger.info(`Player1 State PDA: ${player1StatePda.toString()}`);
+      logger.info(`Player2 State PDA: ${player2StatePda.toString()}`);
+
+      // Build complete_game instruction manually
+      // Account order must match smart contract: state, game, player1State, player2State, escrow, treasury, player1, player2, authority, systemProgram
       const instruction = {
         programId: GAME_ESCROW_PROGRAM_ID,
         keys: [
-          { pubkey: authority.publicKey, isSigner: true, isWritable: false }, // authority
           { pubkey: statePda, isSigner: false, isWritable: true }, // state
           { pubkey: gamePda, isSigner: false, isWritable: true }, // game
+          { pubkey: player1StatePda, isSigner: false, isWritable: true }, // player1State
+          { pubkey: player2StatePda, isSigner: false, isWritable: true }, // player2State
           { pubkey: escrowPda, isSigner: false, isWritable: true }, // escrow
+          { pubkey: TREASURY_WALLET, isSigner: false, isWritable: true }, // treasury
           { pubkey: player1, isSigner: false, isWritable: true }, // player1
           { pubkey: player2, isSigner: false, isWritable: true }, // player2
-          { pubkey: TREASURY_WALLET, isSigner: false, isWritable: true }, // treasury
+          { pubkey: authority.publicKey, isSigner: true, isWritable: false }, // authority
           { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }, // system_program
         ],
         data: this.encodeCompleteGameInstruction(gameId, winnerAddress),
@@ -188,15 +205,12 @@ export class GameEscrowService {
 
   /**
    * Encode the complete_game instruction data
-   * Instruction format: [instruction_discriminator(8)] + [game_id(8)] + [winner_option(1 + optional_32)]
+   * Instruction format: [instruction_discriminator(8)] + [winner_option(1 + optional_32)]
    */
   private encodeCompleteGameInstruction(gameId: number, winnerAddress: string | null): Buffer {
-    // Instruction discriminator for complete_game (use anchor's discriminator)
-    // This should be sha256("global:complete_game")[0..8]
-    const discriminator = Buffer.from([0x9a, 0x0c, 0x8e, 0x42, 0x6c, 0xf9, 0x8d, 0x3f]); // placeholder - needs actual value
-
-    const gameIdBuffer = Buffer.alloc(8);
-    gameIdBuffer.writeBigUInt64LE(BigInt(gameId));
+    // Instruction discriminator for complete_game
+    // Calculated from SHA256("global:complete_game")[0..8]
+    const discriminator = Buffer.from([0x69, 0x45, 0xb8, 0x05, 0x8f, 0xb6, 0x5c, 0x84]);
 
     let winnerBuffer: Buffer;
     if (winnerAddress) {
@@ -210,7 +224,7 @@ export class GameEscrowService {
       winnerBuffer.writeUInt8(0, 0); // None variant
     }
 
-    return Buffer.concat([discriminator, gameIdBuffer, winnerBuffer]);
+    return Buffer.concat([discriminator, winnerBuffer]);
   }
 }
 

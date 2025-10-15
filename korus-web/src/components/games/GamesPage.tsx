@@ -36,7 +36,25 @@ export function GamesPage() {
     }
     try {
       const response = await gamesAPI.getAllGames(activeTab);
-      setGames(response.games);
+      let gamesList = response.games;
+
+      // If we have an expanded game that's not in the list (e.g., just completed),
+      // fetch it separately and add it to the list so it stays visible
+      if (expandedGameId && !gamesList.find(g => g.id === expandedGameId)) {
+        try {
+          const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+          if (token) {
+            const expandedGameResponse = await gamesAPI.getGame(expandedGameId, token);
+            if (expandedGameResponse?.game) {
+              gamesList = [expandedGameResponse.game, ...gamesList];
+            }
+          }
+        } catch (err) {
+          console.error('Failed to fetch expanded game:', err);
+        }
+      }
+
+      setGames(gamesList);
     } catch (error) {
       console.error('Failed to load games:', error);
       showError('Failed to load games');
@@ -46,14 +64,6 @@ export function GamesPage() {
       }
     }
   }, [activeTab, expandedGameId, showError]);
-
-  // Authenticate with backend when wallet connects
-  useEffect(() => {
-    if (connected && !isAuthenticated && !isAuthenticating) {
-      console.log('🔐 Wallet connected but not authenticated - triggering authentication');
-      authenticate();
-    }
-  }, [connected, isAuthenticated, isAuthenticating, authenticate]);
 
   // Fetch games based on active tab
   useEffect(() => {
@@ -226,11 +236,17 @@ export function GamesPage() {
   };
 
   const handleMove = async (gameId: string, move: any) => {
+    // Check if wallet is connected
+    if (!connected || !publicKey) {
+      showError('Please connect your wallet to play');
+      return;
+    }
+
     try {
       console.log('handleMove called:', { gameId, move });
       const token = localStorage.getItem('authToken');
       if (!token) {
-        showError('Not authenticated');
+        showError('Not authenticated. Please sign in with your wallet.');
         return;
       }
       console.log('Sending move to API...');
@@ -302,6 +318,14 @@ export function GamesPage() {
       handleMove(game.id, { index });
     };
 
+    // Debug: log game data to check escrow
+    console.log('Game data:', {
+      id: game.id,
+      status: game.status,
+      escrow: game.escrow,
+      payoutTxSig: game.escrow?.payoutTxSig
+    });
+
     return (
       <TicTacToeBoard
         board={board}
@@ -316,6 +340,8 @@ export function GamesPage() {
         player2DisplayName={game.player2DisplayName}
         wager={game.wager?.toString()}
         gameCreatedAt={game.createdAt}
+        currentPlayerAddress={publicKey?.toBase58()}
+        payoutTxSignature={game.escrow?.payoutTxSig || undefined}
       />
     );
   };
@@ -370,6 +396,14 @@ export function GamesPage() {
       handleMove(game.id, { choice: move });
     };
 
+    // Convert wallet address winner to 'you'/'opponent'/'draw' format
+    const getWinnerDisplayValue = () => {
+      if (!game.winner) return null;
+      if (game.winner === 'draw') return 'draw';
+      if (game.winner === publicKey?.toBase58()) return 'you';
+      return 'opponent';
+    };
+
     return (
       <RockPaperScissorsGame
         onMoveSelected={handleMoveSelected}
@@ -377,7 +411,7 @@ export function GamesPage() {
         opponentMove={opponentMove}
         isMyTurn={isMyTurn}
         isGameOver={isGameOver}
-        winner={game.winner}
+        winner={getWinnerDisplayValue()}
         player1Address={game.player1}
         player2Address={game.player2 || undefined}
         player1DisplayName={getPlayerDisplayName(game.player1)}
@@ -386,6 +420,7 @@ export function GamesPage() {
         gameCreatedAt={game.createdAt}
         wager={game.wager}
         gameState={game.gameState}
+        payoutTxSignature={game.escrow?.payoutTxSig || undefined}
       />
     );
   };
@@ -458,7 +493,7 @@ export function GamesPage() {
                     {/* Left: Game info */}
                     <div className="flex items-center gap-2 text-sm">
                       <span className="font-bold text-white capitalize">
-                        {game.gameType.replace('_', ' ')}
+                        {game.gameType?.replace('_', ' ') || 'Game'}
                       </span>
                       <span className="text-korus-textSecondary">•</span>
                       <span className="text-korus-textSecondary">
@@ -533,8 +568,14 @@ export function GamesPage() {
 
       {/* Create Game Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-korus-surface/90 backdrop-blur-md border border-korus-border rounded-2xl p-8 max-w-md w-full">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          onClick={() => setShowCreateModal(false)}
+        >
+          <div
+            className="bg-korus-surface/90 backdrop-blur-md border border-korus-border rounded-2xl p-8 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-white">Create New Game</h2>
@@ -622,7 +663,7 @@ export function GamesPage() {
                 {isProcessing ? (
                   <div className="flex items-center justify-center gap-2">
                     <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin"></div>
-                    Creating...
+                    {newGame.wager > 0 ? 'Approve in wallet...' : 'Creating...'}
                   </div>
                 ) : !connected ? (
                   'Wallet Not Connected'

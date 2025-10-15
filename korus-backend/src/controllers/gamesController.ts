@@ -261,6 +261,17 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
     }
 
     let gameState = game.gameState as GameState
+
+    // Migrate old tic-tac-toe 2D arrays to 1D arrays for backward compatibility
+    if (game.gameType === 'tictactoe' && gameState.board) {
+      const board = gameState.board as any;
+      if (Array.isArray(board[0])) {
+        // Old 2D format - flatten it
+        logger.info(`Migrating old 2D board to 1D format for game ${game.id}`);
+        gameState.board = board.flat();
+      }
+    }
+
     let winner: string | null = null
     let newStatus = 'active'
 
@@ -319,30 +330,7 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
         // Don't fail the game update if rewards fail
       }
 
-      // Complete game on blockchain (distribute escrow funds)
-      if (game.player2 && game.onChainGameId) {
-        try {
-          logger.info(`Completing game on blockchain: ${id}, winner: ${winner}`)
-
-          const player1Pubkey = new PublicKey(game.player1)
-          const player2Pubkey = new PublicKey(game.player2)
-          // Handle draws by passing null to the blockchain service
-          const winnerPubkey = winner === 'draw' ? null : new PublicKey(winner)
-
-          // TODO: Backend cannot complete games on blockchain without Anchor
-          // Game completion must be done client-side by calling the smart contract
-          // The backend verifies the game was created, but completion happens in the frontend
-          const txSignature = 'COMPLETED_CLIENT_SIDE'
-
-          logger.info(`Game completed on blockchain: ${txSignature}`)
-        } catch (error) {
-          logger.error('Failed to complete game on blockchain:', error)
-          // Continue with database update even if blockchain fails
-          // This allows manual resolution of blockchain issues
-        }
-      } else if (winner === 'draw') {
-        logger.info('Game ended in draw - no blockchain completion needed (manual refund required)')
-      }
+      // Note: Blockchain completion happens after database update (see lines 376-422)
     }
 
     // Update game state
@@ -362,25 +350,98 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
     })
 
     // If game is completed and has an on-chain game ID, complete it on-chain
-    if (newStatus === 'completed' && game.onChainGameId) {
+    logger.info(`🔍 COMPLETION CHECK: newStatus=${newStatus}, onChainGameId=${updatedGame.onChainGameId}, type=${typeof updatedGame.onChainGameId}`);
+    if (newStatus === 'completed' && updatedGame.onChainGameId) {
       try {
-        logger.info(`Game completed, triggering on-chain payout for game ID: ${game.onChainGameId}`);
+        logger.info(`Game completed, triggering on-chain payout for game ID: ${updatedGame.onChainGameId}`);
 
         // Call smart contract to distribute funds
         const result = await gameEscrowService.completeGame(
-          Number(game.onChainGameId),
+          Number(updatedGame.onChainGameId),
           winner // winner wallet address or null for draw
         );
 
-        if (result.success) {
+        if (result.success && result.signature) {
           logger.info(`✅ On-chain payout successful! Signature: ${result.signature}`);
+
+          // Update or create GameEscrow with payout transaction signature
+          const wagerNum = Number(updatedGame.wager);
+          const totalPot = wagerNum * 2;
+          const platformFee = totalPot * 0.02; // 2%
+          const winnerPayout = totalPot * 0.98; // 98%
+
+          await prisma.gameEscrow.upsert({
+            where: { gameId: updatedGame.id },
+            update: {
+              payoutTxSig: result.signature,
+              status: 'paid'
+            },
+            create: {
+              gameId: updatedGame.id,
+              player1Wallet: updatedGame.player1,
+              player2Wallet: updatedGame.player2!,
+              player1Amount: wagerNum,
+              player2Amount: wagerNum,
+              totalPot,
+              platformFee,
+              winnerPayout,
+              payoutTxSig: result.signature,
+              status: 'paid'
+            }
+          });
         } else {
           logger.error(`❌ On-chain payout failed: ${result.error}`);
-          // Don't fail the whole request - game is still completed in database
+
+          // Create escrow record showing failure for debugging
+          const wagerNum = Number(updatedGame.wager);
+          const totalPot = wagerNum * 2;
+          const platformFee = totalPot * 0.02;
+          const winnerPayout = totalPot * 0.98;
+
+          await prisma.gameEscrow.upsert({
+            where: { gameId: updatedGame.id },
+            update: { status: 'failed' },
+            create: {
+              gameId: updatedGame.id,
+              player1Wallet: updatedGame.player1,
+              player2Wallet: updatedGame.player2!,
+              player1Amount: wagerNum,
+              player2Amount: wagerNum,
+              totalPot,
+              platformFee,
+              winnerPayout,
+              status: 'failed'
+            }
+          });
         }
       } catch (error) {
         logger.error('Error processing on-chain payout:', error);
-        // Don't fail the whole request - game is still completed in database
+
+        // Create escrow record showing error
+        try {
+          const wagerNum = Number(updatedGame.wager);
+          const totalPot = wagerNum * 2;
+          const platformFee = totalPot * 0.02;
+          const winnerPayout = totalPot * 0.98;
+
+          await prisma.gameEscrow.upsert({
+            where: { gameId: updatedGame.id },
+            update: { status: 'error' },
+            create: {
+              gameId: updatedGame.id,
+              player1Wallet: updatedGame.player1,
+              player2Wallet: updatedGame.player2!,
+              player1Amount: wagerNum,
+              player2Amount: wagerNum,
+              totalPot,
+              platformFee,
+              winnerPayout,
+              status: 'error'
+            }
+          });
+        } catch (e) {
+          logger.error('Failed to create error escrow record:', e);
+        }
       }
     }
 
@@ -412,6 +473,7 @@ export const getGame = async (req: Request, res: Response) => {
         player1User: true,
         player2User: true,
         winnerUser: true,
+        escrow: true,
         post: {
           include: {
             author: true
@@ -683,6 +745,12 @@ export const getAllGames = async (req: Request, res: Response) => {
 
     const games = await prisma.game.findMany({
       where,
+      include: {
+        player1User: true,
+        player2User: true,
+        winnerUser: true,
+        escrow: true
+      },
       orderBy: {
         createdAt: 'desc'
       },

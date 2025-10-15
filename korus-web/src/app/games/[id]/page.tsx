@@ -217,6 +217,14 @@ export default function GamePlayPage() {
       handleMove({ choice: move });
     };
 
+    // Convert wallet address winner to 'you'/'opponent'/'draw' format
+    const getWinnerDisplayValue = () => {
+      if (!game.winner) return null;
+      if (game.winner === 'draw') return 'draw';
+      if (game.winner === publicKey?.toBase58()) return 'you';
+      return 'opponent';
+    };
+
     return (
       <RockPaperScissorsGame
         onMoveSelected={handleMoveSelected}
@@ -224,7 +232,7 @@ export default function GamePlayPage() {
         opponentMove={opponentMove}
         isMyTurn={isMyTurn}
         isGameOver={isGameOver}
-        winner={game.winner}
+        winner={getWinnerDisplayValue()}
       />
     );
   };
@@ -349,6 +357,16 @@ export default function GamePlayPage() {
                 ? "You won! 🎉"
                 : "You lost"}
             </p>
+            {game.escrow?.payoutTxSig && parseFloat(game.wager) > 0 && (
+              <a
+                href={`https://explorer.solana.com/tx/${game.escrow.payoutTxSig}?cluster=devnet`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-block text-sm text-korus-primary hover:text-korus-primaryDark underline"
+              >
+                View payout transaction on Solana Explorer →
+              </a>
+            )}
           </div>
         )}
 
