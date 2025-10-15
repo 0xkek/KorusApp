@@ -2,6 +2,7 @@ import { Keypair, Connection, PublicKey } from '@solana/web3.js';
 import * as anchor from '@coral-xyz/anchor';
 import fs from 'fs';
 import path from 'path';
+import { logger } from '../utils/logger';
 
 // Contract configuration
 export const GAME_ESCROW_PROGRAM_ID = new PublicKey('4iUdAkPRmZLzUFXTLpt5QPGmUUtP6yfgpPpF3sLD9xtd');
@@ -23,11 +24,11 @@ export function loadAuthorityKeypair(): Keypair {
     try {
       const secretKey = JSON.parse(process.env.SOLANA_AUTHORITY_KEY);
       authorityKeypair = Keypair.fromSecretKey(Uint8Array.from(secretKey));
-      console.log('✅ Loaded authority keypair from environment');
-      console.log('Authority pubkey:', authorityKeypair.publicKey.toString());
+      logger.info('✅ Loaded authority keypair from environment');
+      logger.info('Authority pubkey:', authorityKeypair.publicKey.toString());
       return authorityKeypair;
     } catch (e) {
-      console.error('Failed to load authority from env:', e);
+      logger.error('Failed to load authority from env:', e);
     }
   }
 
@@ -39,27 +40,27 @@ export function loadAuthorityKeypair(): Keypair {
     try {
       const keypairData = JSON.parse(fs.readFileSync(keypairPath, 'utf-8'));
       authorityKeypair = Keypair.fromSecretKey(Uint8Array.from(keypairData));
-      console.log('✅ Loaded authority keypair from file:', keypairPath);
-      console.log('Authority pubkey:', authorityKeypair.publicKey.toString());
+      logger.info('✅ Loaded authority keypair from file:', keypairPath);
+      logger.info('Authority pubkey:', authorityKeypair.publicKey.toString());
       return authorityKeypair;
     } catch (e) {
-      console.error('Failed to load authority from file:', e);
+      logger.error('Failed to load authority from file:', e);
     }
   }
 
   // Generate a new keypair if none exists (ONLY FOR DEVELOPMENT)
-  console.warn('⚠️  No authority keypair found, generating new one...');
-  console.warn('⚠️  THIS SHOULD ONLY HAPPEN IN DEVELOPMENT!');
-  
+  logger.warn('⚠️  No authority keypair found, generating new one...');
+  logger.warn('⚠️  THIS SHOULD ONLY HAPPEN IN DEVELOPMENT!');
+
   authorityKeypair = Keypair.generate();
   const keypairData = Array.from(authorityKeypair.secretKey);
-  
+
   // Save to file for future use
   fs.writeFileSync(keypairPath, JSON.stringify(keypairData));
-  console.log('💾 Saved new authority keypair to:', keypairPath);
-  console.log('🔑 Authority pubkey:', authorityKeypair.publicKey.toString());
-  console.log('\n⚠️  IMPORTANT: You must initialize the smart contract with this authority!');
-  console.log('Run: npm run init-contract');
+  logger.info('💾 Saved new authority keypair to:', keypairPath);
+  logger.info('🔑 Authority pubkey:', authorityKeypair.publicKey.toString());
+  logger.warn('\n⚠️  IMPORTANT: You must initialize the smart contract with this authority!');
+  logger.info('Run: npm run init-contract');
   
   return authorityKeypair;
 }

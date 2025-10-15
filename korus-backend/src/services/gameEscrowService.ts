@@ -25,7 +25,7 @@ export class GameEscrowService {
       const gameAccount = await connection.getAccountInfo(gamePda);
       return gameAccount !== null;
     } catch (error) {
-      console.error('Failed to verify game creation:', error);
+      logger.error('Failed to verify game creation:', error);
       return false;
     }
   }
@@ -50,7 +50,7 @@ export class GameEscrowService {
       const totalGames = stateAccount.data.readBigUInt64LE(72);
       return Number(totalGames);
     } catch (error) {
-      console.error('Failed to get next game ID:', error);
+      logger.error('Failed to get next game ID:', error);
       throw error;
     }
   }
@@ -70,7 +70,7 @@ export class GameEscrowService {
       const gameAccount = await connection.getAccountInfo(gamePda);
       return gameAccount;
     } catch (error) {
-      console.error('Failed to fetch game state:', error);
+      logger.error('Failed to fetch game state:', error);
       return null;
     }
   }
@@ -87,14 +87,14 @@ export class GameEscrowService {
 
       const stateAccount = await connection.getAccountInfo(statePda);
       if (!stateAccount) {
-        console.error('Contract state account not found - contract not initialized');
+        logger.error('Contract state account not found - contract not initialized');
         return false;
       }
 
-      console.log('✅ Contract state account exists');
+      logger.info('✅ Contract state account exists');
       return true;
     } catch (error) {
-      console.error('Contract not initialized:', error);
+      logger.error('Contract not initialized:', error);
       return false;
     }
   }

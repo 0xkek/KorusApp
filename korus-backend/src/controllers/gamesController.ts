@@ -243,6 +243,11 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
     const { move } = req.body
     const playerWallet = req.userWallet!
 
+    // Validate move input
+    if (!move || typeof move !== 'object') {
+      return res.status(400).json({ success: false, error: 'Invalid move data' })
+    }
+
     const game = await prisma.game.findUnique({
       where: { id }
     })
@@ -334,6 +339,9 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
     }
 
     // Update game state
+    // NOTE: Using eventual consistency pattern - database is updated first, then blockchain.
+    // If blockchain fails, GameEscrow status will be 'failed' or 'error' for manual reconciliation.
+    // This prevents losing game state if blockchain call times out or fails temporarily.
     const updatedGame = await prisma.game.update({
       where: { id },
       data: {
@@ -541,6 +549,12 @@ export const getGameByPostId = async (req: Request, res: Response) => {
 // Game logic helpers
 function processTicTacToeMove(game: GameRecord, gameState: GameState, move: { index: number }, playerWallet: string): string | null {
   const { index } = move
+
+  // Validate move structure
+  if (typeof index !== 'number') {
+    throw new Error('Move must include numeric index')
+  }
+
   const board = gameState.board! as BoardCell[]
 
   // Check if it's player's turn
@@ -549,7 +563,7 @@ function processTicTacToeMove(game: GameRecord, gameState: GameState, move: { in
   }
 
   // Validate index
-  if (index < 0 || index > 8) {
+  if (index < 0 || index > 8 || !Number.isInteger(index)) {
     throw new Error('Invalid cell index')
   }
 
@@ -573,8 +587,14 @@ function processTicTacToeMove(game: GameRecord, gameState: GameState, move: { in
 
 function processConnectFourMove(game: GameRecord, gameState: GameState, move: { column: number }, playerWallet: string): string | null {
   const { column } = move
+
+  // Validate move structure
+  if (typeof column !== 'number' || !Number.isInteger(column) || column < 0 || column > 6) {
+    throw new Error('Invalid column number (must be 0-6)')
+  }
+
   const board = gameState.board! as BoardCell[][]
-  
+
   // Check if it's player's turn
   if (game.currentTurn !== playerWallet) {
     throw new Error('Not your turn')
@@ -604,6 +624,11 @@ function processConnectFourMove(game: GameRecord, gameState: GameState, move: { 
 
 function processRPSMove(game: GameRecord, gameState: GameState, move: { choice: string }, playerWallet: string): string | null {
   const { choice } = move // 'rock', 'paper', or 'scissors'
+
+  // Validate move structure
+  if (typeof choice !== 'string' || !['rock', 'paper', 'scissors'].includes(choice)) {
+    throw new Error('Invalid choice (must be rock, paper, or scissors)')
+  }
 
   // Initialize playerMoves if it doesn't exist
   if (!gameState.playerMoves) {

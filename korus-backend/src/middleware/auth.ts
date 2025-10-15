@@ -9,6 +9,18 @@ export interface AuthRequest extends Request {
   }
 }
 
+// Validate JWT_SECRET at module load time (server startup)
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret) {
+  logger.error('CRITICAL: JWT_SECRET environment variable is not configured');
+  if (process.env.NODE_ENV === 'production') {
+    logger.error('Server cannot start without JWT_SECRET in production');
+    process.exit(1);
+  } else {
+    logger.warn('WARNING: JWT_SECRET not set. Authentication will fail.');
+  }
+}
+
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
   const token = req.header('Authorization')?.replace('Bearer ', '')
 
@@ -16,16 +28,11 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
     return res.status(401).json({ error: 'No token provided' })
   }
 
-  // Get JWT secret - NEVER use fallback in production
-  const jwtSecret = process.env.JWT_SECRET
-  
+  // JWT secret was validated at startup - safe to use non-null assertion
   if (!jwtSecret) {
-    logger.error('CRITICAL: JWT_SECRET not configured in auth middleware')
-    // In production, fail fast
-    if (process.env.NODE_ENV === 'production') {
-      process.exit(1)
-    }
-    return res.status(500).json({ error: 'Server configuration error' })
+    // This should never happen if validation at startup worked
+    logger.error('CRITICAL: JWT_SECRET missing during request processing');
+    return res.status(500).json({ error: 'Server configuration error' });
   }
 
   try {
