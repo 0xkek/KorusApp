@@ -9,9 +9,13 @@ import * as anchor from '@coral-xyz/anchor';
 import { useCallback, useState } from 'react';
 
 // Contract configuration
-// Deployed program ID on devnet
-const GAME_ESCROW_PROGRAM_ID = new PublicKey('4iUdAkPRmZLzUFXTLpt5QPGmUUtP6yfgpPpF3sLD9xtd');
-const TREASURY_WALLET = new PublicKey('ByqqYGErKfyLHHd3NjgMnbbxQdPs1kFrPVWPUHUsD31W');
+// Load from environment variables for flexibility across deployments
+const GAME_ESCROW_PROGRAM_ID = new PublicKey(
+  process.env.NEXT_PUBLIC_GAME_ESCROW_PROGRAM_ID || '4iUdAkPRmZLzUFXTLpt5QPGmUUtP6yfgpPpF3sLD9xtd'
+);
+const TREASURY_WALLET = new PublicKey(
+  process.env.NEXT_PUBLIC_TREASURY_WALLET || 'ByqqYGErKfyLHHd3NjgMnbbxQdPs1kFrPVWPUHUsD31W'
+);
 
 // Minimal IDL for client-side interactions
 const IDL = {

@@ -39,7 +39,7 @@ export const config: EnvironmentConfig = {
   // Solana - MAINNET ONLY
   solanaCluster: 'solana:mainnet',
   solanaRpcUrl: process.env.EXPO_PUBLIC_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com',
-  gameEscrowProgramId: '4iUdAkPRmZLzUFXTLpt5QPGmUUtP6yfgpPpF3sLD9xtd',
+  gameEscrowProgramId: process.env.EXPO_PUBLIC_GAME_ESCROW_PROGRAM_ID || '4iUdAkPRmZLzUFXTLpt5QPGmUUtP6yfgpPpF3sLD9xtd',
 
   // Features
   smartContractsEnabled: true,

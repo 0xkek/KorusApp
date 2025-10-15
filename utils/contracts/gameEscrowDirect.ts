@@ -5,8 +5,10 @@ import { config } from '../../config/environment';
 import { logger } from '../logger';
 import { Platform } from 'react-native';
 
-// Program ID - Deployed to Solana Mainnet
-export const GAME_ESCROW_PROGRAM_ID = new PublicKey('4iUdAkPRmZLzUFXTLpt5QPGmUUtP6yfgpPpF3sLD9xtd');
+// Program ID - Load from environment variables for flexibility across deployments
+export const GAME_ESCROW_PROGRAM_ID = new PublicKey(
+  config.gameEscrowProgramId || '4iUdAkPRmZLzUFXTLpt5QPGmUUtP6yfgpPpF3sLD9xtd'
+);
 
 // Constants matching the contract
 const MINIMUM_WAGER = 0.01 * LAMPORTS_PER_SOL; // 0.01 SOL
