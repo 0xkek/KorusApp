@@ -2,4 +2,7 @@ node_modules
 # Keep environment variables out of version control
 .env
 
+# Keep authority keypair out of version control (contains private key)
+authority-keypair.json
+
 /src/generated/prisma
