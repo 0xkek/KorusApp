@@ -193,6 +193,7 @@ model Game {
   winner      String?  @db.VarChar(44)
   status      String   @db.VarChar(20)
   onChainGameId BigInt? // Blockchain game ID (u64)
+  expiresAt   DateTime? // When the waiting game expires (2 hours)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   player1User User     @relation("Player1Games", fields: [player1], references: [walletAddress])
@@ -205,6 +206,7 @@ model Game {
   @@index([player1, status])
   @@index([player2, status])
   @@index([gameType, status])
+  @@index([status, expiresAt])
   @@map("games")
 }
 
