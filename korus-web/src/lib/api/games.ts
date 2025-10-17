@@ -34,6 +34,7 @@ export interface Game {
   createdAt: string;
   updatedAt: string;
   onChainGameId: string | null;
+  expiresAt: string | null; // ISO date string
   escrow?: GameEscrow;
 }
 
@@ -110,7 +111,7 @@ export const gamesAPI = {
   /**
    * Delete/cancel a game
    */
-  async deleteGame(gameId: number, token: string): Promise<{ success: boolean }> {
+  async deleteGame(gameId: string, token: string): Promise<{ success: boolean }> {
     return api.delete<{ success: boolean }>(`/api/games/${gameId}`, token);
   },
 };

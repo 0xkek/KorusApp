@@ -5,12 +5,32 @@ import { useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { notificationsAPI, type Notification as APINotification } from '@/lib/api';
-import { MOCK_RECENT_ACTIVITIES } from '@/data/mockData';
+import * as eventsAPI from '@/lib/api/events';
+import * as gamesAPI from '@/lib/api/games';
 
 interface RightSidebarProps {
   showNotifications?: boolean;
   onNotificationsClose?: () => void;
   onNotificationCountChange?: (count: number) => void;
+}
+
+interface RecentActivity {
+  id: string;
+  type: 'event' | 'game';
+  title: string;
+  category?: string;
+  project?: string;
+  participants?: number;
+  maxParticipants?: number | null;
+  players?: string;
+  wager?: string;
+  time?: string;
+  timeLeft?: string;
+  isLive?: boolean;
+  chain?: string;
+  price?: string;
+  premiumOnly?: boolean;
+  timestamp: number;
 }
 
 export default function RightSidebar({ showNotifications = false, onNotificationCountChange }: RightSidebarProps) {
@@ -19,7 +39,13 @@ export default function RightSidebar({ showNotifications = false, onNotification
   const { token, isAuthenticated } = useWalletAuth();
   const [notifications, setNotifications] = useState<APINotification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const recentActivities = MOCK_RECENT_ACTIVITIES;
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+  const [isLoadingActivities, setIsLoadingActivities] = useState(true);
+
+  // Fetch recent activities (events and games)
+  useEffect(() => {
+    fetchRecentActivities();
+  }, []);
 
   // Fetch notifications when connected and authenticated
   useEffect(() => {
@@ -27,6 +53,94 @@ export default function RightSidebar({ showNotifications = false, onNotification
       fetchNotifications();
     }
   }, [connected, isAuthenticated, token]);
+
+  const fetchRecentActivities = async () => {
+    setIsLoadingActivities(true);
+    try {
+      // Fetch active events
+      const eventsResponse = await eventsAPI.getEvents({ status: 'active' });
+      const events = eventsResponse.events || [];
+
+      // Fetch active games
+      const gamesResponse = await gamesAPI.gamesAPI.getAllGames('waiting');
+      const games = gamesResponse.games || [];
+
+      // Transform events to activity format with timestamp
+      const eventActivities = events.map(event => {
+        const startTime = new Date(event.startDate);
+        const now = new Date();
+        const isLive = startTime <= now;
+        const diff = startTime.getTime() - now.getTime();
+
+        let timeString = '';
+        if (diff > 0) {
+          const hours = Math.floor(diff / (1000 * 60 * 60));
+          const days = Math.floor(hours / 24);
+          if (days > 0) timeString = `${days}d`;
+          else if (hours > 0) timeString = `${hours}h`;
+          else timeString = `${Math.floor(diff / (1000 * 60))}m`;
+        }
+
+        return {
+          id: `event-${event.id}`,
+          type: 'event' as const,
+          title: event.title,
+          category: event.type,
+          project: event.projectName,
+          participants: event.registrationCount || 0,
+          maxParticipants: event.maxSpots,
+          time: timeString,
+          isLive,
+          chain: 'Solana',
+          premiumOnly: false,
+          timestamp: new Date(event.createdAt).getTime()
+        };
+      });
+
+      // Transform games to activity format with timestamp
+      const gameActivities = games.map(game => {
+        let gameTitle = 'Game';
+        const gameType = game.gameType?.toLowerCase();
+
+        if (gameType === 'tic-tac-toe' || gameType === 'tictactoe') {
+          gameTitle = 'Tic Tac Toe';
+        } else if (gameType === 'rps' || gameType === 'rock-paper-scissors') {
+          gameTitle = 'Rock Paper Scissors';
+        } else if (gameType === 'connect-four' || gameType === 'connectfour') {
+          gameTitle = 'Connect Four';
+        } else if (gameType === 'coin-flip' || gameType === 'coinflip') {
+          gameTitle = 'Coin Flip';
+        } else if (game.gameType) {
+          // Use the raw gameType if it exists, formatted nicely
+          gameTitle = game.gameType.split('-').map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1)
+          ).join(' ');
+        }
+
+        return {
+          id: `game-${game.id}`,
+          type: 'game' as const,
+          title: gameTitle,
+          players: `${game.currentPlayers || 1}/2`,
+          wager: `${game.wager} SOL`,
+          timeLeft: '30m',
+          isLive: game.status === 'waiting',
+          timestamp: new Date(game.createdAt).getTime()
+        };
+      });
+
+      // Combine and sort by timestamp (most recent first), then limit to 8
+      const combined = [...eventActivities, ...gameActivities]
+        .sort((a, b) => b.timestamp - a.timestamp)
+        .slice(0, 8);
+
+      setRecentActivities(combined);
+    } catch (error) {
+      console.error('Failed to fetch recent activities:', error);
+    } finally {
+      setIsLoadingActivities(false);
+    }
+  };
 
   const fetchNotifications = async () => {
     if (!token) return;
@@ -280,24 +394,83 @@ export default function RightSidebar({ showNotifications = false, onNotification
         <div className="mb-6 p-4">
           <h2 className="text-2xl font-bold text-korus-text mb-4">Recent Activity</h2>
         <div>
-          {recentActivities.map((activity) => (
-            <div key={activity.id} className="border-b border-korus-borderLight bg-korus-surface/20 backdrop-blur-sm mx-[-1rem] px-4 py-4 hover:bg-korus-surface/40 hover:border-korus-border transition-all duration-200 cursor-pointer group">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">
+          {isLoadingActivities ? (
+            <div className="text-center py-8 text-korus-textSecondary">
+              <div className="w-8 h-8 border-4 border-korus-primary/20 border-t-korus-primary rounded-full animate-spin mx-auto mb-3"></div>
+              <p className="text-sm">Loading activities...</p>
+            </div>
+          ) : recentActivities.length === 0 ? (
+            <div className="text-center py-8 text-korus-textSecondary">
+              <div className="text-4xl mb-2">📊</div>
+              <p className="text-sm">No recent activities</p>
+            </div>
+          ) : (
+            recentActivities.map((activity) => (
+            <div
+              key={activity.id}
+              onClick={() => {
+                if (activity.type === 'event') {
+                  const eventId = activity.id.replace('event-', '');
+                  router.push(`/events/${eventId}`);
+                } else {
+                  const gameId = activity.id.replace('game-', '');
+                  router.push(`/games/${gameId}`);
+                }
+              }}
+              className="border-b border-korus-borderLight bg-korus-surface/20 backdrop-blur-sm mx-[-1rem] px-4 py-4 hover:bg-korus-surface/40 hover:border-korus-border transition-all duration-200 cursor-pointer group"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-start gap-2 flex-1">
+                  <span className="text-lg mt-0.5">
                     {activity.type === 'game' ? getGameIcon(activity.title) : getEventTypeIcon(activity.category || 'Other')}
                   </span>
-                  <div className="text-korus-text font-semibold">{activity.title}</div>
-                  {activity.type === 'event' && activity.premiumOnly && (
-                    <span className="text-xs bg-gradient-to-r from-korus-primary to-korus-secondary text-black px-2 py-0.5 rounded-full font-bold">
-                      PREMIUM
-                    </span>
-                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      {/* Event/Game Tag */}
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded font-bold ${
+                          activity.type === 'game'
+                            ? 'bg-korus-primary/20 text-korus-primary border border-korus-primary/40'
+                            : 'bg-korus-secondary/20 text-korus-secondary border border-korus-secondary/40'
+                        }`}
+                        style={activity.type === 'event' ? {
+                          color: 'var(--color-korus-secondary)',
+                          WebkitTextFillColor: 'var(--color-korus-secondary)'
+                        } : undefined}
+                      >
+                        {activity.type === 'game' ? 'GAME' : 'EVENT'}
+                      </span>
+                      {activity.type === 'event' && activity.premiumOnly && (
+                        <span className="text-xs bg-gradient-to-r from-korus-primary to-korus-secondary text-black px-2 py-0.5 rounded-full font-bold">
+                          PREMIUM
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-korus-text font-semibold text-sm leading-tight">
+                      <span
+                        className={activity.type === 'game' ? 'text-korus-primary' : 'text-korus-secondary'}
+                        style={{
+                          color: activity.type === 'game' ? 'var(--color-korus-primary)' : 'var(--color-korus-secondary)',
+                          WebkitTextFillColor: activity.type === 'game' ? 'var(--color-korus-primary)' : 'var(--color-korus-secondary)'
+                        }}
+                      >
+                        {activity.title}
+                      </span>
+                    </div>
+                  </div>
                 </div>
                 {activity.type === 'game' ? (
-                  <div className="text-korus-primary text-sm font-medium">{activity.wager}</div>
+                  <div
+                    className="text-korus-primary text-sm font-bold ml-2 flex-shrink-0"
+                    style={{
+                      color: 'var(--color-korus-primary)',
+                      WebkitTextFillColor: 'var(--color-korus-primary)'
+                    }}
+                  >
+                    {activity.wager}
+                  </div>
                 ) : (
-                  <div className={`text-xs px-2 py-1 rounded-full font-medium ${getEventTypeColor(activity.category || 'Other')} bg-opacity-20`} style={{backgroundColor: `${getEventTypeColor(activity.category || 'Other').replace('text-', '')}20`}}>
+                  <div className={`text-xs px-2 py-1 rounded-full font-medium ml-2 flex-shrink-0 ${getEventTypeColor(activity.category || 'Other')} bg-opacity-20`} style={{backgroundColor: `${getEventTypeColor(activity.category || 'Other').replace('text-', '')}20`}}>
                     {(activity.category || 'Other').replace('_', ' ').toUpperCase()}
                   </div>
                 )}
@@ -310,19 +483,52 @@ export default function RightSidebar({ showNotifications = false, onNotification
               <div className="flex items-center justify-between text-sm mb-3">
                 {activity.type === 'game' ? (
                   <>
-                    <div className="text-korus-textSecondary">Players: {activity.players}</div>
-                    <div className="text-orange-400">{activity.timeLeft} left</div>
+                    <div className="text-korus-textSecondary">
+                      Players: <span
+                        className="text-korus-primary font-medium"
+                        style={{
+                          color: 'var(--color-korus-primary)',
+                          WebkitTextFillColor: 'var(--color-korus-primary)'
+                        }}
+                      >
+                        {activity.players}
+                      </span>
+                    </div>
+                    <div
+                      className="text-korus-secondary font-medium"
+                      style={{
+                        color: 'var(--color-korus-secondary)',
+                        WebkitTextFillColor: 'var(--color-korus-secondary)'
+                      }}
+                    >
+                      {activity.timeLeft} left
+                    </div>
                   </>
                 ) : (
                   <>
                     <div className="text-korus-textSecondary">
-                      {activity.maxParticipants
-                        ? `${activity.participants}/${activity.maxParticipants} participants`
-                        : `${activity.participants} participants`
-                      }
+                      <span
+                        className="text-korus-secondary font-medium"
+                        style={{
+                          color: 'var(--color-korus-secondary)',
+                          WebkitTextFillColor: 'var(--color-korus-secondary)'
+                        }}
+                      >
+                        {activity.maxParticipants
+                          ? `${activity.participants}/${activity.maxParticipants}`
+                          : `${activity.participants}`
+                        }
+                      </span>
+                      {' participants'}
                     </div>
-                    <div className={activity.isLive ? "text-red-400 font-medium" : "text-orange-400"}>
-                      {activity.isLive ? 'Live Now' : `in ${activity.time}`}
+                    <div
+                      className={activity.isLive ? "text-korus-primary font-bold" : "text-korus-secondary font-medium"}
+                      style={{
+                        color: activity.isLive ? 'var(--color-korus-primary)' : 'var(--color-korus-secondary)',
+                        WebkitTextFillColor: activity.isLive ? 'var(--color-korus-primary)' : 'var(--color-korus-secondary)'
+                      }}
+                    >
+                      {activity.isLive ? '🔴 Live Now' : `in ${activity.time}`}
                     </div>
                   </>
                 )}
@@ -334,25 +540,30 @@ export default function RightSidebar({ showNotifications = false, onNotification
                 </div>
               )}
 
-              <button className={`w-full text-sm font-bold py-1.5 rounded-lg transition-colors ${
-                activity.type === 'game'
-                  ? 'bg-korus-primary text-black hover:bg-korus-secondary'
-                  : activity.isLive
-                    ? 'bg-red-600 text-white hover:bg-red-700'
-                    : 'bg-korus-surface/40 border border-korus-borderLight text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border'
-              }`}>
+              <button
+                className="w-full text-sm font-bold py-2 rounded-lg transition-all border-2 border-korus-primary text-korus-primary hover:bg-korus-primary/10"
+                style={{
+                  color: 'var(--color-korus-primary)',
+                  WebkitTextFillColor: 'var(--color-korus-primary)',
+                  borderColor: 'var(--color-korus-primary)'
+                }}
+              >
                 {activity.type === 'game'
                   ? 'Join Game'
                   : activity.isLive
-                    ? 'Participate Now'
-                    : 'Join Event'
+                    ? 'Join Now'
+                    : 'View Event'
                 }
               </button>
             </div>
-          ))}
+          ))
+          )}
         </div>
           <div className="px-4 pt-3">
-            <button className="text-korus-primary text-sm hover:underline">
+            <button
+              onClick={() => router.push('/events')}
+              className="text-korus-primary text-sm hover:underline"
+            >
               View all activity
             </button>
           </div>

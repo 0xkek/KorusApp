@@ -89,13 +89,14 @@ export const createGame = async (req: AuthRequest, res: Response) => {
 
     let actualPostId = postId;
 
-    // Create a dummy post for standalone games
+    // Create a dummy post for standalone games (hidden from feeds)
     if (!postId || postId === '0') {
       const dummyPost = await prisma.post.create({
         data: {
           content: `Standalone ${gameType} game`,
           authorWallet: player1,
           topic: 'games', // Games topic for standalone games
+          isHidden: true, // Mark as hidden to exclude from feeds
         }
       });
       actualPostId = dummyPost.id;
@@ -144,7 +145,9 @@ export const createGame = async (req: AuthRequest, res: Response) => {
         break
     }
 
-    // Create the game
+    // Create the game with 2-hour expiration
+    const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours from now
+
     const game = await prisma.game.create({
       data: {
         postId: actualPostId,
@@ -154,7 +157,8 @@ export const createGame = async (req: AuthRequest, res: Response) => {
         status: 'waiting',
         gameState: initialState as any,
         currentTurn: gameType === 'rps' ? undefined : player1,
-        onChainGameId: onChainGameId ? BigInt(onChainGameId) : null
+        onChainGameId: onChainGameId ? BigInt(onChainGameId) : null,
+        expiresAt
       },
       include: {
         post: {
@@ -170,7 +174,8 @@ export const createGame = async (req: AuthRequest, res: Response) => {
     const serializedGame = {
       ...game,
       onChainGameId: game.onChainGameId ? game.onChainGameId.toString() : null,
-      wager: game.wager.toString()
+      wager: game.wager.toString(),
+      expiresAt: game.expiresAt ? game.expiresAt.toISOString() : null
     }
 
     res.json({
@@ -498,7 +503,8 @@ export const getGame = async (req: Request, res: Response) => {
     const serializedGame = {
       ...game,
       onChainGameId: game.onChainGameId ? game.onChainGameId.toString() : null,
-      wager: game.wager.toString()
+      wager: game.wager.toString(),
+      expiresAt: game.expiresAt ? game.expiresAt.toISOString() : null
     }
 
     res.json({
@@ -533,7 +539,8 @@ export const getGameByPostId = async (req: Request, res: Response) => {
     const serializedGame = {
       ...game,
       onChainGameId: game.onChainGameId ? game.onChainGameId.toString() : null,
-      wager: game.wager.toString()
+      wager: game.wager.toString(),
+      expiresAt: game.expiresAt ? game.expiresAt.toISOString() : null
     }
 
     res.json({
@@ -786,7 +793,8 @@ export const getAllGames = async (req: Request, res: Response) => {
     const serializedGames = games.map(game => ({
       ...game,
       onChainGameId: game.onChainGameId ? game.onChainGameId.toString() : null,
-      wager: game.wager.toString()
+      wager: game.wager.toString(),
+      expiresAt: game.expiresAt ? game.expiresAt.toISOString() : null
     }))
 
     res.json({

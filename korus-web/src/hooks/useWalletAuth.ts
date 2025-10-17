@@ -23,20 +23,58 @@ let globalAuthInProgress = false;
 let lastAuthTime: number | null = null;
 const AUTH_COOLDOWN_MS = 5000; // Don't re-auth within 5 seconds
 
+// Generate unique instance ID for debugging
+let instanceCounter = 0;
+
+// Global auth state that persists across all hook instances
+let globalAuthState: AuthState = {
+  token: null,
+  isAuthenticated: false,
+  isAuthenticating: false,
+  error: null,
+};
+
+// Listeners for state changes
+type StateListener = (state: AuthState) => void;
+const stateListeners = new Set<StateListener>();
+
+function notifyStateChange(newState: AuthState) {
+  globalAuthState = newState;
+  stateListeners.forEach(listener => listener(newState));
+}
+
+function subscribeToStateChanges(listener: StateListener) {
+  stateListeners.add(listener);
+  return () => stateListeners.delete(listener);
+}
+
 export function useWalletAuth() {
   const { publicKey, signMessage, connected } = useWallet();
-  const [authState, setAuthState] = useState<AuthState>({
-    token: null,
-    isAuthenticated: false,
-    isAuthenticating: false,
-    error: null,
-  });
+  const [authState, setAuthState] = useState<AuthState>(globalAuthState);
   const authInProgressRef = useRef(false);
+  const instanceIdRef = useRef<number>(0);
+
+  // Initialize instance ID only once
+  if (instanceIdRef.current === 0) {
+    instanceIdRef.current = ++instanceCounter;
+  }
+
+  // Subscribe to global state changes
+  useEffect(() => {
+    const unsubscribe = subscribeToStateChanges((newState) => {
+      console.log(`📥 Instance #${instanceIdRef.current} received global state update:`, {
+        hasToken: !!newState.token,
+        isAuthenticated: newState.isAuthenticated,
+      });
+      setAuthState(newState);
+    });
+    return unsubscribe;
+  }, []);
 
   // Authenticate with backend when wallet connects
   const authenticate = useCallback(async () => {
     if (!publicKey || !signMessage || !connected) {
-      setAuthState(prev => ({ ...prev, isAuthenticated: false, token: null }));
+      notifyStateChange({ ...globalAuthState, isAuthenticated: false, token: null });
       return;
     }
 
@@ -54,14 +92,14 @@ export function useWalletAuth() {
 
     globalAuthInProgress = true;
     authInProgressRef.current = true;
-    setAuthState(prev => ({ ...prev, isAuthenticating: true, error: null }));
+    notifyStateChange({ ...globalAuthState, isAuthenticating: true, error: null });
 
     // Set a timeout to force reset if wallet signature takes too long
     const timeoutId = setTimeout(() => {
       console.log('⏱️ Authentication timeout - resetting state');
       globalAuthInProgress = false;
       authInProgressRef.current = false;
-      setAuthState({
+      notifyStateChange({
         token: null,
         isAuthenticated: false,
         isAuthenticating: false,
@@ -101,14 +139,17 @@ export function useWalletAuth() {
       // Record successful auth time
       lastAuthTime = Date.now();
 
-      setAuthState({
+      const newAuthState = {
         token: response.token,
         isAuthenticated: true,
         isAuthenticating: false,
         error: null,
-      });
+      };
+      console.log('🔄 Setting global auth state:', newAuthState);
+      notifyStateChange(newAuthState);
       globalAuthInProgress = false;
       authInProgressRef.current = false;
+      console.log('✅ Auth state updated and broadcasted to all instances');
     } catch (error) {
       // Clear timeout on error
       clearTimeout(timeoutId);
@@ -128,7 +169,7 @@ export function useWalletAuth() {
         console.log('🚫 User cancelled authentication');
       }
 
-      setAuthState({
+      notifyStateChange({
         token: null,
         isAuthenticated: false,
         isAuthenticating: false,
@@ -146,12 +187,12 @@ export function useWalletAuth() {
       if (storedToken) {
         // Token exists, mark as authenticated
         console.log('📦 Found stored auth token');
-        setAuthState(prev => ({
-          ...prev,
+        notifyStateChange({
+          ...globalAuthState,
           token: storedToken,
           isAuthenticated: true,
-        }));
-      } else if (!globalAuthInProgress && !authInProgressRef.current && !authState.isAuthenticating) {
+        });
+      } else if (!globalAuthInProgress && !authInProgressRef.current && !globalAuthState.isAuthenticating) {
         // No token exists, trigger authentication only once
         console.log('🔓 No stored token found, triggering authentication...');
         authenticate();
@@ -165,7 +206,7 @@ export function useWalletAuth() {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('authToken');
       }
-      setAuthState({
+      notifyStateChange({
         token: null,
         isAuthenticated: false,
         isAuthenticating: false,
@@ -178,13 +219,23 @@ export function useWalletAuth() {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('authToken');
     }
-    setAuthState({
+    notifyStateChange({
       token: null,
       isAuthenticated: false,
       isAuthenticating: false,
       error: null,
     });
   }, []);
+
+  // Log state changes
+  useEffect(() => {
+    console.log(`🔐 useWalletAuth instance #${instanceIdRef.current} state changed:`, {
+      hasToken: !!authState.token,
+      isAuthenticated: authState.isAuthenticated,
+      isAuthenticating: authState.isAuthenticating,
+      tokenLength: authState.token?.length || 0
+    });
+  }, [authState]);
 
   return {
     ...authState,

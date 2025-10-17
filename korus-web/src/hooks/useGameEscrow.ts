@@ -486,7 +486,7 @@ export function useGameEscrow() {
 
       // Create cancel_game instruction
       // SHA256("global:cancel_game")[:8]
-      const discriminator = Buffer.from([121, 194, 154, 118, 103, 235, 149, 52]);
+      const discriminator = Buffer.from([0x79, 0xc2, 0x9a, 0x76, 0x67, 0xeb, 0x95, 0x34]);
 
       const cancelGameIx = new TransactionInstruction({
         programId: GAME_ESCROW_PROGRAM_ID,
@@ -513,9 +513,44 @@ export function useGameEscrow() {
       // Simulate first to get better error messages
       try {
         const simulation = await connection.simulateTransaction(tx);
-        console.log('Cancel game simulation logs:', simulation.value.logs);
+        console.log('='.repeat(50));
+        console.log('CANCEL GAME SIMULATION:');
+        console.log('Logs:', simulation.value.logs);
+        console.log('Error:', simulation.value.err);
+        console.log('Units consumed:', simulation.value.unitsConsumed);
+        console.log('Accounts:', JSON.stringify({
+          statePda: statePda.toString(),
+          gamePda: gamePda.toString(),
+          playerStatePda: playerStatePda.toString(),
+          escrowPda: escrowPda.toString(),
+          player1: publicKey.toString(),
+        }, null, 2));
+        console.log('='.repeat(50));
         if (simulation.value.err) {
           console.error('Cancel simulation failed:', simulation.value);
+          console.error('Error details:', JSON.stringify(simulation.value.err, null, 2));
+
+          // Check account existence
+          const [gameAccountInfo, playerStateInfo, escrowInfo] = await Promise.all([
+            connection.getAccountInfo(gamePda),
+            connection.getAccountInfo(playerStatePda),
+            connection.getAccountInfo(escrowPda)
+          ]);
+
+          console.log('Account existence check:');
+          console.log('- Game account exists:', !!gameAccountInfo);
+          console.log('- Player state exists:', !!playerStateInfo);
+          console.log('- Escrow exists:', !!escrowInfo);
+
+          if (gameAccountInfo) {
+            console.log('- Game account owner:', gameAccountInfo.owner.toString());
+            console.log('- Game account data length:', gameAccountInfo.data.length);
+          }
+          if (playerStateInfo) {
+            console.log('- Player state owner:', playerStateInfo.owner.toString());
+            console.log('- Player state data length:', playerStateInfo.data.length);
+          }
+
           throw new Error(`Cancel simulation failed: ${JSON.stringify(simulation.value.err)}`);
         }
       } catch (simError: any) {
