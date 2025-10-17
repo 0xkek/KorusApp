@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import "./globals.css";
 import { WalletContextProvider } from "@/components/WalletProvider";
+import { WalletAuthProvider } from "@/contexts/WalletAuthContext";
 import { ParticleSystem } from "@/components/ParticleSystem";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastProvider } from "@/components/ToastProvider";
@@ -50,10 +51,12 @@ export default function RootLayout({
         <ErrorBoundary>
           <ThemeProvider>
             <WalletContextProvider>
-              <ToastProvider>
-                {children}
-                <ParticleSystem />
-              </ToastProvider>
+              <WalletAuthProvider>
+                <ToastProvider>
+                  {children}
+                  <ParticleSystem />
+                </ToastProvider>
+              </WalletAuthProvider>
             </WalletContextProvider>
           </ThemeProvider>
         </ErrorBoundary>

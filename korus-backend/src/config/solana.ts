@@ -8,8 +8,8 @@ import { logger } from '../utils/logger';
 export const GAME_ESCROW_PROGRAM_ID = new PublicKey('4iUdAkPRmZLzUFXTLpt5QPGmUUtP6yfgpPpF3sLD9xtd');
 export const TREASURY_WALLET = new PublicKey('ByqqYGErKfyLHHd3NjgMnbbxQdPs1kFrPVWPUHUsD31W');
 
-// RPC Configuration
-export const RPC_URL = process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
+// RPC Configuration - Games are on devnet for testing
+export const RPC_URL = process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com';
 export const connection = new Connection(RPC_URL, 'confirmed');
 
 // Authority keypair for completing games

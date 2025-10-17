@@ -3,6 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useState, useEffect } from 'react';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
+import * as eventsAPI from '@/lib/api/events';
 
 interface TabItem {
   name: string;
@@ -11,6 +14,7 @@ interface TabItem {
   badge?: number;
   onClick?: () => void;
   disabled?: boolean;
+  hidden?: boolean;
 }
 
 interface LeftSidebarProps {
@@ -23,6 +27,27 @@ interface LeftSidebarProps {
 export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, onSearchClick, notificationCount = 0 }: LeftSidebarProps) {
   const pathname = usePathname();
   const { connected, publicKey } = useWallet();
+  const { token, isAuthenticated } = useWalletAuth();
+  const [hasCreatedEvents, setHasCreatedEvents] = useState(false);
+
+  // Check if user has created events
+  useEffect(() => {
+    const checkUserEvents = async () => {
+      if (connected && isAuthenticated && token) {
+        try {
+          const result = await eventsAPI.getMyEvents(token);
+          setHasCreatedEvents(result.events && result.events.length > 0);
+        } catch (error) {
+          console.error('Failed to check user events:', error);
+          setHasCreatedEvents(false);
+        }
+      } else {
+        setHasCreatedEvents(false);
+      }
+    };
+
+    checkUserEvents();
+  }, [connected, isAuthenticated, token, pathname]); // Re-check when pathname changes (e.g., after creating event)
 
   const tabs: TabItem[] = [
     {
@@ -31,6 +56,15 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
       icon: (
         <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12 2.1L1 12h3v9h6v-6h4v6h6v-9h3L12 2.1z"/>
+        </svg>
+      ),
+    },
+    {
+      name: 'Events',
+      path: '/events',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       ),
     },
@@ -73,6 +107,26 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
       ),
     },
     {
+      name: 'Submit Event',
+      path: '/events/create',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'My Events',
+      path: '/events/manage',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+      ),
+      hidden: !hasCreatedEvents, // Only show if user has created events
+    },
+    {
       name: 'Profile',
       path: '/profile',
       icon: (
@@ -107,7 +161,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
 
       {/* Navigation Items */}
       <div className="flex flex-col gap-2 flex-1">
-        {tabs.map((tab) => {
+        {tabs.filter(tab => !tab.hidden).map((tab) => {
           const isActive = pathname === tab.path && !tab.disabled;
           const isDisabled = tab.disabled;
           const className = `flex items-center gap-4 px-3 py-3 rounded-full transition-all duration-200 relative group ${

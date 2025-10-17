@@ -126,9 +126,9 @@ export const getPosts = async (req: Request, res: Response) => {
   try {
     const { cursor, limit, maxId, sinceId } = req.query
 
-    // First, get active shoutouts (not expired)
+    // First, get active shoutout (only one at a time - the oldest one by creation)
     const now = new Date()
-    const activeShoutouts = await prisma.post.findMany({
+    const activeShoutout = await prisma.post.findFirst({
       where: {
         isHidden: false,
         isShoutout: true,
@@ -150,11 +150,37 @@ export const getPosts = async (req: Request, res: Response) => {
         }
       },
       orderBy: {
-        shoutoutExpiresAt: 'desc' // Most recently expiring first
+        createdAt: 'asc' // Oldest first (FIFO queue)
       }
     })
 
-    // Then get regular posts using cursor pagination (excluding ALL shoutout posts)
+    // Convert to array for consistency with existing code
+    const activeShoutouts = activeShoutout ? [activeShoutout] : []
+
+    // Get queued shoutouts (all other non-expired shoutouts that aren't currently active)
+    const queuedShoutouts = await prisma.post.findMany({
+      where: {
+        isHidden: false,
+        isShoutout: true,
+        shoutoutExpiresAt: {
+          gt: now
+        },
+        // Exclude the active shoutout from the queue
+        ...(activeShoutout ? { id: { not: activeShoutout.id } } : {})
+      },
+      select: {
+        id: true,
+        content: true,
+        shoutoutDuration: true,
+        createdAt: true,
+        shoutoutExpiresAt: true
+      },
+      orderBy: {
+        createdAt: 'asc' // FIFO order
+      }
+    })
+
+    // Then get regular posts using cursor pagination (excluding ALL shoutout posts and game dummy posts)
     const result = await CursorPagination.paginateQuery<any>(
       prisma.post,
       {
@@ -164,9 +190,10 @@ export const getPosts = async (req: Request, res: Response) => {
         sinceId: sinceId as string
       },
       {
-        where: { 
+        where: {
           isHidden: false,
-          isShoutout: false // Only show non-shoutout posts in regular feed
+          isShoutout: false, // Only show non-shoutout posts in regular feed
+          game: null // Exclude posts that are linked to games
         },
         include: {
           author: {
@@ -220,6 +247,21 @@ export const getPosts = async (req: Request, res: Response) => {
         limit: result.meta.resultCount,
         cursor: result.meta.nextCursor,
         hasMore: result.meta.hasMore
+      },
+      shoutoutQueue: {
+        active: activeShoutout ? {
+          id: activeShoutout.id,
+          duration: activeShoutout.shoutoutDuration,
+          expiresAt: activeShoutout.shoutoutExpiresAt,
+          content: activeShoutout.content
+        } : null,
+        queued: queuedShoutouts.map(s => ({
+          id: s.id,
+          duration: s.shoutoutDuration,
+          expiresAt: s.shoutoutExpiresAt,
+          content: s.content?.substring(0, 50) || '' // First 50 chars for preview
+        })),
+        queueLength: queuedShoutouts.length
       }
     })
   } catch (error: any) {

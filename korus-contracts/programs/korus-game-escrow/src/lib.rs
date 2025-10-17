@@ -229,6 +229,59 @@ pub mod korus_game_escrow {
         Ok(())
     }
 
+    pub fn authority_cancel_expired_game(ctx: Context<AuthorityCancelExpiredGame>) -> Result<()> {
+        let game = &mut ctx.accounts.game;
+        let state = &mut ctx.accounts.state;
+
+        // SECURITY: Only the backend authority can cancel expired games
+        require!(
+            ctx.accounts.authority.key() == state.authority,
+            ErrorCode::UnauthorizedCaller
+        );
+
+        // Only cancel games that are waiting for player2
+        require!(game.status == 0, ErrorCode::GameNotWaiting);
+
+        game.status = 3; // Cancelled
+
+        // Refund player1
+        let game_key = game.key();
+        let seeds = &[
+            b"escrow",
+            game_key.as_ref(),
+            &[ctx.bumps.escrow],
+        ];
+        let signer_seeds = &[&seeds[..]];
+
+        let refund_ix = system_instruction::transfer(
+            &ctx.accounts.escrow.key(),
+            &ctx.accounts.player1.key(),
+            game.player1_deposited,
+        );
+        anchor_lang::solana_program::program::invoke_signed(
+            &refund_ix,
+            &[
+                ctx.accounts.escrow.to_account_info(),
+                ctx.accounts.player1.to_account_info(),
+            ],
+            signer_seeds,
+        )?;
+
+        // Clear player state game tracking
+        let player_state = &mut ctx.accounts.player_state;
+        player_state.current_game_id = None;
+
+        // Update global state
+        state.active_games = state.active_games.saturating_sub(1);
+
+        emit!(GameCancelled {
+            game_id: game.game_id,
+            refund_amount: game.player1_deposited,
+        });
+
+        Ok(())
+    }
+
     pub fn complete_game(ctx: Context<CompleteGame>, winner: Option<Pubkey>) -> Result<()> {
         let game = &mut ctx.accounts.game;
         let state = &mut ctx.accounts.state;
@@ -642,7 +695,7 @@ pub struct CancelGame<'info> {
     pub game: Account<'info, Game>,
     #[account(
         mut,
-        seeds = [b"player", player1.key().as_ref()],
+        seeds = [b"player_game_state", player1.key().as_ref(), game.game_id.to_le_bytes().as_ref()],
         bump
     )]
     pub player_state: Account<'info, PlayerState>,
@@ -655,6 +708,33 @@ pub struct CancelGame<'info> {
     pub escrow: AccountInfo<'info>,
     #[account(mut)]
     pub player1: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct AuthorityCancelExpiredGame<'info> {
+    #[account(mut)]
+    pub state: Account<'info, State>,
+    #[account(mut)]
+    pub game: Account<'info, Game>,
+    #[account(
+        mut,
+        seeds = [b"player_game_state", game.player1.as_ref(), game.game_id.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub player_state: Account<'info, PlayerState>,
+    /// CHECK: Escrow PDA that holds SOL
+    #[account(
+        mut,
+        seeds = [b"escrow", game.key().as_ref()],
+        bump
+    )]
+    pub escrow: AccountInfo<'info>,
+    /// CHECK: Player 1 account (doesn't need to sign for authority cancellation)
+    #[account(mut)]
+    pub player1: AccountInfo<'info>,
+    pub authority: Signer<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]

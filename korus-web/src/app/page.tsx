@@ -1038,7 +1038,7 @@ export default function Home() {
                         width={600}
                         height={400}
                         className="w-full h-auto object-cover"
-                        style={{ maxHeight: '500px' }}
+                        style={{ maxHeight: '400px' }}
                         onError={(e) => {
                           // Hide broken image on error
                           e.currentTarget.style.display = 'none';

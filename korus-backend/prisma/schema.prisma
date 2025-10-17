@@ -386,9 +386,89 @@ model GameEscrow {
   payoutTxSig     String?  @db.VarChar(200) // Payout transaction
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   game            Game     @relation(fields: [gameId], references: [id])
-  
+
   @@index([status])
   @@map("game_escrows")
+}
+
+model Event {
+  id                String                  @id @default(cuid())
+  type              String                  @db.VarChar(20) // "whitelist", "airdrop", "mint", "beta"
+  projectName       String                  @db.VarChar(100)
+  title             String                  @db.VarChar(200)
+  description       String                  @db.Text
+  imageUrl          String?                 @db.VarChar(500)
+  externalLink      String                  @db.VarChar(500) // Project website/Discord
+
+  // Whitelist Configuration
+  maxSpots          Int?                    // null = unlimited
+  startDate         DateTime
+  endDate           DateTime
+  selectionMethod   String                  @db.VarChar(20) // "fcfs", "lottery", "weighted_lottery"
+
+  // Requirements (stored as JSON array)
+  requirements      Json?                   // ["Hold 1+ SOL", "Active Korus user"]
+  minReputation     Int?
+  minAccountAge     Int?                    // days
+
+  // Creator Info
+  creatorWallet     String                  @db.VarChar(44)
+  verified          Boolean                 @default(false) // Verified by Korus team
+  featured          Boolean                 @default(false) // Paid promotion
+
+  // Stats
+  registrationCount Int                     @default(0)
+  viewCount         Int                     @default(0)
+
+  // Status
+  status            String                  @default("active") @db.VarChar(20) // "active", "closed", "cancelled"
+
+  // Timestamps
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  // Relations
+  registrations     WhitelistRegistration[]
+
+  @@index([type, status, startDate])
+  @@index([creatorWallet, createdAt(sort: Desc)])
+  @@index([status, endDate])
+  @@index([featured, status, startDate])
+  @@map("events")
+}
+
+model WhitelistRegistration {
+  id                String   @id @default(cuid())
+  eventId           String
+  walletAddress     String   @db.VarChar(44)
+
+  // Proof of ownership
+  signature         String   @db.Text // Wallet signature
+  signedMessage     String   @db.Text // Message that was signed
+
+  // User info at time of registration
+  reputationScore   Int
+  accountAge        Int      // days
+
+  // Status
+  status            String   @default("registered") @db.VarChar(20) // "registered", "waitlist", "selected", "rejected"
+  position          Int?     // Queue position (for FCFS)
+  selectedAt        DateTime? // If selected via lottery
+
+  // Optional metadata (stored as JSON)
+  metadata          Json?    // { twitter, discord, email }
+
+  // Timestamps
+  registeredAt      DateTime @default(now())
+
+  // Relations
+  event             Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, walletAddress])
+  @@index([eventId, status, registeredAt])
+  @@index([walletAddress, registeredAt(sort: Desc)])
+  @@index([eventId, position])
+  @@map("whitelist_registrations")
 }

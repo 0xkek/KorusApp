@@ -9,6 +9,7 @@ import { apiLimiter } from './middleware/rateLimiter'
 // import { scheduleWeeklyDistribution } from './jobs/weeklyDistribution' // Temporarily disabled
 import { startShoutoutCleanupJob } from './jobs/cleanupShoutouts'
 import { startSubscriptionExpirationJob } from './jobs/subscriptionExpiration'
+import { gameExpirationService } from './services/gameExpirationService'
 import { validateEnv } from './config/validateEnv'
 import { sanitizeBody } from './middleware/sanitization'
 import { securityHeaders, requestIdMiddleware, validateCSRFToken } from './middleware/security'
@@ -36,6 +37,7 @@ import healthRoutes from './routes/health'
 import userRoutes from './routes/user'
 import subscriptionRoutes from './routes/subscription'
 import uploadRoutes from './routes/upload'
+import eventsRoutes from './routes/events'
 
 dotenv.config()
 
@@ -147,6 +149,7 @@ app.use('/api/nfts', nftsRoutes)
 app.use('/api/user', userRoutes)
 app.use('/api/subscription', subscriptionRoutes)
 app.use('/api/upload', uploadRoutes)
+app.use('/api/events', eventsRoutes)
 
 // Debug endpoints removed for production security
 
@@ -201,4 +204,8 @@ app.listen(PORT, () => {
   // Start subscription expiration job
   startSubscriptionExpirationJob()
   logger.info(`\n💳 Subscription expiration check started (runs every hour)`)
+
+  // Start game expiration check
+  gameExpirationService.startPeriodicCheck()
+  logger.info(`\n⏱️  Game expiration check started (runs every minute)`)
 })

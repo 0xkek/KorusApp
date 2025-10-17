@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -9,6 +9,7 @@ import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import PremiumUpgradeModal from '@/components/PremiumUpgradeModal';
 import { useToast } from '@/hooks/useToast';
+import * as eventsAPI from '@/lib/api/events';
 
 // Dynamically import modals
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
@@ -19,25 +20,21 @@ interface Event {
   id: string;
   type: 'whitelist' | 'token_launch' | 'nft_mint' | 'airdrop' | 'ido';
   title: string;
-  project: string;
+  projectName: string;
   description: string;
-  startTime: Date;
-  endTime?: Date;
+  startDate: string;
+  endDate: string;
   imageUrl?: string;
   requirements?: string[];
-  allocation?: string;
-  price?: string;
-  chain: 'Solana' | 'Ethereum' | 'Polygon';
-  isLive?: boolean;
-  participants?: number;
-  maxParticipants?: number;
-  premiumOnly?: boolean;
+  maxSpots?: number;
+  registrationCount: number;
+  status: 'active' | 'closed' | 'cancelled';
 }
 
 export default function EventsPage() {
   const { connected } = useWallet();
   const router = useRouter();
-  const { showSuccess } = useToast();
+  const { showSuccess, showError } = useToast();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
@@ -46,81 +43,45 @@ export default function EventsPage() {
   const [showEventModal, setShowEventModal] = useState(false);
   const [isParticipating, setIsParticipating] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Mock premium status - you can connect this to your actual premium logic
   const isPremium = false;
 
-  // Mock events data
-  const allEvents: Event[] = [
-    {
-      id: '1',
-      type: 'whitelist',
-      title: 'DeFi Protocol Whitelist',
-      project: 'SolanaSwap',
-      description: 'Get early access to the next-gen AMM on Solana. Limited spots available.',
-      startTime: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours from now
-      imageUrl: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&q=80',
-      requirements: ['Hold 1+ SOL', 'Complete KYC', 'Active Korus user'],
-      allocation: '500 USDC',
-      chain: 'Solana',
-      participants: 234,
-      maxParticipants: 500,
-      premiumOnly: true,
-    },
-    {
-      id: '2',
-      type: 'nft_mint',
-      title: 'Cyber Punks NFT Mint',
-      project: 'CyberPunks',
-      description: 'Exclusive NFT collection with utility in the Korus ecosystem.',
-      startTime: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
-      imageUrl: 'https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?w=400&q=80',
-      price: '2 SOL',
-      chain: 'Solana',
-      maxParticipants: 1000,
-      participants: 567,
-    },
-    {
-      id: '3',
-      type: 'token_launch',
-      title: 'DEFI Token Public Sale',
-      project: 'DeFiDAO',
-      description: 'Governance token for the decentralized finance protocol.',
-      startTime: new Date(Date.now() + 48 * 60 * 60 * 1000), // 2 days
-      imageUrl: 'https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=400&q=80',
-      price: '0.10 USDC',
-      allocation: '1000 USDC',
-      chain: 'Solana',
-      isLive: false,
-    },
-    {
-      id: '4',
-      type: 'airdrop',
-      title: 'Loyalty Rewards Airdrop',
-      project: 'Korus',
-      description: 'Exclusive airdrop for active Korus community members.',
-      startTime: new Date(Date.now() - 2 * 60 * 60 * 1000), // Started 2 hours ago
-      endTime: new Date(Date.now() + 22 * 60 * 60 * 1000), // Ends in 22 hours
-      requirements: ['50+ posts', '100+ interactions', 'Connected wallet'],
-      chain: 'Solana',
-      isLive: true,
-      participants: 1234,
-    },
-  ];
+  // Fetch events on mount
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setIsLoading(true);
+        const result = await eventsAPI.getEvents({ status: 'active' });
+        setEvents(result.events);
+      } catch (error) {
+        console.error('Failed to fetch events:', error);
+        showError('Failed to load events');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [showError]);
 
   // Filter events based on premium status
   const currentTime = new Date();
   const premiumTimeAdvantage = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
 
-  const visibleEvents = allEvents.filter(event => {
+  const visibleEvents = events.filter(event => {
+    const eventStartTime = new Date(event.startDate);
+
     // Premium users see events 12 hours early (before start time)
     if (isPremium) {
-      const premiumVisibleTime = new Date(event.startTime.getTime() - premiumTimeAdvantage);
+      const premiumVisibleTime = new Date(eventStartTime.getTime() - premiumTimeAdvantage);
       return currentTime >= premiumVisibleTime;
     }
 
     // Basic users only see events at start time or after
-    return currentTime >= event.startTime;
+    return currentTime >= eventStartTime;
   });
 
   const getEventTypeIcon = (type: Event['type']) => {
@@ -157,9 +118,10 @@ export default function EventsPage() {
     }
   };
 
-  const formatTimeRemaining = (startTime: Date) => {
+  const formatTimeRemaining = (startDate: string) => {
     const now = new Date();
-    const diff = startTime.getTime() - now.getTime();
+    const start = new Date(startDate);
+    const diff = start.getTime() - now.getTime();
 
     if (diff < 0) return 'Live Now';
 
@@ -172,6 +134,13 @@ export default function EventsPage() {
     }
 
     return `${hours}h ${minutes}m`;
+  };
+
+  const isEventLive = (startDate: string, endDate: string) => {
+    const now = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return now >= start && now <= end;
   };
 
   const handleEventPress = (event: Event) => {
@@ -327,7 +296,12 @@ export default function EventsPage() {
 
               {/* Events Grid */}
               <div className="space-y-6">
-                {visibleEvents.length === 0 ? (
+                {isLoading ? (
+                  <div className="text-center py-20">
+                    <div className="w-16 h-16 mx-auto border-4 border-korus-primary/20 border-t-korus-primary rounded-full animate-spin mb-4"></div>
+                    <p className="text-korus-textSecondary">Loading events...</p>
+                  </div>
+                ) : visibleEvents.length === 0 ? (
                   <div className="text-center py-20">
                     <div className="text-6xl mb-4 opacity-60">📅</div>
                     <p className="text-korus-text text-lg font-medium">No events available</p>
@@ -336,13 +310,15 @@ export default function EventsPage() {
                     </p>
                   </div>
                 ) : (
-                  visibleEvents.map((event) => (
+                  visibleEvents.map((event) => {
+                    const eventIsLive = isEventLive(event.startDate, event.endDate);
+                    return (
                     <div
                       key={event.id}
                       onClick={() => handleEventPress(event)}
                       className="border border-korus-borderLight bg-korus-surface/20 hover:bg-korus-surface/40 hover:border-korus-border transition-all duration-200 cursor-pointer rounded-2xl overflow-hidden group"
                       style={{
-                        borderColor: event.isLive ? getEventTypeColor(event.type) : undefined
+                        borderColor: eventIsLive ? getEventTypeColor(event.type) : undefined
                       }}
                     >
                       <div className="flex gap-6 p-6">
@@ -376,53 +352,45 @@ export default function EventsPage() {
 
                             <div
                               className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
-                                event.isLive
+                                eventIsLive
                                   ? 'bg-red-500 text-white'
                                   : 'bg-korus-surface text-korus-textSecondary'
                               }`}
                             >
-                              {event.isLive ? '🔴' : '⏰'}
-                              {formatTimeRemaining(event.startTime)}
+                              {eventIsLive ? '🔴' : '⏰'}
+                              {formatTimeRemaining(event.startDate)}
                             </div>
                           </div>
 
                           <h3 className="text-xl font-bold force-theme-text mb-1">{event.title}</h3>
-                          <p className="text-korus-primary font-medium text-sm mb-2">{event.project}</p>
+                          <p className="text-korus-primary font-medium text-sm mb-2">{event.projectName}</p>
                           <p className="text-korus-textSecondary text-sm leading-relaxed mb-4 line-clamp-2">
                             {event.description}
                           </p>
 
                           {/* Event Details */}
                           <div className="flex items-center gap-6 text-xs text-korus-textTertiary">
-                            {event.price && (
-                              <div className="flex items-center gap-1">
-                                <span>💰</span>
-                                {event.price}
-                              </div>
-                            )}
-
-                            {event.allocation && (
-                              <div className="flex items-center gap-1">
-                                <span>💼</span>
-                                Max: {event.allocation}
-                              </div>
-                            )}
-
                             <div className="flex items-center gap-1">
                               <span>🔗</span>
-                              {event.chain}
+                              Solana
                             </div>
+                            {event.maxSpots && (
+                              <div className="flex items-center gap-1">
+                                <span>👥</span>
+                                Max: {event.maxSpots} spots
+                              </div>
+                            )}
                           </div>
 
                           {/* Participation Progress */}
-                          {event.participants !== undefined && event.maxParticipants && (
+                          {event.registrationCount !== undefined && event.maxSpots && (
                             <div className="mt-4">
                               <div className="flex justify-between items-center mb-2">
                                 <span className="text-xs text-korus-textSecondary">
-                                  {event.participants}/{event.maxParticipants} participants
+                                  {event.registrationCount}/{event.maxSpots} participants
                                 </span>
                                 <span className="text-xs font-medium" style={{ color: getEventTypeColor(event.type) }}>
-                                  {Math.round((event.participants / event.maxParticipants) * 100)}%
+                                  {Math.round((event.registrationCount / event.maxSpots) * 100)}%
                                 </span>
                               </div>
                               <div className="w-full bg-korus-borderLight rounded-full h-2">
@@ -430,7 +398,7 @@ export default function EventsPage() {
                                   className="h-2 rounded-full transition-all"
                                   style={{
                                     backgroundColor: getEventTypeColor(event.type),
-                                    width: `${(event.participants / event.maxParticipants) * 100}%`
+                                    width: `${(event.registrationCount / event.maxSpots) * 100}%`
                                   }}
                                 />
                               </div>
@@ -439,7 +407,8 @@ export default function EventsPage() {
                         </div>
                       </div>
                     </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -510,7 +479,7 @@ export default function EventsPage() {
             {/* Event Info */}
             <div>
               <h2 className="text-3xl font-bold force-theme-text mb-2">{selectedEvent.title}</h2>
-              <p className="text-korus-primary font-medium text-lg mb-4">{selectedEvent.project}</p>
+              <p className="text-korus-primary font-medium text-lg mb-4">{selectedEvent.projectName}</p>
               <p className="text-korus-textSecondary leading-relaxed mb-6">
                 {selectedEvent.description}
               </p>
@@ -520,34 +489,26 @@ export default function EventsPage() {
                 <div className="bg-korus-surface/40 p-4 rounded-xl text-center">
                   <div className="text-korus-primary text-xl mb-1">⏰</div>
                   <div className="text-xs text-korus-textTertiary">Starts In</div>
-                  <div className="font-bold force-theme-text">{formatTimeRemaining(selectedEvent.startTime)}</div>
+                  <div className="font-bold force-theme-text">{formatTimeRemaining(selectedEvent.startDate)}</div>
                 </div>
 
-                {selectedEvent.price && (
+                {selectedEvent.maxSpots && (
                   <div className="bg-korus-surface/40 p-4 rounded-xl text-center">
-                    <div className="text-korus-primary text-xl mb-1">💰</div>
-                    <div className="text-xs text-korus-textTertiary">Price</div>
-                    <div className="font-bold force-theme-text">{selectedEvent.price}</div>
-                  </div>
-                )}
-
-                {selectedEvent.allocation && (
-                  <div className="bg-korus-surface/40 p-4 rounded-xl text-center">
-                    <div className="text-korus-primary text-xl mb-1">💼</div>
-                    <div className="text-xs text-korus-textTertiary">Max Allocation</div>
-                    <div className="font-bold force-theme-text">{selectedEvent.allocation}</div>
+                    <div className="text-korus-primary text-xl mb-1">👥</div>
+                    <div className="text-xs text-korus-textTertiary">Max Spots</div>
+                    <div className="font-bold force-theme-text">{selectedEvent.maxSpots}</div>
                   </div>
                 )}
 
                 <div className="bg-korus-surface/40 p-4 rounded-xl text-center">
                   <div className="text-korus-primary text-xl mb-1">🔗</div>
                   <div className="text-xs text-korus-textTertiary">Chain</div>
-                  <div className="font-bold force-theme-text">{selectedEvent.chain}</div>
+                  <div className="font-bold force-theme-text">Solana</div>
                 </div>
               </div>
 
               {/* Requirements */}
-              {selectedEvent.requirements && (
+              {selectedEvent.requirements && selectedEvent.requirements.length > 0 && (
                 <div className="mb-6">
                   <h3 className="text-lg font-bold force-theme-text mb-3">Requirements</h3>
                   <div className="space-y-2">
@@ -562,15 +523,15 @@ export default function EventsPage() {
               )}
 
               {/* Participation Progress */}
-              {selectedEvent.participants !== undefined && selectedEvent.maxParticipants && (
+              {selectedEvent.registrationCount !== undefined && selectedEvent.maxSpots && (
                 <div className="mb-6">
                   <h3 className="text-lg font-bold force-theme-text mb-3">Participation</h3>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-korus-textSecondary">
-                      {selectedEvent.participants} / {selectedEvent.maxParticipants} spots filled
+                      {selectedEvent.registrationCount} / {selectedEvent.maxSpots} spots filled
                     </span>
                     <span className="text-sm font-medium text-korus-primary">
-                      {Math.round((selectedEvent.participants / selectedEvent.maxParticipants) * 100)}%
+                      {Math.round((selectedEvent.registrationCount / selectedEvent.maxSpots) * 100)}%
                     </span>
                   </div>
                   <div className="w-full bg-korus-borderLight rounded-full h-3">
@@ -578,7 +539,7 @@ export default function EventsPage() {
                       className="h-3 rounded-full transition-all"
                       style={{
                         backgroundColor: getEventTypeColor(selectedEvent.type),
-                        width: `${(selectedEvent.participants / selectedEvent.maxParticipants) * 100}%`
+                        width: `${(selectedEvent.registrationCount / selectedEvent.maxSpots) * 100}%`
                       }}
                     />
                   </div>
@@ -603,9 +564,7 @@ export default function EventsPage() {
                         Processing...
                       </div>
                     ) : (
-                      <>
-                        Participate {selectedEvent.price && `- ${selectedEvent.price}`}
-                      </>
+                      'Join Whitelist'
                     )}
                   </button>
                 )}

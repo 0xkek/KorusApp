@@ -354,6 +354,103 @@ export class GameEscrowService {
   }
 
   /**
+   * Cancel an expired game using authority (no player signature needed)
+   * This is used by the automated expiration service
+   * @param gameId - The on-chain game ID
+   */
+  async authorityCancelExpiredGame(gameId: number): Promise<{ success: boolean; signature?: string; error?: string }> {
+    try {
+      logger.info(`🔄 Authority cancelling expired game ${gameId} and refunding player1`);
+
+      const authority = loadAuthorityKeypair();
+
+      // Derive PDAs
+      const gameIdBuffer = Buffer.alloc(8);
+      gameIdBuffer.writeBigUInt64LE(BigInt(gameId));
+
+      const [gamePda] = await PublicKey.findProgramAddress(
+        [Buffer.from('game'), gameIdBuffer],
+        GAME_ESCROW_PROGRAM_ID
+      );
+
+      const [statePda] = await PublicKey.findProgramAddress(
+        [Buffer.from('state')],
+        GAME_ESCROW_PROGRAM_ID
+      );
+
+      const [escrowPda] = await PublicKey.findProgramAddress(
+        [Buffer.from('escrow'), gamePda.toBuffer()],
+        GAME_ESCROW_PROGRAM_ID
+      );
+
+      // Get game account to read player1 address
+      logger.info(`Fetching game account at PDA: ${gamePda.toString()}`);
+      const gameAccount = await connection.getAccountInfo(gamePda);
+      if (!gameAccount) {
+        logger.error(`Game ${gameId} not found on-chain at PDA: ${gamePda.toString()}`);
+        return { success: false, error: 'Game not found on-chain' };
+      }
+      logger.info(`✅ Game account found, data length: ${gameAccount.data.length}`);
+
+      // Parse game data to get player1 address
+      // Game layout: discriminator(8) + game_id(8) + game_type(1) + player1(32) + ...
+      const player1 = new PublicKey(gameAccount.data.slice(17, 49));
+
+      logger.info(`Refunding player1: ${player1.toString()}`);
+
+      // Derive player1 state PDA
+      const [player1StatePda] = await PublicKey.findProgramAddress(
+        [Buffer.from('player_game_state'), player1.toBuffer(), gameIdBuffer],
+        GAME_ESCROW_PROGRAM_ID
+      );
+
+      logger.info(`Player1 State PDA: ${player1StatePda.toString()}`);
+
+      // Build authority_cancel_expired_game instruction manually
+      // Account order must match smart contract AuthorityCancelExpiredGame context:
+      // state, game, player_state, escrow, player1, authority, system_program
+      const instruction = {
+        programId: GAME_ESCROW_PROGRAM_ID,
+        keys: [
+          { pubkey: statePda, isSigner: false, isWritable: true }, // state
+          { pubkey: gamePda, isSigner: false, isWritable: true }, // game
+          { pubkey: player1StatePda, isSigner: false, isWritable: true }, // player_state
+          { pubkey: escrowPda, isSigner: false, isWritable: true }, // escrow
+          { pubkey: player1, isSigner: false, isWritable: true }, // player1 (does NOT need to sign!)
+          { pubkey: authority.publicKey, isSigner: true, isWritable: false }, // authority
+          { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }, // system_program
+        ],
+        data: this.encodeAuthorityCancelExpiredGameInstruction(),
+      };
+
+      const transaction = new Transaction().add(instruction);
+
+      // Send and confirm transaction
+      const signature = await connection.sendTransaction(transaction, [authority], {
+        skipPreflight: false,
+        preflightCommitment: 'confirmed',
+      });
+
+      logger.info(`Sent authority_cancel_expired_game transaction: ${signature}`);
+
+      // Wait for confirmation
+      const confirmation = await connection.confirmTransaction(signature, 'confirmed');
+
+      if (confirmation.value.err) {
+        logger.error(`Transaction failed:`, confirmation.value.err);
+        return { success: false, error: 'Transaction failed' };
+      }
+
+      logger.info(`✅ Game ${gameId} cancelled by authority! Refunded player1. Signature: ${signature}`);
+      return { success: true, signature };
+
+    } catch (error: any) {
+      logger.error(`Error in authority cancel expired game:`, error);
+      return { success: false, error: error.message || 'Unknown error' };
+    }
+  }
+
+  /**
    * Encode the cancel_game instruction data
    * Instruction format: [instruction_discriminator(8)]
    */
@@ -361,6 +458,17 @@ export class GameEscrowService {
     // Instruction discriminator for cancel_game
     // Calculated from SHA256("global:cancel_game")[0..8]
     const discriminator = Buffer.from([0x79, 0xc2, 0x9a, 0x76, 0x67, 0xeb, 0x95, 0x34]);
+    return discriminator;
+  }
+
+  /**
+   * Encode the authority_cancel_expired_game instruction data
+   * Instruction format: [instruction_discriminator(8)]
+   */
+  private encodeAuthorityCancelExpiredGameInstruction(): Buffer {
+    // Instruction discriminator for authority_cancel_expired_game
+    // Calculated from SHA256("global:authority_cancel_expired_game")[0..8]
+    const discriminator = Buffer.from([0xa6, 0xda, 0xd0, 0x97, 0xe6, 0xda, 0x6a, 0x06]);
     return discriminator;
   }
 
