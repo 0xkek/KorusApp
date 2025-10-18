@@ -1,26 +1,29 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 
+// Treasury wallet that receives shoutout payments
+const TREASURY_WALLET = 'ByqqYGErKfyLHHd3NjgMnbbxQdPs1kFrPVWPUHUsD31W';
+
 const SHOUTOUT_OPTIONS = [
-  { label: '10 min', value: 10, price: 0.10, recommended: false },
-  { label: '20 min', value: 20, price: 0.20, recommended: false },
-  { label: '30 min', value: 30, price: 0.30, recommended: false },
-  { label: '1 hour', value: 60, price: 0.60, recommended: false },
-  { label: '2 hours', value: 120, price: 1.20, recommended: true },
-  { label: '3 hours', value: 180, price: 1.80, recommended: false },
-  { label: '4 hours', value: 240, price: 2.40, recommended: false },
-  { label: '6 hours', value: 360, price: 3.60, recommended: false },
+  { label: '10 min', value: 10, price: 0.05, recommended: false },
+  { label: '20 min', value: 20, price: 0.10, recommended: false },
+  { label: '30 min', value: 30, price: 0.18, recommended: false },
+  { label: '1 hour', value: 60, price: 0.35, recommended: true },
+  { label: '2 hours', value: 120, price: 0.70, recommended: false },
+  { label: '3 hours', value: 180, price: 1.30, recommended: false },
+  { label: '4 hours', value: 240, price: 2.00, recommended: false },
 ];
 
 interface ShoutoutModalProps {
   isOpen: boolean;
   onClose: () => void;
   postContent: string;
-  onConfirm?: (duration: number, price: number) => void;
+  onConfirm?: (duration: number, price: number, transactionSignature: string) => void;
   queueInfo?: {
     activeShoutout: { duration: number; startTime: number; content: string } | null;
     queuedShoutouts: { duration: number; content: string }[];
@@ -28,19 +31,33 @@ interface ShoutoutModalProps {
 }
 
 export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm, queueInfo }: ShoutoutModalProps) {
-  const { connected } = useWallet();
+  const { connected, publicKey, sendTransaction, signTransaction } = useWallet();
+  const { connection } = useConnection();
   const { showSuccess, showError } = useToast();
   const [selectedDuration, setSelectedDuration] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const modalRef = useFocusTrap(isOpen);
 
+  // Fetch wallet balance
   useEffect(() => {
+    const fetchBalance = async () => {
+      if (isOpen && connected && publicKey) {
+        try {
+          const lamports = await connection.getBalance(publicKey);
+          const solBalance = lamports / LAMPORTS_PER_SOL;
+          setWalletBalance(solBalance);
+        } catch (error) {
+          console.error('Failed to fetch balance:', error);
+        }
+      }
+    };
+
     if (isOpen) {
       setSelectedDuration(null);
-      setWalletBalance(2.45);
+      fetchBalance();
     }
-  }, [isOpen]);
+  }, [isOpen, connected, publicKey, connection]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -95,11 +112,11 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm,
   };
 
   const handleConfirm = async () => {
-    if (!connected) {
+    if (!connected || !publicKey) {
       showError('Please connect your wallet to create a shoutout');
       return;
     }
-    if (!selectedDuration) {
+    if (!selectedDuration || !selectedOption) {
       showError('Please select a duration for your shoutout');
       return;
     }
@@ -107,16 +124,135 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm,
       showError('Insufficient balance to create this shoutout');
       return;
     }
+
     setIsProcessing(true);
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      onConfirm?.(selectedDuration, selectedOption?.price || 0);
-      showSuccess('Shoutout created! Your post will be featured for ' + selectedOption?.label + '.');
+      console.log('=== Starting Shoutout Payment Flow ===');
+      console.log('Wallet connected:', connected);
+      console.log('PublicKey:', publicKey.toBase58());
+      console.log('Duration:', selectedDuration, 'min');
+      console.log('Price:', selectedOption.price, 'SOL');
+      console.log('Balance:', walletBalance, 'SOL');
+
+      // Create treasury public key
+      const treasuryPubkey = new PublicKey(TREASURY_WALLET);
+      console.log('Treasury wallet:', treasuryPubkey.toBase58());
+
+      // Calculate transfer amount in lamports
+      const lamports = Math.floor(selectedOption.price * LAMPORTS_PER_SOL);
+      console.log('Transfer amount:', lamports, 'lamports (', selectedOption.price, 'SOL )');
+
+      // Get latest blockhash with commitment
+      console.log('Fetching latest blockhash...');
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
+      console.log('Blockhash:', blockhash);
+      console.log('Last valid block height:', lastValidBlockHeight);
+
+      // Create transaction
+      console.log('Creating transaction...');
+      const transaction = new Transaction();
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = publicKey;
+      transaction.add(
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: treasuryPubkey,
+          lamports,
+        })
+      );
+
+      console.log('Transaction created successfully');
+      console.log('Transaction instructions:', transaction.instructions.length);
+
+      // Try to use signTransaction if available, otherwise fall back to sendTransaction
+      let signature: string;
+
+      if (signTransaction) {
+        console.log('Using signTransaction method...');
+        console.log('Requesting wallet to sign transaction...');
+
+        // Sign the transaction
+        const signedTransaction = await signTransaction(transaction);
+        console.log('Transaction signed successfully!');
+
+        // Serialize and send the signed transaction
+        console.log('Sending signed transaction to network...');
+        const rawTransaction = signedTransaction.serialize();
+        signature = await connection.sendRawTransaction(rawTransaction, {
+          skipPreflight: false,
+          preflightCommitment: 'confirmed',
+          maxRetries: 5,
+        });
+        console.log('Transaction sent! Signature:', signature);
+      } else {
+        console.log('Using sendTransaction method...');
+        console.log('Requesting wallet to sign and send transaction...');
+
+        signature = await sendTransaction(transaction, connection, {
+          skipPreflight: false,
+          preflightCommitment: 'confirmed',
+          maxRetries: 5,
+        });
+        console.log('Transaction sent! Signature:', signature);
+      }
+
+      // Wait for confirmation with timeout
+      console.log('Waiting for transaction confirmation...');
+      const confirmationStart = Date.now();
+
+      const confirmation = await connection.confirmTransaction({
+        signature,
+        blockhash,
+        lastValidBlockHeight,
+      }, 'confirmed');
+
+      const confirmationTime = Date.now() - confirmationStart;
+      console.log('Transaction confirmed in', confirmationTime, 'ms');
+
+      if (confirmation.value.err) {
+        throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
+      }
+
+      console.log('Transaction successful!');
+
+      // Refresh balance
+      console.log('Refreshing wallet balance...');
+      const newBalance = await connection.getBalance(publicKey);
+      setWalletBalance(newBalance / LAMPORTS_PER_SOL);
+      console.log('New balance:', newBalance / LAMPORTS_PER_SOL, 'SOL');
+
+      // Call onConfirm with the transaction signature
+      console.log('Calling onConfirm callback...');
+      onConfirm?.(selectedDuration, selectedOption.price, signature);
+
+      showSuccess(`Shoutout payment sent! Your post will be featured for ${selectedOption.label}.`);
+      console.log('=== Shoutout Payment Complete ===');
       onClose();
-    } catch {
-      showError('Failed to create shoutout. Please try again.');
+    } catch (error: any) {
+      console.error('=== Shoutout Payment Error ===');
+      console.error('Error name:', error?.name);
+      console.error('Error message:', error?.message);
+      console.error('Error stack:', error?.stack);
+      console.error('Full error:', error);
+
+      // Handle user cancellation gracefully
+      if (error?.message?.includes('User rejected') ||
+          error?.message?.includes('rejected') ||
+          error?.message?.includes('cancelled') ||
+          error?.message?.includes('Plugin Closed') ||
+          error?.message?.includes('User declined') ||
+          error?.name === 'WalletSendTransactionError' ||
+          error?.name === 'WalletSignTransactionError') {
+        console.log('Transaction was cancelled by user');
+        showError('Transaction cancelled. No charges were made.');
+      } else {
+        console.log('Transaction failed with error');
+        showError(error?.message || 'Failed to send payment. Please try again.');
+      }
     } finally {
       setIsProcessing(false);
+      console.log('=== Payment Flow Ended ===');
     }
   };
 

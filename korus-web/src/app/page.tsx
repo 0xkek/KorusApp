@@ -1207,10 +1207,91 @@ export default function Home() {
         isOpen={showShoutoutModal}
         onClose={() => setShowShoutoutModal(false)}
         postContent={composeText}
-        onConfirm={(duration, price) => {
-          // Handle shoutout creation
-          showSuccess(`Shoutout created for ${duration} minutes at ${price} SOL!`);
-          setComposeText(''); // Clear compose text after shoutout
+        onConfirm={async (duration, price, transactionSignature) => {
+          console.log('=== Home Page ShoutoutModal onConfirm called ===');
+          console.log('Duration:', duration);
+          console.log('Price:', price);
+          console.log('Transaction signature:', transactionSignature);
+          console.log('Token:', !!token);
+          console.log('Content:', composeText);
+
+          try {
+            // Upload image if needed
+            let imageUrl: string | undefined;
+            if (selectedFiles.length > 0 && selectedFiles[0].type.startsWith('image/')) {
+              console.log('Uploading image...');
+              try {
+                const uploadResponse = await uploadAPI.uploadImage(selectedFiles[0], token!);
+                imageUrl = uploadResponse.url;
+                console.log('Image uploaded:', imageUrl);
+              } catch (uploadError) {
+                console.error('Image upload failed:', uploadError);
+                showError('Failed to upload image');
+                return;
+              }
+            }
+
+            // Create post data with shoutout info
+            const postData: any = {
+              content: composeText.trim(),
+              topic: 'general',
+              subtopic: 'discussion',
+              shoutoutDuration: duration,
+              transactionSignature,
+            };
+
+            // Add image URL if uploaded or GIF if selected
+            if (selectedGif) {
+              postData.imageUrl = selectedGif;
+            } else if (imageUrl) {
+              postData.imageUrl = imageUrl;
+            }
+
+            console.log('Creating shoutout post with data:', postData);
+
+            // Create post via backend API
+            console.log('Calling postsAPI.createPost...');
+            const newPost = await postsAPI.createPost(postData, token!);
+            console.log('Shoutout post created successfully:', newPost);
+
+            // Extract the post from the response
+            const post = (newPost as any).post || newPost;
+            console.log('Extracted post:', post);
+
+            // Transform the backend response to match the frontend Post type
+            const transformedPost = {
+              ...post,
+              user: post.authorWallet || post.author?.walletAddress || publicKey?.toBase58() || 'Unknown',
+              wallet: post.authorWallet,
+              likes: post.likeCount || 0,
+              replies: post.replyCount || 0,
+              tips: post.tipCount || 0,
+              time: 'now',
+              isPremium: false,
+              isShoutout: true,
+              isSponsored: false,
+              shoutoutDuration: duration,
+              shoutoutStartTime: Date.now(),
+            };
+            console.log('Transformed shoutout post:', transformedPost);
+
+            // Call handlePostCreate to add it to the feed
+            handlePostCreate(transformedPost as Post);
+
+            showSuccess(`Shoutout created for ${duration} minutes!`);
+            setShowShoutoutModal(false);
+            setComposeText('');
+            setSelectedFiles([]);
+            setSelectedGif(null);
+            setShowDrawCanvas(false);
+            console.log('=== Home Page Shoutout Post Creation Complete ===');
+          } catch (error: any) {
+            console.error('=== Failed to create shoutout post ===');
+            console.error('Error:', error);
+            console.error('Error message:', error?.message);
+            console.error('Error response:', error?.response);
+            showError(error?.message || 'Failed to create shoutout post');
+          }
         }}
         queueInfo={{
           activeShoutout: null,

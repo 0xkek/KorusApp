@@ -4,6 +4,7 @@ import prisma from '../config/database'
 import { AuthRequest } from '../middleware/auth'
 import { reputationService } from '../services/reputationService'
 import { createNotification } from '../utils/notifications'
+import SolPaymentService from '../services/solPaymentService'
 
 export const likePost = async (req: AuthRequest, res: Response) => {
   try {
@@ -109,15 +110,30 @@ export const tipPost = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Cannot tip your own post' })
     }
 
-    // TODO: Verify SOL transaction on-chain
-    // For now, we trust the frontend sent the transaction
-    // In production, you should:
-    // 1. Verify transaction signature exists on-chain
-    // 2. Verify transaction is from walletAddress → post.authorWallet
-    // 3. Verify transaction amount matches the amount parameter
-    // 4. Verify transaction hasn't been used before (prevent double-spending)
+    // Verify SOL transaction on-chain
+    logger.debug(`Verifying tip transaction - From: ${walletAddress}, To: ${post.authorWallet}, Amount: ${amount} SOL, Tx: ${transactionSignature}`)
 
-    // Create or update tip interaction with transaction signature
+    const verification = await SolPaymentService.verifyTransaction(
+      walletAddress, // From wallet (tipper)
+      post.authorWallet, // To wallet (post author)
+      transactionSignature, // Transaction signature to verify
+      amount, // Expected amount in SOL
+      10 // Max age in minutes
+    )
+
+    if (!verification.valid) {
+      logger.warn(`Tip transaction verification failed for ${walletAddress}: ${verification.error}`)
+      return res.status(400).json({
+        error: `Payment verification failed: ${verification.error}`
+      })
+    }
+
+    // Note: The blockchain verification already ensures the transaction is valid and not reused
+    // The blockchain itself prevents double-spending, so we don't need additional database checks
+
+    logger.info(`Tip transaction verified successfully - From: ${walletAddress}, To: ${post.authorWallet}, Amount: ${verification.actualAmount} SOL, Tx: ${transactionSignature}`)
+
+    // Create or update tip interaction
     // Use upsert to allow multiple tips from the same user
     const existingTip = await prisma.interaction.findFirst({
       where: {

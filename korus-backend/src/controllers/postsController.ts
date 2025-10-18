@@ -6,6 +6,8 @@ import { CreatePostRequest, ApiResponse, PaginatedResponse, Post } from '../type
 import { autoModerate } from './moderationController'
 import { reputationService } from '../services/reputationService'
 import { CursorPagination } from '../utils/pagination'
+import SolPaymentService from '../services/solPaymentService'
+import { TREASURY_WALLET } from '../config/solana'
 
 export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Post>>) => {
   try {
@@ -57,14 +59,26 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
         } as any)
       }
 
-      // TODO: Verify the SOL transaction here
-      // For now, we'll trust the frontend but in production you should:
-      // 1. Verify the transaction signature with Solana RPC
-      // 2. Check that the amount matches the price
-      // 3. Confirm transaction is to the platform wallet
-      // 4. Ensure transaction is recent (within last few minutes)
-      
-      logger.debug(`Shoutout payment received - Duration: ${shoutoutDuration} minutes, Price: ${price} SOL, Tx: ${transactionSignature}`)
+      // Verify the SOL transaction on-chain
+      logger.debug(`Verifying shoutout payment - Duration: ${shoutoutDuration} minutes, Price: ${price} SOL, Tx: ${transactionSignature}`)
+
+      const verification = await SolPaymentService.verifyTransaction(
+        walletAddress, // From wallet (user)
+        TREASURY_WALLET.toBase58(), // To wallet (platform treasury)
+        transactionSignature, // Transaction signature to verify
+        price, // Expected amount in SOL
+        10 // Max age in minutes
+      )
+
+      if (!verification.valid) {
+        logger.warn(`Shoutout payment verification failed for ${walletAddress}: ${verification.error}`)
+        return res.status(400).json({
+          success: false,
+          error: `Payment verification failed: ${verification.error}`
+        } as any)
+      }
+
+      logger.info(`Shoutout payment verified successfully - User: ${walletAddress}, Amount: ${verification.actualAmount} SOL, Tx: ${transactionSignature}`)
 
       // Set shoutout fields
       const expiresAt = new Date()

@@ -469,38 +469,99 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
           onClose={() => setShowShoutoutModal(false)}
           postContent={content}
           queueInfo={queueInfo}
-          onConfirm={(duration) => {
-            // Create shoutout post
-            const shoutoutPost = {
-              id: Date.now(),
-              user: publicKey?.toBase58() || 'Unknown',
-              content: content.trim(),
-              likes: 0,
-              replies: 0,
-              tips: 0,
-              time: 'now',
-              isPremium: false,
-              isShoutout: true,
-              isSponsored: false,
-              shoutoutDuration: duration,
-              shoutoutStartTime: Date.now(),
-              image: selectedFiles.length > 0 && selectedFiles[0].type.startsWith('image/')
-                ? URL.createObjectURL(selectedFiles[0])
-                : undefined,
-            };
+          onConfirm={async (duration, price, transactionSignature) => {
+            console.log('=== ShoutoutModal onConfirm called ===');
+            console.log('Duration:', duration);
+            console.log('Price:', price);
+            console.log('Transaction signature:', transactionSignature);
+            console.log('Token:', !!token);
+            console.log('Content:', content);
 
-            // Call the parent's post creation function
-            // This will handle removing any existing shoutout
-            if (onPostCreate) {
-              onPostCreate(shoutoutPost);
+            try {
+              setIsPosting(true);
+              console.log('Set isPosting to true');
+
+              // Upload image if needed
+              let imageUrl: string | undefined;
+              if (selectedFiles.length > 0 && selectedFiles[0].type.startsWith('image/')) {
+                console.log('Uploading image...');
+                try {
+                  const uploadResponse = await uploadAPI.uploadImage(selectedFiles[0], token!);
+                  imageUrl = uploadResponse.url;
+                  console.log('Image uploaded:', imageUrl);
+                } catch (uploadError) {
+                  console.error('Image upload failed:', uploadError);
+                  showError('Failed to upload image');
+                  setIsPosting(false);
+                  return;
+                }
+              }
+
+              // Create post data with shoutout info
+              const postData: any = {
+                content: content.trim(),
+                topic: 'general',
+                subtopic: 'discussion',
+                shoutoutDuration: duration,
+                transactionSignature,
+              };
+
+              // Add image URL if uploaded
+              if (imageUrl) {
+                postData.imageUrl = imageUrl;
+              }
+
+              console.log('Creating post with data:', postData);
+
+              // Create post via backend API
+              console.log('Calling postsAPI.createPost...');
+              const newPost = await postsAPI.createPost(postData, token!);
+              console.log('Post created successfully:', newPost);
+
+              // Extract the post from the response
+              const post = (newPost as any).post || newPost;
+              console.log('Extracted post:', post);
+
+              // Transform the backend response to match the frontend Post type
+              const transformedPost = {
+                ...post,
+                user: post.authorWallet || post.author?.walletAddress || publicKey?.toBase58() || 'Unknown',
+                likes: post.likeCount || 0,
+                replies: post.replyCount || 0,
+                tips: post.tipCount || 0,
+                time: 'now',
+                isPremium: false,
+                isShoutout: true,
+                isSponsored: false,
+                shoutoutDuration: duration,
+                shoutoutStartTime: Date.now(),
+              };
+              console.log('Transformed post:', transformedPost);
+
+              // Call parent's post creation function
+              console.log('Calling onPostCreate, hasCallback:', !!onPostCreate);
+              if (onPostCreate) {
+                onPostCreate(transformedPost);
+                console.log('onPostCreate called successfully');
+              }
+
+              showSuccess(`Shoutout created for ${duration} minutes!`);
+              setShowShoutoutModal(false);
+              setContent('');
+              setSelectedFiles([]);
+              setShowDrawCanvas(false);
+              onClose();
+              console.log('=== Shoutout Post Creation Complete ===');
+            } catch (error: any) {
+              console.error('=== Failed to create shoutout post ===');
+              console.error('Error:', error);
+              console.error('Error message:', error?.message);
+              console.error('Error response:', error?.response);
+              showError(error?.message || 'Failed to create shoutout post');
+            } finally {
+              setIsPosting(false);
+              console.log('Set isPosting to false');
             }
-
-            showSuccess(`Shoutout created for ${duration} minutes!`);
-            setShowShoutoutModal(false);
-            setContent('');
-            setSelectedFiles([]);
-            setShowDrawCanvas(false);
-            onClose(); // Close the CreatePostModal too
           }}
         />
       )}

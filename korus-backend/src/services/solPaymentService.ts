@@ -1,12 +1,13 @@
 import { Connection, PublicKey, LAMPORTS_PER_SOL, Transaction, SystemProgram } from '@solana/web3.js';
 import prisma from '../config/database';
 import { logger } from '../utils/logger';
+import { connection as solanaConnection, TREASURY_WALLET } from '../config/solana';
 
-const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
-const connection = new Connection(SOLANA_RPC_URL, 'confirmed');
+// Use the connection from solana config (already configured for devnet/mainnet)
+const connection = solanaConnection;
 
-// Platform wallet that receives SOL payments
-const PLATFORM_WALLET = process.env.PLATFORM_WALLET_ADDRESS || 'YOUR_PLATFORM_WALLET_HERE';
+// Platform wallet that receives SOL payments (use TREASURY_WALLET from config)
+const PLATFORM_WALLET = TREASURY_WALLET.toBase58();
 
 export class SolPaymentService {
   /**
@@ -47,7 +48,7 @@ export class SolPaymentService {
       // Check account balances before and after
       const preBalances = transaction.meta?.preBalances || [];
       const postBalances = transaction.meta?.postBalances || [];
-      const accountKeys = transaction.transaction.message.accountKeys;
+      const accountKeys = transaction.transaction.message.staticAccountKeys || transaction.transaction.message.getAccountKeys?.() || [];
       
       for (let i = 0; i < accountKeys.length; i++) {
         const accountKey = accountKeys[i];
@@ -76,7 +77,7 @@ export class SolPaymentService {
       await prisma.user.update({
         where: { walletAddress: userWallet },
         data: {
-          balance: {
+          solBalance: {
             increment: transferAmount
           }
         }
@@ -116,10 +117,10 @@ export class SolPaymentService {
     try {
       const user = await prisma.user.findUnique({
         where: { walletAddress },
-        select: { balance: true }
+        select: { solBalance: true }
       });
-      
-      return user ? Number(user.balance) : 0;
+
+      return user ? Number(user.solBalance) : 0;
     } catch (error) {
       logger.error('Error fetching app balance', { error, walletAddress });
       return 0;
@@ -133,17 +134,17 @@ export class SolPaymentService {
     try {
       const user = await prisma.user.findUnique({
         where: { walletAddress },
-        select: { balance: true }
+        select: { solBalance: true }
       });
-      
-      if (!user || Number(user.balance) < amount) {
+
+      if (!user || Number(user.solBalance) < amount) {
         return false;
       }
-      
+
       await prisma.user.update({
         where: { walletAddress },
         data: {
-          balance: {
+          solBalance: {
             decrement: amount
           }
         }
@@ -164,17 +165,142 @@ export class SolPaymentService {
       await prisma.user.update({
         where: { walletAddress },
         data: {
-          balance: {
+          solBalance: {
             increment: amount
           }
         }
       });
-      
+
       logger.info('Balance refunded', { walletAddress, amount, reason });
       return true;
     } catch (error) {
       logger.error('Error refunding balance', { error, walletAddress, amount });
       return false;
+    }
+  }
+
+  /**
+   * Verify a transaction exists and matches expected parameters
+   * This is for direct payments (shoutouts, tips) that don't credit balance
+   */
+  static async verifyTransaction(
+    fromWallet: string,
+    toWallet: string,
+    transactionSignature: string,
+    expectedAmount: number,
+    maxAgeMinutes: number = 10
+  ): Promise<{ valid: boolean; error?: string; actualAmount?: number }> {
+    try {
+      logger.debug('Verifying transaction', {
+        from: fromWallet,
+        to: toWallet,
+        signature: transactionSignature,
+        expectedAmount
+      });
+
+      // Get transaction details from blockchain
+      const transaction = await connection.getTransaction(transactionSignature, {
+        maxSupportedTransactionVersion: 0
+      });
+
+      if (!transaction) {
+        logger.warn('Transaction not found on blockchain', { signature: transactionSignature });
+        return { valid: false, error: 'Transaction not found on blockchain' };
+      }
+
+      // Check if transaction was successful
+      if (transaction.meta?.err) {
+        logger.warn('Transaction failed on blockchain', {
+          signature: transactionSignature,
+          error: transaction.meta.err
+        });
+        return { valid: false, error: 'Transaction failed on blockchain' };
+      }
+
+      // Verify transaction is recent (prevent replay attacks)
+      if (transaction.blockTime) {
+        const transactionAge = Date.now() / 1000 - transaction.blockTime;
+        const maxAgeSeconds = maxAgeMinutes * 60;
+
+        if (transactionAge > maxAgeSeconds) {
+          logger.warn('Transaction too old', {
+            signature: transactionSignature,
+            ageMinutes: Math.round(transactionAge / 60),
+            maxAgeMinutes
+          });
+          return { valid: false, error: `Transaction is older than ${maxAgeMinutes} minutes` };
+        }
+      }
+
+      // Verify the transaction involves the correct wallets and amount
+      const preBalances = transaction.meta?.preBalances || [];
+      const postBalances = transaction.meta?.postBalances || [];
+      const accountKeys = transaction.transaction.message.staticAccountKeys || transaction.transaction.message.getAccountKeys?.() || [];
+
+      let fromIndex = -1;
+      let toIndex = -1;
+
+      // Find the sender and receiver in the account keys
+      for (let i = 0; i < accountKeys.length; i++) {
+        const accountKey = accountKeys[i].toBase58();
+        if (accountKey === fromWallet) fromIndex = i;
+        if (accountKey === toWallet) toIndex = i;
+      }
+
+      if (fromIndex === -1) {
+        logger.warn('Sender wallet not found in transaction', {
+          signature: transactionSignature,
+          expectedFrom: fromWallet
+        });
+        return { valid: false, error: 'Sender wallet not found in transaction' };
+      }
+
+      if (toIndex === -1) {
+        logger.warn('Receiver wallet not found in transaction', {
+          signature: transactionSignature,
+          expectedTo: toWallet
+        });
+        return { valid: false, error: 'Receiver wallet not found in transaction' };
+      }
+
+      // Calculate the actual transfer amount
+      const senderChange = (preBalances[fromIndex] - postBalances[fromIndex]) / LAMPORTS_PER_SOL;
+      const receiverChange = (postBalances[toIndex] - preBalances[toIndex]) / LAMPORTS_PER_SOL;
+
+      // The receiver should have gained approximately the expected amount
+      // Allow for small variance due to rounding
+      const variance = 0.001; // 0.001 SOL variance allowed
+
+      if (receiverChange < (expectedAmount - variance)) {
+        logger.warn('Transaction amount mismatch', {
+          signature: transactionSignature,
+          expected: expectedAmount,
+          actual: receiverChange,
+          senderChange
+        });
+        return {
+          valid: false,
+          error: `Amount mismatch: expected ${expectedAmount} SOL, but receiver got ${receiverChange} SOL`,
+          actualAmount: receiverChange
+        };
+      }
+
+      logger.info('Transaction verified successfully', {
+        signature: transactionSignature,
+        from: fromWallet,
+        to: toWallet,
+        amount: receiverChange
+      });
+
+      return { valid: true, actualAmount: receiverChange };
+    } catch (error: any) {
+      logger.error('Error verifying transaction', {
+        error: error.message,
+        signature: transactionSignature,
+        from: fromWallet,
+        to: toWallet
+      });
+      return { valid: false, error: `Verification error: ${error.message}` };
     }
   }
 }
