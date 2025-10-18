@@ -18,7 +18,7 @@ interface TipModalProps {
 }
 
 export default function TipModal({ isOpen, onClose, recipientUser, postId, onTipSuccess }: TipModalProps) {
-  const { connected, publicKey, sendTransaction } = useWallet();
+  const { connected, publicKey, sendTransaction, signTransaction } = useWallet();
   const { connection } = useConnection();
   const { token, isAuthenticated } = useWalletAuth();
   const { showSuccess, showError } = useToast();
@@ -152,8 +152,23 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = publicKey;
 
-      // Send transaction
-      const signature = await sendTransaction(transaction, connection);
+      // Try to use signTransaction if available, otherwise fall back to sendTransaction
+      let signature: string;
+
+      if (signTransaction) {
+        // Sign the transaction
+        const signedTransaction = await signTransaction(transaction);
+
+        // Serialize and send the signed transaction
+        const rawTransaction = signedTransaction.serialize();
+        signature = await connection.sendRawTransaction(rawTransaction, {
+          skipPreflight: false,
+          maxRetries: 3
+        });
+      } else {
+        // Fall back to sendTransaction (auto-signs and sends)
+        signature = await sendTransaction(transaction, connection);
+      }
 
       // Wait for confirmation
       await connection.confirmTransaction(signature, 'confirmed');
@@ -185,8 +200,15 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
       setCustomAmount('');
     } catch (error: any) {
       console.error('Failed to send tip:', error);
-      console.error('Error details:', error.data || error.message);
-      if (error instanceof Error) {
+
+      // Improved error handling for better user feedback
+      if (error?.message?.includes('User rejected')) {
+        showError('Transaction cancelled. You can try again anytime.');
+      } else if (error?.message?.includes('insufficient')) {
+        showError('Insufficient balance for this transaction.');
+      } else if (error?.message?.includes('blockhash')) {
+        showError('Transaction timed out. Please try again.');
+      } else if (error instanceof Error) {
         showError(`Failed to send tip: ${error.message}`);
       } else {
         showError('Failed to send tip. Please try again.');
