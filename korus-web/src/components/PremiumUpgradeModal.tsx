@@ -153,15 +153,15 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
         onClick={(e) => e.stopPropagation()}
       >
         <div className="text-center">
-          {/* Premium Icon - Yellow circle with black star (matches premium badge) */}
-          <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg" style={{ boxShadow: '0 4px 20px rgba(234, 179, 8, 0.5)' }}>
-            <svg className="w-7 h-7 text-black" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+          {/* Premium Icon - Exact copy from profile badge */}
+          <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-black" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
             </svg>
           </div>
 
           {/* Header */}
-          <h3 className="text-xl font-bold mb-2 text-yellow-500">
+          <h3 className="text-xl font-bold mb-2 text-yellow-400">
             Unlock Premium
           </h3>
           <p className="text-korus-textSecondary mb-6">
@@ -188,8 +188,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
               disabled={isProcessing}
               className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 border border-korus-border disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)',
-                color: '#FFFFFF'
+                boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)'
               }}
             >
               {isProcessing ? (
@@ -214,8 +213,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
               disabled={isProcessing}
               className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 relative border border-korus-border disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)',
-                color: '#FFFFFF'
+                boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)'
               }}
             >
               {!isProcessing && (
