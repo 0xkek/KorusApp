@@ -1305,7 +1305,7 @@ export default function Home() {
           setShowTipModal(false);
           setPostToTip(null);
         }}
-        recipientUser={postToTip?.user || ''}
+        recipientUser={postToTip?.wallet || postToTip?.user || ''}
         postId={postToTip?.id}
         onTipSuccess={(amount: number) => {
           if (postToTip?.id) {

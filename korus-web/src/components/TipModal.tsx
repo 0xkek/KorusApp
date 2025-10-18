@@ -30,10 +30,28 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
   const [showSuccessScreen, setShowSuccessScreen] = useState(false);
   const [successAmount, setSuccessAmount] = useState(0);
   const [txSignature, setTxSignature] = useState('');
+  const [solToUsd, setSolToUsd] = useState(200); // Default fallback
   const modalRef = useFocusTrap(isOpen);
 
-  // Get SOL to USD rate from environment or use fallback
-  const solToUsd = parseFloat(process.env.NEXT_PUBLIC_SOL_USD_FALLBACK || '200');
+  // Fetch real-time SOL price
+  useEffect(() => {
+    const fetchSolPrice = async () => {
+      try {
+        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
+        const data = await response.json();
+        if (data?.solana?.usd) {
+          setSolToUsd(data.solana.usd);
+        }
+      } catch (error) {
+        console.error('Failed to fetch SOL price:', error);
+        // Keep using fallback value on error
+      }
+    };
+
+    if (isOpen) {
+      fetchSolPrice();
+    }
+  }, [isOpen]);
 
   // Fetch wallet balance
   useEffect(() => {
