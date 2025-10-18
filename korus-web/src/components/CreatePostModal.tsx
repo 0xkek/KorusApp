@@ -69,15 +69,10 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
   if (!isOpen) return null;
 
   const handlePost = async () => {
-    console.log('handlePost called - connected:', connected, 'isAuthenticated:', isAuthenticated, 'token:', !!token);
-
     if (!connected || !isAuthenticated || !token) {
-      console.log('Authentication check failed');
       showError('Please connect your wallet and sign in to post');
       return;
     }
-
-    console.log('Authentication check passed');
 
     if (!content.trim() && selectedFiles.length === 0) {
       showError('Please write some content or add media before posting');
@@ -87,18 +82,14 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
     setIsPosting(true);
 
     try {
-      console.log('Creating post with token:', token);
-
       // Upload images first if there are any
       let imageUrl: string | undefined;
       if (selectedFiles.length > 0) {
         const imageFile = selectedFiles[0]; // For now, support only one image
         if (imageFile.type.startsWith('image/')) {
-          console.log('Uploading image...');
           try {
             const uploadResponse = await uploadAPI.uploadImage(imageFile, token);
             imageUrl = uploadResponse.url;
-            console.log('Image uploaded successfully:', imageUrl);
           } catch (uploadError) {
             console.error('Failed to upload image:', uploadError);
             showError('Failed to upload image. Please try again.');
@@ -123,12 +114,8 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
         postData.imageUrl = imageUrl;
       }
 
-      console.log('Post data:', postData);
-
       // Create post via backend API
       const newPost = await postsAPI.createPost(postData, token);
-
-      console.log('Post created successfully:', newPost);
 
       // Extract the post from the response (backend returns {success: true, post: {...}})
       const post = (newPost as any).post || newPost;
@@ -470,25 +457,15 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
           postContent={content}
           queueInfo={queueInfo}
           onConfirm={async (duration, price, transactionSignature) => {
-            console.log('=== ShoutoutModal onConfirm called ===');
-            console.log('Duration:', duration);
-            console.log('Price:', price);
-            console.log('Transaction signature:', transactionSignature);
-            console.log('Token:', !!token);
-            console.log('Content:', content);
-
             try {
               setIsPosting(true);
-              console.log('Set isPosting to true');
 
               // Upload image if needed
               let imageUrl: string | undefined;
               if (selectedFiles.length > 0 && selectedFiles[0].type.startsWith('image/')) {
-                console.log('Uploading image...');
                 try {
                   const uploadResponse = await uploadAPI.uploadImage(selectedFiles[0], token!);
                   imageUrl = uploadResponse.url;
-                  console.log('Image uploaded:', imageUrl);
                 } catch (uploadError) {
                   console.error('Image upload failed:', uploadError);
                   showError('Failed to upload image');
@@ -511,16 +488,11 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                 postData.imageUrl = imageUrl;
               }
 
-              console.log('Creating post with data:', postData);
-
               // Create post via backend API
-              console.log('Calling postsAPI.createPost...');
               const newPost = await postsAPI.createPost(postData, token!);
-              console.log('Post created successfully:', newPost);
 
               // Extract the post from the response
               const post = (newPost as any).post || newPost;
-              console.log('Extracted post:', post);
 
               // Transform the backend response to match the frontend Post type
               const transformedPost = {
@@ -536,13 +508,10 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                 shoutoutDuration: duration,
                 shoutoutStartTime: Date.now(),
               };
-              console.log('Transformed post:', transformedPost);
 
               // Call parent's post creation function
-              console.log('Calling onPostCreate, hasCallback:', !!onPostCreate);
               if (onPostCreate) {
                 onPostCreate(transformedPost);
-                console.log('onPostCreate called successfully');
               }
 
               showSuccess(`Shoutout created for ${duration} minutes!`);
@@ -551,16 +520,11 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
               setSelectedFiles([]);
               setShowDrawCanvas(false);
               onClose();
-              console.log('=== Shoutout Post Creation Complete ===');
             } catch (error: any) {
-              console.error('=== Failed to create shoutout post ===');
-              console.error('Error:', error);
-              console.error('Error message:', error?.message);
-              console.error('Error response:', error?.response);
+              console.error('Failed to create shoutout post:', error);
               showError(error?.message || 'Failed to create shoutout post');
             } finally {
               setIsPosting(false);
-              console.log('Set isPosting to false');
             }
           }}
         />

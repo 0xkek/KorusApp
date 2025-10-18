@@ -128,29 +128,16 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm,
     setIsProcessing(true);
 
     try {
-      console.log('=== Starting Shoutout Payment Flow ===');
-      console.log('Wallet connected:', connected);
-      console.log('PublicKey:', publicKey.toBase58());
-      console.log('Duration:', selectedDuration, 'min');
-      console.log('Price:', selectedOption.price, 'SOL');
-      console.log('Balance:', walletBalance, 'SOL');
-
       // Create treasury public key
       const treasuryPubkey = new PublicKey(TREASURY_WALLET);
-      console.log('Treasury wallet:', treasuryPubkey.toBase58());
 
       // Calculate transfer amount in lamports
       const lamports = Math.floor(selectedOption.price * LAMPORTS_PER_SOL);
-      console.log('Transfer amount:', lamports, 'lamports (', selectedOption.price, 'SOL )');
 
       // Get latest blockhash with commitment
-      console.log('Fetching latest blockhash...');
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
-      console.log('Blockhash:', blockhash);
-      console.log('Last valid block height:', lastValidBlockHeight);
 
       // Create transaction
-      console.log('Creating transaction...');
       const transaction = new Transaction();
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = publicKey;
@@ -162,79 +149,51 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm,
         })
       );
 
-      console.log('Transaction created successfully');
-      console.log('Transaction instructions:', transaction.instructions.length);
-
       // Try to use signTransaction if available, otherwise fall back to sendTransaction
       let signature: string;
 
       if (signTransaction) {
-        console.log('Using signTransaction method...');
-        console.log('Requesting wallet to sign transaction...');
-
         // Sign the transaction
         const signedTransaction = await signTransaction(transaction);
-        console.log('Transaction signed successfully!');
 
         // Serialize and send the signed transaction
-        console.log('Sending signed transaction to network...');
         const rawTransaction = signedTransaction.serialize();
         signature = await connection.sendRawTransaction(rawTransaction, {
           skipPreflight: false,
           preflightCommitment: 'confirmed',
           maxRetries: 5,
         });
-        console.log('Transaction sent! Signature:', signature);
       } else {
-        console.log('Using sendTransaction method...');
-        console.log('Requesting wallet to sign and send transaction...');
-
+        // Fall back to sendTransaction (auto-signs and sends)
         signature = await sendTransaction(transaction, connection, {
           skipPreflight: false,
           preflightCommitment: 'confirmed',
           maxRetries: 5,
         });
-        console.log('Transaction sent! Signature:', signature);
       }
 
       // Wait for confirmation with timeout
-      console.log('Waiting for transaction confirmation...');
-      const confirmationStart = Date.now();
-
       const confirmation = await connection.confirmTransaction({
         signature,
         blockhash,
         lastValidBlockHeight,
       }, 'confirmed');
 
-      const confirmationTime = Date.now() - confirmationStart;
-      console.log('Transaction confirmed in', confirmationTime, 'ms');
-
       if (confirmation.value.err) {
         throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
       }
 
-      console.log('Transaction successful!');
-
       // Refresh balance
-      console.log('Refreshing wallet balance...');
       const newBalance = await connection.getBalance(publicKey);
       setWalletBalance(newBalance / LAMPORTS_PER_SOL);
-      console.log('New balance:', newBalance / LAMPORTS_PER_SOL, 'SOL');
 
       // Call onConfirm with the transaction signature
-      console.log('Calling onConfirm callback...');
       onConfirm?.(selectedDuration, selectedOption.price, signature);
 
       showSuccess(`Shoutout payment sent! Your post will be featured for ${selectedOption.label}.`);
-      console.log('=== Shoutout Payment Complete ===');
       onClose();
     } catch (error: any) {
-      console.error('=== Shoutout Payment Error ===');
-      console.error('Error name:', error?.name);
-      console.error('Error message:', error?.message);
-      console.error('Error stack:', error?.stack);
-      console.error('Full error:', error);
+      console.error('Shoutout payment error:', error);
 
       // Handle user cancellation gracefully
       if (error?.message?.includes('User rejected') ||
@@ -244,15 +203,12 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm,
           error?.message?.includes('User declined') ||
           error?.name === 'WalletSendTransactionError' ||
           error?.name === 'WalletSignTransactionError') {
-        console.log('Transaction was cancelled by user');
         showError('Transaction cancelled. No charges were made.');
       } else {
-        console.log('Transaction failed with error');
         showError(error?.message || 'Failed to send payment. Please try again.');
       }
     } finally {
       setIsProcessing(false);
-      console.log('=== Payment Flow Ended ===');
     }
   };
 

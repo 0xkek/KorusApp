@@ -40,17 +40,12 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
     const fetchBalance = async () => {
       if (isOpen && connected && publicKey) {
         try {
-          console.log('Fetching balance for:', publicKey.toBase58());
           const lamports = await connection.getBalance(publicKey);
-          console.log('Balance in lamports:', lamports);
           const solBalance = lamports / LAMPORTS_PER_SOL;
-          console.log('Balance in SOL:', solBalance);
           setBalance(solBalance);
         } catch (error) {
           console.error('Failed to fetch balance:', error);
         }
-      } else {
-        console.log('Cannot fetch balance:', { isOpen, connected, publicKey: publicKey?.toBase58() });
       }
     };
 
