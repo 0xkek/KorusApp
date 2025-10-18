@@ -13,3 +13,4 @@ export * from './notifications';
 export * from './users';
 export * from './search';
 export * from './games';
+export * from './subscription';

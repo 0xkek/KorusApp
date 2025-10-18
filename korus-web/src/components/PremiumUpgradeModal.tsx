@@ -1,11 +1,18 @@
 'use client';
 
+import { useState } from 'react';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { useToast } from '@/hooks/useToast';
+import { subscriptionAPI } from '@/lib/api';
 
 interface PremiumUpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpgrade?: (plan: 'monthly' | 'yearly') => void;
+  onSuccess?: () => void;
 }
 
 const PREMIUM_FEATURES = [
@@ -16,17 +23,120 @@ const PREMIUM_FEATURES = [
   '+20% rep score',
 ];
 
-export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade }: PremiumUpgradeModalProps) {
+const SUBSCRIPTION_PRICES = {
+  monthly: 0.1,
+  yearly: 1.0
+};
+
+const PLATFORM_WALLET = process.env.NEXT_PUBLIC_PLATFORM_WALLET || 'CR1Z26D24Vo1kPjS3bbnm7K82QSMggSf6hHe6mqtGyDM';
+
+export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSuccess }: PremiumUpgradeModalProps) {
   const modalRef = useFocusTrap(isOpen);
+  const { connected, publicKey, sendTransaction, signTransaction } = useWallet();
+  const { connection } = useConnection();
+  const { token, isAuthenticated } = useWalletAuth();
+  const { showSuccess, showError } = useToast();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleUpgrade = (plan: 'monthly' | 'yearly') => {
-    onClose();
+  const handleUpgrade = async (plan: 'monthly' | 'yearly') => {
+    // If custom onUpgrade handler provided, use it
     if (onUpgrade) {
+      onClose();
       onUpgrade(plan);
+      return;
     }
-    // TODO: Implement actual payment flow when onUpgrade not provided
+
+    // Otherwise, implement the full payment flow
+    if (!connected || !publicKey || !sendTransaction) {
+      showError('Please connect your wallet to upgrade to premium');
+      return;
+    }
+
+    if (!token || !isAuthenticated) {
+      showError('Please authenticate to upgrade to premium');
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      const amount = SUBSCRIPTION_PRICES[plan];
+
+      // Create recipient public key
+      const recipientPubkey = new PublicKey(PLATFORM_WALLET);
+
+      // Create transaction
+      const transaction = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: recipientPubkey,
+          lamports: Math.floor(amount * LAMPORTS_PER_SOL),
+        })
+      );
+
+      // Get latest blockhash
+      const { blockhash } = await connection.getLatestBlockhash();
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = publicKey;
+
+      // Try to use signTransaction if available, otherwise fall back to sendTransaction
+      let signature: string;
+
+      if (signTransaction) {
+        // Sign the transaction
+        const signedTransaction = await signTransaction(transaction);
+
+        // Serialize and send the signed transaction
+        const rawTransaction = signedTransaction.serialize();
+        signature = await connection.sendRawTransaction(rawTransaction, {
+          skipPreflight: false,
+          maxRetries: 3
+        });
+      } else {
+        // Fall back to sendTransaction (auto-signs and sends)
+        signature = await sendTransaction(transaction, connection);
+      }
+
+      // Wait for confirmation
+      await connection.confirmTransaction(signature, 'confirmed');
+
+      // Process subscription on backend
+      const result = await subscriptionAPI.subscribe(plan, signature, token);
+
+      if (result.success) {
+        showSuccess(
+          `Successfully upgraded to ${plan} premium! You now have access to all premium features.`
+        );
+
+        // Call success callback if provided
+        if (onSuccess) {
+          onSuccess();
+        }
+
+        onClose();
+      } else {
+        showError('Failed to activate subscription. Please contact support.');
+      }
+    } catch (error: any) {
+      console.error('Failed to upgrade to premium:', error);
+
+      // Improved error handling
+      if (error?.message?.includes('User rejected')) {
+        showError('Transaction cancelled. You can try again anytime.');
+      } else if (error?.message?.includes('insufficient')) {
+        showError('Insufficient balance for this subscription.');
+      } else if (error?.message?.includes('blockhash')) {
+        showError('Transaction timed out. Please try again.');
+      } else if (error instanceof Error) {
+        showError(`Failed to upgrade: ${error.message}`);
+      } else {
+        showError('Failed to upgrade to premium. Please try again.');
+      }
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -72,36 +182,65 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade }: Prem
             {/* Monthly Plan */}
             <button
               onClick={() => handleUpgrade('monthly')}
-              className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 border border-korus-border"
+              disabled={isProcessing}
+              className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 border border-korus-border disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)',
                 color: '#FFFFFF'
               }}
             >
-              <div className="font-bold">Monthly - 0.1 SOL</div>
-              <div className="text-sm opacity-90">Paid monthly</div>
+              {isProcessing ? (
+                <div className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Processing...</span>
+                </div>
+              ) : (
+                <>
+                  <div className="font-bold">Monthly - 0.1 SOL</div>
+                  <div className="text-sm opacity-90">Paid monthly</div>
+                </>
+              )}
             </button>
 
             {/* Yearly Plan */}
             <button
               onClick={() => handleUpgrade('yearly')}
-              className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 relative border border-korus-border"
+              disabled={isProcessing}
+              className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 relative border border-korus-border disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)',
                 color: '#FFFFFF'
               }}
             >
-              <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">
-                SAVE 2 MONTHS
-              </div>
-              <div className="font-bold">Yearly - 1 SOL</div>
-              <div className="text-sm opacity-90">Paid annually</div>
+              {!isProcessing && (
+                <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                  SAVE 2 MONTHS
+                </div>
+              )}
+              {isProcessing ? (
+                <div className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Processing...</span>
+                </div>
+              ) : (
+                <>
+                  <div className="font-bold">Yearly - 1 SOL</div>
+                  <div className="text-sm opacity-90">Paid annually</div>
+                </>
+              )}
             </button>
 
             {/* Cancel Button */}
             <button
               onClick={onClose}
-              className="w-full px-4 py-2 bg-korus-surface/40 text-korus-text rounded-xl hover:bg-korus-surface/60 transition-colors border border-korus-border"
+              disabled={isProcessing}
+              className="w-full px-4 py-2 bg-korus-surface/40 text-korus-text rounded-xl hover:bg-korus-surface/60 transition-colors border border-korus-border disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 boxShadow: '0 0 3px var(--korus-primary), 0 0 6px var(--korus-primary)'
               }}
