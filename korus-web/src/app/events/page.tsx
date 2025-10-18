@@ -102,20 +102,8 @@ export default function EventsPage() {
   };
 
   const getEventTypeColor = (type: Event['type']) => {
-    switch (type) {
-      case 'whitelist':
-        return '#9945FF';
-      case 'token_launch':
-        return '#00D4FF';
-      case 'nft_mint':
-        return '#FF6B9D';
-      case 'airdrop':
-        return '#FFD700';
-      case 'ido':
-        return '#43e97b';
-      default:
-        return 'var(--color-primary)';
-    }
+    // Use CSS variable for theme color (matches rest of the app)
+    return 'var(--korus-primary)';
   };
 
   const formatTimeRemaining = (startDate: string) => {
@@ -230,7 +218,7 @@ export default function EventsPage() {
                     className="relative px-4 py-4 text-white font-semibold hover:bg-korus-surface/20 transition-colors group"
                   >
                     <span className="relative z-10">Events</span>
-                    <div className="absolute bottom-0 left-0 right-0 h-1 rounded-full transition-colors" style={{ backgroundColor: '#43E97B' }}></div>
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-korus-primary rounded-full transition-colors"></div>
                   </button>
                 </div>
 
