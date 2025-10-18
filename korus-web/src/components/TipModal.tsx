@@ -30,28 +30,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
   const [showSuccessScreen, setShowSuccessScreen] = useState(false);
   const [successAmount, setSuccessAmount] = useState(0);
   const [txSignature, setTxSignature] = useState('');
-  const [solToUsd, setSolToUsd] = useState(200); // Default fallback
   const modalRef = useFocusTrap(isOpen);
-
-  // Fetch real-time SOL price
-  useEffect(() => {
-    const fetchSolPrice = async () => {
-      try {
-        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
-        const data = await response.json();
-        if (data?.solana?.usd) {
-          setSolToUsd(data.solana.usd);
-        }
-      } catch (error) {
-        console.error('Failed to fetch SOL price:', error);
-        // Keep using fallback value on error
-      }
-    };
-
-    if (isOpen) {
-      fetchSolPrice();
-    }
-  }, [isOpen]);
 
   // Fetch wallet balance
   useEffect(() => {
@@ -327,8 +306,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
                     borderColor: selectedAmount === amount ? 'var(--korus-primary)' : 'color-mix(in srgb, var(--korus-primary) 20%, transparent)'
                   }}
                 >
-                  <div className="text-xs font-medium text-white mb-1">{amount} SOL</div>
-                  <div className="text-[10px] text-korus-textSecondary">${(amount * solToUsd).toFixed(0)}</div>
+                  <div className="text-sm font-medium text-white">{amount} SOL</div>
                 </button>
               ))}
             </div>
@@ -350,11 +328,6 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
                 SOL
               </span>
             </div>
-            {customAmount && !validationError && (
-              <p className="text-xs text-korus-textSecondary mt-1">
-                ≈ ${(parseFloat(customAmount) * solToUsd).toFixed(2)} USD
-              </p>
-            )}
             {validationError && (
               <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
