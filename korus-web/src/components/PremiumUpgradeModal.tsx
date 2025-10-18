@@ -28,7 +28,8 @@ const SUBSCRIPTION_PRICES = {
   yearly: 1.0
 };
 
-const PLATFORM_WALLET = process.env.NEXT_PUBLIC_PLATFORM_WALLET || 'CR1Z26D24Vo1kPjS3bbnm7K82QSMggSf6hHe6mqtGyDM';
+// Treasury wallet - same as used for shoutouts/tips
+const PLATFORM_WALLET = process.env.NEXT_PUBLIC_TREASURY_WALLET || 'ByqqYGErKfyLHHd3NjgMnbbxQdPs1kFrPVWPUHUsD31W';
 
 export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSuccess }: PremiumUpgradeModalProps) {
   const modalRef = useFocusTrap(isOpen);

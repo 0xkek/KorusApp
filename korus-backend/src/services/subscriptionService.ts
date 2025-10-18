@@ -130,14 +130,9 @@ export class SubscriptionService {
         return false
       }
       
-      // Verify amount sent to platform wallet
-      const platformWallet = process.env.PLATFORM_WALLET_ADDRESS
-      if (!platformWallet) {
-        logger.error('Platform wallet not configured')
-        return false
-      }
-      
-      const platformPubkey = new PublicKey(platformWallet)
+      // Verify amount sent to treasury wallet (same as shoutouts/tips)
+      const { TREASURY_WALLET } = await import('../config/solana')
+      const platformPubkey = TREASURY_WALLET
       const accountKeys = transaction.transaction.message.getAccountKeys()
       
       // Find platform wallet in transaction

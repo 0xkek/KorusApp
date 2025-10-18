@@ -38,7 +38,7 @@ export const getSubscriptionPricing = async (req: Request, res: Response) => {
           ]
         }
       },
-      platformWallet: process.env.PLATFORM_WALLET_ADDRESS
+      platformWallet: 'ByqqYGErKfyLHHd3NjgMnbbxQdPs1kFrPVWPUHUsD31W' // TREASURY_WALLET
     })
   } catch (error) {
     logger.error('Get pricing error:', error)
