@@ -69,6 +69,7 @@ export default function Home() {
   const [selectedGif, setSelectedGif] = useState<string | null>(null);
   const [showDrawCanvas, setShowDrawCanvas] = useState(false);
   const [shoutoutQueue, setShoutoutQueue] = useState<Post[]>([]); // Queue for pending shoutouts
+  const [shoutoutQueueInfo, setShoutoutQueueInfo] = useState<{ activeShoutout: { id: string; duration: number; expiresAt: Date; content: string } | null; queuedShoutouts: Array<{ id: string; duration: number; expiresAt: Date; content: string }>}>({ activeShoutout: null, queuedShoutouts: [] });
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [currentUserTheme, setCurrentUserTheme] = useState<string | undefined>(undefined);
 
@@ -146,6 +147,18 @@ export default function Home() {
           return 0;
         });
         setPosts(sortedPosts as Post[]);
+
+        // Update shoutout queue state from backend response
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((response as any).shoutoutQueue) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const queueData = (response as any).shoutoutQueue;
+          logger.log('Shoutout queue data:', queueData);
+          setShoutoutQueueInfo({
+            activeShoutout: queueData.active,
+            queuedShoutouts: queueData.queued || []
+          });
+        }
       } else {
         // Fallback to mock data if backend returns empty
         logger.log('No posts in database, using mock data as fallback');
@@ -1190,10 +1203,7 @@ export default function Home() {
         isOpen={showCreatePostModal}
         onClose={() => setShowCreatePostModal(false)}
         onPostCreate={handlePostCreate}
-        queueInfo={{
-          activeShoutout: null,
-          queuedShoutouts: []
-        }}
+        queueInfo={shoutoutQueueInfo}
       />
 
       <PostOptionsModal
@@ -1306,10 +1316,7 @@ export default function Home() {
             showError((error as Error)?.message || 'Failed to create shoutout post');
           }
         }}
-        queueInfo={{
-          activeShoutout: null,
-          queuedShoutouts: []
-        }}
+        queueInfo={shoutoutQueueInfo}
       />
 
       <TipModal
