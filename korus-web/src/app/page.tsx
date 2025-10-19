@@ -2,7 +2,7 @@
 import { logger } from '@/utils/logger';
 import Image from 'next/image';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -80,6 +80,69 @@ export default function Home() {
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const POSTS_PER_PAGE = 20;
+
+  // Load more posts for infinite scroll (defined early to avoid hoisting issues)
+  const loadMorePosts = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return;
+
+    try {
+      setIsLoadingMore(true);
+      const nextPage = currentPage + 1;
+
+      const response = await postsAPI.getPosts({
+        page: nextPage,
+        limit: POSTS_PER_PAGE,
+      });
+
+      if (response.posts && response.posts.length > 0) {
+        // Transform new posts
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const transformedPosts = response.posts.map((post: any) => ({
+          ...post,
+          user: post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15) || 'Unknown',
+          wallet: post.authorWallet,
+          userTheme: post.author?.themeColor,
+          time: new Date(post.createdAt).toLocaleString(),
+          likes: post.likeCount || 0,
+          comments: post.replyCount || 0,
+          reposts: post.repostCount || 0,
+          tips: Number(post.tipAmount) || 0,
+          image: post.imageUrl,
+          avatar: post.author?.nftAvatar || null,
+          isPremium: post.author?.tier === 'premium',
+          shoutoutExpiresAt: post.shoutoutExpiresAt,
+          repostedPost: post.isRepost && post.originalPost ? {
+            id: post.originalPost.id,
+            user: post.originalPost.author?.username || post.originalPost.author?.snsUsername || post.originalPost.authorWallet?.slice(0, 15) || 'Unknown',
+            wallet: post.originalPost.authorWallet,
+            userTheme: post.originalPost.author?.themeColor,
+            content: post.originalPost.content || '',
+            likes: post.originalPost.likeCount || 0,
+            replies: post.originalPost.replyCount || 0,
+            tips: Number(post.originalPost.tipAmount) || 0,
+            comments: post.originalPost.replyCount || 0,
+            reposts: post.originalPost.repostCount || 0,
+            time: new Date(post.originalPost.createdAt).toLocaleString(),
+            isPremium: post.originalPost.author?.tier === 'premium',
+            image: post.originalPost.imageUrl,
+            avatar: post.originalPost.author?.nftAvatar || null,
+          } : undefined,
+        }));
+
+        // Append new posts to existing ones
+        setPosts(prev => [...prev, ...transformedPosts as Post[]]);
+        setCurrentPage(nextPage);
+        setHasMore(response.posts.length === POSTS_PER_PAGE);
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      logger.error('Failed to load more posts:', error);
+      setHasMore(false);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore, hasMore, currentPage, POSTS_PER_PAGE]);
 
   // Infinite scroll sentinel ref
   const sentinelRef = useInfiniteScroll({
@@ -204,69 +267,6 @@ export default function Home() {
       setPosts(mockPosts);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // Load more posts for infinite scroll
-  const loadMorePosts = async () => {
-    if (isLoadingMore || !hasMore) return;
-
-    try {
-      setIsLoadingMore(true);
-      const nextPage = currentPage + 1;
-
-      const response = await postsAPI.getPosts({
-        page: nextPage,
-        limit: POSTS_PER_PAGE,
-      });
-
-      if (response.posts && response.posts.length > 0) {
-        // Transform new posts
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const transformedPosts = response.posts.map((post: any) => ({
-          ...post,
-          user: post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15) || 'Unknown',
-          wallet: post.authorWallet,
-          userTheme: post.author?.themeColor,
-          time: new Date(post.createdAt).toLocaleString(),
-          likes: post.likeCount || 0,
-          comments: post.replyCount || 0,
-          reposts: post.repostCount || 0,
-          tips: Number(post.tipAmount) || 0,
-          image: post.imageUrl,
-          avatar: post.author?.nftAvatar || null,
-          isPremium: post.author?.tier === 'premium',
-          shoutoutExpiresAt: post.shoutoutExpiresAt,
-          repostedPost: post.isRepost && post.originalPost ? {
-            id: post.originalPost.id,
-            user: post.originalPost.author?.username || post.originalPost.author?.snsUsername || post.originalPost.authorWallet?.slice(0, 15) || 'Unknown',
-            wallet: post.originalPost.authorWallet,
-            userTheme: post.originalPost.author?.themeColor,
-            content: post.originalPost.content || '',
-            likes: post.originalPost.likeCount || 0,
-            replies: post.originalPost.replyCount || 0,
-            tips: Number(post.originalPost.tipAmount) || 0,
-            comments: post.originalPost.replyCount || 0,
-            reposts: post.originalPost.repostCount || 0,
-            time: new Date(post.originalPost.createdAt).toLocaleString(),
-            isPremium: post.originalPost.author?.tier === 'premium',
-            image: post.originalPost.imageUrl,
-            avatar: post.originalPost.author?.nftAvatar || null,
-          } : undefined,
-        }));
-
-        // Append new posts to existing ones
-        setPosts(prev => [...prev, ...transformedPosts as Post[]]);
-        setCurrentPage(nextPage);
-        setHasMore(response.posts.length === POSTS_PER_PAGE);
-      } else {
-        setHasMore(false);
-      }
-    } catch (error) {
-      logger.error('Failed to load more posts:', error);
-      setHasMore(false);
-    } finally {
-      setIsLoadingMore(false);
     }
   };
 
