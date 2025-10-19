@@ -37,7 +37,11 @@ export const searchPosts = asyncHandler(async (req: Request, res: Response) => {
             select: {
               walletAddress: true,
               tier: true,
-              genesisVerified: true
+              genesisVerified: true,
+              snsUsername: true,
+              username: true,
+              nftAvatar: true,
+              themeColor: true
             }
           },
           replies: {
@@ -46,7 +50,11 @@ export const searchPosts = asyncHandler(async (req: Request, res: Response) => {
                 select: {
                   walletAddress: true,
                   tier: true,
-                  genesisVerified: true
+                  genesisVerified: true,
+                  snsUsername: true,
+                  username: true,
+                  nftAvatar: true,
+                  themeColor: true
                 }
               }
             },
@@ -157,7 +165,11 @@ export const searchPosts = asyncHandler(async (req: Request, res: Response) => {
           select: {
             walletAddress: true,
             tier: true,
-            genesisVerified: true
+            genesisVerified: true,
+            snsUsername: true,
+            username: true,
+            nftAvatar: true,
+            themeColor: true
           }
         },
         replies: {
@@ -166,7 +178,11 @@ export const searchPosts = asyncHandler(async (req: Request, res: Response) => {
               select: {
                 walletAddress: true,
                 tier: true,
-                genesisVerified: true
+                genesisVerified: true,
+                snsUsername: true,
+                username: true,
+                nftAvatar: true,
+                themeColor: true
               }
             }
           },

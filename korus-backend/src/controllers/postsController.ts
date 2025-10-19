@@ -109,7 +109,9 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
             tier: true,
             genesisVerified: true,
             snsUsername: true,
-            nftAvatar: true
+            username: true,
+            nftAvatar: true,
+            themeColor: true
           }
         }
       }
