@@ -350,11 +350,15 @@ export default function Home() {
       }
 
       // Prepare post data
-      const postData: { topic: string; content: string; subtopic: string; imageUrl?: string } = {
+      const postData: { topic: string; content?: string; subtopic: string; imageUrl?: string } = {
         topic: 'General',
-        content: composeText.trim() || '', // Default to empty string if no content
         subtopic: 'discussion', // Default subtopic
       };
+
+      // Only include content if there's actual text
+      if (composeText.trim()) {
+        postData.content = composeText.trim();
+      }
 
       // Add image URL if uploaded or GIF if selected
       if (selectedGif) {
@@ -1236,13 +1240,17 @@ export default function Home() {
             }
 
             // Create post data with shoutout info
-            const postData: { content: string; topic: string; subtopic: string; isShoutout?: boolean; shoutoutDuration?: number; imageUrl?: string; transactionSignature?: string } = {
-              content: composeText.trim(),
+            const postData: { content?: string; topic: string; subtopic: string; isShoutout?: boolean; shoutoutDuration?: number; imageUrl?: string; transactionSignature?: string } = {
               topic: 'general',
               subtopic: 'discussion',
               shoutoutDuration: duration,
               transactionSignature,
             };
+
+            // Only include content if there's actual text
+            if (composeText.trim()) {
+              postData.content = composeText.trim();
+            }
 
             // Add image URL if uploaded or GIF if selected
             if (selectedGif) {
