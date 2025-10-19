@@ -37,12 +37,6 @@ export function useWalletAuth() {
       return;
     }
 
-    // Check if we can attempt auth (handles cooldown and in-progress checks)
-    if (!canAttemptAuth()) {
-      logger.log('⏸️ Cannot attempt auth - already in progress or in cooldown period');
-      return;
-    }
-
     setAuthenticating(true);
     setError(null);
 
@@ -109,7 +103,7 @@ export function useWalletAuth() {
       setError(isUserRejection ? null : errorMessage);
       setAuthenticating(false);
     }
-  }, [publicKey, signMessage, connected, canAttemptAuth, setAuthenticating, setError, setToken, setLastAuthTime, clearAuth]);
+  }, [publicKey, signMessage, connected, setAuthenticating, setError, setToken, setLastAuthTime, clearAuth]);
 
   // Load token from storage on mount and check if still valid
   useEffect(() => {
