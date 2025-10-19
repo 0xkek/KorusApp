@@ -13,7 +13,6 @@ import { useAuthStore } from '@/stores/authStore';
 
 export function useWalletAuth() {
   const { publicKey, signMessage, connected } = useWallet();
-  const hasTriedAuth = useRef(false);
 
   // Use Zustand store for state management
   const {
@@ -21,10 +20,12 @@ export function useWalletAuth() {
     isAuthenticated,
     isAuthenticating,
     error,
+    hasAttemptedAuth,
     setToken,
     setAuthenticating,
     setError,
     setLastAuthTime,
+    setHasAttemptedAuth,
     clearAuth,
     canAttemptAuth,
   } = useAuthStore();
@@ -116,30 +117,34 @@ export function useWalletAuth() {
       hasWindow: typeof window !== 'undefined',
       connected,
       hasPublicKey: !!publicKey,
-      publicKey: publicKey?.toBase58()
+      publicKey: publicKey?.toBase58(),
+      hasAttemptedAuth
     });
 
     if (typeof window !== 'undefined' && connected && publicKey) {
       const storedToken = localStorage.getItem('authToken');
-      logger.log('🔑 Checking for stored token:', { hasToken: !!storedToken });
+      logger.log('🔑 Checking for stored token:', { hasToken: !!storedToken, hasAttemptedAuth });
 
       if (storedToken && !token) {
         // Token exists in localStorage but not in Zustand store
         logger.log('📦 Found stored auth token, updating store');
         setToken(storedToken);
-        hasTriedAuth.current = true;
-      } else if (!storedToken && !isAuthenticating && !token && !hasTriedAuth.current) {
+        setHasAttemptedAuth(true);
+      } else if (!storedToken && !isAuthenticating && !token && !hasAttemptedAuth) {
         // No token exists, trigger authentication only once
         logger.log('🔓 No stored token found, triggering authentication...');
-        hasTriedAuth.current = true;
+        setHasAttemptedAuth(true);
         authenticate();
       }
     } else {
       logger.log('⚠️ Auth conditions not met');
-      hasTriedAuth.current = false; // Reset when disconnected
+      if (!connected) {
+        // Reset when disconnected
+        setHasAttemptedAuth(false);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connected, publicKey, token, isAuthenticating, setToken]);
+  }, [connected, publicKey, token, isAuthenticating, hasAttemptedAuth, setToken, setHasAttemptedAuth]);
 
   // Clear auth when wallet disconnects
   useEffect(() => {

@@ -13,6 +13,7 @@ interface AuthState {
   isAuthenticating: boolean;
   error: string | null;
   lastAuthTime: number | null;
+  hasAttemptedAuth: boolean;
 }
 
 interface AuthActions {
@@ -20,6 +21,7 @@ interface AuthActions {
   setAuthenticating: (isAuthenticating: boolean) => void;
   setError: (error: string | null) => void;
   setLastAuthTime: (time: number | null) => void;
+  setHasAttemptedAuth: (hasAttempted: boolean) => void;
   clearAuth: () => void;
   canAttemptAuth: () => boolean;
 }
@@ -37,6 +39,7 @@ export const useAuthStore = create<AuthStore>()(
       isAuthenticating: false,
       error: null,
       lastAuthTime: null,
+      hasAttemptedAuth: false,
 
       // Actions
       setToken: (token) => {
@@ -62,6 +65,10 @@ export const useAuthStore = create<AuthStore>()(
         set({ lastAuthTime: time });
       },
 
+      setHasAttemptedAuth: (hasAttempted) => {
+        set({ hasAttemptedAuth: hasAttempted });
+      },
+
       clearAuth: () => {
         set({
           token: null,
@@ -69,6 +76,7 @@ export const useAuthStore = create<AuthStore>()(
           isAuthenticating: false,
           error: null,
           lastAuthTime: null,
+          hasAttemptedAuth: false,
         });
       },
 
