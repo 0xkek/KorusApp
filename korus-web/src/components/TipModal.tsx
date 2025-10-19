@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState, useEffect } from 'react';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
@@ -41,7 +42,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
           const solBalance = lamports / LAMPORTS_PER_SOL;
           setBalance(solBalance);
         } catch (error) {
-          console.error('Failed to fetch balance:', error);
+          logger.error('Failed to fetch balance:', error);
         }
       }
     };
@@ -191,7 +192,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
       setSelectedAmount(null);
       setCustomAmount('');
     } catch (error: unknown) {
-      console.error('Failed to send tip:', error);
+      logger.error('Failed to send tip:', error);
 
       // Improved error handling for better user feedback
       if (error?.message?.includes('User rejected')) {

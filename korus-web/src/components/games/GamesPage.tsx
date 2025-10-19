@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
@@ -61,13 +62,13 @@ export function GamesPage() {
             }
           }
         } catch (err) {
-          console.error('Failed to fetch expanded game:', err);
+          logger.error('Failed to fetch expanded game:', err);
         }
       }
 
       setGames(gamesList);
     } catch (error) {
-      console.error('Failed to load games:', error);
+      logger.error('Failed to load games:', error);
       showError('Failed to load games');
     } finally {
       if (!expandedGameId) {
@@ -148,21 +149,21 @@ export function GamesPage() {
   }, [connected, loadGames]);
 
   const handleCreateGame = async () => {
-    console.log('🎮 handleCreateGame called');
-    console.log('  connected:', connected);
-    console.log('  publicKey:', publicKey?.toBase58());
-    console.log('  newGame:', newGame);
+    logger.log('🎮 handleCreateGame called');
+    logger.log('  connected:', connected);
+    logger.log('  publicKey:', publicKey?.toBase58());
+    logger.log('  newGame:', newGame);
 
     if (!connected) {
-      console.log('❌ Wallet not connected');
+      logger.log('❌ Wallet not connected');
       showError('Please connect your wallet to create a game');
       return;
     }
 
     const wagerSol = newGame.wager;
-    console.log('  wagerSol:', wagerSol);
+    logger.log('  wagerSol:', wagerSol);
     if (isNaN(wagerSol) || wagerSol < 0) {
-      console.log('❌ Invalid wager amount');
+      logger.log('❌ Invalid wager amount');
       showError('Invalid wager amount');
       return;
     }
@@ -172,26 +173,26 @@ export function GamesPage() {
 
       // Only create blockchain game if there's a wager
       if (wagerSol > 0) {
-        console.log('💰 Creating game with wager on blockchain...');
+        logger.log('💰 Creating game with wager on blockchain...');
         const wagerLamports = Math.floor(wagerSol * LAMPORTS_PER_SOL);
         const result = await createGame(newGame.type, wagerLamports);
         onChainGameId = result.gameId;
-        console.log('✅ Blockchain game created, ID:', onChainGameId);
+        logger.log('✅ Blockchain game created, ID:', onChainGameId);
       } else {
-        console.log('ℹ️ No wager - skipping blockchain creation');
+        logger.log('ℹ️ No wager - skipping blockchain creation');
       }
 
       // Get auth token
       const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-      console.log('  authToken exists:', !!token);
+      logger.log('  authToken exists:', !!token);
       if (!token) {
-        console.log('❌ No auth token found');
+        logger.log('❌ No auth token found');
         showError('Not authenticated. Please sign in with your wallet.');
         return;
       }
 
       // Create game in backend
-      console.log('📤 Calling backend API...');
+      logger.log('📤 Calling backend API...');
       const response = await gamesAPI.createGame(
         {
           postId: 0, // Standalone game not attached to a post
@@ -201,10 +202,10 @@ export function GamesPage() {
         },
         token
       );
-      console.log('📥 Backend response:', response);
+      logger.log('📥 Backend response:', response);
 
       if (response.success) {
-        console.log('✅ Game created successfully!');
+        logger.log('✅ Game created successfully!');
         showSuccess('Game created successfully!');
         setShowCreateModal(false);
         setNewGame({
@@ -214,11 +215,11 @@ export function GamesPage() {
         });
         loadGames(); // Reload games list
       } else {
-        console.log('❌ Backend returned success:false');
+        logger.log('❌ Backend returned success:false');
         showError('Failed to create game in backend');
       }
     } catch (err) {
-      console.error('❌ Failed to create game:', err);
+      logger.error('❌ Failed to create game:', err);
       showError(err instanceof Error ? err.message : 'Failed to create game');
     }
   };
@@ -246,12 +247,12 @@ export function GamesPage() {
           return;
         }
 
-        console.log('💰 Wagered game - joining on blockchain first...');
-        console.log('On-chain game ID:', game.onChainGameId);
+        logger.log('💰 Wagered game - joining on blockchain first...');
+        logger.log('On-chain game ID:', game.onChainGameId);
 
         // Join game on blockchain (deposits wager into escrow)
         const { signature } = await joinGame(parseInt(game.onChainGameId));
-        console.log('✅ Blockchain join successful:', signature);
+        logger.log('✅ Blockchain join successful:', signature);
 
         // Then update backend with signature
         await gamesAPI.joinGame(game.id, { onChainTxSignature: signature }, token);
@@ -268,7 +269,7 @@ export function GamesPage() {
       // Reload games to get updated state
       await loadGames();
     } catch (error) {
-      console.error('Failed to join game:', error);
+      logger.error('Failed to join game:', error);
       showError(error instanceof Error ? error.message : 'Failed to join game. Please try again.');
     } finally {
       setJoiningGame(null);
@@ -308,16 +309,16 @@ export function GamesPage() {
 
     setCancellingGame(game.id);
     try {
-      console.log('🚫 Cancelling game:', game.id, 'On-chain ID:', game.onChainGameId);
+      logger.log('🚫 Cancelling game:', game.id, 'On-chain ID:', game.onChainGameId);
 
       let signature: string | undefined;
 
       // If game has blockchain component, cancel on-chain first (refunds player1)
       if (game.onChainGameId) {
         setCancelStatus(hasWager ? `Refunding ${wagerAmount} SOL...` : 'Cancelling on blockchain...');
-        console.log('💰 Cancelling on-chain and refunding', wagerAmount, 'SOL...');
+        logger.log('💰 Cancelling on-chain and refunding', wagerAmount, 'SOL...');
         signature = await cancelGame(Number(game.onChainGameId));
-        console.log('✅ On-chain cancellation successful:', signature);
+        logger.log('✅ On-chain cancellation successful:', signature);
       }
 
       // Then delete from backend database
@@ -339,7 +340,7 @@ export function GamesPage() {
 
       loadGames();
     } catch (error) {
-      console.error('Failed to cancel game:', error);
+      logger.error('Failed to cancel game:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to cancel game';
 
       // Close modal on error too
@@ -365,20 +366,20 @@ export function GamesPage() {
     }
 
     try {
-      console.log('handleMove called:', { gameId, move });
+      logger.log('handleMove called:', { gameId, move });
       const token = localStorage.getItem('authToken');
       if (!token) {
         showError('Not authenticated. Please sign in with your wallet.');
         return;
       }
-      console.log('Sending move to API...');
+      logger.log('Sending move to API...');
       const response = await gamesAPI.makeMove(gameId, { move }, token);
-      console.log('Move API response:', response);
-      console.log('Reloading games...');
+      logger.log('Move API response:', response);
+      logger.log('Reloading games...');
       await loadGames(); // Reload to get updated state
-      console.log('Games reloaded');
+      logger.log('Games reloaded');
     } catch (error) {
-      console.error('Failed to make move:', error);
+      logger.error('Failed to make move:', error);
       showError('Failed to make move');
     }
   };
@@ -441,7 +442,7 @@ export function GamesPage() {
     };
 
     // Debug: log game data to check escrow
-    console.log('Game data:', {
+    logger.log('Game data:', {
       id: game.id,
       status: game.status,
       escrow: game.escrow,

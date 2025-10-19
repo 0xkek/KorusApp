@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 import Image from 'next/image';
 
 import { useState } from 'react';
@@ -55,10 +56,10 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
       if (selectedFiles.length > 0) {
         const imageFile = selectedFiles[0];
         if (imageFile.type.startsWith('image/')) {
-          console.log('Uploading reply image...');
+          logger.log('Uploading reply image...');
           const uploadResponse = await uploadAPI.uploadImage(imageFile, token);
           imageUrl = uploadResponse.url;
-          console.log('Reply image uploaded:', imageUrl);
+          logger.log('Reply image uploaded:', imageUrl);
         }
       }
 
@@ -82,11 +83,11 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
         token
       );
 
-      console.log('Reply created:', response);
+      logger.log('Reply created:', response);
 
       // Transform backend reply to match frontend type
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const reply: Reply = {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         id: response.reply.id as any,
         user: response.reply.author.walletAddress,
         content: response.reply.content,
@@ -107,7 +108,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
       setSelectedFiles([]);
       onClose();
     } catch (error) {
-      console.error('Failed to post reply:', error);
+      logger.error('Failed to post reply:', error);
       showError('Failed to post reply. Please try again.');
     } finally {
       setIsPosting(false);

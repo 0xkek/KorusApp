@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState, useEffect } from 'react';
 
@@ -88,7 +89,7 @@ export function RockPaperScissorsGame({
   }, [playerMove]);
 
   // Debug logging
-  console.log('RPS Game State:', {
+  logger.log('RPS Game State:', {
     isMyTurn,
     playerMove,
     isGameOver,

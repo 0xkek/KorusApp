@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { Button } from '@/components/Button';
 
@@ -54,12 +55,12 @@ export function TicTacToeBoard({
   };
 
   const handleCellClick = (index: number) => {
-    console.log('Cell clicked:', { index, cell: board[index], isMyTurn, isGameOver });
+    logger.log('Cell clicked:', { index, cell: board[index], isMyTurn, isGameOver });
     if (board[index] !== null || !isMyTurn || isGameOver) {
-      console.log('Click blocked:', { cellOccupied: board[index] !== null, notMyTurn: !isMyTurn, gameOver: isGameOver });
+      logger.log('Click blocked:', { cellOccupied: board[index] !== null, notMyTurn: !isMyTurn, gameOver: isGameOver });
       return;
     }
-    console.log('Making move:', index);
+    logger.log('Making move:', index);
     onCellClick(index);
   };
 

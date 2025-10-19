@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -45,7 +46,7 @@ export default function GifPicker({ onSelect, onClose }: GifPickerProps) {
       const data = await response.json();
       setGifs(data.results || []);
     } catch (error) {
-      console.error('Failed to fetch trending GIFs:', error);
+      logger.error('Failed to fetch trending GIFs:', error);
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +68,7 @@ export default function GifPicker({ onSelect, onClose }: GifPickerProps) {
       const data = await response.json();
       setGifs(data.results || []);
     } catch (error) {
-      console.error('Failed to search GIFs:', error);
+      logger.error('Failed to search GIFs:', error);
     } finally {
       setIsLoading(false);
     }

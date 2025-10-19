@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
@@ -30,12 +31,12 @@ export default function GamePlayPage() {
       setError(null);
       const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
 
-      console.log('📥 Loading game:', gameId);
-      console.log('Auth token present:', !!token);
+      logger.log('📥 Loading game:', gameId);
+      logger.log('Auth token present:', !!token);
 
       const response = await gamesAPI.getGame(gameId, token || undefined);
 
-      console.log('📦 Game response:', response);
+      logger.log('📦 Game response:', response);
 
       if (response.success && response.game) {
         setGame(response.game);
@@ -43,7 +44,7 @@ export default function GamePlayPage() {
         setError('Game not found');
       }
     } catch (err) {
-      console.error('❌ Failed to load game:', err);
+      logger.error('❌ Failed to load game:', err);
       setError(err instanceof Error ? err.message : 'Failed to load game');
     } finally {
       setLoading(false);
@@ -79,9 +80,9 @@ export default function GamePlayPage() {
           return;
         }
 
-        console.log('💰 Wagered game - joining on blockchain first...');
+        logger.log('💰 Wagered game - joining on blockchain first...');
         const { signature } = await joinGame(parseInt(game.onChainGameId));
-        console.log('✅ Blockchain join successful:', signature);
+        logger.log('✅ Blockchain join successful:', signature);
 
         // Then update backend with signature
         await gamesAPI.joinGame(game.id, { onChainTxSignature: signature }, token);
@@ -93,7 +94,7 @@ export default function GamePlayPage() {
       // Reload game data
       await loadGame();
     } catch (err) {
-      console.error('Failed to join game:', err);
+      logger.error('Failed to join game:', err);
       setError(err instanceof Error ? err.message : 'Failed to join game');
     } finally {
       setJoining(false);
@@ -118,7 +119,7 @@ export default function GamePlayPage() {
       // Reload game data
       await loadGame();
     } catch (err) {
-      console.error('Failed to make move:', err);
+      logger.error('Failed to make move:', err);
       setError(err instanceof Error ? err.message : 'Failed to make move');
     } finally {
       setMakingMove(false);

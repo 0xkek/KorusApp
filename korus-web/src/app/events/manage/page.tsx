@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -50,7 +51,7 @@ export default function ManageEventsPage() {
         const response = await eventsAPI.getMyEvents(token);
         setMyEvents(response.events);
       } catch (error) {
-        console.error('Failed to fetch events:', error);
+        logger.error('Failed to fetch events:', error);
         showError('Failed to load your events');
       } finally {
         setIsLoading(false);
@@ -71,7 +72,7 @@ export default function ManageEventsPage() {
       const response = await eventsAPI.getEventRegistrations(event.id, token);
       setRegistrations(response.registrations);
     } catch (error: unknown) {
-      console.error('Failed to fetch registrations:', error);
+      logger.error('Failed to fetch registrations:', error);
       showError((error as Error).message || 'Failed to load registrations');
     } finally {
       setIsLoadingRegistrations(false);
@@ -97,7 +98,7 @@ export default function ManageEventsPage() {
 
       showSuccess(`Exported ${registrations.length} registrations as ${format.toUpperCase()}`);
     } catch (error: unknown) {
-      console.error('Failed to export:', error);
+      logger.error('Failed to export:', error);
       showError((error as Error).message || 'Failed to export registrations');
     }
   };
@@ -113,7 +114,7 @@ export default function ManageEventsPage() {
       const response = await eventsAPI.getMyEvents(token);
       setMyEvents(response.events);
     } catch (error: unknown) {
-      console.error('Failed to close event:', error);
+      logger.error('Failed to close event:', error);
       showError((error as Error).message || 'Failed to close event');
     }
   };

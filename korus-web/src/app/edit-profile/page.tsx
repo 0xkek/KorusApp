@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -86,7 +87,7 @@ export default function EditProfilePage() {
         setTwitter(user.twitter || '');
         setSelectedThemeColor(user.themeColor || '#43e97b');
       } catch (error) {
-        console.error('Failed to load profile:', error);
+        logger.error('Failed to load profile:', error);
         showError('Failed to load profile');
       } finally {
         setIsLoading(false);

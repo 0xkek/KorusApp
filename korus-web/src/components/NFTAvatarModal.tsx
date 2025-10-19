@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -91,7 +92,7 @@ export default function NFTAvatarModal({
         setHasMore(false);
       }
     } catch (error) {
-      console.error('Error loading NFTs:', error);
+      logger.error('Error loading NFTs:', error);
       if (!append) setNfts([]);
       setHasMore(false);
     } finally {

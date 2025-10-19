@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -121,7 +122,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
           id: `game-${game.id}`,
           type: 'game' as const,
           title: gameTitle,
-          players: `${game.currentPlayers || 1}/2`,
+          players: `${game.player2 ? '2' : '1'}/2`,
           wager: `${game.wager} SOL`,
           timeLeft: '30m',
           isLive: game.status === 'waiting',
@@ -136,7 +137,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
 
       setRecentActivities(combined);
     } catch (error) {
-      console.error('Failed to fetch recent activities:', error);
+      logger.error('Failed to fetch recent activities:', error);
     } finally {
       setIsLoadingActivities(false);
     }
@@ -156,7 +157,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
         onNotificationCountChange(unreadCount);
       }
     } catch (error) {
-      console.error('Failed to fetch notifications:', error);
+      logger.error('Failed to fetch notifications:', error);
     } finally {
       setIsLoading(false);
     }
@@ -183,7 +184,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
         router.push(`/post/${notification.postId}`);
       }
     } catch (error) {
-      console.error('Failed to handle notification click:', error);
+      logger.error('Failed to handle notification click:', error);
     }
   };
 
@@ -198,7 +199,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
         onNotificationCountChange(0);
       }
     } catch (error) {
-      console.error('Failed to mark all as read:', error);
+      logger.error('Failed to mark all as read:', error);
     }
   };
 

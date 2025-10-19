@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import { useEffect, useState } from 'react';
 import { getFavoriteSNSDomain, fetchSNSDomains, SNSDomain } from '../utils/sns';
 
@@ -32,7 +33,7 @@ export function useSNSDomain(walletAddress: string | null) {
         domainCache.set(walletAddress, null);
         setDomain(null);
         if (process.env.NODE_ENV === 'development') {
-          console.error('Error fetching SNS domain:', error);
+          logger.error('Error fetching SNS domain:', error);
         }
       })
       .finally(() => {
@@ -62,7 +63,7 @@ export function useAllSNSDomains(walletAddress: string | null) {
       .catch(error => {
         setDomains([]);
         if (process.env.NODE_ENV === 'development') {
-          console.error('Error fetching all SNS domains:', error);
+          logger.error('Error fetching all SNS domains:', error);
         }
       })
       .finally(() => {

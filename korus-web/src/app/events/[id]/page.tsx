@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -55,7 +56,7 @@ export default function EventDetailsPage() {
           setIsCreator(true);
         }
       } catch (error: unknown) {
-        console.error('Failed to fetch event:', error);
+        logger.error('Failed to fetch event:', error);
         showError((error as Error).message || 'Failed to load event');
       } finally {
         setIsLoading(false);
@@ -77,7 +78,7 @@ export default function EventDetailsPage() {
         const response = await eventsAPI.getEventRegistrations(event.id, token);
         setRegistrations(response.registrations);
       } catch (error: unknown) {
-        console.error('Failed to fetch registrations:', error);
+        logger.error('Failed to fetch registrations:', error);
         showError((error as Error).message || 'Failed to load registrations');
       } finally {
         setIsLoadingRegistrations(false);
@@ -99,7 +100,7 @@ export default function EventDetailsPage() {
         setIsRegistered(response.registered);
         setRegistrationStatus(response.registration || null);
       } catch (error: unknown) {
-        console.error('Failed to check registration status:', error);
+        logger.error('Failed to check registration status:', error);
       }
     }
 
@@ -127,7 +128,7 @@ export default function EventDetailsPage() {
 
       showSuccess(`Exported ${registrations.length} registrations as ${format.toUpperCase()}`);
     } catch (error: unknown) {
-      console.error('Failed to export:', error);
+      logger.error('Failed to export:', error);
       showError((error as Error).message || 'Failed to export registrations');
     }
   };
@@ -183,7 +184,7 @@ export default function EventDetailsPage() {
       const eventResponse = await eventsAPI.getEvent(event.id);
       setEvent(eventResponse.event);
     } catch (error: unknown) {
-      console.error('Failed to register:', error);
+      logger.error('Failed to register:', error);
       if ((error as Error).message?.includes('rejected') || (error as Error).message?.includes('User rejected')) {
         showError('You rejected the signature request');
       } else {
@@ -209,7 +210,7 @@ export default function EventDetailsPage() {
         router.push('/events/manage');
       }, 2000);
     } catch (error: unknown) {
-      console.error('Failed to cancel event:', error);
+      logger.error('Failed to cancel event:', error);
       showError((error as Error).message || 'Failed to cancel event');
     } finally {
       setIsCancelling(false);

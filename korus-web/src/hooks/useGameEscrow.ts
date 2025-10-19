@@ -3,6 +3,7 @@
  * Handles blockchain interactions for the game escrow smart contract
  */
 
+import { logger } from '@/utils/logger';
 import { useConnection, useWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
 import * as anchor from '@coral-xyz/anchor';
@@ -88,7 +89,7 @@ export function useGameEscrow() {
       const totalGames = stateAccount.data.readBigUInt64LE(72);
       return Number(totalGames);
     } catch (error) {
-      console.error('Failed to get next game ID:', error);
+      logger.error('Failed to get next game ID:', error);
       throw error;
     }
   }, [connection]);
@@ -108,16 +109,16 @@ export function useGameEscrow() {
     setError(null);
 
     try {
-      console.log('='.repeat(50));
-      console.log('🎮 CREATE GAME STARTED');
-      console.log('Wallet:', publicKey.toString());
-      console.log('Game Type:', gameType);
-      console.log('Wager (lamports):', wagerLamports);
-      console.log('='.repeat(50));
+      logger.log('='.repeat(50));
+      logger.log('🎮 CREATE GAME STARTED');
+      logger.log('Wallet:', publicKey.toString());
+      logger.log('Game Type:', gameType);
+      logger.log('Wager (lamports):', wagerLamports);
+      logger.log('='.repeat(50));
 
       // Get the next game ID
       const gameId = await getNextGameId();
-      console.log('Next Game ID:', gameId);
+      logger.log('Next Game ID:', gameId);
 
       // Convert game type to u8
       const gameTypeMap: Record<GameType, number> = {
@@ -150,7 +151,7 @@ export function useGameEscrow() {
         GAME_ESCROW_PROGRAM_ID
       );
 
-      console.log('Derived PDAs:', {
+      logger.log('Derived PDAs:', {
         wallet: publicKey.toString(),
         statePda: statePda.toString(),
         gamePda: gamePda.toString(),
@@ -162,9 +163,9 @@ export function useGameEscrow() {
       // Check if player state already exists (no longer checking has_active_game - multiple games allowed)
       const existingPlayerState = await connection.getAccountInfo(playerStatePda);
       if (existingPlayerState) {
-        console.log('✅ Player state exists - multiple games allowed');
+        logger.log('✅ Player state exists - multiple games allowed');
       } else {
-        console.log('✅ No existing player state - will be created');
+        logger.log('✅ No existing player state - will be created');
       }
 
       // Build transaction manually without Anchor Program helper
@@ -210,10 +211,10 @@ export function useGameEscrow() {
       // Simulate transaction first to get better error messages
       try {
         const simulation = await connection.simulateTransaction(tx);
-        console.log('Simulation logs:', simulation.value.logs);
+        logger.log('Simulation logs:', simulation.value.logs);
         if (simulation.value.err) {
-          console.error('Simulation failed:', simulation.value);
-          console.error('Full simulation:', JSON.stringify(simulation.value, null, 2));
+          logger.error('Simulation failed:', simulation.value);
+          logger.error('Full simulation:', JSON.stringify(simulation.value, null, 2));
 
           // Check for insufficient funds error (Custom error 1)
           const errStr = JSON.stringify(simulation.value.err);
@@ -226,9 +227,9 @@ export function useGameEscrow() {
 
           throw new Error(`Simulation failed: ${errStr}`);
         }
-        console.log('Simulation succeeded!');
+        logger.log('Simulation succeeded!');
       } catch (simError: unknown) {
-        console.error('Simulation error:', simError);
+        logger.error('Simulation error:', simError);
         throw simError;
       }
 
@@ -237,7 +238,7 @@ export function useGameEscrow() {
       try {
         signature = await sendTransaction(tx, connection);
       } catch (txError: unknown) {
-        console.error('Transaction failed:', txError);
+        logger.error('Transaction failed:', txError);
 
         // Check if user rejected the transaction
         const errorMessage = txError.message || 'Transaction failed';
@@ -250,7 +251,7 @@ export function useGameEscrow() {
           throw new Error('Transaction cancelled by user');
         }
 
-        console.error('Error details:', {
+        logger.error('Error details:', {
           message: txError.message,
           logs: txError.logs,
           error: txError.error,
@@ -261,12 +262,12 @@ export function useGameEscrow() {
       // Wait for confirmation
       await connection.confirmTransaction(signature, 'confirmed');
 
-      console.log('✅ Game created on blockchain:', { gameId, signature });
+      logger.log('✅ Game created on blockchain:', { gameId, signature });
 
       setIsProcessing(false);
       return { gameId, signature };
     } catch (error) {
-      console.error('Failed to create game on blockchain:', error);
+      logger.error('Failed to create game on blockchain:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to create game';
       setError(errorMessage);
       setIsProcessing(false);
@@ -286,11 +287,11 @@ export function useGameEscrow() {
     setError(null);
 
     try {
-      console.log('='.repeat(50));
-      console.log('🎮 JOIN GAME STARTED');
-      console.log('Wallet:', publicKey.toString());
-      console.log('Game ID:', gameId);
-      console.log('='.repeat(50));
+      logger.log('='.repeat(50));
+      logger.log('🎮 JOIN GAME STARTED');
+      logger.log('Wallet:', publicKey.toString());
+      logger.log('Game ID:', gameId);
+      logger.log('='.repeat(50));
 
       // First, get the game from blockchain to know the wager amount
       const gameIdBuffer = Buffer.alloc(8);
@@ -315,7 +316,7 @@ export function useGameEscrow() {
         GAME_ESCROW_PROGRAM_ID
       );
 
-      console.log('Derived PDAs:', {
+      logger.log('Derived PDAs:', {
         gamePda: gamePda.toString(),
         playerStatePda: playerStatePda.toString(),
         escrowPda: escrowPda.toString(),
@@ -325,9 +326,9 @@ export function useGameEscrow() {
       // Check if player state exists (for informational purposes only - blockchain allows multiple games)
       const playerStateAccount = await connection.getAccountInfo(playerStatePda);
       if (playerStateAccount) {
-        console.log('✅ Player state exists - user can join multiple games');
+        logger.log('✅ Player state exists - user can join multiple games');
       } else {
-        console.log('Player state does not exist yet (will be created with init_if_needed)');
+        logger.log('Player state does not exist yet (will be created with init_if_needed)');
       }
 
       // Get game account to read wager
@@ -339,7 +340,7 @@ export function useGameEscrow() {
       // Read wager from game account (discriminator(8) + game_id(8) + game_type(1) + player1(32) + player2_option(1+32) + wager(8))
       const wagerOffset = 8 + 8 + 1 + 32 + 1 + 32;
       const wagerLamports = Number(gameAccount.data.readBigUInt64LE(wagerOffset));
-      console.log('Game wager:', wagerLamports, 'lamports');
+      logger.log('Game wager:', wagerLamports, 'lamports');
 
       // Build join_game instruction
       // NOTE: The smart contract itself does the transfer via CPI, so we don't need a separate transfer instruction
@@ -371,15 +372,15 @@ export function useGameEscrow() {
       // Simulate first
       try {
         const simulation = await connection.simulateTransaction(tx);
-        console.log('='.repeat(50));
-        console.log('SIMULATION RESULT:');
-        console.log('Logs:', simulation.value.logs);
-        console.log('Error:', simulation.value.err);
-        console.log('Units consumed:', simulation.value.unitsConsumed);
-        console.log('='.repeat(50));
+        logger.log('='.repeat(50));
+        logger.log('SIMULATION RESULT:');
+        logger.log('Logs:', simulation.value.logs);
+        logger.log('Error:', simulation.value.err);
+        logger.log('Units consumed:', simulation.value.unitsConsumed);
+        logger.log('='.repeat(50));
 
         if (simulation.value.err) {
-          console.error('Simulation failed:', simulation.value);
+          logger.error('Simulation failed:', simulation.value);
 
           // Parse the error to provide better context
           const errStr = JSON.stringify(simulation.value.err);
@@ -393,15 +394,15 @@ export function useGameEscrow() {
           }
 
           if (errStr.includes('101')) {
-            console.error('Error 101: This might be PlayerAlreadyInGame error');
-            console.error('Check if the player_state account has current_game_id set');
+            logger.error('Error 101: This might be PlayerAlreadyInGame error');
+            logger.error('Check if the player_state account has current_game_id set');
           }
 
           throw new Error(`Simulation failed: ${errStr}`);
         }
-        console.log('Simulation succeeded!');
+        logger.log('Simulation succeeded!');
       } catch (simError: unknown) {
-        console.error('Simulation error:', simError);
+        logger.error('Simulation error:', simError);
         throw simError;
       }
 
@@ -410,7 +411,7 @@ export function useGameEscrow() {
       try {
         signature = await sendTransaction(tx, connection);
       } catch (txError: unknown) {
-        console.error('Transaction failed:', txError);
+        logger.error('Transaction failed:', txError);
 
         // Check if user rejected the transaction
         const errorMessage = txError.message || 'Transaction failed';
@@ -423,7 +424,7 @@ export function useGameEscrow() {
           throw new Error('Transaction cancelled by user');
         }
 
-        console.error('Error details:', {
+        logger.error('Error details:', {
           message: txError.message,
           logs: txError.logs,
           error: txError.error,
@@ -434,12 +435,12 @@ export function useGameEscrow() {
       // Wait for confirmation
       await connection.confirmTransaction(signature, 'confirmed');
 
-      console.log('✅ Joined game on blockchain:', { gameId, signature });
+      logger.log('✅ Joined game on blockchain:', { gameId, signature });
 
       setIsProcessing(false);
       return { signature };
     } catch (error) {
-      console.error('Failed to join game on blockchain:', error);
+      logger.error('Failed to join game on blockchain:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to join game';
       setError(errorMessage);
       setIsProcessing(false);
@@ -459,7 +460,7 @@ export function useGameEscrow() {
     setError(null);
 
     try {
-      console.log('🚫 Cancelling game:', gameId);
+      logger.log('🚫 Cancelling game:', gameId);
 
       // Derive PDAs
       const [statePda] = PublicKey.findProgramAddressSync(
@@ -513,22 +514,22 @@ export function useGameEscrow() {
       // Simulate first to get better error messages
       try {
         const simulation = await connection.simulateTransaction(tx);
-        console.log('='.repeat(50));
-        console.log('CANCEL GAME SIMULATION:');
-        console.log('Logs:', simulation.value.logs);
-        console.log('Error:', simulation.value.err);
-        console.log('Units consumed:', simulation.value.unitsConsumed);
-        console.log('Accounts:', JSON.stringify({
+        logger.log('='.repeat(50));
+        logger.log('CANCEL GAME SIMULATION:');
+        logger.log('Logs:', simulation.value.logs);
+        logger.log('Error:', simulation.value.err);
+        logger.log('Units consumed:', simulation.value.unitsConsumed);
+        logger.log('Accounts:', JSON.stringify({
           statePda: statePda.toString(),
           gamePda: gamePda.toString(),
           playerStatePda: playerStatePda.toString(),
           escrowPda: escrowPda.toString(),
           player1: publicKey.toString(),
         }, null, 2));
-        console.log('='.repeat(50));
+        logger.log('='.repeat(50));
         if (simulation.value.err) {
-          console.error('Cancel simulation failed:', simulation.value);
-          console.error('Error details:', JSON.stringify(simulation.value.err, null, 2));
+          logger.error('Cancel simulation failed:', simulation.value);
+          logger.error('Error details:', JSON.stringify(simulation.value.err, null, 2));
 
           // Check account existence
           const [gameAccountInfo, playerStateInfo, escrowInfo] = await Promise.all([
@@ -537,24 +538,24 @@ export function useGameEscrow() {
             connection.getAccountInfo(escrowPda)
           ]);
 
-          console.log('Account existence check:');
-          console.log('- Game account exists:', !!gameAccountInfo);
-          console.log('- Player state exists:', !!playerStateInfo);
-          console.log('- Escrow exists:', !!escrowInfo);
+          logger.log('Account existence check:');
+          logger.log('- Game account exists:', !!gameAccountInfo);
+          logger.log('- Player state exists:', !!playerStateInfo);
+          logger.log('- Escrow exists:', !!escrowInfo);
 
           if (gameAccountInfo) {
-            console.log('- Game account owner:', gameAccountInfo.owner.toString());
-            console.log('- Game account data length:', gameAccountInfo.data.length);
+            logger.log('- Game account owner:', gameAccountInfo.owner.toString());
+            logger.log('- Game account data length:', gameAccountInfo.data.length);
           }
           if (playerStateInfo) {
-            console.log('- Player state owner:', playerStateInfo.owner.toString());
-            console.log('- Player state data length:', playerStateInfo.data.length);
+            logger.log('- Player state owner:', playerStateInfo.owner.toString());
+            logger.log('- Player state data length:', playerStateInfo.data.length);
           }
 
           throw new Error(`Cancel simulation failed: ${JSON.stringify(simulation.value.err)}`);
         }
       } catch (simError: unknown) {
-        console.error('Cancel simulation error:', simError);
+        logger.error('Cancel simulation error:', simError);
         throw simError;
       }
 
@@ -564,12 +565,12 @@ export function useGameEscrow() {
       // Wait for confirmation
       await connection.confirmTransaction(signature, 'confirmed');
 
-      console.log('✅ Game cancelled on blockchain:', { gameId, signature });
+      logger.log('✅ Game cancelled on blockchain:', { gameId, signature });
 
       setIsProcessing(false);
       return signature;
     } catch (error) {
-      console.error('Failed to cancel game on blockchain:', error);
+      logger.error('Failed to cancel game on blockchain:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to cancel game';
       setError(errorMessage);
       setIsProcessing(false);

@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState } from 'react';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
@@ -106,14 +107,14 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
       }
 
       // Wait for confirmation
-      console.log('⏳ Waiting for transaction confirmation...', signature);
+      logger.log('⏳ Waiting for transaction confirmation...', signature);
       await connection.confirmTransaction(signature, 'confirmed');
-      console.log('✅ Transaction confirmed!');
+      logger.log('✅ Transaction confirmed!');
 
       // Process subscription on backend
-      console.log('📡 Calling backend API to activate subscription...');
+      logger.log('📡 Calling backend API to activate subscription...');
       const result = await subscriptionAPI.subscribe(plan, signature, token);
-      console.log('📦 Backend response:', result);
+      logger.log('📦 Backend response:', result);
 
       if (result.success) {
         showSuccess(
@@ -135,7 +136,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
         showError('Failed to activate subscription. Please contact support.');
       }
     } catch (error: unknown) {
-      console.error('Failed to upgrade to premium:', error);
+      logger.error('Failed to upgrade to premium:', error);
 
       // Improved error handling
       if ((error as Error)?.message?.includes('User rejected')) {

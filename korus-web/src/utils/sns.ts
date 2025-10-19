@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 // SNS (Solana Name Service) utilities for web app
 // Adapted from mobile app implementation
 
@@ -73,7 +74,7 @@ export async function fetchSNSDomains(walletAddress: string): Promise<SNSDomain[
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
     if (!API_URL) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('No API URL configured, using mock SNS domains');
+        logger.log('No API URL configured, using mock SNS domains');
       }
     } else {
       try {
@@ -91,7 +92,7 @@ export async function fetchSNSDomains(walletAddress: string): Promise<SNSDomain[
         }
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
-          console.log('SNS API call failed, using fallback:', error);
+          logger.log('SNS API call failed, using fallback:', error);
         }
       }
     }
@@ -108,7 +109,7 @@ export async function fetchSNSDomains(walletAddress: string): Promise<SNSDomain[
 
     return mockDomains;
   } catch (error) {
-    console.error('Error fetching SNS domains:', error);
+    logger.error('Error fetching SNS domains:', error);
     return [];
   }
 }
@@ -129,7 +130,7 @@ export async function getFavoriteSNSDomain(walletAddress: string): Promise<strin
 
     return null;
   } catch (error) {
-    console.error('Error getting favorite SNS domain:', error);
+    logger.error('Error getting favorite SNS domain:', error);
     return null;
   }
 }
@@ -161,14 +162,14 @@ export async function setFavoriteSNSDomain(walletAddress: string, domain: string
         });
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
-          console.log('Failed to save favorite domain to backend:', error);
+          logger.log('Failed to save favorite domain to backend:', error);
         }
       }
     }
 
     return true;
   } catch (error) {
-    console.error('Error setting favorite SNS domain:', error);
+    logger.error('Error setting favorite SNS domain:', error);
     return false;
   }
 }
@@ -182,7 +183,7 @@ export async function resolveSNSDomain(domain: string): Promise<string | null> {
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
     if (!API_URL) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('No API URL configured for SNS resolution');
+        logger.log('No API URL configured for SNS resolution');
       }
     } else {
       try {
@@ -198,7 +199,7 @@ export async function resolveSNSDomain(domain: string): Promise<string | null> {
         }
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
-          console.log('SNS resolve API failed, using fallback:', error);
+          logger.log('SNS resolve API failed, using fallback:', error);
         }
       }
     }
@@ -212,7 +213,7 @@ export async function resolveSNSDomain(domain: string): Promise<string | null> {
 
     return null;
   } catch (error) {
-    console.error('Error resolving SNS domain:', error);
+    logger.error('Error resolving SNS domain:', error);
     return null;
   }
 }

@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState, useEffect } from 'react';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
@@ -48,7 +49,7 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm,
           const solBalance = lamports / LAMPORTS_PER_SOL;
           setWalletBalance(solBalance);
         } catch (error) {
-          console.error('Failed to fetch balance:', error);
+          logger.error('Failed to fetch balance:', error);
         }
       }
     };
@@ -193,7 +194,7 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm,
       showSuccess(`Shoutout payment sent! Your post will be featured for ${selectedOption.label}.`);
       onClose();
     } catch (error: unknown) {
-      console.error('Shoutout payment error:', error);
+      logger.error('Shoutout payment error:', error);
 
       // Handle user cancellation gracefully
       if (error?.message?.includes('User rejected') ||

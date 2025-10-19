@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 import Image from 'next/image';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -94,14 +95,14 @@ export default function PostDetailPage() {
                 setLiked(interactionsResponse.interactions[postId].liked);
               }
             } catch (error) {
-              console.error('Failed to fetch user interactions:', error);
+              logger.error('Failed to fetch user interactions:', error);
             }
           }
 
           // Fetch replies
           const repliesResponse = await repliesAPI.getReplies(postId);
           if (repliesResponse.success) {
-            console.log('Raw replies from backend:', repliesResponse.replies);
+            logger.log('Raw replies from backend:', repliesResponse.replies);
             // Transform replies to frontend format
             const transformedReplies = repliesResponse.replies.map(reply => {
               const transformed = {
@@ -127,15 +128,15 @@ export default function PostDetailPage() {
                 isPremium: false,
                 image: reply.imageUrl
               };
-              console.log('Transformed reply:', transformed);
+              logger.log('Transformed reply:', transformed);
               return transformed;
             });
-            console.log('Setting transformed replies:', transformedReplies);
+            logger.log('Setting transformed replies:', transformedReplies);
             setReplies(transformedReplies as Reply[]);
           }
         }
       } catch (backendError) {
-        console.error('Backend fetch failed, trying mock data:', backendError);
+        logger.error('Backend fetch failed, trying mock data:', backendError);
         // Fallback to mock data
         const foundPost = MOCK_POSTS.find(p => String(p.id) === postId);
         if (foundPost) {
@@ -144,7 +145,7 @@ export default function PostDetailPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to load post:', error);
+      logger.error('Failed to load post:', error);
     } finally {
       setLoading(false);
     }
@@ -176,7 +177,7 @@ export default function PostDetailPage() {
     try {
       await interactionsAPI.likePost(postId, token);
     } catch (error) {
-      console.error('Failed to like post:', error);
+      logger.error('Failed to like post:', error);
       // Revert on error
       setLiked(previousLiked);
       setPost({
@@ -277,10 +278,10 @@ export default function PostDetailPage() {
       if (selectedFiles.length > 0) {
         const imageFile = selectedFiles[0];
         if (imageFile.type.startsWith('image/')) {
-          console.log('Uploading reply image...');
+          logger.log('Uploading reply image...');
           const uploadResponse = await uploadAPI.uploadImage(imageFile, token);
           imageUrl = uploadResponse.url;
-          console.log('Reply image uploaded:', imageUrl);
+          logger.log('Reply image uploaded:', imageUrl);
         }
       }
 
@@ -301,7 +302,7 @@ export default function PostDetailPage() {
       // Reload post to get latest data from backend
       await loadPost();
     } catch (error) {
-      console.error('Failed to post reply:', error);
+      logger.error('Failed to post reply:', error);
       showError('Failed to post reply. Please try again.');
     } finally {
       setIsPostingReply(false);

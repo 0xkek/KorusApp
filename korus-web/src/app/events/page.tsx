@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -56,7 +57,7 @@ export default function EventsPage() {
         const result = await eventsAPI.getEvents({ status: 'active' });
         setEvents(result.events);
       } catch (error) {
-        console.error('Failed to fetch events:', error);
+        logger.error('Failed to fetch events:', error);
         showError('Failed to load events');
       } finally {
         setIsLoading(false);

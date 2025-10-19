@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState, useEffect, useCallback } from 'react';
 import { subscriptionAPI, SubscriptionStatusResponse } from '@/lib/api';
@@ -36,9 +37,9 @@ export function useSubscription(): UseSubscriptionReturn {
 
     try {
       // ALWAYS fetch fresh data from backend - no cache checks
-      console.log('🔄 Fetching fresh subscription status from backend...');
+      logger.log('🔄 Fetching fresh subscription status from backend...');
       const status = await subscriptionAPI.getStatus(token);
-      console.log('📦 Backend subscription status:', status);
+      logger.log('📦 Backend subscription status:', status);
       setSubscriptionStatus(status);
 
       // Cache in localStorage for offline access
@@ -46,13 +47,13 @@ export function useSubscription(): UseSubscriptionReturn {
         try {
           localStorage.setItem('korus_subscription_status', JSON.stringify(status));
           localStorage.setItem('korus_subscription_cached_at', Date.now().toString());
-          console.log('💾 Cached subscription status in localStorage');
+          logger.log('💾 Cached subscription status in localStorage');
         } catch {
           // Continue without cache
         }
       }
     } catch (err: unknown) {
-      console.error('❌ Failed to fetch subscription status:', err);
+      logger.error('❌ Failed to fetch subscription status:', err);
       setError(err.message || 'Failed to fetch subscription status');
 
       // Try to load from cache on error
@@ -65,10 +66,10 @@ export function useSubscription(): UseSubscriptionReturn {
             const cacheAge = Date.now() - parseInt(cachedAt);
             // Use cache if less than 5 minutes old
             if (cacheAge < 5 * 60 * 1000) {
-              console.log('📂 Using cached subscription status (age:', Math.floor(cacheAge / 1000), 'seconds)');
+              logger.log('📂 Using cached subscription status (age:', Math.floor(cacheAge / 1000), 'seconds)');
               setSubscriptionStatus(JSON.parse(cached));
             } else {
-              console.log('🗑️ Cache expired, clearing...');
+              logger.log('🗑️ Cache expired, clearing...');
               localStorage.removeItem('korus_subscription_status');
               localStorage.removeItem('korus_subscription_cached_at');
             }
@@ -85,7 +86,7 @@ export function useSubscription(): UseSubscriptionReturn {
   // Clear cache and fetch fresh on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      console.log('🗑️ Clearing subscription cache on mount...');
+      logger.log('🗑️ Clearing subscription cache on mount...');
       localStorage.removeItem('korus_subscription_status');
       localStorage.removeItem('korus_subscription_cached_at');
     }

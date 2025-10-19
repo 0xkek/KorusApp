@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 import Image from 'next/image';
 
 import { useState, useEffect } from 'react';
@@ -91,7 +92,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
             const uploadResponse = await uploadAPI.uploadImage(imageFile, token);
             imageUrl = uploadResponse.url;
           } catch (uploadError) {
-            console.error('Failed to upload image:', uploadError);
+            logger.error('Failed to upload image:', uploadError);
             showError('Failed to upload image. Please try again.');
             setIsPosting(false);
             return;
@@ -142,7 +143,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
       setShowDrawCanvas(false);
       onClose();
     } catch (error) {
-      console.error('Failed to create post:', error);
+      logger.error('Failed to create post:', error);
       showError('Failed to create post. Please try again.');
     } finally {
       setIsPosting(false);
@@ -465,7 +466,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                   const uploadResponse = await uploadAPI.uploadImage(selectedFiles[0], token!);
                   imageUrl = uploadResponse.url;
                 } catch (uploadError) {
-                  console.error('Image upload failed:', uploadError);
+                  logger.error('Image upload failed:', uploadError);
                   showError('Failed to upload image');
                   setIsPosting(false);
                   return;
@@ -520,7 +521,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
               setShowDrawCanvas(false);
               onClose();
             } catch (error: unknown) {
-              console.error('Failed to create shoutout post:', error);
+              logger.error('Failed to create shoutout post:', error);
               showError((error as Error)?.message || 'Failed to create shoutout post');
             } finally {
               setIsPosting(false);

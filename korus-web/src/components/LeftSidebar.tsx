@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -38,7 +39,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
           const result = await eventsAPI.getMyEvents(token);
           setHasCreatedEvents(result.events && result.events.length > 0);
         } catch (error) {
-          console.error('Failed to check user events:', error);
+          logger.error('Failed to check user events:', error);
           setHasCreatedEvents(false);
         }
       } else {

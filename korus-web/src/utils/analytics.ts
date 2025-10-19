@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 /**
  * Web Vitals and Analytics Utilities
  * Monitors Core Web Vitals (CWV) for performance tracking
@@ -19,7 +20,7 @@ export type Metric = {
 export function reportWebVitals(metric: Metric) {
   // Log to console in development
   if (process.env.NODE_ENV === 'development') {
-    console.log('📊 Web Vital:', {
+    logger.log('📊 Web Vital:', {
       name: metric.name,
       value: Math.round(metric.value),
       rating: metric.rating,
@@ -51,7 +52,7 @@ export function reportWebVitals(metric: Metric) {
         timestamp: Date.now(),
       }),
       keepalive: true,
-    }).catch(console.error);
+    }).catch(logger.error);
   }
 }
 
@@ -63,7 +64,7 @@ export function trackEvent(
   properties?: Record<string, unknown>
 ) {
   if (process.env.NODE_ENV === 'development') {
-    console.log('📈 Event:', eventName, properties);
+    logger.log('📈 Event:', eventName, properties);
   }
 
   // Google Analytics
@@ -84,7 +85,7 @@ export function trackEvent(
         timestamp: Date.now(),
       }),
       keepalive: true,
-    }).catch(console.error);
+    }).catch(logger.error);
   }
 }
 
@@ -100,7 +101,7 @@ export function trackPageView(url: string) {
  */
 export function trackError(error: Error, errorInfo?: Record<string, unknown>) {
   if (process.env.NODE_ENV === 'development') {
-    console.error('❌ Error tracked:', error, errorInfo);
+    logger.error('❌ Error tracked:', error, errorInfo);
   }
 
   trackEvent('error', {
@@ -127,10 +128,10 @@ export function performanceMeasure(
   if (typeof window !== 'undefined' && window.performance) {
     try {
       const measure = performance.measure(name, startMark, endMark);
-      console.log(`⏱️  ${name}: ${Math.round(measure.duration)}ms`);
+      logger.log(`⏱️  ${name}: ${Math.round(measure.duration)}ms`);
       return measure.duration;
     } catch (e) {
-      console.warn('Performance measurement failed:', e);
+      logger.warn('Performance measurement failed:', e);
     }
   }
   return 0;

@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -69,7 +70,7 @@ export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, o
 
       onClose();
     } catch (error) {
-      console.error('Failed to delete post:', error);
+      logger.error('Failed to delete post:', error);
       showError('Failed to delete post. Please try again.');
     } finally {
       setIsProcessing(false);

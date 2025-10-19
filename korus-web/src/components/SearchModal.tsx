@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 import Image from 'next/image';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -121,7 +122,8 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
       });
 
       // Transform backend results to match expected format
-      const transformedPosts = results.posts.map((post: unknown) => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const transformedPosts = results.posts.map((post: any) => ({
         ...post,
         user: post.author?.username || post.author?.snsUsername || post.authorWallet,
         wallet: post.authorWallet,
@@ -135,7 +137,8 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
       // Filter by category if selected
       let finalResults = transformedPosts;
       if (selectedCategory) {
-        finalResults = transformedPosts.filter((post: unknown) =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        finalResults = transformedPosts.filter((post: any) =>
           post.category?.toLowerCase() === selectedCategory.toLowerCase()
         );
       }
@@ -143,7 +146,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
       setSearchResults(finalResults);
       setShowHistory(false);
     } catch (error) {
-      console.error('Search failed:', error);
+      logger.error('Search failed:', error);
       // Fallback to local search if API fails
       let results = [...allPosts];
 

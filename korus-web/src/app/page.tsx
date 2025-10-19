@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 import Image from 'next/image';
 
 import { useEffect, useState } from 'react';
@@ -87,7 +88,7 @@ export default function Home() {
             setCurrentUserTheme(response.user.themeColor);
           }
         } catch (error) {
-          console.error('Failed to fetch user profile:', error);
+          logger.error('Failed to fetch user profile:', error);
         }
       }
     };
@@ -147,7 +148,7 @@ export default function Home() {
         setPosts(sortedPosts as Post[]);
       } else {
         // Fallback to mock data if backend returns empty
-        console.log('No posts in database, using mock data as fallback');
+        logger.log('No posts in database, using mock data as fallback');
         const mockPosts = [...MOCK_POSTS].sort((a, b) => {
           if (a.isShoutout && !b.isShoutout) return -1;
           if (!a.isShoutout && b.isShoutout) return 1;
@@ -156,8 +157,8 @@ export default function Home() {
         setPosts(mockPosts);
       }
     } catch (error) {
-      console.error('Failed to fetch posts from backend:', error);
-      console.log('Using mock data as fallback');
+      logger.error('Failed to fetch posts from backend:', error);
+      logger.log('Using mock data as fallback');
 
       // Fallback to mock data on error
       const mockPosts = [...MOCK_POSTS].sort((a, b) => {
@@ -182,13 +183,13 @@ export default function Home() {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        console.log('Page visible, refetching posts...');
+        logger.log('Page visible, refetching posts...');
         fetchPosts();
       }
     };
 
     const handleFocus = () => {
-      console.log('Window focused, refetching posts...');
+      logger.log('Window focused, refetching posts...');
       fetchPosts();
     };
 
@@ -214,10 +215,10 @@ export default function Home() {
 
         if (response.success) {
           setPostInteractions(response.interactions as {[key: number]: {liked: boolean, reposted: boolean, replied: boolean, tipped: boolean}});
-          console.log('User interactions loaded:', response.interactions);
+          logger.log('User interactions loaded:', response.interactions);
         }
       } catch (error) {
-        console.error('Failed to fetch user interactions:', error);
+        logger.error('Failed to fetch user interactions:', error);
       }
     };
 
@@ -317,10 +318,10 @@ export default function Home() {
   };
 
   const handleRegularPost = async () => {
-    console.log('handleRegularPost called - connected:', connected, 'isAuthenticated:', isAuthenticated, 'token:', !!token);
+    logger.log('handleRegularPost called - connected:', connected, 'isAuthenticated:', isAuthenticated, 'token:', !!token);
 
     if (!connected || !isAuthenticated || !token) {
-      console.log('Authentication check failed');
+      logger.log('Authentication check failed');
       showError('Please connect your wallet and sign in to post');
       return;
     }
@@ -328,20 +329,20 @@ export default function Home() {
     if (!composeText.trim() && selectedFiles.length === 0 && !selectedGif) return;
 
     try {
-      console.log('Creating post with token:', token);
+      logger.log('Creating post with token:', token);
 
       // Upload images first if there are any
       let imageUrl: string | undefined;
       if (selectedFiles.length > 0) {
         const imageFile = selectedFiles[0]; // For now, support only one image
         if (imageFile.type.startsWith('image/')) {
-          console.log('Uploading image...');
+          logger.log('Uploading image...');
           try {
             const uploadResponse = await uploadAPI.uploadImage(imageFile, token);
             imageUrl = uploadResponse.url;
-            console.log('Image uploaded successfully:', imageUrl);
+            logger.log('Image uploaded successfully:', imageUrl);
           } catch (uploadError) {
-            console.error('Failed to upload image:', uploadError);
+            logger.error('Failed to upload image:', uploadError);
             showError('Failed to upload image. Please try again.');
             return;
           }
@@ -362,12 +363,12 @@ export default function Home() {
         postData.imageUrl = imageUrl;
       }
 
-      console.log('Post data:', postData);
+      logger.log('Post data:', postData);
 
       // Create post via backend API
       const newPost = await postsAPI.createPost(postData, token);
 
-      console.log('Post created successfully:', newPost);
+      logger.log('Post created successfully:', newPost);
 
       // Extract the post from the response (backend returns {success: true, post: {...}})
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -399,7 +400,7 @@ export default function Home() {
       setShowDrawCanvas(false);
       showSuccess('Post created successfully!');
     } catch (error) {
-      console.error('Failed to create post:', error);
+      logger.error('Failed to create post:', error);
       showError('Failed to create post. Please try again.');
     }
   };
@@ -412,7 +413,7 @@ export default function Home() {
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    console.log('Files selected:', files.length, files);
+    logger.log('Files selected:', files.length, files);
     const maxFileSize = 10 * 1024 * 1024; // 10MB
 
     const validFiles = files.filter(file => {
@@ -423,7 +424,7 @@ export default function Home() {
       return true;
     });
 
-    console.log('Valid files:', validFiles.length, validFiles);
+    logger.log('Valid files:', validFiles.length, validFiles);
     setSelectedFiles(prev => [...prev, ...validFiles].slice(0, 4));
   };
 
@@ -486,10 +487,10 @@ export default function Home() {
 
       // Call backend API
       const response = await interactionsAPI.likePost(postIdStr, token);
-      console.log('Like response:', response);
+      logger.log('Like response:', response);
 
     } catch (error) {
-      console.error('Failed to like post:', error);
+      logger.error('Failed to like post:', error);
 
       // Revert on error
       const postIdStr = String(postId);
@@ -598,7 +599,7 @@ export default function Home() {
         }));
       }
     } catch (error) {
-      console.error('Failed to toggle repost:', error);
+      logger.error('Failed to toggle repost:', error);
       showError('Failed to repost. Please try again.');
     }
   };
@@ -1211,24 +1212,24 @@ export default function Home() {
         onClose={() => setShowShoutoutModal(false)}
         postContent={composeText}
         onConfirm={async (duration, price, transactionSignature) => {
-          console.log('=== Home Page ShoutoutModal onConfirm called ===');
-          console.log('Duration:', duration);
-          console.log('Price:', price);
-          console.log('Transaction signature:', transactionSignature);
-          console.log('Token:', !!token);
-          console.log('Content:', composeText);
+          logger.log('=== Home Page ShoutoutModal onConfirm called ===');
+          logger.log('Duration:', duration);
+          logger.log('Price:', price);
+          logger.log('Transaction signature:', transactionSignature);
+          logger.log('Token:', !!token);
+          logger.log('Content:', composeText);
 
           try {
             // Upload image if needed
             let imageUrl: string | undefined;
             if (selectedFiles.length > 0 && selectedFiles[0].type.startsWith('image/')) {
-              console.log('Uploading image...');
+              logger.log('Uploading image...');
               try {
                 const uploadResponse = await uploadAPI.uploadImage(selectedFiles[0], token!);
                 imageUrl = uploadResponse.url;
-                console.log('Image uploaded:', imageUrl);
+                logger.log('Image uploaded:', imageUrl);
               } catch (uploadError) {
-                console.error('Image upload failed:', uploadError);
+                logger.error('Image upload failed:', uploadError);
                 showError('Failed to upload image');
                 return;
               }
@@ -1250,17 +1251,17 @@ export default function Home() {
               postData.imageUrl = imageUrl;
             }
 
-            console.log('Creating shoutout post with data:', postData);
+            logger.log('Creating shoutout post with data:', postData);
 
             // Create post via backend API
-            console.log('Calling postsAPI.createPost...');
+            logger.log('Calling postsAPI.createPost...');
             const newPost = await postsAPI.createPost(postData, token!);
-            console.log('Shoutout post created successfully:', newPost);
+            logger.log('Shoutout post created successfully:', newPost);
 
             // Extract the post from the response
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const post: any = (newPost as { post?: unknown }).post || newPost;
-            console.log('Extracted post:', post);
+            logger.log('Extracted post:', post);
 
             // Transform the backend response to match the frontend Post type
             const transformedPost = {
@@ -1277,7 +1278,7 @@ export default function Home() {
               shoutoutDuration: duration,
               shoutoutStartTime: Date.now(),
             };
-            console.log('Transformed shoutout post:', transformedPost);
+            logger.log('Transformed shoutout post:', transformedPost);
 
             // Call handlePostCreate to add it to the feed
             handlePostCreate(transformedPost as Post);
@@ -1288,12 +1289,12 @@ export default function Home() {
             setSelectedFiles([]);
             setSelectedGif(null);
             setShowDrawCanvas(false);
-            console.log('=== Home Page Shoutout Post Creation Complete ===');
+            logger.log('=== Home Page Shoutout Post Creation Complete ===');
           } catch (error: unknown) {
-            console.error('=== Failed to create shoutout post ===');
-            console.error('Error:', error);
-            console.error('Error message:', (error as Error)?.message);
-            console.error('Error response:', (error as { response?: unknown })?.response);
+            logger.error('=== Failed to create shoutout post ===');
+            logger.error('Error:', error);
+            logger.error('Error message:', (error as Error)?.message);
+            logger.error('Error response:', (error as { response?: unknown })?.response);
             showError((error as Error)?.message || 'Failed to create shoutout post');
           }
         }}

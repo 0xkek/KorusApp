@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -68,7 +69,7 @@ export default function CreateEventPage() {
           const lamports = await connection.getBalance(publicKey);
           setBalance(lamports / LAMPORTS_PER_SOL);
         } catch (error) {
-          console.error('Failed to fetch balance:', error);
+          logger.error('Failed to fetch balance:', error);
         }
       }
     };
@@ -178,7 +179,7 @@ export default function CreateEventPage() {
 
     try {
       // Step 1: Process payment
-      console.log('Processing payment...');
+      logger.log('Processing payment...');
       setIsProcessingPayment(true);
 
       try {
@@ -194,7 +195,7 @@ export default function CreateEventPage() {
         transaction.recentBlockhash = blockhash;
         transaction.feePayer = publicKey;
 
-        console.log('Requesting wallet signature...');
+        logger.log('Requesting wallet signature...');
 
         // Sign transaction (wallet popup opens here)
         let signedTransaction;
@@ -203,9 +204,9 @@ export default function CreateEventPage() {
             throw new Error('Wallet does not support transaction signing');
           }
           signedTransaction = await signTransaction(transaction);
-          console.log('Transaction signed successfully');
+          logger.log('Transaction signed successfully');
         } catch (signError: unknown) {
-          console.error('Signature error:', signError);
+          logger.error('Signature error:', signError);
           if ((signError as Error).message?.includes('User rejected') ||
               (signError as Error).message?.includes('Plugin Closed') ||
               (signError as Error).message?.includes('User closed')) {
@@ -215,14 +216,14 @@ export default function CreateEventPage() {
         }
 
         // Send the signed transaction
-        console.log('Sending signed transaction...');
+        logger.log('Sending signed transaction...');
         const rawTransaction = signedTransaction.serialize();
         const signature = await connection.sendRawTransaction(rawTransaction, {
           skipPreflight: false,
           preflightCommitment: 'confirmed',
         });
 
-        console.log('Transaction sent, waiting for confirmation...', signature);
+        logger.log('Transaction sent, waiting for confirmation...', signature);
 
         // Wait for confirmation with timeout
         await connection.confirmTransaction({
@@ -231,10 +232,10 @@ export default function CreateEventPage() {
           lastValidBlockHeight,
         }, 'confirmed');
 
-        console.log('Payment successful!', signature);
+        logger.log('Payment successful!', signature);
         showSuccess(`Payment of ${EVENT_CREATION_FEE} SOL confirmed!`);
       } catch (paymentError) {
-        console.error('Payment failed:', paymentError);
+        logger.error('Payment failed:', paymentError);
         let errorMsg = 'Payment failed';
 
         if (paymentError instanceof Error) {
@@ -260,9 +261,9 @@ export default function CreateEventPage() {
         try {
           const uploadResponse = await uploadAPI.uploadImage(selectedImage, token);
           imageUrl = uploadResponse.url;
-          console.log('Image uploaded successfully:', imageUrl);
+          logger.log('Image uploaded successfully:', imageUrl);
         } catch (uploadError) {
-          console.error('Failed to upload image:', uploadError);
+          logger.error('Failed to upload image:', uploadError);
           showError('Failed to upload image. Please try again.');
           setIsUploadingImage(false);
           setIsSubmitting(false);
@@ -282,7 +283,7 @@ export default function CreateEventPage() {
 
       router.push(`/events/manage`);
     } catch (error: unknown) {
-      console.error('Failed to create event:', error);
+      logger.error('Failed to create event:', error);
       showError((error as Error).message || 'Failed to create event');
     } finally {
       setIsSubmitting(false);

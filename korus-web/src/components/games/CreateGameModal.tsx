@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState } from 'react';
 import { Button } from '@/components/Button';
@@ -68,7 +69,7 @@ export function CreateGameModal({ postId, onClose, onGameCreated }: CreateGameMo
         onClose();
       }
     } catch (err) {
-      console.error('Failed to create game:', err);
+      logger.error('Failed to create game:', err);
       setError(err instanceof Error ? err.message : 'Failed to create game');
     }
   };

@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 import Image from 'next/image';
 
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -146,7 +147,7 @@ export default function ProfilePage() {
           const lamports = await connection.getBalance(publicKey);
           setBalance(lamports / LAMPORTS_PER_SOL);
         } catch (error) {
-          console.error('Failed to fetch balance:', error);
+          logger.error('Failed to fetch balance:', error);
         }
       }
     };
