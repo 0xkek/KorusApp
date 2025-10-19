@@ -11,6 +11,7 @@ import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { Button } from '@/components/ui';
 import { MAX_POST_LENGTH, MAX_FILE_SIZE, MAX_FILES_PER_POST } from '@/constants';
 import { postsAPI, uploadAPI } from '@/lib/api';
+import { compressImage } from '@/utils/imageCompression';
 import type { Post } from '@/types';
 
 const DrawingCanvasInline = dynamic(() => import('@/components/DrawingCanvasInline'), { ssr: false });
@@ -89,7 +90,9 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
         const imageFile = selectedFiles[0]; // For now, support only one image
         if (imageFile.type.startsWith('image/')) {
           try {
-            const uploadResponse = await uploadAPI.uploadImage(imageFile, token);
+            // Compress image before uploading
+            const compressedImage = await compressImage(imageFile);
+            const uploadResponse = await uploadAPI.uploadImage(compressedImage, token);
             imageUrl = uploadResponse.url;
           } catch (uploadError) {
             logger.error('Failed to upload image:', uploadError);
@@ -463,7 +466,9 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
               let imageUrl: string | undefined;
               if (selectedFiles.length > 0 && selectedFiles[0].type.startsWith('image/')) {
                 try {
-                  const uploadResponse = await uploadAPI.uploadImage(selectedFiles[0], token!);
+                  // Compress image before uploading
+                  const compressedImage = await compressImage(selectedFiles[0]);
+                  const uploadResponse = await uploadAPI.uploadImage(compressedImage, token!);
                   imageUrl = uploadResponse.url;
                 } catch (uploadError) {
                   logger.error('Image upload failed:', uploadError);

@@ -69,7 +69,12 @@ const PostCardComponent = ({ post }: PostCardProps) => {
 };
 
 // Memoize component to prevent unnecessary re-renders
-// Only re-renders when post.id changes
+// Only re-renders when post data actually changes
 export const PostCard = memo(PostCardComponent, (prevProps, nextProps) => {
-  return prevProps.post.id === nextProps.post.id;
+  return (
+    prevProps.post.id === nextProps.post.id &&
+    prevProps.post.likes === nextProps.post.likes &&
+    prevProps.post.replies === nextProps.post.replies &&
+    prevProps.post.content === nextProps.post.content
+  );
 });
