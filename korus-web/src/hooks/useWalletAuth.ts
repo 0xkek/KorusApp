@@ -6,13 +6,14 @@
 
 import { logger } from '@/utils/logger';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { authAPI } from '@/lib/api';
 import bs58 from 'bs58';
 import { useAuthStore } from '@/stores/authStore';
 
 export function useWalletAuth() {
   const { publicKey, signMessage, connected } = useWallet();
+  const hasTriedAuth = useRef(false);
 
   // Use Zustand store for state management
   const {
@@ -126,15 +127,19 @@ export function useWalletAuth() {
         // Token exists in localStorage but not in Zustand store
         logger.log('📦 Found stored auth token, updating store');
         setToken(storedToken);
-      } else if (!storedToken && !isAuthenticating && !token) {
+        hasTriedAuth.current = true;
+      } else if (!storedToken && !isAuthenticating && !token && !hasTriedAuth.current) {
         // No token exists, trigger authentication only once
         logger.log('🔓 No stored token found, triggering authentication...');
+        hasTriedAuth.current = true;
         authenticate();
       }
     } else {
       logger.log('⚠️ Auth conditions not met');
+      hasTriedAuth.current = false; // Reset when disconnected
     }
-  }, [connected, publicKey, token, isAuthenticating, setToken, authenticate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connected, publicKey, token, isAuthenticating, setToken]);
 
   // Clear auth when wallet disconnects
   useEffect(() => {
