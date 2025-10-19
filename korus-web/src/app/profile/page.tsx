@@ -11,6 +11,7 @@ import PremiumUpgradeModal from '@/components/PremiumUpgradeModal';
 import { useAllSNSDomains, useSNSDomain } from '@/hooks/useSNSDomain';
 import { setFavoriteSNSDomain } from '@/utils/sns';
 import { useToastContext } from '@/components/ToastProvider';
+import { useSubscription } from '@/hooks/useSubscription';
 import type { Post } from '@/types/post';
 
 // Dynamically import modals
@@ -60,12 +61,14 @@ export default function ProfilePage() {
   // Mock wallet and user data (must be before hooks that depend on it)
   const walletAddress = publicKey?.toBase58() || '';
   const selectedAvatar = '🎮'; // Mock avatar
-  const isPremium = false; // Mock premium status
   const balance = 2.45; // Mock balance
 
   // SNS Domain hooks - must be called before any conditional returns
   const { domain: snsDomain, loading: snsLoading } = useSNSDomain(walletAddress);
   const { domains: allSNSDomains, loading: allDomainsLoading } = useAllSNSDomains(walletAddress);
+
+  // Subscription status hook
+  const { isPremium, subscriptionStatus, refreshStatus } = useSubscription();
 
   // Refs for outside click detection
   const snsDropdownRef = useRef<HTMLDivElement>(null);
@@ -875,6 +878,7 @@ export default function ProfilePage() {
       <PremiumUpgradeModal
         isOpen={showPremiumModal}
         onClose={() => setShowPremiumModal(false)}
+        onSubscriptionUpdated={refreshStatus}
       />
 
       <LeftSidebar

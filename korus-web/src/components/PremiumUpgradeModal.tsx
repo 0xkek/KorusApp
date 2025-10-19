@@ -13,6 +13,7 @@ interface PremiumUpgradeModalProps {
   onClose: () => void;
   onUpgrade?: (plan: 'monthly' | 'yearly') => void;
   onSuccess?: () => void;
+  onSubscriptionUpdated?: () => void;
 }
 
 const PREMIUM_FEATURES = [
@@ -31,7 +32,7 @@ const SUBSCRIPTION_PRICES = {
 // Treasury wallet - same as used for shoutouts/tips
 const PLATFORM_WALLET = process.env.NEXT_PUBLIC_TREASURY_WALLET || 'ByqqYGErKfyLHHd3NjgMnbbxQdPs1kFrPVWPUHUsD31W';
 
-export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSuccess }: PremiumUpgradeModalProps) {
+export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSuccess, onSubscriptionUpdated }: PremiumUpgradeModalProps) {
   const modalRef = useFocusTrap(isOpen);
   const { connected, publicKey, sendTransaction, signTransaction } = useWallet();
   const { connection } = useConnection();
@@ -112,6 +113,11 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
         showSuccess(
           `Successfully upgraded to ${plan} premium! You now have access to all premium features.`
         );
+
+        // Refresh subscription status
+        if (onSubscriptionUpdated) {
+          onSubscriptionUpdated();
+        }
 
         // Call success callback if provided
         if (onSuccess) {
