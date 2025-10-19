@@ -69,7 +69,7 @@ export default function Home() {
   const [selectedGif, setSelectedGif] = useState<string | null>(null);
   const [showDrawCanvas, setShowDrawCanvas] = useState(false);
   const [shoutoutQueue, setShoutoutQueue] = useState<Post[]>([]); // Queue for pending shoutouts
-  const [shoutoutQueueInfo, setShoutoutQueueInfo] = useState<{ activeShoutout: { id: string; duration: number; expiresAt: Date; content: string } | null; queuedShoutouts: Array<{ id: string; duration: number; expiresAt: Date; content: string }>}>({ activeShoutout: null, queuedShoutouts: [] });
+  const [shoutoutQueueInfo, setShoutoutQueueInfo] = useState<{ activeShoutout: { id: string; duration: number; expiresAt: Date | string; content: string } | null; queuedShoutouts: Array<{ id: string; duration: number; expiresAt: Date | string; content: string }>}>({ activeShoutout: null, queuedShoutouts: [] });
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [currentUserTheme, setCurrentUserTheme] = useState<string | undefined>(undefined);
 
@@ -122,6 +122,7 @@ export default function Home() {
           image: post.imageUrl,
           avatar: post.author?.nftAvatar || null,
           isPremium: post.author?.tier === 'premium',
+          shoutoutExpiresAt: post.shoutoutExpiresAt,
           // Map originalPost to repostedPost for reposts
           repostedPost: post.isRepost && post.originalPost ? {
             id: post.originalPost.id,
@@ -913,8 +914,9 @@ export default function Home() {
                       <span className="text-black text-sm">⭐</span>
                     </div>
                   </div>
-                  {post.shoutoutStartTime && post.shoutoutDuration && (
+                  {post.shoutoutDuration && (post.shoutoutExpiresAt || post.shoutoutStartTime) && (
                     <ShoutoutCountdown
+                      expiresAt={post.shoutoutExpiresAt}
                       startTime={post.shoutoutStartTime}
                       duration={post.shoutoutDuration}
                       onExpire={() => {

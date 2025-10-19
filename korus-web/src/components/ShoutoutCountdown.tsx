@@ -3,18 +3,29 @@
 import { useState, useEffect } from 'react';
 
 interface ShoutoutCountdownProps {
-  startTime: number; // timestamp in milliseconds
+  startTime?: number; // timestamp in milliseconds (optional, calculated from expiresAt if not provided)
+  expiresAt?: Date | string; // expiration timestamp (alternative to startTime + duration)
   duration: number; // duration in minutes
   onExpire?: () => void;
 }
 
-export default function ShoutoutCountdown({ startTime, duration, onExpire }: ShoutoutCountdownProps) {
+export default function ShoutoutCountdown({ startTime, expiresAt, duration, onExpire }: ShoutoutCountdownProps) {
   const [timeLeft, setTimeLeft] = useState<number>(0);
 
   useEffect(() => {
     const updateTimeLeft = () => {
       const now = Date.now();
-      const endTime = startTime + (duration * 60 * 1000); // Convert minutes to milliseconds
+
+      // Calculate end time from expiresAt if provided, otherwise use startTime + duration
+      let endTime: number;
+      if (expiresAt) {
+        endTime = typeof expiresAt === 'string' ? new Date(expiresAt).getTime() : expiresAt.getTime();
+      } else if (startTime) {
+        endTime = startTime + (duration * 60 * 1000); // Convert minutes to milliseconds
+      } else {
+        endTime = now; // Fallback
+      }
+
       const remaining = Math.max(0, endTime - now);
 
       setTimeLeft(remaining);
@@ -31,7 +42,7 @@ export default function ShoutoutCountdown({ startTime, duration, onExpire }: Sho
     const interval = setInterval(updateTimeLeft, 1000);
 
     return () => clearInterval(interval);
-  }, [startTime, duration, onExpire]);
+  }, [startTime, expiresAt, duration, onExpire]);
 
   const formatTime = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);

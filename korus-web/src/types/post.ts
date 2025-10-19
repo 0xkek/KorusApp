@@ -41,6 +41,7 @@ export interface Post {
   videoUrl?: string;
   shoutoutDuration?: number;
   shoutoutStartTime?: number;
+  shoutoutExpiresAt?: Date | string;
   category?: string;
   subcategory?: string;
   avatar?: string; // User's avatar/NFT

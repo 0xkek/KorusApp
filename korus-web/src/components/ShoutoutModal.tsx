@@ -26,8 +26,8 @@ interface ShoutoutModalProps {
   postContent: string;
   onConfirm?: (duration: number, price: number, transactionSignature: string) => void;
   queueInfo?: {
-    activeShoutout: { duration: number; startTime: number; content: string } | null;
-    queuedShoutouts: { duration: number; content: string }[];
+    activeShoutout: { id: string; duration: number; expiresAt: Date | string; content: string } | null;
+    queuedShoutouts: Array<{ id: string; duration: number; expiresAt: Date | string; content: string }>;
   };
 }
 
@@ -86,10 +86,12 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm,
     // If no active shoutout, posts immediately
     if (!activeShoutout) return 0;
 
-    // Calculate remaining time for active shoutout
+    // Calculate remaining time for active shoutout using expiresAt
     const now = Date.now();
-    const activeEndTime = activeShoutout.startTime + (activeShoutout.duration * 60 * 1000);
-    const activeRemainingMinutes = Math.max(0, Math.ceil((activeEndTime - now) / (60 * 1000)));
+    const expiresAt = typeof activeShoutout.expiresAt === 'string'
+      ? new Date(activeShoutout.expiresAt).getTime()
+      : activeShoutout.expiresAt.getTime();
+    const activeRemainingMinutes = Math.max(0, Math.ceil((expiresAt - now) / (60 * 1000)));
 
     // Sum up all queued shoutouts durations
     const queuedTotalMinutes = queuedShoutouts.reduce((sum, shoutout) => sum + shoutout.duration, 0);
