@@ -4,43 +4,10 @@
  */
 
 import { api } from './client';
+import type { APIPostsResponse, APIPostResponse, CreatePostRequest } from '@/types/api';
 
-export interface Post {
-  id: number;
-  walletAddress: string;
-  content: string;
-  category: string;
-  subcategory: string;
-  imageUrl?: string;
-  createdAt: string;
-  updatedAt: string;
-  likes?: number;
-  repliesCount?: number;
-  isLiked?: boolean;
-  user?: {
-    walletAddress: string;
-    username?: string;
-    displayName?: string;
-    nftAvatar?: string;
-  };
-}
-
-export interface CreatePostData {
-  content: string;
-  topic: string;
-  subtopic: string;
-  imageUrl?: string;
-  isShoutout?: boolean;
-  shoutoutDuration?: number;
-  transactionSignature?: string;
-}
-
-export interface PostsResponse {
-  posts: Post[];
-  total: number;
-  page: number;
-  limit: number;
-}
+// Re-export API types for convenience
+export type { APIPostsResponse, APIPostResponse, CreatePostRequest };
 
 export const postsAPI = {
   /**
@@ -51,7 +18,7 @@ export const postsAPI = {
     subcategory?: string;
     page?: number;
     limit?: number;
-  }): Promise<PostsResponse> {
+  }): Promise<APIPostsResponse> {
     const searchParams = new URLSearchParams();
     if (params?.category) searchParams.set('category', params.category);
     if (params?.subcategory) searchParams.set('subcategory', params.subcategory);
@@ -59,21 +26,21 @@ export const postsAPI = {
     if (params?.limit) searchParams.set('limit', params.limit.toString());
 
     const query = searchParams.toString();
-    return api.get<PostsResponse>(`/api/posts${query ? `?${query}` : ''}`);
+    return api.get<APIPostsResponse>(`/api/posts${query ? `?${query}` : ''}`);
   },
 
   /**
    * Get a single post by ID
    */
-  async getPost(id: number, token?: string): Promise<Post> {
-    return api.get<Post>(`/api/posts/${id}`, token);
+  async getPost(id: number, token?: string): Promise<APIPostResponse> {
+    return api.get<APIPostResponse>(`/api/posts/${id}`, token);
   },
 
   /**
    * Create a new post
    */
-  async createPost(data: CreatePostData, token: string): Promise<Post> {
-    return api.post<Post>('/api/posts', data, token);
+  async createPost(data: CreatePostRequest, token: string): Promise<APIPostResponse> {
+    return api.post<APIPostResponse>('/api/posts', data, token);
   },
 
   /**
