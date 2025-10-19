@@ -95,18 +95,28 @@ export const subscribe = async (req: AuthRequest, res: Response) => {
 export const getSubscriptionStatus = async (req: AuthRequest, res: Response) => {
   try {
     const walletAddress = req.userWallet!
-    
+
     const status = await SubscriptionService.getSubscriptionStatus(walletAddress)
-    
+
+    // Calculate days until expiration if there's an end date
+    let daysUntilExpiration = null
+    if (status.endDate) {
+      const now = new Date()
+      const end = new Date(status.endDate)
+      const diffTime = end.getTime() - now.getTime()
+      daysUntilExpiration = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    }
+
     res.json({
       success: true,
-      subscription: status
+      ...status,
+      daysUntilExpiration
     })
   } catch (error) {
     logger.error('Get subscription status error:', error)
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to get subscription status' 
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get subscription status'
     })
   }
 }
