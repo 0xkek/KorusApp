@@ -16,6 +16,7 @@ import { SafeContent } from '@/components/SafeContent';
 import { useToast } from '@/hooks/useToast';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import type { Post } from '@/types';
 import { MOCK_POSTS } from '@/data/mockData';
 import { postsAPI, uploadAPI, interactionsAPI, usersAPI } from '@/lib/api';
@@ -74,6 +75,20 @@ export default function Home() {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [currentUserTheme, setCurrentUserTheme] = useState<string | undefined>(undefined);
 
+  // Infinite scroll state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const POSTS_PER_PAGE = 20;
+
+  // Infinite scroll sentinel ref
+  const sentinelRef = useInfiniteScroll({
+    onLoadMore: loadMorePosts,
+    hasMore,
+    isLoading: isLoadingMore,
+    threshold: 300,
+  });
+
   useEffect(() => {
     if (!connected) {
       router.push('/welcome');
@@ -97,13 +112,16 @@ export default function Home() {
     fetchUserProfile();
   }, [token, connected]);
 
-  // Fetch posts function
+  // Fetch posts function (initial load)
   const fetchPosts = async () => {
     try {
       setIsLoading(true);
 
-      // Try to fetch from backend API
-      const response = await postsAPI.getPosts();
+      // Try to fetch from backend API with pagination
+      const response = await postsAPI.getPosts({
+        page: 1,
+        limit: POSTS_PER_PAGE,
+      });
 
       // If we got posts from the backend, use them
       if (response.posts && response.posts.length > 0) {
@@ -149,6 +167,8 @@ export default function Home() {
           return 0;
         });
         setPosts(sortedPosts as Post[]);
+        setCurrentPage(1);
+        setHasMore(response.posts.length === POSTS_PER_PAGE);
 
         // Update shoutout queue state from backend response
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -184,6 +204,69 @@ export default function Home() {
       setPosts(mockPosts);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Load more posts for infinite scroll
+  const loadMorePosts = async () => {
+    if (isLoadingMore || !hasMore) return;
+
+    try {
+      setIsLoadingMore(true);
+      const nextPage = currentPage + 1;
+
+      const response = await postsAPI.getPosts({
+        page: nextPage,
+        limit: POSTS_PER_PAGE,
+      });
+
+      if (response.posts && response.posts.length > 0) {
+        // Transform new posts
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const transformedPosts = response.posts.map((post: any) => ({
+          ...post,
+          user: post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15) || 'Unknown',
+          wallet: post.authorWallet,
+          userTheme: post.author?.themeColor,
+          time: new Date(post.createdAt).toLocaleString(),
+          likes: post.likeCount || 0,
+          comments: post.replyCount || 0,
+          reposts: post.repostCount || 0,
+          tips: Number(post.tipAmount) || 0,
+          image: post.imageUrl,
+          avatar: post.author?.nftAvatar || null,
+          isPremium: post.author?.tier === 'premium',
+          shoutoutExpiresAt: post.shoutoutExpiresAt,
+          repostedPost: post.isRepost && post.originalPost ? {
+            id: post.originalPost.id,
+            user: post.originalPost.author?.username || post.originalPost.author?.snsUsername || post.originalPost.authorWallet?.slice(0, 15) || 'Unknown',
+            wallet: post.originalPost.authorWallet,
+            userTheme: post.originalPost.author?.themeColor,
+            content: post.originalPost.content || '',
+            likes: post.originalPost.likeCount || 0,
+            replies: post.originalPost.replyCount || 0,
+            tips: Number(post.originalPost.tipAmount) || 0,
+            comments: post.originalPost.replyCount || 0,
+            reposts: post.originalPost.repostCount || 0,
+            time: new Date(post.originalPost.createdAt).toLocaleString(),
+            isPremium: post.originalPost.author?.tier === 'premium',
+            image: post.originalPost.imageUrl,
+            avatar: post.originalPost.author?.nftAvatar || null,
+          } : undefined,
+        }));
+
+        // Append new posts to existing ones
+        setPosts(prev => [...prev, ...transformedPosts as Post[]]);
+        setCurrentPage(nextPage);
+        setHasMore(response.posts.length === POSTS_PER_PAGE);
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      logger.error('Failed to load more posts:', error);
+      setHasMore(false);
+    } finally {
+      setIsLoadingMore(false);
     }
   };
 
@@ -1196,6 +1279,24 @@ export default function Home() {
             </div>
           ))
           )}
+
+            {/* Infinite Scroll Sentinel */}
+            {!isLoading && posts.length > 0 && (
+              <div ref={sentinelRef} className="h-10 flex items-center justify-center">
+                {isLoadingMore && (
+                  <div className="flex items-center gap-2 text-korus-textSecondary">
+                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Loading more posts...</span>
+                  </div>
+                )}
+                {!hasMore && posts.length >= POSTS_PER_PAGE && (
+                  <p className="text-korus-textSecondary text-sm">No more posts to load</p>
+                )}
+              </div>
+            )}
             </div>
         </div>
       </div>
