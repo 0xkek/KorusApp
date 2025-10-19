@@ -31,6 +31,22 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
       },
+      {
+        protocol: 'https',
+        hostname: '**.pinit.io',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.helius-rpc.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'arweave.net',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.arweave.net',
+      },
     ],
   },
 };

@@ -8,6 +8,30 @@ import { reputationService } from '../services/reputationService'
 import { CursorPagination } from '../utils/pagination'
 import SolPaymentService from '../services/solPaymentService'
 import { TREASURY_WALLET } from '../config/solana'
+import { getNFTByMint } from '../services/nftService'
+
+// Helper function to resolve NFT avatar mints to image URLs
+async function resolveNFTAvatar(nftMint: string | null): Promise<string | null> {
+  if (!nftMint) return null
+  try {
+    const nft = await getNFTByMint(nftMint)
+    return nft?.image || null
+  } catch (error) {
+    logger.error(`Failed to resolve NFT avatar ${nftMint}:`, error)
+    return null
+  }
+}
+
+// Transform post author avatars from mint addresses to image URLs
+async function transformPostAvatars(post: any): Promise<any> {
+  if (post.author?.nftAvatar) {
+    post.author.nftAvatar = await resolveNFTAvatar(post.author.nftAvatar)
+  }
+  if (post.originalPost?.author?.nftAvatar) {
+    post.originalPost.author.nftAvatar = await resolveNFTAvatar(post.originalPost.author.nftAvatar)
+  }
+  return post
+}
 
 export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Post>>) => {
   try {
@@ -243,21 +267,21 @@ export const getPosts = async (req: Request, res: Response) => {
       }
     )
 
-    // Combine shoutouts at top with regular posts
-    const allPosts = [
-      ...activeShoutouts.map((post: any) => ({
+    // Resolve NFT avatars to image URLs for all posts
+    const postsWithAvatars = await Promise.all([
+      ...activeShoutouts.map(async (post: any) => await transformPostAvatars({
         ...post,
         replies: []
       })),
-      ...result.data.map((post: any) => ({
+      ...result.data.map(async (post: any) => await transformPostAvatars({
         ...post,
         replies: []
       }))
-    ]
+    ])
 
     res.json({
       success: true,
-      posts: allPosts,
+      posts: postsWithAvatars,
       meta: result.meta,
       pagination: {
         limit: result.meta.resultCount,

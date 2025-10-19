@@ -119,7 +119,6 @@ export async function fetchNFTsForWallet(
           limit: 200, // Get more to filter spam
           displayOptions: {
             showFungible: false,
-            showNativeBalance: false,
             showInscription: false,
             showUnverifiedCollections: true,
           },

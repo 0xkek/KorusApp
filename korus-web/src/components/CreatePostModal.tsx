@@ -33,8 +33,10 @@ interface CreatePostModalProps {
   initialContent?: string;
   onPostCreate?: (post: Post) => void;
   queueInfo?: {
-    activeShoutout: ShoutoutInfo | null;
-    queuedShoutouts: ShoutoutInfo[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    activeShoutout: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    queuedShoutouts: any[];
   };
 }
 
@@ -46,9 +48,42 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
   const [isPosting, setIsPosting] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [showDrawCanvas, setShowDrawCanvas] = useState(false);
   const [showShoutoutModal, setShowShoutoutModal] = useState(false);
   const modalRef = useFocusTrap(isOpen);
+
+  // Load user's NFT avatar when modal opens
+  useEffect(() => {
+    const loadUserAvatar = async () => {
+      if (isOpen && isAuthenticated && token) {
+        logger.log('CreatePostModal: Loading user avatar...', { isOpen, isAuthenticated, hasToken: !!token });
+        try {
+          const { usersAPI, nftsAPI } = await import('@/lib/api');
+          const { user } = await usersAPI.getProfile(token);
+          logger.log('CreatePostModal: User profile loaded', { nftAvatar: user.nftAvatar });
+
+          if (user.nftAvatar) {
+            logger.log('CreatePostModal: Fetching NFT by mint:', user.nftAvatar);
+            const nft = await nftsAPI.getNFTByMint(user.nftAvatar);
+            logger.log('CreatePostModal: NFT fetched', { hasImage: !!nft?.image, nft });
+            if (nft?.image) {
+              setUserAvatar(nft.image);
+              logger.log('CreatePostModal: Avatar set to:', nft.image);
+            }
+          } else {
+            logger.log('CreatePostModal: No NFT avatar in user profile');
+          }
+        } catch (error) {
+          logger.error('CreatePostModal: Failed to load user avatar:', error);
+        }
+      } else {
+        logger.log('CreatePostModal: Skipping avatar load', { isOpen, isAuthenticated, hasToken: !!token });
+      }
+    };
+
+    loadUserAvatar();
+  }, [isOpen, isAuthenticated, token]);
 
   // Update content when initialContent changes
   useEffect(() => {
@@ -56,6 +91,18 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
       setContent(initialContent);
     }
   }, [isOpen, initialContent]);
+
+  // Handle escape key to close modal
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen && !isPosting) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, isPosting, onClose]);
 
   // Cleanup object URLs to prevent memory leaks
   useEffect(() => {
@@ -192,11 +239,17 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
   const isOverLimit = characterCount > MAX_POST_LENGTH;
 
   return (
-    <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget && !isPosting) onClose(); }}>
+    <div
+      className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={(e) => { if (e.target === e.currentTarget && !isPosting) onClose(); }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-post-title"
+    >
       <div ref={modalRef} className="modal-content bg-korus-surface/90 backdrop-blur-md rounded-2xl max-w-2xl w-full border border-korus-border shadow-xl">
         {/* Modal Header */}
         <div className="flex items-center justify-between p-6 border-b border-korus-border">
-          <h2 className="heading-2 text-white">Create Post</h2>
+          <h2 id="create-post-title" className="heading-2 text-white">Create Post</h2>
           <button
             onClick={onClose}
             aria-label="Close create post modal"
@@ -212,11 +265,23 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
         <div className="p-6">
           {/* User Avatar and Content */}
           <div className="flex gap-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0 shadow-lg shadow-korus-primary/20">
-              <span className="text-black font-bold">
-                {publicKey?.toBase58().slice(0, 2).toUpperCase() || 'U'}
-              </span>
-            </div>
+            {userAvatar ? (
+              <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden shadow-lg shadow-korus-primary/20">
+                <Image
+                  src={userAvatar}
+                  alt="Your avatar"
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0 shadow-lg shadow-korus-primary/20">
+                <span className="text-black font-bold">
+                  {publicKey?.toBase58().slice(0, 2).toUpperCase() || 'U'}
+                </span>
+              </div>
+            )}
 
             <div className="flex-1">
               {/* Text Area */}
@@ -228,6 +293,8 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                 style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
                 rows={showDrawCanvas ? 3 : 6}
                 autoFocus
+                aria-label="Post content"
+                aria-describedby="character-counter"
               />
 
               {/* Inline Drawing Canvas */}
@@ -251,7 +318,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                           alt="Upload preview"
                           width={200}
                           height={128}
-                          className="w-full object-cover rounded-xl border border-korus-border"
+                          className="max-w-full h-auto rounded-xl border border-korus-border"
                         />
                       ) : (
                         <div className="w-full h-32 bg-korus-surface/40 border border-korus-border rounded-xl flex items-center justify-center">
@@ -282,7 +349,10 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
               <div className="flex items-center justify-between mt-4">
                 <div className="flex items-center gap-2">
                   {/* Media Upload */}
-                  <label className="flex items-center justify-center w-10 h-10 bg-korus-surface/40 backdrop-blur-sm border border-korus-borderLight rounded-xl text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer">
+                  <label
+                    aria-label="Upload images or videos"
+                    className="flex items-center justify-center w-10 h-10 bg-korus-surface/40 backdrop-blur-sm border border-korus-borderLight rounded-xl text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer"
+                  >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
@@ -292,11 +362,15 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                       accept="image/*,video/*"
                       multiple
                       onChange={handleFileSelect}
+                      aria-label="Upload media files"
                     />
                   </label>
 
                   {/* GIF Button */}
-                  <button className="flex items-center justify-center w-10 h-10 bg-korus-surface/40 backdrop-blur-sm border border-korus-borderLight rounded-xl text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10">
+                  <button
+                    aria-label="Add GIF"
+                    className="flex items-center justify-center w-10 h-10 bg-korus-surface/40 backdrop-blur-sm border border-korus-borderLight rounded-xl text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10"
+                  >
                     <span className="text-xs font-bold">GIF</span>
                   </button>
 
@@ -336,6 +410,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                   <button
                     onClick={() => (content.trim() || selectedFiles.length > 0) && setShowShoutoutModal(true)}
                     disabled={!content.trim() && selectedFiles.length === 0}
+                    aria-label="Create shoutout post"
                     className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm border rounded-xl transition-all duration-200 ${
                       content.trim() || selectedFiles.length > 0
                         ? 'bg-korus-surface/40 border-korus-borderLight text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer'
@@ -346,7 +421,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                   </button>
 
                   {/* Character Counter */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" id="character-counter" aria-live="polite">
                     <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
                       isOverLimit
                         ? 'border-red-500 text-red-500'
@@ -512,6 +587,8 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                 isSponsored: false,
                 shoutoutDuration: duration,
                 shoutoutStartTime: Date.now(),
+                image: post.imageUrl || imageUrl, // Include image from backend or uploaded URL
+                imageUrl: post.imageUrl || imageUrl, // Ensure imageUrl is included
               };
 
               // Call parent's post creation function

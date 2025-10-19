@@ -4,18 +4,7 @@ import { logger } from '@/utils/logger';
 import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import Image from 'next/image';
-
-interface NFT {
-  name: string;
-  symbol: string;
-  uri: string;
-  image?: string;
-  mint: string;
-  collection?: {
-    name: string;
-    family?: string;
-  };
-}
+import { nftsAPI, type NFT } from '@/lib/api';
 
 interface NFTAvatarModalProps {
   isOpen: boolean;
@@ -34,86 +23,46 @@ export default function NFTAvatarModal({
   const [nfts, setNfts] = useState<NFT[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedNFT, setSelectedNFT] = useState<NFT | null>(null);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [showSpam, setShowSpam] = useState(false);
-  const [spamStats, setSpamStats] = useState({ filtered: 0, total: 0 });
+
+  // Debug log
+  logger.log('NFTAvatarModal render:', { isOpen, publicKey: publicKey?.toBase58() });
 
   useEffect(() => {
     if (isOpen && publicKey) {
       setNfts([]);
-      setPage(1);
-      setHasMore(true);
       setSelectedNFT(null);
-      loadNFTs(1, false);
+      loadNFTs();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, publicKey]);
 
-  const loadNFTs = async (pageNum: number = 1, append: boolean = false) => {
+  const loadNFTs = async () => {
     if (!publicKey) {
+      logger.log('No publicKey, skipping NFT load');
       setLoading(false);
       return;
     }
 
-    if (pageNum === 1) {
-      setLoading(true);
-    } else {
-      setLoadingMore(true);
-    }
+    setLoading(true);
+    logger.log('Loading NFTs for wallet:', publicKey.toString());
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-      const response = await fetch(
-        `${apiUrl}/nfts/wallet/${publicKey.toString()}?page=${pageNum}&limit=20&includeSpam=${showSpam}`
-      );
+      const response = await nftsAPI.getNFTsForWallet(publicKey.toString());
+      logger.log('NFT API response:', response);
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch NFTs');
-      }
-
-      const data = await response.json();
-
-      if (data.success && data.nfts && data.nfts.length > 0) {
-        if (append) {
-          setNfts((prev) => [...prev, ...data.nfts]);
-        } else {
-          setNfts(data.nfts);
-        }
-
-        setHasMore(data.hasMore || false);
-        setSpamStats({
-          filtered: data.spamFiltered || 0,
-          total: data.totalBeforeFilter || 0,
-        });
+      if (response.nfts && response.nfts.length > 0) {
+        logger.log(`Found ${response.nfts.length} NFTs`);
+        setNfts(response.nfts);
       } else {
-        if (!append) setNfts([]);
-        setHasMore(false);
+        logger.log('No NFTs found in response');
+        setNfts([]);
       }
     } catch (error) {
       logger.error('Error loading NFTs:', error);
-      if (!append) setNfts([]);
-      setHasMore(false);
+      setNfts([]);
     } finally {
       setLoading(false);
-      setLoadingMore(false);
     }
-  };
-
-  const handleLoadMore = () => {
-    if (!loadingMore && hasMore) {
-      const nextPage = page + 1;
-      setPage(nextPage);
-      loadNFTs(nextPage, true);
-    }
-  };
-
-  const toggleSpamFilter = () => {
-    setShowSpam(!showSpam);
-    setPage(1);
-    setNfts([]);
-    loadNFTs(1, false);
   };
 
   const handleSelect = (nft: NFT) => {
@@ -164,21 +113,6 @@ export default function NFTAvatarModal({
           </div>
         ) : (
           <>
-            {/* Spam filter toggle */}
-            {spamStats.filtered > 0 && (
-              <div className="flex items-center justify-between mb-4 p-3 bg-korus-surface/20 rounded-xl">
-                <span className="text-korus-textSecondary text-sm">
-                  {spamStats.filtered} spam NFTs hidden
-                </span>
-                <button
-                  onClick={toggleSpamFilter}
-                  className="px-4 py-2 bg-korus-primary/20 text-korus-primary rounded-lg text-sm font-semibold hover:bg-korus-primary/30 transition-colors"
-                >
-                  {showSpam ? 'Hide Spam' : 'Show All'}
-                </button>
-              </div>
-            )}
-
             {nfts.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
                 <p className="text-korus-textSecondary text-lg mb-2">
@@ -254,24 +188,6 @@ export default function NFTAvatarModal({
                       </button>
                     ))}
                   </div>
-
-                  {/* Load More Button */}
-                  {hasMore && (
-                    <button
-                      onClick={handleLoadMore}
-                      disabled={loadingMore}
-                      className="w-full py-3 bg-korus-primary/20 text-korus-primary rounded-xl font-semibold hover:bg-korus-primary/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {loadingMore ? (
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="w-4 h-4 border-2 border-korus-primary border-t-transparent rounded-full animate-spin" />
-                          Loading...
-                        </div>
-                      ) : (
-                        'Load More NFTs'
-                      )}
-                    </button>
-                  )}
                 </div>
               </>
             )}

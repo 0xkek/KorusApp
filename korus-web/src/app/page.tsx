@@ -19,7 +19,7 @@ import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import type { Post } from '@/types';
 import { MOCK_POSTS } from '@/data/mockData';
-import { postsAPI, uploadAPI, interactionsAPI, usersAPI } from '@/lib/api';
+import { postsAPI, uploadAPI, interactionsAPI, usersAPI, nftsAPI } from '@/lib/api';
 
 // Dynamically import modals for code splitting
 const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { ssr: false });
@@ -74,6 +74,7 @@ export default function Home() {
   const [shoutoutQueueInfo, setShoutoutQueueInfo] = useState<{ activeShoutout: { id: string; duration: number; expiresAt: Date | string; content: string } | null; queuedShoutouts: Array<{ id: string; duration: number; expiresAt: Date | string; content: string }>}>({ activeShoutout: null, queuedShoutouts: [] });
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [currentUserTheme, setCurrentUserTheme] = useState<string | undefined>(undefined);
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
   // Infinite scroll state
   const [currentPage, setCurrentPage] = useState(1);
@@ -166,6 +167,18 @@ export default function Home() {
           const response = await usersAPI.getProfile(token);
           if (response.user && response.user.themeColor) {
             setCurrentUserTheme(response.user.themeColor);
+          }
+
+          // Load NFT avatar if user has one
+          if (response.user && response.user.nftAvatar) {
+            try {
+              const nft = await nftsAPI.getNFTByMint(response.user.nftAvatar);
+              if (nft?.image) {
+                setUserAvatar(nft.image);
+              }
+            } catch (error) {
+              logger.error('Error loading NFT avatar:', error);
+            }
           }
         } catch (error) {
           logger.error('Failed to fetch user profile:', error);
@@ -815,11 +828,23 @@ export default function Home() {
             {/* Compose Post */}
             <div className="border-b border-korus-border bg-korus-surface/20 backdrop-blur-sm p-4">
               <div className="flex gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0 shadow-lg shadow-korus-primary/20">
-                  <span className="text-black font-bold">
-                    {publicKey?.toBase58().slice(0, 2).toUpperCase()}
-                  </span>
-                </div>
+                {userAvatar ? (
+                  <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden shadow-lg shadow-korus-primary/20">
+                    <Image
+                      src={userAvatar}
+                      alt="Your avatar"
+                      width={48}
+                      height={48}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0 shadow-lg shadow-korus-primary/20">
+                    <span className="text-black font-bold">
+                      {publicKey?.toBase58().slice(0, 2).toUpperCase()}
+                    </span>
+                  </div>
+                )}
                 <div className="flex-1">
                   <textarea
                     value={composeText}
@@ -850,7 +875,7 @@ export default function Home() {
                               alt="Upload preview"
                               width={200}
                               height={128}
-                              className="w-full object-cover rounded-xl border border-korus-border"
+                              className="max-w-full h-auto rounded-xl border border-korus-border"
                             />
                           ) : (
                             <div className="w-full h-32 bg-korus-surface/40 border border-korus-border rounded-xl flex items-center justify-center">
@@ -1016,9 +1041,21 @@ export default function Home() {
 
               <div className={`flex gap-4 ${post.isShoutout ? 'p-6' : 'p-6'}`}>
                 {/* Avatar */}
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-lg font-bold text-black flex-shrink-0">
-                  {post.user.slice(0, 2).toUpperCase()}
-                </div>
+                {post.avatar ? (
+                  <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden">
+                    <Image
+                      src={post.avatar}
+                      alt={`${post.user} avatar`}
+                      width={48}
+                      height={48}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-lg font-bold text-black flex-shrink-0">
+                    {post.user.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
 
                 {/* Post Content */}
                 <div className="flex-1 min-w-0">
@@ -1150,14 +1187,14 @@ export default function Home() {
 
                   {/* Post Image */}
                   {!post.isRepost && post.image && (
-                    <div className="mb-3 rounded-2xl overflow-hidden border border-korus-border">
+                    <div className="mb-3 flex justify-center">
                       <Image
                         src={post.image}
                         alt="Post content"
                         width={600}
                         height={400}
-                        className="w-full h-auto object-cover"
-                        style={{ maxHeight: '400px' }}
+                        className="max-w-full h-auto rounded-xl border border-korus-border"
+                        style={{ maxHeight: '500px', width: 'auto', height: 'auto' }}
                         onError={(e) => {
                           // Hide broken image on error
                           e.currentTarget.style.display = 'none';

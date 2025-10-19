@@ -16,18 +16,12 @@ import { setFavoriteSNSDomain } from '@/utils/sns';
 import { useToastContext } from '@/components/ToastProvider';
 import { useSubscription } from '@/hooks/useSubscription';
 import type { Post } from '@/types/post';
+import { type NFT } from '@/lib/api';
 
 // Dynamically import modals
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
 const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { ssr: false });
-
-interface NFTAvatar {
-  id: string;
-  name: string;
-  image: string;
-  uri: string;
-  collection?: string;
-}
+const NFTAvatarModal = dynamic(() => import('@/components/NFTAvatarModal'), { ssr: false });
 
 interface UserStats {
   posts: number;
@@ -60,7 +54,8 @@ export default function ProfilePage() {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
   const [userPosts] = useState<Post[]>([]); // Mock user posts (would come from API)
-  const [selectedNFTAvatar] = useState<NFTAvatar | null>(null); // NFT avatar (would come from API)
+  const [selectedNFTAvatar, setSelectedNFTAvatar] = useState<NFT | null>(null); // NFT avatar
+  const [showNFTAvatarModal, setShowNFTAvatarModal] = useState(false);
   const [balance, setBalance] = useState<number>(0);
 
   // Wallet and user data
@@ -100,16 +95,28 @@ export default function ProfilePage() {
   const loadUserProfile = useCallback(async () => {
     try {
       // Get auth token
-      const token = localStorage.getItem('korus_auth_token');
+      const token = localStorage.getItem('authToken');
       if (!token) return;
 
       // Load profile from API
-      const { usersAPI } = await import('@/lib/api');
+      const { usersAPI, nftsAPI } = await import('@/lib/api');
       const { user } = await usersAPI.getProfile(token);
 
       if (user.username) {
         setCurrentUsername(user.username);
         setHasSetUsername(user.hasSetUsername || false);
+      }
+
+      // Load NFT avatar if user has one
+      if (user.nftAvatar) {
+        try {
+          const nft = await nftsAPI.getNFTByMint(user.nftAvatar);
+          if (nft) {
+            setSelectedNFTAvatar(nft);
+          }
+        } catch (error) {
+          logger.error('Error loading NFT avatar:', error);
+        }
       }
 
       // Also save to localStorage as backup
@@ -247,7 +254,7 @@ export default function ProfilePage() {
     setSavingUsername(true);
     try {
       // Get auth token
-      const token = localStorage.getItem('korus_auth_token');
+      const token = localStorage.getItem('authToken');
       if (!token) {
         showError('Please reconnect your wallet to set username');
         return;
@@ -290,7 +297,32 @@ export default function ProfilePage() {
   };
 
   const handleChangeAvatar = () => {
-    // TODO: Implement avatar change modal
+    logger.log('Opening NFT avatar modal');
+    setShowNFTAvatarModal(true);
+  };
+
+  const handleSelectNFT = async (nft: NFT) => {
+    logger.log('NFT selected:', nft);
+    setSelectedNFTAvatar(nft);
+
+    try {
+      // Get auth token
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        showError('Please reconnect your wallet to update avatar');
+        return;
+      }
+
+      // Save NFT avatar to backend
+      const { usersAPI } = await import('@/lib/api');
+      await usersAPI.updateProfile({ nftAvatar: nft.mint }, token);
+
+      showSuccess('NFT avatar updated successfully!');
+    } catch (error: unknown) {
+      const errorMessage = (error as { data?: { error?: string }, message?: string })?.data?.error || (error as Error)?.message || 'Failed to update avatar';
+      showError(errorMessage);
+      logger.error('Error saving NFT avatar:', error);
+    }
   };
 
   return (
@@ -331,15 +363,6 @@ export default function ProfilePage() {
                   </svg>
                 </button>
                 <h1 className="text-3xl font-bold text-white flex-1">Profile</h1>
-                <button
-                  onClick={() => router.push('/edit-profile')}
-                  className="px-4 py-2 bg-korus-surface/40 hover:bg-korus-surface/60 border border-korus-borderLight hover:border-korus-border rounded-xl text-white font-medium transition-all duration-200 flex items-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  <span className="hidden sm:inline">Edit Profile</span>
-                </button>
               </div>
             </div>
 
@@ -953,6 +976,14 @@ export default function ProfilePage() {
           showSuccess('Post created successfully!');
           setShowCreatePostModal(false);
         }}
+      />
+
+      {/* NFT Avatar Selection Modal */}
+      <NFTAvatarModal
+        isOpen={showNFTAvatarModal}
+        onClose={() => setShowNFTAvatarModal(false)}
+        onSelectNFT={handleSelectNFT}
+        currentAvatarNFT={selectedNFTAvatar?.mint}
       />
     </main>
   );
