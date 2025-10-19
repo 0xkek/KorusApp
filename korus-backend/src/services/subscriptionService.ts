@@ -263,7 +263,8 @@ export class SubscriptionService {
       if (!user || !user.subscriptionStatus || user.subscriptionStatus === 'inactive') {
         return {
           hasSubscription: false,
-          status: 'inactive'
+          status: 'inactive',
+          isPremium: false
         }
       }
       
