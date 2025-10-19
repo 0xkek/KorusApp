@@ -12,6 +12,7 @@ import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import ReplyModal from '@/components/ReplyModal';
 import PostOptionsModal from '@/components/PostOptionsModal';
+import { SafeContent } from '@/components/SafeContent';
 import { useToast } from '@/hooks/useToast';
 import { postsAPI, repliesAPI, uploadAPI, interactionsAPI } from '@/lib/api';
 import type { Post, Reply } from '@/types';
@@ -370,9 +371,12 @@ export default function PostDetailPage() {
               </div>
 
               {/* Content */}
-              <div className="text-white text-base mb-3 whitespace-pre-wrap break-words">
-                {reply.content}
-              </div>
+              <SafeContent
+                content={reply.content}
+                className="text-white text-base mb-3 whitespace-pre-wrap break-words"
+                allowLinks={true}
+                allowFormatting={true}
+              />
 
               {/* Actions */}
               <div className="flex items-center justify-between max-w-md">
@@ -656,9 +660,12 @@ export default function PostDetailPage() {
                   </div>
 
                   {/* Post Text */}
-                  <div className="text-white text-base leading-normal mb-3 whitespace-pre-wrap break-words">
-                    {post.content}
-                  </div>
+                  <SafeContent
+                    content={post.content}
+                    className="text-white text-base leading-normal mb-3 whitespace-pre-wrap break-words"
+                    allowLinks={true}
+                    allowFormatting={true}
+                  />
 
                   {/* Post Image */}
                   {post.image && (

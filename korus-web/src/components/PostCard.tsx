@@ -2,6 +2,7 @@
 
 import { useState, memo } from 'react';
 import type { Post } from '@/types';
+import { SafeContent } from '@/components/SafeContent';
 
 interface PostCardProps {
   post: Post;
@@ -26,7 +27,13 @@ const PostCardComponent = ({ post }: PostCardProps) => {
             <span className="text-white font-semibold truncate">{post.user}</span>
             <span className="text-korus-textSecondary text-sm flex-shrink-0">{post.time}</span>
           </div>
-          <p className="text-gray-300 mt-2 whitespace-pre-wrap break-words">{post.content}</p>
+          <SafeContent
+            content={post.content}
+            as="p"
+            className="text-gray-300 mt-2 whitespace-pre-wrap break-words"
+            allowLinks={true}
+            allowFormatting={true}
+          />
         </div>
       </div>
 

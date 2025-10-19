@@ -10,6 +10,7 @@ import dynamic from 'next/dynamic';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import PremiumUpgradeModal from '@/components/PremiumUpgradeModal';
+import { SafeContent } from '@/components/SafeContent';
 import { useAllSNSDomains, useSNSDomain } from '@/hooks/useSNSDomain';
 import { setFavoriteSNSDomain } from '@/utils/sns';
 import { useToastContext } from '@/components/ToastProvider';
@@ -857,7 +858,13 @@ export default function ProfilePage() {
                 ) : (
                   userPosts.map((post) => (
                     <div key={post.id} className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6 hover:border-korus-border transition-all group">
-                      <p className="text-white mb-4">{post.content}</p>
+                      <SafeContent
+                        content={post.content}
+                        as="p"
+                        className="text-white mb-4"
+                        allowLinks={true}
+                        allowFormatting={true}
+                      />
                       {post.imageUrl && (
                         <Image src={post.imageUrl} alt="Post image" width={600} height={400} className="w-full rounded-lg mb-4" />
                       )}
