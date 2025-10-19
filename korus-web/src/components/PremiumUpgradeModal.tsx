@@ -186,10 +186,9 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
             <button
               onClick={() => handleUpgrade('monthly')}
               disabled={isProcessing}
-              className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl hover:shadow-lg transition-all duration-200 border border-korus-border disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 white-text rounded-xl hover:shadow-lg transition-all duration-200 border border-korus-border disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)',
-                color: '#FFFFFF'
+                boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)'
               }}
             >
               {isProcessing ? (
@@ -202,8 +201,8 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
                 </div>
               ) : (
                 <>
-                  <div className="font-bold" style={{ color: '#FFFFFF' }}>Monthly - 0.1 SOL</div>
-                  <div className="text-sm opacity-90" style={{ color: '#FFFFFF' }}>Paid monthly</div>
+                  <div className="font-bold">Monthly - 0.1 SOL</div>
+                  <div className="text-sm opacity-90">Paid monthly</div>
                 </>
               )}
             </button>
@@ -212,10 +211,9 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
             <button
               onClick={() => handleUpgrade('yearly')}
               disabled={isProcessing}
-              className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl hover:shadow-lg transition-all duration-200 relative border border-korus-border disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 white-text rounded-xl hover:shadow-lg transition-all duration-200 relative border border-korus-border disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)',
-                color: '#FFFFFF'
+                boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)'
               }}
             >
               {!isProcessing && (
@@ -233,8 +231,8 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
                 </div>
               ) : (
                 <>
-                  <div className="font-bold" style={{ color: '#FFFFFF' }}>Yearly - 1 SOL</div>
-                  <div className="text-sm opacity-90" style={{ color: '#FFFFFF' }}>Paid annually</div>
+                  <div className="font-bold">Yearly - 1 SOL</div>
+                  <div className="text-sm opacity-90">Paid annually</div>
                 </>
               )}
             </button>
