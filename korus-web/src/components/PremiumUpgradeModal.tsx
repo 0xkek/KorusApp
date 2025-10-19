@@ -104,10 +104,14 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
       }
 
       // Wait for confirmation
+      console.log('⏳ Waiting for transaction confirmation...', signature);
       await connection.confirmTransaction(signature, 'confirmed');
+      console.log('✅ Transaction confirmed!');
 
       // Process subscription on backend
+      console.log('📡 Calling backend API to activate subscription...');
       const result = await subscriptionAPI.subscribe(plan, signature, token);
+      console.log('📦 Backend response:', result);
 
       if (result.success) {
         showSuccess(
