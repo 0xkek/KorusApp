@@ -95,8 +95,10 @@ export const subscribe = async (req: AuthRequest, res: Response) => {
 export const getSubscriptionStatus = async (req: AuthRequest, res: Response) => {
   try {
     const walletAddress = req.userWallet!
+    console.log('🔍 [Controller] Getting subscription status for wallet:', walletAddress)
 
     const status = await SubscriptionService.getSubscriptionStatus(walletAddress)
+    console.log('📦 [Controller] Service returned status:', status)
 
     // Calculate days until expiration if there's an end date
     let daysUntilExpiration = null

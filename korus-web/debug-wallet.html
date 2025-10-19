@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head><title>Debug Wallet Connection</title></head>
+<body>
+<h1>Wallet Connection Debug</h1>
+<button onclick="checkWallet()">Check Wallet Status</button>
+<pre id="output"></pre>
+<script>
+function checkWallet() {
+  const output = document.getElementById('output');
+  output.textContent = 'Checking...\n';
+  
+  // Check if wallet is available
+  output.textContent += 'Phantom: ' + (typeof window.phantom !== 'undefined' ? 'Available' : 'Not found') + '\n';
+  output.textContent += 'Solana: ' + (typeof window.solana !== 'undefined' ? 'Available' : 'Not found') + '\n';
+  
+  // Check connection
+  if (window.solana?.isConnected) {
+    output.textContent += 'Connected: YES\n';
+    output.textContent += 'PublicKey: ' + window.solana.publicKey?.toString() + '\n';
+  } else {
+    output.textContent += 'Connected: NO\n';
+  }
+  
+  // Check localStorage
+  output.textContent += '\nLocalStorage:\n';
+  output.textContent += 'authToken: ' + (localStorage.getItem('authToken') ? 'EXISTS' : 'MISSING') + '\n';
+  output.textContent += 'korus_auth_token: ' + (localStorage.getItem('korus_auth_token') ? 'EXISTS' : 'MISSING') + '\n';
+}
+</script>
+</body>
+</html>

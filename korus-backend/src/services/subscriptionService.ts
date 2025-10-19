@@ -248,6 +248,8 @@ export class SubscriptionService {
    */
   static async getSubscriptionStatus(walletAddress: string) {
     try {
+      console.log('🔍 [Service] Querying database for wallet:', walletAddress)
+
       const user = await prisma.user.findUnique({
         where: { walletAddress },
         select: {
@@ -259,15 +261,34 @@ export class SubscriptionService {
           subscriptionPrice: true
         }
       })
-      
+
+      console.log('📊 [Service] Database returned user:', {
+        found: !!user,
+        tier: user?.tier,
+        subscriptionStatus: user?.subscriptionStatus,
+        subscriptionType: user?.subscriptionType
+      })
+
       if (!user || !user.subscriptionStatus || user.subscriptionStatus === 'inactive') {
+        console.log('❌ [Service] Returning inactive status - reason:', {
+          userExists: !!user,
+          hasSubscriptionStatus: !!user?.subscriptionStatus,
+          status: user?.subscriptionStatus
+        })
         return {
           hasSubscription: false,
           status: 'inactive',
           isPremium: false
         }
       }
-      
+
+      const isPremium = user.tier === 'premium'
+      console.log('✅ [Service] Returning active status:', {
+        tier: user.tier,
+        isPremium,
+        status: user.subscriptionStatus
+      })
+
       return {
         hasSubscription: true,
         status: user.subscriptionStatus,
@@ -275,7 +296,7 @@ export class SubscriptionService {
         startDate: user.subscriptionStartDate,
         endDate: user.subscriptionEndDate,
         price: user.subscriptionPrice,
-        isPremium: user.tier === 'premium'
+        isPremium
       }
     } catch (error) {
       logger.error('Failed to get subscription status:', error)
