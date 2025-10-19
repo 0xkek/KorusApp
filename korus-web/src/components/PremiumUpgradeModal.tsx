@@ -202,8 +202,8 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
                 </div>
               ) : (
                 <>
-                  <div className="font-bold">Monthly - 0.1 SOL</div>
-                  <div className="text-sm opacity-90">Paid monthly</div>
+                  <div className="font-bold" style={{ color: '#FFFFFF' }}>Monthly - 0.1 SOL</div>
+                  <div className="text-sm opacity-90" style={{ color: '#FFFFFF' }}>Paid monthly</div>
                 </>
               )}
             </button>
@@ -233,8 +233,8 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
                 </div>
               ) : (
                 <>
-                  <div className="font-bold">Yearly - 1 SOL</div>
-                  <div className="text-sm opacity-90">Paid annually</div>
+                  <div className="font-bold" style={{ color: '#FFFFFF' }}>Yearly - 1 SOL</div>
+                  <div className="text-sm opacity-90" style={{ color: '#FFFFFF' }}>Paid annually</div>
                 </>
               )}
             </button>
