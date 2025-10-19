@@ -81,7 +81,12 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       canAttemptAuth: () => {
-        const { isAuthenticating, lastAuthTime } = get();
+        const { isAuthenticating, lastAuthTime, hasAttemptedAuth } = get();
+
+        // Prevent if already attempted auth
+        if (hasAttemptedAuth) {
+          return false;
+        }
 
         // Prevent if already authenticating
         if (isAuthenticating) {

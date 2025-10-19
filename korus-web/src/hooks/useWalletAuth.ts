@@ -6,7 +6,7 @@
 
 import { logger } from '@/utils/logger';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback } from 'react';
 import { authAPI } from '@/lib/api';
 import bs58 from 'bs58';
 import { useAuthStore } from '@/stores/authStore';
@@ -130,11 +130,18 @@ export function useWalletAuth() {
         logger.log('📦 Found stored auth token, updating store');
         setToken(storedToken);
         setHasAttemptedAuth(true);
-      } else if (!storedToken && !isAuthenticating && !token && !hasAttemptedAuth) {
-        // No token exists, trigger authentication only once
-        logger.log('🔓 No stored token found, triggering authentication...');
-        setHasAttemptedAuth(true);
-        authenticate();
+      } else if (!storedToken && !isAuthenticating && !token) {
+        // Check if we can attempt auth - use getState() for synchronous access
+        const currentState = useAuthStore.getState();
+        if (currentState.canAttemptAuth()) {
+          // No token exists, trigger authentication only once
+          logger.log('🔓 No stored token found, triggering authentication...');
+          // Set flag synchronously BEFORE calling authenticate to prevent race conditions
+          useAuthStore.getState().setHasAttemptedAuth(true);
+          authenticate();
+        } else {
+          logger.log('⏸️ Already attempted auth or in cooldown');
+        }
       }
     } else {
       logger.log('⚠️ Auth conditions not met');
@@ -144,7 +151,7 @@ export function useWalletAuth() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connected, publicKey, token, isAuthenticating, hasAttemptedAuth, setToken, setHasAttemptedAuth]);
+  }, [connected, publicKey, token, isAuthenticating, setToken]);
 
   // Clear auth when wallet disconnects
   useEffect(() => {
