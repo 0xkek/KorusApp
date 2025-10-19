@@ -83,25 +83,29 @@ export const useAuthStore = create<AuthStore>()(
       canAttemptAuth: () => {
         const { isAuthenticating, lastAuthTime, hasAttemptedAuth } = get();
 
-        // Prevent if already attempted auth
-        if (hasAttemptedAuth) {
-          return false;
-        }
-
         // Prevent if already authenticating
         if (isAuthenticating) {
           return false;
         }
 
-        // Check cooldown
+        // Prevent if already attempted in this session (protects against double-render)
+        if (hasAttemptedAuth && !lastAuthTime) {
+          // Auth is in progress but not completed yet
+          return false;
+        }
+
+        // Check cooldown after a completed auth
         if (lastAuthTime) {
           const timeSinceLastAuth = Date.now() - lastAuthTime;
           if (timeSinceLastAuth < AUTH_COOLDOWN_MS) {
             return false;
           }
+          // If cooldown passed, allow retry
+          return true;
         }
 
-        return true;
+        // First attempt - allow it
+        return !hasAttemptedAuth;
       },
     }),
     {
