@@ -182,8 +182,17 @@ export function useWalletAuth() {
 
   // Load token from storage on mount and check if still valid
   useEffect(() => {
+    console.log('🔍 Auth effect running:', {
+      hasWindow: typeof window !== 'undefined',
+      connected,
+      hasPublicKey: !!publicKey,
+      publicKey: publicKey?.toBase58()
+    });
+
     if (typeof window !== 'undefined' && connected && publicKey) {
       const storedToken = localStorage.getItem('authToken');
+      console.log('🔑 Checking for stored token:', { hasToken: !!storedToken });
+
       if (storedToken) {
         // Token exists, mark as authenticated
         console.log('📦 Found stored auth token');
@@ -196,7 +205,15 @@ export function useWalletAuth() {
         // No token exists, trigger authentication only once
         console.log('🔓 No stored token found, triggering authentication...');
         authenticate();
+      } else {
+        console.log('⏸️ Skipping auth:', {
+          globalAuthInProgress,
+          authInProgressRef: authInProgressRef.current,
+          isAuthenticating: globalAuthState.isAuthenticating
+        });
       }
+    } else {
+      console.log('⚠️ Auth conditions not met');
     }
   }, [connected, publicKey]); // Removed authenticate from deps to prevent multiple triggers
 
