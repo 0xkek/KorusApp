@@ -1,111 +1,54 @@
 /**
  * Wallet Authentication Hook
  * Handles wallet-based authentication with the backend
+ * Uses Zustand for state management
  */
 
 import { logger } from '@/utils/logger';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useCallback } from 'react';
 import { authAPI } from '@/lib/api';
 import bs58 from 'bs58';
-
-interface AuthState {
-  token: string | null;
-  isAuthenticated: boolean;
-  isAuthenticating: boolean;
-  error: string | null;
-}
-
-// Global flag to prevent multiple simultaneous auth attempts across all instances
-// This persists across React StrictMode re-renders
-let globalAuthInProgress = false;
-
-// Track last successful auth to avoid re-prompting too quickly
-let lastAuthTime: number | null = null;
-const AUTH_COOLDOWN_MS = 5000; // Don't re-auth within 5 seconds
-
-// Generate unique instance ID for debugging
-let instanceCounter = 0;
-
-// Global auth state that persists across all hook instances
-let globalAuthState: AuthState = {
-  token: null,
-  isAuthenticated: false,
-  isAuthenticating: false,
-  error: null,
-};
-
-// Listeners for state changes
-type StateListener = (state: AuthState) => void;
-const stateListeners = new Set<StateListener>();
-
-function notifyStateChange(newState: AuthState) {
-  globalAuthState = newState;
-  stateListeners.forEach(listener => listener(newState));
-}
-
-function subscribeToStateChanges(listener: StateListener) {
-  stateListeners.add(listener);
-  return () => stateListeners.delete(listener);
-}
+import { useAuthStore } from '@/stores/authStore';
 
 export function useWalletAuth() {
   const { publicKey, signMessage, connected } = useWallet();
-  const [authState, setAuthState] = useState<AuthState>(globalAuthState);
-  const authInProgressRef = useRef(false);
-  const instanceIdRef = useRef<number>(0);
 
-  // Initialize instance ID only once
-  if (instanceIdRef.current === 0) {
-    instanceIdRef.current = ++instanceCounter;
-  }
-
-  // Subscribe to global state changes
-  useEffect(() => {
-    const unsubscribe = subscribeToStateChanges((newState) => {
-      logger.log(`📥 Instance #${instanceIdRef.current} received global state update:`, {
-        hasToken: !!newState.token,
-        isAuthenticated: newState.isAuthenticated,
-      });
-      setAuthState(newState);
-    });
-    return unsubscribe;
-  }, []);
+  // Use Zustand store for state management
+  const {
+    token,
+    isAuthenticated,
+    isAuthenticating,
+    error,
+    setToken,
+    setAuthenticating,
+    setError,
+    setLastAuthTime,
+    clearAuth,
+    canAttemptAuth,
+  } = useAuthStore();
 
   // Authenticate with backend when wallet connects
   const authenticate = useCallback(async () => {
     if (!publicKey || !signMessage || !connected) {
-      notifyStateChange({ ...globalAuthState, isAuthenticated: false, token: null });
+      clearAuth();
       return;
     }
 
-    // Prevent multiple simultaneous authentication attempts using global flag
-    if (globalAuthInProgress || authInProgressRef.current) {
-      logger.log('Authentication already in progress, skipping...');
+    // Check if we can attempt auth (handles cooldown and in-progress checks)
+    if (!canAttemptAuth()) {
+      logger.log('⏸️ Cannot attempt auth - already in progress or in cooldown period');
       return;
     }
 
-    // Check if we recently authenticated (cooldown period)
-    if (lastAuthTime && (Date.now() - lastAuthTime) < AUTH_COOLDOWN_MS) {
-      logger.log('⏸️ Recently authenticated, skipping to prevent popup spam');
-      return;
-    }
-
-    globalAuthInProgress = true;
-    authInProgressRef.current = true;
-    notifyStateChange({ ...globalAuthState, isAuthenticating: true, error: null });
+    setAuthenticating(true);
+    setError(null);
 
     // Set a timeout to force reset if wallet signature takes too long
     const timeoutId = setTimeout(() => {
       logger.log('⏱️ Authentication timeout - resetting state');
-      globalAuthInProgress = false;
-      authInProgressRef.current = false;
-      notifyStateChange({
-        token: null,
-        isAuthenticated: false,
-        isAuthenticating: false,
-        error: 'Authentication timed out. Please try again.',
-      });
+      setError('Authentication timed out. Please try again.');
+      setAuthenticating(false);
     }, 30000); // 30 second timeout
 
     try {
@@ -132,25 +75,15 @@ export function useWalletAuth() {
       clearTimeout(timeoutId);
 
       logger.log('✅ Authentication successful!');
-      // Store token
+      // Store token (Zustand will also persist it)
       if (typeof window !== 'undefined') {
         localStorage.setItem('authToken', response.token);
       }
 
-      // Record successful auth time
-      lastAuthTime = Date.now();
-
-      const newAuthState = {
-        token: response.token,
-        isAuthenticated: true,
-        isAuthenticating: false,
-        error: null,
-      };
-      logger.log('🔄 Setting global auth state:', newAuthState);
-      notifyStateChange(newAuthState);
-      globalAuthInProgress = false;
-      authInProgressRef.current = false;
-      logger.log('✅ Auth state updated and broadcasted to all instances');
+      // Update auth state via Zustand
+      setToken(response.token);
+      setLastAuthTime(Date.now());
+      logger.log('✅ Auth state updated in Zustand store');
     } catch (error) {
       // Clear timeout on error
       clearTimeout(timeoutId);
@@ -170,16 +103,11 @@ export function useWalletAuth() {
         logger.log('🚫 User cancelled authentication');
       }
 
-      notifyStateChange({
-        token: null,
-        isAuthenticated: false,
-        isAuthenticating: false,
-        error: isUserRejection ? null : errorMessage, // Don't show error for user cancellation
-      });
-      globalAuthInProgress = false;
-      authInProgressRef.current = false;
+      // Update error state (don't show error for user cancellation)
+      setError(isUserRejection ? null : errorMessage);
+      setAuthenticating(false);
     }
-  }, [publicKey, signMessage, connected]);
+  }, [publicKey, signMessage, connected, canAttemptAuth, setAuthenticating, setError, setToken, setLastAuthTime, clearAuth]);
 
   // Load token from storage on mount and check if still valid
   useEffect(() => {
@@ -194,29 +122,19 @@ export function useWalletAuth() {
       const storedToken = localStorage.getItem('authToken');
       logger.log('🔑 Checking for stored token:', { hasToken: !!storedToken });
 
-      if (storedToken) {
-        // Token exists, mark as authenticated
-        logger.log('📦 Found stored auth token');
-        notifyStateChange({
-          ...globalAuthState,
-          token: storedToken,
-          isAuthenticated: true,
-        });
-      } else if (!globalAuthInProgress && !authInProgressRef.current && !globalAuthState.isAuthenticating) {
+      if (storedToken && !token) {
+        // Token exists in localStorage but not in Zustand store
+        logger.log('📦 Found stored auth token, updating store');
+        setToken(storedToken);
+      } else if (!storedToken && !isAuthenticating && !token) {
         // No token exists, trigger authentication only once
         logger.log('🔓 No stored token found, triggering authentication...');
         authenticate();
-      } else {
-        logger.log('⏸️ Skipping auth:', {
-          globalAuthInProgress,
-          authInProgressRef: authInProgressRef.current,
-          isAuthenticating: globalAuthState.isAuthenticating
-        });
       }
     } else {
       logger.log('⚠️ Auth conditions not met');
     }
-  }, [connected, publicKey]); // Removed authenticate from deps to prevent multiple triggers
+  }, [connected, publicKey, token, isAuthenticating, setToken, authenticate]);
 
   // Clear auth when wallet disconnects
   useEffect(() => {
@@ -224,39 +142,32 @@ export function useWalletAuth() {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('authToken');
       }
-      notifyStateChange({
-        token: null,
-        isAuthenticated: false,
-        isAuthenticating: false,
-        error: null,
-      });
+      clearAuth();
     }
-  }, [connected]);
+  }, [connected, clearAuth]);
 
   const logout = useCallback(() => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('authToken');
     }
-    notifyStateChange({
-      token: null,
-      isAuthenticated: false,
-      isAuthenticating: false,
-      error: null,
-    });
-  }, []);
+    clearAuth();
+  }, [clearAuth]);
 
   // Log state changes
   useEffect(() => {
-    logger.log(`🔐 useWalletAuth instance #${instanceIdRef.current} state changed:`, {
-      hasToken: !!authState.token,
-      isAuthenticated: authState.isAuthenticated,
-      isAuthenticating: authState.isAuthenticating,
-      tokenLength: authState.token?.length || 0
+    logger.log('🔐 useWalletAuth state changed:', {
+      hasToken: !!token,
+      isAuthenticated,
+      isAuthenticating,
+      tokenLength: token?.length || 0
     });
-  }, [authState]);
+  }, [token, isAuthenticated, isAuthenticating]);
 
   return {
-    ...authState,
+    token,
+    isAuthenticated,
+    isAuthenticating,
+    error,
     authenticate,
     logout,
   };
