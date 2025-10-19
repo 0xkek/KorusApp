@@ -1459,10 +1459,11 @@ Create a checklist to track progress:
 ```markdown
 # Refactoring Progress
 
-## Phase 1: Quick Wins ⏱️ 1-2 days
-- [ ] Fix 69 TypeScript/ESLint errors
-- [ ] Add bs58, dompurify, image compression deps
-- [ ] Replace 263 console statements with logger
+## Phase 1: Quick Wins ⏱️ 1-2 days ✅ COMPLETE
+- [x] Fix 69 TypeScript/ESLint errors (Commit: 0820639)
+- [x] Add bs58, dompurify, image compression deps (Commit: 3d99f47)
+- [x] Replace 263 console statements with logger (Commit: 1ddec24)
+- [x] Fix logger infinite recursion bug (Commit: ad6ad0f)
 
 ## Phase 2: Critical Fixes ⏱️ 3-5 days
 - [ ] Refactor auth hook to use Zustand
@@ -1486,11 +1487,49 @@ Create a checklist to track progress:
 - [ ] Run final cleanup and build
 
 ## Metrics
-- Build errors: 69 → 0
-- Console statements: 263 → 0
-- page.tsx lines: 1444 → <200
-- Test coverage: 0% → 60%+
+- Build errors: 69 → 0 ✅
+- Console statements: 263 → 0 ✅
+- page.tsx lines: 1444 → <200 (In Progress)
+- Test coverage: 0% → 60%+ (Not Started)
 ```
+
+---
+
+## Additional Fixes Completed (Post-Phase 1)
+
+### User Display & Data Consistency ✅
+- **Fixed**: Inconsistent username/premium status display
+- **Commit**: `a615276`
+- **Changes**: Added missing author fields to backend post queries
+
+### Shoutout Feature Fixes ✅
+
+#### Fix 1: Drawing-Only Post Validation
+- **Status**: Complete
+- **Commits**: `0db4be5`, `67f58e5`
+- **Issue**: Posts with only drawings (no text) failed validation
+- **Solution**:
+  - Backend: Changed validation to treat empty strings as optional
+  - Frontend: Only send content field when text exists
+
+#### Fix 2: Shoutout Queue Detection
+- **Status**: Complete
+- **Commit**: `07de00b`
+- **Issue**: Modal showed "No queue" even with active shoutout
+- **Solution**:
+  - Added shoutoutQueueInfo state
+  - Connected backend queue data to frontend
+  - Updated ShoutoutModal to use actual queue state
+
+#### Fix 3: Countdown Timer & Queue Display
+- **Status**: Complete
+- **Commit**: `889d5df`
+- **Issue**: No countdown on active shoutouts, incorrect wait times
+- **Solution**:
+  - Added shoutoutExpiresAt to Post type
+  - Updated ShoutoutCountdown to use expiresAt from backend
+  - Display countdown on homepage shoutouts
+  - Fixed calculateWaitTime in ShoutoutModal
 
 ---
 
