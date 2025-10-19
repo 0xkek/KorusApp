@@ -9,6 +9,7 @@ import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import PremiumUpgradeModal from '@/components/PremiumUpgradeModal';
 import { useToast } from '@/hooks/useToast';
+import { useSubscription } from '@/hooks/useSubscription';
 import * as eventsAPI from '@/lib/api/events';
 
 // Dynamically import modals
@@ -35,6 +36,7 @@ export default function EventsPage() {
   const { connected } = useWallet();
   const router = useRouter();
   const { showSuccess, showError } = useToast();
+  const { isPremium, refreshStatus } = useSubscription();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
@@ -45,9 +47,6 @@ export default function EventsPage() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Mock premium status - you can connect this to your actual premium logic
-  const isPremium = false;
 
   // Fetch events on mount
   useEffect(() => {
@@ -566,6 +565,7 @@ export default function EventsPage() {
       <PremiumUpgradeModal
         isOpen={showPremiumModal}
         onClose={() => setShowPremiumModal(false)}
+        onSubscriptionUpdated={refreshStatus}
       />
 
       {/* Mobile Menu Modal */}

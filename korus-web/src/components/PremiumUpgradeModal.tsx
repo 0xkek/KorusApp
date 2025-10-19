@@ -6,6 +6,7 @@ import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from '@solana
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useToast } from '@/hooks/useToast';
+import { useSubscription } from '@/hooks/useSubscription';
 import { subscriptionAPI } from '@/lib/api';
 
 interface PremiumUpgradeModalProps {
@@ -38,6 +39,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
   const { connection } = useConnection();
   const { token, isAuthenticated } = useWalletAuth();
   const { showSuccess, showError } = useToast();
+  const { isPremium, subscriptionStatus } = useSubscription();
   const [isProcessing, setIsProcessing] = useState(false);
 
   if (!isOpen) return null;
@@ -172,10 +174,13 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
 
           {/* Header */}
           <h3 className="text-xl font-bold mb-2 text-yellow-400">
-            Unlock Premium
+            {isPremium ? 'You\'re Premium!' : 'Unlock Premium'}
           </h3>
           <p className="text-korus-textSecondary mb-6">
-            Get exclusive features with Korus Premium
+            {isPremium
+              ? 'You already have access to all premium features'
+              : 'Get exclusive features with Korus Premium'
+            }
           </p>
 
           {/* Features List */}
@@ -190,75 +195,103 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
             ))}
           </div>
 
-          {/* Pricing Options */}
-          <div className="space-y-3">
-            {/* Monthly Plan */}
-            <button
-              onClick={() => handleUpgrade('monthly')}
-              disabled={isProcessing}
-              className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 white-text rounded-xl hover:shadow-lg transition-all duration-200 border border-korus-border disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)'
-              }}
-            >
-              {isProcessing ? (
-                <div className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span>Processing...</span>
+          {/* Pricing Options or Already Premium Message */}
+          {isPremium ? (
+            <div className="space-y-4">
+              {/* Subscription Info */}
+              {subscriptionStatus && (
+                <div className="bg-korus-surface/40 border border-korus-borderLight rounded-xl p-4 text-left">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-korus-textSecondary text-sm">Subscription Type:</span>
+                    <span className="text-white font-medium capitalize">{subscriptionStatus.type || 'Premium'}</span>
+                  </div>
+                  {subscriptionStatus.daysUntilExpiration !== null && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-korus-textSecondary text-sm">Days Remaining:</span>
+                      <span className="text-white font-medium">{subscriptionStatus.daysUntilExpiration} days</span>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <>
-                  <div className="font-bold">Monthly - 0.1 SOL</div>
-                  <div className="text-sm opacity-90">Paid monthly</div>
-                </>
               )}
-            </button>
 
-            {/* Yearly Plan */}
-            <button
-              onClick={() => handleUpgrade('yearly')}
-              disabled={isProcessing}
-              className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 white-text rounded-xl hover:shadow-lg transition-all duration-200 relative border border-korus-border disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)'
-              }}
-            >
-              {!isProcessing && (
-                <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">
-                  SAVE 2 MONTHS
-                </div>
-              )}
-              {isProcessing ? (
-                <div className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span>Processing...</span>
-                </div>
-              ) : (
-                <>
-                  <div className="font-bold">Yearly - 1 SOL</div>
-                  <div className="text-sm opacity-90">Paid annually</div>
-                </>
-              )}
-            </button>
+              {/* Close Button */}
+              <button
+                onClick={onClose}
+                className="w-full px-4 py-3 bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all"
+              >
+                Close
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {/* Monthly Plan */}
+              <button
+                onClick={() => handleUpgrade('monthly')}
+                disabled={isProcessing}
+                className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 white-text rounded-xl hover:shadow-lg transition-all duration-200 border border-korus-border disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)'
+                }}
+              >
+                {isProcessing ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Processing...</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="font-bold">Monthly - 0.1 SOL</div>
+                    <div className="text-sm opacity-90">Paid monthly</div>
+                  </>
+                )}
+              </button>
 
-            {/* Cancel Button */}
-            <button
-              onClick={onClose}
-              disabled={isProcessing}
-              className="w-full px-4 py-2 bg-korus-surface/40 text-korus-text rounded-xl hover:bg-korus-surface/60 transition-colors border border-korus-border disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                boxShadow: '0 0 3px var(--korus-primary), 0 0 6px var(--korus-primary)'
-              }}
-            >
-              Maybe Later
-            </button>
-          </div>
+              {/* Yearly Plan */}
+              <button
+                onClick={() => handleUpgrade('yearly')}
+                disabled={isProcessing}
+                className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 white-text rounded-xl hover:shadow-lg transition-all duration-200 relative border border-korus-border disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)'
+                }}
+              >
+                {!isProcessing && (
+                  <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                    SAVE 2 MONTHS
+                  </div>
+                )}
+                {isProcessing ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Processing...</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="font-bold">Yearly - 1 SOL</div>
+                    <div className="text-sm opacity-90">Paid annually</div>
+                  </>
+                )}
+              </button>
+
+              {/* Cancel Button */}
+              <button
+                onClick={onClose}
+                disabled={isProcessing}
+                className="w-full px-4 py-2 bg-korus-surface/40 text-korus-text rounded-xl hover:bg-korus-surface/60 transition-colors border border-korus-border disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  boxShadow: '0 0 3px var(--korus-primary), 0 0 6px var(--korus-primary)'
+                }}
+              >
+                Maybe Later
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

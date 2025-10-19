@@ -2,7 +2,8 @@
 import Image from 'next/image';
 
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import LeftSidebar from '@/components/LeftSidebar';
@@ -36,6 +37,7 @@ interface UserStats {
 
 export default function ProfilePage() {
   const { connected, publicKey } = useWallet();
+  const { connection } = useConnection();
   const { showWarning, showSuccess } = useToastContext();
   const router = useRouter();
 
@@ -57,11 +59,11 @@ export default function ProfilePage() {
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
   const [userPosts] = useState<Post[]>([]); // Mock user posts (would come from API)
   const [selectedNFTAvatar] = useState<NFTAvatar | null>(null); // NFT avatar (would come from API)
+  const [balance, setBalance] = useState<number>(0);
 
-  // Mock wallet and user data (must be before hooks that depend on it)
+  // Wallet and user data
   const walletAddress = publicKey?.toBase58() || '';
   const selectedAvatar = '🎮'; // Mock avatar
-  const balance = 2.45; // Mock balance
 
   // SNS Domain hooks - must be called before any conditional returns
   const { domain: snsDomain, loading: snsLoading } = useSNSDomain(walletAddress);
@@ -135,6 +137,26 @@ export default function ProfilePage() {
   const displayName = useMemo(() => {
     return (isPremium && snsDomain) || currentUsername || `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`;
   }, [isPremium, snsDomain, currentUsername, walletAddress]);
+
+  // Fetch wallet balance
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (publicKey && connection) {
+        try {
+          const lamports = await connection.getBalance(publicKey);
+          setBalance(lamports / LAMPORTS_PER_SOL);
+        } catch (error) {
+          console.error('Failed to fetch balance:', error);
+        }
+      }
+    };
+
+    fetchBalance();
+
+    // Refresh balance every 10 seconds
+    const interval = setInterval(fetchBalance, 10000);
+    return () => clearInterval(interval);
+  }, [publicKey, connection]);
 
   useEffect(() => {
     if (!connected) {
@@ -323,10 +345,27 @@ export default function ProfilePage() {
             <div className="p-6">
               {/* Profile Header */}
               <div className="mb-8 relative">
-                {/* Balance Card - Top Right */}
-                <div className="absolute top-0 right-0 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-xl px-4 py-2 shadow-lg shadow-korus-primary/20">
-                  <div className="text-black font-bold text-lg">
-                    {balance.toFixed(2)} SOL
+                {/* Status Cards - Top Right */}
+                <div className="absolute top-0 right-0 flex flex-col items-end gap-2">
+                  {/* Premium Status Badge */}
+                  {isPremium && (
+                    <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl px-4 py-2 shadow-lg" style={{ boxShadow: '0 0 12px rgba(251, 191, 36, 0.4)' }}>
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
+                          <svg className="w-3 h-3" viewBox="0 0 24 24" style={{ fill: '#000000' }}>
+                            <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
+                          </svg>
+                        </div>
+                        <span className="text-black font-bold text-sm">Premium</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Balance Card */}
+                  <div className="bg-gradient-to-r from-korus-primary to-korus-secondary rounded-xl px-4 py-2 shadow-lg shadow-korus-primary/20">
+                    <div className="text-black font-bold text-lg">
+                      {balance.toFixed(2)} SOL
+                    </div>
                   </div>
                 </div>
 
