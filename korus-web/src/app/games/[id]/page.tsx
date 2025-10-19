@@ -164,7 +164,7 @@ export default function GamePlayPage() {
 
   // Render Tic Tac Toe
   const renderTicTacToe = () => {
-    const board: TicTacToeCell[] = game.gameState?.board || Array(9).fill(null);
+    const board: TicTacToeCell[] = (game.gameState as { board?: TicTacToeCell[] })?.board || Array(9).fill(null);
     const playerSymbol: 'X' | 'O' = isPlayer1 ? 'X' : 'O';
 
     const handleCellClick = (index: number) => {
@@ -187,7 +187,7 @@ export default function GamePlayPage() {
 
   // Render Connect Four
   const renderConnectFour = () => {
-    const board: ConnectFourCell[][] = game.gameState?.board ||
+    const board: ConnectFourCell[][] = (game.gameState as { board?: ConnectFourCell[][] })?.board ||
       Array(6).fill(null).map(() => Array(7).fill(null));
     const playerColor: 'red' | 'yellow' = isPlayer1 ? 'red' : 'yellow';
 
@@ -209,9 +209,9 @@ export default function GamePlayPage() {
 
   // Render Rock Paper Scissors
   const renderRPS = () => {
-    const playerMove = game.gameState?.playerMoves?.[publicKey?.toBase58() || ''] || null;
+    const playerMove = (game.gameState as { playerMoves?: Record<string, RPSMove> })?.playerMoves?.[publicKey?.toBase58() || ''] || null;
     const opponentAddress = isPlayer1 ? game.player2 : game.player1;
-    const opponentMove = game.gameState?.playerMoves?.[opponentAddress || ''] || null;
+    const opponentMove = (game.gameState as { playerMoves?: Record<string, RPSMove> })?.playerMoves?.[opponentAddress || ''] || null;
 
     const handleMoveSelected = (move: RPSMove) => {
       handleMove({ choice: move });
@@ -332,7 +332,7 @@ export default function GamePlayPage() {
 
         {game.status === 'active' && !isMyTurn && isParticipant && (
           <div className="mb-6 p-4 bg-korus-surface border border-korus-border rounded-lg text-center">
-            <p className="text-korus-textSecondary">Waiting for opponent's move...</p>
+            <p className="text-korus-textSecondary">Waiting for opponent&apos;s move...</p>
           </div>
         )}
 

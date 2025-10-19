@@ -100,14 +100,11 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
       }
 
       // Prepare post data
-      const postData: any = {
+      const postData: { topic: string; content: string; subtopic: string; imageUrl?: string } = {
         topic: 'General', // You can add a category selector later
+        content: content.trim() || '', // Default to empty string if no content
+        subtopic: 'discussion', // Default subtopic
       };
-
-      // Add content if present
-      if (content.trim()) {
-        postData.content = content.trim();
-      }
 
       // Add image URL if uploaded
       if (imageUrl) {
@@ -118,7 +115,8 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
       const newPost = await postsAPI.createPost(postData, token);
 
       // Extract the post from the response (backend returns {success: true, post: {...}})
-      const post = (newPost as any).post || newPost;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const post: any = (newPost as { post?: unknown }).post || newPost;
 
       // Transform the backend response to match the frontend Post type
       const transformedPost = {
@@ -135,7 +133,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
 
       // Call the parent's post creation function
       if (onPostCreate) {
-        onPostCreate(transformedPost as any);
+        onPostCreate(transformedPost as Post);
       }
 
       showSuccess('Post created successfully!');
@@ -475,7 +473,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
               }
 
               // Create post data with shoutout info
-              const postData: any = {
+              const postData: { content: string; topic: string; subtopic: string; shoutoutDuration: number; transactionSignature: string; imageUrl?: string } = {
                 content: content.trim(),
                 topic: 'general',
                 subtopic: 'discussion',
@@ -492,7 +490,8 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
               const newPost = await postsAPI.createPost(postData, token!);
 
               // Extract the post from the response
-              const post = (newPost as any).post || newPost;
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const post: any = (newPost as { post?: unknown }).post || newPost;
 
               // Transform the backend response to match the frontend Post type
               const transformedPost = {
@@ -522,7 +521,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
               onClose();
             } catch (error: unknown) {
               console.error('Failed to create shoutout post:', error);
-              showError(error?.message || 'Failed to create shoutout post');
+              showError((error as Error)?.message || 'Failed to create shoutout post');
             } finally {
               setIsPosting(false);
             }

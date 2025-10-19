@@ -332,19 +332,7 @@ export function GamesPage() {
 
       // Show success message with refund info and transaction link
       if (hasWager && signature) {
-        showSuccess(
-          <div className="flex flex-col gap-1">
-            <div>Game cancelled! {wagerAmount} SOL refunded to your wallet</div>
-            <a
-              href={`https://solscan.io/tx/${signature}?cluster=devnet`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-korus-primary underline hover:text-korus-secondary text-sm"
-            >
-              View refund transaction →
-            </a>
-          </div>
-        );
+        showSuccess(`Game cancelled! ${wagerAmount} SOL refunded to your wallet. View transaction: https://solscan.io/tx/${signature}?cluster=devnet`);
       } else {
         showSuccess('Game cancelled successfully!');
       }
@@ -431,13 +419,13 @@ export function GamesPage() {
   const renderTicTacToe = (game: Game) => {
     // Handle both 1D (new) and 2D (old) array formats
     let board: TicTacToeCell[];
-    const rawBoard = game.gameState?.board;
+    const rawBoard = (game.gameState as { board?: unknown })?.board;
 
     if (!rawBoard) {
       board = Array(9).fill(null);
-    } else if (Array.isArray(rawBoard[0])) {
+    } else if (Array.isArray((rawBoard as unknown[])[0])) {
       // Old 2D format - flatten it
-      board = (rawBoard as any[][]).flat();
+      board = (rawBoard as unknown[][]).flat() as TicTacToeCell[];
     } else {
       // New 1D format
       board = rawBoard as TicTacToeCell[];
@@ -482,7 +470,7 @@ export function GamesPage() {
 
   // Render Connect Four
   const renderConnectFour = (game: Game) => {
-    const board: ConnectFourCell[][] = game.gameState?.board ||
+    const board: ConnectFourCell[][] = (game.gameState as { board?: ConnectFourCell[][] })?.board ||
       Array(6).fill(null).map(() => Array(7).fill(null));
     const isPlayer1 = publicKey?.toBase58() === game.player1;
     const playerColor: 'red' | 'yellow' = isPlayer1 ? 'red' : 'yellow';
@@ -501,13 +489,6 @@ export function GamesPage() {
         isGameOver={isGameOver}
         winner={game.winner}
         playerColor={playerColor}
-        player1Address={game.player1}
-        player2Address={game.player2 || undefined}
-        currentPlayerAddress={publicKey?.toBase58()}
-        player1DisplayName={game.player1DisplayName}
-        player2DisplayName={game.player2DisplayName}
-        wager={game.wager?.toString()}
-        payoutTxSignature={game.escrow?.payoutTxSig || undefined}
       />
     );
   };
@@ -521,10 +502,10 @@ export function GamesPage() {
 
   // Render Rock Paper Scissors
   const renderRPS = (game: Game) => {
-    const playerMove = game.gameState?.playerMoves?.[publicKey?.toBase58() || ''] || null;
+    const playerMove = (game.gameState as { playerMoves?: Record<string, RPSMove> })?.playerMoves?.[publicKey?.toBase58() || ''] || null;
     const isPlayer1 = publicKey?.toBase58() === game.player1;
     const opponentAddress = isPlayer1 ? game.player2 : game.player1;
-    const opponentMove = game.gameState?.playerMoves?.[opponentAddress || ''] || null;
+    const opponentMove = (game.gameState as { playerMoves?: Record<string, RPSMove> })?.playerMoves?.[opponentAddress || ''] || null;
 
     // For RPS, both players can make moves simultaneously (not turn-based)
     // A player can move if: game is active AND they haven't made a move this round
@@ -560,7 +541,7 @@ export function GamesPage() {
         currentTurnAddress={game.currentTurn || undefined}
         gameCreatedAt={game.createdAt}
         wager={game.wager}
-        gameState={game.gameState}
+        gameState={game.gameState as { player1Score?: number; player2Score?: number; rounds?: unknown[]; round?: number; roundResults?: unknown[] }}
         payoutTxSignature={game.escrow?.payoutTxSig || undefined}
       />
     );

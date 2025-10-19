@@ -49,7 +49,7 @@ export interface RepostResponse {
   success: boolean;
   reposted: boolean;
   message: string;
-  repostPost?: any; // Full repost post object with original post data
+  repostPost?: unknown; // Full repost post object with original post data
 }
 
 export interface UserRepostsResponse {

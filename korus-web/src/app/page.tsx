@@ -105,7 +105,9 @@ export default function Home() {
       // If we got posts from the backend, use them
       if (response.posts && response.posts.length > 0) {
         // Transform backend posts to match frontend format
-        const transformedPosts = response.posts.map(post => ({
+        // Note: Backend posts have a different structure than frontend Post type
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const transformedPosts = response.posts.map((post: any) => ({
           ...post,
           user: post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15) || 'Unknown',
           wallet: post.authorWallet,
@@ -142,7 +144,7 @@ export default function Home() {
           if (!a.isShoutout && b.isShoutout) return 1;
           return 0;
         });
-        setPosts(sortedPosts as any);
+        setPosts(sortedPosts as Post[]);
       } else {
         // Fallback to mock data if backend returns empty
         console.log('No posts in database, using mock data as fallback');
@@ -211,7 +213,7 @@ export default function Home() {
         const response = await interactionsAPI.getUserInteractions(postIds, token);
 
         if (response.success) {
-          setPostInteractions(response.interactions);
+          setPostInteractions(response.interactions as {[key: number]: {liked: boolean, reposted: boolean, replied: boolean, tipped: boolean}});
           console.log('User interactions loaded:', response.interactions);
         }
       } catch (error) {
@@ -347,14 +349,11 @@ export default function Home() {
       }
 
       // Prepare post data
-      const postData: any = {
+      const postData: { topic: string; content: string; subtopic: string; imageUrl?: string } = {
         topic: 'General',
+        content: composeText.trim() || '', // Default to empty string if no content
+        subtopic: 'discussion', // Default subtopic
       };
-
-      // Add content if present
-      if (composeText.trim()) {
-        postData.content = composeText.trim();
-      }
 
       // Add image URL if uploaded or GIF if selected
       if (selectedGif) {
@@ -371,7 +370,8 @@ export default function Home() {
       console.log('Post created successfully:', newPost);
 
       // Extract the post from the response (backend returns {success: true, post: {...}})
-      const post = (newPost as any).post || newPost;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const post: any = (newPost as { post?: unknown }).post || newPost;
 
       // Transform the backend response to match the frontend Post type
       const transformedPost = {
@@ -390,7 +390,7 @@ export default function Home() {
       setPosts(prev => {
         const shoutouts = prev.filter(p => p.isShoutout);
         const regularPosts = prev.filter(p => !p.isShoutout);
-        return [...shoutouts, transformedPost as any, ...regularPosts];
+        return [...shoutouts, transformedPost as Post, ...regularPosts];
       });
 
       setComposeText('');
@@ -461,13 +461,14 @@ export default function Home() {
 
     try {
       const postIdStr = String(postId);
-      const currentlyLiked = postInteractions[postIdStr]?.liked || false;
+      const postIdNum = Number(postId);
+      const currentlyLiked = postInteractions[postIdNum]?.liked || false;
 
       // Optimistically update UI
       setPostInteractions(prev => ({
         ...prev,
-        [postIdStr]: {
-          ...prev[postIdStr],
+        [postIdNum]: {
+          ...prev[postIdNum],
           liked: !currentlyLiked
         }
       }));
@@ -492,17 +493,18 @@ export default function Home() {
 
       // Revert on error
       const postIdStr = String(postId);
+      const postIdNum = Number(postId);
       setPostInteractions(prev => ({
         ...prev,
-        [postIdStr]: {
-          ...prev[postIdStr],
-          liked: prev[postIdStr]?.liked || false
+        [postIdNum]: {
+          ...prev[postIdNum],
+          liked: prev[postIdNum]?.liked || false
         }
       }));
 
       setPosts(prev => prev.map(p => {
         if (String(p.id) === postIdStr) {
-          const wasLiked = postInteractions[postIdStr]?.liked || false;
+          const wasLiked = postInteractions[postIdNum]?.liked || false;
           return {
             ...p,
             likes: wasLiked ? p.likes + 1 : p.likes - 1
@@ -528,7 +530,8 @@ export default function Home() {
       if (response.success) {
         if (!isCurrentlyReposted && response.repostPost) {
           // Backend returns the full repost post with originalPost included
-          const backendPost = response.repostPost;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const backendPost: any = response.repostPost;
 
           // Map backend post data to frontend Post format
           const repost = {
@@ -1232,7 +1235,7 @@ export default function Home() {
             }
 
             // Create post data with shoutout info
-            const postData: any = {
+            const postData: { content: string; topic: string; subtopic: string; isShoutout?: boolean; shoutoutDuration?: number; imageUrl?: string; transactionSignature?: string } = {
               content: composeText.trim(),
               topic: 'general',
               subtopic: 'discussion',
@@ -1255,7 +1258,8 @@ export default function Home() {
             console.log('Shoutout post created successfully:', newPost);
 
             // Extract the post from the response
-            const post = (newPost as any).post || newPost;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const post: any = (newPost as { post?: unknown }).post || newPost;
             console.log('Extracted post:', post);
 
             // Transform the backend response to match the frontend Post type
@@ -1288,9 +1292,9 @@ export default function Home() {
           } catch (error: unknown) {
             console.error('=== Failed to create shoutout post ===');
             console.error('Error:', error);
-            console.error('Error message:', error?.message);
-            console.error('Error response:', error?.response);
-            showError(error?.message || 'Failed to create shoutout post');
+            console.error('Error message:', (error as Error)?.message);
+            console.error('Error response:', (error as { response?: unknown })?.response);
+            showError((error as Error)?.message || 'Failed to create shoutout post');
           }
         }}
         queueInfo={{

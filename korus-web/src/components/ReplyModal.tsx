@@ -65,11 +65,15 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
       // Create reply via backend API
       // Check if we're replying to a post or a reply
       const isReplyToReply = 'postId' in post && post.postId;
-      const targetPostId = isReplyToReply ? post.postId : String(post.id);
+      const targetPostId = isReplyToReply ? String(post.postId) : String(post.id);
       const parentReplyId = isReplyToReply ? String(post.id) : undefined;
 
+      if (!targetPostId) {
+        throw new Error('Invalid post ID');
+      }
+
       const response = await repliesAPI.createReply(
-        targetPostId!,
+        targetPostId,
         {
           content: replyContent.trim(),
           imageUrl,
@@ -81,6 +85,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
       console.log('Reply created:', response);
 
       // Transform backend reply to match frontend type
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const reply: Reply = {
         id: response.reply.id as any,
         user: response.reply.author.walletAddress,

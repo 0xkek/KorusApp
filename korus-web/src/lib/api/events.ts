@@ -39,7 +39,7 @@ export interface WhitelistRegistration {
   metadata?: {
     twitter?: string;
     discord?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   registeredAt: string;
 }
@@ -66,7 +66,7 @@ export interface RegisterForWhitelistData {
   metadata?: {
     twitter?: string;
     discord?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -202,7 +202,7 @@ export async function exportRegistrations(
   eventId: string,
   format: 'csv' | 'json',
   authToken: string
-): Promise<string | any> {
+): Promise<string | unknown> {
   const response = await fetch(`${API_BASE_URL}/api/events/${eventId}/export?format=${format}`, {
     headers: {
       'Authorization': `Bearer ${authToken}`

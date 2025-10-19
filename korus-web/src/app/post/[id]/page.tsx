@@ -66,23 +66,25 @@ export default function PostDetailPage() {
 
       // Try to fetch from backend
       try {
-        const response = await postsAPI.getPost(postId);
+        const response = await postsAPI.getPost(Number(postId));
 
-        if (response.success && response.post) {
+        if (response) {
           // Transform backend post to frontend format
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const backendPost = response as any;
           const transformedPost = {
-            ...response.post,
-            user: response.post.authorWallet || response.post.author?.walletAddress || 'Unknown',
-            wallet: response.post.authorWallet,
-            time: new Date(response.post.createdAt).toLocaleString(),
-            likes: response.post.likeCount || 0,
-            comments: response.post.replyCount || 0,
+            ...backendPost,
+            user: backendPost.authorWallet || backendPost.author?.walletAddress || 'Unknown',
+            wallet: backendPost.authorWallet,
+            time: new Date(backendPost.createdAt).toLocaleString(),
+            likes: backendPost.likeCount || 0,
+            comments: backendPost.replyCount || 0,
             reposts: 0,
-            tips: response.post.tipCount || 0,
-            image: response.post.imageUrl,
+            tips: backendPost.tipCount || 0,
+            image: backendPost.imageUrl,
           };
 
-          setPost(transformedPost as any);
+          setPost(transformedPost as Post);
 
           // Fetch user's like status if authenticated
           if (isAuthenticated && token) {
@@ -103,14 +105,14 @@ export default function PostDetailPage() {
             // Transform replies to frontend format
             const transformedReplies = repliesResponse.replies.map(reply => {
               const transformed = {
-                id: reply.id as any,
+                id: reply.id as unknown,
                 postId: postId, // Include the post ID for nested replies
                 user: reply.author?.walletAddress || reply.authorWallet || 'Unknown',
                 wallet: reply.authorWallet,
                 content: reply.content,
                 likes: reply.likeCount || 0,
                 replies: reply.childReplies?.map(child => ({
-                  id: child.id as any,
+                  id: child.id as unknown,
                   postId: postId, // Include the post ID for nested replies
                   user: child.author?.walletAddress || child.authorWallet || 'Unknown',
                   wallet: child.authorWallet,
@@ -129,7 +131,7 @@ export default function PostDetailPage() {
               return transformed;
             });
             console.log('Setting transformed replies:', transformedReplies);
-            setReplies(transformedReplies);
+            setReplies(transformedReplies as Reply[]);
           }
         }
       } catch (backendError) {
@@ -943,7 +945,9 @@ export default function PostDetailPage() {
           setShowRepostModal(false);
           setPostToRepost(null);
         }}
-        post={postToRepost}
+        postId={postToRepost?.id || 0}
+        postContent={postToRepost?.content || ''}
+        postUser={postToRepost?.user || ''}
       />
 
       {/* Tip Modal */}
@@ -953,7 +957,8 @@ export default function PostDetailPage() {
           setShowTipModal(false);
           setPostToTip(null);
         }}
-        post={postToTip}
+        recipientUser={postToTip?.user || ''}
+        postId={postToTip?.id}
       />
 
       {/* Share Modal */}

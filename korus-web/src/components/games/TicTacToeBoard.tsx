@@ -112,7 +112,7 @@ export function TicTacToeBoard({
             {isMyTurn ? (
               <span className="text-korus-primary font-bold">Your turn ({playerSymbol})</span>
             ) : (
-              <span className="text-korus-textSecondary">Opponent's turn...</span>
+              <span className="text-korus-textSecondary">Opponent&apos;s turn...</span>
             )}
           </div>
         )}

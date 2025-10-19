@@ -38,7 +38,7 @@ interface UserStats {
 export default function ProfilePage() {
   const { connected, publicKey } = useWallet();
   const { connection } = useConnection();
-  const { showWarning, showSuccess } = useToastContext();
+  const { showWarning, showSuccess, showError } = useToastContext();
   const router = useRouter();
 
   // All hooks must be called before any conditional logic
@@ -271,7 +271,7 @@ export default function ProfilePage() {
 
       showSuccess('Username set successfully!');
     } catch (error: unknown) {
-      const errorMessage = error?.data?.error || error?.message || 'Failed to set username';
+      const errorMessage = (error as { data?: { error?: string }, message?: string })?.data?.error || (error as Error)?.message || 'Failed to set username';
       showError(errorMessage);
       setUsernameError(errorMessage);
     } finally {

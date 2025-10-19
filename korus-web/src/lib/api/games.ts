@@ -27,7 +27,7 @@ export interface Game {
   player2: string | null;
   player1DisplayName?: string;
   player2DisplayName?: string;
-  gameState: any;
+  gameState: unknown;
   status: GameStatus;
   winner: string | null;
   currentTurn: string | null;
@@ -50,7 +50,7 @@ export interface JoinGameData {
 }
 
 export interface MakeMoveData {
-  move: any;
+  move: unknown;
 }
 
 export interface GameResponse {

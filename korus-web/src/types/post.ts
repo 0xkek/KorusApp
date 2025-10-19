@@ -24,7 +24,10 @@ export interface Post {
   content: string;
   likes: number;
   replies: number; // Count of replies, NOT the actual reply objects
+  comments?: number; // Alias for replies count
+  reposts?: number; // Count of reposts
   tips: number;
+  tipCount?: number; // Count of tips received
   time: string;
   isPremium?: boolean;
   isShoutout?: boolean;
@@ -40,6 +43,8 @@ export interface Post {
   shoutoutStartTime?: number;
   category?: string;
   subcategory?: string;
+  avatar?: string; // User's avatar/NFT
+  userTheme?: string; // User's theme color
 }
 
 export interface UserStats {

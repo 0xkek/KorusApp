@@ -18,7 +18,7 @@ interface RPSGameProps {
   currentTurnAddress?: string;
   gameCreatedAt?: string;
   wager?: string; // SOL amount
-  gameState?: any; // Full game state with score and round info
+  gameState?: { player1Score?: number; player2Score?: number; rounds?: unknown[]; round?: number; roundResults?: unknown[] }; // Full game state with score and round info
   payoutTxSignature?: string; // Transaction signature for blockchain payout
 }
 
@@ -62,13 +62,13 @@ export function RockPaperScissorsGame({
   useEffect(() => {
     if (currentRound > previousRound && !isGameOver) {
       // A draw just occurred - get the last round result
-      const roundResults = gameState?.roundResults as any[] | undefined;
-      const lastResult = roundResults?.[roundResults.length - 1];
+      const roundResults = gameState?.roundResults as unknown[] | undefined;
+      const lastResult = roundResults?.[roundResults.length - 1] as { winner?: string; player1Choice?: RPSMove; player2Choice?: RPSMove } | undefined;
 
       if (lastResult && lastResult.winner === 'draw') {
         setLastDrawResult({
-          player1: lastResult.player1Choice,
-          player2: lastResult.player2Choice
+          player1: lastResult.player1Choice!,
+          player2: lastResult.player2Choice!
         });
         setShowDrawNotification(true);
 

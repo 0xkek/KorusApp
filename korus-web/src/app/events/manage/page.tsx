@@ -44,6 +44,7 @@ export default function ManageEventsPage() {
     }
 
     async function fetchMyEvents() {
+      if (!token) return;
       try {
         setIsLoading(true);
         const response = await eventsAPI.getMyEvents(token);

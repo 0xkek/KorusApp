@@ -138,11 +138,11 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
       console.error('Failed to upgrade to premium:', error);
 
       // Improved error handling
-      if (error?.message?.includes('User rejected')) {
+      if ((error as Error)?.message?.includes('User rejected')) {
         showError('Transaction cancelled. You can try again anytime.');
-      } else if (error?.message?.includes('insufficient')) {
+      } else if ((error as Error)?.message?.includes('insufficient')) {
         showError('Insufficient balance for this subscription.');
-      } else if (error?.message?.includes('blockhash')) {
+      } else if ((error as Error)?.message?.includes('blockhash')) {
         showError('Transaction timed out. Please try again.');
       } else if (error instanceof Error) {
         showError(`Failed to upgrade: ${error.message}`);

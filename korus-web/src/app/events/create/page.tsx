@@ -206,9 +206,9 @@ export default function CreateEventPage() {
           console.log('Transaction signed successfully');
         } catch (signError: unknown) {
           console.error('Signature error:', signError);
-          if (signError.message?.includes('User rejected') ||
-              signError.message?.includes('Plugin Closed') ||
-              signError.message?.includes('User closed')) {
+          if ((signError as Error).message?.includes('User rejected') ||
+              (signError as Error).message?.includes('Plugin Closed') ||
+              (signError as Error).message?.includes('User closed')) {
             throw new Error('Transaction cancelled. Please try again and approve the transaction in your wallet.');
           }
           throw signError;
@@ -338,7 +338,7 @@ export default function CreateEventPage() {
                   <label className="block text-sm font-medium text-korus-text mb-2">Event Type *</label>
                   <select
                     value={formData.type}
-                    onChange={(e) => handleInputChange('type', e.target.value as any)}
+                    onChange={(e) => handleInputChange('type', e.target.value as unknown)}
                     className="w-full bg-korus-surface/40 border border-korus-borderLight rounded-xl px-4 py-3 text-white focus:outline-none focus:border-korus-primary transition-colors"
                   >
                     <option value="whitelist">Whitelist</option>
@@ -468,7 +468,7 @@ export default function CreateEventPage() {
                   <label className="block text-sm font-medium text-korus-text mb-2">Selection Method *</label>
                   <select
                     value={formData.selectionMethod}
-                    onChange={(e) => handleInputChange('selectionMethod', e.target.value as any)}
+                    onChange={(e) => handleInputChange('selectionMethod', e.target.value as unknown)}
                     className="w-full bg-korus-surface/40 border border-korus-borderLight rounded-xl px-4 py-3 text-white focus:outline-none focus:border-korus-primary transition-colors"
                   >
                     <option value="fcfs">First Come First Serve</option>

@@ -7,15 +7,15 @@ import { api } from './client';
 
 export interface SearchResults {
   success: boolean;
-  posts: any[];
-  users?: any[];
+  posts: unknown[];
+  users?: unknown[];
   totalPosts: number;
   hasMore: boolean;
 }
 
 export interface UserSearchResults {
   success: boolean;
-  users: any[];
+  users: unknown[];
 }
 
 export const searchAPI = {

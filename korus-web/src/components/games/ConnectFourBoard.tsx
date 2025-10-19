@@ -75,7 +75,7 @@ export function ConnectFourBoard({
                 )
               </span>
             ) : (
-              <span className="text-korus-textSecondary">Opponent's turn...</span>
+              <span className="text-korus-textSecondary">Opponent&apos;s turn...</span>
             )}
           </div>
         )}

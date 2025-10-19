@@ -30,6 +30,9 @@ export interface CreatePostData {
   topic: string;
   subtopic: string;
   imageUrl?: string;
+  isShoutout?: boolean;
+  shoutoutDuration?: number;
+  transactionSignature?: string;
 }
 
 export interface PostsResponse {

@@ -63,7 +63,8 @@ export function CreateGameModal({ postId, onClose, onGameCreated }: CreateGameMo
       );
 
       if (response.success) {
-        onGameCreated(response.game.id);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onGameCreated(response.game.id as any);
         onClose();
       }
     } catch (err) {

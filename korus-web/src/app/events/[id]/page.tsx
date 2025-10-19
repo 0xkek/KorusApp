@@ -139,7 +139,7 @@ export default function EventDetailsPage() {
     }
 
     // Check if wallet supports message signing
-    const walletAdapter = (window as any).solana;
+    const walletAdapter = (window as { solana?: { signMessage?: (message: Uint8Array, encoding: string) => Promise<{ signature: Uint8Array; publicKey: Uint8Array }> } }).solana;
     if (!walletAdapter || !walletAdapter.signMessage) {
       showError('Your wallet does not support message signing');
       return;

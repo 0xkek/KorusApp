@@ -9,7 +9,7 @@ export class APIError extends Error {
   constructor(
     message: string,
     public status: number,
-    public data?: any
+    public data?: unknown
   ) {
     super(message);
     this.name = 'APIError';
@@ -83,14 +83,14 @@ export const api = {
   get: <T>(endpoint: string, token?: string) =>
     apiRequest<T>(endpoint, { method: 'GET', token }),
 
-  post: <T>(endpoint: string, data?: any, token?: string) =>
+  post: <T>(endpoint: string, data?: unknown, token?: string) =>
     apiRequest<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
       token,
     }),
 
-  put: <T>(endpoint: string, data?: any, token?: string) =>
+  put: <T>(endpoint: string, data?: unknown, token?: string) =>
     apiRequest<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
