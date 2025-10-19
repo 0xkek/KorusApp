@@ -37,7 +37,7 @@ export const handleValidationErrors = (req: Request, res: Response, next: NextFu
 // Post validations
 export const validateCreatePost = [
   body('content')
-    .optional()
+    .optional({ values: 'falsy' }) // Treat empty strings as optional
     .trim()
     .isLength({ min: 1, max: 500 }).withMessage('Content must be between 1 and 500 characters')
     .customSanitizer(value => sanitizeHtml(value)),
