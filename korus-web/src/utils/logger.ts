@@ -8,19 +8,19 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 export const logger = {
   log: (...args: unknown[]) => {
     if (isDevelopment) {
-      logger.log(...args);
+      console.log(...args);
     }
   },
 
   error: (...args: unknown[]) => {
     if (isDevelopment) {
-      logger.error(...args);
+      console.error(...args);
     }
   },
 
   warn: (...args: unknown[]) => {
     if (isDevelopment) {
-      logger.warn(...args);
+      console.warn(...args);
     }
   },
 
