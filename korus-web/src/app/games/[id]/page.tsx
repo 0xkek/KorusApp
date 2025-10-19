@@ -101,7 +101,7 @@ export default function GamePlayPage() {
   };
 
   // Handle making a move
-  const handleMove = async (move: any) => {
+  const handleMove = async (move: unknown) => {
     if (!game || makingMove) return;
 
     setMakingMove(true);

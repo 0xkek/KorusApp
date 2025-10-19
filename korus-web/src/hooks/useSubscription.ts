@@ -51,7 +51,7 @@ export function useSubscription(): UseSubscriptionReturn {
           // Continue without cache
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('❌ Failed to fetch subscription status:', err);
       setError(err.message || 'Failed to fetch subscription status');
 

@@ -121,7 +121,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
       });
 
       // Transform backend results to match expected format
-      const transformedPosts = results.posts.map((post: any) => ({
+      const transformedPosts = results.posts.map((post: unknown) => ({
         ...post,
         user: post.author?.username || post.author?.snsUsername || post.authorWallet,
         wallet: post.authorWallet,
@@ -135,7 +135,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
       // Filter by category if selected
       let finalResults = transformedPosts;
       if (selectedCategory) {
-        finalResults = transformedPosts.filter((post: any) =>
+        finalResults = transformedPosts.filter((post: unknown) =>
           post.category?.toLowerCase() === selectedCategory.toLowerCase()
         );
       }

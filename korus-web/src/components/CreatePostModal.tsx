@@ -520,7 +520,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
               setSelectedFiles([]);
               setShowDrawCanvas(false);
               onClose();
-            } catch (error: any) {
+            } catch (error: unknown) {
               console.error('Failed to create shoutout post:', error);
               showError(error?.message || 'Failed to create shoutout post');
             } finally {

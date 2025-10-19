@@ -227,7 +227,7 @@ export function useGameEscrow() {
           throw new Error(`Simulation failed: ${errStr}`);
         }
         console.log('Simulation succeeded!');
-      } catch (simError: any) {
+      } catch (simError: unknown) {
         console.error('Simulation error:', simError);
         throw simError;
       }
@@ -236,7 +236,7 @@ export function useGameEscrow() {
       let signature: string;
       try {
         signature = await sendTransaction(tx, connection);
-      } catch (txError: any) {
+      } catch (txError: unknown) {
         console.error('Transaction failed:', txError);
 
         // Check if user rejected the transaction
@@ -400,7 +400,7 @@ export function useGameEscrow() {
           throw new Error(`Simulation failed: ${errStr}`);
         }
         console.log('Simulation succeeded!');
-      } catch (simError: any) {
+      } catch (simError: unknown) {
         console.error('Simulation error:', simError);
         throw simError;
       }
@@ -409,7 +409,7 @@ export function useGameEscrow() {
       let signature: string;
       try {
         signature = await sendTransaction(tx, connection);
-      } catch (txError: any) {
+      } catch (txError: unknown) {
         console.error('Transaction failed:', txError);
 
         // Check if user rejected the transaction
@@ -553,7 +553,7 @@ export function useGameEscrow() {
 
           throw new Error(`Cancel simulation failed: ${JSON.stringify(simulation.value.err)}`);
         }
-      } catch (simError: any) {
+      } catch (simError: unknown) {
         console.error('Cancel simulation error:', simError);
         throw simError;
       }

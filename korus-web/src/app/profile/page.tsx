@@ -270,7 +270,7 @@ export default function ProfilePage() {
       }
 
       showSuccess('Username set successfully!');
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorMessage = error?.data?.error || error?.message || 'Failed to set username';
       showError(errorMessage);
       setUsernameError(errorMessage);

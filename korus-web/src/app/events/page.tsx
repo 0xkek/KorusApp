@@ -144,7 +144,7 @@ export default function EventsPage() {
     setTimeout(() => {
       setIsParticipating(false);
       setShowEventModal(false);
-      showSuccess(`Success! You've successfully joined the ${selectedEvent.title}`);
+      showSuccess(`Success! You&apos;ve successfully joined the ${selectedEvent.title}`);
     }, 2000);
   };
 

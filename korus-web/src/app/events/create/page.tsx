@@ -84,7 +84,7 @@ export default function CreateEventPage() {
     };
   }, [imagePreview]);
 
-  const handleInputChange = (field: keyof eventsAPI.CreateEventData, value: any) => {
+  const handleInputChange = (field: keyof eventsAPI.CreateEventData, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -204,7 +204,7 @@ export default function CreateEventPage() {
           }
           signedTransaction = await signTransaction(transaction);
           console.log('Transaction signed successfully');
-        } catch (signError: any) {
+        } catch (signError: unknown) {
           console.error('Signature error:', signError);
           if (signError.message?.includes('User rejected') ||
               signError.message?.includes('Plugin Closed') ||
@@ -281,9 +281,9 @@ export default function CreateEventPage() {
       setBalance(newLamports / LAMPORTS_PER_SOL);
 
       router.push(`/events/manage`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create event:', error);
-      showError(error.message || 'Failed to create event');
+      showError((error as Error).message || 'Failed to create event');
     } finally {
       setIsSubmitting(false);
       setIsProcessingPayment(false);

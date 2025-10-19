@@ -369,7 +369,7 @@ export function GamesPage() {
     }
   };
 
-  const handleMove = async (gameId: string, move: any) => {
+  const handleMove = async (gameId: string, move: unknown) => {
     // Check if wallet is connected
     if (!connected || !publicKey) {
       showError('Please connect your wallet to play');

@@ -1285,7 +1285,7 @@ export default function Home() {
             setSelectedGif(null);
             setShowDrawCanvas(false);
             console.log('=== Home Page Shoutout Post Creation Complete ===');
-          } catch (error: any) {
+          } catch (error: unknown) {
             console.error('=== Failed to create shoutout post ===');
             console.error('Error:', error);
             console.error('Error message:', error?.message);

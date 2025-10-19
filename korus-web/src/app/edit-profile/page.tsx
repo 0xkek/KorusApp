@@ -140,8 +140,10 @@ export default function EditProfilePage() {
 
       showSuccess('Profile updated successfully!');
       router.back();
-    } catch (error: any) {
-      const errorMessage = error?.data?.error || error?.message || 'Failed to save profile';
+    } catch (error: unknown) {
+      const errorMessage = (error as { data?: { error?: string }, message?: string })?.data?.error ||
+                          (error as { message?: string })?.message ||
+                          'Failed to save profile';
       showError(errorMessage);
     } finally {
       setIsSaving(false);

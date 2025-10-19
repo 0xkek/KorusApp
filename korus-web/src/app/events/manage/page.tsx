@@ -69,9 +69,9 @@ export default function ManageEventsPage() {
     try {
       const response = await eventsAPI.getEventRegistrations(event.id, token);
       setRegistrations(response.registrations);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to fetch registrations:', error);
-      showError(error.message || 'Failed to load registrations');
+      showError((error as Error).message || 'Failed to load registrations');
     } finally {
       setIsLoadingRegistrations(false);
     }
@@ -95,9 +95,9 @@ export default function ManageEventsPage() {
       URL.revokeObjectURL(url);
 
       showSuccess(`Exported ${registrations.length} registrations as ${format.toUpperCase()}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to export:', error);
-      showError(error.message || 'Failed to export registrations');
+      showError((error as Error).message || 'Failed to export registrations');
     }
   };
 
@@ -111,9 +111,9 @@ export default function ManageEventsPage() {
       // Refresh events
       const response = await eventsAPI.getMyEvents(token);
       setMyEvents(response.events);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to close event:', error);
-      showError(error.message || 'Failed to close event');
+      showError((error as Error).message || 'Failed to close event');
     }
   };
 

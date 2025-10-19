@@ -190,7 +190,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
       // Reset form
       setSelectedAmount(null);
       setCustomAmount('');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to send tip:', error);
 
       // Improved error handling for better user feedback

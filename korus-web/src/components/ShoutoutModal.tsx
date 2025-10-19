@@ -192,7 +192,7 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm,
 
       showSuccess(`Shoutout payment sent! Your post will be featured for ${selectedOption.label}.`);
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Shoutout payment error:', error);
 
       // Handle user cancellation gracefully

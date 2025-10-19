@@ -134,7 +134,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
       } else {
         showError('Failed to activate subscription. Please contact support.');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to upgrade to premium:', error);
 
       // Improved error handling

@@ -54,9 +54,9 @@ export default function EventDetailsPage() {
         if (publicKey && response.event.creatorWallet === publicKey.toBase58()) {
           setIsCreator(true);
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Failed to fetch event:', error);
-        showError(error.message || 'Failed to load event');
+        showError((error as Error).message || 'Failed to load event');
       } finally {
         setIsLoading(false);
       }
@@ -76,9 +76,9 @@ export default function EventDetailsPage() {
         setIsLoadingRegistrations(true);
         const response = await eventsAPI.getEventRegistrations(event.id, token);
         setRegistrations(response.registrations);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Failed to fetch registrations:', error);
-        showError(error.message || 'Failed to load registrations');
+        showError((error as Error).message || 'Failed to load registrations');
       } finally {
         setIsLoadingRegistrations(false);
       }
@@ -98,7 +98,7 @@ export default function EventDetailsPage() {
         const response = await eventsAPI.getRegistrationStatus(event.id, token);
         setIsRegistered(response.registered);
         setRegistrationStatus(response.registration || null);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Failed to check registration status:', error);
       }
     }
@@ -126,9 +126,9 @@ export default function EventDetailsPage() {
       URL.revokeObjectURL(url);
 
       showSuccess(`Exported ${registrations.length} registrations as ${format.toUpperCase()}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to export:', error);
-      showError(error.message || 'Failed to export registrations');
+      showError((error as Error).message || 'Failed to export registrations');
     }
   };
 
@@ -182,12 +182,12 @@ export default function EventDetailsPage() {
       // Refresh event data to update registration count
       const eventResponse = await eventsAPI.getEvent(event.id);
       setEvent(eventResponse.event);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to register:', error);
-      if (error.message?.includes('rejected') || error.message?.includes('User rejected')) {
+      if ((error as Error).message?.includes('rejected') || (error as Error).message?.includes('User rejected')) {
         showError('You rejected the signature request');
       } else {
-        showError(error.message || 'Failed to register for whitelist');
+        showError((error as Error).message || 'Failed to register for whitelist');
       }
     } finally {
       setIsRegistering(false);
@@ -208,9 +208,9 @@ export default function EventDetailsPage() {
       setTimeout(() => {
         router.push('/events/manage');
       }, 2000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to cancel event:', error);
-      showError(error.message || 'Failed to cancel event');
+      showError((error as Error).message || 'Failed to cancel event');
     } finally {
       setIsCancelling(false);
     }
@@ -260,7 +260,7 @@ export default function EventDetailsPage() {
         <div className="text-center">
           <div className="text-6xl mb-4">❌</div>
           <h2 className="text-2xl font-bold text-white mb-2">Event Not Found</h2>
-          <p className="text-korus-textSecondary mb-6">This event doesn't exist or has been removed</p>
+          <p className="text-korus-textSecondary mb-6">This event doesn&apos;t exist or has been removed</p>
           <button
             onClick={() => router.back()}
             className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl"
@@ -406,7 +406,7 @@ export default function EventDetailsPage() {
                       </div>
                       <h4 className="text-xl font-bold text-green-400 mb-2">Successfully Registered!</h4>
                       <p className="text-korus-textSecondary mb-4">
-                        You're on the whitelist for this event
+                        You&apos;re on the whitelist for this event
                       </p>
                       {registrationStatus?.position && (
                         <div className="inline-flex items-center gap-2 px-4 py-2 bg-korus-primary/20 text-korus-primary rounded-full font-medium">
@@ -501,7 +501,7 @@ export default function EventDetailsPage() {
                       </button>
 
                       <p className="text-xs text-korus-textTertiary mt-3 text-center">
-                        You'll be asked to sign a message with your wallet to verify ownership
+                        You&apos;ll be asked to sign a message with your wallet to verify ownership
                       </p>
                     </>
                   )}
