@@ -12,6 +12,7 @@ import RightSidebar from '@/components/RightSidebar';
 import LinkPreview from '@/components/LinkPreview';
 import VideoPlayer from '@/components/VideoPlayer';
 import { FeedSkeleton } from '@/components/Skeleton';
+import { SafeContent } from '@/components/SafeContent';
 import { useToast } from '@/hooks/useToast';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
@@ -1001,9 +1002,12 @@ export default function Home() {
                     <>
                       {/* User's comment on the repost (if any) */}
                       {post.content && (
-                        <div className="text-white text-base leading-normal mb-3 whitespace-pre-wrap break-words">
-                          {post.content}
-                        </div>
+                        <SafeContent
+                          content={post.content}
+                          className="text-white text-base leading-normal mb-3 whitespace-pre-wrap break-words"
+                          allowLinks={true}
+                          allowFormatting={true}
+                        />
                       )}
 
                       {/* Original Post in box with reposter's theme color */}
@@ -1023,7 +1027,13 @@ export default function Home() {
                           <span className="text-white font-medium">{truncateAddress(post.repostedPost.wallet || post.repostedPost.user)}</span>
                           <span className="text-korus-textSecondary text-sm">· {post.repostedPost.time}</span>
                         </div>
-                        <p className="text-korus-text text-sm leading-relaxed">{post.repostedPost.content}</p>
+                        <SafeContent
+                          content={post.repostedPost.content}
+                          as="p"
+                          className="text-korus-text text-sm leading-relaxed"
+                          allowLinks={true}
+                          allowFormatting={true}
+                        />
                         {post.repostedPost.image && (
                           <Image src={post.repostedPost.image} alt="Reposted content" width={600} height={400} className="mt-3 w-full rounded-lg" />
                         )}
@@ -1032,9 +1042,12 @@ export default function Home() {
                   ) : (
                     /* Regular Post Text */
                     post.content && (
-                      <div className="text-white text-base leading-normal mb-3 whitespace-pre-wrap break-words">
-                        {post.content}
-                      </div>
+                      <SafeContent
+                        content={post.content}
+                        className="text-white text-base leading-normal mb-3 whitespace-pre-wrap break-words"
+                        allowLinks={true}
+                        allowFormatting={true}
+                      />
                     )
                   )}
 
