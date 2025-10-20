@@ -18,8 +18,13 @@ interface Props {
 }
 
 export const WalletContextProvider: FC<Props> = ({ children }) => {
-  // Use devnet for development, mainnet for production
-  const network = WalletAdapterNetwork.Devnet;
+  // Get network from environment variable (mainnet-beta or devnet)
+  const network = useMemo(() => {
+    const envNetwork = process.env.NEXT_PUBLIC_SOLANA_NETWORK;
+    return envNetwork === 'mainnet-beta'
+      ? WalletAdapterNetwork.Mainnet
+      : WalletAdapterNetwork.Devnet;
+  }, []);
 
   // Use custom RPC endpoint from env or fallback to default
   const endpoint = useMemo(

@@ -390,7 +390,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
                           </div>
                           <p className="text-korus-text text-sm mb-3 line-clamp-3">{post.content}</p>
                           {post.imageUrl && (
-                            <Image src={post.imageUrl} alt="Post" width={300} height={160} className="rounded-xl mb-3 max-h-40 object-cover" />
+                            <Image src={post.imageUrl} alt="Post" width={300} height={160} className="rounded-xl mb-3 h-auto" />
                           )}
                           <div className="flex items-center gap-4 text-korus-textSecondary text-sm">
                             <span className="flex items-center gap-1">

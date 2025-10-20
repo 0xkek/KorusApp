@@ -2,11 +2,12 @@
 import { logger } from '@/utils/logger';
 import Image from 'next/image';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { io, Socket } from 'socket.io-client';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import LinkPreview from '@/components/LinkPreview';
@@ -82,6 +83,11 @@ export default function Home() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const POSTS_PER_PAGE = 20;
 
+  // WebSocket connection ref
+  const socketRef = useRef<Socket | null>(null);
+  const socketInitialized = useRef(false);
+  const addedPostIds = useRef<Set<number>>(new Set());
+
   // Load more posts for infinite scroll (defined early to avoid hoisting issues)
   const loadMorePosts = useCallback(async () => {
     if (isLoadingMore || !hasMore) return;
@@ -98,12 +104,14 @@ export default function Home() {
       if (response.posts && response.posts.length > 0) {
         // Transform new posts
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const transformedPosts = response.posts.map((post: any) => ({
+        const transformedPosts = response.posts.map((post: any) => {
+          return {
           ...post,
           user: post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15) || 'Unknown',
           wallet: post.authorWallet,
           userTheme: post.author?.themeColor,
           time: new Date(post.createdAt).toLocaleString(),
+          createdAt: post.createdAt, // Keep raw timestamp for sorting
           likes: post.likeCount || 0,
           comments: post.replyCount || 0,
           reposts: post.repostCount || 0,
@@ -112,6 +120,7 @@ export default function Home() {
           avatar: post.author?.nftAvatar || null,
           isPremium: post.author?.tier === 'premium',
           shoutoutExpiresAt: post.shoutoutExpiresAt,
+          repostedBy: post.isRepost ? (post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15)) : undefined,
           repostedPost: post.isRepost && post.originalPost ? {
             id: post.originalPost.id,
             user: post.originalPost.author?.username || post.originalPost.author?.snsUsername || post.originalPost.authorWallet?.slice(0, 15) || 'Unknown',
@@ -124,11 +133,16 @@ export default function Home() {
             comments: post.originalPost.replyCount || 0,
             reposts: post.originalPost.repostCount || 0,
             time: new Date(post.originalPost.createdAt).toLocaleString(),
+            createdAt: post.originalPost.createdAt,
             isPremium: post.originalPost.author?.tier === 'premium',
             image: post.originalPost.imageUrl,
             avatar: post.originalPost.author?.nftAvatar || null,
           } : undefined,
-        }));
+        };
+        });
+
+        // Track new post IDs
+        transformedPosts.forEach((post: any) => addedPostIds.current.add(post.id));
 
         // Append new posts to existing ones
         setPosts(prev => [...prev, ...transformedPosts as Post[]]);
@@ -210,6 +224,7 @@ export default function Home() {
           wallet: post.authorWallet,
           userTheme: post.author?.themeColor,
           time: new Date(post.createdAt).toLocaleString(),
+          createdAt: post.createdAt, // Keep raw timestamp for sorting
           likes: post.likeCount || 0,
           comments: post.replyCount || 0,
           reposts: post.repostCount || 0,
@@ -219,6 +234,7 @@ export default function Home() {
           isPremium: post.author?.tier === 'premium',
           shoutoutExpiresAt: post.shoutoutExpiresAt,
           // Map originalPost to repostedPost for reposts
+          repostedBy: post.isRepost ? (post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15)) : undefined,
           repostedPost: post.isRepost && post.originalPost ? {
             id: post.originalPost.id,
             user: post.originalPost.author?.username || post.originalPost.author?.snsUsername || post.originalPost.authorWallet?.slice(0, 15) || 'Unknown',
@@ -231,6 +247,7 @@ export default function Home() {
             comments: post.originalPost.replyCount || 0,
             reposts: post.originalPost.repostCount || 0,
             time: new Date(post.originalPost.createdAt).toLocaleString(),
+            createdAt: post.originalPost.createdAt,
             isPremium: post.originalPost.author?.tier === 'premium',
             image: post.originalPost.imageUrl,
             avatar: post.originalPost.author?.nftAvatar || null,
@@ -242,6 +259,10 @@ export default function Home() {
           if (!a.isShoutout && b.isShoutout) return 1;
           return 0;
         });
+
+        // Track all post IDs
+        sortedPosts.forEach(post => addedPostIds.current.add(post.id));
+
         setPosts(sortedPosts as Post[]);
         setCurrentPage(1);
         setHasMore(response.posts.length === POSTS_PER_PAGE);
@@ -310,6 +331,187 @@ export default function Home() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
+  // Listen for theme color changes and update cached posts
+  useEffect(() => {
+    const handleThemeColorUpdate = (event: CustomEvent) => {
+      const { newColor } = event.detail;
+      const userWallet = publicKey?.toBase58();
+
+      if (!userWallet) return;
+
+      console.log('🎨 Theme color updated, updating cached posts to:', newColor);
+
+      // Update all posts where the current user is the author or reposter
+      setPosts(prevPosts => prevPosts.map(post => {
+        // If this post was created by the current user, update their theme
+        if (post.wallet === userWallet) {
+          return { ...post, userTheme: newColor };
+        }
+        return post;
+      }));
+
+      // Also update the current user theme state
+      setCurrentUserTheme(newColor);
+    };
+
+    window.addEventListener('themeColorUpdated', handleThemeColorUpdate as EventListener);
+
+    return () => {
+      window.removeEventListener('themeColorUpdated', handleThemeColorUpdate as EventListener);
+    };
+  }, [publicKey]);
+
+  // WebSocket connection for real-time post updates
+  useEffect(() => {
+    // Check if we already have an active connection with listeners
+    if (socketRef.current?.connected) {
+      logger.log('⚠️ WebSocket already connected, skipping');
+      return;
+    }
+
+    // If we have a socket instance, reuse it
+    if (!socketRef.current) {
+      logger.log('🔌 Initializing new WebSocket connection');
+      // Connect to WebSocket server
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+      socketRef.current = io(API_URL, {
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 5
+      });
+
+      socketRef.current.on('connect', () => {
+        logger.log('✅ WebSocket connected');
+      });
+
+      socketRef.current.on('disconnect', () => {
+        logger.log('❌ WebSocket disconnected');
+      });
+    } else {
+      logger.log('🔌 Reconnecting existing WebSocket');
+      socketRef.current.connect();
+    }
+
+    // Remove any existing 'new_post' listeners to prevent duplicates
+    socketRef.current.off('new_post');
+
+    // Listen for new posts (always set up fresh listener)
+    socketRef.current.on('new_post', (newPost: any) => {
+      logger.log('📨 Received new post via WebSocket:', newPost.id);
+
+      // Transform the new post to match frontend format (same as in fetchPosts)
+      const transformedPost = {
+        ...newPost,
+        user: newPost.author?.username || newPost.author?.snsUsername || newPost.authorWallet?.slice(0, 15) || 'Unknown',
+        wallet: newPost.authorWallet,
+        userTheme: newPost.author?.themeColor,
+        time: new Date(newPost.createdAt).toLocaleString(),
+        createdAt: newPost.createdAt, // Keep raw timestamp for sorting
+        likes: newPost.likeCount || 0,
+        comments: newPost.replyCount || 0,
+        reposts: newPost.repostCount || 0,
+        tips: Number(newPost.tipAmount) || 0,
+        image: newPost.imageUrl,
+        avatar: newPost.author?.nftAvatar || null,
+        isPremium: newPost.author?.tier === 'premium',
+        shoutoutExpiresAt: newPost.shoutoutExpiresAt,
+        // Map originalPost to repostedPost for reposts
+        repostedBy: newPost.isRepost ? (newPost.author?.username || newPost.author?.snsUsername || newPost.authorWallet?.slice(0, 15)) : undefined,
+        repostedPost: newPost.isRepost && newPost.originalPost ? {
+          id: newPost.originalPost.id,
+          user: newPost.originalPost.author?.username || newPost.originalPost.author?.snsUsername || newPost.originalPost.authorWallet?.slice(0, 15) || 'Unknown',
+          wallet: newPost.originalPost.authorWallet,
+          userTheme: newPost.originalPost.author?.themeColor,
+          content: newPost.originalPost.content || '',
+          likes: newPost.originalPost.likeCount || 0,
+          replies: newPost.originalPost.replyCount || 0,
+          tips: Number(newPost.originalPost.tipAmount) || 0,
+          comments: newPost.originalPost.replyCount || 0,
+          reposts: newPost.originalPost.repostCount || 0,
+          time: new Date(newPost.originalPost.createdAt).toLocaleString(),
+          createdAt: newPost.originalPost.createdAt,
+          isPremium: newPost.originalPost.author?.tier === 'premium',
+          image: newPost.originalPost.imageUrl,
+          avatar: newPost.originalPost.author?.nftAvatar || null,
+        } : undefined,
+      };
+
+      // Add new post to the feed in chronological order (avoiding duplicates)
+      setPosts(prevPosts => {
+        // Check both the posts array AND our tracking Set
+        const existsInArray = prevPosts.some(p => p.id === transformedPost.id);
+        const existsInSet = addedPostIds.current.has(transformedPost.id);
+
+        if (existsInArray || existsInSet) {
+          logger.log('⚠️ Post already exists in feed, skipping duplicate:', transformedPost.id);
+          return prevPosts;
+        }
+
+        // Track this post ID to prevent future duplicates
+        addedPostIds.current.add(transformedPost.id);
+        logger.log('✨ Adding new post to feed:', transformedPost.id);
+
+        // If it's a shoutout, add at the beginning
+        if (transformedPost.isShoutout) {
+          return [transformedPost as Post, ...prevPosts];
+        }
+
+        // For regular posts, insert in chronological order based on createdAt timestamp
+        // If createdAt is not available, add to the top of regular posts (after shoutouts)
+        if (!transformedPost.createdAt) {
+          const firstNonShoutoutIndex = prevPosts.findIndex(p => !p.isShoutout);
+          if (firstNonShoutoutIndex === -1) {
+            return [...prevPosts, transformedPost as Post];
+          }
+          const newPosts = [...prevPosts];
+          newPosts.splice(firstNonShoutoutIndex, 0, transformedPost as Post);
+          return newPosts;
+        }
+
+        const newPostTime = new Date(transformedPost.createdAt).getTime();
+
+        // Find the first shoutout/non-shoutout boundary
+        const firstNonShoutoutIndex = prevPosts.findIndex(p => !p.isShoutout);
+        const startIndex = firstNonShoutoutIndex === -1 ? prevPosts.length : firstNonShoutoutIndex;
+
+        // Find the correct position based on timestamp (newest first)
+        let insertIndex = startIndex;
+        for (let i = startIndex; i < prevPosts.length; i++) {
+          // If existing post doesn't have createdAt, treat it as older
+          if (!prevPosts[i].createdAt) {
+            insertIndex = i;
+            break;
+          }
+          const existingPostTime = new Date(prevPosts[i].createdAt!).getTime();
+          if (newPostTime > existingPostTime) {
+            insertIndex = i;
+            break;
+          }
+          insertIndex = i + 1;
+        }
+
+        const newPosts = [...prevPosts];
+        newPosts.splice(insertIndex, 0, transformedPost as Post);
+        logger.log('📍 Inserted post at index:', insertIndex, 'timestamp:', transformedPost.createdAt);
+        return newPosts;
+      });
+    });
+
+    // Cleanup on unmount
+    return () => {
+      if (socketRef.current) {
+        logger.log('🔌 Cleaning up WebSocket listeners');
+        // Remove the listener to prevent duplicates when effect runs again
+        socketRef.current.off('new_post');
+        if (socketRef.current.connected) {
+          socketRef.current.disconnect();
+        }
+        // Keep the socket instance so it can reconnect on remount
+      }
     };
   }, []);
 
@@ -489,25 +691,10 @@ export default function Home() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const post: any = (newPost as { post?: unknown }).post || newPost;
 
-      // Transform the backend response to match the frontend Post type
-      const transformedPost = {
-        ...post,
-        user: post.authorWallet || post.author?.walletAddress || publicKey?.toBase58() || 'Unknown',
-        wallet: post.authorWallet,
-        time: 'Just now',
-        likes: post.likeCount || 0,
-        comments: post.replyCount || 0,
-        reposts: 0,
-        tips: Number(post.tipAmount) || 0,
-        image: post.imageUrl,
-      };
-
-      // Insert new post after any shoutouts (shoutouts should always be on top)
-      setPosts(prev => {
-        const shoutouts = prev.filter(p => p.isShoutout);
-        const regularPosts = prev.filter(p => !p.isShoutout);
-        return [...shoutouts, transformedPost as Post, ...regularPosts];
-      });
+      // Don't manually add the post - let WebSocket handle it for real-time sync
+      // The WebSocket will receive the post from backend and add it chronologically
+      // We don't need to manually insert it here as that would cause duplicates
+      logger.log('✅ Post created, WebSocket will add it to feed. Post ID:', post.id);
 
       setComposeText('');
       setSelectedFiles([]);
@@ -645,58 +832,8 @@ export default function Home() {
 
       if (response.success) {
         if (!isCurrentlyReposted && response.repostPost) {
-          // Backend returns the full repost post with originalPost included
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const backendPost: any = response.repostPost;
-
-          // Map backend post data to frontend Post format
-          const repost = {
-            id: backendPost.id,
-            user: backendPost.author?.username || backendPost.author?.snsUsername || backendPost.authorWallet.slice(0, 15),
-            wallet: backendPost.authorWallet,
-            userTheme: backendPost.author?.themeColor || currentUserTheme,
-            content: backendPost.content || '',
-            likes: backendPost.likeCount || 0,
-            replies: backendPost.replyCount || 0,
-            tips: backendPost.tipCount || 0,
-            comments: backendPost.replyCount || 0,
-            reposts: backendPost.repostCount || 0,
-            time: 'now',
-            isPremium: backendPost.author?.tier === 'premium',
-            isShoutout: backendPost.isShoutout || false,
-            isSponsored: false,
-            image: backendPost.imageUrl,
-            avatar: backendPost.author?.nftAvatar || null,
-            isRepost: true,
-            repostedPost: backendPost.originalPost ? {
-              id: backendPost.originalPost.id,
-              user: backendPost.originalPost.author?.username || backendPost.originalPost.author?.snsUsername || backendPost.originalPost.authorWallet.slice(0, 15),
-              wallet: backendPost.originalPost.authorWallet,
-              userTheme: backendPost.originalPost.author?.themeColor,
-              content: backendPost.originalPost.content || '',
-              likes: backendPost.originalPost.likeCount || 0,
-              replies: backendPost.originalPost.replyCount || 0,
-              tips: backendPost.originalPost.tipCount || 0,
-              comments: backendPost.originalPost.replyCount || 0,
-              reposts: backendPost.originalPost.repostCount || 0,
-              time: new Date(backendPost.originalPost.createdAt).toLocaleString(),
-              isPremium: backendPost.originalPost.author?.tier === 'premium',
-              image: backendPost.originalPost.imageUrl,
-              avatar: backendPost.originalPost.author?.nftAvatar || null,
-            } : undefined,
-            repostedBy: backendPost.author?.username || backendPost.author?.snsUsername || backendPost.authorWallet.slice(0, 15)
-          } as Post;
-
-          // Add repost and maintain shoutout priority
-          setPosts(prev => {
-            const updatedPosts = [repost, ...prev];
-            // Sort to keep shoutouts at the top
-            return updatedPosts.sort((a, b) => {
-              if (a.isShoutout && !b.isShoutout) return -1;
-              if (!a.isShoutout && b.isShoutout) return 1;
-              return 0;
-            });
-          });
+          // Don't add locally - let WebSocket handle it to avoid duplicates
+          // The backend broadcasts the repost via WebSocket, which will add it to the feed
           showSuccess('Post reposted successfully!');
         } else {
           // Remove the repost from feed
@@ -1131,9 +1268,12 @@ export default function Home() {
                       )}
 
                       {/* Original Post in box with reposter's theme color */}
-                      <div className="mb-3 border-2 rounded-xl p-4" style={{ background: 'linear-gradient(90deg, rgba(67, 233, 123, 0.1), rgba(56, 239, 125, 0.1))', borderColor: post.userTheme || 'rgba(67, 233, 123, 0.3)' }}>
+                      <div className="mb-3 border-2 rounded-xl p-4" style={{
+                        background: `linear-gradient(90deg, ${post.userTheme ? `${post.userTheme}15` : 'rgba(67, 233, 123, 0.1)'}, ${post.userTheme ? `${post.userTheme}20` : 'rgba(56, 239, 125, 0.1)'})`,
+                        borderColor: post.userTheme || 'rgba(67, 233, 123, 0.3)'
+                      }}>
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden" style={{ background: `linear-gradient(135deg, ${post.userTheme || '#43E97B'}, ${post.userTheme || '#38EF7D'})`, color: '#000' }}>
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden" style={{ background: `linear-gradient(135deg, ${post.repostedPost.userTheme || '#43E97B'}, ${post.repostedPost.userTheme || '#38EF7D'})`, color: '#000' }}>
                             {post.repostedPost.avatar ? (
                               post.repostedPost.avatar.startsWith('http') || post.repostedPost.avatar.startsWith('data:') ? (
                                 <Image src={post.repostedPost.avatar} alt={post.repostedPost.user} width={32} height={32} className="w-full h-full object-cover" />
@@ -1144,7 +1284,16 @@ export default function Home() {
                               <span>{post.repostedPost.user.slice(0, 2).toUpperCase()}</span>
                             )}
                           </div>
-                          <span className="text-white font-medium">{truncateAddress(post.repostedPost.wallet || post.repostedPost.user)}</span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-white font-medium">{post.repostedPost.user}</span>
+                            {post.repostedPost.isPremium && (
+                              <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
+                                <svg className="w-3 h-3" fill="black" viewBox="0 0 24 24">
+                                  <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
+                                </svg>
+                              </div>
+                            )}
+                          </div>
                           <span className="text-korus-textSecondary text-sm">· {post.repostedPost.time}</span>
                         </div>
                         <SafeContent
@@ -1284,6 +1433,13 @@ export default function Home() {
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
+
+                        // Prevent self-tipping
+                        if (publicKey && (post.wallet === publicKey.toBase58() || post.author?.walletAddress === publicKey.toBase58())) {
+                          showError("You cannot tip your own posts");
+                          return;
+                        }
+
                         setPostToTip(post);
                         setShowTipModal(true);
                       }}

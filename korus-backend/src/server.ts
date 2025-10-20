@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import express from 'express'
 import helmet from 'helmet'
 import morgan from 'morgan'
+import { createServer } from 'http'
 import swaggerUi from 'swagger-ui-express'
 import prisma from './config/database'
 import { apiLimiter } from './middleware/rateLimiter'
@@ -17,6 +18,7 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler'
 import { requestLogger, performanceLogger } from './middleware/requestLogger'
 import { logger } from './utils/logger'
 import { swaggerSpec } from './config/swagger'
+import { initializeSocket } from './config/socket'
 
 // Import routes
 import authRoutes from './routes/auth'
@@ -160,11 +162,16 @@ app.use(notFoundHandler)
 // Global error handler - must be last middleware
 app.use(errorHandler)
 
+// Create HTTP server and initialize WebSocket
+const httpServer = createServer(app)
+initializeSocket(httpServer)
+
 // Start server
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   // Production mode only - mock mode removed
-  
+
   logger.info(`🚀 Korus Backend running on http://localhost:${PORT}`)
+  logger.info(`🔌 WebSocket server ready for real-time updates`)
   logger.info(`📊 Health: http://localhost:${PORT}/health`)
   if (process.env.NODE_ENV !== 'production') {
     logger.info(`📚 API Docs: http://localhost:${PORT}/api-docs`)
@@ -182,13 +189,13 @@ app.listen(PORT, () => {
   logger.info(`🎁 Distribution: http://localhost:${PORT}/api/distribution/*`)
   logger.info(`💳 Subscription: http://localhost:${PORT}/api/subscription/*`)
   logger.info(`\n🔧 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:8081'}`)
-  
+
   // Environment check
   logger.info(`\n🔐 Environment Check:`)
   logger.info(`- DATABASE_URL: ${process.env.DATABASE_URL ? '✅ Set' : '❌ Not set'}`)
   logger.info(`- JWT_SECRET: ${process.env.JWT_SECRET ? '✅ Set' : '⚠️  Using default (not secure for production)'}`)
   logger.info(`- NODE_ENV: ${process.env.NODE_ENV || 'development'}`)
-  
+
   // Schedule weekly distribution cron job if enabled
   if (process.env.ENABLE_WEEKLY_DISTRIBUTION === 'true') {
     // scheduleWeeklyDistribution() // Temporarily disabled - TypeScript errors
@@ -196,11 +203,11 @@ app.listen(PORT, () => {
   } else {
     logger.info(`\n⏸️  Weekly distribution is disabled (set ENABLE_WEEKLY_DISTRIBUTION=true to enable)`)
   }
-  
+
   // Start shoutout cleanup job
   startShoutoutCleanupJob()
   logger.info(`\n🧹 Shoutout cleanup job started (runs every hour)`)
-  
+
   // Start subscription expiration job
   startSubscriptionExpirationJob()
   logger.info(`\n💳 Subscription expiration check started (runs every hour)`)

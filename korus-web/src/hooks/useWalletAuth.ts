@@ -27,7 +27,6 @@ export function useWalletAuth() {
     setLastAuthTime,
     setHasAttemptedAuth,
     clearAuth,
-    canAttemptAuth,
   } = useAuthStore();
 
   // Authenticate with backend when wallet connects

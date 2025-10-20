@@ -8,52 +8,7 @@ export interface SNSDomain {
   favorite?: boolean;
 }
 
-// Mock SNS domains for development
-const MOCK_SNS_DOMAINS: { [walletAddress: string]: SNSDomain[] } = {
-  '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU': [
-    { domain: 'shadowy.sol', owner: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU', favorite: true },
-    { domain: 'supercode.sol', owner: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU' },
-    { domain: 'developer.sol', owner: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU' }
-  ],
-  'GKJRSuAqFatpGpNcB3dQkUDddt5p5uTwYdM2qygYzRBe': [
-    { domain: 'defi.sol', owner: 'GKJRSuAqFatpGpNcB3dQkUDddt5p5uTwYdM2qygYzRBe', favorite: true }
-  ],
-  'E7r83mAKJRSuAZFatpGpNcBdK3dQkTDddt5p5uUYqwY': [
-    { domain: 'moonshot.sol', owner: 'E7r83mAKJRSuAZFatpGpNcBdK3dQkTDddt5p5uUYqwY', favorite: true },
-    { domain: 'trader.sol', owner: 'E7r83mAKJRSuAZFatpGpNcBdK3dQkTDddt5p5uUYqwY' },
-    { domain: 'nft.sol', owner: 'E7r83mAKJRSuAZFatpGpNcBdK3dQkTDddt5p5uUYqwY' }
-  ],
-  'B9r3dQkTDddt5p5uUYqGKJRSuAZFatpGpNcmAKwYE7r8': [
-    { domain: 'ape.sol', owner: 'B9r3dQkTDddt5p5uUYqGKJRSuAZFatpGpNcmAKwYE7r8', favorite: true }
-  ],
-  '5p5uUYqGKJRSuAZFatpGpNcmAKwYE7r8B9r3dQkTDddt': [
-    { domain: 'wagmi.sol', owner: '5p5uUYqGKJRSuAZFatpGpNcmAKwYE7r8B9r3dQkTDddt', favorite: true }
-  ],
-  'BKJRSuAqF8tpGpNcB3dQkUDddt5p5uTwYdM2qygYzRBe': [
-    { domain: 'korus.sol', owner: 'BKJRSuAqF8tpGpNcB3dQkUDddt5p5uTwYdM2qygYzRBe', favorite: true },
-    { domain: 'builder.sol', owner: 'BKJRSuAqF8tpGpNcB3dQkUDddt5p5uTwYdM2qygYzRBe' }
-  ],
-  'CKdR8mBvH9tgLpQeN4eSkVHgfr6k6pVxZfO3syhZaSDt': [
-    { domain: 'solana.sol', owner: 'CKdR8mBvH9tgLpQeN4eSkVHgfr6k6pVxZfO3syhZaSDt', favorite: true },
-    { domain: 'tutorial.sol', owner: 'CKdR8mBvH9tgLpQeN4eSkVHgfr6k6pVxZfO3syhZaSDt' }
-  ],
-  'RPS5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhGamer': [
-    { domain: 'rockstar.sol', owner: 'RPS5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhGamer', favorite: true },
-    { domain: 'gamer.sol', owner: 'RPS5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhGamer' }
-  ],
-  'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip': [
-    { domain: 'coinflip.sol', owner: 'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip', favorite: true },
-    { domain: 'lucky.sol', owner: 'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip' },
-    { domain: 'flipper.sol', owner: 'CoiN5yK9tgLpQeN4eSkVHgfr6k6pVxZfO3syhFlip' }
-  ]
-};
-
-// Default domains for any wallet not in the mock data
-const DEFAULT_USER_DOMAINS: SNSDomain[] = [
-  { domain: 'anonymous.sol', owner: '', favorite: true },
-  { domain: 'user.sol', owner: '' },
-  { domain: 'newbie.sol', owner: '' }
-];
+// Mock SNS domains removed - only show real domains from the blockchain
 
 // Cache for resolved domains
 const snsCache: Map<string, { domains: SNSDomain[], timestamp: number }> = new Map();
@@ -79,7 +34,7 @@ export async function fetchSNSDomains(walletAddress: string): Promise<SNSDomain[
     } else {
       try {
         // Try to fetch real SNS domains from our backend
-        const response = await fetch(`${API_URL}/sns/domains/${walletAddress}`);
+        const response = await fetch(`${API_URL}/api/sns/domains/${walletAddress}`);
 
         if (response.ok) {
           const data = await response.json();
@@ -97,17 +52,11 @@ export async function fetchSNSDomains(walletAddress: string): Promise<SNSDomain[
       }
     }
 
-    // Fallback to mock domains for development/demo
-    // This ensures the app works even without real SNS domains
-    const mockDomains = MOCK_SNS_DOMAINS[walletAddress] || DEFAULT_USER_DOMAINS.map(d => ({
-      ...d,
-      owner: walletAddress
-    }));
+    // Return empty array if no real domains found
+    // Don't use mock data - only show actual SNS domains owned by the user
+    snsCache.set(walletAddress, { domains: [], timestamp: Date.now() });
 
-    // Cache the result
-    snsCache.set(walletAddress, { domains: mockDomains, timestamp: Date.now() });
-
-    return mockDomains;
+    return [];
   } catch (error) {
     logger.error('Error fetching SNS domains:', error);
     return [];
@@ -151,21 +100,9 @@ export async function setFavoriteSNSDomain(walletAddress: string, domain: string
     // Update cache
     snsCache.set(walletAddress, { domains: updatedDomains, timestamp: Date.now() });
 
-    // TODO: Send to backend API
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
-    if (API_URL) {
-      try {
-        await fetch(`${API_URL}/sns/favorite`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ walletAddress, domain })
-        });
-      } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
-          logger.log('Failed to save favorite domain to backend:', error);
-        }
-      }
-    }
+    // Send to backend API - but we don't need this since we save via updateProfile
+    // The favorite domain is saved via usersAPI.updateProfile({ snsUsername: domain }, token)
+    // in the profile page SNS dropdown handler
 
     return true;
   } catch (error) {
@@ -185,29 +122,23 @@ export async function resolveSNSDomain(domain: string): Promise<string | null> {
       if (process.env.NODE_ENV === 'development') {
         logger.log('No API URL configured for SNS resolution');
       }
-    } else {
-      try {
-        // Try to resolve domain using real SNS API
-        const response = await fetch(`${API_URL}/sns/resolve/${encodeURIComponent(domain)}`);
-
-        if (response.ok) {
-          const data = await response.json();
-
-          if (data.success && data.owner) {
-            return data.owner;
-          }
-        }
-      } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
-          logger.log('SNS resolve API failed, using fallback:', error);
-        }
-      }
+      return null;
     }
 
-    // Fallback to mock data for development
-    for (const [wallet, domains] of Object.entries(MOCK_SNS_DOMAINS)) {
-      if (domains.some(d => d.domain.toLowerCase() === domain.toLowerCase())) {
-        return wallet;
+    try {
+      // Resolve domain using real SNS API
+      const response = await fetch(`${API_URL}/api/sns/resolve/${encodeURIComponent(domain)}`);
+
+      if (response.ok) {
+        const data = await response.json();
+
+        if (data.success && data.owner) {
+          return data.owner;
+        }
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        logger.log('SNS resolve API failed:', error);
       }
     }
 

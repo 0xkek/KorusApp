@@ -5,9 +5,24 @@ import { getFavoriteSNSDomain, fetchSNSDomains, SNSDomain } from '../utils/sns';
 // Cache for SNS domains to avoid repeated lookups
 const domainCache = new Map<string, string | null>();
 
+// Export function to clear cache
+export function clearSNSCache(walletAddress?: string) {
+  if (walletAddress) {
+    domainCache.delete(walletAddress);
+  } else {
+    domainCache.clear();
+  }
+}
+
 export function useSNSDomain(walletAddress: string | null) {
   const [domain, setDomain] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const refresh = () => {
+    clearSNSCache(walletAddress || undefined);
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   useEffect(() => {
     if (!walletAddress || walletAddress.includes('...')) {
@@ -39,9 +54,9 @@ export function useSNSDomain(walletAddress: string | null) {
       .finally(() => {
         setLoading(false);
       });
-  }, [walletAddress]);
+  }, [walletAddress, refreshTrigger]);
 
-  return { domain, loading };
+  return { domain, loading, refresh };
 }
 
 // Hook to fetch all SNS domains for dropdown

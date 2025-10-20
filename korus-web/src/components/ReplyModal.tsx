@@ -225,7 +225,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                           alt="Upload preview"
                           width={200}
                           height={128}
-                          className="w-full object-cover rounded-xl border border-korus-border"
+                          className="max-w-full h-auto rounded-xl border border-korus-border"
                         />
                       ) : (
                         <div className="w-full h-32 bg-korus-surface/40 border border-korus-border rounded-xl flex items-center justify-center">

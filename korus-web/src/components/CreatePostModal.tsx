@@ -169,18 +169,46 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const post: any = (newPost as { post?: unknown }).post || newPost;
 
+      // Debug: Log what backend returned
+      console.log('🔍 Backend returned post:', {
+        authorWallet: post.authorWallet,
+        'author.tier': post.author?.tier,
+        'author.snsUsername': post.author?.snsUsername,
+        'author.nftAvatar': post.author?.nftAvatar,
+        'author.username': post.author?.username,
+        'author.walletAddress': post.author?.walletAddress
+      });
+
       // Transform the backend response to match the frontend Post type
+      // Use the complete author object from the backend (includes tier, SNS, NFT avatar)
+      // Priority: SNS username > regular username > truncated wallet address
       const transformedPost = {
         ...post,
-        user: post.authorWallet || post.author?.walletAddress || publicKey?.toBase58() || 'Unknown',
+        // Use SNS username if available, otherwise username, otherwise truncated wallet
+        user: post.author?.snsUsername || post.author?.username || post.authorWallet?.slice(0, 15) || publicKey?.toBase58()?.slice(0, 15) || 'Unknown',
         wallet: post.authorWallet,
+        userTheme: post.author?.themeColor,
         time: 'Just now',
         likes: post.likeCount || 0,
         comments: post.replyCount || 0,
         reposts: 0,
         tips: post.tipCount || 0,
         image: post.imageUrl,
+        avatar: post.author?.nftAvatar || null,
+        // Preserve the complete author object from backend
+        author: post.author,
       };
+
+      console.log('✅ Transformed post for frontend:', {
+        user: transformedPost.user,
+        wallet: transformedPost.wallet,
+        avatar: transformedPost.avatar,
+        'author.tier': transformedPost.author?.tier,
+        'author.snsUsername': transformedPost.author?.snsUsername,
+        'author.nftAvatar': transformedPost.author?.nftAvatar,
+        hasPremiumBadge: transformedPost.author?.tier === 'premium',
+        hasNFTAvatar: !!transformedPost.avatar
+      });
 
       // Call the parent's post creation function
       if (onPostCreate) {

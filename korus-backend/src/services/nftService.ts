@@ -25,112 +25,119 @@ if (!HELIUS_API_KEY) {
   logger.warn('HELIUS_API_KEY not set - NFT fetching may be limited')
 }
 
-// Spam detection patterns - expanded list
+// Industry-standard spam detection patterns based on Phantom/Solana wallet research
 const SPAM_PATTERNS = [
+  // === SCAM KEYWORDS (High priority) ===
+  /airdrop/i,
+  /claim/i,
+  /free\s*(mint|nft|token)/i,
+  /giveaway/i,
+  /reward/i,
+  /winner/i,
+  /you'?ve?\s*won/i,
+  /congratulations/i,
+  /eligible/i,
+  /snapshot/i,
+  /whitelist/i,
+  /verify/i,
+  /redeem/i,
+  /bonus/i,
+
+  // === PHISHING PATTERNS ===
+  /click\s*(here|link|below)/i,
+  /visit\s*(our|the)?\s*(website|site|link)/i,
+  /connect.*wallet/i,
+  /wallet.*verify/i,
+  /(discord|telegram|twitter).*join/i,
+  /follow.*us/i,
+
+  // === URGENCY TACTICS ===
+  /limited\s*time/i,
+  /act\s*now/i,
+  /expires?\s*(soon|today|tonight)/i,
+  /hurry/i,
+  /don't\s*miss/i,
+
+  // === TOKEN SCAMS ===
+  /\$\d+\s*(usdc|sol|usdt|bonk|wif|bome)/i, // Price advertising
+  /\d{3,}\s*\$[a-z]+/i, // "3000$W", "4000$BOME"
+  /^(pump|bome|wif|jup|bonk|pepe)\s/i, // Token names at start
+  /\d+\s*(usdc|sol|usdt|bonk)\s*(airdrop|drop|claim)/i,
+
+  // === DROP/TICKET SCAMS ===
+  /\sdrop(\s|$)/i, // "X Drop" or "Drop X"
+  /drop\s*box/i,
+  /ticket/i,
+  /mint\s*pass/i,
+
+  // === GENERIC/LOW EFFORT ===
   /^(test|demo|sample|example)/i,
   /^\d+$/, // Just numbers
   /^#\d+$/, // Just #numbers
   /^NFT\s*#?\d+$/i, // Generic "NFT #123"
-  /^(mint|token|asset)\s*#?\d+$/i,
-  /airdrop/i,
-  /claim/i,
-  /free\s*mint/i,
+  /^(mint|token|asset|item)\s*#?\d+$/i,
   /^untitled/i,
   /^unnamed/i,
-  /^(CM|CC|CD|CE|CF|CG|CH|CI|CJ|CK)$/i, // Single letter combos
-  /^[A-Z]{1,2}$/,  // 1-2 letter names
-  /whitelist/i,
-  /reward/i,
+  /^(common|uncommon|rare|epic|legendary)\s*#?\d+$/i,
   /^nft$/i,
   /^solana/i,
   /^sol\s*#?\d+$/i,
-  /^item\s*#?\d+$/i,
-  /^(common|uncommon|rare|epic|legendary)\s*#?\d+$/i,
-  // Additional scam patterns
-  /click\s*(here|link|below)/i,
-  /visit\s*(our|the)\s*(website|site)/i,
-  /\$\d+\s*(usdc|sol|usdt)/i, // Price advertising
-  /verify/i,
-  /congratulations/i,
-  /you'?ve?\s*won/i,
-  /winner/i,
-  /giveaway/i,
-  /snapshot/i,
-  /eligible/i,
-  /redeem/i,
-  /bonus/i,
-  /^claim\s*your/i,
-  /wallet.*verify/i,
-  /connect.*wallet/i,
-  /(discord|telegram).*join/i,
-  /limited\s*time/i,
-  /act\s*now/i,
-  /expires?\s*(soon|today)/i,
+
+  // === SUSPICIOUS SHORT NAMES ===
+  /^(CM|CC|CD|CE|CF|CG|CH|CI|CJ|CK)$/i, // Candy Machine codes
+  /^[A-Z]{1,2}$/,  // 1-2 letter names
+
+  // === DOMAIN NAMES (Phishing) ===
+  /\.(com|io|xyz|site|cc|net|org|app|co)/i,
+  /https?:\/\//i, // Any URL
+
+  // === EMPTY/INVALID ===
   /^\s*$/, // Empty names
   /^\.+$/, // Just dots
   /^_+$/, // Just underscores
+  /^-+$/, // Just dashes
 ]
 
 // Use verified collections from config
 const VERIFIED_COLLECTIONS = NFT_CONFIG.VERIFIED_COLLECTIONS
 
 function isSpamNFT(nft: any): boolean {
-  // Handle both raw API data and transformed NFT objects
   const name = nft.content?.metadata?.name || nft.name || ''
   const collectionName = nft.grouping?.[0]?.collection_metadata?.name || nft.collection?.name || ''
   const symbol = nft.content?.metadata?.symbol || nft.symbol || ''
   const description = nft.content?.metadata?.description || ''
 
-  // Check if verified collection - these are always shown
+  // 1. VERIFIED COLLECTIONS - Always show these (highest priority)
   if (VERIFIED_COLLECTIONS.some(vc =>
     collectionName.toLowerCase().includes(vc.toLowerCase())
   )) {
     return false
   }
 
-  // Use Helius built-in spam detection flag (if available)
-  if (nft.interface === 'ProgrammableNFT' && nft.content?.metadata?.attributes) {
-    const spamFlag = nft.content.metadata.attributes.find(
-      (attr: any) => attr.trait_type?.toLowerCase() === 'spam'
-    )
-    if (spamFlag?.value === true || spamFlag?.value === 'true') {
-      return true
-    }
+  // 2. HELIUS BURNT FLAG - Always filter burnt NFTs
+  if (nft.burnt === true) {
+    return true
   }
 
-  // Check Helius compression/spam signals
+  // 3. CHECK NAME, SYMBOL, AND DESCRIPTION for spam patterns
+  const textToCheck = `${name} ${symbol} ${description}`.toLowerCase()
+
+  if (SPAM_PATTERNS.some(pattern => pattern.test(textToCheck))) {
+    return true
+  }
+
+  // 4. SUSPICIOUS COMPRESSED NFTs without collection
   if (nft.compression?.compressed && !collectionName) {
-    // Compressed NFTs without collections are often spam
     return true
   }
 
-  // Check spam patterns on name, symbol, and description
-  if (SPAM_PATTERNS.some(pattern =>
-    pattern.test(name) || pattern.test(symbol) || pattern.test(description)
-  )) {
+  // 5. DELEGATED OWNERSHIP without collection (suspicious pattern)
+  if (nft.ownership?.delegated === true && !collectionName) {
     return true
   }
 
-  // Check for missing or suspicious metadata
-  if (!name || name === 'Unknown NFT' || name.length < 3) {
-    return true
-  }
-
-  // Filter out NFTs with no collection and generic names
-  if (!collectionName && name.length <= 5) {
-    return true
-  }
-
-  // Check for suspicious URLs in description (common phishing)
-  const urlPattern = /(https?:\/\/[^\s]+)/gi
-  const urls = description.match(urlPattern) || []
-  if (urls.length > 2) {
-    // Multiple URLs in description is suspicious
-    return true
-  }
-
-  // Check for all-caps spam (but allow short acronyms)
-  if (name.length > 10 && name === name.toUpperCase() && !/\s/.test(name)) {
+  // 6. NO METADATA = likely spam
+  if (!name || name.trim() === '') {
     return true
   }
 
@@ -245,12 +252,18 @@ export async function fetchNFTsForWallet(
     
     
     const totalBeforeFilter = transformedAssets.length
-    
+
     // Filter spam if requested (pass the transformed NFT objects)
-    const filtered = includeSpam ? transformedAssets : transformedAssets.filter((nft: any) => !isSpamNFT(nft))
+    const filtered = includeSpam ? transformedAssets : transformedAssets.filter((nft: any) => {
+      const isSpam = isSpamNFT(nft)
+      if (isSpam) {
+        logger.debug(`[SPAM FILTER] Filtering out: ${nft.name} (${nft.mint.substring(0, 8)}...)`)
+      }
+      return !isSpam
+    })
     const spamFiltered = totalBeforeFilter - filtered.length
-    
-    logger.debug(`Found ${totalBeforeFilter} NFTs, filtered ${spamFiltered} spam`)
+
+    logger.info(`✅ NFT Filtering Results: Total=${totalBeforeFilter}, Spam Filtered=${spamFiltered}, Clean=${filtered.length}`)
     
     // Paginate the already-transformed assets
     const startIndex = (page - 1) * limit

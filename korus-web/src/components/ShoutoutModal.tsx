@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 // Treasury wallet that receives shoutout payments
-const TREASURY_WALLET = 'ByqqYGErKfyLHHd3NjgMnbbxQdPs1kFrPVWPUHUsD31W';
+const TREASURY_WALLET = process.env.NEXT_PUBLIC_TREASURY_WALLET || 'ByqqYGErKfyLHHd3NjgMnbbxQdPs1kFrPVWPUHUsD31W';
 
 const SHOUTOUT_OPTIONS = [
   { label: '10 min', value: 10, price: 0.05, recommended: false },
@@ -199,16 +199,19 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm,
       logger.error('Shoutout payment error:', error);
 
       // Handle user cancellation gracefully
-      if (error?.message?.includes('User rejected') ||
-          error?.message?.includes('rejected') ||
-          error?.message?.includes('cancelled') ||
-          error?.message?.includes('Plugin Closed') ||
-          error?.message?.includes('User declined') ||
-          error?.name === 'WalletSendTransactionError' ||
-          error?.name === 'WalletSignTransactionError') {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorName = error instanceof Error ? error.name : '';
+
+      if (errorMessage.includes('User rejected') ||
+          errorMessage.includes('rejected') ||
+          errorMessage.includes('cancelled') ||
+          errorMessage.includes('Plugin Closed') ||
+          errorMessage.includes('User declined') ||
+          errorName === 'WalletSendTransactionError' ||
+          errorName === 'WalletSignTransactionError') {
         showError('Transaction cancelled. No charges were made.');
       } else {
-        showError(error?.message || 'Failed to send payment. Please try again.');
+        showError(errorMessage || 'Failed to send payment. Please try again.');
       }
     } finally {
       setIsProcessing(false);

@@ -35,6 +35,12 @@ function getDisplayName(author?: APIAuthor, wallet?: string): string {
 function formatTime(dateString: string): string {
   try {
     const date = new Date(dateString);
+
+    // Check if date is invalid
+    if (isNaN(date.getTime())) {
+      return 'unknown';
+    }
+
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
@@ -78,7 +84,7 @@ export function apiPostToPost(apiPost: APIPost): Post {
     imageUrl: apiPost.imageUrl,
     video: apiPost.videoUrl,
     videoUrl: apiPost.videoUrl,
-    avatar: apiPost.author?.nftAvatar || null,
+    avatar: apiPost.author?.nftAvatar || undefined,
     userTheme: apiPost.author?.themeColor,
     shoutoutDuration: apiPost.shoutoutDuration,
     shoutoutExpiresAt: apiPost.shoutoutExpiresAt,

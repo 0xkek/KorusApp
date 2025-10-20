@@ -195,11 +195,13 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
       logger.error('Failed to send tip:', error);
 
       // Improved error handling for better user feedback
-      if (error?.message?.includes('User rejected')) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      if (errorMessage.includes('User rejected')) {
         showError('Transaction cancelled. You can try again anytime.');
-      } else if (error?.message?.includes('insufficient')) {
+      } else if (errorMessage.includes('insufficient')) {
         showError('Insufficient balance for this transaction.');
-      } else if (error?.message?.includes('blockhash')) {
+      } else if (errorMessage.includes('blockhash')) {
         showError('Transaction timed out. Please try again.');
       } else if (error instanceof Error) {
         showError(`Failed to send tip: ${error.message}`);

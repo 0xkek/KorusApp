@@ -5,7 +5,7 @@
 
 import { logger } from '@/utils/logger';
 import { useConnection, useWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
-import { PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
+import { PublicKey, SystemProgram, Transaction, TransactionInstruction, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import * as anchor from '@coral-xyz/anchor';
 import { useCallback, useState } from 'react';
 
@@ -241,7 +241,7 @@ export function useGameEscrow() {
         logger.error('Transaction failed:', txError);
 
         // Check if user rejected the transaction
-        const errorMessage = txError.message || 'Transaction failed';
+        const errorMessage = txError instanceof Error ? txError.message : 'Transaction failed';
         const isUserRejection = errorMessage.includes('closed') ||
                                 errorMessage.includes('rejected') ||
                                 errorMessage.includes('cancelled') ||
@@ -251,11 +251,7 @@ export function useGameEscrow() {
           throw new Error('Transaction cancelled by user');
         }
 
-        logger.error('Error details:', {
-          message: txError.message,
-          logs: txError.logs,
-          error: txError.error,
-        });
+        logger.error('Error details:', txError);
         throw new Error(errorMessage);
       }
 
@@ -414,7 +410,7 @@ export function useGameEscrow() {
         logger.error('Transaction failed:', txError);
 
         // Check if user rejected the transaction
-        const errorMessage = txError.message || 'Transaction failed';
+        const errorMessage = txError instanceof Error ? txError.message : 'Transaction failed';
         const isUserRejection = errorMessage.includes('closed') ||
                                 errorMessage.includes('rejected') ||
                                 errorMessage.includes('cancelled') ||
@@ -424,11 +420,7 @@ export function useGameEscrow() {
           throw new Error('Transaction cancelled by user');
         }
 
-        logger.error('Error details:', {
-          message: txError.message,
-          logs: txError.logs,
-          error: txError.error,
-        });
+        logger.error('Error details:', txError);
         throw new Error(errorMessage);
       }
 

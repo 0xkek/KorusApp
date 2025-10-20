@@ -29,6 +29,8 @@ export interface UpdateProfileData {
   website?: string;
   twitter?: string;
   themeColor?: string;
+  nftAvatar?: string;
+  snsUsername?: string;
 }
 
 export interface SetUsernameData {

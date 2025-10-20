@@ -164,7 +164,8 @@ export const connectWallet = asyncHandler(async (req: Request, res: Response) =>
           walletSource: hasGenesisToken ? 'seeker' : 'app',
           genesisVerified: hasGenesisToken,
           solBalance: TOKEN_CONFIG.INITIAL_SOL_BALANCE,
-          totalInteractionScore: 0
+          totalInteractionScore: 0,
+          themeColor: '#43E97B' // Default green theme color
         }
         
         logger.debug('User data to create:', userData)

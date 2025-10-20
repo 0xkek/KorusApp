@@ -75,6 +75,7 @@ export default function SettingsPage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [profileColor, setProfileColor] = useState<string>('#43E97B');
 
   // Debounced values for localStorage optimization
   const debouncedHideShoutout = useDebounce(hideSponsoredPosts, 500);
@@ -96,6 +97,35 @@ export default function SettingsPage() {
     }
   }, [connected, router]);
 
+  // Load user's profile color
+  useEffect(() => {
+    const fetchProfileColor = async () => {
+      try {
+        const token = localStorage.getItem('korus-token');
+        if (!token) return;
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.user?.themeColor) {
+            setProfileColor(data.user.themeColor);
+          }
+        }
+      } catch (error) {
+        // Failed to load profile color
+      }
+    };
+
+    if (connected && mounted) {
+      fetchProfileColor();
+    }
+  }, [connected, mounted]);
+
   const handleLogout = useCallback(async () => {
     setIsLoggingOut(true);
     try {
@@ -114,16 +144,79 @@ export default function SettingsPage() {
     setTimeout(() => setSuccessMessage(''), 3000);
   }, []);
 
-  const handleThemeChange = useCallback((newTheme: string) => {
+  // Map theme IDs to their corresponding profile colors
+  const themeToProfileColor: Record<string, string> = useMemo(() => ({
+    'mint': '#43E97B',
+    'purple': '#9945FF',
+    'blue': '#00D4FF',
+    'gold': '#FFD700',
+    'cherry': '#FF6B9D',
+    'cyber': '#00FFF0'
+  }), []);
+
+  const handleThemeChange = useCallback(async (newTheme: string, themeId?: string) => {
     try {
       if (mounted) {
         setTheme(newTheme);
-        showSuccess('Theme updated successfully!');
+
+        // Also update profile color in database to match the theme
+        if (themeId) {
+          const newProfileColor = themeToProfileColor[themeId];
+          console.log('🎨 Updating profile color to:', newProfileColor, 'for theme:', themeId);
+          if (newProfileColor) {
+            const token = localStorage.getItem('authToken');
+            console.log('🔑 Token exists:', !!token, 'API URL:', process.env.NEXT_PUBLIC_API_URL);
+            if (token) {
+              try {
+                console.log('📤 Making PUT request to update profile color...');
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`, {
+                  method: 'PUT',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ themeColor: newProfileColor })
+                });
+
+                console.log('📥 Response received:', { status: response.status, ok: response.ok });
+
+                if (response.ok) {
+                  setProfileColor(newProfileColor);
+                  console.log('✅ Profile color updated successfully in database');
+
+                  // Broadcast theme change to update cached posts
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('themeColorUpdated', {
+                      detail: { newColor: newProfileColor }
+                    }));
+                  }
+
+                  showSuccess('Theme updated successfully!');
+                } else {
+                  const errorText = await response.text();
+                  console.error('❌ Failed to update profile color, response not ok:', errorText);
+                  showSuccess('Theme updated successfully!');
+                }
+              } catch (error) {
+                console.error('❌ Error updating profile color:', error);
+                showSuccess('Theme updated successfully!');
+              }
+            } else {
+              console.error('❌ No auth token found');
+              showSuccess('Theme updated successfully!');
+            }
+          } else {
+            console.error('❌ No profile color found for theme:', themeId);
+            showSuccess('Theme updated successfully!');
+          }
+        } else {
+          showSuccess('Theme updated successfully!');
+        }
       }
     } catch {
       // Could add user notification here
     }
-  }, [mounted, setTheme, showSuccess]);
+  }, [mounted, setTheme, showSuccess, themeToProfileColor]);
 
   const themes: ThemeOption[] = useMemo(() => [
     { id: 'mint', name: 'Mint Fresh', colors: ['#43e97b', '#38f9d7'], free: true },
@@ -275,7 +368,7 @@ export default function SettingsPage() {
                               return;
                             }
                             const newTheme = isDarkMode ? `${theme.id}Dark` : `${theme.id}Light`;
-                            handleThemeChange(newTheme);
+                            handleThemeChange(newTheme, theme.id);
                           }}
                           className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 ${
                             currentColorScheme === theme.id
@@ -303,6 +396,78 @@ export default function SettingsPage() {
                         </button>
                       ))}
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Profile Color */}
+              <div className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
+                <h2 className="text-2xl font-bold text-korus-text mb-4">Profile Color</h2>
+                <div className="p-4 bg-korus-surface/20 rounded-xl border border-korus-borderLight">
+                  <div className="text-korus-text font-medium mb-2">Your Profile Theme</div>
+                  <div className="text-korus-textSecondary text-sm mb-4">
+                    This color represents you on Korus - it appears on your posts, reposts, and profile. Your profile color automatically matches your chosen Color Theme above, but you can manually override it here if you prefer.
+                  </div>
+                  <div className="grid grid-cols-4 gap-3">
+                    {[
+                      { name: 'Green', color: '#43E97B' },
+                      { name: 'Purple', color: '#9945FF' },
+                      { name: 'Orange', color: '#FF6B35' },
+                      { name: 'Blue', color: '#00D4FF' },
+                      { name: 'Pink', color: '#FF6B9D' },
+                      { name: 'Gold', color: '#FFD700' },
+                      { name: 'Cyan', color: '#00FFF0' },
+                      { name: 'Red', color: '#FF4757' },
+                    ].map((colorOption) => {
+                      const isSelected = profileColor.toUpperCase() === colorOption.color.toUpperCase();
+
+                      return (
+                        <button
+                          key={colorOption.color}
+                          onClick={async () => {
+                            try {
+                              const token = localStorage.getItem('authToken');
+                              if (!token) return;
+
+                              const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`, {
+                                method: 'PUT',
+                                headers: {
+                                  'Authorization': `Bearer ${token}`,
+                                  'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ themeColor: colorOption.color })
+                              });
+
+                              if (response.ok) {
+                                setProfileColor(colorOption.color);
+                                showSuccess(`Profile color updated to ${colorOption.name}!`);
+                              }
+                            } catch {
+                              // Error handling
+                            }
+                          }}
+                          className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 ${
+                            isSelected
+                              ? 'border-korus-primary bg-korus-primary/10'
+                              : 'border-korus-borderLight hover:border-korus-border'
+                          }`}
+                          title={colorOption.name}
+                        >
+                          <div className="relative">
+                            <div
+                              className="w-12 h-12 rounded-full"
+                              style={{ background: `linear-gradient(135deg, ${colorOption.color}, ${colorOption.color}dd)` }}
+                            />
+                            {isSelected && (
+                              <svg className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                              </svg>
+                            )}
+                          </div>
+                          <span className="text-korus-textSecondary text-xs">{colorOption.name}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>

@@ -9,6 +9,7 @@ import { CursorPagination } from '../utils/pagination'
 import SolPaymentService from '../services/solPaymentService'
 import { TREASURY_WALLET } from '../config/solana'
 import { getNFTByMint } from '../services/nftService'
+import { emitNewPost } from '../config/socket'
 
 // Helper function to resolve NFT avatar mints to image URLs
 async function resolveNFTAvatar(nftMint: string | null): Promise<string | null> {
@@ -155,6 +156,9 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
     // Transform NFT avatar mint address to image URL
     const transformedPost = await transformPostAvatars(post)
 
+    // Emit new post to all connected WebSocket clients
+    emitNewPost(transformedPost)
+
     res.status(201).json({
       success: true,
       post: transformedPost
@@ -260,7 +264,9 @@ export const getPosts = async (req: Request, res: Response) => {
                   snsUsername: true,
                   username: true,
                   nftAvatar: true,
-                  themeColor: true
+                  themeColor: true,
+                  subscriptionStatus: true,
+                  subscriptionType: true
                 }
               }
             }

@@ -11,7 +11,7 @@ import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import PremiumUpgradeModal from '@/components/PremiumUpgradeModal';
 import { SafeContent } from '@/components/SafeContent';
-import { useAllSNSDomains, useSNSDomain } from '@/hooks/useSNSDomain';
+import { useAllSNSDomains, useSNSDomain, clearSNSCache } from '@/hooks/useSNSDomain';
 import { setFavoriteSNSDomain } from '@/utils/sns';
 import { useToastContext } from '@/components/ToastProvider';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -57,17 +57,18 @@ export default function ProfilePage() {
   const [selectedNFTAvatar, setSelectedNFTAvatar] = useState<NFT | null>(null); // NFT avatar
   const [showNFTAvatarModal, setShowNFTAvatarModal] = useState(false);
   const [balance, setBalance] = useState<number>(0);
+  const [dbSnsUsername, setDbSnsUsername] = useState<string | null>(null); // SNS from database
 
   // Wallet and user data
   const walletAddress = publicKey?.toBase58() || '';
   const selectedAvatar = '🎮'; // Mock avatar
 
   // SNS Domain hooks - must be called before any conditional returns
-  const { domain: snsDomain, loading: snsLoading } = useSNSDomain(walletAddress);
+  const { domain: snsDomain, loading: snsLoading, refresh: refreshSNS } = useSNSDomain(walletAddress);
   const { domains: allSNSDomains, loading: allDomainsLoading } = useAllSNSDomains(walletAddress);
 
   // Subscription status hook
-  const { isPremium, subscriptionStatus, refreshStatus } = useSubscription();
+  const { isPremium, subscriptionStatus, refreshStatus, daysUntilExpiration } = useSubscription();
 
   // Refs for outside click detection
   const snsDropdownRef = useRef<HTMLDivElement>(null);
@@ -107,6 +108,11 @@ export default function ProfilePage() {
         setHasSetUsername(user.hasSetUsername || false);
       }
 
+      // Load SNS username from database
+      if (user.snsUsername) {
+        setDbSnsUsername(user.snsUsername);
+      }
+
       // Load NFT avatar if user has one
       if (user.nftAvatar) {
         try {
@@ -144,8 +150,9 @@ export default function ProfilePage() {
   }, []);
 
   const displayName = useMemo(() => {
-    return (isPremium && snsDomain) || currentUsername || `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`;
-  }, [isPremium, snsDomain, currentUsername, walletAddress]);
+    // Priority: DB SNS username > regular username > wallet address
+    return (isPremium && dbSnsUsername) || currentUsername || `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`;
+  }, [isPremium, dbSnsUsername, currentUsername, walletAddress]);
 
   // Fetch wallet balance
   useEffect(() => {
@@ -374,14 +381,23 @@ export default function ProfilePage() {
                 <div className="absolute top-0 right-0 flex flex-col items-end gap-2">
                   {/* Premium Status Badge */}
                   {isPremium && (
-                    <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl px-4 py-2 shadow-lg" style={{ boxShadow: '0 0 12px rgba(251, 191, 36, 0.4)' }}>
+                    <div className="rounded-xl px-4 py-2 shadow-lg" style={{ background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)' }}>
                       <div className="flex items-center gap-2">
                         <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
-                          <svg className="w-3 h-3" viewBox="0 0 24 24" style={{ fill: '#000000' }}>
+                          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="#000">
                             <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
                           </svg>
                         </div>
-                        <span className="text-black font-bold text-sm">Premium</span>
+                        <div className="flex flex-col">
+                          <div className="font-bold text-sm" style={{ color: '#000000' }}>Premium</div>
+                          {daysUntilExpiration !== null && daysUntilExpiration >= 0 && (
+                            <div className="text-xs" style={{ color: '#000000' }}>
+                              {daysUntilExpiration === 0 ? 'Expires today' :
+                               daysUntilExpiration === 1 ? 'Expires tomorrow' :
+                               `${daysUntilExpiration} days left`}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -462,7 +478,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Identity Options Section */}
-                <div className="mb-6 bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6">
+                <div className="mb-6 bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6 relative z-50">
                   <h3 className="text-lg font-bold text-white mb-4">Your Identity</h3>
 
                   {/* Current Display Name */}
@@ -474,7 +490,7 @@ export default function ProfilePage() {
                       <span className="text-korus-textSecondary text-sm">Currently displaying as:</span>
                     </div>
                     <div className="text-xl font-bold text-white">{displayName}</div>
-                    {isPremium && snsDomain && (
+                    {isPremium && dbSnsUsername && (
                       <div className="flex items-center gap-2 mt-2">
                         <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
                           <svg className="w-2.5 h-2.5" fill="black" viewBox="0 0 24 24">
@@ -646,7 +662,7 @@ export default function ProfilePage() {
 
                   {/* SNS Domain Selector (Premium Only) */}
                   {isPremium && allSNSDomains.length > 0 && (
-                    <div>
+                    <div className="relative z-[100]">
                       <div className="flex items-center gap-2 mb-3">
                         <h4 className="font-medium text-white">Select SNS Domain</h4>
                         <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
@@ -656,7 +672,7 @@ export default function ProfilePage() {
                         </div>
                       </div>
 
-                      <div className="relative" ref={snsDropdownRef}>
+                      <div className="relative z-50" ref={snsDropdownRef}>
                         <button
                           onClick={() => setShowSNSDropdown(!showSNSDropdown)}
                           className="w-full bg-korus-surface/40 border border-korus-borderLight rounded-xl p-4 hover:border-korus-border transition-colors"
@@ -685,16 +701,46 @@ export default function ProfilePage() {
                             {allSNSDomains.map((domain, index) => (
                               <button
                                 key={index}
-                                onClick={async () => {
+                                onClick={async (e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  logger.log(`Clicked on domain: ${domain.domain}`);
+
                                   try {
+                                    // Set as favorite in local cache
                                     await setFavoriteSNSDomain(walletAddress, domain.domain);
+
+                                    // Save to backend
+                                    const token = localStorage.getItem('authToken');
+                                    if (!token) {
+                                      showError('Please reconnect your wallet');
+                                      return;
+                                    }
+
+                                    const { usersAPI } = await import('@/lib/api');
+                                    await usersAPI.updateProfile({ snsUsername: domain.domain }, token);
+
+                                    // Update local state immediately
+                                    setDbSnsUsername(domain.domain);
+
+                                    // Update local cache with new domain
+                                    await setFavoriteSNSDomain(walletAddress, domain.domain);
+
                                     setShowSNSDropdown(false);
-                                    // TODO: Show success toast
-                                  } catch {
-                                    // TODO: Show error toast
+                                    showSuccess(`SNS domain ${domain.domain} set successfully!`);
+
+                                    // Refresh SNS domain display
+                                    refreshSNS();
+
+                                    // Refresh subscription status to update display
+                                    await refreshStatus();
+                                  } catch (error) {
+                                    const errorMessage = (error as { data?: { error?: string }, message?: string })?.data?.error || (error as Error)?.message || 'Failed to set SNS domain';
+                                    showError(errorMessage);
+                                    logger.error('Error setting SNS domain:', error);
                                   }
                                 }}
-                                className="w-full px-4 py-3 text-left hover:bg-korus-surface/40 transition-colors border-b border-korus-borderLight last:border-b-0"
+                                className="w-full px-4 py-3 text-left hover:bg-korus-primary/20 hover:border-korus-primary/40 transition-colors border-b border-korus-borderLight last:border-b-0 cursor-pointer"
                               >
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
@@ -751,7 +797,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Tabs */}
-                <div className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-1 mb-6">
+                <div className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-1 mb-6 relative z-10">
                   <div className="flex">
                     <button
                       onClick={() => setActiveTab('posts')}

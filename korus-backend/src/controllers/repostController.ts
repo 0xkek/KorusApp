@@ -4,6 +4,31 @@ import prisma from '../config/database'
 import { AuthRequest } from '../middleware/auth'
 import { reputationService } from '../services/reputationService'
 import { createNotification } from '../utils/notifications'
+import { getNFTByMint } from '../services/nftService'
+import { emitNewPost } from '../config/socket'
+
+// Helper function to resolve NFT avatar mints to image URLs
+async function resolveNFTAvatar(nftMint: string | null): Promise<string | null> {
+  if (!nftMint) return null
+  try {
+    const nft = await getNFTByMint(nftMint)
+    return nft?.image || null
+  } catch (error) {
+    logger.error(`Failed to resolve NFT avatar ${nftMint}:`, error)
+    return null
+  }
+}
+
+// Transform post author avatars from mint addresses to image URLs
+async function transformPostAvatars(post: any): Promise<any> {
+  if (post.author?.nftAvatar) {
+    post.author.nftAvatar = await resolveNFTAvatar(post.author.nftAvatar)
+  }
+  if (post.originalPost?.author?.nftAvatar) {
+    post.originalPost.author.nftAvatar = await resolveNFTAvatar(post.originalPost.author.nftAvatar)
+  }
+  return post
+}
 
 export const repostPost = async (req: AuthRequest, res: Response) => {
   try {
@@ -82,7 +107,9 @@ export const repostPost = async (req: AuthRequest, res: Response) => {
                   snsUsername: true,
                   username: true,
                   nftAvatar: true,
-                  themeColor: true
+                  themeColor: true,
+                  subscriptionStatus: true,
+                  subscriptionType: true
                 }
               }
             }
@@ -95,7 +122,9 @@ export const repostPost = async (req: AuthRequest, res: Response) => {
               snsUsername: true,
               username: true,
               nftAvatar: true,
-              themeColor: true
+              themeColor: true,
+              subscriptionStatus: true,
+              subscriptionType: true
             }
           }
         }
@@ -127,11 +156,17 @@ export const repostPost = async (req: AuthRequest, res: Response) => {
         postId: id
       })
 
+      // Transform NFT avatar mint addresses to image URLs
+      const transformedPost = await transformPostAvatars(repostPost)
+
+      // Emit new repost to all connected WebSocket clients
+      emitNewPost(transformedPost)
+
       res.json({
         success: true,
         reposted: true,
         message: 'Post reposted',
-        repostPost // Return the full repost post with original post data
+        repostPost: transformedPost // Return the full repost post with original post data
       })
     }
   } catch (error: any) {

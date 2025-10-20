@@ -8,7 +8,7 @@ import { sanitizeContent, SanitizeOptions } from '@/utils/sanitize';
 interface SafeContentProps extends SanitizeOptions {
   content: string;
   className?: string;
-  as?: keyof JSX.IntrinsicElements;
+  as?: keyof React.JSX.IntrinsicElements;
 }
 
 /**

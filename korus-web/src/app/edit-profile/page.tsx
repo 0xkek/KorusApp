@@ -8,17 +8,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { useToastContext } from '@/components/ToastProvider';
+import { type NFT } from '@/lib/api';
+import { useAllSNSDomains } from '@/hooks/useSNSDomain';
 
-// Dynamically import modal for code splitting
+// Dynamically import modals for code splitting
 const ConfirmModal = dynamic(() => import('@/components/ConfirmModal'), { ssr: false });
-
-interface NFTAvatar {
-  id: string;
-  name: string;
-  image: string;
-  uri: string;
-  collection?: string;
-}
+const NFTAvatarModal = dynamic(() => import('@/components/NFTAvatarModal'), { ssr: false });
 
 export default function EditProfilePage() {
   const { connected, publicKey } = useWallet();
@@ -28,7 +23,6 @@ export default function EditProfilePage() {
   // Mock wallet and user data (replace with actual context/API later)
   const walletAddress = publicKey?.toBase58() || '';
   const selectedAvatar = '🎮'; // Mock avatar
-  const selectedNFTAvatar = null as NFTAvatar | null;
   const snsDomain = null; // Mock SNS domain
   const timeFunUsername = null;
   const isPremium = false; // Mock premium status
@@ -45,6 +39,11 @@ export default function EditProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [showAvatarSelection, setShowAvatarSelection] = useState(false);
   const [showDiscardModal, setShowDiscardModal] = useState(false);
+  const [selectedNFTAvatar, setSelectedNFTAvatar] = useState<NFT | null>(null);
+  const [selectedSNSDomain, setSelectedSNSDomain] = useState<string>('');
+
+  // Fetch SNS domains for this wallet
+  const { domains: snsDomains, loading: snsLoading } = useAllSNSDomains(walletAddress);
 
   // Theme color options
   const themeColors = [
@@ -86,6 +85,18 @@ export default function EditProfilePage() {
         setWebsite(user.website || '');
         setTwitter(user.twitter || '');
         setSelectedThemeColor(user.themeColor || '#43e97b');
+        setSelectedSNSDomain(user.snsUsername || '');
+
+        // If user has an NFT avatar, create a minimal NFT object
+        if (user.nftAvatar) {
+          setSelectedNFTAvatar({
+            name: 'Current Avatar',
+            symbol: '',
+            uri: user.nftAvatar,
+            image: user.nftAvatar,
+            mint: ''
+          });
+        }
       } catch (error) {
         logger.error('Failed to load profile:', error);
         showError('Failed to load profile');
@@ -136,7 +147,9 @@ export default function EditProfilePage() {
         location,
         website,
         twitter,
-        themeColor: selectedThemeColor
+        themeColor: selectedThemeColor,
+        nftAvatar: selectedNFTAvatar?.image || undefined,
+        snsUsername: selectedSNSDomain || undefined
       }, token);
 
       showSuccess('Profile updated successfully!');
@@ -152,7 +165,15 @@ export default function EditProfilePage() {
   };
 
   const handleChangeAvatar = () => {
+    logger.log('handleChangeAvatar called');
     setShowAvatarSelection(true);
+    logger.log('showAvatarSelection set to true');
+  };
+
+  const handleSelectNFT = (nft: NFT) => {
+    logger.log('NFT selected:', nft);
+    setSelectedNFTAvatar(nft);
+    setHasChanges(true);
   };
 
   const handleDiscardChanges = () => {
@@ -295,6 +316,41 @@ export default function EditProfilePage() {
               <p className="text-korus-textSecondary text-xs mt-1">This is how other users will see your name</p>
             </div>
 
+            {/* SNS Domain Selection */}
+            {snsDomains.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+                  <span>SNS Domain</span>
+                  {isPremium && (
+                    <span className="px-2 py-0.5 text-xs bg-gradient-to-r from-korus-primary to-korus-secondary text-black rounded-full font-bold">
+                      Premium
+                    </span>
+                  )}
+                </label>
+                <select
+                  value={selectedSNSDomain}
+                  onChange={(e) => {
+                    setSelectedSNSDomain(e.target.value);
+                    setHasChanges(true);
+                  }}
+                  disabled={!isPremium && snsLoading}
+                  className="w-full bg-korus-surface/20 backdrop-blur-sm text-white border border-korus-borderLight rounded-xl px-4 py-3 focus:outline-none focus:border-korus-primary transition-colors disabled:opacity-50"
+                >
+                  <option value="">None (use display name)</option>
+                  {snsDomains.map((domain) => (
+                    <option key={domain.domain} value={domain.domain}>
+                      {domain.domain} {domain.favorite ? '⭐' : ''}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-korus-textSecondary text-xs mt-1">
+                  {isPremium
+                    ? 'Choose which SNS domain to display on your profile'
+                    : 'Upgrade to Premium to use your SNS domains'}
+                </p>
+              </div>
+            )}
+
             {/* Bio */}
             <div>
               <label className="block text-sm font-medium mb-2">Bio</label>
@@ -429,36 +485,13 @@ export default function EditProfilePage() {
         </div>
       </div>
 
-      {/* Avatar Selection Modal (placeholder) */}
-      {showAvatarSelection && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold">Change Avatar</h3>
-              <button
-                onClick={() => setShowAvatarSelection(false)}
-                className="p-2 hover:bg-korus-surface/60 rounded-full transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-              </button>
-            </div>
-
-            <div className="text-center py-8">
-              <p className="text-korus-textSecondary">Avatar selection coming soon!</p>
-              <p className="text-korus-textSecondary text-sm mt-2">Choose from emojis or upload your NFT avatar</p>
-            </div>
-
-            <button
-              onClick={() => setShowAvatarSelection(false)}
-              className="w-full bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold py-3 rounded-lg hover:shadow-lg transition-all"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+      {/* NFT Avatar Selection Modal */}
+      <NFTAvatarModal
+        isOpen={showAvatarSelection}
+        onClose={() => setShowAvatarSelection(false)}
+        onSelectNFT={handleSelectNFT}
+        currentAvatarNFT={selectedNFTAvatar?.mint}
+      />
 
       {/* Discard Changes Confirmation Modal */}
       <ConfirmModal

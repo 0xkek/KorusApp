@@ -29,6 +29,7 @@ export interface Post {
   tips: number;
   tipCount?: number; // Count of tips received
   time: string;
+  createdAt?: string | Date; // Raw timestamp for sorting
   isPremium?: boolean;
   isShoutout?: boolean;
   isSponsored?: boolean;
@@ -46,6 +47,16 @@ export interface Post {
   subcategory?: string;
   avatar?: string; // User's avatar/NFT
   userTheme?: string; // User's theme color
+  // Complete author object from backend (includes premium status, SNS, NFT avatar)
+  author?: {
+    walletAddress: string;
+    tier?: string;
+    genesisVerified?: boolean;
+    snsUsername?: string | null;
+    username?: string | null;
+    nftAvatar?: string | null;
+    themeColor?: string | null;
+  };
 }
 
 export interface UserStats {

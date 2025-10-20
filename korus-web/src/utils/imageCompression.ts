@@ -17,20 +17,26 @@ const DEFAULT_OPTIONS: CompressionOptions = {
   maxSizeMB: 1,
   maxWidthOrHeight: 1920,
   useWebWorker: true,
-  fileType: 'image/jpeg',
+  // fileType removed - will preserve original format (PNG transparency, GIF animations, WebP, etc.)
 };
 
 /**
- * Compress an image file
+ * Compress an image file while preserving format
  * @param file - The image file to compress
  * @param options - Optional compression settings
- * @returns Compressed file
+ * @returns Compressed file in original format
  */
 export async function compressImage(
   file: File,
   options: CompressionOptions = {}
 ): Promise<File> {
-  const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
+  // Merge options but preserve original file type if not specified
+  const mergedOptions = {
+    ...DEFAULT_OPTIONS,
+    ...options,
+    // Use original file type to preserve PNG transparency, GIF animations, etc.
+    fileType: options.fileType || file.type,
+  };
 
   try {
     const originalSizeMB = file.size / 1024 / 1024;
