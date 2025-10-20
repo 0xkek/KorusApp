@@ -47,6 +47,18 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '**.arweave.net',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.tqweyuasd.cc',
+      },
+      {
+        protocol: 'https',
+        hostname: 'nftstorage.link',
+      },
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
     ],
   },
 };
