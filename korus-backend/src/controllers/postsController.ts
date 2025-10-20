@@ -152,9 +152,12 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
     const hasMedia = !!(imageUrl || videoUrl);
     await reputationService.onPostCreated(walletAddress, hasMedia)
 
+    // Transform NFT avatar mint address to image URL
+    const transformedPost = await transformPostAvatars(post)
+
     res.status(201).json({
       success: true,
-      post: post
+      post: transformedPost
     } as any)
   } catch (error) {
     logger.error('Create post error:', error)

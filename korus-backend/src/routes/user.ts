@@ -206,7 +206,7 @@ router.get('/by-username/:username', async (req, res) => {
 router.put('/profile', authenticate, async (req: AuthRequest, res) => {
   try {
     const userWallet = req.userWallet!;
-    const { displayName, bio, location, website, twitter, themeColor } = req.body;
+    const { displayName, bio, location, website, twitter, themeColor, nftAvatar, snsUsername } = req.body;
 
     // Validate website URL if provided
     if (website && !website.match(/^https?:\/\/.+/)) {
@@ -222,7 +222,9 @@ router.put('/profile', authenticate, async (req: AuthRequest, res) => {
         location: location || undefined,
         website: website || undefined,
         twitter: twitter || undefined,
-        themeColor: themeColor || undefined
+        themeColor: themeColor || undefined,
+        nftAvatar: nftAvatar || undefined,
+        snsUsername: snsUsername || undefined
       },
       select: {
         walletAddress: true,

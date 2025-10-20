@@ -19,11 +19,13 @@ export class SubscriptionService {
   private static connection: Connection
 
   static initialize() {
-    // Use mainnet for production, devnet for testing
-    const rpcUrl = process.env.NODE_ENV === 'production'
-      ? 'https://api.mainnet-beta.solana.com'
-      : 'https://api.devnet.solana.com'
-    
+    // Use SOLANA_RPC_URL from environment, fallback to mainnet/devnet based on NODE_ENV
+    const rpcUrl = process.env.SOLANA_RPC_URL || (
+      process.env.NODE_ENV === 'production'
+        ? 'https://api.mainnet-beta.solana.com'
+        : 'https://api.devnet.solana.com'
+    )
+
     this.connection = new Connection(rpcUrl, 'confirmed')
     logger.info('Subscription service initialized', { rpcUrl })
   }
