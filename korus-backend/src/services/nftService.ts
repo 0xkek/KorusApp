@@ -46,6 +46,29 @@ const SPAM_PATTERNS = [
   /^sol\s*#?\d+$/i,
   /^item\s*#?\d+$/i,
   /^(common|uncommon|rare|epic|legendary)\s*#?\d+$/i,
+  // Additional scam patterns
+  /click\s*(here|link|below)/i,
+  /visit\s*(our|the)\s*(website|site)/i,
+  /\$\d+\s*(usdc|sol|usdt)/i, // Price advertising
+  /verify/i,
+  /congratulations/i,
+  /you'?ve?\s*won/i,
+  /winner/i,
+  /giveaway/i,
+  /snapshot/i,
+  /eligible/i,
+  /redeem/i,
+  /bonus/i,
+  /^claim\s*your/i,
+  /wallet.*verify/i,
+  /connect.*wallet/i,
+  /(discord|telegram).*join/i,
+  /limited\s*time/i,
+  /act\s*now/i,
+  /expires?\s*(soon|today)/i,
+  /^\s*$/, // Empty names
+  /^\.+$/, // Just dots
+  /^_+$/, // Just underscores
 ]
 
 // Use verified collections from config
@@ -56,29 +79,61 @@ function isSpamNFT(nft: any): boolean {
   const name = nft.content?.metadata?.name || nft.name || ''
   const collectionName = nft.grouping?.[0]?.collection_metadata?.name || nft.collection?.name || ''
   const symbol = nft.content?.metadata?.symbol || nft.symbol || ''
-  
+  const description = nft.content?.metadata?.description || ''
+
   // Check if verified collection - these are always shown
-  if (VERIFIED_COLLECTIONS.some(vc => 
+  if (VERIFIED_COLLECTIONS.some(vc =>
     collectionName.toLowerCase().includes(vc.toLowerCase())
   )) {
     return false
   }
-  
-  // Check spam patterns on both name and symbol
-  if (SPAM_PATTERNS.some(pattern => pattern.test(name) || pattern.test(symbol))) {
+
+  // Use Helius built-in spam detection flag (if available)
+  if (nft.interface === 'ProgrammableNFT' && nft.content?.metadata?.attributes) {
+    const spamFlag = nft.content.metadata.attributes.find(
+      (attr: any) => attr.trait_type?.toLowerCase() === 'spam'
+    )
+    if (spamFlag?.value === true || spamFlag?.value === 'true') {
+      return true
+    }
+  }
+
+  // Check Helius compression/spam signals
+  if (nft.compression?.compressed && !collectionName) {
+    // Compressed NFTs without collections are often spam
     return true
   }
-  
+
+  // Check spam patterns on name, symbol, and description
+  if (SPAM_PATTERNS.some(pattern =>
+    pattern.test(name) || pattern.test(symbol) || pattern.test(description)
+  )) {
+    return true
+  }
+
   // Check for missing or suspicious metadata
   if (!name || name === 'Unknown NFT' || name.length < 3) {
     return true
   }
-  
+
   // Filter out NFTs with no collection and generic names
   if (!collectionName && name.length <= 5) {
     return true
   }
-  
+
+  // Check for suspicious URLs in description (common phishing)
+  const urlPattern = /(https?:\/\/[^\s]+)/gi
+  const urls = description.match(urlPattern) || []
+  if (urls.length > 2) {
+    // Multiple URLs in description is suspicious
+    return true
+  }
+
+  // Check for all-caps spam (but allow short acronyms)
+  if (name.length > 10 && name === name.toUpperCase() && !/\s/.test(name)) {
+    return true
+  }
+
   return false
 }
 
@@ -151,25 +206,25 @@ export async function fetchNFTsForWallet(
     const transformedAssets = assets
       .map((item: any) => {
         // Prefer CDN URLs for faster loading
-        let imageUrl = 
+        let imageUrl =
           item.content?.files?.[0]?.cdn_uri ||  // CDN first (fastest)
-          item.content?.links?.image || 
-          item.content?.files?.[0]?.uri || 
+          item.content?.links?.image ||
+          item.content?.files?.[0]?.uri ||
           ''
-        
+
         // Fix double slash issue in Helius CDN URLs
         if (imageUrl && imageUrl.includes('cdn.helius-rpc.com/cdn-cgi/image//')) {
           // Use the original image URL instead of broken CDN URL
           imageUrl = item.content?.links?.image || item.content?.files?.[0]?.uri || ''
         }
-        
+
         // Handle empty name by using collection name or symbol as fallback
-        const nftName = item.content?.metadata?.name && item.content.metadata.name.trim() !== '' 
-          ? item.content.metadata.name 
-          : item.grouping?.[0]?.collection_metadata?.name || 
-            item.content?.metadata?.symbol || 
+        const nftName = item.content?.metadata?.name && item.content.metadata.name.trim() !== ''
+          ? item.content.metadata.name
+          : item.grouping?.[0]?.collection_metadata?.name ||
+            item.content?.metadata?.symbol ||
             'NFT';
-        
+
         return {
           name: nftName,
           symbol: item.content?.metadata?.symbol || 'NFT',
@@ -180,7 +235,11 @@ export async function fetchNFTsForWallet(
           collection: item.grouping?.[0] ? {
             name: item.grouping[0].collection_metadata?.name || item.grouping[0].group_value,
             family: item.grouping[0].group_key
-          } : undefined
+          } : undefined,
+          // Keep raw data for spam detection
+          content: item.content,
+          compression: item.compression,
+          interface: item.interface
         }
       })
     
