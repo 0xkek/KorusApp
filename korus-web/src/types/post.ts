@@ -3,7 +3,7 @@
  */
 
 export interface Reply {
-  id: number;
+  id: number | string;
   postId?: string; // The original post ID this reply belongs to
   user: string;
   wallet?: string;
@@ -15,10 +15,11 @@ export interface Reply {
   isExpanded?: boolean;
   image?: string;
   videoUrl?: string;
+  avatar?: string | null; // NFT avatar URL
 }
 
 export interface Post {
-  id: number;
+  id: number | string;
   user: string;
   wallet?: string;
   content: string;

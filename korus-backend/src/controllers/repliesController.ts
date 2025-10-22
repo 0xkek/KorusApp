@@ -6,6 +6,19 @@ import { autoModerate } from './moderationController'
 import { reputationService } from '../services/reputationService'
 import { createNotification } from '../utils/notifications'
 import { CursorPagination } from '../utils/pagination'
+import { getNFTByMint } from '../services/nftService'
+
+// Helper function to resolve NFT avatar mints to image URLs
+async function resolveNFTAvatar(nftMint: string | null): Promise<string | null> {
+  if (!nftMint) return null
+  try {
+    const nft = await getNFTByMint(nftMint)
+    return nft?.image || null
+  } catch (error) {
+    logger.error(`Failed to resolve NFT avatar ${nftMint}:`, error)
+    return null
+  }
+}
 
 export const createReply = async (req: AuthRequest, res: Response) => {
   try {
@@ -194,9 +207,28 @@ export const getReplies = async (req: Request, res: Response) => {
       }
     )
 
+    // Transform NFT avatar mint addresses to image URLs
+    const transformedReplies = await Promise.all(
+      result.data.map(async (reply: any) => {
+        // Transform parent reply author avatar
+        if (reply.author?.nftAvatar) {
+          reply.author.nftAvatar = await resolveNFTAvatar(reply.author.nftAvatar)
+        }
+        // Transform child replies' author avatars
+        if (reply.childReplies && Array.isArray(reply.childReplies)) {
+          for (const childReply of reply.childReplies) {
+            if (childReply.author?.nftAvatar) {
+              childReply.author.nftAvatar = await resolveNFTAvatar(childReply.author.nftAvatar)
+            }
+          }
+        }
+        return reply
+      })
+    )
+
     res.json({
       success: true,
-      replies: result.data,
+      replies: transformedReplies,
       meta: result.meta,
       pagination: {
         limit: result.meta.resultCount,

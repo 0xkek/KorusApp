@@ -7,6 +7,7 @@ import { AppError, ValidationError, AuthenticationError, DatabaseError } from '.
 import { asyncHandler } from '../middleware/errorHandler'
 import { TOKEN_CONFIG } from '../config/constants'
 import { logger } from '../utils/logger'
+import { getNFTByMint } from '../services/nftService'
 // Mock mode removed for production
 
 
@@ -289,10 +290,31 @@ export const getProfile = asyncHandler(async (req: AuthRequest, res: Response) =
     })
   }
 
+  // Transform NFT avatar mint address to image URL
+  let nftAvatarUrl = user.nftAvatar
+  logger.debug('Original nftAvatar from DB:', user.nftAvatar)
+  if (user.nftAvatar) {
+    try {
+      const nft = await getNFTByMint(user.nftAvatar)
+      nftAvatarUrl = nft?.image || user.nftAvatar
+      logger.debug('Transformed nftAvatarUrl:', nftAvatarUrl)
+    } catch (error) {
+      logger.error(`Failed to resolve NFT avatar ${user.nftAvatar}:`, error)
+    }
+  }
+
+  // Prevent browser caching to ensure fresh avatar data
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+  res.setHeader('Pragma', 'no-cache')
+  res.setHeader('Expires', '0')
+
+  logger.debug('Sending profile response with nftAvatar:', nftAvatarUrl)
+
   res.json({
     user: {
       ...user,
-      solBalance: user.solBalance.toString()
+      solBalance: user.solBalance.toString(),
+      nftAvatar: nftAvatarUrl
     }
   })
 })

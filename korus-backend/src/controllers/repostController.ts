@@ -36,35 +36,97 @@ export const repostPost = async (req: AuthRequest, res: Response) => {
     const walletAddress = req.userWallet!
     const { comment } = req.body // Optional comment on the repost
 
-    // Check if post exists
-    const post = await prisma.post.findUnique({ where: { id } })
+    logger.debug('Repost request received:', {
+      id,
+      walletAddress,
+      hasComment: !!comment
+    })
+
+    // Try to find as post first, then as reply
+    let post = await prisma.post.findUnique({ where: { id } })
+    let reply = null
+    let isReplyRepost = false
+    let authorWallet = ''
+    let originalPostId = id // Default to the post ID
+
     if (!post) {
-      return res.status(404).json({ error: 'Post not found' })
+      // Check if it's a reply
+      reply = await prisma.reply.findUnique({
+        where: { id },
+        include: {
+          author: {
+            select: {
+              walletAddress: true,
+              tier: true,
+              genesisVerified: true,
+              snsUsername: true,
+              username: true,
+              nftAvatar: true,
+              themeColor: true,
+              subscriptionStatus: true,
+              subscriptionType: true
+            }
+          },
+          post: true // Include the parent post
+        }
+      })
+
+      if (!reply) {
+        return res.status(404).json({ error: 'Post or reply not found' })
+      }
+
+      isReplyRepost = true
+      authorWallet = reply.authorWallet
+      originalPostId = reply.id // For replies, we store the reply ID as originalPostId
+    } else {
+      authorWallet = post.authorWallet
     }
 
-    // Can't repost your own post
-    if (post.authorWallet === walletAddress) {
-      return res.status(400).json({ error: 'Cannot repost your own post' })
+    // Can't repost your own post/reply
+    if (authorWallet === walletAddress) {
+      return res.status(400).json({ error: 'Cannot repost your own post or reply' })
     }
 
     // Toggle repost (if already reposted, unrepost it)
-    const existingRepost = await prisma.repost.findUnique({
-      where: {
-        userWallet_postId: {
-          userWallet: walletAddress,
-          postId: id
-        }
-      }
-    })
+    // For post reposts: Check Repost table
+    // For reply reposts: Check for a repost Post (since we don't create Repost records for replies)
+    let existingRepost = null
+    let hasExistingRepost = false
 
-    if (existingRepost) {
-      // Unrepost - delete the repost post entity and the repost record
+    if (!isReplyRepost) {
+      // For post reposts, check the Repost table
+      existingRepost = await prisma.repost.findUnique({
+        where: {
+          userWallet_postId: {
+            userWallet: walletAddress,
+            postId: originalPostId
+          }
+        }
+      })
+      hasExistingRepost = !!existingRepost
+    } else {
+      // For reply reposts, check if there's a repost Post
+      // We can't use originalPostId since it's null for reply reposts
+      // So we search for a repost Post by this user with matching content
+      const repostPosts = await prisma.post.findMany({
+        where: {
+          authorWallet: walletAddress,
+          isRepost: true,
+          originalPostId: null // Reply reposts have null originalPostId
+        }
+      })
+      // Check if any of these reposts match the reply content
+      hasExistingRepost = repostPosts.some(rp => rp.content === (reply?.content || ''))
+    }
+
+    if (hasExistingRepost) {
+      // Unrepost - delete the repost post entity and (for posts) the repost record
       // Find the repost post
       const repostPost = await prisma.post.findFirst({
         where: {
           authorWallet: walletAddress,
           isRepost: true,
-          originalPostId: id
+          originalPostId: isReplyRepost ? null : originalPostId
         }
       })
 
@@ -75,45 +137,41 @@ export const repostPost = async (req: AuthRequest, res: Response) => {
         })
       }
 
-      // Delete the repost record
-      await prisma.repost.delete({
-        where: { id: existingRepost.id }
-      })
+      // Delete the repost record (only exists for post reposts)
+      if (!isReplyRepost && existingRepost) {
+        await prisma.repost.delete({
+          where: { id: existingRepost.id }
+        })
+      }
 
-      // Decrement original post's repost count
-      await prisma.post.update({
-        where: { id },
-        data: { repostCount: { decrement: 1 } }
-      })
+      // Decrement repost count on the original content
+      if (isReplyRepost && reply) {
+        // Decrement original reply's repost count
+        await prisma.reply.update({
+          where: { id },
+          data: { repostCount: { decrement: 1 } }
+        })
+      } else if (post) {
+        // Decrement original post's repost count
+        await prisma.post.update({
+          where: { id },
+          data: { repostCount: { decrement: 1 } }
+        })
+      }
 
-      res.json({ success: true, reposted: false, message: 'Post unreposted' })
+      res.json({ success: true, reposted: false, message: isReplyRepost ? 'Reply unreposted' : 'Post unreposted' })
     } else {
       // Create a new Post entity for the repost (so it can have its own interactions)
+      // For replies, we don't use originalPostId (since it's a FK to posts table)
+      // Instead, we store the reply content and use the Repost table to track the reply ID
       const repostPost = await prisma.post.create({
         data: {
           authorWallet: walletAddress,
-          content: comment || '', // Optional comment on the repost
+          content: comment || (isReplyRepost && reply ? reply.content : ''), // Use reply content if reposting a reply
           isRepost: true,
-          originalPostId: id
+          originalPostId: isReplyRepost ? null : originalPostId // Only set for post reposts, not reply reposts
         },
         include: {
-          originalPost: {
-            include: {
-              author: {
-                select: {
-                  walletAddress: true,
-                  tier: true,
-                  genesisVerified: true,
-                  snsUsername: true,
-                  username: true,
-                  nftAvatar: true,
-                  themeColor: true,
-                  subscriptionStatus: true,
-                  subscriptionType: true
-                }
-              }
-            }
-          },
           author: {
             select: {
               walletAddress: true,
@@ -131,33 +189,105 @@ export const repostPost = async (req: AuthRequest, res: Response) => {
       })
 
       // Create repost record linking user to original post
-      await prisma.repost.create({
-        data: {
-          userWallet: walletAddress,
-          postId: id
-        }
-      })
+      // Note: Only create Repost record for post reposts, not reply reposts
+      // (because Repost.postId has FK constraint to Post table)
+      if (!isReplyRepost) {
+        await prisma.repost.create({
+          data: {
+            userWallet: walletAddress,
+            postId: originalPostId
+          }
+        })
+      }
 
-      // Increment original post's repost count
-      await prisma.post.update({
-        where: { id },
-        data: { repostCount: { increment: 1 } }
-      })
+      // Increment repost count on the original content
+      if (isReplyRepost && reply) {
+        // Increment original reply's repost count
+        await prisma.reply.update({
+          where: { id },
+          data: { repostCount: { increment: 1 } }
+        })
+      } else if (post) {
+        // Increment original post's repost count
+        await prisma.post.update({
+          where: { id },
+          data: { repostCount: { increment: 1 } }
+        })
+      }
 
       // Award reputation points
       await reputationService.onRepostGiven(walletAddress)
-      await reputationService.onRepostReceived(post.authorWallet)
+      await reputationService.onRepostReceived(authorWallet)
 
       // Create notification
       await createNotification({
-        userId: post.authorWallet,
+        userId: authorWallet,
         type: 'repost',
         fromUserId: walletAddress,
-        postId: id
+        postId: originalPostId
       })
 
+      // For reply reposts, we need to manually construct the response with the original reply data
+      let responseData: any
+      if (isReplyRepost && reply) {
+        // Manually add the original reply data to the response
+        responseData = {
+          ...repostPost,
+          originalReply: {
+            id: reply.id,
+            content: reply.content,
+            authorWallet: reply.authorWallet,
+            createdAt: reply.createdAt,
+            likeCount: reply.likeCount,
+            tipCount: reply.tipCount,
+            imageUrl: reply.imageUrl,
+            videoUrl: reply.videoUrl,
+            author: reply.author,
+            postId: reply.postId // Include parent post ID for context
+          }
+        }
+      } else {
+        // For post reposts, fetch with the originalPost relation
+        const repostWithOriginal = await prisma.post.findUnique({
+          where: { id: repostPost.id },
+          include: {
+            originalPost: {
+              include: {
+                author: {
+                  select: {
+                    walletAddress: true,
+                    tier: true,
+                    genesisVerified: true,
+                    snsUsername: true,
+                    username: true,
+                    nftAvatar: true,
+                    themeColor: true,
+                    subscriptionStatus: true,
+                    subscriptionType: true
+                  }
+                }
+              }
+            },
+            author: {
+              select: {
+                walletAddress: true,
+                tier: true,
+                genesisVerified: true,
+                snsUsername: true,
+                username: true,
+                nftAvatar: true,
+                themeColor: true,
+                subscriptionStatus: true,
+                subscriptionType: true
+              }
+            }
+          }
+        })
+        responseData = repostWithOriginal
+      }
+
       // Transform NFT avatar mint addresses to image URLs
-      const transformedPost = await transformPostAvatars(repostPost)
+      const transformedPost = await transformPostAvatars(responseData)
 
       // Emit new repost to all connected WebSocket clients
       emitNewPost(transformedPost)
@@ -165,8 +295,9 @@ export const repostPost = async (req: AuthRequest, res: Response) => {
       res.json({
         success: true,
         reposted: true,
-        message: 'Post reposted',
-        repostPost: transformedPost // Return the full repost post with original post data
+        message: isReplyRepost ? 'Reply reposted' : 'Post reposted',
+        repostPost: transformedPost, // Return the full repost post with original post/reply data
+        isReplyRepost // Flag to indicate this is a reply repost
       })
     }
   } catch (error: any) {

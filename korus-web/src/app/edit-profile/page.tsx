@@ -89,12 +89,15 @@ export default function EditProfilePage() {
 
         // If user has an NFT avatar, create a minimal NFT object
         if (user.nftAvatar) {
+          // Check if nftAvatar is a URL (old data) or a mint address (new data)
+          const isUrl = user.nftAvatar.startsWith('http://') || user.nftAvatar.startsWith('https://');
+
           setSelectedNFTAvatar({
             name: 'Current Avatar',
             symbol: '',
-            uri: user.nftAvatar,
-            image: user.nftAvatar,
-            mint: ''
+            uri: isUrl ? user.nftAvatar : '',
+            image: isUrl ? user.nftAvatar : '',
+            mint: isUrl ? '' : user.nftAvatar
           });
         }
       } catch (error) {
@@ -141,6 +144,15 @@ export default function EditProfilePage() {
 
       // Save profile via API
       const { usersAPI } = await import('@/lib/api');
+
+      // Determine what to send for nftAvatar:
+      // - If there's a mint address, send it (new/correct behavior)
+      // - If there's only an image URL (old data), send the URL to preserve it
+      // - Otherwise send undefined
+      const nftAvatarValue = selectedNFTAvatar?.mint ||
+                            selectedNFTAvatar?.image ||
+                            undefined;
+
       await usersAPI.updateProfile({
         displayName,
         bio,
@@ -148,7 +160,7 @@ export default function EditProfilePage() {
         website,
         twitter,
         themeColor: selectedThemeColor,
-        nftAvatar: selectedNFTAvatar?.image || undefined,
+        nftAvatar: nftAvatarValue,
         snsUsername: selectedSNSDomain || undefined
       }, token);
 

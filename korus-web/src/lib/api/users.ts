@@ -48,7 +48,7 @@ export const usersAPI = {
    * Get current user's profile
    */
   async getProfile(token: string): Promise<{ user: UserProfile }> {
-    return api.get<{ user: UserProfile }>('/api/user/profile', token);
+    return api.get<{ user: UserProfile }>('/api/auth/profile', token);
   },
 
   /**

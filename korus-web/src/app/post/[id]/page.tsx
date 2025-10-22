@@ -14,7 +14,7 @@ import ReplyModal from '@/components/ReplyModal';
 import PostOptionsModal from '@/components/PostOptionsModal';
 import { SafeContent } from '@/components/SafeContent';
 import { useToast } from '@/hooks/useToast';
-import { postsAPI, repliesAPI, uploadAPI, interactionsAPI } from '@/lib/api';
+import { postsAPI, repliesAPI, uploadAPI, interactionsAPI, usersAPI } from '@/lib/api';
 import type { Post, Reply } from '@/types';
 import { MOCK_POSTS, MOCK_REPLIES } from '@/data/mockData';
 
@@ -36,8 +36,14 @@ export default function PostDetailPage() {
   const [post, setPost] = useState<Post | null>(null);
   const [replies, setReplies] = useState<Reply[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUserAvatar, setCurrentUserAvatar] = useState<string | null>(null);
+  const [currentUserProfile, setCurrentUserProfile] = useState<{ username?: string; snsUsername?: string; tier?: string } | null>(null);
   const [liked, setLiked] = useState(false);
-  const [likedReplies, setLikedReplies] = useState<Set<number>>(new Set());
+  const [reposted, setReposted] = useState(false);
+  const [tipped, setTipped] = useState(false);
+  const [likedReplies, setLikedReplies] = useState<Set<string>>(new Set());
+  const [repostedReplies, setRepostedReplies] = useState<Set<string>>(new Set());
+  const [tippedReplies, setTippedReplies] = useState<Set<string>>(new Set());
   const [showReplyModal, setShowReplyModal] = useState(false);
   const [replyToPost, setReplyToPost] = useState<Post | null>(null);
   const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
@@ -68,23 +74,58 @@ export default function PostDetailPage() {
 
       // Try to fetch from backend
       try {
-        const response = await postsAPI.getPost(Number(postId));
+        const response = await postsAPI.getPost(postId);
+        logger.log('📝 Raw backend response:', response);
 
         if (response) {
           // Transform backend post to frontend format
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const backendPost = response as any;
+          const backendPost = (response as any).post || response as any;
+          logger.log('📝 Backend post before transformation:', backendPost);
+          logger.log('📝 Backend post author:', backendPost.author);
           const transformedPost = {
             ...backendPost,
-            user: backendPost.authorWallet || backendPost.author?.walletAddress || 'Unknown',
+            user: backendPost.author?.snsUsername || backendPost.author?.username || backendPost.authorWallet?.slice(0, 15) || 'Unknown',
             wallet: backendPost.authorWallet,
+            userTheme: backendPost.author?.themeColor,
             time: new Date(backendPost.createdAt).toLocaleString(),
+            createdAt: backendPost.createdAt,
             likes: backendPost.likeCount || 0,
             comments: backendPost.replyCount || 0,
-            reposts: 0,
-            tips: backendPost.tipCount || 0,
+            replies: backendPost.replyCount || 0,
+            reposts: backendPost.repostCount || 0,
+            tips: Number(backendPost.tipAmount) || 0,
+            tipCount: backendPost.tipCount || 0,
             image: backendPost.imageUrl,
+            videoUrl: backendPost.videoUrl,
+            avatar: backendPost.author?.nftAvatar || null,
+            isPremium: backendPost.author?.tier === 'premium' || backendPost.author?.subscriptionStatus === 'active',
+            author: backendPost.author,
+            // Handle reposts
+            isRepost: backendPost.isRepost,
+            repostedPost: backendPost.isRepost && backendPost.originalPost ? {
+              id: backendPost.originalPost.id,
+              user: backendPost.originalPost.author?.snsUsername || backendPost.originalPost.author?.username || backendPost.originalPost.authorWallet?.slice(0, 15) || 'Unknown',
+              wallet: backendPost.originalPost.authorWallet,
+              userTheme: backendPost.originalPost.author?.themeColor,
+              content: backendPost.originalPost.content || '',
+              likes: backendPost.originalPost.likeCount || 0,
+              replies: backendPost.originalPost.replyCount || 0,
+              tips: Number(backendPost.originalPost.tipAmount) || 0,
+              comments: backendPost.originalPost.replyCount || 0,
+              reposts: backendPost.originalPost.repostCount || 0,
+              time: new Date(backendPost.originalPost.createdAt).toLocaleString(),
+              createdAt: backendPost.originalPost.createdAt,
+              isPremium: backendPost.originalPost.author?.tier === 'premium',
+              image: backendPost.originalPost.imageUrl,
+              avatar: backendPost.originalPost.author?.nftAvatar || null,
+            } : undefined,
+            repostedBy: backendPost.isRepost ? (backendPost.author?.snsUsername || backendPost.author?.username || backendPost.authorWallet?.slice(0, 15)) : undefined,
           };
+
+          logger.log('✅ Transformed post:', transformedPost);
+          logger.log('✅ Transformed post.user:', transformedPost.user);
+          logger.log('✅ Transformed post.time:', transformedPost.time);
 
           setPost(transformedPost as Post);
 
@@ -94,9 +135,45 @@ export default function PostDetailPage() {
               const interactionsResponse = await interactionsAPI.getUserInteractions([postId], token);
               if (interactionsResponse.success && interactionsResponse.interactions[postId]) {
                 setLiked(interactionsResponse.interactions[postId].liked);
+                setTipped(interactionsResponse.interactions[postId].tipped);
               }
             } catch (error) {
               logger.error('Failed to fetch user interactions:', error);
+            }
+
+            // Check if user has reposted this post
+            try {
+              const repostsResponse = await interactionsAPI.getUserReposts([postId], token);
+              if (repostsResponse.success && repostsResponse.reposts[postId]) {
+                setReposted(repostsResponse.reposts[postId]);
+              }
+            } catch (error) {
+              logger.error('Failed to fetch user reposts:', error);
+            }
+
+            // Fetch current user's profile
+            try {
+              const profileResponse = await usersAPI.getProfile(token);
+              logger.log('Profile API response:', profileResponse);
+              logger.log('NFT Avatar from API:', profileResponse.user?.nftAvatar);
+              if (profileResponse.user) {
+                if (profileResponse.user.nftAvatar) {
+                  setCurrentUserAvatar(profileResponse.user.nftAvatar);
+                  logger.log('Set currentUserAvatar to:', profileResponse.user.nftAvatar);
+                }
+                setCurrentUserProfile({
+                  username: profileResponse.user.username,
+                  snsUsername: profileResponse.user.snsUsername,
+                  tier: profileResponse.user.tier
+                });
+                logger.log('Set currentUserProfile to:', {
+                  username: profileResponse.user.username,
+                  snsUsername: profileResponse.user.snsUsername,
+                  tier: profileResponse.user.tier
+                });
+              }
+            } catch (error) {
+              logger.error('Failed to fetch user profile:', error);
             }
           }
 
@@ -108,32 +185,80 @@ export default function PostDetailPage() {
             const transformedReplies = repliesResponse.replies.map(reply => {
               const transformed = {
                 id: reply.id as unknown,
-                postId: postId, // Include the post ID for nested replies
-                user: reply.author?.walletAddress || reply.authorWallet || 'Unknown',
+                postId: postId,
+                user: reply.author?.snsUsername || reply.author?.username || reply.authorWallet?.slice(0, 15) || 'Unknown',
                 wallet: reply.authorWallet,
                 content: reply.content,
                 likes: reply.likeCount || 0,
                 replies: reply.childReplies?.map(child => ({
                   id: child.id as unknown,
-                  postId: postId, // Include the post ID for nested replies
-                  user: child.author?.walletAddress || child.authorWallet || 'Unknown',
+                  postId: postId,
+                  user: child.author?.snsUsername || child.author?.username || child.authorWallet?.slice(0, 15) || 'Unknown',
                   wallet: child.authorWallet,
                   content: child.content,
                   likes: child.likeCount || 0,
                   replies: [],
                   time: new Date(child.createdAt).toLocaleString(),
-                  isPremium: false,
-                  image: child.imageUrl
+                  isPremium: child.author?.tier === 'premium' || child.author?.subscriptionStatus === 'active',
+                  image: child.imageUrl,
+                  videoUrl: child.videoUrl,
+                  avatar: child.author?.nftAvatar || null,
                 })) || [],
                 time: new Date(reply.createdAt).toLocaleString(),
-                isPremium: false,
-                image: reply.imageUrl
+                isPremium: reply.author?.tier === 'premium' || reply.author?.subscriptionStatus === 'active',
+                image: reply.imageUrl,
+                videoUrl: reply.videoUrl,
+                avatar: reply.author?.nftAvatar || null,
               };
               logger.log('Transformed reply:', transformed);
               return transformed;
             });
             logger.log('Setting transformed replies:', transformedReplies);
             setReplies(transformedReplies as Reply[]);
+
+            // Fetch liked and tipped status for all replies if authenticated
+            if (isAuthenticated && token && transformedReplies.length > 0) {
+              try {
+                const replyIds = transformedReplies.map(r => String(r.id));
+                const likedRepliesResponse = await interactionsAPI.getUserInteractions(replyIds, token);
+                if (likedRepliesResponse.success) {
+                  const newLikedReplies = new Set<string>();
+                  const newTippedReplies = new Set<string>();
+                  Object.entries(likedRepliesResponse.interactions).forEach(([replyId, interaction]) => {
+                    if (interaction.liked) {
+                      newLikedReplies.add(replyId);
+                    }
+                    if (interaction.tipped) {
+                      newTippedReplies.add(replyId);
+                    }
+                  });
+                  setLikedReplies(newLikedReplies);
+                  setTippedReplies(newTippedReplies);
+                  logger.log('Loaded liked replies:', Array.from(newLikedReplies));
+                  logger.log('Loaded tipped replies:', Array.from(newTippedReplies));
+                }
+              } catch (error) {
+                logger.error('Failed to fetch reply interactions:', error);
+              }
+
+              // Check if user has reposted any replies
+              try {
+                const replyIds = transformedReplies.map(r => String(r.id));
+                const repostedRepliesResponse = await interactionsAPI.getUserReposts(replyIds, token);
+                if (repostedRepliesResponse.success) {
+                  const newRepostedReplies = new Set<string>();
+                  Object.entries(repostedRepliesResponse.reposts).forEach(([replyId, hasReposted]) => {
+                    if (hasReposted) {
+                      newRepostedReplies.add(replyId);
+                    }
+                  });
+                  setRepostedReplies(newRepostedReplies);
+                  logger.log('Loaded reposted replies:', Array.from(newRepostedReplies));
+                }
+              } catch (error) {
+                logger.error('Failed to fetch reply reposts:', error);
+              }
+            }
           }
         }
       } catch (backendError) {
@@ -189,14 +314,21 @@ export default function PostDetailPage() {
     }
   };
 
-  const handleLikeReply = (replyId: number) => {
+  const handleLikeReply = async (replyId: number | string) => {
+    if (!token) {
+      showError('Please connect your wallet to like replies');
+      return;
+    }
+
+    const replyIdStr = String(replyId);
     const newLikedReplies = new Set(likedReplies);
-    const isLiked = likedReplies.has(replyId);
+    const isLiked = likedReplies.has(replyIdStr);
+    const previousLikedReplies = new Set(likedReplies);
 
     if (isLiked) {
-      newLikedReplies.delete(replyId);
+      newLikedReplies.delete(replyIdStr);
     } else {
-      newLikedReplies.add(replyId);
+      newLikedReplies.add(replyIdStr);
     }
 
     setLikedReplies(newLikedReplies);
@@ -214,7 +346,19 @@ export default function PostDetailPage() {
       });
     };
 
+    const previousReplies = [...replies];
     setReplies(updateReplyLikes(replies));
+
+    // Call backend API to persist the like
+    try {
+      await repliesAPI.likeReply(replyIdStr, token);
+    } catch (error) {
+      logger.error('Failed to like reply:', error);
+      // Revert on error
+      setLikedReplies(previousLikedReplies);
+      setReplies(previousReplies);
+      showError('Failed to like reply. Please try again.');
+    }
   };
 
   const toggleReplyExpansion = (replyId: number) => {
@@ -344,9 +488,21 @@ export default function PostDetailPage() {
           <div className="border-b border-korus-primary/20 pb-3 mb-3 mr-6">
           <div className="flex gap-3">
             {/* Avatar */}
-            <div className="w-10 h-10 bg-gradient-to-br from-korus-primary to-korus-secondary rounded-full flex items-center justify-center text-sm font-bold text-black flex-shrink-0">
-              {reply.user.slice(0, 2).toUpperCase()}
-            </div>
+            {reply.avatar ? (
+              <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
+                <Image
+                  src={reply.avatar}
+                  alt={`${reply.user} avatar`}
+                  width={40}
+                  height={40}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-10 h-10 bg-gradient-to-br from-korus-primary to-korus-secondary rounded-full flex items-center justify-center text-sm font-bold text-black flex-shrink-0">
+                {reply.user.slice(0, 2).toUpperCase()}
+              </div>
+            )}
 
             {/* Reply Body */}
             <div className="flex-1 min-w-0">
@@ -397,12 +553,20 @@ export default function PostDetailPage() {
                     setShowRepostModal(true);
                   }}
                   aria-label="Repost"
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight"
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
+                    repostedReplies.has(String(reply.id))
+                      ? 'bg-korus-primary/20 border border-korus-primary/40'
+                      : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
+                  }`}
                 >
-                  <svg className="w-4 h-4 transition-colors text-korus-textTertiary group-hover:text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-4 h-4 transition-colors ${
+                    repostedReplies.has(String(reply.id)) ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
-                  <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">0</span>
+                  <span className={`text-sm transition-colors font-medium ${
+                    repostedReplies.has(String(reply.id)) ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                  }`}>0</span>
                 </button>
 
                 <button
@@ -430,10 +594,18 @@ export default function PostDetailPage() {
                     setShowTipModal(true);
                   }}
                   aria-label="Send tip (0 SOL)"
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight"
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
+                    tippedReplies.has(String(reply.id))
+                      ? 'bg-korus-primary/20 border border-korus-primary/40'
+                      : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
+                  }`}
                 >
-                  <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">$</span>
-                  <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">0 SOL</span>
+                  <span className={`text-sm transition-colors font-medium ${
+                    tippedReplies.has(String(reply.id)) ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                  }`}>$</span>
+                  <span className={`text-sm transition-colors font-medium ${
+                    tippedReplies.has(String(reply.id)) ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                  }`}>0 SOL</span>
                 </button>
 
                 <button
@@ -613,9 +785,21 @@ export default function PostDetailPage() {
               <div className="border-b border-korus-primary/20 pb-6 mb-6">
               <div className="flex gap-4">
                 {/* Avatar */}
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-lg font-bold text-black flex-shrink-0">
-                  {post.user.slice(0, 2).toUpperCase()}
-                </div>
+                {post.avatar ? (
+                  <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden">
+                    <Image
+                      src={post.avatar}
+                      alt={`${post.user} avatar`}
+                      width={48}
+                      height={48}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-lg font-bold text-black flex-shrink-0">
+                    {post.user.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
 
                 {/* Post Content */}
                 <div className="flex-1 min-w-0">
@@ -669,8 +853,19 @@ export default function PostDetailPage() {
 
                   {/* Post Image */}
                   {post.image && (
-                    <div className="mb-3 rounded-2xl overflow-hidden border border-korus-border">
-                      <Image src={post.image} alt="Post content" width={600} height={400} className="w-full h-auto" />
+                    <div className="mb-3 flex justify-center">
+                      <Image
+                        src={post.image}
+                        alt="Post content"
+                        width={600}
+                        height={400}
+                        className="max-w-full h-auto rounded-xl border border-korus-border"
+                        style={{ maxHeight: '500px', width: 'auto', height: 'auto' }}
+                        onError={(e) => {
+                          // Hide broken image on error
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
                     </div>
                   )}
 
@@ -693,12 +888,20 @@ export default function PostDetailPage() {
                         setShowRepostModal(true);
                       }}
                       aria-label="Repost"
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight"
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
+                        reposted
+                          ? 'bg-korus-primary/20 border border-korus-primary/40'
+                          : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
+                      }`}
                     >
-                      <svg className="w-4 h-4 transition-colors text-korus-textTertiary group-hover:text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className={`w-4 h-4 transition-colors ${
+                        reposted ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                      }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">0</span>
+                      <span className={`text-sm transition-colors font-medium ${
+                        reposted ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                      }`}>0</span>
                     </button>
 
                     <button
@@ -726,10 +929,18 @@ export default function PostDetailPage() {
                         setShowTipModal(true);
                       }}
                       aria-label={`Send tip (${post.tips} SOL)`}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight"
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
+                        tipped
+                          ? 'bg-korus-primary/20 border border-korus-primary/40'
+                          : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
+                      }`}
                     >
-                      <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">$</span>
-                      <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">{post.tips} SOL</span>
+                      <span className={`text-sm transition-colors font-medium ${
+                        tipped ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                      }`}>$</span>
+                      <span className={`text-sm transition-colors font-medium ${
+                        tipped ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
+                      }`}>{post.tips} SOL</span>
                     </button>
 
                     <button
@@ -754,19 +965,51 @@ export default function PostDetailPage() {
             {/* Inline Reply Composer */}
             <div className="border-b border-korus-border/50">
               <div className="px-6 py-4">
-                <div className="flex gap-3 items-start">
+                {/* Header with Avatar and Username */}
+                <div className="flex gap-3 items-center mb-3">
                   {/* Avatar */}
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0">
-                    <span className="text-black font-bold text-base">
-                      {publicKey?.toBase58().slice(0, 2).toUpperCase() || 'U'}
+                  {currentUserAvatar ? (
+                    <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
+                      <img
+                        src={currentUserAvatar}
+                        alt="Your avatar"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          logger.error('Failed to load avatar image:', currentUserAvatar);
+                          e.currentTarget.style.display = 'none';
+                        }}
+                        onLoad={() => {
+                          logger.log('✅ Avatar image loaded successfully:', currentUserAvatar);
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0">
+                      <span className="text-black font-bold text-sm">
+                        {publicKey?.toBase58().slice(0, 2).toUpperCase() || 'U'}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <span className="text-white font-medium">
+                      {currentUserProfile?.snsUsername || currentUserProfile?.username || publicKey?.toBase58().slice(0, 8) + '...'}
                     </span>
+                    {currentUserProfile?.tier === 'premium' && (
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" fill="#FFD700"/>
+                        <path d="M12 6l1.545 3.13L17 9.635l-2.5 2.435L15.09 15.5 12 13.885 8.91 15.5l.59-3.43L7 9.635l3.455-.505L12 6z" fill="black"/>
+                      </svg>
+                    )}
                   </div>
+                </div>
 
+                {/* Reply Input */}
+                <div className="pl-[52px]">
                   <div className="flex-1">
                     <textarea
                       value={inlineReplyContent}
                       onChange={(e) => setInlineReplyContent(e.target.value)}
-                      placeholder="Post your reply..."
+                      placeholder="What's on your mind?"
                       className="w-full bg-transparent text-white text-base resize-none placeholder-korus-textSecondary min-h-[28px] max-h-[300px] leading-6"
                       style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
                       rows={1}
@@ -956,6 +1199,15 @@ export default function PostDetailPage() {
         postId={postToRepost?.id || 0}
         postContent={postToRepost?.content || ''}
         postUser={postToRepost?.user || ''}
+        onSuccess={() => {
+          // Check if this is the main post or a reply
+          if (postToRepost?.id === post?.id) {
+            setReposted(true);
+          } else if (postToRepost?.id) {
+            // It's a reply, add to reposted replies set
+            setRepostedReplies(prev => new Set([...prev, String(postToRepost.id)]));
+          }
+        }}
       />
 
       {/* Tip Modal */}
@@ -967,6 +1219,15 @@ export default function PostDetailPage() {
         }}
         recipientUser={postToTip?.user || ''}
         postId={postToTip?.id}
+        onSuccess={() => {
+          // Check if this is the main post or a reply
+          if (postToTip?.id === post?.id) {
+            setTipped(true);
+          } else if (postToTip?.id) {
+            // It's a reply, add to tipped replies set
+            setTippedReplies(prev => new Set([...prev, String(postToTip.id)]));
+          }
+        }}
       />
 
       {/* Share Modal */}

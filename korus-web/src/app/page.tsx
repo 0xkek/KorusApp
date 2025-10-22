@@ -121,23 +121,43 @@ export default function Home() {
           isPremium: post.author?.tier === 'premium',
           shoutoutExpiresAt: post.shoutoutExpiresAt,
           repostedBy: post.isRepost ? (post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15)) : undefined,
-          repostedPost: post.isRepost && post.originalPost ? {
-            id: post.originalPost.id,
-            user: post.originalPost.author?.username || post.originalPost.author?.snsUsername || post.originalPost.authorWallet?.slice(0, 15) || 'Unknown',
-            wallet: post.originalPost.authorWallet,
-            userTheme: post.originalPost.author?.themeColor,
-            content: post.originalPost.content || '',
-            likes: post.originalPost.likeCount || 0,
-            replies: post.originalPost.replyCount || 0,
-            tips: Number(post.originalPost.tipAmount) || 0,
-            comments: post.originalPost.replyCount || 0,
-            reposts: post.originalPost.repostCount || 0,
-            time: new Date(post.originalPost.createdAt).toLocaleString(),
-            createdAt: post.originalPost.createdAt,
-            isPremium: post.originalPost.author?.tier === 'premium',
-            image: post.originalPost.imageUrl,
-            avatar: post.originalPost.author?.nftAvatar || null,
-          } : undefined,
+          repostedPost: post.isRepost ? (
+            post.originalPost ? {
+              // Post repost
+              id: post.originalPost.id,
+              user: post.originalPost.author?.username || post.originalPost.author?.snsUsername || post.originalPost.authorWallet?.slice(0, 15) || 'Unknown',
+              wallet: post.originalPost.authorWallet,
+              userTheme: post.originalPost.author?.themeColor,
+              content: post.originalPost.content || '',
+              likes: post.originalPost.likeCount || 0,
+              replies: post.originalPost.replyCount || 0,
+              tips: Number(post.originalPost.tipAmount) || 0,
+              comments: post.originalPost.replyCount || 0,
+              reposts: post.originalPost.repostCount || 0,
+              time: new Date(post.originalPost.createdAt).toLocaleString(),
+              createdAt: post.originalPost.createdAt,
+              isPremium: post.originalPost.author?.tier === 'premium',
+              image: post.originalPost.imageUrl,
+              avatar: post.originalPost.author?.nftAvatar || null,
+            } : post.originalReply ? {
+              // Reply repost
+              id: post.originalReply.id,
+              user: post.originalReply.author?.username || post.originalReply.author?.snsUsername || post.originalReply.authorWallet?.slice(0, 15) || 'Unknown',
+              wallet: post.originalReply.authorWallet,
+              userTheme: post.originalReply.author?.themeColor,
+              content: post.originalReply.content || '',
+              likes: post.originalReply.likeCount || 0,
+              replies: 0, // Replies don't track reply count
+              tips: Number(post.originalReply.tipCount) || 0,
+              comments: 0, // Replies don't track reply count
+              reposts: post.originalReply.repostCount || 0,
+              time: new Date(post.originalReply.createdAt).toLocaleString(),
+              createdAt: post.originalReply.createdAt,
+              isPremium: post.originalReply.author?.tier === 'premium',
+              image: post.originalReply.imageUrl,
+              avatar: post.originalReply.author?.nftAvatar || null,
+            } : undefined
+          ) : undefined,
         };
         });
 
@@ -186,9 +206,18 @@ export default function Home() {
           // Load NFT avatar if user has one
           if (response.user && response.user.nftAvatar) {
             try {
-              const nft = await nftsAPI.getNFTByMint(response.user.nftAvatar);
-              if (nft?.image) {
-                setUserAvatar(nft.image);
+              // Check if nftAvatar is a URL (old data) or a mint address (new data)
+              const isUrl = response.user.nftAvatar.startsWith('http://') || response.user.nftAvatar.startsWith('https://');
+
+              if (isUrl) {
+                // Old data: nftAvatar is already an image URL
+                setUserAvatar(response.user.nftAvatar);
+              } else {
+                // New data: nftAvatar is a mint address, need to resolve to image
+                const nft = await nftsAPI.getNFTByMint(response.user.nftAvatar);
+                if (nft?.image) {
+                  setUserAvatar(nft.image);
+                }
               }
             } catch (error) {
               logger.error('Error loading NFT avatar:', error);
@@ -235,23 +264,43 @@ export default function Home() {
           shoutoutExpiresAt: post.shoutoutExpiresAt,
           // Map originalPost to repostedPost for reposts
           repostedBy: post.isRepost ? (post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15)) : undefined,
-          repostedPost: post.isRepost && post.originalPost ? {
-            id: post.originalPost.id,
-            user: post.originalPost.author?.username || post.originalPost.author?.snsUsername || post.originalPost.authorWallet?.slice(0, 15) || 'Unknown',
-            wallet: post.originalPost.authorWallet,
-            userTheme: post.originalPost.author?.themeColor,
-            content: post.originalPost.content || '',
-            likes: post.originalPost.likeCount || 0,
-            replies: post.originalPost.replyCount || 0,
-            tips: Number(post.originalPost.tipAmount) || 0,
-            comments: post.originalPost.replyCount || 0,
-            reposts: post.originalPost.repostCount || 0,
-            time: new Date(post.originalPost.createdAt).toLocaleString(),
-            createdAt: post.originalPost.createdAt,
-            isPremium: post.originalPost.author?.tier === 'premium',
-            image: post.originalPost.imageUrl,
-            avatar: post.originalPost.author?.nftAvatar || null,
-          } : undefined,
+          repostedPost: post.isRepost ? (
+            post.originalPost ? {
+              // Post repost
+              id: post.originalPost.id,
+              user: post.originalPost.author?.username || post.originalPost.author?.snsUsername || post.originalPost.authorWallet?.slice(0, 15) || 'Unknown',
+              wallet: post.originalPost.authorWallet,
+              userTheme: post.originalPost.author?.themeColor,
+              content: post.originalPost.content || '',
+              likes: post.originalPost.likeCount || 0,
+              replies: post.originalPost.replyCount || 0,
+              tips: Number(post.originalPost.tipAmount) || 0,
+              comments: post.originalPost.replyCount || 0,
+              reposts: post.originalPost.repostCount || 0,
+              time: new Date(post.originalPost.createdAt).toLocaleString(),
+              createdAt: post.originalPost.createdAt,
+              isPremium: post.originalPost.author?.tier === 'premium',
+              image: post.originalPost.imageUrl,
+              avatar: post.originalPost.author?.nftAvatar || null,
+            } : post.originalReply ? {
+              // Reply repost
+              id: post.originalReply.id,
+              user: post.originalReply.author?.username || post.originalReply.author?.snsUsername || post.originalReply.authorWallet?.slice(0, 15) || 'Unknown',
+              wallet: post.originalReply.authorWallet,
+              userTheme: post.originalReply.author?.themeColor,
+              content: post.originalReply.content || '',
+              likes: post.originalReply.likeCount || 0,
+              replies: 0, // Replies don't track reply count
+              tips: Number(post.originalReply.tipCount) || 0,
+              comments: 0, // Replies don't track reply count
+              reposts: post.originalReply.repostCount || 0,
+              time: new Date(post.originalReply.createdAt).toLocaleString(),
+              createdAt: post.originalReply.createdAt,
+              isPremium: post.originalReply.author?.tier === 'premium',
+              image: post.originalReply.imageUrl,
+              avatar: post.originalReply.author?.nftAvatar || null,
+            } : undefined
+          ) : undefined,
         }));
 
         const sortedPosts = [...transformedPosts].sort((a, b) => {
@@ -820,6 +869,106 @@ export default function Home() {
     }
   };
 
+  const handleRepostResponse = (postId: number, response: any) => {
+    const isCurrentlyReposted = postInteractions[postId]?.reposted;
+
+    if (response.success) {
+      if (!isCurrentlyReposted && response.repostPost) {
+        // Check if WebSocket already added this repost
+        const alreadyExists = posts.some(p => p.id === response.repostPost.id);
+
+        if (!alreadyExists) {
+          // WebSocket hasn't added it yet, add it locally
+          logger.log('WebSocket hasn\'t added repost yet, adding locally');
+
+          const post = response.repostPost;
+          const transformedRepost = {
+            ...post,
+            user: post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15) || 'Unknown',
+            wallet: post.authorWallet,
+            userTheme: post.author?.themeColor,
+            time: new Date(post.createdAt).toLocaleString(),
+            createdAt: post.createdAt,
+            likes: post.likeCount || 0,
+            comments: post.replyCount || 0,
+            reposts: post.repostCount || 0,
+            tips: Number(post.tipAmount) || 0,
+            image: post.imageUrl,
+            avatar: post.author?.nftAvatar || null,
+            isPremium: post.author?.tier === 'premium',
+            shoutoutExpiresAt: post.shoutoutExpiresAt,
+            repostedBy: post.isRepost ? (post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15)) : undefined,
+            repostedPost: post.isRepost ? (
+              post.originalPost ? {
+                // Post repost
+                id: post.originalPost.id,
+                user: post.originalPost.author?.username || post.originalPost.author?.snsUsername || post.originalPost.authorWallet?.slice(0, 15) || 'Unknown',
+                wallet: post.originalPost.authorWallet,
+                userTheme: post.originalPost.author?.themeColor,
+                content: post.originalPost.content || '',
+                likes: post.originalPost.likeCount || 0,
+                replies: post.originalPost.replyCount || 0,
+                tips: Number(post.originalPost.tipAmount) || 0,
+                comments: post.originalPost.replyCount || 0,
+                reposts: post.originalPost.repostCount || 0,
+                time: new Date(post.originalPost.createdAt).toLocaleString(),
+                createdAt: post.originalPost.createdAt,
+                isPremium: post.originalPost.author?.tier === 'premium',
+                image: post.originalPost.imageUrl,
+                avatar: post.originalPost.author?.nftAvatar || null,
+              } : post.originalReply ? {
+                // Reply repost
+                id: post.originalReply.id,
+                user: post.originalReply.author?.username || post.originalReply.author?.snsUsername || post.originalReply.authorWallet?.slice(0, 15) || 'Unknown',
+                wallet: post.originalReply.authorWallet,
+                userTheme: post.originalReply.author?.themeColor,
+                content: post.originalReply.content || '',
+                likes: post.originalReply.likeCount || 0,
+                replies: 0,
+                tips: Number(post.originalReply.tipCount) || 0,
+                comments: 0,
+                reposts: post.originalReply.repostCount || 0,
+                time: new Date(post.originalReply.createdAt).toLocaleString(),
+                createdAt: post.originalReply.createdAt,
+                isPremium: post.originalReply.author?.tier === 'premium',
+                image: post.originalReply.imageUrl,
+                avatar: post.originalReply.author?.nftAvatar || null,
+              } : undefined
+            ) : undefined,
+          };
+
+          setPosts(prev => [transformedRepost as Post, ...prev]);
+          addedPostIds.current.add(response.repostPost.id);
+        } else {
+          logger.log('Repost already added by WebSocket');
+        }
+      } else if (isCurrentlyReposted) {
+        // Remove the repost from feed
+        setPosts(prev => prev.filter(p => !(p.isRepost && p.repostedPost?.id === postId)));
+      }
+
+      // Toggle repost state
+      setPostInteractions(prev => ({
+        ...prev,
+        [postId]: {
+          ...prev[postId],
+          reposted: !isCurrentlyReposted
+        }
+      }));
+
+      // Update repost count on the original post/reply
+      setPosts(prev => prev.map(p => {
+        if (p.id === postId) {
+          return {
+            ...p,
+            reposts: !isCurrentlyReposted ? p.reposts + 1 : p.reposts - 1
+          };
+        }
+        return p;
+      }));
+    }
+  };
+
   const toggleRepost = async (postId: number, comment?: string) => {
     const originalPost = posts.find(p => p.id === postId);
     if (!originalPost) return;
@@ -832,8 +981,69 @@ export default function Home() {
 
       if (response.success) {
         if (!isCurrentlyReposted && response.repostPost) {
-          // Don't add locally - let WebSocket handle it to avoid duplicates
-          // The backend broadcasts the repost via WebSocket, which will add it to the feed
+          // Add the repost to the feed immediately
+          const repost = response.repostPost;
+          const transformedRepost = {
+            ...repost,
+            user: repost.author?.username || repost.author?.snsUsername || repost.authorWallet?.slice(0, 15) || 'Unknown',
+            wallet: repost.authorWallet,
+            userTheme: repost.author?.themeColor,
+            time: new Date(repost.createdAt).toLocaleString(),
+            createdAt: repost.createdAt,
+            likes: repost.likeCount || 0,
+            comments: repost.replyCount || 0,
+            reposts: repost.repostCount || 0,
+            tips: Number(repost.tipAmount) || 0,
+            image: repost.imageUrl,
+            avatar: repost.author?.nftAvatar || null,
+            isPremium: repost.author?.tier === 'premium',
+            repostedBy: repost.author?.username || repost.author?.snsUsername || repost.authorWallet?.slice(0, 15),
+            repostedPost: repost.originalPost ? {
+              id: repost.originalPost.id,
+              user: repost.originalPost.author?.username || repost.originalPost.author?.snsUsername || repost.originalPost.authorWallet?.slice(0, 15) || 'Unknown',
+              wallet: repost.originalPost.authorWallet,
+              userTheme: repost.originalPost.author?.themeColor,
+              content: repost.originalPost.content || '',
+              likes: repost.originalPost.likeCount || 0,
+              replies: repost.originalPost.replyCount || 0,
+              tips: Number(repost.originalPost.tipAmount) || 0,
+              comments: repost.originalPost.replyCount || 0,
+              reposts: repost.originalPost.repostCount || 0,
+              time: new Date(repost.originalPost.createdAt).toLocaleString(),
+              createdAt: repost.originalPost.createdAt,
+              isPremium: repost.originalPost.author?.tier === 'premium',
+              image: repost.originalPost.imageUrl,
+              avatar: repost.originalPost.author?.nftAvatar || null,
+            } : undefined,
+          };
+
+          // Track the repost ID to prevent WebSocket duplicates
+          addedPostIds.current.add(transformedRepost.id);
+
+          // Add to feed at the top (after shoutouts)
+          setPosts(prev => {
+            // Check if it already exists to avoid duplicates from WebSocket
+            if (prev.some(p => p.id === transformedRepost.id)) {
+              logger.log('Repost already exists in feed, skipping:', transformedRepost.id);
+              return prev;
+            }
+
+            logger.log('Adding repost to feed:', transformedRepost.id);
+
+            // Find the first non-shoutout post
+            const firstNonShoutoutIndex = prev.findIndex(p => !p.isShoutout);
+            if (firstNonShoutoutIndex === -1) {
+              // No regular posts, add at the end
+              return [...prev, transformedRepost as any];
+            }
+            // Insert after shoutouts but before other posts
+            return [
+              ...prev.slice(0, firstNonShoutoutIndex),
+              transformedRepost as any,
+              ...prev.slice(firstNonShoutoutIndex)
+            ];
+          });
+
           showSuccess('Post reposted successfully!');
         } else {
           // Remove the repost from feed
@@ -1669,9 +1879,10 @@ export default function Home() {
         postId={postToRepost?.id || 0}
         postContent={postToRepost?.content || ''}
         postUser={postToRepost?.user || ''}
-        onRepostSuccess={(comment) => {
-          if (postToRepost?.id) {
-            toggleRepost(postToRepost.id, comment);
+        onRepostSuccess={(comment, response) => {
+          if (postToRepost?.id && response) {
+            // Handle the repost response directly without making another API call
+            handleRepostResponse(postToRepost.id, response);
           }
         }}
       />

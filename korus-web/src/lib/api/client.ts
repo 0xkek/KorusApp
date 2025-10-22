@@ -40,10 +40,25 @@ async function apiRequest<T>(
 
   const url = `${API_BASE_URL}${endpoint}`;
 
+  console.log('[API Client] Making request:', {
+    url,
+    method: fetchOptions.method || 'GET',
+    hasToken: !!token,
+    headers: { ...headers, Authorization: token ? 'Bearer ***' : undefined },
+    body: fetchOptions.body
+  });
+
   try {
     const response = await fetch(url, {
       ...fetchOptions,
       headers,
+    });
+
+    console.log('[API Client] Got response:', {
+      url,
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
     });
 
     // Handle non-JSON responses
@@ -52,8 +67,15 @@ async function apiRequest<T>(
 
     if (!response.ok) {
       const errorData = isJSON ? await response.json() : await response.text();
+      console.error('[API Client] Request failed:', {
+        url,
+        status: response.status,
+        statusText: response.statusText,
+        errorData,
+        errorDataString: JSON.stringify(errorData, null, 2)
+      });
       throw new APIError(
-        typeof errorData === 'string' ? errorData : errorData.message || 'API request failed',
+        typeof errorData === 'string' ? errorData : errorData.message || errorData.error || 'API request failed',
         response.status,
         errorData
       );
@@ -81,7 +103,11 @@ async function apiRequest<T>(
 
 export const api = {
   get: <T>(endpoint: string, token?: string) =>
-    apiRequest<T>(endpoint, { method: 'GET', token }),
+    apiRequest<T>(endpoint, {
+      method: 'GET',
+      token,
+      cache: 'no-store' // Prevent browser caching of GET requests
+    }),
 
   post: <T>(endpoint: string, data?: unknown, token?: string) =>
     apiRequest<T>(endpoint, {

@@ -255,25 +255,26 @@ export const getUserInteractions = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'postIds array is required' })
     }
 
-    // Get all user's interactions for the specified posts
+    // Get all user's interactions for the specified posts/replies
+    // Don't filter by targetType - allow both 'post' and 'reply'
     const interactions = await prisma.interaction.findMany({
       where: {
         userWallet: walletAddress,
         targetId: {
           in: postIds.map(id => String(id))
-        },
-        targetType: 'post'
+        }
       },
       select: {
         targetId: true,
-        interactionType: true
+        interactionType: true,
+        targetType: true
       }
     })
 
-    // Create a map of postId -> interaction types
+    // Create a map of postId/replyId -> interaction types
     const interactionMap: Record<string, { liked: boolean; tipped: boolean }> = {}
-    
-    // Initialize all posts as not interacted
+
+    // Initialize all items as not interacted
     postIds.forEach(id => {
       interactionMap[String(id)] = {
         liked: false,
@@ -289,7 +290,7 @@ export const getUserInteractions = async (req: AuthRequest, res: Response) => {
           tipped: false
         }
       }
-      
+
       switch (interaction.interactionType) {
         case 'like':
           interactionMap[interaction.targetId].liked = true

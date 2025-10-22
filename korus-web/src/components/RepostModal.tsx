@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { interactionsAPI } from '@/lib/api/interactions';
+import { logger } from '@/utils/logger';
 
 interface RepostModalProps {
   isOpen: boolean;
@@ -11,10 +14,12 @@ interface RepostModalProps {
   postId: number;
   postContent: string;
   postUser: string;
-  onRepostSuccess?: (comment?: string) => void;
+  onRepostSuccess?: (comment?: string, response?: any) => void;
+  onSuccess?: () => void;
 }
 
-export default function RepostModal({ isOpen, onClose, postContent, postUser, onRepostSuccess }: RepostModalProps) {
+export default function RepostModal({ isOpen, onClose, postId, postContent, postUser, onRepostSuccess, onSuccess }: RepostModalProps) {
+  const { isAuthenticated, token } = useWalletAuth();
   const { connected } = useWallet();
   const { showSuccess, showError } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -32,26 +37,44 @@ export default function RepostModal({ isOpen, onClose, postContent, postUser, on
   const displayUser = truncateAddress(postUser);
 
   const handleRepost = async () => {
-    if (!connected) {
-      showError('Please connect your wallet to repost');
+    console.log('[RepostModal] handleRepost called, postId:', postId);
+    console.log('[RepostModal] connected:', connected, 'isAuthenticated:', isAuthenticated, 'hasToken:', !!token);
+
+    if (!connected || !isAuthenticated || !token) {
+      console.error('[RepostModal] Missing auth requirements');
+      showError('Please connect your wallet and sign in to repost');
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      // Simulate repost
-      await new Promise(resolve => setTimeout(resolve, 800));
+      console.log('[RepostModal] Calling backend API - postId:', postId, 'comment:', comment.trim());
+      logger.log('Reposting post/reply:', postId);
 
-      // Call success callback with comment if provided
+      // Call backend API to repost
+      const response = await interactionsAPI.repostPost(
+        String(postId),
+        token,
+        comment.trim() || undefined
+      );
+
+      console.log('[RepostModal] Got response:', response);
+      logger.log('Repost response:', response);
+
+      // Call success callbacks - pass the response to the parent
+      if (onSuccess) {
+        onSuccess();
+      }
       if (onRepostSuccess) {
-        onRepostSuccess(comment.trim() || undefined);
+        onRepostSuccess(comment.trim() || undefined, response);
       }
 
       showSuccess(comment.trim() ? 'Quote reposted successfully!' : 'Reposted successfully!');
       setComment('');
       onClose();
-    } catch {
+    } catch (error) {
+      logger.error('Failed to repost:', error);
       showError('Failed to repost. Please try again.');
     } finally {
       setIsProcessing(false);
