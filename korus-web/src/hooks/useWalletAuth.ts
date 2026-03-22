@@ -114,7 +114,11 @@ export function useWalletAuth() {
       // Update error state (don't show error for user cancellation)
       setError(isUserRejection ? null : errorMessage);
       setAuthenticating(false);
-      authAttemptedRef.current = false; // Allow retry after failure
+      // Only allow retry for non-user-rejection errors (e.g. network errors)
+      // User rejections should NOT reset the ref, or we get an infinite popup loop
+      if (!isUserRejection) {
+        authAttemptedRef.current = false;
+      }
     }
   }, [publicKey, signMessage, connected, setAuthenticating, setError, setToken, setLastAuthTime, clearAuth]);
 
