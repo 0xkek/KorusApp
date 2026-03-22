@@ -19,7 +19,6 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import type { Post } from '@/types';
-import { MOCK_POSTS } from '@/data/mockData';
 import { postsAPI, uploadAPI, interactionsAPI, usersAPI, nftsAPI } from '@/lib/api';
 
 // Dynamically import modals for code splitting
@@ -324,59 +323,35 @@ export default function Home() {
             queuedShoutouts: queueData.queued || []
           });
         }
-      } else {
-        // Fallback to mock data if backend returns empty
-        logger.log('No posts in database, using mock data as fallback');
-        const mockPosts = [...MOCK_POSTS].sort((a, b) => {
-          if (a.isShoutout && !b.isShoutout) return -1;
-          if (!a.isShoutout && b.isShoutout) return 1;
-          return 0;
-        });
-        setPosts(mockPosts);
       }
     } catch (error) {
       logger.error('Failed to fetch posts from backend:', error);
-      logger.log('Using mock data as fallback');
-
-      // Fallback to mock data on error
-      const mockPosts = [...MOCK_POSTS].sort((a, b) => {
-        if (a.isShoutout && !b.isShoutout) return -1;
-        if (!a.isShoutout && b.isShoutout) return 1;
-        return 0;
-      });
-      setPosts(mockPosts);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Initialize posts when component mounts
+  // Initialize posts when component mounts (run once)
   useEffect(() => {
-    if (posts.length === 0) {
-      fetchPosts();
-    }
-  }, [posts]);
+    fetchPosts();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Refetch posts when page becomes visible (user navigates back from post detail)
+  // Refetch posts when page becomes visible (throttled to max once per 30 seconds)
   useEffect(() => {
+    let lastFetchTime = Date.now();
+
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        logger.log('Page visible, refetching posts...');
+      if (!document.hidden && Date.now() - lastFetchTime > 30000) {
+        lastFetchTime = Date.now();
         fetchPosts();
       }
     };
 
-    const handleFocus = () => {
-      logger.log('Window focused, refetching posts...');
-      fetchPosts();
-    };
-
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
     };
   }, []);
 
