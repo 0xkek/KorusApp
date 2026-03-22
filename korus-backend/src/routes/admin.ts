@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticateJWT } from '../middleware/auth';
+import { authenticate as authenticateJWT } from '../middleware/auth';
 import { isAuthorityConfigured } from '../config/gameAuthority';
 import { gameCompletionService } from '../services/gameCompletionService';
 import { logger } from '../utils/logger';
