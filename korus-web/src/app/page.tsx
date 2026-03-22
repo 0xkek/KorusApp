@@ -696,10 +696,7 @@ export default function Home() {
   };
 
   const handleRegularPost = async () => {
-    console.log('[POST] handleRegularPost called', { connected, isAuthenticated, hasToken: !!token });
-
     if (!connected || !isAuthenticated || !token) {
-      console.log('[POST] Auth check failed');
       showError('Please connect your wallet and sign in to post');
       return;
     }
@@ -707,7 +704,6 @@ export default function Home() {
     if (!composeText.trim() && selectedFiles.length === 0 && !selectedGif) return;
 
     try {
-      console.log('[POST] Creating post...');
 
       // Upload images first if there are any
       let imageUrl: string | undefined;
@@ -767,7 +763,7 @@ export default function Home() {
       setShowDrawCanvas(false);
       showSuccess('Post created successfully!');
     } catch (error) {
-      console.error('[POST] Failed to create post:', error);
+      logger.error('Failed to create post:', error);
       showError('Failed to create post. Please try again.');
     }
   };

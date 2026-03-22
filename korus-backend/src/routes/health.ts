@@ -39,27 +39,5 @@ router.get('/health/db', async (req, res) => {
   }
 });
 
-// One-time cleanup endpoint — cancel stale test games
-router.get('/health/cleanup', async (req, res) => {
-  const secret = req.query.secret;
-  if (secret !== process.env.JWT_SECRET) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
-
-  try {
-    const cancelled = await prisma.game.updateMany({
-      where: { status: 'waiting' },
-      data: { status: 'cancelled' }
-    });
-
-    res.json({
-      success: true,
-      cancelledGames: cancelled.count,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
 export default router;
