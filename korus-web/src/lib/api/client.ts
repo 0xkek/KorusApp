@@ -22,6 +22,42 @@ interface RequestOptions extends RequestInit {
   token?: string;
 }
 
+// CSRF token cache
+let csrfToken: string | null = null;
+let sessionId: string | null = null;
+
+function getSessionId(): string {
+  if (sessionId) return sessionId;
+  // Generate a stable session ID per browser session
+  if (typeof window !== 'undefined') {
+    sessionId = sessionStorage.getItem('korus_session_id');
+    if (!sessionId) {
+      sessionId = crypto.randomUUID();
+      sessionStorage.setItem('korus_session_id', sessionId);
+    }
+  } else {
+    sessionId = crypto.randomUUID();
+  }
+  return sessionId;
+}
+
+async function fetchCSRFToken(): Promise<string> {
+  if (csrfToken) return csrfToken;
+
+  const sid = getSessionId();
+  const response = await fetch(`${API_BASE_URL}/api/auth/csrf`, {
+    headers: { 'x-session-id': sid },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch CSRF token');
+  }
+
+  const data = await response.json();
+  csrfToken = data.token;
+  return csrfToken!;
+}
+
 /**
  * Base fetch wrapper with error handling
  */
@@ -30,6 +66,8 @@ async function apiRequest<T>(
   options: RequestOptions = {}
 ): Promise<T> {
   const { token, ...fetchOptions } = options;
+  const method = fetchOptions.method || 'GET';
+  const isStateChanging = method === 'POST' || method === 'PUT' || method === 'DELETE' || method === 'PATCH';
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -40,11 +78,22 @@ async function apiRequest<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  // Add CSRF headers for state-changing requests
+  if (isStateChanging) {
+    try {
+      const csrf = await fetchCSRFToken();
+      headers['x-csrf-token'] = csrf;
+      headers['x-session-id'] = getSessionId();
+    } catch (e) {
+      logger.error('[API Client] Failed to get CSRF token:', e);
+    }
+  }
+
   const url = `${API_BASE_URL}${endpoint}`;
 
   logger.log('[API Client] Making request:', {
     url,
-    method: fetchOptions.method || 'GET',
+    method,
     hasToken: !!token,
   });
 
@@ -65,6 +114,26 @@ async function apiRequest<T>(
     const isJSON = contentType?.includes('application/json');
 
     if (!response.ok) {
+      // If CSRF token was rejected, clear cache and retry once
+      if (response.status === 403 && isStateChanging) {
+        const errorData = isJSON ? await response.json() : await response.text();
+        const errorMsg = typeof errorData === 'string' ? errorData : errorData?.error || '';
+        if (errorMsg.includes('CSRF')) {
+          csrfToken = null; // Clear cached token
+          const newCsrf = await fetchCSRFToken();
+          headers['x-csrf-token'] = newCsrf;
+          // Retry the request
+          const retryResponse = await fetch(url, { ...fetchOptions, headers });
+          if (retryResponse.ok) {
+            const retryContentType = retryResponse.headers.get('content-type');
+            if (retryResponse.status === 204 || !retryContentType?.includes('application/json')) {
+              return {} as T;
+            }
+            return await retryResponse.json();
+          }
+        }
+      }
+
       const errorData = isJSON ? await response.json() : await response.text();
       logger.error('[API Client] Request failed:', {
         url,
