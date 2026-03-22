@@ -7,7 +7,7 @@ import { useFocusTrap } from '@/hooks/useFocusTrap';
 interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
-  postId: number;
+  postId: string | number;
   postContent: string;
   postUser: string;
 }

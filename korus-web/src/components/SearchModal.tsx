@@ -214,7 +214,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
     performSearch(query);
   };
 
-  const handlePostClick = (postId: number) => {
+  const handlePostClick = (postId: string | number) => {
     router.push(`/post/${postId}`);
     onClose();
   };

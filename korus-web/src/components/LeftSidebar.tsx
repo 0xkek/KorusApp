@@ -7,6 +7,8 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useState, useEffect } from 'react';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import * as eventsAPI from '@/lib/api/events';
+import Image from 'next/image';
+import { nftsAPI } from '@/lib/api';
 
 interface TabItem {
   name: string;
@@ -30,6 +32,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
   const { connected, publicKey } = useWallet();
   const { token, isAuthenticated } = useWalletAuth();
   const [hasCreatedEvents, setHasCreatedEvents] = useState(false);
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
   // Check if user has created events
   useEffect(() => {
@@ -49,6 +52,56 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
 
     checkUserEvents();
   }, [connected, isAuthenticated, token, pathname]); // Re-check when pathname changes (e.g., after creating event)
+
+  // Fetch user avatar
+  useEffect(() => {
+    const fetchUserAvatar = async () => {
+      console.log('[LeftSidebar] fetchUserAvatar called', { connected, publicKey: publicKey?.toBase58(), isAuthenticated, hasToken: !!token });
+      if (connected && publicKey && isAuthenticated && token) {
+        try {
+          const url = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`;
+          console.log('[LeftSidebar] Fetching user data from:', url);
+          const userResponse = await fetch(url, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          console.log('[LeftSidebar] User response status:', userResponse.status);
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            console.log('[LeftSidebar] User data:', userData);
+            if (userData.user?.nftAvatar) {
+              console.log('[LeftSidebar] nftAvatar found:', userData.user.nftAvatar);
+              // Check if it's a URL (old data) or mint address (new data)
+              const isUrl = userData.user.nftAvatar.startsWith('http://') || userData.user.nftAvatar.startsWith('https://');
+              console.log('[LeftSidebar] Is URL?', isUrl);
+              if (isUrl) {
+                console.log('[LeftSidebar] Setting avatar URL:', userData.user.nftAvatar);
+                setUserAvatar(userData.user.nftAvatar);
+              } else {
+                // It's a mint address, fetch the NFT image
+                console.log('[LeftSidebar] Fetching NFT by mint:', userData.user.nftAvatar);
+                const nft = await nftsAPI.getNFTByMint(userData.user.nftAvatar);
+                console.log('[LeftSidebar] NFT data:', nft);
+                if (nft?.image) {
+                  console.log('[LeftSidebar] Setting avatar image:', nft.image);
+                  setUserAvatar(nft.image);
+                }
+              }
+            } else {
+              console.log('[LeftSidebar] No nftAvatar in user data');
+            }
+          }
+        } catch (error) {
+          console.error('[LeftSidebar] Failed to fetch user avatar:', error);
+        }
+      } else {
+        console.log('[LeftSidebar] Not connected, no publicKey, or not authenticated');
+      }
+    };
+
+    fetchUserAvatar();
+  }, [connected, publicKey, isAuthenticated, token]);
 
   const tabs: TabItem[] = [
     {
@@ -277,19 +330,36 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
       {/* User Profile */}
       {connected && publicKey && (
         <div className="py-4 border-t border-korus-border">
-          <div className="flex items-center gap-3 p-3 rounded-full hover:bg-korus-surface/40 transition-all duration-200 cursor-pointer">
-            <div className="w-10 h-10 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center">
-              <span className="text-black font-bold text-sm">
-                {publicKey.toBase58().slice(0, 2).toUpperCase()}
-              </span>
-            </div>
-            <div className="hidden xl:block">
-              <div className="text-korus-text font-medium text-sm">You</div>
-              <div className="text-korus-textSecondary text-xs">
-                {publicKey.toBase58().slice(0, 8)}...
+          <Link href="/profile" className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-korus-primary/10 to-korus-secondary/10 border border-korus-primary/30 hover:bg-korus-surface/40 transition-all duration-200 cursor-pointer">
+            {(() => {
+              console.log('[LeftSidebar] Rendering, userAvatar state:', userAvatar);
+              return null;
+            })()}
+            {userAvatar ? (
+              <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden shadow-lg shadow-korus-primary/20 border-2 border-korus-primary/50">
+                <Image
+                  src={userAvatar}
+                  alt="Your avatar"
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-cover"
+                  unoptimized
+                />
+              </div>
+            ) : (
+              <div className="w-12 h-12 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center shadow-lg shadow-korus-primary/20 flex-shrink-0">
+                <span className="text-black font-bold text-sm">
+                  {publicKey.toBase58().slice(0, 2).toUpperCase()}
+                </span>
+              </div>
+            )}
+            <div className="hidden xl:block flex-1 min-w-0">
+              <div className="text-base mb-1 font-medium" style={{ color: '#9ca3af', WebkitTextFillColor: '#9ca3af' }}>Connected with:</div>
+              <div className="text-white font-mono text-base font-bold truncate" style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>
+                {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
               </div>
             </div>
-          </div>
+          </Link>
         </div>
       )}
     </nav>

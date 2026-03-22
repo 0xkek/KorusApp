@@ -22,7 +22,7 @@ export default function EventDetailsPage() {
   const params = useParams();
   const eventId = params.id as string;
   const { connected, publicKey } = useWallet();
-  const { token, isAuthenticated } = useWalletAuth();
+  const { token } = useWalletAuth();
   const { showSuccess, showError } = useToast();
 
   // UI State
@@ -66,7 +66,8 @@ export default function EventDetailsPage() {
     if (eventId) {
       fetchEvent();
     }
-  }, [eventId, publicKey]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventId]);
 
   // Fetch registrations if creator
   useEffect(() => {
@@ -88,6 +89,7 @@ export default function EventDetailsPage() {
     if (isCreator && event) {
       fetchRegistrations();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCreator, token, event]);
 
   // Check registration status for non-creator users

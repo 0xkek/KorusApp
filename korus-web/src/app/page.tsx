@@ -16,7 +16,7 @@ import { FeedSkeleton } from '@/components/Skeleton';
 import { SafeContent } from '@/components/SafeContent';
 import { useToast } from '@/hooks/useToast';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import type { Post } from '@/types';
 import { MOCK_POSTS } from '@/data/mockData';
@@ -29,7 +29,6 @@ const MobileMenuModal = dynamic(() => import('@/components/MobileMenuModal'), { 
 const ShoutoutModal = dynamic(() => import('@/components/ShoutoutModal'), { ssr: false });
 const TipModal = dynamic(() => import('@/components/TipModal'), { ssr: false });
 const ShareModal = dynamic(() => import('@/components/ShareModal'), { ssr: false });
-const RepostModal = dynamic(() => import('@/components/RepostModal'), { ssr: false });
 const ReplyModal = dynamic(() => import('@/components/ReplyModal'), { ssr: false });
 const DrawingCanvasInline = dynamic(() => import('@/components/DrawingCanvasInline'), { ssr: false });
 const ShoutoutCountdown = dynamic(() => import('@/components/ShoutoutCountdown'), { ssr: false });
@@ -40,7 +39,7 @@ export default function Home() {
   const { connected, publicKey } = useWallet();
   const router = useRouter();
   const { showSuccess, showError } = useToast();
-  const { token, isAuthenticated, authenticate, isAuthenticating } = useWalletAuth();
+  const { token, isAuthenticated } = useWalletAuth();
 
   // Truncate wallet address for display
   const truncateAddress = (address: string) => {
@@ -58,13 +57,11 @@ export default function Home() {
   const [showShoutoutModal, setShowShoutoutModal] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [showRepostModal, setShowRepostModal] = useState(false);
   const [showReplyModal, setShowReplyModal] = useState(false);
   const [postToTip, setPostToTip] = useState<Post | null>(null);
   const [postToShare, setPostToShare] = useState<Post | null>(null);
-  const [postToRepost, setPostToRepost] = useState<Post | null>(null);
   const [postToReply, setPostToReply] = useState<Post | null>(null);
-  const [postInteractions, setPostInteractions] = useState<{[key: number]: {liked: boolean, reposted: boolean, replied: boolean, tipped: boolean}}>({});
+  const [postInteractions, setPostInteractions] = useState<{[key: string | number]: {liked: boolean, reposted: boolean, replied: boolean, tipped: boolean}}>({});
   const [isLoading, setIsLoading] = useState(true);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
@@ -74,7 +71,7 @@ export default function Home() {
   const [shoutoutQueue, setShoutoutQueue] = useState<Post[]>([]); // Queue for pending shoutouts
   const [shoutoutQueueInfo, setShoutoutQueueInfo] = useState<{ activeShoutout: { id: string; duration: number; expiresAt: Date | string; content: string } | null; queuedShoutouts: Array<{ id: string; duration: number; expiresAt: Date | string; content: string }>}>({ activeShoutout: null, queuedShoutouts: [] });
   const [showSearchModal, setShowSearchModal] = useState(false);
-  const [currentUserTheme, setCurrentUserTheme] = useState<string | undefined>(undefined);
+  const [, setCurrentUserTheme] = useState<string | undefined>(undefined);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
   // Infinite scroll state
@@ -85,7 +82,6 @@ export default function Home() {
 
   // WebSocket connection ref
   const socketRef = useRef<Socket | null>(null);
-  const socketInitialized = useRef(false);
   const addedPostIds = useRef<Set<number>>(new Set());
 
   // Load more posts for infinite scroll (defined early to avoid hoisting issues)
@@ -162,6 +158,7 @@ export default function Home() {
         });
 
         // Track new post IDs
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         transformedPosts.forEach((post: any) => addedPostIds.current.add(post.id));
 
         // Append new posts to existing ones
@@ -449,6 +446,7 @@ export default function Home() {
     socketRef.current.off('new_post');
 
     // Listen for new posts (always set up fresh listener)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     socketRef.current.on('new_post', (newPost: any) => {
       logger.log('📨 Received new post via WebSocket:', newPost.id);
 
@@ -470,23 +468,42 @@ export default function Home() {
         shoutoutExpiresAt: newPost.shoutoutExpiresAt,
         // Map originalPost to repostedPost for reposts
         repostedBy: newPost.isRepost ? (newPost.author?.username || newPost.author?.snsUsername || newPost.authorWallet?.slice(0, 15)) : undefined,
-        repostedPost: newPost.isRepost && newPost.originalPost ? {
-          id: newPost.originalPost.id,
-          user: newPost.originalPost.author?.username || newPost.originalPost.author?.snsUsername || newPost.originalPost.authorWallet?.slice(0, 15) || 'Unknown',
-          wallet: newPost.originalPost.authorWallet,
-          userTheme: newPost.originalPost.author?.themeColor,
-          content: newPost.originalPost.content || '',
-          likes: newPost.originalPost.likeCount || 0,
-          replies: newPost.originalPost.replyCount || 0,
-          tips: Number(newPost.originalPost.tipAmount) || 0,
-          comments: newPost.originalPost.replyCount || 0,
-          reposts: newPost.originalPost.repostCount || 0,
-          time: new Date(newPost.originalPost.createdAt).toLocaleString(),
-          createdAt: newPost.originalPost.createdAt,
-          isPremium: newPost.originalPost.author?.tier === 'premium',
-          image: newPost.originalPost.imageUrl,
-          avatar: newPost.originalPost.author?.nftAvatar || null,
-        } : undefined,
+        repostedPost: newPost.isRepost ? (
+          newPost.originalPost ? {
+            id: newPost.originalPost.id,
+            user: newPost.originalPost.author?.username || newPost.originalPost.author?.snsUsername || newPost.originalPost.authorWallet?.slice(0, 15) || 'Unknown',
+            wallet: newPost.originalPost.authorWallet,
+            userTheme: newPost.originalPost.author?.themeColor,
+            content: newPost.originalPost.content || '',
+            likes: newPost.originalPost.likeCount || 0,
+            replies: newPost.originalPost.replyCount || 0,
+            tips: Number(newPost.originalPost.tipAmount) || 0,
+            comments: newPost.originalPost.replyCount || 0,
+            reposts: newPost.originalPost.repostCount || 0,
+            time: new Date(newPost.originalPost.createdAt).toLocaleString(),
+            createdAt: newPost.originalPost.createdAt,
+            isPremium: newPost.originalPost.author?.tier === 'premium',
+            image: newPost.originalPost.imageUrl,
+            avatar: newPost.originalPost.author?.nftAvatar || null,
+          } : newPost.originalReply ? {
+            // Reply repost
+            id: newPost.originalReply.id,
+            user: newPost.originalReply.author?.username || newPost.originalReply.author?.snsUsername || newPost.originalReply.authorWallet?.slice(0, 15) || 'Unknown',
+            wallet: newPost.originalReply.authorWallet,
+            userTheme: newPost.originalReply.author?.themeColor,
+            content: newPost.originalReply.content || '',
+            likes: newPost.originalReply.likeCount || 0,
+            replies: 0,
+            tips: Number(newPost.originalReply.tipCount) || 0,
+            comments: 0,
+            reposts: newPost.originalReply.repostCount || 0,
+            time: new Date(newPost.originalReply.createdAt).toLocaleString(),
+            createdAt: newPost.originalReply.createdAt,
+            isPremium: newPost.originalReply.author?.tier === 'premium',
+            image: newPost.originalReply.imageUrl,
+            avatar: newPost.originalReply.author?.nftAvatar || null,
+          } : undefined
+        ) : undefined,
       };
 
       // Add new post to the feed in chronological order (avoiding duplicates)
@@ -550,12 +567,37 @@ export default function Home() {
       });
     });
 
+    // Remove any existing 'post_update' listeners to prevent duplicates
+    socketRef.current.off('post_update');
+
+    // Listen for post updates (likes, tips, replies, etc.)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    socketRef.current.on('post_update', (update: any) => {
+      logger.log('📨 Received post update via WebSocket:', update);
+
+      setPosts(prevPosts => {
+        return prevPosts.map(post => {
+          if (post.id === update.postId) {
+            logger.log('🔄 Updating post:', post.id, 'with:', update.updates);
+            return {
+              ...post,
+              likes: update.updates.likeCount !== undefined ? update.updates.likeCount : post.likes,
+              tips: update.updates.tipAmount !== undefined ? Number(update.updates.tipAmount) : post.tips,
+              comments: update.updates.replyCount !== undefined ? update.updates.replyCount : post.comments,
+            };
+          }
+          return post;
+        });
+      });
+    });
+
     // Cleanup on unmount
     return () => {
       if (socketRef.current) {
         logger.log('🔌 Cleaning up WebSocket listeners');
         // Remove the listener to prevent duplicates when effect runs again
         socketRef.current.off('new_post');
+        socketRef.current.off('post_update');
         if (socketRef.current.connected) {
           socketRef.current.disconnect();
         }
@@ -613,7 +655,6 @@ export default function Home() {
         if (showSearchModal) setShowSearchModal(false);
         if (showTipModal) setShowTipModal(false);
         if (showShareModal) setShowShareModal(false);
-        if (showRepostModal) setShowRepostModal(false);
         if (showReplyModal) setShowReplyModal(false);
         if (showPostOptionsModal) setShowPostOptionsModal(false);
         if (showMobileMenu) setShowMobileMenu(false);
@@ -869,6 +910,7 @@ export default function Home() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
   const handleRepostResponse = (postId: number, response: any) => {
     const isCurrentlyReposted = postInteractions[postId]?.reposted;
 
@@ -961,7 +1003,7 @@ export default function Home() {
         if (p.id === postId) {
           return {
             ...p,
-            reposts: !isCurrentlyReposted ? p.reposts + 1 : p.reposts - 1
+            reposts: !isCurrentlyReposted ? (p.reposts ?? 0) + 1 : (p.reposts ?? 0) - 1
           };
         }
         return p;
@@ -969,6 +1011,7 @@ export default function Home() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const toggleRepost = async (postId: number, comment?: string) => {
     const originalPost = posts.find(p => p.id === postId);
     if (!originalPost) return;
@@ -1014,6 +1057,23 @@ export default function Home() {
               isPremium: repost.originalPost.author?.tier === 'premium',
               image: repost.originalPost.imageUrl,
               avatar: repost.originalPost.author?.nftAvatar || null,
+            } : repost.originalReply ? {
+              // Reply repost
+              id: repost.originalReply.id,
+              user: repost.originalReply.author?.username || repost.originalReply.author?.snsUsername || repost.originalReply.authorWallet?.slice(0, 15) || 'Unknown',
+              wallet: repost.originalReply.authorWallet,
+              userTheme: repost.originalReply.author?.themeColor,
+              content: repost.originalReply.content || '',
+              likes: repost.originalReply.likeCount || 0,
+              replies: 0,
+              tips: Number(repost.originalReply.tipCount) || 0,
+              comments: 0,
+              reposts: repost.originalReply.repostCount || 0,
+              time: new Date(repost.originalReply.createdAt).toLocaleString(),
+              createdAt: repost.originalReply.createdAt,
+              isPremium: repost.originalReply.author?.tier === 'premium',
+              image: repost.originalReply.imageUrl,
+              avatar: repost.originalReply.author?.nftAvatar || null,
             } : undefined,
           };
 
@@ -1034,11 +1094,13 @@ export default function Home() {
             const firstNonShoutoutIndex = prev.findIndex(p => !p.isShoutout);
             if (firstNonShoutoutIndex === -1) {
               // No regular posts, add at the end
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               return [...prev, transformedRepost as any];
             }
             // Insert after shoutouts but before other posts
             return [
               ...prev.slice(0, firstNonShoutoutIndex),
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               transformedRepost as any,
               ...prev.slice(firstNonShoutoutIndex)
             ];
@@ -1066,7 +1128,7 @@ export default function Home() {
     }
   };
 
-  const markReplied = (postId: number) => {
+  const markReplied = (postId: string | number) => {
     setPostInteractions(prev => ({
       ...prev,
       [postId]: {
@@ -1076,7 +1138,7 @@ export default function Home() {
     }));
   };
 
-  const markTipped = (postId: number) => {
+  const markTipped = (postId: string | number) => {
     setPostInteractions(prev => ({
       ...prev,
       [postId]: {
@@ -1348,7 +1410,8 @@ export default function Home() {
           {isLoading ? (
             <FeedSkeleton count={5} />
           ) : (
-            posts.map((post) => (
+            // Deduplicate posts before rendering to prevent React key errors
+            Array.from(new Map(posts.map(post => [post.id, post])).values()).map((post) => (
             <div
               key={post.id}
               className={`backdrop-blur-sm p-0 transition-all duration-200 cursor-pointer group ${
@@ -1406,18 +1469,6 @@ export default function Home() {
 
                 {/* Post Content */}
                 <div className="flex-1 min-w-0">
-                  {/* Reposted By Indicator */}
-                  {post.isRepost && post.repostedBy && (
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <svg className="w-3.5 h-3.5 text-korus-textSecondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      <span className="text-xs text-korus-textSecondary font-medium">
-                        {truncateAddress(post.repostedBy)} reposted
-                      </span>
-                    </div>
-                  )}
-
                   {/* Post Header */}
                   <div className="flex items-center gap-2 mb-2">
                     <Link
@@ -1464,88 +1515,32 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Reposted Post */}
-                  {post.isRepost && post.repostedPost ? (
-                    <>
-                      {/* User's comment on the repost (if any) */}
-                      {post.content && (
-                        <SafeContent
-                          content={post.content}
-                          className="text-white text-base leading-normal mb-3 whitespace-pre-wrap break-words"
-                          allowLinks={true}
-                          allowFormatting={true}
-                        />
-                      )}
-
-                      {/* Original Post in box with reposter's theme color */}
-                      <div className="mb-3 border-2 rounded-xl p-4" style={{
-                        background: `linear-gradient(90deg, ${post.userTheme ? `${post.userTheme}15` : 'rgba(67, 233, 123, 0.1)'}, ${post.userTheme ? `${post.userTheme}20` : 'rgba(56, 239, 125, 0.1)'})`,
-                        borderColor: post.userTheme || 'rgba(67, 233, 123, 0.3)'
-                      }}>
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden" style={{ background: `linear-gradient(135deg, ${post.repostedPost.userTheme || '#43E97B'}, ${post.repostedPost.userTheme || '#38EF7D'})`, color: '#000' }}>
-                            {post.repostedPost.avatar ? (
-                              post.repostedPost.avatar.startsWith('http') || post.repostedPost.avatar.startsWith('data:') ? (
-                                <Image src={post.repostedPost.avatar} alt={post.repostedPost.user} width={32} height={32} className="w-full h-full object-cover" />
-                              ) : (
-                                <span className="text-lg">{post.repostedPost.avatar}</span>
-                              )
-                            ) : (
-                              <span>{post.repostedPost.user.slice(0, 2).toUpperCase()}</span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span className="text-white font-medium">{post.repostedPost.user}</span>
-                            {post.repostedPost.isPremium && (
-                              <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
-                                <svg className="w-3 h-3" fill="black" viewBox="0 0 24 24">
-                                  <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
-                                </svg>
-                              </div>
-                            )}
-                          </div>
-                          <span className="text-korus-textSecondary text-sm">· {post.repostedPost.time}</span>
-                        </div>
-                        <SafeContent
-                          content={post.repostedPost.content}
-                          as="p"
-                          className="text-korus-text text-sm leading-relaxed"
-                          allowLinks={true}
-                          allowFormatting={true}
-                        />
-                        {post.repostedPost.image && (
-                          <Image src={post.repostedPost.image} alt="Reposted content" width={600} height={400} className="mt-3 w-full rounded-lg" />
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    /* Regular Post Text */
-                    post.content && (
-                      <SafeContent
-                        content={post.content}
-                        className="text-white text-base leading-normal mb-3 whitespace-pre-wrap break-words"
-                        allowLinks={true}
-                        allowFormatting={true}
-                      />
-                    )
+                  {/* Post Text */}
+                  {post.content && (
+                    <SafeContent
+                      content={post.content}
+                      className="text-white text-base leading-normal mb-3 whitespace-pre-wrap break-words"
+                      allowLinks={true}
+                      allowFormatting={true}
+                    />
                   )}
 
                   {/* Link Preview */}
-                  {!post.isRepost && extractUrls(post.content).map((url, index) => (
+                  {extractUrls(post.content).map((url, index) => (
                     <div key={index} className="mb-3">
                       <LinkPreview url={url} />
                     </div>
                   ))}
 
                   {/* Video Player */}
-                  {!post.isRepost && post.video && (
+                  {post.video && (
                     <div className="mb-3">
                       <VideoPlayer videoUrl={post.video} />
                     </div>
                   )}
 
                   {/* Post Image */}
-                  {!post.isRepost && post.image && (
+                  {post.image && (
                     <div className="mb-3 flex justify-center">
                       <Image
                         src={post.image}
@@ -1584,28 +1579,6 @@ export default function Home() {
                       <span className={`text-sm transition-colors font-medium ${
                         postInteractions[post.id]?.replied ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
                       }`}>{post.comments}</span>
-                    </button>
-
-                    <button
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
-                        postInteractions[post.id]?.reposted
-                          ? 'bg-korus-primary/20 border border-korus-primary/40'
-                          : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPostToRepost(post);
-                        setShowRepostModal(true);
-                      }}
-                    >
-                      <svg className={`w-4 h-4 transition-colors ${
-                        postInteractions[post.id]?.reposted ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
-                      }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      <span className={`text-sm transition-colors font-medium ${
-                        postInteractions[post.id]?.reposted ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
-                      }`}>{posts.filter(p => p.repostedPost?.id === post.id).length || 0}</span>
                     </button>
 
                     <button
@@ -1868,23 +1841,6 @@ export default function Home() {
         postId={postToShare?.id || 0}
         postContent={postToShare?.content || ''}
         postUser={postToShare?.user || ''}
-      />
-
-      <RepostModal
-        isOpen={showRepostModal}
-        onClose={() => {
-          setShowRepostModal(false);
-          setPostToRepost(null);
-        }}
-        postId={postToRepost?.id || 0}
-        postContent={postToRepost?.content || ''}
-        postUser={postToRepost?.user || ''}
-        onRepostSuccess={(comment, response) => {
-          if (postToRepost?.id && response) {
-            // Handle the repost response directly without making another API call
-            handleRepostResponse(postToRepost.id, response);
-          }
-        }}
       />
 
       <ReplyModal

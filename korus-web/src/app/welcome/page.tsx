@@ -5,12 +5,12 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import WalletButton from '@/components/WalletButton';
-import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 
 export default function WelcomePage() {
   const { connected, disconnect } = useWallet();
   const router = useRouter();
-  const { isAuthenticated, authenticate, isAuthenticating } = useWalletAuth();
+  const { isAuthenticated } = useWalletAuth();
   const [showDeveloperTools, setShowDeveloperTools] = useState(false);
 
   // Add hardcoded mint colors for wallet button on welcome page

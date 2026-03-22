@@ -28,10 +28,6 @@ export default function GifPicker({ onSelect, onClose }: GifPickerProps) {
   const [gifs, setGifs] = useState<TenorGif[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Tenor API key - using test key, replace with your own
-  const TENOR_API_KEY = 'AIzaSyAyimkuYQYF_FXVALexPuGQctUWRURdCYQ';
-  const TENOR_CLIENT_KEY = 'korus_app';
-
   // Fetch trending GIFs on mount
   useEffect(() => {
     fetchTrendingGifs();
@@ -40,9 +36,7 @@ export default function GifPicker({ onSelect, onClose }: GifPickerProps) {
   const fetchTrendingGifs = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `https://tenor.googleapis.com/v2/featured?key=${TENOR_API_KEY}&client_key=${TENOR_CLIENT_KEY}&limit=20`
-      );
+      const response = await fetch('/api/tenor?type=featured&limit=20');
       const data = await response.json();
       setGifs(data.results || []);
     } catch (error) {
@@ -61,9 +55,7 @@ export default function GifPicker({ onSelect, onClose }: GifPickerProps) {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(
-          query
-        )}&key=${TENOR_API_KEY}&client_key=${TENOR_CLIENT_KEY}&limit=20`
+        `/api/tenor?q=${encodeURIComponent(query)}&limit=20`
       );
       const data = await response.json();
       setGifs(data.results || []);

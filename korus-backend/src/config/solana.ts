@@ -25,7 +25,6 @@ export function loadAuthorityKeypair(): Keypair {
       const secretKey = JSON.parse(process.env.SOLANA_AUTHORITY_KEY);
       authorityKeypair = Keypair.fromSecretKey(Uint8Array.from(secretKey));
       logger.info('✅ Loaded authority keypair from environment');
-      logger.info('Authority pubkey:', authorityKeypair.publicKey.toString());
       return authorityKeypair;
     } catch (e) {
       logger.error('Failed to load authority from env:', e);
@@ -40,28 +39,27 @@ export function loadAuthorityKeypair(): Keypair {
     try {
       const keypairData = JSON.parse(fs.readFileSync(keypairPath, 'utf-8'));
       authorityKeypair = Keypair.fromSecretKey(Uint8Array.from(keypairData));
-      logger.info('✅ Loaded authority keypair from file:', keypairPath);
-      logger.info('Authority pubkey:', authorityKeypair.publicKey.toString());
+      logger.info('✅ Loaded authority keypair from file');
       return authorityKeypair;
     } catch (e) {
       logger.error('Failed to load authority from file:', e);
     }
   }
 
-  // Generate a new keypair if none exists (ONLY FOR DEVELOPMENT)
-  logger.warn('⚠️  No authority keypair found, generating new one...');
-  logger.warn('⚠️  THIS SHOULD ONLY HAPPEN IN DEVELOPMENT!');
+  // In production, fail hard if no authority keypair is configured
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'FATAL: No authority keypair found. Set SOLANA_AUTHORITY_KEY env var or SOLANA_AUTHORITY_KEYPAIR_PATH. ' +
+      'Refusing to generate a random keypair in production.'
+    );
+  }
 
+  // Generate a new keypair ONLY in development
+  logger.warn('⚠️  No authority keypair found, generating new one (DEVELOPMENT ONLY)...');
   authorityKeypair = Keypair.generate();
-  const keypairData = Array.from(authorityKeypair.secretKey);
+  logger.info('🔑 Dev authority pubkey:', authorityKeypair.publicKey.toString());
+  logger.warn('⚠️  IMPORTANT: You must initialize the smart contract with this authority!');
 
-  // Save to file for future use
-  fs.writeFileSync(keypairPath, JSON.stringify(keypairData));
-  logger.info('💾 Saved new authority keypair to:', keypairPath);
-  logger.info('🔑 Authority pubkey:', authorityKeypair.publicKey.toString());
-  logger.warn('\n⚠️  IMPORTANT: You must initialize the smart contract with this authority!');
-  logger.info('Run: npm run init-contract');
-  
   return authorityKeypair;
 }
 

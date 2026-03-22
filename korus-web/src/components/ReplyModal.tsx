@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { Button } from '@/components/ui';

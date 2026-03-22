@@ -5,6 +5,7 @@ import { AuthRequest } from '../middleware/auth'
 import { reputationService } from '../services/reputationService'
 import { createNotification } from '../utils/notifications'
 import SolPaymentService from '../services/solPaymentService'
+import { emitPostUpdate } from '../config/socket'
 
 export const likePost = async (req: AuthRequest, res: Response) => {
   try {
@@ -33,10 +34,18 @@ export const likePost = async (req: AuthRequest, res: Response) => {
       await prisma.interaction.delete({
         where: { id: existingLike.id }
       })
-      await prisma.post.update({
+      const updatedPost = await prisma.post.update({
         where: { id },
         data: { likeCount: { decrement: 1 } }
       })
+
+      // Emit real-time update
+      emitPostUpdate(id, {
+        likeCount: updatedPost.likeCount,
+        action: 'unlike',
+        userWallet: walletAddress
+      })
+
       res.json({ success: true, liked: false, message: 'Post unliked' })
     } else {
       // Like
@@ -48,15 +57,22 @@ export const likePost = async (req: AuthRequest, res: Response) => {
           interactionType: 'like'
         }
       })
-      await prisma.post.update({
+      const updatedPost = await prisma.post.update({
         where: { id },
         data: { likeCount: { increment: 1 } }
       })
-      
+
+      // Emit real-time update
+      emitPostUpdate(id, {
+        likeCount: updatedPost.likeCount,
+        action: 'like',
+        userWallet: walletAddress
+      })
+
       // Award reputation points
       await reputationService.onLikeGiven(walletAddress, 'post')
       await reputationService.onLikeReceived(post.authorWallet, 'post')
-      
+
       // Create notification
       await createNotification({
         userId: post.authorWallet,
@@ -64,7 +80,7 @@ export const likePost = async (req: AuthRequest, res: Response) => {
         fromUserId: walletAddress,
         postId: id
       })
-      
+
       res.json({ success: true, liked: true, message: 'Post liked' })
     }
   } catch (error: any) {
@@ -172,12 +188,21 @@ export const tipPost = async (req: AuthRequest, res: Response) => {
     }
 
     // Update post tip count and amount
-    await prisma.post.update({
+    const updatedPost = await prisma.post.update({
       where: { id },
       data: {
         tipCount: { increment: 1 },
         tipAmount: { increment: amount }
       }
+    })
+
+    // Emit real-time update
+    emitPostUpdate(id, {
+      tipCount: updatedPost.tipCount,
+      tipAmount: updatedPost.tipAmount,
+      action: 'tip',
+      userWallet: walletAddress,
+      amount: Number(amount)
     })
 
     logger.info(`${walletAddress} tipped ${amount} SOL to post ${id} (tx: ${transactionSignature})`)

@@ -68,7 +68,7 @@ export default function EditProfilePage() {
     const loadProfile = async () => {
       try {
         // Get auth token
-        const token = localStorage.getItem('korus_auth_token');
+        const token = localStorage.getItem('authToken');
         if (!token) {
           setIsLoading(false);
           return;
@@ -136,7 +136,7 @@ export default function EditProfilePage() {
     setIsSaving(true);
     try {
       // Get auth token
-      const token = localStorage.getItem('korus_auth_token');
+      const token = localStorage.getItem('authToken');
       if (!token) {
         showError('Please reconnect your wallet to save profile');
         return;

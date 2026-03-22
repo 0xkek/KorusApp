@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
-import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { interactionsAPI } from '@/lib/api/interactions';
 import { logger } from '@/utils/logger';
 
@@ -14,7 +14,7 @@ interface RepostModalProps {
   postId: number;
   postContent: string;
   postUser: string;
-  onRepostSuccess?: (comment?: string, response?: any) => void;
+  onRepostSuccess?: (comment?: string, response?: unknown) => void;
   onSuccess?: () => void;
 }
 

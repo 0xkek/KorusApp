@@ -14,6 +14,7 @@ export interface APIAuthor {
   username?: string;
   nftAvatar?: string;
   themeColor?: string;
+  subscriptionStatus?: string;
 }
 
 /**

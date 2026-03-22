@@ -1,8 +1,6 @@
 'use client';
 import { logger } from '@/utils/logger';
 
-import { Button } from '@/components/Button';
-
 export type TicTacToeCell = 'X' | 'O' | null;
 export type TicTacToeBoard = TicTacToeCell[];
 
@@ -35,11 +33,11 @@ export function TicTacToeBoard({
   player1DisplayName,
   player2DisplayName,
   wager,
-  gameCreatedAt,
   currentPlayerAddress,
   payoutTxSignature,
 }: TicTacToeBoardProps) {
-  const getCellClassName = (cell: TicTacToeCell, index: number) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const getCellClassName = (cell: TicTacToeCell, _index: number) => {
     const baseClasses = 'w-24 h-24 flex items-center justify-center text-4xl font-bold rounded-lg transition-all';
     const borderClasses = 'border-2 border-korus-border hover:border-korus-primary';
     const bgClasses = cell === null && isMyTurn && !isGameOver
@@ -157,7 +155,7 @@ export function TicTacToeBoard({
       {isGameOver && payoutTxSignature && (
         <div className="mt-2 px-2 text-xs text-center">
           <a
-            href={`https://explorer.solana.com/tx/${payoutTxSignature}?cluster=devnet`}
+            href={`https://explorer.solana.com/tx/${payoutTxSignature}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-korus-primary hover:text-korus-secondary underline"

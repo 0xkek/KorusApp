@@ -3,8 +3,6 @@
  * Handles image and file uploads to Cloudinary
  */
 
-import { api } from './client';
-
 export interface UploadResponse {
   success: boolean;
   url: string;

@@ -4,7 +4,7 @@ import { logger } from '@/utils/logger';
 import { useState, useEffect } from 'react';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
-import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { Button } from '@/components/ui';
@@ -22,7 +22,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
   const { connected, publicKey, sendTransaction, signTransaction } = useWallet();
   const { connection } = useConnection();
   const { token, isAuthenticated } = useWalletAuth();
-  const { showSuccess, showError } = useToast();
+  const { showError } = useToast();
   const [customAmount, setCustomAmount] = useState('');
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [isSending, setIsSending] = useState(false);
@@ -128,8 +128,15 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
     setIsSending(true);
 
     try {
-      // Create recipient public key
-      const recipientPubkey = new PublicKey(recipientUser);
+      // Create and validate recipient public key
+      let recipientPubkey: PublicKey;
+      try {
+        recipientPubkey = new PublicKey(recipientUser);
+      } catch {
+        showError('Invalid recipient wallet address');
+        setIsSending(false);
+        return;
+      }
 
       // Create transaction
       const transaction = new Transaction().add(
@@ -140,8 +147,8 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
         })
       );
 
-      // Get latest blockhash
-      const { blockhash } = await connection.getLatestBlockhash();
+      // Get latest blockhash with commitment
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = publicKey;
 
@@ -163,8 +170,8 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
         signature = await sendTransaction(transaction, connection);
       }
 
-      // Wait for confirmation
-      await connection.confirmTransaction(signature, 'confirmed');
+      // Wait for confirmation with timeout protection
+      await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
 
       // Record tip in backend
       await interactionsAPI.tipPost(
@@ -261,7 +268,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-korus-textSecondary">Transaction</span>
                 <a
-                  href={`https://solscan.io/tx/${txSignature}?cluster=devnet`}
+                  href={`https://solscan.io/tx/${txSignature}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-korus-primary hover:text-korus-secondary transition-colors flex items-center gap-1"

@@ -5,7 +5,7 @@
 import { Connection, PublicKey } from '@solana/web3.js';
 
 const GAME_ESCROW_PROGRAM_ID = new PublicKey('4iUdAkPRmZLzUFXTLpt5QPGmUUtP6yfgpPpF3sLD9xtd');
-const RPC_URL = 'https://mainnet.helius-rpc.com/?api-key=573b969e-057e-49c1-9652-0b95226030ed';
+const RPC_URL = process.env.HELIUS_RPC_URL || 'https://api.mainnet-beta.solana.com';
 
 async function verifyTreasury() {
   const connection = new Connection(RPC_URL, 'confirmed');

@@ -6,7 +6,7 @@ import RightSidebar from '@/components/RightSidebar';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
-import { Connection, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useToastContext } from '@/components/ToastProvider';
 
 // Dynamically import modals
@@ -44,10 +44,20 @@ export default function WalletPage() {
     setLoading(true);
     setHasError(false);
     try {
-      // Use RPC endpoint from environment variables
-      const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com';
-      const connection = new Connection(rpcUrl);
-      const bal = await connection.getBalance(publicKey);
+      // Use the server-side RPC proxy to avoid exposing the API key
+      const rpcResponse = await fetch('/api/rpc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'getBalance',
+          params: [publicKey.toBase58()],
+        }),
+      });
+      const rpcData = await rpcResponse.json();
+      if (rpcData.error) throw new Error(rpcData.error.message || 'RPC error');
+      const bal = rpcData.result?.value ?? 0;
       setBalance(bal / LAMPORTS_PER_SOL);
       if (hasError) {
         showSuccess('Balance refreshed successfully');

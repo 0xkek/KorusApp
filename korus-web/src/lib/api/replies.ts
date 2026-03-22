@@ -19,6 +19,7 @@ export interface Reply {
     snsUsername?: string;
     username?: string;
     nftAvatar?: string;
+    subscriptionStatus?: string;
   };
   childReplies?: Reply[];
   _count?: {

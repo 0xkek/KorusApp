@@ -32,7 +32,7 @@ export const postsAPI = {
   /**
    * Get a single post by ID
    */
-  async getPost(id: number, token?: string): Promise<APIPostResponse> {
+  async getPost(id: number | string, token?: string): Promise<APIPostResponse> {
     return api.get<APIPostResponse>(`/api/posts/${id}`, token);
   },
 

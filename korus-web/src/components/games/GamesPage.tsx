@@ -6,7 +6,6 @@ import { createPortal } from 'react-dom';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { gamesAPI, type Game, type GameType } from '@/lib/api/games';
 import { useGameEscrow } from '@/hooks/useGameEscrow';
-import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useToast } from '@/hooks/useToast';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { TicTacToeBoard, type TicTacToeCell } from './TicTacToeBoard';
@@ -17,7 +16,6 @@ import { GameCountdown } from './GameCountdown';
 export function GamesPage() {
   const { connected, publicKey } = useWallet();
   const { createGame, joinGame, cancelGame, isProcessing } = useGameEscrow();
-  const { isAuthenticated, authenticate, isAuthenticating } = useWalletAuth();
   const { showSuccess, showError } = useToast();
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,11 +28,37 @@ export function GamesPage() {
   const [gameToCancelData, setGameToCancelData] = useState<{ game: Game; wagerAmount: number; hasWager: boolean } | null>(null);
   const [cancelModalClosing, setCancelModalClosing] = useState(false);
   const [cancelStatus, setCancelStatus] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'lobby' | 'completed'>('lobby');
+  const [completedGames, setCompletedGames] = useState<Game[]>([]);
+  const [completedLoading, setCompletedLoading] = useState(false);
+  const [completedLoaded, setCompletedLoaded] = useState(false);
   const [newGame, setNewGame] = useState({
     type: 'tictactoe' as GameType,
     wager: 0,
     timeLimit: '2h'
   });
+
+  const loadCompletedGames = useCallback(async () => {
+    setCompletedLoading(true);
+    try {
+      const response = await gamesAPI.getAllGames('completed');
+      setCompletedGames(response.games);
+      setCompletedLoaded(true);
+    } catch (error) {
+      logger.error('Failed to load completed games:', error);
+      showError('Failed to load completed games');
+    } finally {
+      setCompletedLoading(false);
+    }
+  }, [showError]);
+
+  // Lazy load completed games when tab is clicked
+  const handleTabChange = useCallback((tab: 'lobby' | 'completed') => {
+    setActiveTab(tab);
+    if (tab === 'completed' && !completedLoaded) {
+      loadCompletedGames();
+    }
+  }, [completedLoaded, loadCompletedGames]);
 
   const loadGames = useCallback(async () => {
     // Don't show loading spinner when polling for updates
@@ -165,6 +189,13 @@ export function GamesPage() {
     if (isNaN(wagerSol) || wagerSol < 0) {
       logger.log('❌ Invalid wager amount');
       showError('Invalid wager amount');
+      return;
+    }
+
+    // Validate wager against smart contract limits (0.01 - 1.0 SOL)
+    if (wagerSol > 0 && (wagerSol < 0.01 || wagerSol > 1.0)) {
+      logger.log('❌ Wager out of range:', wagerSol);
+      showError('Wager must be between 0.01 and 1.0 SOL');
       return;
     }
 
@@ -333,7 +364,7 @@ export function GamesPage() {
 
       // Show success message with refund info and transaction link
       if (hasWager && signature) {
-        showSuccess(`Game cancelled! ${wagerAmount} SOL refunded to your wallet. View transaction: https://solscan.io/tx/${signature}?cluster=devnet`);
+        showSuccess(`Game cancelled! ${wagerAmount} SOL refunded to your wallet. View transaction: https://solscan.io/tx/${signature}`);
       } else {
         showSuccess('Game cancelled successfully!');
       }
@@ -494,10 +525,16 @@ export function GamesPage() {
     );
   };
 
-  // Helper to format display name (TODO: fetch from backend with user data)
-  const getPlayerDisplayName = (address: string) => {
-    // For now, just return truncated address
-    // In the future, this should fetch username/SNS from backend
+  // Helper to format display name, preferring API-provided names over truncated addresses
+  const getPlayerDisplayName = (address: string, game?: Game) => {
+    if (game) {
+      if (address === game.player1 && game.player1DisplayName) {
+        return game.player1DisplayName;
+      }
+      if (address === game.player2 && game.player2DisplayName) {
+        return game.player2DisplayName;
+      }
+    }
     return `${address.slice(0, 4)}...${address.slice(-4)}`;
   };
 
@@ -537,8 +574,8 @@ export function GamesPage() {
         winner={getWinnerDisplayValue()}
         player1Address={game.player1}
         player2Address={game.player2 || undefined}
-        player1DisplayName={getPlayerDisplayName(game.player1)}
-        player2DisplayName={game.player2 ? getPlayerDisplayName(game.player2) : undefined}
+        player1DisplayName={getPlayerDisplayName(game.player1, game)}
+        player2DisplayName={game.player2 ? getPlayerDisplayName(game.player2, game) : undefined}
         currentTurnAddress={game.currentTurn || undefined}
         gameCreatedAt={game.createdAt}
         wager={game.wager}
@@ -558,28 +595,62 @@ export function GamesPage() {
           </h1>
           <p className="text-korus-textSecondary">Join or create games with SOL wagers</p>
         </div>
+        {activeTab === 'lobby' && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-full hover:shadow-lg hover:shadow-korus-primary/20 transition-all"
+          >
+            + Create Game
+          </button>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-korus-border mb-6">
         <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-full hover:shadow-lg hover:shadow-korus-primary/20 transition-all"
+          onClick={() => handleTabChange('lobby')}
+          className={`relative px-6 py-3 font-semibold transition-colors ${
+            activeTab === 'lobby'
+              ? 'text-white'
+              : 'text-korus-textSecondary hover:text-white'
+          }`}
         >
-          + Create Game
+          Lobby
+          {activeTab === 'lobby' && (
+            <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-korus-primary rounded-full" />
+          )}
+        </button>
+        <button
+          onClick={() => handleTabChange('completed')}
+          className={`relative px-6 py-3 font-semibold transition-colors ${
+            activeTab === 'completed'
+              ? 'text-white'
+              : 'text-korus-textSecondary hover:text-white'
+          }`}
+        >
+          Completed
+          {activeTab === 'completed' && (
+            <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-korus-primary rounded-full" />
+          )}
         </button>
       </div>
 
-      {/* Games List */}
-      {loading ? (
-        <div className="text-center py-20">
-          <div className="w-8 h-8 border-4 border-korus-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-korus-textSecondary">Loading games...</p>
-        </div>
-      ) : games.length === 0 ? (
-        <div className="text-center py-20">
-          <div className="text-6xl mb-4 opacity-60">🎮</div>
-          <p className="text-white text-lg font-medium">No games available</p>
-          <p className="text-korus-textSecondary text-sm mt-2">
-            Create a game to get started!
-          </p>
-        </div>
+      {/* Lobby Tab */}
+      {activeTab === 'lobby' && (
+        <>
+          {loading ? (
+            <div className="text-center py-20">
+              <div className="w-8 h-8 border-4 border-korus-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-korus-textSecondary">Loading games...</p>
+            </div>
+          ) : games.length === 0 ? (
+            <div className="text-center py-20">
+              <div className="text-6xl mb-4 opacity-60">🎮</div>
+              <p className="text-white text-lg font-medium">No games available</p>
+              <p className="text-korus-textSecondary text-sm mt-2">
+                Create a game to get started!
+              </p>
+            </div>
       ) : (
         <div className="space-y-0">
           {games.map((game) => (
@@ -693,6 +764,142 @@ export function GamesPage() {
           ))}
         </div>
       )}
+        </>
+      )}
+
+      {/* Completed Tab */}
+      {activeTab === 'completed' && (
+        <>
+          {completedLoading ? (
+            <div className="text-center py-20">
+              <div className="w-8 h-8 border-4 border-korus-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-korus-textSecondary">Loading completed games...</p>
+            </div>
+          ) : completedGames.length === 0 ? (
+            <div className="text-center py-20">
+              <div className="text-6xl mb-4 opacity-60">🏆</div>
+              <p className="text-white text-lg font-medium">No completed games yet</p>
+              <p className="text-korus-textSecondary text-sm mt-2">
+                Completed games will appear here
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-0">
+              {completedGames.map((game) => {
+                const wagerAmount = parseFloat(game.wager || '0');
+                const payoutAmount = wagerAmount > 0 ? wagerAmount * 2 : 0;
+                const winnerAddress = game.winner;
+                const loserAddress = winnerAddress === game.player1 ? game.player2 : game.player1;
+                const isDraw = game.winner === 'draw' || !game.winner;
+                const isUserWinner = publicKey?.toBase58() === winnerAddress;
+                const isUserLoser = publicKey?.toBase58() === loserAddress;
+                const isUserInGame = publicKey?.toBase58() === game.player1 || publicKey?.toBase58() === game.player2;
+
+                return (
+                  <div
+                    key={game.id}
+                    className="border-b border-korus-border bg-korus-surface/20 hover:bg-korus-surface/30 transition-colors cursor-pointer"
+                    onClick={() => setExpandedGameId(expandedGameId === game.id ? null : game.id)}
+                  >
+                    <div className="flex items-center gap-3 p-3">
+                      {/* Game Icon */}
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-korus-primary/60 to-korus-secondary/60 flex items-center justify-center text-xl flex-shrink-0">
+                        {getGameIcon(game.gameType)}
+                      </div>
+
+                      {/* Game Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-3">
+                          {/* Left: Game info */}
+                          <div className="flex items-center gap-2 text-sm flex-wrap">
+                            <span className="font-bold text-white capitalize">
+                              {game.gameType?.replace('_', ' ') || 'Game'}
+                            </span>
+                            <span className="text-korus-textSecondary">|</span>
+                            {isDraw ? (
+                              <span className="text-yellow-400 font-semibold">Draw</span>
+                            ) : isUserWinner ? (
+                              <span className="text-green-400 font-semibold">You Won!</span>
+                            ) : isUserLoser ? (
+                              <span className="text-red-400 font-semibold">You Lost</span>
+                            ) : (
+                              <span className="text-blue-400 font-semibold">
+                                Winner: {winnerAddress ? `${winnerAddress.slice(0, 4)}...${winnerAddress.slice(-4)}` : 'N/A'}
+                              </span>
+                            )}
+                            {wagerAmount > 0 && (
+                              <>
+                                <span className="text-korus-textSecondary">|</span>
+                                <span className="text-korus-textSecondary">
+                                  Wager: {wagerAmount} SOL
+                                </span>
+                                {!isDraw && (
+                                  <span className={`font-semibold ${isUserWinner ? 'text-green-400' : isUserLoser ? 'text-red-400' : 'text-korus-textSecondary'}`}>
+                                    {isUserWinner ? `+${payoutAmount} SOL` : isUserLoser ? `-${wagerAmount} SOL` : `Payout: ${payoutAmount} SOL`}
+                                  </span>
+                                )}
+                              </>
+                            )}
+                            <span className="text-korus-textSecondary">|</span>
+                            <span className="text-korus-textSecondary">
+                              {formatTimeAgo(game.updatedAt || game.createdAt)}
+                            </span>
+                          </div>
+
+                          {/* Right: Status + Actions */}
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${getStatusColor(game.status)}`}>
+                              {isUserInGame ? (isUserWinner ? 'Won' : isDraw ? 'Draw' : 'Lost') : 'Completed'}
+                            </div>
+                            {game.escrow?.payoutTxSig && (
+                              <a
+                                href={`https://solscan.io/tx/${game.escrow.payoutTxSig}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-xs text-korus-primary hover:text-korus-secondary transition-colors underline"
+                              >
+                                Payout Tx
+                              </a>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedGameId(expandedGameId === game.id ? null : game.id);
+                              }}
+                              className="bg-korus-surface border border-korus-border text-white font-bold px-3 py-1 rounded-full hover:bg-korus-surface/80 transition-all text-xs"
+                            >
+                              {expandedGameId === game.id ? 'Hide' : 'View'}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Players row */}
+                        <div className="flex items-center gap-2 text-xs text-korus-textSecondary mt-1">
+                          <span>{game.player1DisplayName || `${game.player1.slice(0, 4)}...${game.player1.slice(-4)}`}</span>
+                          <span>vs</span>
+                          <span>{game.player2 ? (game.player2DisplayName || `${game.player2.slice(0, 4)}...${game.player2.slice(-4)}`) : 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Inline Game Board (view completed game state) */}
+                    {expandedGameId === game.id && (
+                      <div className="px-6 pb-3 bg-korus-cardBackground border-t border-korus-border">
+                        <div className="py-3">
+                          {game.gameType === 'tictactoe' && renderTicTacToe(game)}
+                          {game.gameType === 'connectfour' && renderConnectFour(game)}
+                          {game.gameType === 'rps' && renderRPS(game)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
 
       {/* Create Game Modal - Rendered via Portal */}
       {showCreateModal && typeof window !== 'undefined' && createPortal(
@@ -759,14 +966,20 @@ export function GamesPage() {
                 type="number"
                 step="0.01"
                 min="0"
+                max="1.0"
                 value={newGame.wager}
                 onChange={(e) => setNewGame(prev => ({ ...prev, wager: parseFloat(e.target.value) || 0 }))}
                 disabled={isProcessing}
                 className="w-full px-4 py-2 bg-korus-surface/60 border border-korus-border rounded-lg text-white focus:border-korus-primary focus:outline-none disabled:opacity-50"
                 placeholder="0.1"
               />
+              {newGame.wager > 0 && (newGame.wager < 0.01 || newGame.wager > 1.0) && (
+                <p className="text-xs text-red-400 mt-1">
+                  Wager must be between 0.01 and 1.0 SOL
+                </p>
+              )}
               <p className="text-xs text-korus-textSecondary mt-1">
-                Set to 0 for a friendly game (no blockchain escrow)
+                Set to 0 for a friendly game (no blockchain escrow). Wagered games: 0.01 - 1.0 SOL.
               </p>
             </div>
 

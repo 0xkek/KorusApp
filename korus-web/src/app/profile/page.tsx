@@ -11,7 +11,7 @@ import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import PremiumUpgradeModal from '@/components/PremiumUpgradeModal';
 import { SafeContent } from '@/components/SafeContent';
-import { useAllSNSDomains, useSNSDomain, clearSNSCache } from '@/hooks/useSNSDomain';
+import { useAllSNSDomains, useSNSDomain } from '@/hooks/useSNSDomain';
 import { setFavoriteSNSDomain } from '@/utils/sns';
 import { useToastContext } from '@/components/ToastProvider';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -58,6 +58,7 @@ export default function ProfilePage() {
   const [showNFTAvatarModal, setShowNFTAvatarModal] = useState(false);
   const [balance, setBalance] = useState<number>(0);
   const [dbSnsUsername, setDbSnsUsername] = useState<string | null>(null); // SNS from database
+  const [reputationScore, setReputationScore] = useState<number>(0); // Backend reputation score
 
   // Wallet and user data
   const walletAddress = publicKey?.toBase58() || '';
@@ -68,7 +69,7 @@ export default function ProfilePage() {
   const { domains: allSNSDomains, loading: allDomainsLoading } = useAllSNSDomains(walletAddress);
 
   // Subscription status hook
-  const { isPremium, subscriptionStatus, refreshStatus, daysUntilExpiration } = useSubscription();
+  const { isPremium, refreshStatus, daysUntilExpiration } = useSubscription();
 
   // Refs for outside click detection
   const snsDropdownRef = useRef<HTMLDivElement>(null);
@@ -76,22 +77,14 @@ export default function ProfilePage() {
 
   // Calculate stats with memoization for performance
   const stats: UserStats = useMemo(() => {
-    const baseStats = {
+    return {
       posts: userPosts.length,
       replies: userPosts.reduce((sum, post) => sum + post.replies, 0),
       likes: userPosts.reduce((sum, post) => sum + post.likes, 0),
       tips: userPosts.reduce((sum, post) => sum + post.tips, 0),
-      repScore: 0
+      repScore: reputationScore,
     };
-
-    // Calculate reputation score
-    baseStats.repScore = baseStats.posts * 10 + baseStats.replies * 5 + baseStats.likes * 2 + baseStats.tips * 20;
-    if (isPremium) {
-      baseStats.repScore = Math.floor(baseStats.repScore * 1.2);
-    }
-
-    return baseStats;
-  }, [userPosts, isPremium]);
+  }, [userPosts, reputationScore]);
 
   const loadUserProfile = useCallback(async () => {
     try {
@@ -100,8 +93,18 @@ export default function ProfilePage() {
       if (!token) return;
 
       // Load profile from API
-      const { usersAPI, nftsAPI } = await import('@/lib/api');
+      const { usersAPI, nftsAPI, reputationAPI } = await import('@/lib/api');
       const { user } = await usersAPI.getProfile(token);
+
+      // Fetch reputation score from backend
+      if (user.walletAddress) {
+        try {
+          const { reputation } = await reputationAPI.getReputation(user.walletAddress, token);
+          setReputationScore(reputation.reputationScore);
+        } catch {
+          logger.error('Failed to load reputation, using 0');
+        }
+      }
 
       if (user.username) {
         setCurrentUsername(user.username);
@@ -116,9 +119,23 @@ export default function ProfilePage() {
       // Load NFT avatar if user has one
       if (user.nftAvatar) {
         try {
-          const nft = await nftsAPI.getNFTByMint(user.nftAvatar);
-          if (nft) {
-            setSelectedNFTAvatar(nft);
+          // Check if it's a URL (old data) or mint address (new data)
+          const isUrl = user.nftAvatar.startsWith('http://') || user.nftAvatar.startsWith('https://');
+
+          if (isUrl) {
+            // Old data format: nftAvatar is already a URL
+            setSelectedNFTAvatar({
+              mint: '', // We don't have the mint address for old data
+              name: 'NFT Avatar',
+              image: user.nftAvatar,
+              uri: user.nftAvatar,
+            } as NFT);
+          } else {
+            // New data format: nftAvatar is a mint address, fetch the NFT
+            const nft = await nftsAPI.getNFTByMint(user.nftAvatar);
+            if (nft) {
+              setSelectedNFTAvatar(nft);
+            }
           }
         } catch (error) {
           logger.error('Error loading NFT avatar:', error);

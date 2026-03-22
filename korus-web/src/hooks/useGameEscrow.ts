@@ -4,9 +4,8 @@
  */
 
 import { logger } from '@/utils/logger';
-import { useConnection, useWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, SystemProgram, Transaction, TransactionInstruction, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import * as anchor from '@coral-xyz/anchor';
 import { useCallback, useState } from 'react';
 
 // Contract configuration
@@ -14,12 +13,9 @@ import { useCallback, useState } from 'react';
 const GAME_ESCROW_PROGRAM_ID = new PublicKey(
   process.env.NEXT_PUBLIC_GAME_ESCROW_PROGRAM_ID || '4iUdAkPRmZLzUFXTLpt5QPGmUUtP6yfgpPpF3sLD9xtd'
 );
-const TREASURY_WALLET = new PublicKey(
-  process.env.NEXT_PUBLIC_TREASURY_WALLET || 'ByqqYGErKfyLHHd3NjgMnbbxQdPs1kFrPVWPUHUsD31W'
-);
-
-// Minimal IDL for client-side interactions
-const IDL = {
+// Minimal IDL for client-side interactions (kept for reference)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _IDL = {
   version: "0.1.0",
   name: "korus_game_escrow",
   instructions: [
@@ -66,7 +62,6 @@ interface JoinGameResult {
 export function useGameEscrow() {
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
-  const anchorWallet = useAnchorWallet();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

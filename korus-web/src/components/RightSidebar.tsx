@@ -4,7 +4,7 @@ import { logger } from '@/utils/logger';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { notificationsAPI, type Notification as APINotification } from '@/lib/api';
 import * as eventsAPI from '@/lib/api/events';
 import * as gamesAPI from '@/lib/api/games';
@@ -53,6 +53,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
     if (connected && isAuthenticated && token) {
       fetchNotifications();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected, isAuthenticated, token]);
 
   const fetchRecentActivities = async () => {

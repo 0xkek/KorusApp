@@ -11,6 +11,7 @@ import RightSidebar from '@/components/RightSidebar';
 import PremiumUpgradeModal from '@/components/PremiumUpgradeModal';
 import { useToast } from '@/hooks/useToast';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import * as eventsAPI from '@/lib/api/events';
 
 // Dynamically import modals
@@ -34,7 +35,8 @@ interface Event {
 }
 
 export default function EventsPage() {
-  const { connected } = useWallet();
+  const { connected, publicKey } = useWallet();
+  const { token } = useWalletAuth();
   const router = useRouter();
   const { showSuccess, showError } = useToast();
   const { isPremium, refreshStatus } = useSubscription();
@@ -101,7 +103,8 @@ export default function EventsPage() {
     }
   };
 
-  const getEventTypeColor = (type: Event['type']) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const getEventTypeColor = (_type: Event['type']) => {
     // Use CSS variable for theme color (matches rest of the app)
     return 'var(--korus-primary)';
   };
@@ -136,17 +139,65 @@ export default function EventsPage() {
     setShowEventModal(true);
   };
 
-  const handleParticipate = () => {
-    if (!selectedEvent || !connected) return;
+  const handleParticipate = async () => {
+    if (!selectedEvent || !connected || !publicKey || !token) {
+      showError('Please connect your wallet first');
+      return;
+    }
+
+    // Check if wallet supports message signing
+    const walletAdapter = (window as { solana?: { signMessage?: (message: Uint8Array, encoding: string) => Promise<{ signature: Uint8Array; publicKey: Uint8Array }> } }).solana;
+    if (!walletAdapter || !walletAdapter.signMessage) {
+      showError('Your wallet does not support message signing');
+      return;
+    }
 
     setIsParticipating(true);
+    try {
+      // Generate message for wallet signing
+      const message = eventsAPI.generateSignatureMessage(selectedEvent.id, selectedEvent.projectName);
+      const messageBytes = new TextEncoder().encode(message);
 
-    // Simulate transaction
-    setTimeout(() => {
-      setIsParticipating(false);
+      // Request wallet signature
+      const signatureResponse = await walletAdapter.signMessage(messageBytes, 'utf8');
+
+      if (!signatureResponse || !signatureResponse.signature) {
+        throw new Error('Failed to get signature from wallet');
+      }
+
+      // Import bs58 for encoding
+      const bs58 = await import('bs58');
+
+      // Convert signature to base58 (backend expects base58)
+      const signatureUint8 = new Uint8Array(signatureResponse.signature);
+      const signatureBase58 = bs58.default.encode(signatureUint8);
+
+      // Register for whitelist
+      const response = await eventsAPI.registerForWhitelist(
+        selectedEvent.id,
+        {
+          signature: signatureBase58,
+          signedMessage: message
+        },
+        token
+      );
+
       setShowEventModal(false);
-      showSuccess(`Success! You&apos;ve successfully joined the ${selectedEvent.title}`);
-    }, 2000);
+      showSuccess(response.message || `Successfully joined the ${selectedEvent.title}!`);
+
+      // Refresh events to update registration count
+      const result = await eventsAPI.getEvents({ status: 'active' });
+      setEvents(result.events);
+    } catch (error: unknown) {
+      logger.error('Failed to register:', error);
+      if ((error as Error).message?.includes('rejected') || (error as Error).message?.includes('User rejected')) {
+        showError('You rejected the signature request');
+      } else {
+        showError((error as Error).message || 'Failed to register for whitelist');
+      }
+    } finally {
+      setIsParticipating(false);
+    }
   };
 
   return (

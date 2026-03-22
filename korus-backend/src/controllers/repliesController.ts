@@ -7,6 +7,7 @@ import { reputationService } from '../services/reputationService'
 import { createNotification } from '../utils/notifications'
 import { CursorPagination } from '../utils/pagination'
 import { getNFTByMint } from '../services/nftService'
+import { emitNewReply, emitPostUpdate } from '../config/socket'
 
 // Helper function to resolve NFT avatar mints to image URLs
 async function resolveNFTAvatar(nftMint: string | null): Promise<string | null> {
@@ -73,9 +74,17 @@ export const createReply = async (req: AuthRequest, res: Response) => {
     })
 
     // Update post reply count
-    await prisma.post.update({
+    const updatedPost = await prisma.post.update({
       where: { id: postId },
       data: { replyCount: { increment: 1 } }
+    })
+
+    // Emit real-time updates
+    emitNewReply(reply)
+    emitPostUpdate(postId, {
+      replyCount: updatedPost.replyCount,
+      action: 'reply',
+      userWallet: walletAddress
     })
 
     // Run auto-moderation on the new reply

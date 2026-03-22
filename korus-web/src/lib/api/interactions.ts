@@ -49,7 +49,8 @@ export interface RepostResponse {
   success: boolean;
   reposted: boolean;
   message: string;
-  repostPost?: unknown; // Full repost post object with original post data
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  repostPost?: any; // Full repost post object with original post data
 }
 
 export interface UserRepostsResponse {

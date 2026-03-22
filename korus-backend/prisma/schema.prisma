@@ -62,7 +62,6 @@ model User {
   posts                    Post[]              @relation("AuthoredPosts")
   repEvents                RepEvent[]
   replies                  Reply[]
-  reposts                  Repost[]
   reports                  Report[]
   tokenDistributions       TokenDistribution[]
   subscriptionPayments     SubscriptionPayment[]
@@ -84,7 +83,6 @@ model Post {
   subtopic         String?        @db.VarChar(100)
   likeCount        Int            @default(0)
   replyCount       Int            @default(0)
-  repostCount      Int            @default(0)
   tipCount         Int            @default(0)
   tipAmount        Decimal        @default(0) @db.Decimal(18, 6) // Total SOL tipped
   createdAt        DateTime       @default(now())
@@ -98,16 +96,11 @@ model Post {
   shoutoutDuration Int?           // Duration in minutes
   shoutoutExpiresAt DateTime?     // When the shoutout expires
   shoutoutPrice    Decimal?       @db.Decimal(18, 6) // Price paid in SOL
-  isRepost         Boolean        @default(false)
-  originalPostId   String?        // ID of the original post if this is a repost
   game             Game?
   notifications    Notification[]
   author           User           @relation("AuthoredPosts", fields: [authorWallet], references: [walletAddress])
   replies          Reply[]
-  reposts          Repost[]
   sponsoredPost    SponsoredPost?
-  originalPost     Post?          @relation("RepostedPosts", fields: [originalPostId], references: [id])
-  repostedPosts    Post[]         @relation("RepostedPosts")
 
   @@index([createdAt(sort: Desc)])
   @@index([authorWallet, createdAt(sort: Desc)])
@@ -117,8 +110,6 @@ model Post {
   @@index([isHidden, createdAt(sort: Desc)])
   @@index([flaggedCount(sort: Desc)])
   @@index([isShoutout, shoutoutExpiresAt(sort: Desc)])
-  @@index([isRepost, createdAt(sort: Desc)])
-  @@index([originalPostId])
   @@map("posts")
 }
 
@@ -129,7 +120,6 @@ model Reply {
   content          String
   parentReplyId    String?
   likeCount        Int      @default(0)
-  repostCount      Int      @default(0)
   tipCount         Int      @default(0)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -166,20 +156,6 @@ model Interaction {
   @@index([userWallet, createdAt(sort: Desc)])
   @@index([createdAt(sort: Desc)])
   @@map("interactions")
-}
-
-model Repost {
-  id           String   @id @default(cuid())
-  userWallet   String   @db.VarChar(44)
-  postId       String
-  createdAt    DateTime @default(now())
-  user         User     @relation(fields: [userWallet], references: [walletAddress])
-  post         Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-
-  @@unique([userWallet, postId])
-  @@index([postId, createdAt(sort: Desc)])
-  @@index([userWallet, createdAt(sort: Desc)])
-  @@map("reposts")
 }
 
 model Game {
@@ -360,7 +336,7 @@ model SubscriptionPayment {
   walletAddress     String   @db.VarChar(44)
   subscriptionType  String   // "monthly" or "yearly"
   amount            Decimal  @db.Decimal(18, 6) // Amount in SOL
-  txSignature       String   @db.VarChar(200) // Solana transaction signature
+  txSignature       String   @unique @db.VarChar(200) // Solana transaction signature
   periodStart       DateTime
   periodEnd         DateTime
   createdAt         DateTime @default(now())
@@ -378,13 +354,13 @@ model GameEscrow {
   player2Wallet   String?  @db.VarChar(44)
   player1Amount   Decimal  @db.Decimal(18, 6) // Amount in SOL
   player2Amount   Decimal? @db.Decimal(18, 6) // Amount in SOL
-  player1TxSig    String?  @db.VarChar(200) // Transaction signature
-  player2TxSig    String?  @db.VarChar(200) // Transaction signature
+  player1TxSig    String?  @unique @db.VarChar(200) // Transaction signature
+  player2TxSig    String?  @unique @db.VarChar(200) // Transaction signature
   totalPot        Decimal  @db.Decimal(18, 6) // Total pot
   platformFee     Decimal  @db.Decimal(18, 6) // 2% fee
   winnerPayout    Decimal  @db.Decimal(18, 6) // 98% to winner
   status          String   @db.VarChar(20) // "pending", "locked", "paid", "refunded"
-  payoutTxSig     String?  @db.VarChar(200) // Payout transaction
+  payoutTxSig     String?  @unique @db.VarChar(200) // Payout transaction
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -446,7 +422,7 @@ model WhitelistRegistration {
   walletAddress     String   @db.VarChar(44)
 
   // Proof of ownership
-  signature         String   @db.Text // Wallet signature
+  signature         String   @unique @db.Text // Wallet signature
   signedMessage     String   @db.Text // Message that was signed
 
   // User info at time of registration

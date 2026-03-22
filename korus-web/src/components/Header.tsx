@@ -101,8 +101,18 @@ export default function Header({
             })}
           </div>
 
-          {/* Right: Settings + Wallet Button */}
+          {/* Right: Connected Wallet Display + Settings + Wallet Button */}
           <div className="flex items-center gap-3 flex-shrink-0">
+            {/* Connected Wallet Address Display */}
+            {connected && publicKey && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-korus-primary/10 to-korus-secondary/10 border border-korus-primary/30">
+                <span className="text-xs text-korus-textSecondary">Connected:</span>
+                <code className="text-xs font-mono text-korus-primary font-semibold">
+                  {publicKey.toString().slice(0, 4)}...{publicKey.toString().slice(-4)}
+                </code>
+              </div>
+            )}
+
             {connected && onSettingsClick && (
               <button
                 onClick={onSettingsClick}

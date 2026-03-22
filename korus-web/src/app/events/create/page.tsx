@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
-import Image from 'next/image';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import { useToast } from '@/hooks/useToast';
@@ -25,7 +24,7 @@ const PLATFORM_WALLET = new PublicKey('ByqqYGErKfyLHHd3NjgMnbbxQdPs1kFrPVWPUHUsD
 
 export default function CreateEventPage() {
   const router = useRouter();
-  const { connected, publicKey, sendTransaction, signTransaction } = useWallet();
+  const { connected, publicKey, signTransaction } = useWallet();
   const { connection } = useConnection();
   const { token, isAuthenticated } = useWalletAuth();
   const { showSuccess, showError } = useToast();
@@ -274,7 +273,7 @@ export default function CreateEventPage() {
 
       // Step 3: Create event with uploaded image URL
       const eventData = { ...formData, imageUrl };
-      const response = await eventsAPI.createEvent(eventData, token);
+      await eventsAPI.createEvent(eventData, token);
       showSuccess('Event created successfully!');
 
       // Refresh balance
@@ -410,6 +409,7 @@ export default function CreateEventPage() {
                     </label>
                   ) : (
                     <div className="relative">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={imagePreview}
                         alt="Event preview"

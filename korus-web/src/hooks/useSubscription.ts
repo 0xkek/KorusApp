@@ -3,7 +3,7 @@ import { logger } from '@/utils/logger';
 
 import { useState, useEffect, useCallback } from 'react';
 import { subscriptionAPI, SubscriptionStatusResponse } from '@/lib/api';
-import { useWalletAuth } from './useWalletAuth';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 
 interface UseSubscriptionReturn {
   isPremium: boolean;
@@ -25,7 +25,8 @@ export function useSubscription(): UseSubscriptionReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStatus = useCallback(async (forceFresh = false) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const fetchStatus = useCallback(async (_forceFresh = false) => {
     if (!token || !isAuthenticated) {
       setSubscriptionStatus(null);
       setError(null);

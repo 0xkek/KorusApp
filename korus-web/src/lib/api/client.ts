@@ -3,6 +3,8 @@
  * Base configuration for all API requests to the Korus backend
  */
 
+import { logger } from '@/utils/logger';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 export class APIError extends Error {
@@ -29,9 +31,9 @@ async function apiRequest<T>(
 ): Promise<T> {
   const { token, ...fetchOptions } = options;
 
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...fetchOptions.headers,
+    ...(fetchOptions.headers as Record<string, string>),
   };
 
   if (token) {
@@ -40,12 +42,10 @@ async function apiRequest<T>(
 
   const url = `${API_BASE_URL}${endpoint}`;
 
-  console.log('[API Client] Making request:', {
+  logger.log('[API Client] Making request:', {
     url,
     method: fetchOptions.method || 'GET',
     hasToken: !!token,
-    headers: { ...headers, Authorization: token ? 'Bearer ***' : undefined },
-    body: fetchOptions.body
   });
 
   try {
@@ -54,10 +54,9 @@ async function apiRequest<T>(
       headers,
     });
 
-    console.log('[API Client] Got response:', {
+    logger.log('[API Client] Got response:', {
       url,
       status: response.status,
-      statusText: response.statusText,
       ok: response.ok
     });
 
@@ -67,12 +66,10 @@ async function apiRequest<T>(
 
     if (!response.ok) {
       const errorData = isJSON ? await response.json() : await response.text();
-      console.error('[API Client] Request failed:', {
+      logger.error('[API Client] Request failed:', {
         url,
         status: response.status,
-        statusText: response.statusText,
-        errorData,
-        errorDataString: JSON.stringify(errorData, null, 2)
+        error: typeof errorData === 'string' ? errorData : errorData?.message || errorData?.error,
       });
       throw new APIError(
         typeof errorData === 'string' ? errorData : errorData.message || errorData.error || 'API request failed',

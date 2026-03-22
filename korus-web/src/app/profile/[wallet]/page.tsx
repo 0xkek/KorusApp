@@ -25,6 +25,7 @@ export default function UserProfilePage() {
   const [favoriteDomain, setFavoriteDomain] = useState<string | null>(null);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
+  const [reputationScore, setReputationScore] = useState<number>(0);
 
   // Mock user data for the profile being viewed
   const userInfo = {
@@ -34,37 +35,25 @@ export default function UserProfilePage() {
     isPremium: false,
   };
 
-  // Calculate stats
+  // Calculate stats (reputation comes from backend)
   const stats: UserStats = useMemo(() => {
     const postsCount = userPosts.length;
     const tipsReceived = userPosts.reduce((sum, post) => sum + post.tips, 0);
-    // Mock tips given based on activity (would come from actual data)
     const tipsGiven = Math.max(1, Math.floor(postsCount * 2.5));
-    // Calculate replies count (sum of reply counts from all posts)
     const repliesCount = userPosts.reduce((sum, post) => sum + post.replies, 0);
-
-    // Calculate reputation score
-    let repScore = 0;
-    repScore += postsCount * 10;
-    repScore += tipsReceived * 20;
-    repScore += tipsGiven * 15;
-
-    if (userInfo.isPremium) {
-      repScore = Math.floor(repScore * 1.2);
-    }
 
     return {
       posts: postsCount,
       replies: repliesCount,
       tipsReceived,
       tipsGiven,
-      repScore
+      repScore: reputationScore,
     };
-  }, [userPosts, userInfo.isPremium]);
+  }, [userPosts, reputationScore]);
 
   const displayName = userInfo.username || `${profileWallet.slice(0, 4)}...${profileWallet.slice(-4)}`;
 
-  // Fetch SNS domains on mount
+  // Fetch SNS domains and reputation on mount
   useEffect(() => {
     if (profileWallet) {
       fetchSNSDomains(profileWallet).then(domains => {
@@ -72,6 +61,14 @@ export default function UserProfilePage() {
       });
       getFavoriteSNSDomain(profileWallet).then(domain => {
         setFavoriteDomain(domain);
+      });
+      // Fetch reputation from backend
+      import('@/lib/api').then(({ reputationAPI }) => {
+        reputationAPI.getReputation(profileWallet).then(({ reputation }) => {
+          setReputationScore(reputation.reputationScore);
+        }).catch(() => {
+          // Silently fail — score stays at 0
+        });
       });
     }
   }, [profileWallet]);

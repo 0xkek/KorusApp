@@ -182,6 +182,13 @@ export default function GamePlayPage() {
         isGameOver={isGameOver}
         winner={game.winner}
         playerSymbol={playerSymbol}
+        player1Address={game.player1}
+        player2Address={game.player2 || undefined}
+        player1DisplayName={game.player1DisplayName}
+        player2DisplayName={game.player2DisplayName}
+        wager={game.wager}
+        currentPlayerAddress={publicKey?.toBase58()}
+        payoutTxSignature={game.escrow?.payoutTxSig}
       />
     );
   };
@@ -234,6 +241,15 @@ export default function GamePlayPage() {
         isMyTurn={isMyTurn}
         isGameOver={isGameOver}
         winner={getWinnerDisplayValue()}
+        player1Address={game.player1}
+        player2Address={game.player2 || undefined}
+        player1DisplayName={game.player1DisplayName}
+        player2DisplayName={game.player2DisplayName}
+        currentTurnAddress={game.currentTurn || undefined}
+        gameCreatedAt={game.createdAt}
+        wager={game.wager}
+        gameState={game.gameState as { player1Score?: number; player2Score?: number; rounds?: unknown[]; round?: number; roundResults?: unknown[] }}
+        payoutTxSignature={game.escrow?.payoutTxSig || undefined}
       />
     );
   };
@@ -278,7 +294,7 @@ export default function GamePlayPage() {
             <div className="flex-1 bg-korus-cardBackground border border-korus-border rounded-lg p-3">
               <div className="text-xs text-korus-textSecondary mb-1">PLAYER 1</div>
               <div className="font-mono text-sm text-korus-text">
-                {game.player1.slice(0, 6)}...{game.player1.slice(-4)}
+                {game.player1DisplayName || `${game.player1.slice(0, 6)}...${game.player1.slice(-4)}`}
               </div>
               {isPlayer1 && (
                 <div className="inline-block mt-1 px-2 py-0.5 bg-korus-primary text-white text-xs rounded">
@@ -294,7 +310,7 @@ export default function GamePlayPage() {
               {game.player2 ? (
                 <>
                   <div className="font-mono text-sm text-korus-text">
-                    {game.player2.slice(0, 6)}...{game.player2.slice(-4)}
+                    {game.player2DisplayName || `${game.player2.slice(0, 6)}...${game.player2.slice(-4)}`}
                   </div>
                   {isPlayer2 && (
                     <div className="inline-block mt-1 px-2 py-0.5 bg-korus-secondary text-white text-xs rounded">
@@ -360,7 +376,7 @@ export default function GamePlayPage() {
             </p>
             {game.escrow?.payoutTxSig && parseFloat(game.wager) > 0 && (
               <a
-                href={`https://explorer.solana.com/tx/${game.escrow.payoutTxSig}?cluster=devnet`}
+                href={`https://explorer.solana.com/tx/${game.escrow.payoutTxSig}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-2 inline-block text-sm text-korus-primary hover:text-korus-primaryDark underline"

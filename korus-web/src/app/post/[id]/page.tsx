@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import LeftSidebar from '@/components/LeftSidebar';
@@ -21,7 +21,6 @@ import { MOCK_POSTS, MOCK_REPLIES } from '@/data/mockData';
 // Dynamically import modals
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
 const MobileMenuModal = dynamic(() => import('@/components/MobileMenuModal'), { ssr: false });
-const RepostModal = dynamic(() => import('@/components/RepostModal'), { ssr: false });
 const TipModal = dynamic(() => import('@/components/TipModal'), { ssr: false });
 const ShareModal = dynamic(() => import('@/components/ShareModal'), { ssr: false });
 
@@ -39,11 +38,9 @@ export default function PostDetailPage() {
   const [currentUserAvatar, setCurrentUserAvatar] = useState<string | null>(null);
   const [currentUserProfile, setCurrentUserProfile] = useState<{ username?: string; snsUsername?: string; tier?: string } | null>(null);
   const [liked, setLiked] = useState(false);
-  const [reposted, setReposted] = useState(false);
   const [tipped, setTipped] = useState(false);
-  const [likedReplies, setLikedReplies] = useState<Set<string>>(new Set());
-  const [repostedReplies, setRepostedReplies] = useState<Set<string>>(new Set());
-  const [tippedReplies, setTippedReplies] = useState<Set<string>>(new Set());
+  const [likedReplies, setLikedReplies] = useState<Set<string | number>>(new Set());
+  const [tippedReplies, setTippedReplies] = useState<Set<string | number>>(new Set());
   const [showReplyModal, setShowReplyModal] = useState(false);
   const [replyToPost, setReplyToPost] = useState<Post | null>(null);
   const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
@@ -55,10 +52,8 @@ export default function PostDetailPage() {
   const [showGifPicker, setShowGifPicker] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [showRepostModal, setShowRepostModal] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [postToRepost, setPostToRepost] = useState<Post | null>(null);
   const [postToTip, setPostToTip] = useState<Post | null>(null);
   const [postToShare, setPostToShare] = useState<Post | null>(null);
 
@@ -139,16 +134,6 @@ export default function PostDetailPage() {
               }
             } catch (error) {
               logger.error('Failed to fetch user interactions:', error);
-            }
-
-            // Check if user has reposted this post
-            try {
-              const repostsResponse = await interactionsAPI.getUserReposts([postId], token);
-              if (repostsResponse.success && repostsResponse.reposts[postId]) {
-                setReposted(repostsResponse.reposts[postId]);
-              }
-            } catch (error) {
-              logger.error('Failed to fetch user reposts:', error);
             }
 
             // Fetch current user's profile
@@ -239,24 +224,6 @@ export default function PostDetailPage() {
                 }
               } catch (error) {
                 logger.error('Failed to fetch reply interactions:', error);
-              }
-
-              // Check if user has reposted any replies
-              try {
-                const replyIds = transformedReplies.map(r => String(r.id));
-                const repostedRepliesResponse = await interactionsAPI.getUserReposts(replyIds, token);
-                if (repostedRepliesResponse.success) {
-                  const newRepostedReplies = new Set<string>();
-                  Object.entries(repostedRepliesResponse.reposts).forEach(([replyId, hasReposted]) => {
-                    if (hasReposted) {
-                      newRepostedReplies.add(replyId);
-                    }
-                  });
-                  setRepostedReplies(newRepostedReplies);
-                  logger.log('Loaded reposted replies:', Array.from(newRepostedReplies));
-                }
-              } catch (error) {
-                logger.error('Failed to fetch reply reposts:', error);
               }
             }
           }
@@ -361,7 +328,7 @@ export default function PostDetailPage() {
     }
   };
 
-  const toggleReplyExpansion = (replyId: number) => {
+  const toggleReplyExpansion = (replyId: string | number) => {
     const toggleExpansion = (replies: Reply[]): Reply[] => {
       return replies.map(reply => {
         if (reply.id === replyId) {
@@ -431,7 +398,7 @@ export default function PostDetailPage() {
       }
 
       // Create reply via backend API
-      const response = await repliesAPI.createReply(
+      await repliesAPI.createReply(
         postId,
         {
           content: inlineReplyContent.trim(),
@@ -545,28 +512,6 @@ export default function PostDetailPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                   </svg>
                   {hasReplies && <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">{reply.replies.length}</span>}
-                </button>
-
-                <button
-                  onClick={() => {
-                    setPostToRepost(convertReplyToPost(reply));
-                    setShowRepostModal(true);
-                  }}
-                  aria-label="Repost"
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
-                    repostedReplies.has(String(reply.id))
-                      ? 'bg-korus-primary/20 border border-korus-primary/40'
-                      : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
-                  }`}
-                >
-                  <svg className={`w-4 h-4 transition-colors ${
-                    repostedReplies.has(String(reply.id)) ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
-                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  <span className={`text-sm transition-colors font-medium ${
-                    repostedReplies.has(String(reply.id)) ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
-                  }`}>0</span>
                 </button>
 
                 <button
@@ -883,28 +828,6 @@ export default function PostDetailPage() {
                     </button>
 
                     <button
-                      onClick={() => {
-                        setPostToRepost(post);
-                        setShowRepostModal(true);
-                      }}
-                      aria-label="Repost"
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
-                        reposted
-                          ? 'bg-korus-primary/20 border border-korus-primary/40'
-                          : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
-                      }`}
-                    >
-                      <svg className={`w-4 h-4 transition-colors ${
-                        reposted ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
-                      }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      <span className={`text-sm transition-colors font-medium ${
-                        reposted ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
-                      }`}>0</span>
-                    </button>
-
-                    <button
                       onClick={handleLike}
                       aria-label={liked ? "Unlike post" : "Like post"}
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
@@ -970,6 +893,7 @@ export default function PostDetailPage() {
                   {/* Avatar */}
                   {currentUserAvatar ? (
                     <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={currentUserAvatar}
                         alt="Your avatar"
@@ -1189,27 +1113,6 @@ export default function PostDetailPage() {
         onClose={() => setShowMobileMenu(false)}
       />
 
-      {/* Repost Modal */}
-      <RepostModal
-        isOpen={showRepostModal}
-        onClose={() => {
-          setShowRepostModal(false);
-          setPostToRepost(null);
-        }}
-        postId={postToRepost?.id || 0}
-        postContent={postToRepost?.content || ''}
-        postUser={postToRepost?.user || ''}
-        onSuccess={() => {
-          // Check if this is the main post or a reply
-          if (postToRepost?.id === post?.id) {
-            setReposted(true);
-          } else if (postToRepost?.id) {
-            // It's a reply, add to reposted replies set
-            setRepostedReplies(prev => new Set([...prev, String(postToRepost.id)]));
-          }
-        }}
-      />
-
       {/* Tip Modal */}
       <TipModal
         isOpen={showTipModal}
@@ -1219,7 +1122,7 @@ export default function PostDetailPage() {
         }}
         recipientUser={postToTip?.user || ''}
         postId={postToTip?.id}
-        onSuccess={() => {
+        onTipSuccess={() => {
           // Check if this is the main post or a reply
           if (postToTip?.id === post?.id) {
             setTipped(true);

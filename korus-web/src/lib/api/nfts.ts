@@ -45,7 +45,7 @@ export const nftsAPI = {
     try {
       const response = await api.get<{ nft: NFT }>(`/api/nfts/mint/${mintAddress}`);
       return response.nft;
-    } catch (error) {
+    } catch {
       return null;
     }
   },

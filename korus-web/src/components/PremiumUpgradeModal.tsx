@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
-import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { useToast } from '@/hooks/useToast';
 import { useSubscription } from '@/hooks/useSubscription';
 import { subscriptionAPI } from '@/lib/api';
@@ -81,8 +81,8 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
         })
       );
 
-      // Get latest blockhash
-      const { blockhash } = await connection.getLatestBlockhash();
+      // Get latest blockhash with commitment
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = publicKey;
 
@@ -96,19 +96,17 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
         // Serialize and send the signed transaction
         const rawTransaction = signedTransaction.serialize();
         signature = await connection.sendRawTransaction(rawTransaction, {
-          skipPreflight: true, // Skip simulation to avoid "already processed" error
+          skipPreflight: false,
           maxRetries: 3
         });
       } else {
         // Fall back to sendTransaction (auto-signs and sends)
-        signature = await sendTransaction(transaction, connection, {
-          skipPreflight: true
-        });
+        signature = await sendTransaction(transaction, connection);
       }
 
-      // Wait for confirmation
-      logger.log('⏳ Waiting for transaction confirmation...', signature);
-      await connection.confirmTransaction(signature, 'confirmed');
+      // Wait for confirmation with timeout protection
+      logger.log('⏳ Waiting for transaction confirmation...');
+      await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
       logger.log('✅ Transaction confirmed!');
 
       // Process subscription on backend

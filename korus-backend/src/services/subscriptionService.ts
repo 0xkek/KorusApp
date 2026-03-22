@@ -40,7 +40,15 @@ export class SubscriptionService {
   ) {
     try {
       logger.info('Processing subscription', { walletAddress, subscriptionType, txSignature })
-      
+
+      // Check for replay — reject if signature already used
+      const existingPayment = await prisma.subscriptionPayment.findFirst({
+        where: { txSignature }
+      })
+      if (existingPayment) {
+        throw new Error('Transaction signature already processed')
+      }
+
       // Verify the transaction
       const isValid = await this.verifyTransaction(txSignature, SUBSCRIPTION_PRICES[subscriptionType])
       

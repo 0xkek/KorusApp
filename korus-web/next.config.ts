@@ -57,7 +57,23 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: '**',
+        hostname: '**.ipfs.nftstorage.link',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ipfs.io',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.metaplex.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'shdw-drive.genesysgo.net',
+      },
+      {
+        protocol: 'https',
+        hostname: 'tenor.googleapis.com',
       },
     ],
   },

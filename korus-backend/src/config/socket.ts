@@ -72,7 +72,7 @@ export const emitNewReply = (reply: any) => {
 }
 
 /**
- * Emit a post update event (for likes, reposts, etc.)
+ * Emit a post update event (for likes, tips, etc.)
  */
 export const emitPostUpdate = (postId: string, updates: any) => {
   if (io) {

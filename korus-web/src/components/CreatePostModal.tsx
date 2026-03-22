@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
-import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { Button } from '@/components/ui';
 import { MAX_POST_LENGTH, MAX_FILE_SIZE, MAX_FILES_PER_POST } from '@/constants';
 import { postsAPI, uploadAPI } from '@/lib/api';
@@ -16,16 +16,6 @@ import type { Post } from '@/types';
 
 const DrawingCanvasInline = dynamic(() => import('@/components/DrawingCanvasInline'), { ssr: false });
 const ShoutoutModal = dynamic(() => import('@/components/ShoutoutModal'), { ssr: false });
-
-interface ShoutoutInfo {
-  id: number;
-  user: string;
-  content: string;
-  duration: number;
-  startTime: number;
-  endTime: number;
-  price: number;
-}
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -64,12 +54,23 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
           logger.log('CreatePostModal: User profile loaded', { nftAvatar: user.nftAvatar });
 
           if (user.nftAvatar) {
-            logger.log('CreatePostModal: Fetching NFT by mint:', user.nftAvatar);
-            const nft = await nftsAPI.getNFTByMint(user.nftAvatar);
-            logger.log('CreatePostModal: NFT fetched', { hasImage: !!nft?.image, nft });
-            if (nft?.image) {
-              setUserAvatar(nft.image);
-              logger.log('CreatePostModal: Avatar set to:', nft.image);
+            logger.log('CreatePostModal: Found nftAvatar:', user.nftAvatar);
+            // Check if it's a URL (old data) or mint address (new data)
+            const isUrl = user.nftAvatar.startsWith('http://') || user.nftAvatar.startsWith('https://');
+
+            if (isUrl) {
+              // Old data format: nftAvatar is already a URL
+              logger.log('CreatePostModal: Using URL directly:', user.nftAvatar);
+              setUserAvatar(user.nftAvatar);
+            } else {
+              // New data format: nftAvatar is a mint address, fetch the NFT
+              logger.log('CreatePostModal: Fetching NFT by mint:', user.nftAvatar);
+              const nft = await nftsAPI.getNFTByMint(user.nftAvatar);
+              logger.log('CreatePostModal: NFT fetched', { hasImage: !!nft?.image, nft });
+              if (nft?.image) {
+                setUserAvatar(nft.image);
+                logger.log('CreatePostModal: Avatar set to:', nft.image);
+              }
             }
           } else {
             logger.log('CreatePostModal: No NFT avatar in user profile');

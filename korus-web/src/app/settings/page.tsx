@@ -101,7 +101,7 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchProfileColor = async () => {
       try {
-        const token = localStorage.getItem('korus-token');
+        const token = localStorage.getItem('authToken');
         if (!token) return;
 
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`, {
@@ -116,7 +116,7 @@ export default function SettingsPage() {
             setProfileColor(data.user.themeColor);
           }
         }
-      } catch (error) {
+      } catch {
         // Failed to load profile color
       }
     };

@@ -19,7 +19,7 @@ const MobileMenuModal = dynamic(() => import('@/components/MobileMenuModal'), { 
 
 export default function ManageEventsPage() {
   const router = useRouter();
-  const { connected, publicKey } = useWallet();
+  const { connected } = useWallet();
   const { token, isAuthenticated } = useWalletAuth();
   const { showSuccess, showError } = useToast();
 
@@ -59,6 +59,7 @@ export default function ManageEventsPage() {
     }
 
     fetchMyEvents();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, token]);
 
   const viewRegistrations = async (event: eventsAPI.Event) => {

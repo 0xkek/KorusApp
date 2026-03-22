@@ -28,9 +28,6 @@ async function transformPostAvatars(post: any): Promise<any> {
   if (post.author?.nftAvatar) {
     post.author.nftAvatar = await resolveNFTAvatar(post.author.nftAvatar)
   }
-  if (post.originalPost?.author?.nftAvatar) {
-    post.originalPost.author.nftAvatar = await resolveNFTAvatar(post.originalPost.author.nftAvatar)
-  }
   // Transform reply authors' avatars
   if (post.replies && Array.isArray(post.replies)) {
     for (const reply of post.replies) {
@@ -261,83 +258,10 @@ export const getPosts = async (req: Request, res: Response) => {
               nftAvatar: true,
               themeColor: true
             }
-          },
-          originalPost: {
-            include: {
-              author: {
-                select: {
-                  walletAddress: true,
-                  tier: true,
-                  genesisVerified: true,
-                  snsUsername: true,
-                  username: true,
-                  nftAvatar: true,
-                  themeColor: true,
-                  subscriptionStatus: true,
-                  subscriptionType: true
-                }
-              }
-            }
           }
         },
         orderBy: { createdAt: 'desc' }
       }
-    )
-
-    // Fetch original reply data for reply reposts
-    // Reply reposts have isRepost=true and originalPostId=null
-    const postsWithReplyData = await Promise.all(
-      result.data.map(async (post: any) => {
-        if (post.isRepost && !post.originalPostId) {
-          // This is a reply repost - find the original reply
-          // We need to find the reply by matching content since we don't store reply ID
-          // Get the earliest reply with this exact content from this repost's author
-          const originalReply = await prisma.reply.findFirst({
-            where: {
-              content: post.content,
-              authorWallet: {
-                not: post.authorWallet // Not by the reposter
-              }
-            },
-            include: {
-              author: {
-                select: {
-                  walletAddress: true,
-                  tier: true,
-                  genesisVerified: true,
-                  snsUsername: true,
-                  username: true,
-                  nftAvatar: true,
-                  themeColor: true,
-                  subscriptionStatus: true,
-                  subscriptionType: true
-                }
-              }
-            },
-            orderBy: { createdAt: 'asc' } // Get the earliest (original)
-          })
-
-          if (originalReply) {
-            return {
-              ...post,
-              originalReply: {
-                id: originalReply.id,
-                content: originalReply.content,
-                authorWallet: originalReply.authorWallet,
-                createdAt: originalReply.createdAt,
-                likeCount: originalReply.likeCount,
-                repostCount: originalReply.repostCount,
-                tipCount: originalReply.tipCount,
-                imageUrl: originalReply.imageUrl,
-                videoUrl: originalReply.videoUrl,
-                author: originalReply.author,
-                postId: originalReply.postId
-              }
-            }
-          }
-        }
-        return post
-      })
     )
 
     // Resolve NFT avatars to image URLs for all posts
@@ -346,7 +270,7 @@ export const getPosts = async (req: Request, res: Response) => {
         ...post,
         replies: []
       })),
-      ...postsWithReplyData.map(async (post: any) => await transformPostAvatars({
+      ...result.data.map(async (post: any) => await transformPostAvatars({
         ...post,
         replies: []
       }))
@@ -407,23 +331,6 @@ export const getSinglePost = async (req: Request, res: Response<ApiResponse<Post
             themeColor: true,
             subscriptionStatus: true,
             subscriptionType: true
-          }
-        },
-        originalPost: {
-          include: {
-            author: {
-              select: {
-                walletAddress: true,
-                tier: true,
-                genesisVerified: true,
-                snsUsername: true,
-                username: true,
-                nftAvatar: true,
-                themeColor: true,
-                subscriptionStatus: true,
-                subscriptionType: true
-              }
-            }
           }
         },
         replies: {

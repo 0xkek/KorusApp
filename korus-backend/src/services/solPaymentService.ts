@@ -20,7 +20,26 @@ export class SolPaymentService {
   ): Promise<boolean> {
     try {
       logger.info('Verifying SOL payment', { userWallet, signature: transactionSignature, expectedAmount });
-      
+
+      // Check for replay — reject if signature already used in subscription payments
+      const existingPayment = await prisma.subscriptionPayment.findFirst({
+        where: { txSignature: transactionSignature }
+      });
+      if (existingPayment) {
+        logger.error('Transaction signature already processed', { signature: transactionSignature });
+        return false;
+      }
+
+      // Also check if this signature was the user's last payment (prevents double-credit)
+      const user = await prisma.user.findUnique({
+        where: { walletAddress: userWallet },
+        select: { lastPaymentTxSignature: true }
+      });
+      if (user?.lastPaymentTxSignature === transactionSignature) {
+        logger.error('Transaction signature already credited to this user', { signature: transactionSignature });
+        return false;
+      }
+
       // Get transaction details
       const transaction = await connection.getTransaction(transactionSignature, {
         maxSupportedTransactionVersion: 0
@@ -73,13 +92,14 @@ export class SolPaymentService {
         return false;
       }
       
-      // Credit user's balance in database
+      // Credit user's balance in database and record the signature to prevent replay
       await prisma.user.update({
         where: { walletAddress: userWallet },
         data: {
           solBalance: {
             increment: transferAmount
-          }
+          },
+          lastPaymentTxSignature: transactionSignature
         }
       });
       
@@ -188,7 +208,7 @@ export class SolPaymentService {
     toWallet: string,
     transactionSignature: string,
     expectedAmount: number,
-    maxAgeMinutes: number = 10
+    maxAgeMinutes: number = 5
   ): Promise<{ valid: boolean; error?: string; actualAmount?: number }> {
     try {
       logger.debug('Verifying transaction', {

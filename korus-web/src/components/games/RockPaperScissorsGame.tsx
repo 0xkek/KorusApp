@@ -293,7 +293,7 @@ export function RockPaperScissorsGame({
             {/* Transaction Link */}
             {payoutTxSignature && wagerAmount > 0 && (
               <a
-                href={`https://explorer.solana.com/tx/${payoutTxSignature}?cluster=devnet`}
+                href={`https://explorer.solana.com/tx/${payoutTxSignature}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-2 inline-block text-xs underline hover:opacity-80 transition-opacity"

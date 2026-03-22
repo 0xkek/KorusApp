@@ -2,8 +2,11 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
+import Image from 'next/image';
+import { nftsAPI } from '@/lib/api';
+import { useAuthStore } from '@/stores/authStore';
 
 interface TabItem {
   name: string;
@@ -24,12 +27,50 @@ export default function MobileMenuModal({ isOpen, onClose, onNotificationsToggle
   const pathname = usePathname();
   const router = useRouter();
   const { connected, publicKey } = useWallet();
+  const { token, isAuthenticated } = useAuthStore();
   const modalRef = useFocusTrap(isOpen);
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
   // Close modal when route changes
   useEffect(() => {
     onClose();
   }, [pathname, onClose]);
+
+  // Fetch user avatar
+  useEffect(() => {
+    const fetchUserAvatar = async () => {
+      if (connected && publicKey && isAuthenticated && token) {
+        try {
+          const url = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`;
+          const userResponse = await fetch(url, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            if (userData.user?.nftAvatar) {
+              // Check if it's a URL (old data) or mint address (new data)
+              const isUrl = userData.user.nftAvatar.startsWith('http://') || userData.user.nftAvatar.startsWith('https://');
+              if (isUrl) {
+                setUserAvatar(userData.user.nftAvatar);
+              } else {
+                // It's a mint address, fetch the NFT image
+                const nft = await nftsAPI.getNFTByMint(userData.user.nftAvatar);
+                if (nft?.image) {
+                  setUserAvatar(nft.image);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch user avatar:', error);
+        }
+      }
+    };
+
+    fetchUserAvatar();
+  }, [connected, publicKey, isAuthenticated, token]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -198,16 +239,28 @@ export default function MobileMenuModal({ isOpen, onClose, onNotificationsToggle
         {/* User Profile Section */}
         {connected && publicKey && (
           <div className="p-4 border-t border-korus-border mt-auto">
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-korus-surface/20 border border-korus-borderLight">
-              <div className="w-10 h-10 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center">
-                <span className="text-black font-bold text-sm">
-                  {publicKey.toBase58().slice(0, 2).toUpperCase()}
-                </span>
-              </div>
-              <div>
-                <div className="text-korus-text font-medium text-sm">You</div>
-                <div className="text-korus-textSecondary text-xs">
-                  {publicKey.toBase58().slice(0, 8)}...
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-korus-primary/10 to-korus-secondary/10 border border-korus-primary/30">
+              {userAvatar ? (
+                <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden shadow-lg shadow-korus-primary/20">
+                  <Image
+                    src={userAvatar}
+                    alt="Your avatar"
+                    width={48}
+                    height={48}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-12 h-12 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center shadow-lg shadow-korus-primary/20">
+                  <span className="text-black font-bold text-sm">
+                    {publicKey.toBase58().slice(0, 2).toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="text-korus-textSecondary text-xs mb-1">Connected with:</div>
+                <div className="text-korus-primary font-mono text-xs font-semibold truncate">
+                  {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
                 </div>
               </div>
             </div>
