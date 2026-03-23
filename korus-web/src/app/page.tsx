@@ -1128,10 +1128,16 @@ export default function Home() {
 
       {/* Content wrapper */}
       <div className="relative z-10">
-        {/* Main Content Container */}
-      <div className="flex min-h-screen">
+        {/* Main Content Container — centered 1280px max like mockup */}
+      <div className="flex min-h-screen max-w-[1280px] mx-auto">
+        <LeftSidebar
+          onNotificationsToggle={() => setShowNotifications(!showNotifications)}
+          onPostButtonClick={() => setShowCreatePostModal(true)}
+          onSearchClick={() => setShowSearchModal(true)}
+          notificationCount={notificationCount}
+        />
         {/* Main Feed */}
-        <div className="flex-1 sm:ml-0 sm:mr-0 md:ml-[260px] md:mr-[320px] max-w-[640px] border-r border-[#22232e]">
+        <div className="flex-1 max-w-[640px] border-r border-[#22232e]">
         {/* Main app - only accessible when connected */}
             {/* Header Navigation */}
             <div className="sticky top-0 z-10 bg-[#0a0a0f]/85 backdrop-blur-[16px] border-b border-[#22232e]">
@@ -1600,20 +1606,13 @@ export default function Home() {
             )}
             </div>
         </div>
+        <RightSidebar
+          showNotifications={showNotifications}
+          onNotificationsClose={() => setShowNotifications(false)}
+          onNotificationCountChange={setNotificationCount}
+        />
       </div>
       </div>
-
-      <LeftSidebar
-        onNotificationsToggle={() => setShowNotifications(!showNotifications)}
-        onPostButtonClick={() => setShowCreatePostModal(true)}
-        onSearchClick={() => setShowSearchModal(true)}
-        notificationCount={notificationCount}
-      />
-      <RightSidebar
-        showNotifications={showNotifications}
-        onNotificationsClose={() => setShowNotifications(false)}
-        onNotificationCountChange={setNotificationCount}
-      />
 
       {/* Modals */}
       <CreatePostModal

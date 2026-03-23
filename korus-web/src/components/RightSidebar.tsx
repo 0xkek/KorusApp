@@ -108,7 +108,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
 
 
   return (
-    <div className="fixed right-0 top-0 h-screen w-[320px] z-30 py-[24px] px-[20px] hidden lg:flex flex-col overflow-y-auto">
+    <div className="sticky top-0 h-screen w-[320px] shrink-0 z-30 py-[24px] px-[20px] hidden lg:flex flex-col overflow-y-auto">
       {/* Content based on showNotifications prop */}
       {showNotifications ? (
         /* Notifications Widget */

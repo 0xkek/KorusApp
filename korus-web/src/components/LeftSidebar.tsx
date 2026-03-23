@@ -156,7 +156,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
   ];
 
   return (
-    <nav className="fixed left-0 top-0 h-screen w-[260px] z-30 border-r border-[#22232e] px-[16px] py-[24px] flex flex-col hidden md:flex bg-transparent" role="navigation" aria-label="Main navigation">
+    <nav className="sticky top-0 h-screen w-[260px] shrink-0 z-30 border-r border-[#22232e] px-[16px] py-[24px] hidden md:flex flex-col bg-transparent" role="navigation" aria-label="Main navigation">
       {/* Logo */}
       <div className="flex items-center gap-[10px] px-[12px] mb-[32px]">
         <Link href="/" className="flex items-center gap-[10px]" aria-label="Korus Home">
