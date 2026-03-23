@@ -233,7 +233,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
       {/* Content based on showNotifications prop */}
       {showNotifications ? (
         /* Notifications Widget */
-        <div className="bg-[#14151f] border border-[#2a2b38] rounded-[16px] p-[16px] mb-[16px]">
+        <div className="bg-[#14151f] border border-[#363748] rounded-[16px] p-[16px] mb-[16px]">
           <h2 className="text-[18px] font-extrabold tracking-[-0.3px] mb-[14px]">Notifications</h2>
           <div role="list" aria-label="Notifications">
             {isLoading ? (
@@ -249,7 +249,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className="py-[10px] border-b border-[#2a2b38] last:border-b-0 cursor-pointer"
+                  className="py-[10px] border-b border-[#363748] last:border-b-0 cursor-pointer"
                   role="listitem"
                   aria-label={`${notification.type} notification`}
                   tabIndex={0}
@@ -331,7 +331,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
         </div>
       ) : (
         /* Recent Activity Widget */
-        <div className="bg-[#14151f] border border-[#2a2b38] rounded-[16px] p-[16px] mb-[16px]">
+        <div className="bg-[#14151f] border border-[#363748] rounded-[16px] p-[16px] mb-[16px]">
           <h2 className="text-[18px] font-extrabold tracking-[-0.3px] mb-[14px]">Recent Activity</h2>
           <div>
             {isLoadingActivities ? (
@@ -356,7 +356,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
                       router.push(`/games/${gameId}`);
                     }
                   }}
-                  className="py-[10px] border-b border-[#2a2b38] last:border-b-0 cursor-pointer"
+                  className="py-[10px] border-b border-[#363748] last:border-b-0 cursor-pointer"
                 >
                   <div className="text-[12px] text-[#6b6d7a]">
                     {activity.type === 'game'

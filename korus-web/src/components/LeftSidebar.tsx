@@ -156,7 +156,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
   ];
 
   return (
-    <nav className="sticky top-0 h-screen w-[260px] shrink-0 z-30 border-r border-[#2a2b38] px-[16px] py-[24px] hidden md:flex flex-col bg-transparent" role="navigation" aria-label="Main navigation">
+    <nav className="sticky top-0 h-screen w-[260px] shrink-0 z-30 border-r border-[#363748] px-[16px] py-[24px] hidden md:flex flex-col bg-transparent" role="navigation" aria-label="Main navigation">
       {/* Logo */}
       <div className="flex items-center gap-[10px] px-[12px] mb-[32px]">
         <Link href="/" className="flex items-center gap-[10px]" aria-label="Korus Home">
@@ -280,8 +280,8 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
 
       {/* User Profile */}
       {connected && publicKey && (
-        <div className="mt-[12px] p-[14px] rounded-[14px] border border-[#2a2b38] bg-[#14151f]">
-          <Link href="/profile" className="flex items-center gap-[10px] transition-all duration-200 cursor-pointer">
+        <div className="mt-[12px] p-[14px] rounded-[14px] border border-[#363748] bg-[#14151f]">
+          <Link href="/profile" className="flex items-center justify-center gap-[10px] transition-all duration-200 cursor-pointer">
             {(() => {
               console.log('[LeftSidebar] Rendering, userAvatar state:', userAvatar);
               return null;

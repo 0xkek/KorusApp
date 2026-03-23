@@ -1137,10 +1137,10 @@ export default function Home() {
           notificationCount={notificationCount}
         />
         {/* Main Feed */}
-        <div className="flex-1 max-w-[640px] border-r border-[#2a2b38]">
+        <div className="flex-1 max-w-[640px] border-r border-[#363748]">
         {/* Main app - only accessible when connected */}
             {/* Header Navigation */}
-            <div className="sticky top-0 z-10 bg-[#0d0e14]/85 backdrop-blur-[16px] border-b border-[#2a2b38]">
+            <div className="sticky top-0 z-10 bg-[#0d0e14]/85 backdrop-blur-[16px] border-b border-[#363748]">
               {/* Mobile controls row */}
               <div className="flex md:hidden items-center justify-between px-2">
                 <button
@@ -1193,7 +1193,7 @@ export default function Home() {
             </div>
 
             {/* Compose Post */}
-            <div className="px-5 py-4 border-b border-[#2a2b38] flex gap-3">
+            <div className="px-5 py-4 border-b border-[#363748] flex gap-3">
                 {userAvatar ? (
                   <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
                     <Image
@@ -1268,7 +1268,7 @@ export default function Home() {
                   )}
 
                   {/* Post Options */}
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#2a2b38]">
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#363748]">
                     <div className="flex items-center gap-0.5">
                       {/* Image Upload */}
                       <label className="w-[34px] h-[34px] rounded-lg flex items-center justify-center text-korus-primary/70 hover:text-korus-primary hover:bg-korus-primary/[0.12] transition-all cursor-pointer">
@@ -1349,7 +1349,7 @@ export default function Home() {
               className={`transition-colors cursor-pointer group ${
                 post.isShoutout
                   ? 'shoutout-post border border-korus-primary bg-korus-primary/5 shadow-[0_4px_12px_rgba(var(--korus-primary-rgb),0.3)] hover:border-korus-primary hover:shadow-[0_8px_24px_rgba(var(--korus-primary-rgb),0.4)] hover:bg-korus-primary/[0.12]'
-                  : 'px-5 py-4 border-b border-[#2a2b38] hover:bg-[#1e1f2a]'
+                  : 'px-5 py-4 border-b border-[#363748] hover:bg-[#1e1f2a]'
               }`}
               onClick={() => router.push(`/post/${post.id}`)}
             >
