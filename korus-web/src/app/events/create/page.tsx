@@ -291,10 +291,10 @@ export default function CreateEventPage() {
   };
 
   return (
-    <main className="min-h-screen bg-korus-dark-100 relative overflow-hidden">
+    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
       {/* Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-korus-dark-100 via-korus-dark-200 to-korus-dark-100">
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-korus-dark-300/25 to-korus-dark-200/35" />
+      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#171717]/25 to-[#111111]/35" />
       </div>
       <div className="fixed inset-0 overflow-hidden">
         <div className="absolute -top-32 -right-32 w-[600px] h-[600px] bg-gradient-to-br from-korus-primary/8 to-korus-secondary/6 rounded-full blur-[80px]" />
@@ -302,7 +302,7 @@ export default function CreateEventPage() {
       </div>
 
       <div className="relative z-10">
-        <div className="flex">
+        <div className="flex min-h-screen max-w-[1280px] mx-auto">
           <LeftSidebar
             onNotificationsToggle={() => setShowNotifications(!showNotifications)}
             onPostButtonClick={() => setShowCreatePostModal(true)}
@@ -310,22 +310,22 @@ export default function CreateEventPage() {
           />
 
           {/* Main Content */}
-          <div className="flex-1 lg:ml-80 lg:mr-96 md:ml-64 md:mr-80 sm:ml-0 sm:mr-0 md:border-x md:border-korus-border bg-korus-surface/10 backdrop-blur-sm max-w-full overflow-hidden">
+          <div className="flex-1 min-w-0 border-x border-white/10">
 
             {/* Header */}
-            <div className="sticky top-0 bg-korus-dark-300/80 backdrop-blur-xl border-b border-korus-border z-10 px-6 py-4">
+            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-white/10 z-10 px-6 py-4">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => router.back()}
-                  className="w-10 h-10 rounded-full bg-korus-surface/40 hover:bg-korus-surface/60 flex items-center justify-center transition-colors"
+                  className="w-10 h-10 rounded-full bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors"
                 >
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-[#fafafa]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
                 <div>
-                  <h1 className="text-2xl font-bold force-theme-text">Create Event</h1>
-                  <p className="text-korus-textSecondary text-sm">Submit your whitelist or community event</p>
+                  <h1 className="text-2xl font-semibold text-[#fafafa]">Create Event</h1>
+                  <p className="text-[#a1a1a1] text-sm">Submit your whitelist or community event</p>
                 </div>
               </div>
             </div>
@@ -335,11 +335,11 @@ export default function CreateEventPage() {
 
                 {/* Event Type */}
                 <div>
-                  <label className="block text-sm font-medium text-korus-text mb-2">Event Type *</label>
+                  <label className="block text-sm font-medium text-[#fafafa] mb-2">Event Type *</label>
                   <select
                     value={formData.type}
                     onChange={(e) => handleInputChange('type', e.target.value as unknown)}
-                    className="w-full bg-korus-surface/40 border border-korus-borderLight rounded-xl px-4 py-3 text-white focus:outline-none focus:border-korus-primary transition-colors"
+                    className="w-full bg-white/[0.06] border border-white/15 rounded-lg px-3 py-2.5 text-[#fafafa] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                   >
                     <option value="whitelist">Whitelist</option>
                     <option value="token_launch">Token Launch</option>
@@ -351,54 +351,54 @@ export default function CreateEventPage() {
 
                 {/* Project Name */}
                 <div>
-                  <label className="block text-sm font-medium text-korus-text mb-2">Project Name *</label>
+                  <label className="block text-sm font-medium text-[#fafafa] mb-2">Project Name *</label>
                   <input
                     type="text"
                     value={formData.projectName}
                     onChange={(e) => handleInputChange('projectName', e.target.value)}
                     placeholder="e.g., SolanaMonkeys"
-                    className="w-full bg-korus-surface/40 border border-korus-borderLight rounded-xl px-4 py-3 text-white placeholder-korus-textTertiary focus:outline-none focus:border-korus-primary transition-colors"
+                    className="w-full bg-white/[0.06] border border-white/15 rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                   />
                 </div>
 
                 {/* Event Title */}
                 <div>
-                  <label className="block text-sm font-medium text-korus-text mb-2">Event Title *</label>
+                  <label className="block text-sm font-medium text-[#fafafa] mb-2">Event Title *</label>
                   <input
                     type="text"
                     value={formData.title}
                     onChange={(e) => handleInputChange('title', e.target.value)}
                     placeholder="e.g., Exclusive Whitelist for Gen 2 Mint"
-                    className="w-full bg-korus-surface/40 border border-korus-borderLight rounded-xl px-4 py-3 text-white placeholder-korus-textTertiary focus:outline-none focus:border-korus-primary transition-colors"
+                    className="w-full bg-white/[0.06] border border-white/15 rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                   />
                 </div>
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-korus-text mb-2">Description *</label>
+                  <label className="block text-sm font-medium text-[#fafafa] mb-2">Description *</label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     placeholder="Describe your event, what participants will get, and any important details..."
                     rows={5}
-                    className="w-full bg-korus-surface/40 border border-korus-borderLight rounded-xl px-4 py-3 text-white placeholder-korus-textTertiary focus:outline-none focus:border-korus-primary transition-colors resize-none"
+                    className="w-full bg-white/[0.06] border border-white/15 rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none resize-none"
                   />
                 </div>
 
                 {/* Image Upload */}
                 <div>
-                  <label className="block text-sm font-medium text-korus-text mb-2">Event Image (optional)</label>
+                  <label className="block text-sm font-medium text-[#fafafa] mb-2">Event Image (optional)</label>
 
                   {!imagePreview ? (
-                    <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-korus-borderLight rounded-xl cursor-pointer bg-korus-surface/20 hover:bg-korus-surface/40 transition-colors group">
+                    <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-white/15 rounded-lg cursor-pointer bg-white/[0.06] hover:bg-white/[0.08] duration-150 group">
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <svg className="w-12 h-12 mb-3 text-korus-textTertiary group-hover:text-korus-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-12 h-12 mb-3 text-[#737373] group-hover:text-korus-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        <p className="mb-2 text-sm text-korus-textSecondary">
+                        <p className="mb-2 text-sm text-[#a1a1a1]">
                           <span className="font-semibold">Click to upload</span> or drag and drop
                         </p>
-                        <p className="text-xs text-korus-textTertiary">PNG, JPG, GIF up to 5MB</p>
+                        <p className="text-xs text-[#737373]">PNG, JPG, GIF up to 5MB</p>
                       </div>
                       <input
                         type="file"
@@ -413,7 +413,7 @@ export default function CreateEventPage() {
                       <img
                         src={imagePreview}
                         alt="Event preview"
-                        className="w-full h-64 object-cover rounded-xl border border-korus-borderLight"
+                        className="w-full h-64 object-cover rounded-xl border border-white/10"
                       />
                       <button
                         type="button"
@@ -426,51 +426,51 @@ export default function CreateEventPage() {
                       </button>
                     </div>
                   )}
-                  <p className="text-xs text-korus-textTertiary mt-1">Upload a banner image for your event</p>
+                  <p className="text-xs text-[#737373] mt-1">Upload a banner image for your event</p>
                 </div>
 
                 {/* External Link */}
                 <div>
-                  <label className="block text-sm font-medium text-korus-text mb-2">External Link *</label>
+                  <label className="block text-sm font-medium text-[#fafafa] mb-2">External Link *</label>
                   <input
                     type="text"
                     value={formData.externalLink}
                     onChange={(e) => handleInputChange('externalLink', e.target.value)}
                     placeholder="https://your-project.com or www.korus.fun"
-                    className="w-full bg-korus-surface/40 border border-korus-borderLight rounded-xl px-4 py-3 text-white placeholder-korus-textTertiary focus:outline-none focus:border-korus-primary transition-colors"
+                    className="w-full bg-white/[0.06] border border-white/15 rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                   />
-                  <p className="text-xs text-korus-textTertiary mt-1">Link to your project website or mint page (with or without https://)</p>
+                  <p className="text-xs text-[#737373] mt-1">Link to your project website or mint page (with or without https://)</p>
                 </div>
 
                 {/* Date Range */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-korus-text mb-2">Start Date *</label>
+                    <label className="block text-sm font-medium text-[#fafafa] mb-2">Start Date *</label>
                     <input
                       type="datetime-local"
                       value={formData.startDate}
                       onChange={(e) => handleInputChange('startDate', e.target.value)}
-                      className="w-full bg-korus-surface/40 border border-korus-borderLight rounded-xl px-4 py-3 text-white focus:outline-none focus:border-korus-primary transition-colors"
+                      className="w-full bg-white/[0.06] border border-white/15 rounded-lg px-3 py-2.5 text-[#fafafa] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-korus-text mb-2">End Date *</label>
+                    <label className="block text-sm font-medium text-[#fafafa] mb-2">End Date *</label>
                     <input
                       type="datetime-local"
                       value={formData.endDate}
                       onChange={(e) => handleInputChange('endDate', e.target.value)}
-                      className="w-full bg-korus-surface/40 border border-korus-borderLight rounded-xl px-4 py-3 text-white focus:outline-none focus:border-korus-primary transition-colors"
+                      className="w-full bg-white/[0.06] border border-white/15 rounded-lg px-3 py-2.5 text-[#fafafa] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                     />
                   </div>
                 </div>
 
                 {/* Selection Method */}
                 <div>
-                  <label className="block text-sm font-medium text-korus-text mb-2">Selection Method *</label>
+                  <label className="block text-sm font-medium text-[#fafafa] mb-2">Selection Method *</label>
                   <select
                     value={formData.selectionMethod}
                     onChange={(e) => handleInputChange('selectionMethod', e.target.value as unknown)}
-                    className="w-full bg-korus-surface/40 border border-korus-borderLight rounded-xl px-4 py-3 text-white focus:outline-none focus:border-korus-primary transition-colors"
+                    className="w-full bg-white/[0.06] border border-white/15 rounded-lg px-3 py-2.5 text-[#fafafa] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                   >
                     <option value="fcfs">First Come First Serve</option>
                     <option value="lottery">Lottery (Random Selection)</option>
@@ -479,19 +479,19 @@ export default function CreateEventPage() {
 
                 {/* Max Spots */}
                 <div>
-                  <label className="block text-sm font-medium text-korus-text mb-2">Max Spots (optional)</label>
+                  <label className="block text-sm font-medium text-[#fafafa] mb-2">Max Spots (optional)</label>
                   <input
                     type="number"
                     value={formData.maxSpots || ''}
                     onChange={(e) => handleInputChange('maxSpots', e.target.value ? parseInt(e.target.value) : undefined)}
                     placeholder="Leave empty for unlimited"
-                    className="w-full bg-korus-surface/40 border border-korus-borderLight rounded-xl px-4 py-3 text-white placeholder-korus-textTertiary focus:outline-none focus:border-korus-primary transition-colors"
+                    className="w-full bg-white/[0.06] border border-white/15 rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                   />
                 </div>
 
                 {/* Requirements */}
                 <div>
-                  <label className="block text-sm font-medium text-korus-text mb-2">Requirements (optional)</label>
+                  <label className="block text-sm font-medium text-[#fafafa] mb-2">Requirements (optional)</label>
                   <div className="flex gap-2 mb-3">
                     <input
                       type="text"
@@ -499,12 +499,12 @@ export default function CreateEventPage() {
                       onChange={(e) => setRequirementInput(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addRequirement())}
                       placeholder="e.g., Hold 1 Gen 1 NFT"
-                      className="flex-1 bg-korus-surface/40 border border-korus-borderLight rounded-xl px-4 py-3 text-white placeholder-korus-textTertiary focus:outline-none focus:border-korus-primary transition-colors"
+                      className="flex-1 bg-white/[0.06] border border-white/15 rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                     />
                     <button
                       type="button"
                       onClick={addRequirement}
-                      className="px-6 bg-korus-surface/60 hover:bg-korus-surface/80 border border-korus-borderLight rounded-xl font-medium text-white transition-colors"
+                      className="px-6 bg-white/[0.08] border border-white/15 text-[#fafafa] rounded-lg hover:bg-white/[0.12] duration-150 font-medium"
                     >
                       Add
                     </button>
@@ -512,9 +512,9 @@ export default function CreateEventPage() {
                   {formData.requirements && formData.requirements.length > 0 && (
                     <div className="space-y-2">
                       {formData.requirements.map((req, index) => (
-                        <div key={index} className="flex items-center gap-2 bg-korus-surface/20 border border-korus-borderLight rounded-lg px-3 py-2">
+                        <div key={index} className="flex items-center gap-2 bg-white/[0.06] border border-white/10 rounded-lg px-3 py-2">
                           <span className="text-korus-primary">✓</span>
-                          <span className="flex-1 text-sm text-white">{req}</span>
+                          <span className="flex-1 text-sm text-[#fafafa]">{req}</span>
                           <button
                             type="button"
                             onClick={() => removeRequirement(index)}
@@ -531,27 +531,27 @@ export default function CreateEventPage() {
                 </div>
 
                 {/* Advanced Settings */}
-                <div className="border border-korus-borderLight rounded-xl p-4 bg-korus-surface/10">
-                  <h3 className="text-sm font-bold text-korus-text mb-4">Advanced Settings (optional)</h3>
+                <div className="border border-white/10 rounded-xl p-4 bg-[#171717]">
+                  <h3 className="text-sm font-semibold text-[#fafafa] mb-4">Advanced Settings (optional)</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-korus-textSecondary mb-2">Min Reputation Score</label>
+                      <label className="block text-xs font-medium text-[#a1a1a1] mb-2">Min Reputation Score</label>
                       <input
                         type="number"
                         value={formData.minReputation || ''}
                         onChange={(e) => handleInputChange('minReputation', e.target.value ? parseInt(e.target.value) : undefined)}
                         placeholder="0"
-                        className="w-full bg-korus-surface/40 border border-korus-borderLight rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-korus-primary transition-colors"
+                        className="w-full bg-white/[0.06] border border-white/15 rounded-lg px-3 py-2.5 text-[#fafafa] text-sm focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-korus-textSecondary mb-2">Min Account Age (days)</label>
+                      <label className="block text-xs font-medium text-[#a1a1a1] mb-2">Min Account Age (days)</label>
                       <input
                         type="number"
                         value={formData.minAccountAge || ''}
                         onChange={(e) => handleInputChange('minAccountAge', e.target.value ? parseInt(e.target.value) : undefined)}
                         placeholder="0"
-                        className="w-full bg-korus-surface/40 border border-korus-borderLight rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-korus-primary transition-colors"
+                        className="w-full bg-white/[0.06] border border-white/15 rounded-lg px-3 py-2.5 text-[#fafafa] text-sm focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                       />
                     </div>
                   </div>
@@ -566,17 +566,17 @@ export default function CreateEventPage() {
                       </svg>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-sm font-bold text-white mb-1">Event Creation Fee</h3>
-                      <p className="text-xs text-gray-300 mb-3">
+                      <h3 className="text-sm font-semibold text-[#fafafa] mb-1">Event Creation Fee</h3>
+                      <p className="text-xs text-[#a1a1a1] mb-3">
                         Creating events requires a {EVENT_CREATION_FEE} SOL payment to prevent spam and ensure quality submissions.
                       </p>
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-300">Creation Fee:</span>
+                        <span className="text-[#a1a1a1]">Creation Fee:</span>
                         <span className="font-bold text-korus-primary">{EVENT_CREATION_FEE} SOL</span>
                       </div>
                       {connected && publicKey && (
-                        <div className="flex justify-between items-center text-sm mt-2 pt-2 border-t border-white/20">
-                          <span className="text-gray-300">Your Balance:</span>
+                        <div className="flex justify-between items-center text-sm mt-2 pt-2 border-t border-white/10">
+                          <span className="text-[#a1a1a1]">Your Balance:</span>
                           <span className={`font-bold ${balance >= EVENT_CREATION_FEE + 0.001 ? 'text-green-400' : 'text-red-400'}`}>
                             {balance.toFixed(4)} SOL
                           </span>
@@ -614,14 +614,14 @@ export default function CreateEventPage() {
                   <button
                     type="button"
                     onClick={() => router.back()}
-                    className="flex-1 bg-korus-surface/40 border border-korus-borderLight text-white font-semibold py-3 rounded-xl hover:bg-korus-surface/60 transition-colors"
+                    className="flex-1 bg-white/[0.08] border border-white/15 text-[#fafafa] font-semibold py-3 rounded-lg hover:bg-white/[0.12] duration-150"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting || isUploadingImage || isProcessingPayment || !connected || !isAuthenticated || (balance < EVENT_CREATION_FEE + 0.001)}
-                    className="flex-1 bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-semibold py-3 rounded-lg hover:shadow-lg hover:shadow-korus-primary/20 duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isProcessingPayment ? (
                       <div className="flex items-center justify-center gap-2">
@@ -645,7 +645,7 @@ export default function CreateEventPage() {
                 </div>
 
                 {!connected && (
-                  <p className="text-center text-sm text-korus-textSecondary">
+                  <p className="text-center text-sm text-[#a1a1a1]">
                     Please connect your wallet to create an event
                   </p>
                 )}

@@ -155,12 +155,12 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
       onClick={onClose}
     >
       <div
         ref={modalRef}
-        className="bg-korus-surface/90 backdrop-blur-xl border border-korus-primary rounded-2xl p-6 max-w-md w-full mx-4"
+        className="bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="text-center">
@@ -175,7 +175,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
           <h3 className="text-xl font-bold mb-2 text-yellow-400">
             {isPremium ? 'You\'re Premium!' : 'Unlock Premium'}
           </h3>
-          <p className="text-korus-textSecondary mb-6">
+          <p className="text-[#a1a1a1] mb-6">
             {isPremium
               ? 'You already have access to all premium features'
               : 'Get exclusive features with Korus Premium'
@@ -189,7 +189,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
                 <svg className="w-5 h-5 text-yellow-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                 </svg>
-                <span className="text-korus-text">{feature}</span>
+                <span className="text-[#fafafa]">{feature}</span>
               </div>
             ))}
           </div>
@@ -199,15 +199,15 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
             <div className="space-y-4">
               {/* Subscription Info */}
               {subscriptionStatus && (
-                <div className="bg-korus-surface/40 border border-korus-borderLight rounded-xl p-4 text-left">
+                <div className="bg-white/[0.06] border border-white/15 rounded-lg p-4 text-left">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-korus-textSecondary text-sm">Subscription Type:</span>
-                    <span className="text-white font-medium capitalize">{subscriptionStatus.type || 'Premium'}</span>
+                    <span className="text-[#737373] text-sm">Subscription Type:</span>
+                    <span className="text-[#fafafa] font-medium capitalize">{subscriptionStatus.type || 'Premium'}</span>
                   </div>
                   {subscriptionStatus.daysUntilExpiration !== null && (
                     <div className="flex items-center justify-between">
-                      <span className="text-korus-textSecondary text-sm">Days Remaining:</span>
-                      <span className="text-white font-medium">{subscriptionStatus.daysUntilExpiration} days</span>
+                      <span className="text-[#737373] text-sm">Days Remaining:</span>
+                      <span className="text-[#fafafa] font-medium">{subscriptionStatus.daysUntilExpiration} days</span>
                     </div>
                   )}
                 </div>
@@ -216,7 +216,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
               {/* Close Button */}
               <button
                 onClick={onClose}
-                className="w-full px-4 py-3 bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all"
+                className="w-full px-4 py-3 bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-semibold rounded-lg hover:shadow-lg hover:shadow-korus-primary/30 duration-150"
               >
                 Close
               </button>
@@ -227,10 +227,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
               <button
                 onClick={() => handleUpgrade('monthly')}
                 disabled={isProcessing}
-                className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 white-text rounded-xl hover:shadow-lg transition-all duration-200 border border-korus-border disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)'
-                }}
+                className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 white-text rounded-lg hover:shadow-lg font-semibold duration-150 border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (
                   <div className="flex items-center justify-center gap-2">
@@ -252,10 +249,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
               <button
                 onClick={() => handleUpgrade('yearly')}
                 disabled={isProcessing}
-                className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 white-text rounded-xl hover:shadow-lg transition-all duration-200 relative border border-korus-border disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  boxShadow: '0 0 4px var(--korus-primary), 0 0 8px var(--korus-primary)'
-                }}
+                className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 white-text rounded-lg hover:shadow-lg font-semibold duration-150 relative border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {!isProcessing && (
                   <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">
@@ -282,10 +276,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
               <button
                 onClick={onClose}
                 disabled={isProcessing}
-                className="w-full px-4 py-2 bg-korus-surface/40 text-korus-text rounded-xl hover:bg-korus-surface/60 transition-colors border border-korus-border disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  boxShadow: '0 0 3px var(--korus-primary), 0 0 6px var(--korus-primary)'
-                }}
+                className="w-full px-4 py-2 bg-white/[0.08] border border-white/15 text-[#fafafa] rounded-lg hover:bg-white/[0.12] duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Maybe Later
               </button>

@@ -222,28 +222,28 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/80 backdrop-blur-sm overflow-y-auto pt-20 pb-20">
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm overflow-y-auto pt-20 pb-20">
       <div ref={modalRef} className="relative w-full max-w-2xl mx-4">
-        <div className="bg-korus-dark-200/95 backdrop-blur-xl border-2 border-korus-primary/30 rounded-3xl shadow-2xl shadow-korus-primary/20 overflow-hidden">
+        <div className="bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-korus-border">
-            <h2 className="text-2xl font-bold text-white">Search Korus</h2>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+            <h2 className="text-2xl font-semibold text-[#fafafa]">Search Korus</h2>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-korus-surface/20 rounded-full transition-colors"
+              className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[#fafafa] transition-colors duration-150 flex items-center justify-center"
             >
-              <svg className="w-6 h-6 text-korus-textSecondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
           {/* Search Input */}
-          <div className="p-6 border-b border-korus-border">
+          <div className="p-6 border-b border-white/10">
             <form onSubmit={handleSubmit}>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                  <svg className="w-5 h-5 text-korus-textSecondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-[#a1a1a1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
@@ -255,7 +255,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
                   onFocus={() => setShowHistory(true)}
                   onBlur={() => setTimeout(() => setShowHistory(false), 200)}
                   placeholder="Search posts, users, or categories..."
-                  className="w-full pl-12 pr-24 py-3 bg-korus-surface/40 border border-korus-borderLight rounded-xl text-white placeholder-korus-textTertiary focus:outline-none focus:border-korus-primary focus:ring-2 focus:ring-korus-primary/20 transition-all"
+                  className="w-full pl-12 pr-24 py-3 bg-white/[0.06] border border-white/15 rounded-lg text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-all"
                 />
                 {searchQuery && (
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -272,9 +272,9 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
                         setSearchResults([]);
                         setHasSearched(false);
                       }}
-                      className="p-1.5 hover:bg-korus-surface/20 rounded-lg transition-colors"
+                      className="p-1.5 hover:bg-white/[0.04] rounded-lg transition-colors"
                     >
-                      <svg className="w-4 h-4 text-korus-textSecondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 text-[#a1a1a1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
@@ -285,9 +285,9 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
 
             {/* Search History */}
             {showHistory && searchHistory.length > 0 && (
-              <div className="mt-3 p-3 bg-korus-surface/30 border border-korus-borderLight rounded-xl">
+              <div className="mt-3 p-3 bg-white/[0.06] border border-white/15 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-korus-textSecondary uppercase">Recent Searches</span>
+                  <span className="text-xs font-semibold text-[#a1a1a1] uppercase">Recent Searches</span>
                   <button
                     onClick={clearSearchHistory}
                     className="text-xs text-korus-primary hover:text-korus-primary/80 font-medium"
@@ -300,12 +300,12 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
                     <button
                       key={index}
                       onClick={() => handleHistoryClick(item)}
-                      className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-korus-surface/40 rounded-lg transition-colors text-left"
+                      className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-white/[0.06] rounded-lg transition-colors text-left"
                     >
-                      <svg className="w-4 h-4 text-korus-textTertiary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 text-[#737373] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span className="text-sm text-korus-textSecondary">{item}</span>
+                      <span className="text-sm text-[#a1a1a1]">{item}</span>
                     </button>
                   ))}
                 </div>
@@ -321,7 +321,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
                   className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
                     (category === 'All' && !selectedCategory) || selectedCategory === category.toLowerCase()
                       ? 'bg-korus-primary/20 text-korus-primary border-2 border-korus-primary/30'
-                      : 'bg-korus-surface/40 text-korus-textSecondary border border-korus-borderLight hover:bg-korus-surface/60'
+                      : 'bg-white/[0.06] text-[#a1a1a1] border border-white/15 hover:bg-white/[0.12]'
                   }`}
                 >
                   {category}
@@ -333,8 +333,8 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
           {/* Search Results */}
           <div className="max-h-[60vh] overflow-y-auto">
             {/* Search Info */}
-            <div className="px-6 py-3 bg-korus-surface/20 border-b border-korus-border">
-              <p className="text-sm text-korus-textSecondary">
+            <div className="px-6 py-3 bg-white/[0.04] border-b border-white/10">
+              <p className="text-sm text-[#a1a1a1]">
                 {searchQuery ? (
                   <>
                     <span className="font-semibold text-korus-primary">{searchResults.length}</span> results for &quot;{searchQuery}&quot;
@@ -345,7 +345,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
                 )}
               </p>
               {!searchQuery && (
-                <p className="text-xs text-korus-textTertiary mt-1 italic">
+                <p className="text-xs text-[#737373] mt-1 italic">
                   💡 Try searching by wallet address, content, or category
                 </p>
               )}
@@ -361,12 +361,12 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
               </div>
             ) : hasSearched ? (
               searchResults.length > 0 ? (
-                <div className="divide-y divide-korus-border">
+                <div className="divide-y divide-white/10">
                   {searchResults.map(post => (
                     <div
                       key={post.id}
                       onClick={() => handlePostClick(post.id)}
-                      className="p-6 hover:bg-korus-surface/10 transition-colors cursor-pointer"
+                      className="p-6 hover:bg-white/[0.04] transition-colors cursor-pointer"
                     >
                       <div className="flex gap-3">
                         <div className="w-10 h-10 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center text-black font-bold flex-shrink-0">
@@ -377,22 +377,22 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
                             <Link
                               href={`/profile/${post.wallet}`}
                               onClick={(e) => e.stopPropagation()}
-                              className={`font-bold hover:underline ${post.isShoutout ? 'text-korus-primary' : 'text-white'}`}
+                              className={`font-bold hover:underline ${post.isShoutout ? 'text-korus-primary' : 'text-[#fafafa]'}`}
                             >
                               {post.user}
                             </Link>
-                            <span className="text-korus-textTertiary text-sm">• {post.time}</span>
+                            <span className="text-[#737373] text-sm">• {post.time}</span>
                             {post.category && (
                               <span className="px-2 py-0.5 bg-korus-primary/20 text-korus-primary text-xs font-medium rounded-full capitalize">
                                 {post.category}
                               </span>
                             )}
                           </div>
-                          <p className="text-korus-text text-sm mb-3 line-clamp-3">{post.content}</p>
+                          <p className="text-[#fafafa] text-sm mb-3 line-clamp-3">{post.content}</p>
                           {post.imageUrl && (
                             <Image src={post.imageUrl} alt="Post" width={300} height={160} className="rounded-xl mb-3 h-auto" />
                           )}
-                          <div className="flex items-center gap-4 text-korus-textSecondary text-sm">
+                          <div className="flex items-center gap-4 text-[#a1a1a1] text-sm">
                             <span className="flex items-center gap-1">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -420,8 +420,8 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 px-6">
                   <div className="text-6xl mb-4 opacity-50">🔍</div>
-                  <h3 className="text-xl font-bold text-white mb-2">No results found</h3>
-                  <p className="text-korus-textSecondary text-center">
+                  <h3 className="text-xl font-semibold text-[#fafafa] mb-2">No results found</h3>
+                  <p className="text-[#a1a1a1] text-center">
                     Try adjusting your search terms or browse by category
                   </p>
                 </div>
@@ -429,7 +429,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
             ) : (
               <div className="flex flex-col items-center justify-center py-20 px-6">
                 <div className="text-6xl mb-4 opacity-50">🔎</div>
-                <p className="text-korus-textSecondary text-center">
+                <p className="text-[#a1a1a1] text-center">
                   Start typing to search posts and users
                 </p>
               </div>

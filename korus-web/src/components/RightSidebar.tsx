@@ -233,23 +233,23 @@ export default function RightSidebar({ showNotifications = false, onNotification
       {/* Content based on showNotifications prop */}
       {showNotifications ? (
         /* Notifications Widget */
-        <div className="bg-[#1a1a1a] rounded-[16px] p-[16px] mb-[16px]">
-          <h2 className="text-[18px] font-extrabold tracking-[-0.3px] mb-[14px]">Notifications</h2>
+        <div className="bg-[#171717] rounded-xl border border-white/10 p-[16px] mb-[16px]">
+          <h2 className="text-[18px] font-semibold tracking-[-0.3px] mb-[14px]">Notifications</h2>
           <div role="list" aria-label="Notifications">
             {isLoading ? (
-              <div className="text-center py-8 text-white/30">
+              <div className="text-center py-8 text-[#525252]">
                 <div className="w-6 h-6 border-2 border-white/10 border-t-white/40 rounded-full animate-spin mx-auto mb-2"></div>
                 <p className="text-xs">Loading notifications...</p>
               </div>
             ) : notifications.length === 0 ? (
-              <div className="text-center py-8 text-white/30">
+              <div className="text-center py-8 text-[#525252]">
                 <p className="text-sm">No notifications yet</p>
               </div>
             ) : (
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className="py-[10px] px-2 -mx-2 border-b border-[#2c2c2c] last:border-b-0 cursor-pointer hover:bg-white/[0.04] rounded-lg transition-colors"
+                  className="py-[10px] px-2 -mx-2 border-b border-white/[0.08] last:border-b-0 cursor-pointer hover:bg-white/[0.04] rounded-lg transition-colors duration-150"
                   role="listitem"
                   aria-label={`${notification.type} notification`}
                   tabIndex={0}
@@ -265,11 +265,11 @@ export default function RightSidebar({ showNotifications = false, onNotification
                     {/* User Avatar */}
                     <div className="flex-shrink-0">
                       {notification.fromUser ? (
-                        <div className="w-[32px] h-[32px] bg-[#222222] rounded-full flex items-center justify-center text-xs font-bold text-white/60">
+                        <div className="w-[32px] h-[32px] bg-[#262626] rounded-full flex items-center justify-center text-xs font-bold text-white/60">
                           {notification.fromUser.walletAddress.slice(0, 2).toUpperCase()}
                         </div>
                       ) : (
-                        <div className="w-[32px] h-[32px] rounded-full flex items-center justify-center text-xs bg-[#222222] text-white/30">
+                        <div className="w-[32px] h-[32px] rounded-full flex items-center justify-center text-xs bg-[#262626] text-[#525252]">
                           N
                         </div>
                       )}
@@ -279,16 +279,16 @@ export default function RightSidebar({ showNotifications = false, onNotification
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="text-[14px] font-bold mt-0.5 hover:text-white transition-colors">
+                          <p className="text-[14px] font-semibold mt-0.5 hover:text-[#fafafa] transition-colors duration-150">
                             {notification.title}
                           </p>
-                          <p className="text-[12px] text-[#666666] mt-0.5">
+                          <p className="text-[12px] text-[#737373] mt-0.5">
                             {notification.message}
                           </p>
 
                           {/* Show from user if present */}
                           {notification.fromUser && (
-                            <div className="mt-1 text-[12px] text-[#666666]">
+                            <div className="mt-1 text-[12px] text-[#737373]">
                               from {truncateAddress(notification.fromUser.walletAddress)}
                             </div>
                           )}
@@ -308,7 +308,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
                       </div>
 
                       {/* Timestamp */}
-                      <span className="text-[12px] text-[#666666] mt-1 block">
+                      <span className="text-[12px] text-[#737373] mt-1 block">
                         {formatTimeAgo(notification.createdAt)}
                       </span>
                     </div>
@@ -331,16 +331,16 @@ export default function RightSidebar({ showNotifications = false, onNotification
         </div>
       ) : (
         /* Recent Activity Widget */
-        <div className="bg-[#1a1a1a] rounded-[16px] p-[16px] mb-[16px]">
-          <h2 className="text-[18px] font-extrabold tracking-[-0.3px] mb-[14px]">Recent Activity</h2>
+        <div className="bg-[#171717] rounded-xl border border-white/10 p-[16px] mb-[16px]">
+          <h2 className="text-[18px] font-semibold tracking-[-0.3px] mb-[14px]">Recent Activity</h2>
           <div>
             {isLoadingActivities ? (
-              <div className="text-center py-8 text-white/30">
+              <div className="text-center py-8 text-[#525252]">
                 <div className="w-6 h-6 border-2 border-white/10 border-t-white/40 rounded-full animate-spin mx-auto mb-2"></div>
                 <p className="text-xs">Loading activities...</p>
               </div>
             ) : recentActivities.length === 0 ? (
-              <div className="text-center py-8 text-white/30">
+              <div className="text-center py-8 text-[#525252]">
                 <p className="text-sm">No recent activities</p>
               </div>
             ) : (
@@ -356,22 +356,22 @@ export default function RightSidebar({ showNotifications = false, onNotification
                       router.push(`/games/${gameId}`);
                     }
                   }}
-                  className="py-[10px] px-2 -mx-2 border-b border-[#2c2c2c] last:border-b-0 cursor-pointer hover:bg-white/[0.04] rounded-lg transition-colors"
+                  className="py-[10px] px-2 -mx-2 border-b border-white/[0.08] last:border-b-0 cursor-pointer hover:bg-white/[0.04] rounded-lg transition-colors duration-150"
                 >
-                  <div className="text-[12px] text-[#666666]">
+                  <div className="text-[12px] text-[#737373]">
                     {activity.type === 'game'
                       ? `${getGameIcon(activity.title)} Game`
                       : `${getEventTypeIcon(activity.category || 'Other')} ${(activity.category || 'Other').replace('_', ' ')}`
                     }
                     {activity.type === 'event' && activity.premiumOnly && ' · Premium'}
                   </div>
-                  <div className="text-[14px] font-bold my-[2px] hover:text-white transition-colors">
+                  <div className="text-[14px] font-semibold my-[2px] hover:text-[#fafafa] transition-colors duration-150">
                     {activity.title}
                   </div>
                   {activity.type === 'event' && activity.project && (
-                    <div className="text-[12px] text-[#666666] mt-0.5">by {activity.project}</div>
+                    <div className="text-[12px] text-[#737373] mt-0.5">by {activity.project}</div>
                   )}
-                  <div className="text-[12px] text-[#666666] mt-0.5">
+                  <div className="text-[12px] text-[#737373] mt-0.5">
                     {activity.type === 'game' ? (
                       <>Players: {activity.players} · {activity.wager} · {activity.timeLeft} left</>
                     ) : (
@@ -406,7 +406,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
       <div className="flex-1" />
 
       {/* Footer */}
-      <div className="text-[12px] text-[#666666] mt-[16px] px-1">
+      <div className="text-[12px] text-neutral-600 mt-[16px] px-1">
         &copy; 2025 Korus &middot; Terms &middot; Privacy
       </div>
     </div>

@@ -10,6 +10,8 @@ import dynamic from 'next/dynamic';
 import { useToastContext } from '@/components/ToastProvider';
 import { type NFT } from '@/lib/api';
 import { useAllSNSDomains } from '@/hooks/useSNSDomain';
+import LeftSidebar from '@/components/LeftSidebar';
+import RightSidebar from '@/components/RightSidebar';
 
 // Dynamically import modals for code splitting
 const ConfirmModal = dynamic(() => import('@/components/ConfirmModal'), { ssr: false });
@@ -39,6 +41,7 @@ export default function EditProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [showAvatarSelection, setShowAvatarSelection] = useState(false);
   const [showDiscardModal, setShowDiscardModal] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [selectedNFTAvatar, setSelectedNFTAvatar] = useState<NFT | null>(null);
   const [selectedSNSDomain, setSelectedSNSDomain] = useState<string>('');
 
@@ -202,10 +205,10 @@ export default function EditProfilePage() {
 
   if (!connected) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a0a0a] text-[#fafafa] flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Connect Your Wallet</h2>
-          <p className="text-korus-textSecondary mb-8">Please connect your wallet to edit your profile</p>
+          <p className="text-[#a1a1a1] mb-8">Please connect your wallet to edit your profile</p>
           <Link
             href="/"
             className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-lg hover:shadow-lg transition-all"
@@ -219,7 +222,7 @@ export default function EditProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a0a0a] text-[#fafafa] flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-korus-primary border-t-transparent rounded-full animate-spin mb-4"></div>
           <p>Loading profile...</p>
@@ -229,10 +232,10 @@ export default function EditProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-korus-dark-100 relative overflow-hidden">
+    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
       {/* Background gradients */}
-      <div className="fixed inset-0 bg-gradient-to-br from-korus-dark-100 via-korus-dark-200 to-korus-dark-100">
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-korus-dark-300/25 to-korus-dark-200/35" />
+      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#171717]/25 to-[#111111]/35" />
       </div>
 
       {/* Animated gradient orbs */}
@@ -244,28 +247,23 @@ export default function EditProfilePage() {
 
       {/* Content */}
       <div className="relative z-10">
-        <div className="flex min-h-screen">
-          {/* Left Sidebar */}
-          <div className="hidden lg:block lg:w-80 xl:w-80 fixed left-0 top-0 h-full border-r border-korus-border bg-korus-surface/5 backdrop-blur-sm">
-            {/* Left sidebar content would go here */}
-          </div>
-
+        <div className="flex min-h-screen max-w-[1280px] mx-auto">
           {/* Main Content */}
-          <div className="flex-1 lg:ml-80 lg:mr-96 md:ml-64 md:mr-80 sm:ml-0 sm:mr-0 md:border-x md:border-korus-border bg-korus-surface/10 backdrop-blur-sm max-w-full overflow-hidden">
+          <div className="flex-1 min-w-0 border-x border-white/10">
             {/* Header */}
-            <div className="sticky top-0 z-20 bg-korus-surface/80 backdrop-blur-md border-b border-korus-borderLight">
+            <div className="sticky top-0 z-20 bg-[#171717] backdrop-blur-md border-b border-white/15">
               <div className="px-4 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <button
                       onClick={handleDiscardChanges}
-                      className="p-2 hover:bg-korus-surface/60 rounded-full transition-colors"
+                      className="p-2 hover:bg-white/[0.12] rounded-full transition-colors"
                     >
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                       </svg>
                     </button>
-                    <h1 className="text-3xl font-bold text-white">Edit Profile</h1>
+                    <h1 className="text-3xl font-bold text-[#fafafa]">Edit Profile</h1>
                   </div>
                   <button
                     onClick={handleSave}
@@ -309,7 +307,7 @@ export default function EditProfilePage() {
                 </div>
               </button>
             </div>
-            <p className="text-korus-textSecondary text-sm">Click to change your avatar</p>
+            <p className="text-[#a1a1a1] text-sm">Click to change your avatar</p>
           </div>
 
           {/* Form Fields */}
@@ -322,10 +320,10 @@ export default function EditProfilePage() {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Enter your display name"
-                className="w-full bg-korus-surface/20 backdrop-blur-sm text-white border border-korus-borderLight rounded-xl px-4 py-3 placeholder-gray-400 focus:outline-none focus:border-korus-primary transition-colors"
+                className="w-full bg-white/[0.06] border border-white/15 rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
                 maxLength={50}
               />
-              <p className="text-korus-textSecondary text-xs mt-1">This is how other users will see your name</p>
+              <p className="text-[#a1a1a1] text-xs mt-1">This is how other users will see your name</p>
             </div>
 
             {/* SNS Domain Selection */}
@@ -346,7 +344,7 @@ export default function EditProfilePage() {
                     setHasChanges(true);
                   }}
                   disabled={!isPremium && snsLoading}
-                  className="w-full bg-korus-surface/20 backdrop-blur-sm text-white border border-korus-borderLight rounded-xl px-4 py-3 focus:outline-none focus:border-korus-primary transition-colors disabled:opacity-50"
+                  className="w-full bg-white/[0.06] border border-white/15 rounded-lg px-3 py-2.5 text-[#fafafa] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors disabled:opacity-50"
                 >
                   <option value="">None (use display name)</option>
                   {snsDomains.map((domain) => (
@@ -355,7 +353,7 @@ export default function EditProfilePage() {
                     </option>
                   ))}
                 </select>
-                <p className="text-korus-textSecondary text-xs mt-1">
+                <p className="text-[#a1a1a1] text-xs mt-1">
                   {isPremium
                     ? 'Choose which SNS domain to display on your profile'
                     : 'Upgrade to Premium to use your SNS domains'}
@@ -370,13 +368,13 @@ export default function EditProfilePage() {
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="Tell us about yourself..."
-                className="w-full bg-korus-surface/20 backdrop-blur-sm text-white border border-korus-borderLight rounded-xl px-4 py-3 placeholder-gray-400 focus:outline-none focus:border-korus-primary transition-colors resize-none"
+                className="w-full bg-white/[0.06] border border-white/15 rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors resize-none"
                 rows={4}
                 maxLength={200}
               />
               <div className="flex justify-between items-center mt-1">
-                <p className="text-korus-textSecondary text-xs">Share a bit about yourself</p>
-                <span className="text-korus-textSecondary text-xs">{bio.length}/200</span>
+                <p className="text-[#a1a1a1] text-xs">Share a bit about yourself</p>
+                <span className="text-[#a1a1a1] text-xs">{bio.length}/200</span>
               </div>
             </div>
 
@@ -388,7 +386,7 @@ export default function EditProfilePage() {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="Where are you based?"
-                className="w-full bg-korus-surface/20 backdrop-blur-sm text-white border border-korus-borderLight rounded-xl px-4 py-3 placeholder-gray-400 focus:outline-none focus:border-korus-primary transition-colors"
+                className="w-full bg-white/[0.06] border border-white/15 rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
                 maxLength={50}
               />
             </div>
@@ -401,7 +399,7 @@ export default function EditProfilePage() {
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
                 placeholder="https://yourwebsite.com"
-                className="w-full bg-korus-surface/20 backdrop-blur-sm text-white border border-korus-borderLight rounded-xl px-4 py-3 placeholder-gray-400 focus:outline-none focus:border-korus-primary transition-colors"
+                className="w-full bg-white/[0.06] border border-white/15 rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
               />
             </div>
 
@@ -409,13 +407,13 @@ export default function EditProfilePage() {
             <div>
               <label className="block text-sm font-medium mb-2">Twitter</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-korus-textSecondary">@</span>
+                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#a1a1a1]">@</span>
                 <input
                   type="text"
                   value={twitter}
                   onChange={(e) => setTwitter(e.target.value.replace('@', ''))}
                   placeholder="username"
-                  className="w-full bg-korus-surface/20 backdrop-blur-sm text-white border border-korus-borderLight rounded-xl pl-8 pr-4 py-3 placeholder-gray-400 focus:outline-none focus:border-korus-primary transition-colors"
+                  className="w-full bg-white/[0.06] border border-white/15 rounded-lg pl-8 pr-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
                   maxLength={15}
                 />
               </div>
@@ -432,20 +430,20 @@ export default function EditProfilePage() {
                     className={`aspect-square rounded-xl border-2 transition-all hover:scale-105 ${
                       selectedThemeColor === theme.color
                         ? 'border-white shadow-lg'
-                        : 'border-gray-600 hover:border-gray-400'
+                        : 'border-white/10 hover:border-white/20'
                     }`}
                     style={{ backgroundColor: theme.color }}
                     title={theme.name}
                   >
                     {selectedThemeColor === theme.color && (
-                      <svg className="w-6 h-6 text-white mx-auto" fill="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-6 h-6 text-[#fafafa] mx-auto" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
                       </svg>
                     )}
                   </button>
                 ))}
               </div>
-              <p className="text-korus-textSecondary text-xs mt-2">Choose your personal theme color</p>
+              <p className="text-[#a1a1a1] text-xs mt-2">Choose your personal theme color</p>
             </div>
 
             {/* Premium Features */}
@@ -459,7 +457,7 @@ export default function EditProfilePage() {
                   </div>
                   <div>
                     <h3 className="text-yellow-400 font-semibold mb-1">Unlock Premium Features</h3>
-                    <p className="text-gray-300 text-sm mb-3">
+                    <p className="text-[#a1a1a1] text-sm mb-3">
                       Get access to custom banners, more theme colors, and advanced profile customization.
                     </p>
                     <Link
@@ -489,13 +487,20 @@ export default function EditProfilePage() {
             )}
             </div>
           </div>
-
-          {/* Right Sidebar */}
-          <div className="hidden lg:block lg:w-96 xl:w-96 fixed right-0 top-0 h-full border-l border-korus-border bg-korus-surface/5 backdrop-blur-sm">
-            {/* Right sidebar content would go here */}
           </div>
+
+          <RightSidebar
+            showNotifications={showNotifications}
+            onNotificationsClose={() => setShowNotifications(false)}
+          />
         </div>
       </div>
+
+      <LeftSidebar
+        onNotificationsToggle={() => setShowNotifications(!showNotifications)}
+        onPostButtonClick={() => {}}
+        onSearchClick={() => {}}
+      />
 
       {/* NFT Avatar Selection Modal */}
       <NFTAvatarModal
@@ -516,7 +521,6 @@ export default function EditProfilePage() {
         cancelText="Keep Editing"
         confirmVariant="danger"
       />
-      </div>
     </main>
   );
 }

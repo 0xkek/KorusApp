@@ -41,19 +41,19 @@ export function ToastComponent({ toast, onRemove }: ToastProps) {
   }, [toast.id, toast.duration, onRemove]);
 
   const getToastStyles = () => {
-    const baseStyles = "flex items-start gap-3 p-4 rounded-xl border backdrop-blur-sm transition-all duration-300 shadow-lg";
+    const baseStyles = "flex items-start gap-3 p-4 rounded-xl border border-white/10 backdrop-blur-sm duration-150 shadow-2xl bg-[#171717]";
 
     switch (toast.type) {
       case 'success':
-        return `${baseStyles} bg-green-500/10 border-green-500/20 text-green-100`;
+        return `${baseStyles} border-l-4 border-l-green-500 text-[#fafafa]`;
       case 'error':
-        return `${baseStyles} bg-red-500/10 border-red-500/20 text-red-100`;
+        return `${baseStyles} border-l-4 border-l-red-500 text-[#fafafa]`;
       case 'warning':
-        return `${baseStyles} bg-yellow-500/10 border-yellow-500/20 text-yellow-100`;
+        return `${baseStyles} border-l-4 border-l-yellow-500 text-[#fafafa]`;
       case 'info':
-        return `${baseStyles} bg-blue-500/10 border-blue-500/20 text-blue-100`;
+        return `${baseStyles} border-l-4 border-l-blue-500 text-[#fafafa]`;
       default:
-        return `${baseStyles} bg-korus-surface/20 border-korus-border text-korus-text`;
+        return `${baseStyles} text-[#fafafa]`;
     }
   };
 
@@ -106,7 +106,7 @@ export function ToastComponent({ toast, onRemove }: ToastProps) {
           }
           exitTimeoutRef.current = setTimeout(() => onRemove(toast.id), 300);
         }}
-        className="text-current hover:text-white/80 transition-colors p-1 -m-1"
+        className="text-[#737373] hover:text-[#fafafa] duration-150 p-1 -m-1"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

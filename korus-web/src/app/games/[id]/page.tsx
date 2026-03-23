@@ -128,10 +128,10 @@ export default function GamePlayPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-korus-background flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-korus-primary mx-auto mb-4"></div>
-          <p className="text-korus-textSecondary">Loading game...</p>
+          <p className="text-[#a1a1a1]">Loading game...</p>
         </div>
       </div>
     );
@@ -139,7 +139,7 @@ export default function GamePlayPage() {
 
   if (error || !game) {
     return (
-      <div className="min-h-screen bg-korus-background flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-500 mb-4">{error || 'Game not found'}</p>
           <Button onClick={() => router.push('/games')}>Back to Games</Button>
@@ -255,9 +255,9 @@ export default function GamePlayPage() {
   };
 
   return (
-    <div className="min-h-screen bg-korus-background">
+    <div className="min-h-screen bg-[#0a0a0a]">
       {/* Header */}
-      <div className="bg-korus-surface border-b border-korus-border">
+      <div className="bg-[#171717] border-b border-white/10">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between mb-4">
             <Button
@@ -271,49 +271,49 @@ export default function GamePlayPage() {
               {game.status === 'active' && (
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-korus-textSecondary">LIVE</span>
+                  <span className="text-sm text-[#a1a1a1]">LIVE</span>
                 </div>
               )}
               {game.status === 'waiting' && (
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-korus-textSecondary">WAITING</span>
+                  <span className="text-sm text-[#a1a1a1]">WAITING</span>
                 </div>
               )}
 
-              <div className="bg-gradient-to-r from-korus-primary to-korus-secondary text-white px-4 py-2 rounded-lg font-bold">
+              <div className="bg-gradient-to-r from-korus-primary to-korus-secondary text-[#fafafa] px-4 py-2 rounded-lg font-bold">
                 {game.wager} SOL
               </div>
             </div>
           </div>
 
-          <h1 className="text-3xl font-bold text-korus-text mb-2">{getGameName()}</h1>
+          <h1 className="text-3xl font-bold text-[#fafafa] mb-2">{getGameName()}</h1>
 
           {/* Players */}
           <div className="flex items-center gap-4">
-            <div className="flex-1 bg-korus-cardBackground border border-korus-border rounded-lg p-3">
-              <div className="text-xs text-korus-textSecondary mb-1">PLAYER 1</div>
-              <div className="font-mono text-sm text-korus-text">
+            <div className="flex-1 bg-[#171717] border border-white/10 rounded-lg p-3">
+              <div className="text-xs text-[#a1a1a1] mb-1">PLAYER 1</div>
+              <div className="font-mono text-sm text-[#fafafa]">
                 {game.player1DisplayName || `${game.player1.slice(0, 6)}...${game.player1.slice(-4)}`}
               </div>
               {isPlayer1 && (
-                <div className="inline-block mt-1 px-2 py-0.5 bg-korus-primary text-white text-xs rounded">
+                <div className="inline-block mt-1 px-2 py-0.5 bg-korus-primary text-[#fafafa] text-xs rounded">
                   YOU
                 </div>
               )}
             </div>
 
-            <div className="text-korus-textSecondary font-bold">VS</div>
+            <div className="text-[#a1a1a1] font-bold">VS</div>
 
-            <div className="flex-1 bg-korus-cardBackground border border-korus-border rounded-lg p-3">
-              <div className="text-xs text-korus-textSecondary mb-1">PLAYER 2</div>
+            <div className="flex-1 bg-[#171717] border border-white/10 rounded-lg p-3">
+              <div className="text-xs text-[#a1a1a1] mb-1">PLAYER 2</div>
               {game.player2 ? (
                 <>
-                  <div className="font-mono text-sm text-korus-text">
+                  <div className="font-mono text-sm text-[#fafafa]">
                     {game.player2DisplayName || `${game.player2.slice(0, 6)}...${game.player2.slice(-4)}`}
                   </div>
                   {isPlayer2 && (
-                    <div className="inline-block mt-1 px-2 py-0.5 bg-korus-secondary text-white text-xs rounded">
+                    <div className="inline-block mt-1 px-2 py-0.5 bg-korus-secondary text-[#fafafa] text-xs rounded">
                       YOU
                     </div>
                   )}
@@ -348,8 +348,8 @@ export default function GamePlayPage() {
         )}
 
         {game.status === 'active' && !isMyTurn && isParticipant && (
-          <div className="mb-6 p-4 bg-korus-surface border border-korus-border rounded-lg text-center">
-            <p className="text-korus-textSecondary">Waiting for opponent&apos;s move...</p>
+          <div className="mb-6 p-4 bg-[#171717] border border-white/10 rounded-lg text-center">
+            <p className="text-[#a1a1a1]">Waiting for opponent&apos;s move...</p>
           </div>
         )}
 
@@ -358,14 +358,14 @@ export default function GamePlayPage() {
             game.winner === publicKey?.toBase58()
               ? 'bg-green-500/20 border-green-500'
               : game.winner === 'draw'
-              ? 'bg-korus-surface border-korus-border'
+              ? 'bg-[#171717] border-white/10'
               : 'bg-red-500/20 border-red-500'
           }`}>
             <p className={`font-bold text-lg ${
               game.winner === publicKey?.toBase58()
                 ? 'text-green-500'
                 : game.winner === 'draw'
-                ? 'text-korus-textSecondary'
+                ? 'text-[#a1a1a1]'
                 : 'text-red-500'
             }`}>
               {game.winner === 'draw'
@@ -394,7 +394,7 @@ export default function GamePlayPage() {
         )}
 
         {/* Game Board */}
-        <div className="bg-korus-cardBackground border border-korus-border rounded-xl p-8">
+        <div className="bg-[#171717] border border-white/10 rounded-xl p-8">
           {game.gameType === 'tictactoe' && renderTicTacToe()}
           {game.gameType === 'connectfour' && renderConnectFour()}
           {game.gameType === 'rps' && renderRPS()}

@@ -156,7 +156,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
   ];
 
   return (
-    <nav className="sticky top-0 h-screen w-[260px] shrink-0 z-30 border-r border-[#2c2c2c] px-[16px] py-[24px] hidden md:flex flex-col bg-transparent" role="navigation" aria-label="Main navigation">
+    <nav className="sticky top-0 h-screen w-[260px] shrink-0 z-30 border-r border-white/10 px-[16px] py-[24px] hidden md:flex flex-col bg-[#111111]" role="navigation" aria-label="Main navigation">
       {/* Logo */}
       <div className="flex items-center gap-[10px] px-[12px] mb-[32px]">
         <Link href="/" className="flex items-center gap-[10px]" aria-label="Korus Home">
@@ -174,10 +174,10 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
           const isDisabled = tab.disabled;
           const className = `flex items-center gap-[14px] px-[16px] py-[12px] rounded-[12px] text-[15px] cursor-pointer transition-all duration-150 relative group mb-[2px] ${
             isDisabled
-              ? 'text-[#888888] opacity-50 cursor-not-allowed'
+              ? 'text-[#525252] opacity-50 cursor-not-allowed'
               : isActive
-              ? 'text-[#e8e8e8] font-semibold'
-              : 'text-[#888888] font-medium hover:bg-white/[0.06] hover:text-[#e8e8e8]'
+              ? 'bg-white/[0.08] text-[#fafafa] font-semibold'
+              : 'text-[#a1a1a1] font-medium hover:bg-white/[0.06] hover:text-[#fafafa]'
           }`;
 
           const content = (
@@ -194,14 +194,14 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
 
               <span className={`text-[15px] hidden xl:block ${
                 isDisabled
-                  ? 'text-[#888888]'
+                  ? 'text-[#525252]'
                   : isActive
-                  ? 'text-[#e8e8e8] font-semibold'
-                  : 'text-[#888888] font-medium group-hover:text-[#e8e8e8]'
+                  ? 'text-[#fafafa] font-semibold'
+                  : 'text-[#a1a1a1] font-medium group-hover:text-[#fafafa]'
               }`}>
                 {tab.name}
                 {isDisabled && (
-                  <span className="text-[11px] text-[#888888]/50 block">Coming Soon</span>
+                  <span className="text-[11px] text-[#525252] block">Coming Soon</span>
                 )}
               </span>
 
@@ -245,7 +245,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
               >
                 {content}
                 {/* Tooltip on hover */}
-                <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-white/[0.08] border border-white/[0.1] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#262626] border border-white/10 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50 whitespace-nowrap">
                   Feature coming soon
                 </div>
               </div>
@@ -271,7 +271,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
         <div className="mt-auto pt-[20px]">
           <button
             onClick={onPostButtonClick}
-            className="w-full bg-gradient-to-r from-korus-primary to-korus-secondary text-black text-[15px] font-bold rounded-[14px] py-[12px] text-center hover:-translate-y-px hover:shadow-xl hover:shadow-korus-primary/35 transition-all duration-200 flex items-center justify-center"
+            className="w-full bg-gradient-to-r from-korus-primary to-korus-secondary text-black text-[15px] font-bold rounded-[14px] py-[12px] text-center hover:-translate-y-px hover:shadow-xl hover:shadow-korus-primary/35 transition-all duration-150 flex items-center justify-center"
           >
             <span>Post</span>
           </button>
@@ -280,8 +280,8 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
 
       {/* User Profile */}
       {connected && publicKey && (
-        <div className="mt-[12px] p-[14px] rounded-[14px] bg-[#1a1a1a]">
-          <Link href="/profile" className="flex items-center gap-[10px] transition-all duration-200 cursor-pointer">
+        <div className="mt-[12px] p-[14px] rounded-xl bg-[#171717] border border-white/10">
+          <Link href="/profile" className="flex items-center gap-[10px] transition-all duration-150 cursor-pointer">
             {userAvatar ? (
               <div className="w-[36px] h-[36px] rounded-[10px] flex-shrink-0 overflow-hidden">
                 <Image
@@ -302,7 +302,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
             )}
             <div className="hidden xl:block flex-1 min-w-0">
               <div className="text-[13px] font-semibold text-white">{userDisplayName || 'korus.sol'}</div>
-              <div className="text-[11px] text-[#666666] font-mono truncate">
+              <div className="text-[11px] text-[#737373] font-mono truncate">
                 {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
               </div>
             </div>

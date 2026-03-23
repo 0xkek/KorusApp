@@ -24,21 +24,21 @@ export function ConnectFourBoard({
   const COLS = 7;
 
   const getCellClassName = (cell: ConnectFourCell) => {
-    const baseClasses = 'w-12 h-12 rounded-full transition-all';
+    const baseClasses = 'w-12 h-12 rounded-full duration-150';
     if (cell === 'red') {
       return `${baseClasses} bg-red-500 shadow-lg shadow-red-500/50`;
     } else if (cell === 'yellow') {
       return `${baseClasses} bg-yellow-400 shadow-lg shadow-yellow-400/50`;
     }
-    return `${baseClasses} bg-korus-surface/60 border border-korus-border`;
+    return `${baseClasses} bg-white/[0.12] border border-white/10`;
   };
 
   const getColumnClassName = (col: number) => {
-    const baseClasses = 'flex flex-col gap-2 p-2 rounded-lg transition-all';
+    const baseClasses = 'flex flex-col gap-2 p-2 rounded-lg duration-150';
     if (isMyTurn && !isGameOver && canDropInColumn(col)) {
-      return `${baseClasses} bg-korus-surface/20 hover:bg-korus-surface/40 cursor-pointer hover:scale-105`;
+      return `${baseClasses} bg-white/[0.04] hover:bg-white/[0.06] cursor-pointer hover:scale-105`;
     }
-    return `${baseClasses} bg-korus-surface/10`;
+    return `${baseClasses} bg-white/[0.04]`;
   };
 
   const canDropInColumn = (col: number): boolean => {
@@ -57,7 +57,7 @@ export function ConnectFourBoard({
         {isGameOver ? (
           <div className="text-xl font-bold">
             {winner === 'draw' ? (
-              <span className="text-korus-textSecondary">Game ended in a draw!</span>
+              <span className="text-[#a1a1a1]">Game ended in a draw!</span>
             ) : winner === playerColor ? (
               <span className="text-korus-primary">You won! 🎉</span>
             ) : (
@@ -75,14 +75,14 @@ export function ConnectFourBoard({
                 )
               </span>
             ) : (
-              <span className="text-korus-textSecondary">Opponent&apos;s turn...</span>
+              <span className="text-[#a1a1a1]">Opponent&apos;s turn...</span>
             )}
           </div>
         )}
       </div>
 
       {/* Board */}
-      <div className="bg-korus-surface/40 p-4 rounded-xl border-2 border-korus-border">
+      <div className="bg-white/[0.06] p-4 rounded-xl border-2 border-white/10">
         <div className="flex gap-2">
           {Array.from({ length: COLS }).map((_, col) => (
             <div
@@ -100,7 +100,7 @@ export function ConnectFourBoard({
 
       {/* Instructions */}
       {!isGameOver && isMyTurn && (
-        <div className="text-sm text-korus-textSecondary">
+        <div className="text-sm text-[#a1a1a1]">
           Click on a column to drop your piece
         </div>
       )}

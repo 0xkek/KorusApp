@@ -23,13 +23,13 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
-  const baseStyles = 'inline-flex items-center justify-center gap-2 font-bold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseStyles = 'inline-flex items-center justify-center gap-2 font-semibold rounded-lg transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variantStyles = {
     primary: 'bg-gradient-to-r from-korus-primary to-korus-secondary text-black hover:shadow-lg hover:shadow-korus-primary/30 hover:scale-[1.02] disabled:hover:scale-100',
-    secondary: 'bg-korus-surface/60 border border-korus-borderLight text-korus-text hover:bg-korus-surface/80 hover:border-korus-border',
+    secondary: 'bg-white/[0.12] border border-white/15 text-[#fafafa] hover:bg-[#171717] hover:border-white/10',
     danger: 'bg-red-600 hover:bg-red-700 text-white border border-red-500 hover:shadow-lg hover:shadow-red-500/40 hover:scale-[1.02] disabled:hover:scale-100',
-    ghost: 'bg-transparent text-korus-textSecondary hover:bg-korus-surface/40 hover:text-white',
+    ghost: 'bg-transparent text-[#a1a1a1] hover:bg-white/[0.06] hover:text-white',
   };
 
   const sizeStyles = {

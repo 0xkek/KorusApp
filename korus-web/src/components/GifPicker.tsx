@@ -72,14 +72,14 @@ export default function GifPicker({ onSelect, onClose }: GifPickerProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-korus-surface border-2 border-korus-border rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-korus-border flex items-center justify-between">
-          <h3 className="text-lg font-bold text-white">Choose a GIF</h3>
+        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+          <h3 className="text-lg font-bold text-[#fafafa]">Choose a GIF</h3>
           <button
             onClick={onClose}
-            className="text-korus-textSecondary hover:text-white transition-colors p-2"
+            className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[#fafafa] duration-150 flex items-center justify-center"
             aria-label="Close GIF picker"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -89,18 +89,18 @@ export default function GifPicker({ onSelect, onClose }: GifPickerProps) {
         </div>
 
         {/* Search */}
-        <form onSubmit={handleSearch} className="p-4 border-b border-korus-border">
+        <form onSubmit={handleSearch} className="p-4 border-b border-white/10">
           <div className="relative">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search for GIFs..."
-              className="w-full bg-korus-background border border-korus-borderLight rounded-xl px-4 py-3 text-white placeholder-korus-textSecondary focus:outline-none focus:border-korus-primary transition-colors"
+              className="w-full bg-white/[0.06] border border-white/15 rounded-lg px-4 py-3 text-[#fafafa] placeholder-[#737373] focus:outline-none focus:border-korus-primary duration-150"
             />
             <button
               type="submit"
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-korus-primary text-black px-4 py-1.5 rounded-lg font-semibold hover:bg-korus-secondary transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-korus-primary text-black px-4 py-1.5 rounded-lg font-semibold hover:bg-korus-secondary duration-150"
             >
               Search
             </button>
@@ -122,28 +122,28 @@ export default function GifPicker({ onSelect, onClose }: GifPickerProps) {
                     onSelect(gif.media_formats.gif.url);
                     onClose();
                   }}
-                  className="relative aspect-square rounded-lg overflow-hidden hover:ring-2 hover:ring-korus-primary transition-all group"
+                  className="relative aspect-square rounded-lg overflow-hidden hover:ring-2 hover:ring-korus-primary duration-150 group"
                 >
                   <Image
                     src={gif.media_formats.tinygif.url}
                     alt={gif.content_description || 'GIF'}
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform"
+                    className="object-cover group-hover:scale-105 duration-150"
                     unoptimized
                   />
                 </button>
               ))}
             </div>
           ) : (
-            <div className="flex items-center justify-center h-48 text-korus-textSecondary">
+            <div className="flex items-center justify-center h-48 text-[#a1a1a1]">
               <p>No GIFs found. Try a different search term.</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-korus-border text-center">
-          <p className="text-xs text-korus-textSecondary">
+        <div className="p-3 border-t border-white/10 text-center">
+          <p className="text-xs text-[#737373]">
             Powered by <span className="text-korus-primary font-semibold">Tenor</span>
           </p>
         </div>

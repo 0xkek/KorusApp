@@ -43,7 +43,7 @@ export default function Header({
 
 
   return (
-    <header className="sticky top-0 left-0 right-0 z-50 border-b border-korus-primary/20 bg-gradient-to-r from-black/80 via-korus-dark-100/80 to-black/80 backdrop-blur-md shadow-[0_4px_20px_rgba(67,233,123,0.1)] w-full">
+    <header className="sticky top-0 left-0 right-0 z-50 border-b border-korus-primary/20 bg-gradient-to-r from-black/80 via-[#0a0a0a]/80 to-black/80 backdrop-blur-md shadow-[0_4px_20px_rgba(67,233,123,0.1)] w-full">
       <div className="w-full px-4">
         <div className="flex justify-between items-center h-16 max-w-7xl mx-auto gap-6">
           {/* Left: Profile Icon + Logo */}
@@ -106,7 +106,7 @@ export default function Header({
             {/* Connected Wallet Address Display */}
             {connected && publicKey && (
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-korus-primary/10 to-korus-secondary/10 border border-korus-primary/30">
-                <span className="text-xs text-korus-textSecondary">Connected:</span>
+                <span className="text-xs text-[#a1a1a1]">Connected:</span>
                 <code className="text-xs font-mono text-korus-primary font-semibold">
                   {publicKey.toString().slice(0, 4)}...{publicKey.toString().slice(-4)}
                 </code>

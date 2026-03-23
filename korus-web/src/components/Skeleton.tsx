@@ -15,7 +15,7 @@ export function Skeleton({
   height,
   animation = 'pulse',
 }: SkeletonProps) {
-  const baseStyles = 'bg-korus-surface/40 animate-pulse';
+  const baseStyles = 'animate-pulse bg-white/[0.06]';
 
   const variantStyles = {
     text: 'rounded h-4',
@@ -25,7 +25,7 @@ export function Skeleton({
 
   const animationStyles = {
     pulse: 'animate-pulse',
-    wave: 'animate-shimmer bg-gradient-to-r from-korus-surface/40 via-korus-surface/60 to-korus-surface/40 bg-[length:400%_100%]',
+    wave: 'animate-shimmer bg-gradient-to-r from-white/[0.04] via-white/[0.08] to-white/[0.04] bg-[length:400%_100%]',
     none: '',
   };
 
@@ -46,7 +46,7 @@ export function Skeleton({
 
 export function PostSkeleton() {
   return (
-    <div className="bg-korus-dark-300 border border-korus-dark-400 rounded-xl p-4 mb-4">
+    <div className="bg-[#171717] border border-white/10 rounded-xl p-4 mb-4">
       {/* Header */}
       <div className="flex items-start gap-3 mb-3">
         <Skeleton variant="circular" width={40} height={40} />
@@ -64,7 +64,7 @@ export function PostSkeleton() {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-6 pt-3 border-t border-korus-dark-400">
+      <div className="flex items-center gap-6 pt-3 border-t border-white/10">
         <Skeleton variant="rectangular" width={60} height={24} />
         <Skeleton variant="rectangular" width={60} height={24} />
         <Skeleton variant="rectangular" width={80} height={24} />
@@ -111,7 +111,7 @@ export function FeedSkeleton({ count = 3 }: { count?: number }) {
 
 export function SidebarSkeleton() {
   return (
-    <div className="bg-korus-surface/60 rounded-xl p-4 space-y-4">
+    <div className="bg-white/[0.12] rounded-xl p-4 space-y-4">
       <Skeleton variant="text" width="60%" className="h-5 mb-4" />
       {Array.from({ length: 5 }).map((_, i) => (
         <div key={i} className="flex items-center gap-3">

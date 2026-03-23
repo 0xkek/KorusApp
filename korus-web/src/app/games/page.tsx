@@ -21,11 +21,11 @@ export default function GamesPage() {
 
 
   return (
-    <main className="min-h-screen bg-korus-dark-100 relative overflow-hidden">
+    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
       {/* Standardized static background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-korus-dark-100 via-korus-dark-200 to-korus-dark-100">
+      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
         {/* Surface gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-korus-dark-300/25 to-korus-dark-200/35" />
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#171717]/25 to-[#111111]/35" />
       </div>
       {/* Static gradient orbs for visual depth */}
       <div className="fixed inset-0 overflow-hidden">
@@ -38,7 +38,7 @@ export default function GamesPage() {
       </div>
 
       <div className="relative z-10">
-        <div className="flex">
+        <div className="flex min-h-screen max-w-[1280px] mx-auto">
           <LeftSidebar
             onNotificationsToggle={() => setShowNotifications(!showNotifications)}
             onPostButtonClick={() => setShowCreatePostModal(true)}
@@ -46,16 +46,16 @@ export default function GamesPage() {
           />
 
           {/* Main Content */}
-          <div className="flex-1 lg:ml-80 lg:mr-96 md:ml-64 md:mr-80 sm:ml-0 sm:mr-0 md:border-x md:border-korus-border bg-korus-surface/10 backdrop-blur-sm max-w-full overflow-hidden">
+          <div className="flex-1 min-w-0 border-x border-white/10">
 
             {/* Header Navigation */}
-            <div className="sticky top-0 bg-korus-dark-300/80 backdrop-blur-xl border-b border-korus-border z-10">
+            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-white/10 z-10">
               <div className="flex">
                 {/* Mobile menu button */}
                 <button
                   onClick={() => setShowMobileMenu(true)}
                   aria-label="Open mobile menu"
-                  className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors"
+                  className="md:hidden flex items-center justify-center w-12 h-12 text-[#fafafa] hover:bg-white/[0.04] transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -72,21 +72,21 @@ export default function GamesPage() {
                 <div className="relative flex items-center justify-center w-full">
                   <button
                     onClick={() => router.push('/')}
-                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                    className="relative px-4 py-4 text-[#a1a1a1] font-semibold hover:bg-white/[0.04] hover:text-[#fafafa] transition-colors group"
                   >
                     <span className="relative z-10">Home</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
                   </button>
                   <button
                     onClick={() => router.push('/games')}
-                    className="relative px-4 py-4 text-white font-semibold hover:bg-korus-surface/20 transition-colors group"
+                    className="relative px-4 py-4 text-[#fafafa] font-semibold hover:bg-white/[0.04] transition-colors group"
                   >
                     <span className="relative z-10">Games</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-korus-primary rounded-full"></div>
                   </button>
                   <button
                     onClick={() => router.push('/events')}
-                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                    className="relative px-4 py-4 text-[#a1a1a1] font-semibold hover:bg-white/[0.04] hover:text-[#fafafa] transition-colors group"
                   >
                     <span className="relative z-10">Events</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
@@ -97,7 +97,7 @@ export default function GamesPage() {
                 <button
                   onClick={() => setShowSearchModal(true)}
                   aria-label="Open search"
-                  className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors"
+                  className="md:hidden flex items-center justify-center w-12 h-12 text-[#fafafa] hover:bg-white/[0.04] transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

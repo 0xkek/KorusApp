@@ -66,7 +66,7 @@ export default function WelcomePage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-black via-korus-dark-100 to-black relative overflow-hidden">
+    <main className="min-h-screen bg-gradient-to-b from-[#0a0a0a] via-[#0a0a0a] to-[#0a0a0a] relative overflow-hidden">
       {/* Animated gradient orbs */}
       <div className="fixed inset-0">
         {/* Primary orb - top right - hardcoded mint green */}
@@ -104,7 +104,7 @@ export default function WelcomePage() {
             DEV
           </button>
           {showDeveloperTools && (
-            <div className="absolute top-8 right-0 bg-black border border-gray-600 rounded p-3 text-xs text-white font-mono min-w-48">
+            <div className="absolute top-8 right-0 bg-[#0a0a0a] border border-white/10 rounded p-3 text-xs text-[#fafafa] font-mono min-w-48">
               <div className="mb-2">Status: {connected ? 'Connected' : 'Disconnected'}</div>
               {connected && (
                 <button
@@ -150,25 +150,25 @@ export default function WelcomePage() {
                   Korus
                 </span>
               </h1>
-              <p className="text-gray-300 text-2xl font-medium mb-4">
+              <p className="text-[#a1a1a1] text-2xl font-medium mb-4">
                 Where community meets crypto
               </p>
-              <p className="text-korus-textSecondary text-lg max-w-xl mx-auto">
+              <p className="text-[#a1a1a1] text-lg max-w-xl mx-auto">
                 Join the revolution of radical authenticity. Create, connect, and earn with the power of Solana blockchain.
               </p>
             </div>
 
             {/* Connect Wallet Card */}
-            <div className="bg-korus-dark-300/50 border border-korus-dark-400 rounded-3xl p-10 backdrop-blur-md mb-12 shadow-2xl shadow-black/50">
-              <p className="text-white text-2xl mb-8 font-semibold">
+            <div className="bg-[#171717]/50 border border-white/10 rounded-3xl p-10 backdrop-blur-md mb-12 shadow-2xl shadow-black/50">
+              <p className="text-[#fafafa] text-2xl mb-8 font-semibold">
                 Connect your wallet to get started
               </p>
               <div className="mb-8">
                 <WalletButton />
               </div>
 
-              <div className="pt-8 border-t border-korus-dark-400">
-                <p className="text-korus-textSecondary text-base mb-6">New to Solana?</p>
+              <div className="pt-8 border-t border-white/10">
+                <p className="text-[#a1a1a1] text-base mb-6">New to Solana?</p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <a
                     href="https://phantom.app"
@@ -198,26 +198,26 @@ export default function WelcomePage() {
 
             {/* Features Preview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-              <div className="bg-korus-dark-300/30 border border-korus-dark-400 rounded-2xl p-8 backdrop-blur-sm hover:bg-korus-dark-300/50 transition-all">
+              <div className="bg-[#171717]/30 border border-white/10 rounded-2xl p-8 backdrop-blur-sm hover:bg-[#171717]/50 transition-all">
                 <div className="text-4xl mb-4">💬</div>
-                <h3 className="text-white text-xl font-bold mb-2">Social Feed</h3>
-                <p className="text-korus-textSecondary text-base">Share thoughts, engage with community, and build meaningful connections</p>
+                <h3 className="text-[#fafafa] text-xl font-bold mb-2">Social Feed</h3>
+                <p className="text-[#a1a1a1] text-base">Share thoughts, engage with community, and build meaningful connections</p>
               </div>
-              <div className="bg-korus-dark-300/30 border border-korus-dark-400 rounded-2xl p-8 backdrop-blur-sm hover:bg-korus-dark-300/50 transition-all">
+              <div className="bg-[#171717]/30 border border-white/10 rounded-2xl p-8 backdrop-blur-sm hover:bg-[#171717]/50 transition-all">
                 <div className="text-4xl mb-4">🎮</div>
-                <h3 className="text-white text-xl font-bold mb-2">Play & Earn</h3>
-                <p className="text-korus-textSecondary text-base">Challenge friends in games with SOL wagering and real rewards</p>
+                <h3 className="text-[#fafafa] text-xl font-bold mb-2">Play & Earn</h3>
+                <p className="text-[#a1a1a1] text-base">Challenge friends in games with SOL wagering and real rewards</p>
               </div>
-              <div className="bg-korus-dark-300/30 border border-korus-dark-400 rounded-2xl p-8 backdrop-blur-sm hover:bg-korus-dark-300/50 transition-all">
+              <div className="bg-[#171717]/30 border border-white/10 rounded-2xl p-8 backdrop-blur-sm hover:bg-[#171717]/50 transition-all">
                 <div className="text-4xl mb-4">💰</div>
-                <h3 className="text-white text-xl font-bold mb-2">Tip & Reward</h3>
-                <p className="text-korus-textSecondary text-base">Support creators directly with SOL tips and participate in weekly rewards</p>
+                <h3 className="text-[#fafafa] text-xl font-bold mb-2">Tip & Reward</h3>
+                <p className="text-[#a1a1a1] text-base">Support creators directly with SOL tips and participate in weekly rewards</p>
               </div>
             </div>
 
             {/* Footer Links */}
             <div className="text-center">
-              <p className="text-korus-textSecondary text-sm mb-4">
+              <p className="text-[#a1a1a1] text-sm mb-4">
                 Already have an account? Your wallet is your login.
               </p>
               <Link

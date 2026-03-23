@@ -201,11 +201,11 @@ export default function EventsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-korus-dark-100 relative overflow-hidden">
+    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
       {/* Standardized static background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-korus-dark-100 via-korus-dark-200 to-korus-dark-100">
+      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
         {/* Surface gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-korus-dark-300/25 to-korus-dark-200/35" />
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#171717]/25 to-[#111111]/35" />
       </div>
       {/* Static gradient orbs for visual depth */}
       <div className="fixed inset-0 overflow-hidden">
@@ -218,7 +218,7 @@ export default function EventsPage() {
       </div>
 
       <div className="relative z-10">
-        <div className="flex">
+        <div className="flex min-h-screen max-w-[1280px] mx-auto">
           <LeftSidebar
             onNotificationsToggle={() => setShowNotifications(!showNotifications)}
             onPostButtonClick={() => setShowCreatePostModal(true)}
@@ -226,16 +226,16 @@ export default function EventsPage() {
           />
 
           {/* Main Content */}
-          <div className="flex-1 lg:ml-80 lg:mr-96 md:ml-64 md:mr-80 sm:ml-0 sm:mr-0 md:border-x md:border-korus-border bg-korus-surface/10 backdrop-blur-sm max-w-full overflow-hidden">
+          <div className="flex-1 min-w-0 border-x border-white/10">
 
             {/* Header Navigation */}
-            <div className="sticky top-0 bg-korus-dark-300/80 backdrop-blur-xl border-b border-korus-border z-10">
+            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-white/10 z-10">
               <div className="flex">
                 {/* Mobile menu button */}
                 <button
                   onClick={() => setShowMobileMenu(true)}
                   aria-label="Open mobile menu"
-                  className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors"
+                  className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-white/[0.04] transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -252,21 +252,21 @@ export default function EventsPage() {
                 <div className="relative flex items-center justify-center w-full">
                   <button
                     onClick={() => router.push('/')}
-                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                    className="relative px-4 py-4 text-[#a1a1a1] font-semibold hover:bg-white/[0.04] hover:text-white transition-colors group"
                   >
                     <span className="relative z-10">Home</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
                   </button>
                   <button
                     onClick={() => router.push('/games')}
-                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                    className="relative px-4 py-4 text-[#a1a1a1] font-semibold hover:bg-white/[0.04] hover:text-white transition-colors group"
                   >
                     <span className="relative z-10">Games</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
                   </button>
                   <button
                     onClick={() => router.push('/events')}
-                    className="relative px-4 py-4 text-white font-semibold hover:bg-korus-surface/20 transition-colors group"
+                    className="relative px-4 py-4 text-white font-semibold hover:bg-white/[0.04] transition-colors group"
                   >
                     <span className="relative z-10">Events</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-korus-primary rounded-full transition-colors"></div>
@@ -277,7 +277,7 @@ export default function EventsPage() {
                 <button
                   onClick={() => setShowSearchModal(true)}
                   aria-label="Open search"
-                  className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors"
+                  className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-white/[0.04] transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -290,10 +290,10 @@ export default function EventsPage() {
               {/* Header Section */}
               <div className="flex justify-between items-center mb-8">
                 <div>
-                  <h1 className="text-4xl font-bold mb-2 force-theme-text">
+                  <h1 className="text-4xl font-semibold mb-2 text-[#fafafa]">
                     📅 Community Events
                   </h1>
-                  <p className="text-korus-textSecondary">Discover exclusive opportunities and participate in community events</p>
+                  <p className="text-[#a1a1a1]">Discover exclusive opportunities and participate in community events</p>
                   {isPremium && (
                     <div className="inline-flex items-center gap-2 mt-2 px-3 py-1 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black rounded-full text-sm font-semibold">
                       <span>⭐</span>
@@ -316,12 +316,12 @@ export default function EventsPage() {
                       <span className="text-2xl">🔓</span>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold" style={{ color: '#fbbf24' }}>Get 12-Hour Early Access</h3>
-                      <p className="text-korus-textSecondary">See events before everyone else with Premium</p>
+                      <h3 className="text-lg font-semibold" style={{ color: '#fbbf24' }}>Get 12-Hour Early Access</h3>
+                      <p className="text-[#a1a1a1]">See events before everyone else with Premium</p>
                     </div>
                     <button
                       onClick={() => setShowPremiumModal(true)}
-                      className="px-6 py-3 font-bold rounded-xl hover:shadow-lg transition-all"
+                      className="px-6 py-3 font-semibold rounded-lg hover:shadow-lg duration-150"
                       style={{
                         background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
                         color: '#000000'
@@ -338,13 +338,13 @@ export default function EventsPage() {
                 {isLoading ? (
                   <div className="text-center py-20">
                     <div className="w-16 h-16 mx-auto border-4 border-korus-primary/20 border-t-korus-primary rounded-full animate-spin mb-4"></div>
-                    <p className="text-korus-textSecondary">Loading events...</p>
+                    <p className="text-[#a1a1a1]">Loading events...</p>
                   </div>
                 ) : visibleEvents.length === 0 ? (
                   <div className="text-center py-20">
                     <div className="text-6xl mb-4 opacity-60">📅</div>
-                    <p className="text-korus-text text-lg font-medium">No events available</p>
-                    <p className="text-korus-textSecondary text-sm mt-2">
+                    <p className="text-[#fafafa] text-lg font-medium">No events available</p>
+                    <p className="text-[#a1a1a1] text-sm mt-2">
                       {!isPremium ? 'Upgrade to Premium to see events 12 hours early' : 'Check back soon for new opportunities'}
                     </p>
                   </div>
@@ -355,7 +355,7 @@ export default function EventsPage() {
                     <div
                       key={event.id}
                       onClick={() => handleEventPress(event)}
-                      className="border border-korus-borderLight bg-korus-surface/20 hover:bg-korus-surface/40 hover:border-korus-border transition-all duration-200 cursor-pointer rounded-2xl overflow-hidden group"
+                      className="border border-white/10 bg-[#171717] hover:bg-white/[0.04] hover:border-white/10 transition-all duration-150 cursor-pointer rounded-xl overflow-hidden group"
                       style={{
                         borderColor: eventIsLive ? getEventTypeColor(event.type) : undefined
                       }}
@@ -393,7 +393,7 @@ export default function EventsPage() {
                               className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
                                 eventIsLive
                                   ? 'bg-red-500 text-white'
-                                  : 'bg-korus-surface text-korus-textSecondary'
+                                  : 'bg-[#171717] text-[#a1a1a1]'
                               }`}
                             >
                               {eventIsLive ? '🔴' : '⏰'}
@@ -401,14 +401,14 @@ export default function EventsPage() {
                             </div>
                           </div>
 
-                          <h3 className="text-xl font-bold force-theme-text mb-1">{event.title}</h3>
+                          <h3 className="text-xl font-semibold text-[#fafafa] mb-1">{event.title}</h3>
                           <p className="text-korus-primary font-medium text-sm mb-2">{event.projectName}</p>
-                          <p className="text-korus-textSecondary text-sm leading-relaxed mb-4 line-clamp-2">
+                          <p className="text-[#a1a1a1] text-sm leading-relaxed mb-4 line-clamp-2">
                             {event.description}
                           </p>
 
                           {/* Event Details */}
-                          <div className="flex items-center gap-6 text-xs text-korus-textTertiary">
+                          <div className="flex items-center gap-6 text-xs text-[#737373]">
                             <div className="flex items-center gap-1">
                               <span>🔗</span>
                               Solana
@@ -425,14 +425,14 @@ export default function EventsPage() {
                           {event.registrationCount !== undefined && event.maxSpots && (
                             <div className="mt-4">
                               <div className="flex justify-between items-center mb-2">
-                                <span className="text-xs text-korus-textSecondary">
+                                <span className="text-xs text-[#a1a1a1]">
                                   {event.registrationCount}/{event.maxSpots} participants
                                 </span>
                                 <span className="text-xs font-medium" style={{ color: getEventTypeColor(event.type) }}>
                                   {Math.round((event.registrationCount / event.maxSpots) * 100)}%
                                 </span>
                               </div>
-                              <div className="w-full bg-korus-borderLight rounded-full h-2">
+                              <div className="w-full bg-white/15 rounded-full h-2">
                                 <div
                                   className="h-2 rounded-full transition-all"
                                   style={{
@@ -479,8 +479,8 @@ export default function EventsPage() {
 
       {/* Event Details Modal */}
       {showEventModal && selectedEvent && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-korus-surface/90 backdrop-blur-md rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-korus-borderLight">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex justify-between items-center mb-6">
               <div
@@ -496,9 +496,9 @@ export default function EventsPage() {
               <button
                 onClick={() => setShowEventModal(false)}
                 aria-label="Close event details"
-                className="w-8 h-8 rounded-full bg-korus-surface/60 flex items-center justify-center hover:bg-korus-surface/80 transition-all"
+                className="w-8 h-8 rounded-full bg-white/[0.12] flex items-center justify-center hover:bg-[#171717] transition-all"
               >
-                <svg className="w-5 h-5 force-theme-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-[#fafafa]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -517,44 +517,44 @@ export default function EventsPage() {
 
             {/* Event Info */}
             <div>
-              <h2 className="text-3xl font-bold force-theme-text mb-2">{selectedEvent.title}</h2>
+              <h2 className="text-3xl font-semibold text-[#fafafa] mb-2">{selectedEvent.title}</h2>
               <p className="text-korus-primary font-medium text-lg mb-4">{selectedEvent.projectName}</p>
-              <p className="text-korus-textSecondary leading-relaxed mb-6">
+              <p className="text-[#a1a1a1] leading-relaxed mb-6">
                 {selectedEvent.description}
               </p>
 
               {/* Event Details Grid */}
               <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-korus-surface/40 p-4 rounded-xl text-center">
+                <div className="bg-[#262626] p-4 rounded-xl text-center border border-white/10">
                   <div className="text-korus-primary text-xl mb-1">⏰</div>
-                  <div className="text-xs text-korus-textTertiary">Starts In</div>
-                  <div className="font-bold force-theme-text">{formatTimeRemaining(selectedEvent.startDate)}</div>
+                  <div className="text-xs text-[#737373]">Starts In</div>
+                  <div className="font-semibold text-[#fafafa]">{formatTimeRemaining(selectedEvent.startDate)}</div>
                 </div>
 
                 {selectedEvent.maxSpots && (
-                  <div className="bg-korus-surface/40 p-4 rounded-xl text-center">
+                  <div className="bg-[#262626] p-4 rounded-xl text-center border border-white/10">
                     <div className="text-korus-primary text-xl mb-1">👥</div>
-                    <div className="text-xs text-korus-textTertiary">Max Spots</div>
-                    <div className="font-bold force-theme-text">{selectedEvent.maxSpots}</div>
+                    <div className="text-xs text-[#737373]">Max Spots</div>
+                    <div className="font-semibold text-[#fafafa]">{selectedEvent.maxSpots}</div>
                   </div>
                 )}
 
-                <div className="bg-korus-surface/40 p-4 rounded-xl text-center">
+                <div className="bg-[#262626] p-4 rounded-xl text-center border border-white/10">
                   <div className="text-korus-primary text-xl mb-1">🔗</div>
-                  <div className="text-xs text-korus-textTertiary">Chain</div>
-                  <div className="font-bold force-theme-text">Solana</div>
+                  <div className="text-xs text-[#737373]">Chain</div>
+                  <div className="font-semibold text-[#fafafa]">Solana</div>
                 </div>
               </div>
 
               {/* Requirements */}
               {selectedEvent.requirements && selectedEvent.requirements.length > 0 && (
                 <div className="mb-6">
-                  <h3 className="text-lg font-bold force-theme-text mb-3">Requirements</h3>
+                  <h3 className="text-lg font-semibold text-[#fafafa] mb-3">Requirements</h3>
                   <div className="space-y-2">
                     {selectedEvent.requirements.map((req, index) => (
                       <div key={index} className="flex items-center gap-2">
                         <span className="text-korus-primary">✓</span>
-                        <span className="text-korus-textSecondary text-sm">{req}</span>
+                        <span className="text-[#a1a1a1] text-sm">{req}</span>
                       </div>
                     ))}
                   </div>
@@ -564,16 +564,16 @@ export default function EventsPage() {
               {/* Participation Progress */}
               {selectedEvent.registrationCount !== undefined && selectedEvent.maxSpots && (
                 <div className="mb-6">
-                  <h3 className="text-lg font-bold force-theme-text mb-3">Participation</h3>
+                  <h3 className="text-lg font-semibold text-[#fafafa] mb-3">Participation</h3>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-korus-textSecondary">
+                    <span className="text-sm text-[#a1a1a1]">
                       {selectedEvent.registrationCount} / {selectedEvent.maxSpots} spots filled
                     </span>
                     <span className="text-sm font-medium text-korus-primary">
                       {Math.round((selectedEvent.registrationCount / selectedEvent.maxSpots) * 100)}%
                     </span>
                   </div>
-                  <div className="w-full bg-korus-borderLight rounded-full h-3">
+                  <div className="w-full bg-white/15 rounded-full h-3">
                     <div
                       className="h-3 rounded-full transition-all"
                       style={{
@@ -588,14 +588,14 @@ export default function EventsPage() {
               {/* Action Button */}
               <div className="mt-8">
                 {!connected ? (
-                  <button className="w-full bg-korus-surface/60 border border-korus-borderLight text-korus-textSecondary font-semibold py-4 rounded-xl">
+                  <button className="w-full bg-white/[0.08] border border-white/15 text-[#fafafa] font-semibold py-4 rounded-lg hover:bg-white/[0.12] duration-150">
                     Connect Wallet to Participate
                   </button>
                 ) : (
                   <button
                     onClick={handleParticipate}
                     disabled={isParticipating}
-                    className="w-full bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold py-4 rounded-xl hover:shadow-lg hover:shadow-korus-primary/20 transition-all disabled:opacity-50"
+                    className="w-full bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-semibold py-4 rounded-lg hover:shadow-lg hover:shadow-korus-primary/20 duration-150 disabled:opacity-50"
                   >
                     {isParticipating ? (
                       <div className="flex items-center justify-center gap-2">

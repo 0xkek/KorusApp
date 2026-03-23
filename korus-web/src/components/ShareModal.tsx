@@ -136,10 +136,10 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
   ];
 
   return (
-    <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div ref={modalRef} className="modal-content bg-korus-surface/95 backdrop-blur-xl rounded-2xl max-w-md w-full border border-korus-border shadow-2xl">
+    <div className="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl max-w-md w-full">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-korus-border">
+        <div className="flex items-center justify-between p-6 border-b border-white/10">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 40%, transparent)' }}>
               <svg className="w-6 h-6" fill="none" stroke="#000000" strokeWidth={2.5} viewBox="0 0 24 24">
@@ -147,13 +147,13 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
               </svg>
             </div>
             <div>
-              <h2 className="heading-2 text-white">Share Post</h2>
-              <p className="text-sm text-korus-textSecondary">by {displayUser}</p>
+              <h2 className="heading-2 text-[#fafafa] font-semibold">Share Post</h2>
+              <p className="text-sm text-[#a1a1a1]">by {displayUser}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center bg-korus-surface/40 border border-korus-borderLight text-korus-textSecondary hover:bg-korus-surface/60 hover:text-white transition-all duration-200"
+            className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[#fafafa] transition-colors duration-150 flex items-center justify-center"
             aria-label="Close modal"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -169,9 +169,9 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))', color: '#000000' }}>
                 {postUser.slice(0, 2).toUpperCase()}
               </div>
-              <span className="text-white font-medium truncate">{displayUser}</span>
+              <span className="text-[#fafafa] font-medium truncate">{displayUser}</span>
             </div>
-            <p className="text-korus-text text-sm leading-relaxed line-clamp-3">
+            <p className="text-[#fafafa] text-sm leading-relaxed line-clamp-3">
               {truncatedContent}
             </p>
           </div>
@@ -180,13 +180,13 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
         {/* Share Options */}
         <div className="p-5 space-y-5">
           <div>
-            <h3 className="label text-white mb-3">Share to</h3>
+            <h3 className="label text-[#fafafa] mb-3">Share to</h3>
             <div className="grid grid-cols-2 gap-2">
               {shareOptions.map((option) => (
                 <button
                   key={option.name}
                   onClick={option.action}
-                  className="flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 hover:scale-[1.02]"
+                  className="flex items-center gap-3 p-3 rounded-lg border transition-all duration-150 hover:scale-[1.02]"
                   style={{
                     backgroundColor: 'rgba(26, 26, 26, 0.4)',
                     borderColor: 'color-mix(in srgb, var(--korus-primary) 20%, transparent)'
@@ -195,7 +195,7 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
                   <div className={`${option.color}`}>
                     {option.icon}
                   </div>
-                  <span className="text-white font-medium text-sm">
+                  <span className="text-[#fafafa] font-medium text-sm">
                     {option.name === 'Copy Link' && copied ? 'Copied!' : option.name}
                   </span>
                 </button>
@@ -205,13 +205,13 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
 
           {/* Direct Link */}
           <div>
-            <h4 className="label text-white mb-3">Direct Link</h4>
+            <h4 className="label text-[#fafafa] mb-3">Direct Link</h4>
             <div className="flex items-center gap-2">
               <input
                 type="text"
                 value={postUrl}
                 readOnly
-                className="flex-1 bg-korus-surface/40 text-korus-textSecondary text-sm px-3 py-2.5 rounded-lg border border-korus-borderLight focus:outline-none"
+                className="flex-1 bg-white/[0.06] text-[#a1a1a1] text-sm px-3 py-2.5 rounded-lg border border-white/15 focus:outline-none"
               />
               <button
                 onClick={async () => {
@@ -224,7 +224,7 @@ export default function ShareModal({ isOpen, onClose, postId, postContent, postU
                     showError('Failed to copy');
                   }
                 }}
-                className="px-4 py-2.5 rounded-lg font-semibold transition-all duration-200 hover:scale-[1.02]"
+                className="px-4 py-2.5 rounded-lg font-semibold transition-all duration-150 hover:scale-[1.02]"
                 style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))', color: '#000000' }}
               >
                 Copy

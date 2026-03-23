@@ -191,31 +191,31 @@ export function RockPaperScissorsGame({
       {/* Game Info Bar - Players */}
       <div className="flex items-center justify-between mb-2 px-2 text-xs">
         <div className="flex items-center gap-2">
-          <span className="text-korus-textSecondary">Players:</span>
+          <span className="text-[#a1a1a1]">Players:</span>
           <span className="font-semibold text-korus-primary">
             {getDisplayName(player1Address, player1DisplayName)}
           </span>
-          <span className="text-korus-textSecondary">vs</span>
+          <span className="text-[#a1a1a1]">vs</span>
           <span className="font-semibold text-korus-secondary">
             {getDisplayName(player2Address, player2DisplayName)}
           </span>
         </div>
         {!isGameOver && timeLeft && (
           <div className="flex items-center gap-1.5 relative">
-            <span className="text-korus-textSecondary">⏱</span>
-            <span className={`font-semibold ${timeLeft === 'Expired' ? 'text-red-400' : 'text-white'}`}>
+            <span className="text-[#a1a1a1]">⏱</span>
+            <span className={`font-semibold ${timeLeft === 'Expired' ? 'text-red-400' : 'text-[#fafafa]'}`}>
               {timeLeft}
             </span>
             <button
               onClick={() => setShowTimerInfo(!showTimerInfo)}
-              className="ml-1 text-korus-textSecondary hover:text-white transition-colors"
+              className="ml-1 text-[#a1a1a1] hover:text-[#fafafa] duration-150"
               aria-label="Timer info"
             >
               ℹ️
             </button>
             {showTimerInfo && (
-              <div className="absolute top-6 right-0 bg-korus-surface border border-korus-border rounded-lg p-2 w-48 text-xs shadow-lg z-10">
-                <p className="text-white">Each player has 24 hours to make their move. If time expires, they lose!</p>
+              <div className="absolute top-6 right-0 bg-[#171717] border border-white/10 rounded-lg p-2 w-48 text-xs shadow-lg z-10">
+                <p className="text-[#fafafa]">Each player has 24 hours to make their move. If time expires, they lose!</p>
               </div>
             )}
           </div>
@@ -226,9 +226,9 @@ export function RockPaperScissorsGame({
       {!isGameOver && currentRound > 1 && (
         <div className="flex items-center justify-center mb-3 px-2 text-xs">
           <div className="flex items-center gap-2">
-            <span className="text-korus-textSecondary">Round:</span>
-            <span className="font-bold text-white">{currentRound}</span>
-            <span className="text-korus-textSecondary text-[10px]">(Draw - play again!)</span>
+            <span className="text-[#a1a1a1]">Round:</span>
+            <span className="font-bold text-[#fafafa]">{currentRound}</span>
+            <span className="text-[#a1a1a1] text-[10px]">(Draw - play again!)</span>
           </div>
         </div>
       )}
@@ -238,14 +238,14 @@ export function RockPaperScissorsGame({
         <div className="mb-3 text-center">
           {!playerMove && (
             <p className={`text-xs font-semibold ${
-              canMakeChoice ? 'text-korus-primary' : 'text-korus-textSecondary'
+              canMakeChoice ? 'text-korus-primary' : 'text-[#a1a1a1]'
             }`}>
               {canMakeChoice ? '👉 Make your choice!' : '⏳ Waiting for your turn...'}
             </p>
           )}
 
           {playerMove && (
-            <p className="text-xs font-semibold text-korus-textSecondary">
+            <p className="text-xs font-semibold text-[#a1a1a1]">
               ⏳ Waiting for opponent...
             </p>
           )}
@@ -296,7 +296,7 @@ export function RockPaperScissorsGame({
                 href={`https://explorer.solana.com/tx/${payoutTxSignature}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 inline-block text-xs underline hover:opacity-80 transition-opacity"
+                className="mt-2 inline-block text-xs underline hover:opacity-80 duration-150"
                 style={{ color: 'white', WebkitTextFillColor: 'white' }}
               >
                 View payout on Solana Explorer →
@@ -306,7 +306,7 @@ export function RockPaperScissorsGame({
 
           {/* Show both players' choices */}
           {opponentMove && (
-            <div className="bg-korus-surface/50 rounded-lg p-3">
+            <div className="bg-white/[0.12] rounded-lg p-3">
               <div className="flex items-center justify-center gap-6">
                 <div className="flex flex-col items-center">
                   <div
@@ -366,12 +366,12 @@ export function RockPaperScissorsGame({
             className={`
               relative w-20 h-20 rounded-2xl
               flex flex-col items-center justify-center
-              transition-all duration-200
+              transition-all duration-150
               ${playerMove === choice.id
                 ? 'bg-gradient-to-br from-korus-primary to-korus-secondary border-3 border-korus-primary shadow-lg scale-105'
                 : selectedChoice === choice.id && canMakeChoice
                 ? 'bg-gradient-to-br from-korus-primary/40 to-korus-primary/20 border-2 border-korus-primary/80'
-                : 'bg-gradient-to-br from-korus-surface to-korus-cardBackground border-2 border-korus-border hover:border-korus-primary/50 hover:scale-105'
+                : 'bg-gradient-to-br from-[#171717] to-[#171717] border-2 border-white/10 hover:border-korus-primary/50 hover:scale-105'
               }
               ${!canMakeChoice && !playerMove ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
               ${canMakeChoice ? 'hover:shadow-lg' : ''}
@@ -391,7 +391,7 @@ export function RockPaperScissorsGame({
             </span>
             {playerMove === choice.id && (
               <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs font-bold">✓</span>
+                <span className="text-[#fafafa] text-xs font-bold">✓</span>
               </div>
             )}
           </button>
@@ -400,19 +400,19 @@ export function RockPaperScissorsGame({
 
       {/* Wager Info Bar */}
       {wagerAmount > 0 && (
-        <div className="flex items-center justify-between px-2 text-xs bg-korus-surface/30 rounded-lg py-1.5">
+        <div className="flex items-center justify-between px-2 text-xs bg-white/[0.06] rounded-lg py-1.5">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
-              <span className="text-korus-textSecondary">Wager:</span>
+              <span className="text-[#a1a1a1]">Wager:</span>
               <span className="font-bold text-korus-primary">{wagerAmount} SOL</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-korus-textSecondary">Korus Fee (2%):</span>
+              <span className="text-[#a1a1a1]">Korus Fee (2%):</span>
               <span className="font-semibold text-yellow-400">{korusFee.toFixed(4)} SOL</span>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-korus-textSecondary">Winner gets:</span>
+            <span className="text-[#a1a1a1]">Winner gets:</span>
             <span className="font-bold text-green-400">{winnerPayout.toFixed(4)} SOL</span>
           </div>
         </div>

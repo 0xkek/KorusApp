@@ -60,7 +60,7 @@ export default function RootLayout({
         <meta name="twitter:description" content="Connect, play, and earn on Solana." />
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className={`${poppins.variable} font-sans antialiased`}>
+      <body className={`${poppins.variable} font-sans antialiased bg-[#0a0a0a] text-[#fafafa]`}>
         <ErrorBoundary>
           <ThemeProvider>
             <WalletContextProvider>

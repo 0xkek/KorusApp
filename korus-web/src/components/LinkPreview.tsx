@@ -96,7 +96,7 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
 
   if (loading) {
     return (
-      <div className="my-3 p-4 rounded-xl border border-korus-dark-400 bg-korus-dark-300/50 flex items-center justify-center">
+      <div className="my-3 p-4 rounded-xl border border-white/10 bg-[#171717] flex items-center justify-center">
         <div className="w-5 h-5 border-2 border-korus-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -107,7 +107,7 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
     return (
       <button
         onClick={handlePress}
-        className="text-korus-primary text-sm underline hover:text-korus-secondary transition-colors"
+        className="text-korus-primary text-sm underline hover:text-korus-secondary duration-150"
       >
         {url}
       </button>
@@ -117,10 +117,10 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
   return (
     <button
       onClick={handlePress}
-      className="my-3 w-full rounded-xl overflow-hidden border border-korus-dark-400 bg-gradient-to-br from-korus-dark-300/40 to-korus-dark-400/20 hover:border-korus-primary/40 transition-all group"
+      className="my-3 w-full rounded-xl overflow-hidden border border-white/10 bg-[#171717] hover:border-korus-primary/40 duration-150 group"
     >
       {previewData.image && (
-        <div className="relative w-full h-[180px] bg-black">
+        <div className="relative w-full h-[180px] bg-[#0a0a0a]">
           <Image
             src={previewData.image}
             alt={previewData.title || 'Link preview'}
@@ -130,9 +130,9 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
           />
           {previewData.type === 'video' && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-black/70 to-black/50 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-black/70 to-black/50 flex items-center justify-center group-hover:scale-110 duration-150">
                 <svg
-                  className="w-6 h-6 text-white ml-1"
+                  className="w-6 h-6 text-[#fafafa] ml-1"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
@@ -148,7 +148,7 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
         {previewData.siteName && (
           <div className="flex items-center gap-1.5 mb-2">
             <svg
-              className="w-3 h-3 text-korus-textSecondary"
+              className="w-3 h-3 text-[#737373]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -159,20 +159,20 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
               )}
             </svg>
-            <span className="text-xs text-korus-textSecondary uppercase font-medium tracking-wider">
+            <span className="text-xs text-[#737373] uppercase font-medium tracking-wider">
               {previewData.siteName}
             </span>
           </div>
         )}
 
         {previewData.title && (
-          <h3 className="text-white font-semibold text-base mb-1.5 line-clamp-2">
+          <h3 className="text-[#fafafa] font-semibold text-base mb-1.5 line-clamp-2">
             {previewData.title}
           </h3>
         )}
 
         {previewData.description && (
-          <p className="text-korus-textSecondary text-sm mb-2.5 line-clamp-2">
+          <p className="text-[#a1a1a1] text-sm mb-2.5 line-clamp-2">
             {previewData.description}
           </p>
         )}

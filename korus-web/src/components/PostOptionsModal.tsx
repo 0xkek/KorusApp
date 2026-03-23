@@ -80,8 +80,8 @@ export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, o
   // Render report confirmation modal (similar to mobile app)
   if (!isOwnPost) {
     return (
-      <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div ref={modalRef} className="modal-content bg-korus-surface/90 backdrop-blur-md rounded-3xl max-w-md w-full border-2 shadow-xl shadow-red-500/20" style={{borderColor: '#ef4444'}}>
+      <div className="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl max-w-md w-full border-2 shadow-xl shadow-red-500/20" style={{borderColor: '#ef4444'}}>
           <div className="p-6 text-center">
             {/* Warning Icon */}
             <div className="mb-6 flex justify-center">
@@ -93,10 +93,10 @@ export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, o
             </div>
 
             {/* Title */}
-            <h2 className="heading-1 text-white mb-4">Report Post?</h2>
+            <h2 className="heading-1 text-[#fafafa] mb-4">Report Post?</h2>
 
             {/* Message */}
-            <p className="text-korus-textSecondary text-base leading-relaxed mb-8">
+            <p className="text-[#a1a1a1] text-base leading-relaxed mb-8">
               Are you sure you want to report this post? Our moderation team will review it for violations of community guidelines.
             </p>
 
@@ -105,14 +105,14 @@ export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, o
               <button
                 onClick={onClose}
                 disabled={isProcessing}
-                className="flex-1 py-4 px-6 bg-korus-surface/60 border border-korus-borderLight text-korus-text font-semibold rounded-2xl hover:bg-korus-surface/80 hover:border-korus-border transition-all duration-200 disabled:opacity-50"
+                className="flex-1 py-4 px-6 bg-white/[0.08] border border-white/15 text-[#fafafa] font-semibold rounded-lg hover:bg-white/[0.12] duration-150 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleReport}
                 disabled={isProcessing}
-                className="flex-1 py-4 px-6 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl hover:shadow-lg hover:shadow-red-500/40 transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 border border-red-500 shadow-md"
+                className="flex-1 py-4 px-6 bg-red-500 text-white rounded-lg hover:bg-red-600 duration-150 disabled:opacity-50 disabled:hover:scale-100 font-semibold"
               >
                 {isProcessing ? (
                   <div className="flex items-center justify-center gap-2">
@@ -132,8 +132,8 @@ export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, o
 
   // Render delete confirmation modal for own posts
   return (
-    <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div ref={modalRef} className="modal-content bg-korus-surface/90 backdrop-blur-md rounded-3xl max-w-md w-full border-2 shadow-xl shadow-red-500/20" style={{borderColor: '#ef4444'}}>
+    <div className="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl max-w-md w-full border-2 shadow-xl shadow-red-500/20" style={{borderColor: '#ef4444'}}>
         <div className="p-6 text-center">
           {/* Delete Icon */}
           <div className="mb-6 flex justify-center">
@@ -145,10 +145,10 @@ export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, o
           </div>
 
           {/* Title */}
-          <h2 className="heading-1 text-white mb-4">Delete Post?</h2>
+          <h2 className="heading-1 text-[#fafafa] mb-4">Delete Post?</h2>
 
           {/* Message */}
-          <p className="text-korus-textSecondary text-base leading-relaxed mb-8">
+          <p className="text-[#a1a1a1] text-base leading-relaxed mb-8">
             Are you sure you want to delete this post? This action cannot be undone.
           </p>
 
@@ -157,14 +157,14 @@ export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, o
             <button
               onClick={onClose}
               disabled={isProcessing}
-              className="flex-1 py-4 px-6 bg-korus-surface/60 border border-korus-borderLight text-korus-text font-semibold rounded-2xl hover:bg-korus-surface/80 hover:border-korus-border transition-all duration-200 disabled:opacity-50"
+              className="flex-1 py-4 px-6 bg-white/[0.08] border border-white/15 text-[#fafafa] font-semibold rounded-lg hover:bg-white/[0.12] duration-150 disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={handleDelete}
               disabled={isProcessing}
-              className="flex-1 py-4 px-6 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl hover:shadow-lg hover:shadow-red-500/40 transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 border border-red-500 shadow-md"
+              className="flex-1 py-4 px-6 bg-red-500 text-white rounded-lg hover:bg-red-600 duration-150 disabled:opacity-50 disabled:hover:scale-100 font-semibold"
             >
               {isProcessing ? (
                 <div className="flex items-center justify-center gap-2">

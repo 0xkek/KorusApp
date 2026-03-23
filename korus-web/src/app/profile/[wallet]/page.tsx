@@ -80,10 +80,10 @@ export default function UserProfilePage() {
   };
 
   return (
-    <main className="min-h-screen bg-korus-dark-100 relative overflow-hidden">
+    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
       {/* Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-korus-dark-100 via-korus-dark-200 to-korus-dark-100">
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-korus-dark-300/25 to-korus-dark-200/35" />
+      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#171717]/25 to-[#111111]/35" />
       </div>
 
       {/* Static gradient orbs */}
@@ -94,21 +94,21 @@ export default function UserProfilePage() {
 
       {/* Content wrapper */}
       <div className="relative z-10">
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen max-w-[1280px] mx-auto">
           {/* Main Content */}
-          <div className="flex-1 lg:ml-80 lg:mr-96 md:ml-64 md:mr-80 sm:ml-0 sm:mr-0 md:border-x md:border-korus-border bg-korus-surface/10 backdrop-blur-sm max-w-full overflow-hidden">
+          <div className="flex-1 min-w-0 border-x border-white/10">
             {/* Header */}
-            <div className="sticky top-0 bg-korus-dark-300/80 backdrop-blur-xl border-b border-korus-border z-10">
+            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-white/10 z-10">
               <div className="flex items-center px-4 py-4">
                 <button
                   onClick={() => router.back()}
-                  className="p-2 hover:bg-korus-surface/20 rounded-full transition-colors mr-3"
+                  className="p-2 hover:bg-white/[0.04] rounded-full transition-colors mr-3"
                 >
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-[#fafafa]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-                <h1 className="text-3xl font-bold text-white">Profile</h1>
+                <h1 className="text-3xl font-bold text-[#fafafa]">Profile</h1>
               </div>
             </div>
 
@@ -140,11 +140,11 @@ export default function UserProfilePage() {
                             </div>
                           )}
                         </div>
-                        <p className="text-korus-text text-base mb-2">@{displayName}</p>
+                        <p className="text-[#fafafa] text-base mb-2">@{displayName}</p>
                       </>
                     ) : (
                       <div className="flex items-center justify-center gap-2 mb-2">
-                        <h2 className="text-2xl font-bold text-white">
+                        <h2 className="text-2xl font-bold text-[#fafafa]">
                           {displayName}
                         </h2>
                         {userInfo.isPremium && (
@@ -162,7 +162,7 @@ export default function UserProfilePage() {
                       <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${
                         userInfo.isPremium
                           ? 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/30'
-                          : 'bg-korus-surface/40 text-korus-textSecondary border border-korus-borderLight'
+                          : 'bg-white/[0.06] text-[#a1a1a1] border border-white/15'
                       }`}>
                         {userInfo.isPremium ? (
                           <>
@@ -179,12 +179,12 @@ export default function UserProfilePage() {
 
                     {/* Wallet Address */}
                     <div className="flex items-center justify-center gap-2 mb-4">
-                      <span className="text-korus-textTertiary text-xs font-mono" style={{ textShadow: '0 0 8px rgba(67, 233, 123, 0.2)' }}>
+                      <span className="text-[#737373] text-xs font-mono" style={{ textShadow: '0 0 8px rgba(67, 233, 123, 0.2)' }}>
                         {profileWallet}
                       </span>
                       <button
                         onClick={handleCopyWallet}
-                        className="p-1 hover:bg-korus-surface/20 rounded transition-colors"
+                        className="p-1 hover:bg-white/[0.04] rounded transition-colors"
                       >
                         {copied ? (
                           <svg className="w-4 h-4 text-korus-primary" fill="currentColor" viewBox="0 0 24 24">
@@ -207,7 +207,7 @@ export default function UserProfilePage() {
                             className={`px-2 py-1 rounded-lg text-xs font-medium ${
                               domain.favorite
                                 ? 'bg-korus-primary/20 text-korus-primary border border-korus-primary/30'
-                                : 'bg-korus-surface/30 text-korus-textSecondary border border-korus-borderLight'
+                                : 'bg-white/[0.06] text-[#a1a1a1] border border-white/15'
                             }`}
                           >
                             {domain.domain}
@@ -220,22 +220,22 @@ export default function UserProfilePage() {
 
                 {/* Stats Grid */}
                 <div className="flex gap-2 mb-6">
-                  <div className="flex-1 bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-4">
+                  <div className="flex-1 bg-white/[0.04] backdrop-blur-sm border border-white/15 rounded-2xl p-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-korus-primary mb-1">{stats.posts}</div>
-                      <div className="text-xs text-korus-textSecondary font-medium">Posts Made</div>
+                      <div className="text-xs text-[#a1a1a1] font-medium">Posts Made</div>
                     </div>
                   </div>
-                  <div className="flex-1 bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-4">
+                  <div className="flex-1 bg-white/[0.04] backdrop-blur-sm border border-white/15 rounded-2xl p-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-korus-primary mb-1">{stats.tipsReceived}</div>
-                      <div className="text-xs text-korus-textSecondary font-medium">Tips Received</div>
+                      <div className="text-xs text-[#a1a1a1] font-medium">Tips Received</div>
                     </div>
                   </div>
-                  <div className="flex-1 bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-4">
+                  <div className="flex-1 bg-white/[0.04] backdrop-blur-sm border border-white/15 rounded-2xl p-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-korus-primary mb-1">{stats.tipsGiven}</div>
-                      <div className="text-xs text-korus-textSecondary font-medium">Tips Given</div>
+                      <div className="text-xs text-[#a1a1a1] font-medium">Tips Given</div>
                     </div>
                   </div>
                 </div>
@@ -244,7 +244,7 @@ export default function UserProfilePage() {
                 <div className="mb-6">
                   <button
                     onClick={() => setShowTipModal(true)}
-                    className="w-full bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold py-3 px-6 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-200 flex items-center justify-center gap-2"
+                    className="w-full bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold py-3 px-6 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150 flex items-center justify-center gap-2"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
@@ -254,7 +254,7 @@ export default function UserProfilePage() {
                 </div>
 
                 {/* Reputation Score Card */}
-                <div className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6 mb-6">
+                <div className="bg-white/[0.04] backdrop-blur-sm border border-white/15 rounded-2xl p-6 mb-6">
                   <div className="flex items-center justify-center">
                     <div className="text-center">
                       <div className="flex items-center justify-center gap-3 mb-2">
@@ -264,7 +264,7 @@ export default function UserProfilePage() {
                           </svg>
                         </div>
                       </div>
-                      <h3 className="text-sm font-medium text-korus-textSecondary mb-2">Reputation Score</h3>
+                      <h3 className="text-sm font-medium text-[#a1a1a1] mb-2">Reputation Score</h3>
                       <div className="text-4xl font-bold text-korus-primary">{stats.repScore}</div>
                       {userInfo.isPremium && (
                         <div className="flex items-center justify-center gap-2 mt-3">
@@ -281,10 +281,10 @@ export default function UserProfilePage() {
                 </div>
 
                 {/* Privacy Notice */}
-                <div className="text-center py-16 bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl">
+                <div className="text-center py-16 bg-white/[0.04] backdrop-blur-sm border border-white/15 rounded-2xl">
                   <div className="text-5xl mb-4 opacity-60">🔒</div>
-                  <p className="text-korus-text text-lg font-medium mb-2">User activity is private</p>
-                  <p className="text-korus-textSecondary text-sm">
+                  <p className="text-[#fafafa] text-lg font-medium mb-2">User activity is private</p>
+                  <p className="text-[#a1a1a1] text-sm">
                     Posts and replies are only visible to the account owner
                   </p>
                 </div>

@@ -34,16 +34,16 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
     <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/95 backdrop-blur-lg"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div ref={modalRef} className="modal-content relative z-10 bg-korus-dark-200 rounded-2xl p-6 max-w-md w-full mx-4 border border-korus-dark-400">
+      <div ref={modalRef} className="modal-content relative z-10 bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center bg-korus-surface/40 border border-korus-borderLight text-korus-textSecondary hover:bg-korus-surface/60 hover:text-white transition-all duration-200"
+          className="absolute top-4 right-4 w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[#fafafa] transition-colors duration-150 flex items-center justify-center"
           aria-label="Close modal"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,14 +52,14 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
         </button>
 
         {/* Title */}
-        <h2 className="heading-1 text-white mb-2">
+        <h2 className="heading-1 text-[#fafafa] mb-2">
           Connect a wallet on Solana to continue
         </h2>
 
         {/* Installed Wallets Section */}
         {installedWallets.length > 0 && (
           <div className="mt-6">
-            <h3 className="label text-korus-textSecondary mb-3">Installed</h3>
+            <h3 className="label text-[#a1a1a1] mb-3">Installed</h3>
             <div className="space-y-3">
               {installedWallets.map((wallet) => (
                 <button
@@ -121,7 +121,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
         {notInstalledWallets.length > 0 && (
           <div className="mt-6">
             {installedWallets.length > 0 && (
-              <h3 className="label text-korus-textSecondary mb-3">Available Wallets</h3>
+              <h3 className="label text-[#a1a1a1] mb-3">Available Wallets</h3>
             )}
             <div className="space-y-3">
               {notInstalledWallets.map((wallet) => (
@@ -168,8 +168,8 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
         )}
 
         {/* Footer */}
-        <div className="mt-6 pt-6 border-t border-korus-dark-400 text-center">
-          <p className="text-korus-textSecondary text-sm mb-3">New to Solana?</p>
+        <div className="mt-6 pt-6 border-t border-white/10 text-center">
+          <p className="text-[#a1a1a1] text-sm mb-3">New to Solana?</p>
           <a
             href="https://phantom.app"
             target="_blank"

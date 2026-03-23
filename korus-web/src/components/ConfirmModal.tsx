@@ -37,16 +37,16 @@ export default function ConfirmModal({
     <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div ref={modalRef} className="modal-content relative bg-korus-surface/90 backdrop-blur-xl border border-korus-border rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+      <div ref={modalRef} className="modal-content relative bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
         {/* Header */}
         <div className="mb-4">
-          <h3 className="text-xl font-bold text-korus-text mb-2">{title}</h3>
-          <p className="text-korus-textSecondary leading-relaxed">{message}</p>
+          <h3 className="text-xl font-semibold text-[#fafafa] mb-2">{title}</h3>
+          <p className="text-[#a1a1a1] leading-relaxed">{message}</p>
         </div>
 
         {/* Actions */}

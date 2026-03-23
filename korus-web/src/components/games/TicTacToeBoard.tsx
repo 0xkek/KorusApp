@@ -38,11 +38,11 @@ export function TicTacToeBoard({
 }: TicTacToeBoardProps) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getCellClassName = (cell: TicTacToeCell, _index: number) => {
-    const baseClasses = 'w-24 h-24 flex items-center justify-center text-4xl font-bold rounded-lg transition-all';
-    const borderClasses = 'border-2 border-korus-border hover:border-korus-primary';
+    const baseClasses = 'w-24 h-24 flex items-center justify-center text-4xl font-bold rounded-lg duration-150';
+    const borderClasses = 'border-2 border-white/10 hover:border-korus-primary';
     const bgClasses = cell === null && isMyTurn && !isGameOver
-      ? 'bg-korus-surface/40 hover:bg-korus-surface/60 cursor-pointer'
-      : 'bg-korus-surface/60 cursor-not-allowed';
+      ? 'bg-white/[0.06] hover:bg-white/[0.12] cursor-pointer'
+      : 'bg-white/[0.12] cursor-not-allowed';
     const textClasses = cell === 'X'
       ? 'text-korus-primary'
       : cell === 'O'
@@ -82,11 +82,11 @@ export function TicTacToeBoard({
       {(player1Address || player2Address) && (
         <div className="flex items-center justify-between mb-2 px-2 text-xs">
           <div className="flex items-center gap-2">
-            <span className="text-korus-textSecondary">Players:</span>
+            <span className="text-[#a1a1a1]">Players:</span>
             <span className="font-semibold text-korus-primary">
               {getDisplayName(player1Address, player1DisplayName)} (X)
             </span>
-            <span className="text-korus-textSecondary">vs</span>
+            <span className="text-[#a1a1a1]">vs</span>
             <span className="font-semibold text-korus-secondary">
               {getDisplayName(player2Address, player2DisplayName)} (O)
             </span>
@@ -99,7 +99,7 @@ export function TicTacToeBoard({
         {isGameOver ? (
           <div className="text-xl font-bold">
             {winner === 'draw' ? (
-              <span className="text-korus-textSecondary">Game ended in a draw!</span>
+              <span className="text-[#a1a1a1]">Game ended in a draw!</span>
             ) : winner === currentPlayerAddress ? (
               <span className="text-korus-primary">You won! 🎉</span>
             ) : (
@@ -111,7 +111,7 @@ export function TicTacToeBoard({
             {isMyTurn ? (
               <span className="text-korus-primary font-bold">Your turn ({playerSymbol})</span>
             ) : (
-              <span className="text-korus-textSecondary">Opponent&apos;s turn...</span>
+              <span className="text-[#a1a1a1]">Opponent&apos;s turn...</span>
             )}
           </div>
         )}
@@ -133,19 +133,19 @@ export function TicTacToeBoard({
 
       {/* Wager Info Bar */}
       {wagerAmount > 0 && (
-        <div className="flex items-center justify-between px-2 text-xs bg-korus-surface/30 rounded-lg py-1.5">
+        <div className="flex items-center justify-between px-2 text-xs bg-white/[0.06] rounded-lg py-1.5">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
-              <span className="text-korus-textSecondary">Wager:</span>
+              <span className="text-[#a1a1a1]">Wager:</span>
               <span className="font-bold text-korus-primary">{wagerAmount} SOL</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-korus-textSecondary">Korus Fee (2%):</span>
+              <span className="text-[#a1a1a1]">Korus Fee (2%):</span>
               <span className="font-semibold text-yellow-400">{korusFee.toFixed(4)} SOL</span>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-korus-textSecondary">Winner gets:</span>
+            <span className="text-[#a1a1a1]">Winner gets:</span>
             <span className="font-bold text-green-400">{winnerPayout.toFixed(4)} SOL</span>
           </div>
         </div>

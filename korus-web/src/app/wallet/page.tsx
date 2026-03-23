@@ -80,12 +80,12 @@ export default function WalletPage() {
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {
     return (
-      <main className="min-h-screen bg-korus-dark-100 relative overflow-hidden">
+      <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
         <div className="relative z-10">
           <div className="max-w-3xl mx-auto px-4 py-6 pb-24">
-            <h2 className="text-3xl font-bold text-korus-text mb-6">Wallet</h2>
-            <div className="bg-korus-surface/40 backdrop-blur-sm rounded-2xl p-6 mb-6 border border-korus-borderLight">
-              <div className="text-korus-text text-sm mb-2 font-medium">SOL Balance</div>
+            <h2 className="text-3xl font-bold text-[#fafafa] mb-6">Wallet</h2>
+            <div className="bg-white/[0.06] backdrop-blur-sm rounded-2xl p-6 mb-6 border border-white/10">
+              <div className="text-[#fafafa] text-sm mb-2 font-medium">SOL Balance</div>
               <div className="text-4xl font-bold text-korus-primary animate-pulse mb-4">Loading...</div>
             </div>
           </div>
@@ -95,11 +95,11 @@ export default function WalletPage() {
   }
 
   return (
-    <main className="min-h-screen bg-korus-dark-100 relative overflow-hidden">
+    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
       {/* Standardized static background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-korus-dark-100 via-korus-dark-200 to-korus-dark-100">
+      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
         {/* Surface gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-korus-dark-300/25 to-korus-dark-200/35" />
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#171717]/25 to-[#111111]/35" />
       </div>
       {/* Static gradient orbs for visual depth */}
       <div className="fixed inset-0 overflow-hidden">
@@ -112,22 +112,22 @@ export default function WalletPage() {
       </div>
 
       <div className="relative z-10">
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen max-w-[1280px] mx-auto">
           <LeftSidebar
             onNotificationsToggle={() => setShowNotifications(!showNotifications)}
             onPostButtonClick={() => setShowCreatePostModal(true)}
             onSearchClick={() => setShowSearchModal(true)}
           />
 
-          <div className="flex-1 lg:ml-80 lg:mr-96 md:ml-64 md:mr-80 sm:ml-0 sm:mr-0 md:border-x md:border-korus-border bg-korus-surface/10 backdrop-blur-sm max-w-full overflow-hidden">
+          <div className="flex-1 min-w-0 border-x border-white/10">
             {/* Feed Navigation */}
-            <div className="sticky top-0 bg-korus-dark-300/80 backdrop-blur-xl border-b border-korus-border z-10">
+            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-white/10 z-10">
               <div className="flex">
                 {/* Mobile menu button */}
                 <button
                   onClick={() => setShowMobileMenu(true)}
                   aria-label="Open mobile menu"
-                  className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors"
+                  className="md:hidden flex items-center justify-center w-12 h-12 text-[#fafafa] hover:bg-white/[0.04] transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -144,21 +144,21 @@ export default function WalletPage() {
                 <div className="relative flex items-center justify-center w-full">
                   <button
                     onClick={() => router.push('/')}
-                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                    className="relative px-4 py-4 text-[#a1a1a1] font-semibold hover:bg-white/[0.04] hover:text-[#fafafa] transition-colors group"
                   >
                     <span className="relative z-10">Home</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
                   </button>
                   <button
                     onClick={() => router.push('/games')}
-                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                    className="relative px-4 py-4 text-[#a1a1a1] font-semibold hover:bg-white/[0.04] hover:text-[#fafafa] transition-colors group"
                   >
                     <span className="relative z-10">Games</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
                   </button>
                   <button
                     onClick={() => router.push('/events')}
-                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
+                    className="relative px-4 py-4 text-[#a1a1a1] font-semibold hover:bg-white/[0.04] hover:text-[#fafafa] transition-colors group"
                   >
                     <span className="relative z-10">Events</span>
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
@@ -169,7 +169,7 @@ export default function WalletPage() {
                 <button
                   onClick={() => setShowSearchModal(true)}
                   aria-label="Open search"
-                  className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors"
+                  className="md:hidden flex items-center justify-center w-12 h-12 text-[#fafafa] hover:bg-white/[0.04] transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -179,36 +179,36 @@ export default function WalletPage() {
             </div>
 
             <div className="max-w-3xl mx-auto px-4 py-6 pb-24">
-          <h2 className="text-3xl font-bold text-korus-text mb-6">Wallet</h2>
+          <h2 className="text-3xl font-bold text-[#fafafa] mb-6">Wallet</h2>
 
           {/* Balance Card */}
-          <div className="bg-korus-surface/40 backdrop-blur-sm rounded-2xl p-6 mb-6 border border-korus-borderLight shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div className="text-korus-text text-sm mb-2 font-medium">SOL Balance</div>
-            <div className="text-4xl font-bold text-korus-text mb-4">
+          <div className="bg-white/[0.06] backdrop-blur-sm rounded-2xl p-6 mb-6 border border-white/10 shadow-lg transition-shadow duration-150">
+            <div className="text-[#fafafa] text-sm mb-2 font-medium">SOL Balance</div>
+            <div className="text-4xl font-bold text-[#fafafa] mb-4">
               {loading ? (
                 <span className="text-korus-primary animate-pulse">Loading...</span>
               ) : hasError ? (
                 <div className="flex flex-col gap-2">
                   <span className="text-red-400">Unable to load balance</span>
-                  <span className="text-korus-textSecondary text-sm">
+                  <span className="text-[#a1a1a1] text-sm">
                     Check your connection or try again
                   </span>
                 </div>
               ) : balance !== null ? (
-                <span className="text-korus-text">
+                <span className="text-[#fafafa]">
                   {balance.toFixed(4)} SOL
                 </span>
               ) : (
-                <span className="text-korus-textSecondary">--</span>
+                <span className="text-[#a1a1a1]">--</span>
               )}
             </div>
-            <div className="text-korus-text text-xs font-mono bg-korus-surface/60 rounded-lg p-2 mb-4">
+            <div className="text-[#fafafa] text-xs font-mono bg-white/[0.12] rounded-lg p-2 mb-4">
               {publicKey?.toString().slice(0, 20)}...{publicKey?.toString().slice(-20)}
             </div>
             <button
               onClick={fetchBalance}
               disabled={loading}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-korus-primary to-korus-secondary font-semibold hover:shadow-[0_0_20px_var(--korus-primary)] transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="px-6 py-3 rounded-lg bg-gradient-to-r from-korus-primary to-korus-secondary font-semibold hover:shadow-[0_0_20px_var(--korus-primary)] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ color: '#000000' }}
               aria-label={hasError ? 'Retry loading balance' : 'Refresh balance'}
             >
@@ -222,10 +222,10 @@ export default function WalletPage() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 ${
                   activeTab === tab
                     ? 'bg-gradient-to-r from-korus-primary to-korus-secondary'
-                    : 'bg-korus-surface/20 hover:bg-korus-surface/40 border border-korus-borderLight'
+                    : 'bg-white/[0.08] hover:bg-white/[0.12] border border-white/15'
                 }`}
                 style={activeTab === tab ? { color: '#000000' } : { color: 'var(--color-text)' }}
               >
@@ -235,25 +235,25 @@ export default function WalletPage() {
           </div>
 
           {/* Tab Content */}
-          <div className="bg-korus-surface/20 backdrop-blur-sm rounded-2xl border border-korus-borderLight">
+          <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/10">
             {activeTab === 'All' && (
               <div className="text-center py-20">
                 <div className="text-6xl mb-4 opacity-60">💳</div>
-                <p className="text-korus-text text-lg font-medium">No transactions yet</p>
-                <p className="text-korus-textSecondary text-sm mt-2 mb-6">
+                <p className="text-[#fafafa] text-lg font-medium">No transactions yet</p>
+                <p className="text-[#a1a1a1] text-sm mt-2 mb-6">
                   All your SOL transactions will appear here.<br/>
                   Start by exploring posts, games, and events to build activity.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button
                     onClick={() => window.location.href = '/'}
-                    className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-200 hover:scale-105"
+                    className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150"
                   >
                     Explore Posts
                   </button>
                   <button
                     onClick={() => window.location.href = '/games'}
-                    className="bg-korus-surface/40 border border-korus-borderLight text-korus-text font-semibold px-6 py-3 rounded-xl hover:bg-korus-surface/60 transition-all duration-200"
+                    className="bg-white/[0.06] border border-white/10 text-[#fafafa] font-semibold px-6 py-3 rounded-xl hover:bg-white/[0.12] transition-all duration-150"
                   >
                     Play Games
                   </button>
@@ -264,14 +264,14 @@ export default function WalletPage() {
             {activeTab === 'Tips' && (
               <div className="text-center py-20">
                 <div className="text-6xl mb-4 opacity-60">💰</div>
-                <p className="text-korus-text text-lg font-medium">No tips yet</p>
-                <p className="text-korus-textSecondary text-sm mt-2 mb-6">
+                <p className="text-[#fafafa] text-lg font-medium">No tips yet</p>
+                <p className="text-[#a1a1a1] text-sm mt-2 mb-6">
                   Tips you send and receive will appear here.<br/>
                   Start engaging with quality content to earn tips!
                 </p>
                 <button
                   onClick={() => window.location.href = '/'}
-                  className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-200 hover:scale-105"
+                  className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150"
                 >
                   Find Great Content
                 </button>
@@ -281,14 +281,14 @@ export default function WalletPage() {
             {activeTab === 'Games' && (
               <div className="text-center py-20">
                 <div className="text-6xl mb-4 opacity-60">🎮</div>
-                <p className="text-korus-text text-lg font-medium">No game activity</p>
-                <p className="text-korus-textSecondary text-sm mt-2 mb-6">
+                <p className="text-[#fafafa] text-lg font-medium">No game activity</p>
+                <p className="text-[#a1a1a1] text-sm mt-2 mb-6">
                   Your game winnings, losses, and rewards will appear here.<br/>
                   Join games to start earning SOL!
                 </p>
                 <button
                   onClick={() => window.location.href = '/games'}
-                  className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-200 hover:scale-105"
+                  className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150"
                 >
                   Browse Games
                 </button>
@@ -298,14 +298,14 @@ export default function WalletPage() {
             {activeTab === 'Events' && (
               <div className="text-center py-20">
                 <div className="text-6xl mb-4 opacity-60">🎪</div>
-                <p className="text-korus-text text-lg font-medium">No event activity</p>
-                <p className="text-korus-textSecondary text-sm mt-2 mb-6">
+                <p className="text-[#fafafa] text-lg font-medium">No event activity</p>
+                <p className="text-[#a1a1a1] text-sm mt-2 mb-6">
                   Event rewards, airdrops, and participation fees will appear here.<br/>
                   Join exclusive events to earn unique rewards!
                 </p>
                 <button
                   onClick={() => window.location.href = '/events'}
-                  className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-200 hover:scale-105"
+                  className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150"
                 >
                   View Events
                 </button>

@@ -239,8 +239,8 @@ export default function ProfilePage() {
   // Early return after all hooks are declared
   if (!connected) {
     return (
-      <div className="min-h-screen bg-korus-dark-100 flex items-center justify-center">
-        <div className="text-white">Redirecting...</div>
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+        <div className="text-[#fafafa]">Redirecting...</div>
       </div>
     );
   }
@@ -350,10 +350,10 @@ export default function ProfilePage() {
   };
 
   return (
-    <main className="min-h-screen bg-korus-dark-100 relative overflow-hidden">
+    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
       {/* Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-korus-dark-100 via-korus-dark-200 to-korus-dark-100">
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-korus-dark-300/25 to-korus-dark-200/35" />
+      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#171717]/25 to-[#111111]/35" />
       </div>
 
       {/* Static gradient orbs for visual depth */}
@@ -366,13 +366,13 @@ export default function ProfilePage() {
       {/* Content wrapper */}
       <div className="relative z-10">
         {/* Main Content Container with sidebar layout */}
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen max-w-[1280px] mx-auto">
           {/* Main Content */}
-          <div className="flex-1 lg:ml-80 lg:mr-96 md:ml-64 md:mr-80 sm:ml-0 sm:mr-0 md:border-x md:border-korus-border bg-korus-surface/10 backdrop-blur-sm max-w-full overflow-hidden">
+          <div className="flex-1 min-w-0 border-x border-white/10">
             {/* Header */}
-            <div className="sticky top-0 bg-korus-dark-300/80 backdrop-blur-xl border-b border-korus-border z-10">
+            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-white/10 z-10">
               <div className="flex items-center px-4 py-4">
-                <button aria-label="Open mobile menu" className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors mr-2">
+                <button aria-label="Open mobile menu" className="md:hidden flex items-center justify-center w-12 h-12 text-[#fafafa] hover:bg-white/[0.04] transition-colors mr-2">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
@@ -380,13 +380,13 @@ export default function ProfilePage() {
                 <button
                   onClick={() => router.back()}
                   aria-label="Go back"
-                  className="p-2 hover:bg-korus-surface/20 rounded-full transition-colors mr-3"
+                  className="p-2 hover:bg-white/[0.04] rounded-full transition-colors mr-3"
                 >
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-[#fafafa]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-                <h1 className="text-3xl font-bold text-white flex-1">Profile</h1>
+                <h1 className="text-3xl font-bold text-[#fafafa] flex-1">Profile</h1>
               </div>
             </div>
 
@@ -435,7 +435,7 @@ export default function ProfilePage() {
                       aria-label="Change avatar"
                       className="relative group rounded-full"
                     >
-                      <div className="w-32 h-32 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center text-5xl font-bold text-black shadow-lg shadow-korus-primary/20 group-hover:shadow-xl group-hover:shadow-korus-primary/30 transition-all duration-200 border-4 border-transparent">
+                      <div className="w-32 h-32 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center text-5xl font-bold text-black shadow-lg shadow-korus-primary/20 group-hover:shadow-xl group-hover:shadow-korus-primary/30 transition-all duration-150 border-4 border-transparent">
                         {selectedNFTAvatar ? (
                           <Image
                             src={selectedNFTAvatar.image || selectedNFTAvatar.uri}
@@ -461,7 +461,7 @@ export default function ProfilePage() {
 
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-2 mb-2">
-                      <h2 className={`text-2xl font-bold ${snsDomain ? 'text-korus-primary' : 'text-white'}`}>
+                      <h2 className={`text-2xl font-bold ${snsDomain ? 'text-korus-primary' : 'text-[#fafafa]'}`}>
                         {displayName}
                       </h2>
                       {isPremium && (
@@ -474,11 +474,11 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="flex items-center justify-center gap-2 mb-4">
-                      <span className="text-korus-textTertiary text-sm font-mono">{walletAddress}</span>
+                      <span className="text-[#737373] text-sm font-mono">{walletAddress}</span>
                       <button
                         onClick={handleCopyWallet}
                         aria-label={copied ? "Copied!" : "Copy wallet address"}
-                        className="p-1 hover:bg-korus-surface/20 rounded transition-colors"
+                        className="p-1 hover:bg-white/[0.04] rounded transition-colors"
                       >
                         {copied ? (
                           <svg className="w-4 h-4 text-korus-primary" fill="currentColor" viewBox="0 0 24 24">
@@ -495,18 +495,18 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Identity Options Section */}
-                <div className="mb-6 bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6 relative z-50">
-                  <h3 className="text-lg font-bold text-white mb-4">Your Identity</h3>
+                <div className="mb-6 bg-white/[0.04] backdrop-blur-sm border border-white/15 rounded-2xl p-6 relative z-50">
+                  <h3 className="text-lg font-bold text-[#fafafa] mb-4">Your Identity</h3>
 
                   {/* Current Display Name */}
-                  <div className="mb-6 p-4 bg-korus-surface/40 border border-korus-borderLight rounded-xl">
+                  <div className="mb-6 p-4 bg-white/[0.06] border border-white/15 rounded-xl">
                     <div className="flex items-center gap-3 mb-2">
                       <svg className="w-5 h-5 text-korus-primary" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                       </svg>
-                      <span className="text-korus-textSecondary text-sm">Currently displaying as:</span>
+                      <span className="text-[#a1a1a1] text-sm">Currently displaying as:</span>
                     </div>
-                    <div className="text-xl font-bold text-white">{displayName}</div>
+                    <div className="text-xl font-bold text-[#fafafa]">{displayName}</div>
                     {isPremium && dbSnsUsername && (
                       <div className="flex items-center gap-2 mt-2">
                         <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
@@ -521,53 +521,53 @@ export default function ProfilePage() {
 
                   {/* Identity Options Explanation */}
                   <div className="space-y-4 mb-6">
-                    <div className="text-korus-textSecondary text-sm">
+                    <div className="text-[#a1a1a1] text-sm">
                       Choose how others see you on the platform:
                     </div>
 
                     {/* Option 1: Wallet Address (Default) */}
-                    <div className="flex items-start gap-3 p-3 bg-korus-surface/20 rounded-lg">
+                    <div className="flex items-start gap-3 p-3 bg-white/[0.04] rounded-lg">
                       <div className="w-6 h-6 mt-0.5 bg-korus-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
                         <span className="text-xs font-bold text-korus-primary">1</span>
                       </div>
                       <div className="flex-1">
-                        <div className="font-medium text-white mb-1">Wallet Address (Default)</div>
-                        <div className="text-korus-textTertiary text-sm mb-2">
+                        <div className="font-medium text-[#fafafa] mb-1">Wallet Address (Default)</div>
+                        <div className="text-[#737373] text-sm mb-2">
                           {`${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`} • Always available
                         </div>
-                        <div className="text-xs text-korus-textTertiary">
+                        <div className="text-xs text-[#737373]">
                           Your truncated wallet address is shown by default when no other identity is set.
                         </div>
                       </div>
                     </div>
 
                     {/* Option 2: Username */}
-                    <div className="flex items-start gap-3 p-3 bg-korus-surface/20 rounded-lg">
+                    <div className="flex items-start gap-3 p-3 bg-white/[0.04] rounded-lg">
                       <div className="w-6 h-6 mt-0.5 bg-korus-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
                         <span className="text-xs font-bold text-korus-primary">2</span>
                       </div>
                       <div className="flex-1">
-                        <div className="font-medium text-white mb-1">Custom Username</div>
-                        <div className="text-korus-textTertiary text-sm mb-2">
+                        <div className="font-medium text-[#fafafa] mb-1">Custom Username</div>
+                        <div className="text-[#737373] text-sm mb-2">
                           {currentUsername ? `@${currentUsername}` : 'Not set'} •
                           <span className="text-korus-primary ml-1">
                             {!hasSetUsername ? 'Can set once (free)' : isPremium ? 'Can change anytime (premium)' : 'Locked (upgrade to change)'}
                           </span>
                         </div>
-                        <div className="text-xs text-korus-textTertiary">
+                        <div className="text-xs text-[#737373]">
                           Free users can set once. Premium users can change anytime.
                         </div>
                       </div>
                     </div>
 
                     {/* Option 3: SNS Domain */}
-                    <div className="flex items-start gap-3 p-3 bg-korus-surface/20 rounded-lg">
+                    <div className="flex items-start gap-3 p-3 bg-white/[0.04] rounded-lg">
                       <div className="w-6 h-6 mt-0.5 bg-korus-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
                         <span className="text-xs font-bold text-korus-primary">3</span>
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-white">SNS Domain</span>
+                          <span className="font-medium text-[#fafafa]">SNS Domain</span>
                           <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
                             <svg className="w-2.5 h-2.5" fill="black" viewBox="0 0 24 24">
                               <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
@@ -575,13 +575,13 @@ export default function ProfilePage() {
                           </div>
                           <span className="text-xs text-yellow-400 font-medium">PREMIUM ONLY</span>
                         </div>
-                        <div className="text-korus-textTertiary text-sm mb-2">
+                        <div className="text-[#737373] text-sm mb-2">
                           {allSNSDomains.length > 0
                             ? `${allSNSDomains.length} domain${allSNSDomains.length !== 1 ? 's' : ''} found in wallet`
                             : 'No domains found'
                           } • Highest priority display
                         </div>
-                        <div className="text-xs text-korus-textTertiary">
+                        <div className="text-xs text-[#737373]">
                           SNS domains override usernames when active. Premium feature only.
                         </div>
                       </div>
@@ -592,9 +592,9 @@ export default function ProfilePage() {
                   {!snsDomain && (
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-medium text-white">Set Username</h4>
+                        <h4 className="font-medium text-[#fafafa]">Set Username</h4>
                         {hasSetUsername && !isPremium && (
-                          <svg className="w-4 h-4 text-korus-textTertiary" fill="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-[#737373]" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM15.1 8H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
                           </svg>
                         )}
@@ -619,18 +619,18 @@ export default function ProfilePage() {
                             setUsernameError('');
                             setTempUsernameValue(currentUsername || '');
                           }}
-                          className="w-full bg-korus-surface/40 border border-korus-borderLight rounded-xl p-4 hover:border-korus-border transition-colors"
+                          className="w-full bg-white/[0.06] border border-white/15 rounded-xl p-4 hover:border-white/10 transition-colors"
                         >
                           <div className="flex items-center gap-3">
                             <svg className="w-5 h-5 text-korus-primary" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                             </svg>
                             {currentUsername ? (
-                              <span className="text-white">@{currentUsername}</span>
+                              <span className="text-[#fafafa]">@{currentUsername}</span>
                             ) : (
-                              <span className="text-korus-textTertiary">Set your username</span>
+                              <span className="text-[#737373]">Set your username</span>
                             )}
-                            <svg className="w-4 h-4 text-korus-textTertiary ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-[#737373] ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                             </svg>
                           </div>
@@ -645,7 +645,7 @@ export default function ProfilePage() {
                               setTempUsernameValue(cleanedText);
                             }}
                             placeholder="Enter username (3-20 chars, letters/numbers)"
-                            className="w-full bg-korus-surface/40 text-white border border-korus-borderLight rounded-lg px-3 py-2 placeholder-korus-textTertiary focus:outline-none focus:border-korus-border"
+                            className="w-full bg-white/[0.06] border border-white/15 rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                             autoCapitalize="none"
                             maxLength={20}
                             autoCorrect="false"
@@ -660,7 +660,7 @@ export default function ProfilePage() {
                                 setEditingUsername(false);
                                 setUsernameError('');
                               }}
-                              className="flex-1 px-4 py-2 border border-korus-borderLight rounded-lg text-korus-textTertiary hover:border-korus-border transition-colors"
+                              className="flex-1 px-4 py-2 bg-white/[0.08] border border-white/15 text-[#fafafa] rounded-lg hover:bg-white/[0.12] duration-150"
                             >
                               Cancel
                             </button>
@@ -681,7 +681,7 @@ export default function ProfilePage() {
                   {isPremium && allSNSDomains.length > 0 && (
                     <div className="relative z-[100]">
                       <div className="flex items-center gap-2 mb-3">
-                        <h4 className="font-medium text-white">Select SNS Domain</h4>
+                        <h4 className="font-medium text-[#fafafa]">Select SNS Domain</h4>
                         <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
                           <svg className="w-2.5 h-2.5" fill="black" viewBox="0 0 24 24">
                             <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
@@ -692,7 +692,7 @@ export default function ProfilePage() {
                       <div className="relative z-50" ref={snsDropdownRef}>
                         <button
                           onClick={() => setShowSNSDropdown(!showSNSDropdown)}
-                          className="w-full bg-korus-surface/40 border border-korus-borderLight rounded-xl p-4 hover:border-korus-border transition-colors"
+                          className="w-full bg-white/[0.06] border border-white/15 rounded-xl p-4 hover:border-white/10 transition-colors"
                           disabled={allDomainsLoading}
                         >
                           <div className="flex items-center justify-between">
@@ -702,11 +702,11 @@ export default function ProfilePage() {
                                   <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
                                 </svg>
                               </div>
-                              <span className="text-white">
+                              <span className="text-[#fafafa]">
                                 {snsLoading ? 'Loading...' : (snsDomain ? snsDomain : 'Select SNS Domain')}
                               </span>
                             </div>
-                            <svg className={`w-4 h-4 text-korus-textTertiary transition-transform ${showSNSDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className={`w-4 h-4 text-[#737373] transition-transform ${showSNSDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
                             </svg>
                           </div>
@@ -714,7 +714,7 @@ export default function ProfilePage() {
 
                         {/* SNS Dropdown */}
                         {showSNSDropdown && (
-                          <div className="absolute top-full left-0 right-0 mt-2 bg-korus-surface/90 backdrop-blur-xl border border-korus-border rounded-xl z-50 max-h-60 overflow-y-auto">
+                          <div className="absolute top-full left-0 right-0 mt-2 bg-[#171717] backdrop-blur-xl border border-white/10 rounded-xl z-50 max-h-60 overflow-y-auto">
                             {allSNSDomains.map((domain, index) => (
                               <button
                                 key={index}
@@ -757,12 +757,12 @@ export default function ProfilePage() {
                                     logger.error('Error setting SNS domain:', error);
                                   }
                                 }}
-                                className="w-full px-4 py-3 text-left hover:bg-korus-primary/20 hover:border-korus-primary/40 transition-colors border-b border-korus-borderLight last:border-b-0 cursor-pointer"
+                                className="w-full px-4 py-3 text-left hover:bg-korus-primary/20 hover:border-korus-primary/40 transition-colors border-b border-white/15 last:border-b-0 cursor-pointer"
                               >
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
-                                    <div className={`w-2 h-2 rounded-full ${domain.favorite ? 'bg-korus-primary' : 'bg-korus-textTertiary'}`} />
-                                    <span className="text-white">{domain.domain}</span>
+                                    <div className={`w-2 h-2 rounded-full ${domain.favorite ? 'bg-korus-primary' : 'bg-[#737373]'}`} />
+                                    <span className="text-[#fafafa]">{domain.domain}</span>
                                   </div>
                                   {domain.favorite && (
                                     <svg className="w-4 h-4 text-korus-primary" fill="currentColor" viewBox="0 0 24 24">
@@ -787,18 +787,18 @@ export default function ProfilePage() {
                             <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
                           </svg>
                         </div>
-                        <span className="font-medium text-white">
+                        <span className="font-medium text-[#fafafa]">
                           {allSNSDomains.length} SNS domain{allSNSDomains.length !== 1 ? 's' : ''} detected
                         </span>
                       </div>
                       <div className="space-y-1 mb-4">
                         {allSNSDomains.slice(0, 3).map((domain, index) => (
-                          <div key={index} className="text-sm text-white">
+                          <div key={index} className="text-sm text-[#fafafa]">
                             • {domain.domain}
                           </div>
                         ))}
                         {allSNSDomains.length > 3 && (
-                          <div className="text-korus-textTertiary text-sm">
+                          <div className="text-[#737373] text-sm">
                             +{allSNSDomains.length - 3} more...
                           </div>
                         )}
@@ -814,24 +814,24 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Tabs */}
-                <div className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-1 mb-6 relative z-10">
+                <div className="bg-[#171717] border border-white/10 rounded-xl mb-6 relative z-10">
                   <div className="flex">
                     <button
                       onClick={() => setActiveTab('posts')}
-                      className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
+                      className={`flex-1 py-3 px-4 text-center transition-all duration-150 border-b-2 ${
                         activeTab === 'posts'
-                          ? 'bg-korus-primary/20 text-korus-primary'
-                          : 'text-korus-textTertiary hover:text-white'
+                          ? 'text-[#fafafa] font-semibold border-korus-primary'
+                          : 'text-[#737373] hover:bg-white/[0.04] hover:text-[#a1a1a1] border-transparent'
                       }`}
                     >
                       Posts ({stats.posts})
                     </button>
                     <button
                       onClick={() => setActiveTab('replies')}
-                      className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
+                      className={`flex-1 py-3 px-4 text-center transition-all duration-150 border-b-2 ${
                         activeTab === 'replies'
-                          ? 'bg-korus-primary/20 text-korus-primary'
-                          : 'text-korus-textTertiary hover:text-white'
+                          ? 'text-[#fafafa] font-semibold border-korus-primary'
+                          : 'text-[#737373] hover:bg-white/[0.04] hover:text-[#a1a1a1] border-transparent'
                       }`}
                     >
                       Replies ({stats.replies})
@@ -840,7 +840,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Reputation Score Card */}
-                <div className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6 mb-6">
+                <div className="bg-white/[0.04] backdrop-blur-sm border border-white/15 rounded-2xl p-6 mb-6">
                   <div className="text-center mb-6">
                     <div className="flex items-center justify-center gap-3 mb-2">
                       <div className="w-9 h-9 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center shadow-lg shadow-korus-primary/20">
@@ -848,36 +848,36 @@ export default function ProfilePage() {
                           <path d="M6 3h12l4 6-10 12L2 9l4-6z"/>
                         </svg>
                       </div>
-                      <h3 className="text-lg font-bold text-white">Reputation Score</h3>
+                      <h3 className="text-lg font-bold text-[#fafafa]">Reputation Score</h3>
                     </div>
                     <div className="text-4xl font-bold text-korus-primary mb-4">{stats.repScore}</div>
                   </div>
 
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between py-3 border-b border-korus-borderLight/20">
+                    <div className="flex items-center justify-between py-3 border-b border-white/15/20">
                       <div className="flex items-center gap-2">
                         <svg className="w-4 h-4 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
-                        <span className="text-korus-textSecondary text-sm">Posts created</span>
+                        <span className="text-[#a1a1a1] text-sm">Posts created</span>
                       </div>
                       <span className="text-korus-primary font-bold">+{stats.posts * 10}</span>
                     </div>
-                    <div className="flex items-center justify-between py-3 border-b border-korus-borderLight/20">
+                    <div className="flex items-center justify-between py-3 border-b border-white/15/20">
                       <div className="flex items-center gap-2">
                         <svg className="w-4 h-4 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                         </svg>
-                        <span className="text-korus-textSecondary text-sm">Replies made</span>
+                        <span className="text-[#a1a1a1] text-sm">Replies made</span>
                       </div>
                       <span className="text-korus-primary font-bold">+{stats.replies * 5}</span>
                     </div>
-                    <div className="flex items-center justify-between py-3 border-b border-korus-borderLight/20">
+                    <div className="flex items-center justify-between py-3 border-b border-white/15/20">
                       <div className="flex items-center gap-2">
                         <svg className="w-4 h-4 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                         </svg>
-                        <span className="text-korus-textSecondary text-sm">Likes received</span>
+                        <span className="text-[#a1a1a1] text-sm">Likes received</span>
                       </div>
                       <span className="text-korus-primary font-bold">+{stats.likes * 2}</span>
                     </div>
@@ -886,14 +886,14 @@ export default function ProfilePage() {
                         <svg className="w-4 h-4 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
                         </svg>
-                        <span className="text-korus-textSecondary text-sm">Tips received</span>
+                        <span className="text-[#a1a1a1] text-sm">Tips received</span>
                       </div>
                       <span className="text-korus-primary font-bold">+{stats.tips * 20}</span>
                     </div>
                   </div>
 
                   {isPremium && (
-                    <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t border-korus-borderLight/30">
+                    <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t border-white/15/30">
                       <div className="w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
                         <svg className="w-2.5 h-2.5 text-black" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
@@ -908,18 +908,18 @@ export default function ProfilePage() {
               {/* Posts Content */}
               <div className="space-y-4">
                 {userPosts.length === 0 ? (
-                  <div className="text-center py-20 bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl">
+                  <div className="text-center py-20 bg-white/[0.04] backdrop-blur-sm border border-white/15 rounded-2xl">
                     {activeTab === 'posts' ? (
                       <>
                         <div className="text-6xl mb-4 opacity-60">📝</div>
-                        <p className="text-korus-text text-lg font-medium mb-2">No posts yet</p>
-                        <p className="text-korus-textSecondary text-sm mb-6">
+                        <p className="text-[#fafafa] text-lg font-medium mb-2">No posts yet</p>
+                        <p className="text-[#a1a1a1] text-sm mb-6">
                           Share your thoughts, insights, or questions with the Korus community.<br/>
                           Your posts earn reputation and can receive tips!
                         </p>
                         <button
                           onClick={() => window.location.href = '/'}
-                          className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-200 hover:scale-105"
+                          className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150 hover:scale-105"
                         >
                           Create Your First Post
                         </button>
@@ -927,14 +927,14 @@ export default function ProfilePage() {
                     ) : (
                       <>
                         <div className="text-6xl mb-4 opacity-60">💬</div>
-                        <p className="text-korus-text text-lg font-medium mb-2">No replies yet</p>
-                        <p className="text-korus-textSecondary text-sm mb-6">
+                        <p className="text-[#fafafa] text-lg font-medium mb-2">No replies yet</p>
+                        <p className="text-[#a1a1a1] text-sm mb-6">
                           Engage with other users&apos; posts to start building your reputation.<br/>
                           Thoughtful replies can earn tips and grow your network!
                         </p>
                         <button
                           onClick={() => window.location.href = '/'}
-                          className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-200 hover:scale-105"
+                          className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150 hover:scale-105"
                         >
                           Explore Posts to Reply
                         </button>
@@ -943,18 +943,18 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   userPosts.map((post) => (
-                    <div key={post.id} className="bg-korus-surface/20 backdrop-blur-sm border border-korus-borderLight rounded-2xl p-6 hover:border-korus-border transition-all group">
+                    <div key={post.id} className="bg-white/[0.04] backdrop-blur-sm border border-white/15 rounded-2xl p-6 hover:border-white/10 transition-all group">
                       <SafeContent
                         content={post.content}
                         as="p"
-                        className="text-white mb-4"
+                        className="text-[#fafafa] mb-4"
                         allowLinks={true}
                         allowFormatting={true}
                       />
                       {post.imageUrl && (
                         <Image src={post.imageUrl} alt="Post image" width={600} height={400} className="w-full rounded-lg mb-4" />
                       )}
-                      <div className="flex items-center gap-6 text-korus-textTertiary text-sm">
+                      <div className="flex items-center gap-6 text-[#737373] text-sm">
                         <span>{post.likes} likes</span>
                         <span>{post.tips} tips</span>
                         <span>{post.replies || 0} replies</span>
@@ -970,23 +970,23 @@ export default function ProfilePage() {
 
       {/* Username Warning Modal */}
       {showUsernameWarning && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-          <div className="bg-korus-surface/90 backdrop-blur-xl border border-korus-border rounded-2xl p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#171717] backdrop-blur-xl border border-white/10 rounded-2xl p-6 max-w-md w-full mx-4">
             <div className="text-center">
               <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.268 16.5C3.498 18.333 4.46 20 6 20z" />
                 </svg>
               </div>
-              <h3 className="text-korus-text text-xl font-bold mb-2">Choose Wisely!</h3>
-              <p className="text-korus-textSecondary mb-6">
+              <h3 className="text-[#fafafa] text-xl font-bold mb-2">Choose Wisely!</h3>
+              <p className="text-[#a1a1a1] mb-6">
                 As a free user, you can only set your username <strong>ONCE</strong>. Choose wisely!
                 Premium users can change their username anytime.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowUsernameWarning(false)}
-                  className="flex-1 px-4 py-2 bg-korus-surface/40 border border-korus-border text-korus-text rounded-xl hover:bg-korus-surface/60 hover:border-korus-primary transition-colors"
+                  className="flex-1 px-4 py-2 bg-white/[0.08] border border-white/15 text-[#fafafa] rounded-lg hover:bg-white/[0.12] duration-150"
                 >
                   Cancel
                 </button>
