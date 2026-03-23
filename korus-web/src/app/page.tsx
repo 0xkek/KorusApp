@@ -1124,7 +1124,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-korus-dark-100 relative overflow-hidden">
       {/* Clean dark background */}
-      <div className="fixed inset-0 bg-[#0a0a0f]" />
+      <div className="fixed inset-0 bg-[#0d0e14]" />
 
       {/* Content wrapper */}
       <div className="relative z-10">
@@ -1137,16 +1137,16 @@ export default function Home() {
           notificationCount={notificationCount}
         />
         {/* Main Feed */}
-        <div className="flex-1 max-w-[640px] border-r border-[#22232e]">
+        <div className="flex-1 max-w-[640px] border-r border-[#2a2b38]">
         {/* Main app - only accessible when connected */}
             {/* Header Navigation */}
-            <div className="sticky top-0 z-10 bg-[#0a0a0f]/85 backdrop-blur-[16px] border-b border-[#22232e]">
+            <div className="sticky top-0 z-10 bg-[#0d0e14]/85 backdrop-blur-[16px] border-b border-[#2a2b38]">
               {/* Mobile controls row */}
               <div className="flex md:hidden items-center justify-between px-2">
                 <button
                   onClick={() => setShowMobileMenu(true)}
                   aria-label="Open mobile menu"
-                  className="flex items-center justify-center w-12 h-12 text-white hover:bg-[#1a1b24] transition-colors"
+                  className="flex items-center justify-center w-12 h-12 text-white hover:bg-[#1e1f2a] transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -1160,7 +1160,7 @@ export default function Home() {
                 <button
                   onClick={() => setShowSearchModal(true)}
                   aria-label="Open search"
-                  className="flex items-center justify-center w-12 h-12 text-white hover:bg-[#1a1b24] transition-colors"
+                  className="flex items-center justify-center w-12 h-12 text-white hover:bg-[#1e1f2a] transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -1170,21 +1170,30 @@ export default function Home() {
 
               {/* Tabs */}
               <div className="flex">
-                <button className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[#f0f0f5]">
-                  For You
+                <button
+                  onClick={() => router.push('/')}
+                  className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[#f0f0f5]"
+                >
+                  Home
                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-[3px] rounded-[3px] bg-korus-primary" />
                 </button>
-                <button className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[#8b8d9a] hover:text-[#f0f0f5] hover:bg-[#1a1b24]">
-                  Following
+                <button
+                  onClick={() => router.push('/games')}
+                  className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[#8b8d9a] hover:text-[#f0f0f5] hover:bg-[#1e1f2a]"
+                >
+                  Games
                 </button>
-                <button className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[#8b8d9a] hover:text-[#f0f0f5] hover:bg-[#1a1b24]">
-                  Trending
+                <button
+                  onClick={() => router.push('/events')}
+                  className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[#8b8d9a] hover:text-[#f0f0f5] hover:bg-[#1e1f2a]"
+                >
+                  Events
                 </button>
               </div>
             </div>
 
             {/* Compose Post */}
-            <div className="px-5 py-4 border-b border-[#22232e] flex gap-3">
+            <div className="px-5 py-4 border-b border-[#2a2b38] flex gap-3">
                 {userAvatar ? (
                   <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
                     <Image
@@ -1259,7 +1268,7 @@ export default function Home() {
                   )}
 
                   {/* Post Options */}
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#22232e]">
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#2a2b38]">
                     <div className="flex items-center gap-0.5">
                       {/* Image Upload */}
                       <label className="w-[34px] h-[34px] rounded-lg flex items-center justify-center text-korus-primary/70 hover:text-korus-primary hover:bg-korus-primary/[0.12] transition-all cursor-pointer">
@@ -1340,7 +1349,7 @@ export default function Home() {
               className={`transition-colors cursor-pointer group ${
                 post.isShoutout
                   ? 'shoutout-post border border-korus-primary bg-korus-primary/5 shadow-[0_4px_12px_rgba(var(--korus-primary-rgb),0.3)] hover:border-korus-primary hover:shadow-[0_8px_24px_rgba(var(--korus-primary-rgb),0.4)] hover:bg-korus-primary/[0.12]'
-                  : 'px-5 py-4 border-b border-[#22232e] hover:bg-[#1a1b24]'
+                  : 'px-5 py-4 border-b border-[#2a2b38] hover:bg-[#1e1f2a]'
               }`}
               onClick={() => router.push(`/post/${post.id}`)}
             >
@@ -1429,7 +1438,7 @@ export default function Home() {
                           e.stopPropagation();
                           handlePostOptionsClick(post);
                         }}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-[#5c5e6e] hover:text-white hover:bg-[#1a1b24] transition-colors opacity-0 group-hover:opacity-100"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-[#5c5e6e] hover:text-white hover:bg-[#1e1f2a] transition-colors opacity-0 group-hover:opacity-100"
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
