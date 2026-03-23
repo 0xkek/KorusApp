@@ -6,32 +6,11 @@ import { useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { notificationsAPI, type Notification as APINotification } from '@/lib/api';
-import * as eventsAPI from '@/lib/api/events';
-import * as gamesAPI from '@/lib/api/games';
 
 interface RightSidebarProps {
   showNotifications?: boolean;
   onNotificationsClose?: () => void;
   onNotificationCountChange?: (count: number) => void;
-}
-
-interface RecentActivity {
-  id: string;
-  type: 'event' | 'game';
-  title: string;
-  category?: string;
-  project?: string;
-  participants?: number;
-  maxParticipants?: number | null;
-  players?: string;
-  wager?: string;
-  time?: string;
-  timeLeft?: string;
-  isLive?: boolean;
-  chain?: string;
-  price?: string;
-  premiumOnly?: boolean;
-  timestamp: number;
 }
 
 export default function RightSidebar({ showNotifications = false, onNotificationCountChange }: RightSidebarProps) {
@@ -40,13 +19,6 @@ export default function RightSidebar({ showNotifications = false, onNotification
   const { token, isAuthenticated } = useWalletAuth();
   const [notifications, setNotifications] = useState<APINotification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
-  const [isLoadingActivities, setIsLoadingActivities] = useState(true);
-
-  // Fetch recent activities (events and games)
-  useEffect(() => {
-    fetchRecentActivities();
-  }, []);
 
   // Fetch notifications when connected and authenticated
   useEffect(() => {
@@ -55,94 +27,6 @@ export default function RightSidebar({ showNotifications = false, onNotification
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected, isAuthenticated, token]);
-
-  const fetchRecentActivities = async () => {
-    setIsLoadingActivities(true);
-    try {
-      // Fetch active events
-      const eventsResponse = await eventsAPI.getEvents({ status: 'active' });
-      const events = eventsResponse.events || [];
-
-      // Fetch active games
-      const gamesResponse = await gamesAPI.gamesAPI.getAllGames('waiting');
-      const games = gamesResponse.games || [];
-
-      // Transform events to activity format with timestamp
-      const eventActivities = events.map(event => {
-        const startTime = new Date(event.startDate);
-        const now = new Date();
-        const isLive = startTime <= now;
-        const diff = startTime.getTime() - now.getTime();
-
-        let timeString = '';
-        if (diff > 0) {
-          const hours = Math.floor(diff / (1000 * 60 * 60));
-          const days = Math.floor(hours / 24);
-          if (days > 0) timeString = `${days}d`;
-          else if (hours > 0) timeString = `${hours}h`;
-          else timeString = `${Math.floor(diff / (1000 * 60))}m`;
-        }
-
-        return {
-          id: `event-${event.id}`,
-          type: 'event' as const,
-          title: event.title,
-          category: event.type,
-          project: event.projectName,
-          participants: event.registrationCount || 0,
-          maxParticipants: event.maxSpots,
-          time: timeString,
-          isLive,
-          chain: 'Solana',
-          premiumOnly: false,
-          timestamp: new Date(event.createdAt).getTime()
-        };
-      });
-
-      // Transform games to activity format with timestamp
-      const gameActivities = games.map(game => {
-        let gameTitle = 'Game';
-        const gameType = game.gameType?.toLowerCase();
-
-        if (gameType === 'tic-tac-toe' || gameType === 'tictactoe') {
-          gameTitle = 'Tic Tac Toe';
-        } else if (gameType === 'rps' || gameType === 'rock-paper-scissors') {
-          gameTitle = 'Rock Paper Scissors';
-        } else if (gameType === 'connect-four' || gameType === 'connectfour') {
-          gameTitle = 'Connect Four';
-        } else if (gameType === 'coin-flip' || gameType === 'coinflip') {
-          gameTitle = 'Coin Flip';
-        } else if (game.gameType) {
-          // Use the raw gameType if it exists, formatted nicely
-          gameTitle = game.gameType.split('-').map(word =>
-            word.charAt(0).toUpperCase() + word.slice(1)
-          ).join(' ');
-        }
-
-        return {
-          id: `game-${game.id}`,
-          type: 'game' as const,
-          title: gameTitle,
-          players: `${game.player2 ? '2' : '1'}/2`,
-          wager: `${game.wager} SOL`,
-          timeLeft: '30m',
-          isLive: game.status === 'waiting',
-          timestamp: new Date(game.createdAt).getTime()
-        };
-      });
-
-      // Combine and sort by timestamp (most recent first), then limit to 8
-      const combined = [...eventActivities, ...gameActivities]
-        .sort((a, b) => b.timestamp - a.timestamp)
-        .slice(0, 8);
-
-      setRecentActivities(combined);
-    } catch (error) {
-      logger.error('Failed to fetch recent activities:', error);
-    } finally {
-      setIsLoadingActivities(false);
-    }
-  };
 
   const fetchNotifications = async () => {
     if (!token) return;
@@ -220,29 +104,6 @@ export default function RightSidebar({ showNotifications = false, onNotification
   const truncateAddress = (address: string) => {
     if (!address || address.length <= 20) return address;
     return `${address.slice(0, 8)}...${address.slice(-6)}`;
-  };
-
-
-  const getEventTypeIcon = (category: string) => {
-    switch (category) {
-      case 'whitelist': return '📋';
-      case 'token_launch': return '🚀';
-      case 'nft_mint': return '🖼️';
-      case 'airdrop': return '🎁';
-      case 'ido': return '📈';
-      default: return '📅';
-    }
-  };
-
-
-  const getGameIcon = (title: string) => {
-    switch (title.toLowerCase()) {
-      case 'tic tac toe': return '⭕';
-      case 'rock paper scissors': return '✂️';
-      case 'connect four': return '🔴';
-      case 'coin flip': return '🪙';
-      default: return '🎮';
-    }
   };
 
 
@@ -348,77 +209,25 @@ export default function RightSidebar({ showNotifications = false, onNotification
           )}
         </div>
       ) : (
-        /* Recent Activity Widget */
+        /* Trending on Korus Widget */
         <div className="bg-[#12131a] border border-[#22232e] rounded-[16px] p-[16px] mb-[16px]">
-          <h2 className="text-[18px] font-extrabold tracking-[-0.3px] mb-[14px]">Recent Activity</h2>
+          <h2 className="text-[18px] font-extrabold tracking-[-0.3px] mb-[14px]">Trending on Korus</h2>
           <div>
-            {isLoadingActivities ? (
-              <div className="text-center py-8 text-white/30">
-                <div className="w-6 h-6 border-2 border-white/10 border-t-white/40 rounded-full animate-spin mx-auto mb-2"></div>
-                <p className="text-xs">Loading activities...</p>
-              </div>
-            ) : recentActivities.length === 0 ? (
-              <div className="text-center py-8 text-white/30">
-                <p className="text-sm">No recent activities</p>
-              </div>
-            ) : (
-              recentActivities.map((activity) => (
-                <div
-                  key={activity.id}
-                  onClick={() => {
-                    if (activity.type === 'event') {
-                      const eventId = activity.id.replace('event-', '');
-                      router.push(`/events/${eventId}`);
-                    } else {
-                      const gameId = activity.id.replace('game-', '');
-                      router.push(`/games/${gameId}`);
-                    }
-                  }}
-                  className="py-[10px] border-b border-[#22232e] last:border-b-0 cursor-pointer"
-                >
-                  <div className="text-[12px] text-[#5c5e6e]">
-                    {activity.type === 'game'
-                      ? `${getGameIcon(activity.title)} Game`
-                      : `${getEventTypeIcon(activity.category || 'Other')} ${(activity.category || 'Other').replace('_', ' ')}`
-                    }
-                    {activity.type === 'event' && activity.premiumOnly && ' · Premium'}
-                  </div>
-                  <div className="text-[14px] font-bold my-[2px] hover:text-korus-primary transition-colors">
-                    {activity.title}
-                  </div>
-
-                  {activity.type === 'event' && activity.project && (
-                    <div className="text-[12px] text-[#5c5e6e] mt-0.5">by {activity.project}</div>
-                  )}
-
-                  <div className="text-[12px] text-[#5c5e6e] mt-0.5">
-                    {activity.type === 'game' ? (
-                      <>Players: {activity.players} · {activity.wager} · {activity.timeLeft} left</>
-                    ) : (
-                      <>
-                        {activity.maxParticipants
-                          ? `${activity.participants}/${activity.maxParticipants}`
-                          : `${activity.participants}`
-                        }
-                        {' participants'}
-                        {activity.isLive ? ' · Live Now' : activity.time ? ` · in ${activity.time}` : ''}
-                        {activity.chain ? ` · ${activity.chain}` : ''}
-                        {activity.price ? ` · ${activity.price}` : ''}
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          <div className="pt-3">
-            <button
-              onClick={() => router.push('/events')}
-              className="text-korus-primary text-[12px] hover:underline"
-            >
-              View all activity
-            </button>
+            <div className="py-[10px] border-b border-[#22232e] cursor-pointer group">
+              <div className="text-[12px] text-[#5c5e6e]">Solana · Trending</div>
+              <div className="text-[14px] font-bold my-[2px] group-hover:text-korus-primary transition-colors">#GameEscrow</div>
+              <div className="text-[12px] text-[#5c5e6e]">142 posts</div>
+            </div>
+            <div className="py-[10px] border-b border-[#22232e] cursor-pointer group">
+              <div className="text-[12px] text-[#5c5e6e]">Gaming · Trending</div>
+              <div className="text-[14px] font-bold my-[2px] group-hover:text-korus-primary transition-colors">Connect Four Tournament</div>
+              <div className="text-[12px] text-[#5c5e6e]">89 posts</div>
+            </div>
+            <div className="py-[10px] cursor-pointer group">
+              <div className="text-[12px] text-[#5c5e6e]">DeFi · Trending</div>
+              <div className="text-[14px] font-bold my-[2px] group-hover:text-korus-primary transition-colors">#SolanaGaming</div>
+              <div className="text-[12px] text-[#5c5e6e]">67 posts</div>
+            </div>
           </div>
         </div>
       )}

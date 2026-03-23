@@ -1164,24 +1164,15 @@ export default function Home() {
 
               {/* Tabs */}
               <div className="flex">
-                <button
-                  onClick={() => router.push('/')}
-                  className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[#f0f0f5]"
-                >
-                  Home
+                <button className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[#f0f0f5]">
+                  For You
                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-[3px] rounded-[3px] bg-korus-primary" />
                 </button>
-                <button
-                  onClick={() => router.push('/games')}
-                  className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[#8b8d9a] hover:text-[#f0f0f5] hover:bg-[#1a1b24]"
-                >
-                  Games
+                <button className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[#8b8d9a] hover:text-[#f0f0f5] hover:bg-[#1a1b24]">
+                  Following
                 </button>
-                <button
-                  onClick={() => router.push('/events')}
-                  className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[#8b8d9a] hover:text-[#f0f0f5] hover:bg-[#1a1b24]"
-                >
-                  Events
+                <button className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[#8b8d9a] hover:text-[#f0f0f5] hover:bg-[#1a1b24]">
+                  Trending
                 </button>
               </div>
             </div>
@@ -1288,19 +1279,6 @@ export default function Home() {
                       >
                         <span className="text-xs font-bold">GIF</span>
                       </button>
-                      {/* Draw/Pen Button */}
-                      <button
-                        onClick={() => setShowDrawCanvas(!showDrawCanvas)}
-                        className={`w-[34px] h-[34px] rounded-lg flex items-center justify-center transition-all ${
-                          showDrawCanvas
-                            ? 'text-korus-primary bg-korus-primary/[0.12]'
-                            : 'text-korus-primary/70 hover:text-korus-primary hover:bg-korus-primary/[0.12]'
-                        }`}
-                      >
-                        <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                      </button>
                       {/* Emoji Button */}
                       <button
                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
@@ -1313,17 +1291,6 @@ export default function Home() {
                         <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M16 10h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                      </button>
-                      <button
-                        onClick={() => (composeText.trim() || selectedFiles.length > 0) && setShowShoutoutModal(true)}
-                        disabled={!composeText.trim() && selectedFiles.length === 0}
-                        className={`w-[34px] h-[34px] rounded-lg flex items-center justify-center transition-all ${
-                          composeText.trim() || selectedFiles.length > 0
-                            ? 'text-korus-primary/70 hover:text-korus-primary hover:bg-korus-primary/[0.12] cursor-pointer'
-                            : 'text-korus-primary/20 cursor-not-allowed'
-                        }`}
-                      >
-                        <span className="text-sm">📢</span>
                       </button>
                     </div>
 
@@ -1551,6 +1518,23 @@ export default function Home() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
                       <span>{post.likes}</span>
+                    </button>
+
+                    <button
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] text-[13px] transition-all ${
+                        postInteractions[post.id]?.reposted
+                          ? 'text-[#10b981] hover:bg-[rgba(16,185,129,0.12)]'
+                          : 'text-[#5c5e6e] hover:text-korus-primary hover:bg-korus-primary/[0.12]'
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleRepost(Number(post.id));
+                      }}
+                    >
+                      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      <span>{post.reposts ?? 0}</span>
                     </button>
 
                     <button

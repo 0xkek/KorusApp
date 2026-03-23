@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useState, useEffect } from 'react';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
-import * as eventsAPI from '@/lib/api/events';
 import Image from 'next/image';
 import { nftsAPI } from '@/lib/api';
 
@@ -17,7 +16,6 @@ interface TabItem {
   badge?: number;
   onClick?: () => void;
   disabled?: boolean;
-  hidden?: boolean;
 }
 
 interface LeftSidebarProps {
@@ -31,29 +29,10 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
   const pathname = usePathname();
   const { connected, publicKey } = useWallet();
   const { token, isAuthenticated } = useWalletAuth();
-  const [hasCreatedEvents, setHasCreatedEvents] = useState(false);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [userDisplayName, setUserDisplayName] = useState<string | null>(null);
 
-  // Check if user has created events
-  useEffect(() => {
-    const checkUserEvents = async () => {
-      if (connected && isAuthenticated && token) {
-        try {
-          const result = await eventsAPI.getMyEvents(token);
-          setHasCreatedEvents(result.events && result.events.length > 0);
-        } catch (error) {
-          logger.error('Failed to check user events:', error);
-          setHasCreatedEvents(false);
-        }
-      } else {
-        setHasCreatedEvents(false);
-      }
-    };
-
-    checkUserEvents();
-  }, [connected, isAuthenticated, token, pathname]); // Re-check when pathname changes (e.g., after creating event)
-
-  // Fetch user avatar
+  // Fetch user avatar and display name
   useEffect(() => {
     const fetchUserAvatar = async () => {
       console.log('[LeftSidebar] fetchUserAvatar called', { connected, publicKey: publicKey?.toBase58(), isAuthenticated, hasToken: !!token });
@@ -70,6 +49,10 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
           if (userResponse.ok) {
             const userData = await userResponse.json();
             console.log('[LeftSidebar] User data:', userData);
+            // Set display name from profile data
+            const displayName = userData.user?.snsUsername || userData.user?.username || null;
+            setUserDisplayName(displayName);
+
             if (userData.user?.nftAvatar) {
               console.log('[LeftSidebar] nftAvatar found:', userData.user.nftAvatar);
               // Check if it's a URL (old data) or mint address (new data)
@@ -114,6 +97,16 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
       ),
     },
     {
+      name: 'Games',
+      path: '/games',
+      icon: (
+        <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      ),
+    },
+    {
       name: 'Events',
       path: '/events',
       icon: (
@@ -129,7 +122,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9zM13.73 21a2 2 0 01-3.46 0" />
         </svg>
       ),
-      badge: notificationCount > 0 ? notificationCount : undefined, // Use dynamic count, hide if 0
+      badge: notificationCount > 0 ? notificationCount : undefined,
       onClick: onNotificationsToggle,
     },
     {
@@ -140,45 +133,6 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
         </svg>
       ),
       onClick: onSearchClick,
-    },
-    {
-      name: 'Messages',
-      path: '#',
-      icon: (
-        <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-        </svg>
-      ),
-      disabled: true,
-    },
-    {
-      name: 'Wallet',
-      path: '/wallet',
-      icon: (
-        <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Submit Event',
-      path: '/events/create',
-      icon: (
-        <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      ),
-    },
-    {
-      name: 'My Events',
-      path: '/events/manage',
-      icon: (
-        <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-        </svg>
-      ),
-      hidden: !hasCreatedEvents, // Only show if user has created events
     },
     {
       name: 'Profile',
@@ -215,7 +169,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
 
       {/* Navigation Items */}
       <div className="flex flex-col flex-1">
-        {tabs.filter(tab => !tab.hidden).map((tab) => {
+        {tabs.map((tab) => {
           const isActive = pathname === tab.path && !tab.disabled;
           const isDisabled = tab.disabled;
           const className = `flex items-center gap-[14px] px-[16px] py-[12px] rounded-[12px] text-[15px] cursor-pointer transition-all duration-150 relative group mb-[2px] ${
@@ -317,12 +271,9 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
         <div className="mt-[20px]">
           <button
             onClick={onPostButtonClick}
-            className="w-full bg-gradient-to-r from-korus-primary to-korus-secondary text-black text-[15px] font-bold rounded-[14px] p-[14px] hover:-translate-y-px hover:shadow-xl hover:shadow-korus-primary/35 transition-all duration-200 flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-korus-primary to-korus-secondary text-black text-[15px] font-bold rounded-[14px] p-[14px] hover:-translate-y-px hover:shadow-xl hover:shadow-korus-primary/35 transition-all duration-200 flex items-center justify-center"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            <span className="hidden xl:block">Post</span>
+            <span>Post</span>
           </button>
         </div>
       )}
@@ -354,7 +305,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
               </div>
             )}
             <div className="hidden xl:block flex-1 min-w-0">
-              <div className="text-[13px] font-semibold text-white">Wallet</div>
+              <div className="text-[13px] font-semibold text-white">{userDisplayName || 'korus.sol'}</div>
               <div className="text-[11px] text-[#5c5e6e] font-mono truncate">
                 {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
               </div>
