@@ -11,6 +11,7 @@ export interface Reply {
   likes: number;
   replies: Reply[]; // Nested replies (threaded conversations)
   time: string;
+  createdAt?: string | Date; // Raw timestamp for relative formatting
   isPremium?: boolean;
   isExpanded?: boolean;
   image?: string;

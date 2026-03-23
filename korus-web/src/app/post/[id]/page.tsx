@@ -13,6 +13,7 @@ import RightSidebar from '@/components/RightSidebar';
 import ReplyModal from '@/components/ReplyModal';
 import PostOptionsModal from '@/components/PostOptionsModal';
 import { SafeContent } from '@/components/SafeContent';
+import { formatRelativeTime, formatFullTimestamp } from '@/utils/formatTime';
 import { useToast } from '@/hooks/useToast';
 import { postsAPI, repliesAPI, uploadAPI, interactionsAPI, usersAPI } from '@/lib/api';
 import type { Post, Reply } from '@/types';
@@ -183,12 +184,14 @@ export default function PostDetailPage() {
                   likes: child.likeCount || 0,
                   replies: [],
                   time: new Date(child.createdAt).toLocaleString(),
+                  createdAt: child.createdAt,
                   isPremium: child.author?.tier === 'premium' || child.author?.subscriptionStatus === 'active',
                   image: child.imageUrl,
                   videoUrl: child.videoUrl,
                   avatar: child.author?.nftAvatar || null,
                 })) || [],
                 time: new Date(reply.createdAt).toLocaleString(),
+                createdAt: reply.createdAt,
                 isPremium: reply.author?.tier === 'premium' || reply.author?.subscriptionStatus === 'active',
                 image: reply.imageUrl,
                 videoUrl: reply.videoUrl,
@@ -445,7 +448,7 @@ export default function PostDetailPage() {
       <div key={reply.id} className="">
         {/* Reply Content */}
         <div className="pl-4 py-3 hover:bg-korus-surface/5 transition-colors">
-          <div className="border-b border-korus-primary/20 pb-3 mb-3 mr-6">
+          <div className="border-b border-korus-primary/20 pb-3 mb-3">
           <div className="flex gap-3">
             {/* Avatar */}
             {reply.avatar ? (
@@ -483,7 +486,7 @@ export default function PostDetailPage() {
                 )}
                 <span className="text-korus-textSecondary">@{truncateAddress(reply.user)}</span>
                 <span className="text-korus-textSecondary">·</span>
-                <span className="text-korus-textSecondary">{reply.time}</span>
+                <span className="text-korus-textSecondary">{reply.createdAt ? formatRelativeTime(reply.createdAt) : reply.time}</span>
               </div>
 
               {/* Content */}
@@ -499,31 +502,27 @@ export default function PostDetailPage() {
                 <button
                   onClick={() => handleReply(reply)}
                   aria-label="Reply to comment"
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 text-korus-textTertiary hover:text-korus-primary hover:bg-korus-primary/10"
                 >
-                  <svg className="w-4 h-4 transition-colors text-korus-textTertiary group-hover:text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                   </svg>
-                  {hasReplies && <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">{reply.replies.length}</span>}
+                  {hasReplies && <span className="text-sm font-medium">{reply.replies.length}</span>}
                 </button>
 
                 <button
                   onClick={() => handleLikeReply(reply.id)}
                   aria-label={likedReplies.has(reply.id) ? "Unlike reply" : "Like reply"}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 ${
                     likedReplies.has(reply.id)
-                      ? 'bg-korus-primary/20 border border-korus-primary/40'
-                      : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
+                      ? 'text-red-400 hover:bg-red-400/10'
+                      : 'text-korus-textTertiary hover:text-red-400 hover:bg-red-400/10'
                   }`}
                 >
-                  <svg className={`w-4 h-4 transition-colors ${
-                    likedReplies.has(reply.id) ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
-                  }`} fill={likedReplies.has(reply.id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill={likedReplies.has(reply.id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                   </svg>
-                  <span className={`text-sm transition-colors font-medium ${
-                    likedReplies.has(reply.id) ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
-                  }`}>{reply.likes}</span>
+                  <span className="text-sm font-medium">{reply.likes}</span>
                 </button>
 
                 <button
@@ -532,18 +531,14 @@ export default function PostDetailPage() {
                     setShowTipModal(true);
                   }}
                   aria-label="Send tip (0 SOL)"
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 ${
                     tippedReplies.has(String(reply.id))
-                      ? 'bg-korus-primary/20 border border-korus-primary/40'
-                      : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
+                      ? 'text-green-400 hover:bg-green-400/10'
+                      : 'text-korus-textTertiary hover:text-green-400 hover:bg-green-400/10'
                   }`}
                 >
-                  <span className={`text-sm transition-colors font-medium ${
-                    tippedReplies.has(String(reply.id)) ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
-                  }`}>$</span>
-                  <span className={`text-sm transition-colors font-medium ${
-                    tippedReplies.has(String(reply.id)) ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
-                  }`}>0 SOL</span>
+                  <span className="text-sm font-medium">$</span>
+                  <span className="text-sm font-medium">0 SOL</span>
                 </button>
 
                 <button
@@ -552,9 +547,9 @@ export default function PostDetailPage() {
                     setShowShareModal(true);
                   }}
                   aria-label="Share reply"
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 text-korus-textTertiary hover:text-korus-primary hover:bg-korus-primary/10"
                 >
-                  <svg className="w-4 h-4 transition-colors text-korus-textTertiary group-hover:text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
                   </svg>
                 </button>
@@ -782,8 +777,6 @@ export default function PostDetailPage() {
                     )}
 
                     <span className="text-korus-textSecondary">@{truncateAddress(post.user)}</span>
-                    <span className="text-korus-textSecondary">·</span>
-                    <span className="text-korus-textSecondary hover:underline cursor-pointer">{post.time}</span>
 
                     {/* More button */}
                     <div className="ml-auto">
@@ -829,36 +822,45 @@ export default function PostDetailPage() {
                     </div>
                   )}
 
+                  {/* Full Timestamp */}
+                  <p className="text-sm text-korus-textTertiary mt-3">
+                    {formatFullTimestamp(post.createdAt || post.time)}
+                  </p>
+
+                  {/* Stats Row */}
+                  <div className="flex gap-5 py-3 mt-3 border-t border-korus-border/30 border-b border-korus-border/30">
+                    <span className="text-sm text-korus-textSecondary"><strong className="text-white font-semibold">{post.comments}</strong> Replies</span>
+                    <span className="text-sm text-korus-textSecondary"><strong className="text-white font-semibold">{post.likes}</strong> Likes</span>
+                    <span className="text-sm text-korus-textSecondary"><strong className="text-white font-semibold">{post.reposts ?? 0}</strong> Reposts</span>
+                    <span className="text-sm text-korus-textSecondary"><strong className="text-white font-semibold">{post.tips}</strong> SOL tipped</span>
+                  </div>
+
                   {/* Post Actions */}
-                  <div className="flex items-center justify-between max-w-md mt-3">
+                  <div className="flex items-center justify-around py-2 border-b border-korus-border/30">
                     <button
                       onClick={() => handleReply(post)}
                       aria-label="Reply to post"
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 text-korus-textTertiary hover:text-korus-primary hover:bg-korus-primary/10"
                     >
-                      <svg className="w-4 h-4 transition-colors text-korus-textTertiary group-hover:text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                       </svg>
-                      <span className="text-sm transition-colors font-medium text-korus-textTertiary group-hover:text-korus-primary">{post.comments}</span>
+                      <span className="text-sm font-medium">{post.comments}</span>
                     </button>
 
                     <button
                       onClick={handleLike}
                       aria-label={liked ? "Unlike post" : "Like post"}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 ${
                         liked
-                          ? 'bg-korus-primary/20 border border-korus-primary/40'
-                          : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
+                          ? 'text-red-400 hover:bg-red-400/10'
+                          : 'text-korus-textTertiary hover:text-red-400 hover:bg-red-400/10'
                       }`}
                     >
-                      <svg className={`w-4 h-4 transition-colors ${
-                        liked ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
-                      }`} fill={liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                       </svg>
-                      <span className={`text-sm transition-colors font-medium ${
-                        liked ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
-                      }`}>{post.likes}</span>
+                      <span className="text-sm font-medium">{post.likes}</span>
                     </button>
 
                     <button
@@ -867,18 +869,14 @@ export default function PostDetailPage() {
                         setShowTipModal(true);
                       }}
                       aria-label={`Send tip (${post.tips} SOL)`}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 ${
                         tipped
-                          ? 'bg-korus-primary/20 border border-korus-primary/40'
-                          : 'border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight'
+                          ? 'text-green-400 hover:bg-green-400/10'
+                          : 'text-korus-textTertiary hover:text-green-400 hover:bg-green-400/10'
                       }`}
                     >
-                      <span className={`text-sm transition-colors font-medium ${
-                        tipped ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
-                      }`}>$</span>
-                      <span className={`text-sm transition-colors font-medium ${
-                        tipped ? 'text-korus-primary' : 'text-korus-textTertiary group-hover:text-korus-primary'
-                      }`}>{post.tips} SOL</span>
+                      <span className="text-sm font-medium">$</span>
+                      <span className="text-sm font-medium">{post.tips} SOL</span>
                     </button>
 
                     <button
@@ -887,9 +885,9 @@ export default function PostDetailPage() {
                         setShowShareModal(true);
                       }}
                       aria-label="Share post"
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 group border border-transparent hover:bg-korus-surface/40 hover:border-korus-borderLight"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 text-korus-textTertiary hover:text-korus-primary hover:bg-korus-primary/10"
                     >
-                      <svg className="w-4 h-4 transition-colors text-korus-textTertiary group-hover:text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
                       </svg>
                     </button>
