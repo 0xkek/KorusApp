@@ -1,6 +1,0 @@
-{
-  "framework": "nextjs",
-  "installCommand": "cd korus-web && npm install",
-  "buildCommand": "cd korus-web && npm run build",
-  "outputDirectory": "korus-web/.next"
-}
