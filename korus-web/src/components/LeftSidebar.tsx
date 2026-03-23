@@ -202,60 +202,60 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
   ];
 
   return (
-    <nav className="fixed left-0 top-0 bottom-0 lg:w-80 md:w-64 sm:w-16 z-30 border-r border-korus-border bg-black px-4 flex flex-col hidden md:flex" role="navigation" aria-label="Main navigation">
+    <nav className="fixed left-0 top-0 bottom-0 w-[270px] z-30 border-r border-white/[0.08] px-3 py-5 flex flex-col hidden md:flex" role="navigation" aria-label="Main navigation">
       {/* Logo */}
-      <div className="py-4">
-        <Link href="/" className="flex items-center gap-3 p-3 rounded-full hover:bg-korus-surface/40 transition-all duration-200" aria-label="Korus Home">
-          <div className="w-8 h-8 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center">
+      <div className="flex items-center gap-3 px-3 mb-8">
+        <Link href="/" className="flex items-center gap-3" aria-label="Korus Home">
+          <div className="w-8 h-8 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-[10px] flex items-center justify-center">
             <span className="text-black font-bold text-sm">K</span>
           </div>
-          <span className="text-white text-xl font-bold">Korus</span>
+          <span className="text-white text-xl font-extrabold tracking-tight hidden xl:block">Korus</span>
         </Link>
       </div>
 
       {/* Navigation Items */}
-      <div className="flex flex-col gap-2 flex-1">
+      <div className="flex flex-col flex-1">
         {tabs.filter(tab => !tab.hidden).map((tab) => {
           const isActive = pathname === tab.path && !tab.disabled;
           const isDisabled = tab.disabled;
-          const className = `flex items-center gap-4 px-3 py-3 rounded-full transition-all duration-200 relative group ${
+          const className = `flex items-center gap-3.5 px-4 py-3 rounded-xl text-[15px] font-medium cursor-pointer transition-all duration-150 relative group mb-0.5 ${
             isDisabled
-              ? 'text-korus-textSecondary opacity-50 cursor-not-allowed bg-korus-surface/10 border border-korus-borderLight border-dashed'
+              ? 'text-white/30 opacity-50 cursor-not-allowed border border-white/[0.06] border-dashed'
               : isActive
-              ? 'bg-korus-primary shadow-lg shadow-korus-primary/40'
-              : 'text-korus-textSecondary hover:bg-korus-surface/40 hover:text-korus-text'
+              ? 'text-white bg-korus-primary/[0.1] border border-korus-primary/[0.15]'
+              : 'text-white/60 hover:bg-white/[0.06] hover:text-white'
           }`;
 
           const content = (
             <>
-              <div className={`transition-colors ${
+              <div className={`w-[22px] h-[22px] flex items-center justify-center transition-colors ${
                 isDisabled
-                  ? 'text-korus-textSecondary'
+                  ? 'text-white/30'
                   : isActive
-                  ? 'text-black'
-                  : 'text-korus-textSecondary group-hover:text-korus-text'
+                  ? 'text-korus-primary'
+                  : 'text-white/60 group-hover:text-white'
               }`}>
                 {tab.icon}
               </div>
 
-              <span className={`text-xl font-medium hidden xl:block ${
+              <span className={`text-[15px] font-medium hidden xl:block ${
                 isDisabled
-                  ? 'text-korus-textSecondary'
+                  ? 'text-white/30'
                   : isActive
-                  ? 'text-black'
-                  : 'text-korus-textSecondary group-hover:text-korus-text'
+                  ? 'text-white'
+                  : 'text-white/60 group-hover:text-white'
               }`}>
                 {tab.name}
                 {isDisabled && (
-                  <span className="text-xs text-korus-textTertiary block">Coming Soon</span>
+                  <span className="text-xs text-white/20 block">Coming Soon</span>
                 )}
               </span>
 
               {/* Badge */}
               {tab.badge && tab.badge > 0 && !isDisabled && (
                 <span
-                  className="bg-korus-primary text-black font-bold rounded-full w-6 h-6 hidden xl:flex xl:items-center xl:justify-center ml-auto"
-                  style={{fontSize: '14px', lineHeight: '1', fontFamily: 'monospace'}}
+                  className="bg-korus-primary text-black font-bold rounded-full w-5 h-5 hidden xl:flex xl:items-center xl:justify-center ml-auto text-xs"
+                  style={{lineHeight: '1', fontFamily: 'monospace'}}
                   id={`${tab.name}-badge`}
                   aria-label={`${tab.badge > 9 ? 'More than 9' : tab.badge} unread notifications`}
                 >
@@ -291,7 +291,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
               >
                 {content}
                 {/* Tooltip on hover */}
-                <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-korus-surface border border-korus-border text-korus-text text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-white/[0.08] border border-white/[0.1] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
                   Feature coming soon
                 </div>
               </div>
@@ -314,10 +314,10 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
 
       {/* Post Button */}
       {connected && onPostButtonClick && (
-        <div className="px-3 pb-4">
+        <div className="mt-5 px-1">
           <button
             onClick={onPostButtonClick}
-            className="w-full bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold rounded-full py-3 px-6 hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-200 hover:scale-[1.02] flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-korus-primary to-korus-secondary text-black text-[15px] font-bold rounded-xl py-3.5 px-6 shadow-lg shadow-korus-primary/25 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-korus-primary/35 transition-all duration-200 flex items-center justify-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -329,33 +329,33 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
 
       {/* User Profile */}
       {connected && publicKey && (
-        <div className="py-4 border-t border-korus-border">
-          <Link href="/profile" className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-korus-primary/10 to-korus-secondary/10 border border-korus-primary/30 hover:bg-korus-surface/40 transition-all duration-200 cursor-pointer">
+        <div className="mt-auto p-3.5 rounded-2xl border border-white/[0.08] bg-white/[0.03]">
+          <Link href="/profile" className="flex items-center gap-3 transition-all duration-200 cursor-pointer">
             {(() => {
               console.log('[LeftSidebar] Rendering, userAvatar state:', userAvatar);
               return null;
             })()}
             {userAvatar ? (
-              <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden shadow-lg shadow-korus-primary/20 border-2 border-korus-primary/50">
+              <div className="w-9 h-9 rounded-[10px] flex-shrink-0 overflow-hidden">
                 <Image
                   src={userAvatar}
                   alt="Your avatar"
-                  width={48}
-                  height={48}
+                  width={36}
+                  height={36}
                   className="w-full h-full object-cover"
                   unoptimized
                 />
               </div>
             ) : (
-              <div className="w-12 h-12 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center shadow-lg shadow-korus-primary/20 flex-shrink-0">
-                <span className="text-black font-bold text-sm">
+              <div className="w-9 h-9 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-[10px] flex items-center justify-center flex-shrink-0">
+                <span className="text-black font-bold text-xs">
                   {publicKey.toBase58().slice(0, 2).toUpperCase()}
                 </span>
               </div>
             )}
             <div className="hidden xl:block flex-1 min-w-0">
-              <div className="text-base mb-1 font-medium" style={{ color: '#9ca3af', WebkitTextFillColor: '#9ca3af' }}>Connected with:</div>
-              <div className="text-white font-mono text-base font-bold truncate" style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>
+              <div className="text-sm font-semibold text-white">Wallet</div>
+              <div className="text-[11px] text-white/40 font-mono truncate">
                 {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
               </div>
             </div>

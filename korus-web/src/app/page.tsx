@@ -1123,105 +1123,84 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-korus-dark-100 relative overflow-hidden">
-      {/* Mobile app style gradient background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-korus-dark-100 via-korus-dark-200 to-korus-dark-100">
-        {/* Surface gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-korus-dark-300/25 to-korus-dark-200/35" />
-      </div>
-
-      {/* Subtle animated gradient orbs - more like mobile app */}
-      <div className="fixed inset-0 overflow-hidden">
-        {/* Primary gradient orb */}
-        <div className="absolute -top-32 -right-32 w-[600px] h-[600px] bg-gradient-to-br from-korus-primary/8 to-korus-secondary/6 rounded-full blur-[80px] animate-float" />
-
-        {/* Secondary gradient orb */}
-        <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-gradient-to-tr from-korus-secondary/6 to-korus-primary/8 rounded-full blur-[70px] animate-float-delayed" />
-
-        {/* Accent orb for depth */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-to-r from-korus-primary/4 to-korus-secondary/4 rounded-full blur-[60px] animate-pulse-slow" />
-      </div>
+      {/* Clean dark background */}
+      <div className="fixed inset-0 bg-[#050508]" />
 
       {/* Content wrapper */}
       <div className="relative z-10">
         {/* Main Content Container */}
       <div className="flex min-h-screen">
         {/* Main Feed */}
-        <div className="flex-1 lg:ml-80 lg:mr-96 md:ml-64 md:mr-80 sm:ml-0 sm:mr-0 md:border-x md:border-korus-border bg-korus-surface/10 backdrop-blur-sm max-w-full overflow-hidden">
+        <div className="flex-1 sm:ml-0 sm:mr-0 md:ml-[270px] md:mr-[340px] max-w-[640px] border-x border-white/[0.08]">
         {/* Main app - only accessible when connected */}
             {/* Header Navigation */}
-            <div className="sticky top-0 bg-korus-dark-300/80 backdrop-blur-xl border-b border-korus-border z-10">
-              <div className="flex">
-                {/* Mobile menu button */}
+            <div className="sticky top-0 z-10 bg-black/75 backdrop-blur-[16px] border-b border-white/[0.08]">
+              {/* Mobile controls row */}
+              <div className="flex md:hidden items-center justify-between px-2">
                 <button
                   onClick={() => setShowMobileMenu(true)}
                   aria-label="Open mobile menu"
-                  className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors"
+                  className="flex items-center justify-center w-12 h-12 text-white hover:bg-white/[0.06] transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 </button>
 
-                {/* Logo on mobile */}
-                <div className="md:hidden flex items-center px-4">
-                  <div className="w-6 h-6 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center">
-                    <span className="text-black font-bold text-xs">K</span>
-                  </div>
+                <div className="w-6 h-6 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center">
+                  <span className="text-black font-bold text-xs">K</span>
                 </div>
 
-                <div className="relative flex items-center justify-center w-full">
-                  <button
-                    onClick={() => router.push('/')}
-                    className="relative px-4 py-4 text-white font-semibold hover:bg-korus-surface/20 transition-colors group"
-                  >
-                    <span className="relative z-10">Home</span>
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-korus-primary rounded-full"></div>
-                  </button>
-                  <button
-                    onClick={() => router.push('/games')}
-                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
-                  >
-                    <span className="relative z-10">Games</span>
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
-                  </button>
-                  <button
-                    onClick={() => router.push('/events')}
-                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
-                  >
-                    <span className="relative z-10">Events</span>
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
-                  </button>
-                </div>
-
-                {/* Mobile search/menu */}
                 <button
                   onClick={() => setShowSearchModal(true)}
                   aria-label="Open search"
-                  className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors"
+                  className="flex items-center justify-center w-12 h-12 text-white hover:bg-white/[0.06] transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </button>
               </div>
+
+              {/* Tabs */}
+              <div className="flex">
+                <button
+                  onClick={() => router.push('/')}
+                  className="flex-1 text-center py-4 text-sm font-semibold cursor-pointer transition-colors relative text-white"
+                >
+                  Home
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-[3px] rounded-full bg-korus-primary" />
+                </button>
+                <button
+                  onClick={() => router.push('/games')}
+                  className="flex-1 text-center py-4 text-sm font-semibold cursor-pointer transition-colors relative text-white/50 hover:text-white hover:bg-white/[0.06]"
+                >
+                  Games
+                </button>
+                <button
+                  onClick={() => router.push('/events')}
+                  className="flex-1 text-center py-4 text-sm font-semibold cursor-pointer transition-colors relative text-white/50 hover:text-white hover:bg-white/[0.06]"
+                >
+                  Events
+                </button>
+              </div>
             </div>
 
             {/* Compose Post */}
-            <div className="border-b border-korus-border bg-korus-surface/20 backdrop-blur-sm p-4">
-              <div className="flex gap-3">
+            <div className="px-5 py-4 border-b border-white/[0.08] flex gap-3">
                 {userAvatar ? (
-                  <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden shadow-lg shadow-korus-primary/20">
+                  <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
                     <Image
                       src={userAvatar}
                       alt="Your avatar"
-                      width={48}
-                      height={48}
+                      width={40}
+                      height={40}
                       className="w-full h-full object-cover"
                     />
                   </div>
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0 shadow-lg shadow-korus-primary/20">
-                    <span className="text-black font-bold">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0">
+                    <span className="text-black font-bold text-sm">
                       {publicKey?.toBase58().slice(0, 2).toUpperCase()}
                     </span>
                   </div>
@@ -1231,7 +1210,7 @@ export default function Home() {
                     value={composeText}
                     onChange={(e) => setComposeText(e.target.value)}
                     placeholder="What's on your mind? Share your experience, ask for advice, or offer support..."
-                    className={`w-full bg-transparent text-white text-xl resize-none outline-none placeholder-korus-textTertiary ${showDrawCanvas ? 'min-h-[60px]' : 'min-h-[120px]'}`}
+                    className={`bg-transparent text-white text-[15px] placeholder-white/30 w-full resize-none min-h-[48px] border-none outline-none ${showDrawCanvas ? 'min-h-[48px]' : 'min-h-[48px]'}`}
                     rows={showDrawCanvas ? 2 : 3}
                   />
 
@@ -1283,10 +1262,10 @@ export default function Home() {
                   )}
 
                   {/* Post Options */}
-                  <div className="flex items-center justify-between mt-4">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.08]">
+                    <div className="flex items-center gap-1">
                       {/* Image Upload */}
-                      <label className="flex items-center justify-center w-10 h-10 bg-korus-surface/40 backdrop-blur-sm border border-korus-borderLight rounded-xl text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer">
+                      <label className="w-9 h-9 rounded-lg flex items-center justify-center text-korus-primary/60 hover:text-korus-primary hover:bg-korus-primary/10 transition-all cursor-pointer">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
@@ -1301,10 +1280,10 @@ export default function Home() {
                       {/* GIF Button */}
                       <button
                         onClick={() => setShowGifPicker(!showGifPicker)}
-                        className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10 ${
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
                           showGifPicker
-                            ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
-                            : 'bg-korus-surface/40 border-korus-borderLight text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border'
+                            ? 'text-korus-primary bg-korus-primary/10'
+                            : 'text-korus-primary/60 hover:text-korus-primary hover:bg-korus-primary/10'
                         }`}
                       >
                         <span className="text-xs font-bold">GIF</span>
@@ -1312,10 +1291,10 @@ export default function Home() {
                       {/* Draw/Pen Button */}
                       <button
                         onClick={() => setShowDrawCanvas(!showDrawCanvas)}
-                        className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10 ${
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
                           showDrawCanvas
-                            ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
-                            : 'bg-korus-surface/40 border-korus-borderLight text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border'
+                            ? 'text-korus-primary bg-korus-primary/10'
+                            : 'text-korus-primary/60 hover:text-korus-primary hover:bg-korus-primary/10'
                         }`}
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1325,10 +1304,10 @@ export default function Home() {
                       {/* Emoji Button */}
                       <button
                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                        className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-korus-primary/10 ${
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
                           showEmojiPicker
-                            ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
-                            : 'bg-korus-surface/40 border-korus-borderLight text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border'
+                            ? 'text-korus-primary bg-korus-primary/10'
+                            : 'text-korus-primary/60 hover:text-korus-primary hover:bg-korus-primary/10'
                         }`}
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1338,26 +1317,25 @@ export default function Home() {
                       <button
                         onClick={() => (composeText.trim() || selectedFiles.length > 0) && setShowShoutoutModal(true)}
                         disabled={!composeText.trim() && selectedFiles.length === 0}
-                        className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm border rounded-xl transition-all duration-200 ${
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
                           composeText.trim() || selectedFiles.length > 0
-                            ? 'bg-korus-surface/40 border-korus-borderLight text-korus-primary hover:bg-korus-surface/60 hover:border-korus-border hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer'
-                            : 'bg-korus-surface/20 border-korus-borderLight/50 text-korus-textTertiary cursor-not-allowed opacity-50'
+                            ? 'text-korus-primary/60 hover:text-korus-primary hover:bg-korus-primary/10 cursor-pointer'
+                            : 'text-korus-primary/20 cursor-not-allowed'
                         }`}
                       >
-                        <span className="text-sm font-medium">📢 Shoutout</span>
+                        <span className="text-sm">📢</span>
                       </button>
                     </div>
 
                     <button
                       onClick={handleRegularPost}
                       disabled={!composeText.trim() && selectedFiles.length === 0}
-                      className="px-6 py-2 bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
+                      className="px-5 py-2 rounded-full bg-korus-primary text-black text-sm font-semibold hover:bg-korus-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Post
                     </button>
                   </div>
                 </div>
-              </div>
             </div>
 
             {/* Shoutout Queue Indicator */}
@@ -1386,10 +1364,10 @@ export default function Home() {
             Array.from(new Map(posts.map(post => [post.id, post])).values()).map((post) => (
             <div
               key={post.id}
-              className={`backdrop-blur-sm transition-all duration-200 cursor-pointer group ${
+              className={`transition-colors cursor-pointer group ${
                 post.isShoutout
                   ? 'shoutout-post border border-korus-primary bg-korus-primary/5 shadow-[0_4px_12px_rgba(var(--korus-primary-rgb),0.3)] hover:border-korus-primary hover:shadow-[0_8px_24px_rgba(var(--korus-primary-rgb),0.4)] hover:bg-korus-primary/10'
-                  : 'border-b border-korus-borderLight hover:bg-korus-surface/40'
+                  : 'px-5 py-4 border-b border-white/[0.08] hover:bg-white/[0.03]'
               }`}
               onClick={() => router.push(`/post/${post.id}`)}
             >
@@ -1421,20 +1399,20 @@ export default function Home() {
                 </div>
               )}
 
-              <div className={`flex gap-3 ${post.isShoutout ? 'p-6' : 'px-5 py-4'}`}>
+              <div className={`flex gap-3 ${post.isShoutout ? 'p-6' : ''}`}>
                 {/* Avatar */}
                 {post.avatar ? (
-                  <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden">
+                  <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
                     <Image
                       src={post.avatar}
                       alt={`${post.user} avatar`}
-                      width={48}
-                      height={48}
+                      width={40}
+                      height={40}
                       className="w-full h-full object-cover"
                     />
                   </div>
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-lg font-bold text-black flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-sm font-bold text-black flex-shrink-0">
                     {post.user.slice(0, 2).toUpperCase()}
                   </div>
                 )}
@@ -1442,11 +1420,11 @@ export default function Home() {
                 {/* Post Content */}
                 <div className="flex-1 min-w-0">
                   {/* Post Header */}
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-1.5">
                     <Link
                       href={`/profile/${post.wallet || post.user}`}
                       onClick={(e) => e.stopPropagation()}
-                      className={`font-bold hover:underline cursor-pointer ${post.isShoutout ? 'text-korus-primary' : 'text-white'}`}
+                      className={`font-bold text-[15px] hover:underline cursor-pointer ${post.isShoutout ? 'text-korus-primary' : 'text-white'}`}
                     >
                       {truncateAddress(post.user)}
                     </Link>
@@ -1460,9 +1438,9 @@ export default function Home() {
                       </div>
                     )}
 
-                    <span className="text-korus-textSecondary">@{truncateAddress(post.user)}</span>
-                    <span className="text-korus-textSecondary">·</span>
-                    <span className="text-korus-textSecondary hover:underline cursor-pointer">{formatRelativeTime(post.createdAt || post.time)}</span>
+                    <span className="text-sm text-white/50">@{truncateAddress(post.user)}</span>
+                    <span className="text-white/30 text-xs">·</span>
+                    <span className="text-[13px] text-white/30 hover:underline cursor-pointer">{formatRelativeTime(post.createdAt || post.time)}</span>
 
                     {/* Sponsored Badge */}
                     {post.isSponsored && (
@@ -1478,7 +1456,7 @@ export default function Home() {
                           e.stopPropagation();
                           handlePostOptionsClick(post);
                         }}
-                        className="text-korus-textSecondary hover:text-white hover:bg-korus-surface/60 rounded-full p-1 transition-colors opacity-0 group-hover:opacity-100"
+                        className="text-white/30 hover:text-white hover:bg-white/[0.06] rounded-full p-1 transition-colors opacity-0 group-hover:opacity-100"
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
@@ -1491,7 +1469,7 @@ export default function Home() {
                   {post.content && (
                     <SafeContent
                       content={post.content}
-                      className="text-white text-base leading-normal mb-3 whitespace-pre-wrap break-words"
+                      className="text-[15px] leading-relaxed text-white mt-1 whitespace-pre-wrap break-words"
                       allowLinks={true}
                       allowFormatting={true}
                     />
@@ -1530,12 +1508,12 @@ export default function Home() {
                   )}
 
                   {/* Post Actions */}
-                  <div className="flex items-center justify-between max-w-md mt-3">
+                  <div className="flex items-center gap-1 mt-3 -ml-2">
                     <button
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] transition-all ${
                         postInteractions[post.id]?.replied
-                          ? 'text-korus-primary bg-korus-primary/10'
-                          : 'text-korus-textTertiary hover:text-korus-primary hover:bg-korus-primary/10'
+                          ? 'text-korus-primary hover:bg-korus-primary/[0.08]'
+                          : 'text-white/30 hover:text-korus-primary hover:bg-korus-primary/[0.08]'
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1543,17 +1521,17 @@ export default function Home() {
                         setShowReplyModal(true);
                       }}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                       </svg>
-                      <span className="font-medium">{post.comments}</span>
+                      <span>{post.comments}</span>
                     </button>
 
                     <button
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] transition-all ${
                         postInteractions[post.id]?.liked
                           ? 'text-red-400 hover:bg-red-400/10'
-                          : 'text-korus-textTertiary hover:text-red-400 hover:bg-red-400/10'
+                          : 'text-white/30 hover:text-korus-primary hover:bg-korus-primary/[0.08]'
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1566,17 +1544,17 @@ export default function Home() {
                         }
                       }}
                     >
-                      <svg className="w-4 h-4" fill={postInteractions[post.id]?.liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-[18px] h-[18px]" fill={postInteractions[post.id]?.liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
-                      <span className="font-medium">{post.likes}</span>
+                      <span>{post.likes}</span>
                     </button>
 
                     <button
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] transition-all ${
                         postInteractions[post.id]?.tipped
                           ? 'text-green-400 hover:bg-green-400/10'
-                          : 'text-korus-textTertiary hover:text-green-400 hover:bg-green-400/10'
+                          : 'text-white/30 hover:text-korus-primary hover:bg-korus-primary/[0.08]'
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1591,21 +1569,21 @@ export default function Home() {
                         setShowTipModal(true);
                       }}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span className="font-medium">{post.tips ? `${post.tips} SOL` : 'Tip'}</span>
+                      <span>{post.tips ? `${post.tips} SOL` : 'Tip'}</span>
                     </button>
 
                     <button
-                      className="flex items-center justify-center w-9 h-9 rounded-full text-korus-textTertiary hover:text-korus-primary hover:bg-korus-primary/10 transition-all duration-150"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] text-white/30 hover:text-korus-primary hover:bg-korus-primary/[0.08] transition-all"
                       onClick={(e) => {
                         e.stopPropagation();
                         setPostToShare(post);
                         setShowShareModal(true);
                       }}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                       </svg>
                     </button>

@@ -445,130 +445,126 @@ export default function PostDetailPage() {
     const hasReplies = reply.replies && reply.replies.length > 0;
 
     return (
-      <div key={reply.id} className="">
+      <div key={reply.id}>
         {/* Reply Content */}
-        <div className="pl-4 py-3 hover:bg-korus-surface/5 transition-colors">
-          <div className="border-b border-korus-primary/20 pb-3 mb-3">
-          <div className="flex gap-3">
-            {/* Avatar */}
-            {reply.avatar ? (
-              <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
-                <Image
-                  src={reply.avatar}
-                  alt={`${reply.user} avatar`}
-                  width={40}
-                  height={40}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ) : (
-              <div className="w-10 h-10 bg-gradient-to-br from-korus-primary to-korus-secondary rounded-full flex items-center justify-center text-sm font-bold text-black flex-shrink-0">
-                {reply.user.slice(0, 2).toUpperCase()}
-              </div>
-            )}
-
-            {/* Reply Body */}
-            <div className="flex-1 min-w-0">
-              {/* Header */}
-              <div className="flex items-center gap-2 mb-1">
-                <Link
-                  href={`/profile/${reply.wallet || reply.user}`}
-                  className="font-bold text-white hover:underline"
-                >
-                  {truncateAddress(reply.user)}
-                </Link>
-                {reply.isPremium && (
-                  <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
-                    <svg className="w-2.5 h-2.5" fill="black" viewBox="0 0 24 24">
-                      <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
-                    </svg>
-                  </div>
-                )}
-                <span className="text-korus-textSecondary">@{truncateAddress(reply.user)}</span>
-                <span className="text-korus-textSecondary">·</span>
-                <span className="text-korus-textSecondary">{reply.createdAt ? formatRelativeTime(reply.createdAt) : reply.time}</span>
-              </div>
-
-              {/* Content */}
-              <SafeContent
-                content={reply.content}
-                className="text-white text-base mb-3 whitespace-pre-wrap break-words"
-                allowLinks={true}
-                allowFormatting={true}
+        <div className="px-5 py-3.5 border-b border-white/[0.08] flex gap-3 hover:bg-white/[0.03] transition-colors">
+          {/* Avatar */}
+          {reply.avatar ? (
+            <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden">
+              <Image
+                src={reply.avatar}
+                alt={`${reply.user} avatar`}
+                width={36}
+                height={36}
+                className="w-full h-full object-cover"
               />
-
-              {/* Actions */}
-              <div className="flex items-center justify-between max-w-md">
-                <button
-                  onClick={() => handleReply(reply)}
-                  aria-label="Reply to comment"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 text-korus-textTertiary hover:text-korus-primary hover:bg-korus-primary/10"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                  </svg>
-                  {hasReplies && <span className="text-sm font-medium">{reply.replies.length}</span>}
-                </button>
-
-                <button
-                  onClick={() => handleLikeReply(reply.id)}
-                  aria-label={likedReplies.has(reply.id) ? "Unlike reply" : "Like reply"}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 ${
-                    likedReplies.has(reply.id)
-                      ? 'text-red-400 hover:bg-red-400/10'
-                      : 'text-korus-textTertiary hover:text-red-400 hover:bg-red-400/10'
-                  }`}
-                >
-                  <svg className="w-4 h-4" fill={likedReplies.has(reply.id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                  </svg>
-                  <span className="text-sm font-medium">{reply.likes}</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setPostToTip(convertReplyToPost(reply));
-                    setShowTipModal(true);
-                  }}
-                  aria-label="Send tip (0 SOL)"
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 ${
-                    tippedReplies.has(String(reply.id))
-                      ? 'text-green-400 hover:bg-green-400/10'
-                      : 'text-korus-textTertiary hover:text-green-400 hover:bg-green-400/10'
-                  }`}
-                >
-                  <span className="text-sm font-medium">$</span>
-                  <span className="text-sm font-medium">0 SOL</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setPostToShare(convertReplyToPost(reply));
-                    setShowShareModal(true);
-                  }}
-                  aria-label="Share reply"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 text-korus-textTertiary hover:text-korus-primary hover:bg-korus-primary/10"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-                  </svg>
-                </button>
-              </div>
-
-              {/* Show replies toggle */}
-              {hasReplies && (
-                <button
-                  onClick={() => toggleReplyExpansion(reply.id)}
-                  className="mt-3 text-korus-primary hover:underline text-sm"
-                >
-                  {reply.isExpanded
-                    ? `Hide ${reply.replies.length} ${reply.replies.length === 1 ? 'reply' : 'replies'}`
-                    : `Show ${reply.replies.length} ${reply.replies.length === 1 ? 'reply' : 'replies'}`
-                  }
-                </button>
-              )}
             </div>
-          </div>
+          ) : (
+            <div className="w-9 h-9 bg-gradient-to-br from-korus-primary to-korus-secondary rounded-full flex items-center justify-center text-xs font-bold text-black flex-shrink-0">
+              {reply.user.slice(0, 2).toUpperCase()}
+            </div>
+          )}
+
+          {/* Reply Body */}
+          <div className="flex-1 min-w-0">
+            {/* Header */}
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <Link
+                href={`/profile/${reply.wallet || reply.user}`}
+                className="font-semibold text-sm text-white hover:underline"
+              >
+                {truncateAddress(reply.user)}
+              </Link>
+              {reply.isPremium && (
+                <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
+                  <svg className="w-2.5 h-2.5" fill="black" viewBox="0 0 24 24">
+                    <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
+                  </svg>
+                </div>
+              )}
+              <span className="text-[13px] text-white/50">@{truncateAddress(reply.user)}</span>
+              <span className="text-white/30">·</span>
+              <span className="text-[13px] text-white/30">{reply.createdAt ? formatRelativeTime(reply.createdAt) : reply.time}</span>
+            </div>
+
+            {/* Content */}
+            <SafeContent
+              content={reply.content}
+              className="text-white text-sm leading-relaxed mb-2 whitespace-pre-wrap break-words"
+              allowLinks={true}
+              allowFormatting={true}
+            />
+
+            {/* Actions */}
+            <div className="flex items-center gap-4 -ml-2">
+              <button
+                onClick={() => handleReply(reply)}
+                aria-label="Reply to comment"
+                className="flex items-center gap-1 px-2 py-1 rounded-full text-white/30 hover:text-korus-primary hover:bg-korus-primary/[0.08] transition-all"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+                {hasReplies && <span className="text-xs font-medium">{reply.replies.length}</span>}
+              </button>
+
+              <button
+                onClick={() => handleLikeReply(reply.id)}
+                aria-label={likedReplies.has(reply.id) ? "Unlike reply" : "Like reply"}
+                className={`flex items-center gap-1 px-2 py-1 rounded-full transition-all ${
+                  likedReplies.has(reply.id)
+                    ? 'text-red-400 hover:bg-red-400/10'
+                    : 'text-white/30 hover:text-red-400 hover:bg-red-400/10'
+                }`}
+              >
+                <svg className="w-4 h-4" fill={likedReplies.has(reply.id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+                <span className="text-xs font-medium">{reply.likes}</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setPostToTip(convertReplyToPost(reply));
+                  setShowTipModal(true);
+                }}
+                aria-label="Send tip (0 SOL)"
+                className={`flex items-center gap-1 px-2 py-1 rounded-full transition-all ${
+                  tippedReplies.has(String(reply.id))
+                    ? 'text-green-400 hover:bg-green-400/10'
+                    : 'text-white/30 hover:text-green-400 hover:bg-green-400/10'
+                }`}
+              >
+                <span className="text-xs font-medium">$</span>
+                <span className="text-xs font-medium">0 SOL</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setPostToShare(convertReplyToPost(reply));
+                  setShowShareModal(true);
+                }}
+                aria-label="Share reply"
+                className="flex items-center gap-1 px-2 py-1 rounded-full text-white/30 hover:text-korus-primary hover:bg-korus-primary/[0.08] transition-all"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Show replies toggle */}
+            {hasReplies && (
+              <button
+                onClick={() => toggleReplyExpansion(reply.id)}
+                className="mt-2 text-korus-primary hover:underline text-[13px]"
+              >
+                {reply.isExpanded
+                  ? `Hide ${reply.replies.length} ${reply.replies.length === 1 ? 'reply' : 'replies'}`
+                  : `Show ${reply.replies.length} ${reply.replies.length === 1 ? 'reply' : 'replies'}`
+                }
+              </button>
+            )}
           </div>
         </div>
 
@@ -588,56 +584,56 @@ export default function PostDetailPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-korus-dark-100 relative overflow-hidden">
-        <div className="fixed inset-0 bg-gradient-to-br from-korus-dark-100 via-korus-dark-200 to-korus-dark-100">
-          <div className="absolute inset-0 bg-gradient-to-t from-transparent via-korus-dark-300/25 to-korus-dark-200/35" />
-        </div>
+      <main className="min-h-screen relative overflow-hidden">
+        <div className="fixed inset-0 bg-[#050508]" />
         <div className="relative z-10">
           <div className="flex min-h-screen">
-            <div className="flex-1 lg:ml-80 lg:mr-96 md:ml-64 md:mr-80 sm:ml-0 sm:mr-0 md:border-x md:border-korus-border bg-korus-surface/10 backdrop-blur-sm max-w-full overflow-hidden">
+            <div className="flex-1 ml-[270px] mr-[340px] max-w-[640px] border-x border-white/[0.08] xl:ml-[270px] xl:mr-[340px] lg:ml-[240px] lg:mr-[300px] md:ml-[200px] md:mr-0 sm:ml-0 sm:mr-0 max-sm:border-x-0">
               {/* Header skeleton */}
-              <div className="sticky top-0 bg-korus-dark-300/80 backdrop-blur-xl border-b border-korus-border z-10">
-                <div className="flex items-center px-4 py-3 gap-3">
-                  <button onClick={() => router.back()} className="text-white hover:bg-korus-surface/20 rounded-full p-2 transition-colors">
+              <div className="sticky top-0 z-10 bg-black/75 backdrop-blur-[16px] border-b border-white/[0.08]">
+                <div className="flex items-center gap-4 px-5 py-3">
+                  <button onClick={() => router.back()} className="w-9 h-9 rounded-full flex items-center justify-center text-white hover:bg-white/[0.06] transition-colors">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
                   </button>
-                  <span className="text-white font-bold text-lg">Post</span>
+                  <span className="text-lg font-extrabold tracking-tight text-white">Post</span>
                 </div>
               </div>
               {/* Post skeleton */}
-              <div className="px-6 py-6 animate-pulse">
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 rounded-full bg-korus-surface/30" />
+              <div className="px-5 py-5 animate-pulse">
+                <div className="flex gap-3">
+                  <div className="w-10 h-10 rounded-full bg-white/[0.08]" />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="h-4 w-24 bg-korus-surface/30 rounded" />
-                      <div className="h-4 w-16 bg-korus-surface/20 rounded" />
+                      <div className="h-4 w-24 bg-white/[0.08] rounded" />
+                      <div className="h-4 w-16 bg-white/[0.06] rounded" />
                     </div>
-                    <div className="h-4 w-full bg-korus-surface/20 rounded mb-2" />
-                    <div className="h-4 w-3/4 bg-korus-surface/20 rounded mb-4" />
-                    <div className="flex gap-6 mt-4">
-                      <div className="h-4 w-12 bg-korus-surface/20 rounded" />
-                      <div className="h-4 w-12 bg-korus-surface/20 rounded" />
-                      <div className="h-4 w-12 bg-korus-surface/20 rounded" />
-                      <div className="h-4 w-12 bg-korus-surface/20 rounded" />
+                    <div className="h-5 w-full bg-white/[0.06] rounded mb-2" />
+                    <div className="h-5 w-3/4 bg-white/[0.06] rounded mb-4" />
+                    <div className="h-3 w-32 bg-white/[0.06] rounded mt-3.5" />
+                    <div className="flex gap-5 py-3.5 mt-3.5 border-t border-white/[0.08] border-b border-white/[0.08]">
+                      <div className="h-4 w-16 bg-white/[0.06] rounded" />
+                      <div className="h-4 w-12 bg-white/[0.06] rounded" />
+                      <div className="h-4 w-16 bg-white/[0.06] rounded" />
+                      <div className="h-4 w-20 bg-white/[0.06] rounded" />
                     </div>
                   </div>
                 </div>
               </div>
-              {/* Reply skeletons */}
-              <div className="border-t border-korus-border/50 px-6 py-4">
-                <div className="h-10 w-full bg-korus-surface/15 rounded-lg mb-4" />
+              {/* Reply composer skeleton */}
+              <div className="px-5 py-4 border-b border-white/[0.08]">
+                <div className="h-10 w-full bg-white/[0.04] rounded-lg mb-4" />
               </div>
+              {/* Reply skeletons */}
               {[1, 2].map(i => (
-                <div key={i} className="px-6 py-4 animate-pulse border-b border-korus-border/20">
+                <div key={i} className="px-5 py-3.5 animate-pulse border-b border-white/[0.08]">
                   <div className="flex gap-3">
-                    <div className="w-10 h-10 rounded-full bg-korus-surface/30" />
+                    <div className="w-9 h-9 rounded-full bg-white/[0.08]" />
                     <div className="flex-1">
-                      <div className="h-3 w-20 bg-korus-surface/30 rounded mb-2" />
-                      <div className="h-3 w-full bg-korus-surface/20 rounded mb-1" />
-                      <div className="h-3 w-1/2 bg-korus-surface/20 rounded" />
+                      <div className="h-3 w-20 bg-white/[0.08] rounded mb-2" />
+                      <div className="h-3 w-full bg-white/[0.06] rounded mb-1" />
+                      <div className="h-3 w-1/2 bg-white/[0.06] rounded" />
                     </div>
                   </div>
                 </div>
@@ -653,14 +649,12 @@ export default function PostDetailPage() {
 
   if (!post) {
     return (
-      <main className="min-h-screen bg-korus-dark-100 relative overflow-hidden">
-        <div className="fixed inset-0 bg-gradient-to-br from-korus-dark-100 via-korus-dark-200 to-korus-dark-100">
-          <div className="absolute inset-0 bg-gradient-to-t from-transparent via-korus-dark-300/25 to-korus-dark-200/35" />
-        </div>
+      <main className="min-h-screen relative overflow-hidden">
+        <div className="fixed inset-0 bg-[#050508]" />
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-4 text-white">Post Not Found</h2>
-            <p className="text-korus-textTertiary mb-8">The post you&apos;re looking for doesn&apos;t exist.</p>
+            <p className="text-white/30 mb-8">The post you&apos;re looking for doesn&apos;t exist.</p>
             <Link
               href="/"
               className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-200 hover:scale-[1.02]"
@@ -674,40 +668,38 @@ export default function PostDetailPage() {
   }
 
   return (
-    <main className="min-h-screen bg-korus-dark-100 relative overflow-hidden">
+    <main className="min-h-screen relative overflow-hidden">
       {/* Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-korus-dark-100 via-korus-dark-200 to-korus-dark-100">
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-korus-dark-300/25 to-korus-dark-200/35" />
-      </div>
+      <div className="fixed inset-0 bg-[#050508]" />
 
       {/* Content wrapper */}
       <div className="relative z-10">
         <div className="flex min-h-screen">
           {/* Main Content */}
-          <div className="flex-1 lg:ml-80 lg:mr-96 md:ml-64 md:mr-80 sm:ml-0 sm:mr-0 md:border-x md:border-korus-border bg-korus-surface/10 backdrop-blur-sm max-w-full overflow-hidden">
+          <div className="flex-1 ml-[270px] mr-[340px] max-w-[640px] border-x border-white/[0.08] xl:ml-[270px] xl:mr-[340px] lg:ml-[240px] lg:mr-[300px] md:ml-[200px] md:mr-0 sm:ml-0 sm:mr-0 max-sm:border-x-0">
 
             {/* Header Navigation */}
-            <div className="sticky top-0 bg-korus-dark-300/80 backdrop-blur-xl border-b border-korus-border z-10">
-              <div className="flex items-center px-2 py-1">
+            <div className="sticky top-0 z-10 bg-black/75 backdrop-blur-[16px] border-b border-white/[0.08]">
+              <div className="flex items-center gap-4 px-5 py-3">
                 {/* Back button */}
                 <button
                   onClick={() => router.back()}
                   aria-label="Go back"
-                  className="flex items-center justify-center w-10 h-10 text-white hover:bg-korus-surface/20 rounded-full transition-colors"
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-white hover:bg-white/[0.06] transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
                 </button>
 
-                <h1 className="text-white font-bold text-lg ml-4">Post</h1>
+                <h1 className="text-lg font-extrabold tracking-tight text-white">Post</h1>
 
                 <div className="ml-auto flex items-center">
                   {/* Mobile search */}
                   <button
                     onClick={() => setShowSearchModal(true)}
                     aria-label="Open search"
-                    className="md:hidden flex items-center justify-center w-10 h-10 text-white hover:bg-korus-surface/20 rounded-full transition-colors"
+                    className="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-white hover:bg-white/[0.06] transition-colors"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -736,334 +728,314 @@ export default function PostDetailPage() {
                 </div>
               )}
 
-              <div className="px-6 py-6">
-              <div className="border-b border-korus-primary/20 pb-6 mb-6">
-              <div className="flex gap-4">
-                {/* Avatar */}
-                {post.avatar ? (
-                  <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden">
-                    <Image
-                      src={post.avatar}
-                      alt={`${post.user} avatar`}
-                      width={48}
-                      height={48}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-lg font-bold text-black flex-shrink-0">
-                    {post.user.slice(0, 2).toUpperCase()}
-                  </div>
-                )}
-
-                {/* Post Content */}
-                <div className="flex-1 min-w-0">
-                  {/* Post Header */}
-                  <div className="flex items-center gap-2 mb-2">
-                    <Link
-                      href={`/profile/${post.wallet || post.user}`}
-                      className={`font-bold hover:underline cursor-pointer ${post.isShoutout ? 'text-korus-primary' : 'text-white'}`}
-                    >
-                      {truncateAddress(post.user)}
-                    </Link>
-
-                    {/* Premium Badge */}
-                    {post.isPremium && (
-                      <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
-                        <svg className="w-3 h-3" fill="black" viewBox="0 0 24 24">
-                          <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
-                        </svg>
-                      </div>
-                    )}
-
-                    <span className="text-korus-textSecondary">@{truncateAddress(post.user)}</span>
-
-                    {/* More button */}
-                    <div className="ml-auto">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedPost(post);
-                          setShowPostOptionsModal(true);
-                        }}
-                        className="text-korus-textSecondary hover:text-white hover:bg-korus-surface/60 rounded-full p-1 transition-colors"
-                        aria-label="Post options"
-                      >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Post Text */}
-                  <SafeContent
-                    content={post.content}
-                    className="text-white text-base leading-normal mb-3 whitespace-pre-wrap break-words"
-                    allowLinks={true}
-                    allowFormatting={true}
-                  />
-
-                  {/* Post Image */}
-                  {post.image && (
-                    <div className="mb-3 flex justify-center">
+              <div className="px-5 py-5">
+                {/* Author header */}
+                <div className="flex items-center gap-3">
+                  {/* Avatar */}
+                  {post.avatar ? (
+                    <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
                       <Image
-                        src={post.image}
-                        alt="Post content"
-                        width={600}
-                        height={400}
-                        className="max-w-full h-auto rounded-xl border border-korus-border"
-                        style={{ maxHeight: '500px', width: 'auto', height: 'auto' }}
-                        onError={(e) => {
-                          // Hide broken image on error
-                          e.currentTarget.style.display = 'none';
-                        }}
+                        src={post.avatar}
+                        alt={`${post.user} avatar`}
+                        width={40}
+                        height={40}
+                        className="w-full h-full object-cover"
                       />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-sm font-bold text-black flex-shrink-0">
+                      {post.user.slice(0, 2).toUpperCase()}
                     </div>
                   )}
 
-                  {/* Full Timestamp */}
-                  <p className="text-sm text-korus-textTertiary mt-3">
-                    {formatFullTimestamp(post.createdAt || post.time)}
-                  </p>
+                  {/* Name / Handle */}
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <Link
+                        href={`/profile/${post.wallet || post.user}`}
+                        className={`font-bold text-[15px] hover:underline cursor-pointer ${post.isShoutout ? 'text-korus-primary' : 'text-white'}`}
+                      >
+                        {truncateAddress(post.user)}
+                      </Link>
 
-                  {/* Stats Row */}
-                  <div className="flex gap-5 py-3 mt-3 border-t border-korus-border/30 border-b border-korus-border/30">
-                    <span className="text-sm text-korus-textSecondary"><strong className="text-white font-semibold">{post.comments}</strong> Replies</span>
-                    <span className="text-sm text-korus-textSecondary"><strong className="text-white font-semibold">{post.likes}</strong> Likes</span>
-                    <span className="text-sm text-korus-textSecondary"><strong className="text-white font-semibold">{post.reposts ?? 0}</strong> Reposts</span>
-                    <span className="text-sm text-korus-textSecondary"><strong className="text-white font-semibold">{post.tips}</strong> SOL tipped</span>
+                      {/* Premium Badge */}
+                      {post.isPremium && (
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
+                          <svg className="w-3 h-3" fill="black" viewBox="0 0 24 24">
+                            <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-sm text-white/50">@{truncateAddress(post.user)}</span>
                   </div>
 
-                  {/* Post Actions */}
-                  <div className="flex items-center justify-around py-2 border-b border-korus-border/30">
+                  {/* More button */}
+                  <div className="ml-auto">
                     <button
-                      onClick={() => handleReply(post)}
-                      aria-label="Reply to post"
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 text-korus-textTertiary hover:text-korus-primary hover:bg-korus-primary/10"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                      </svg>
-                      <span className="text-sm font-medium">{post.comments}</span>
-                    </button>
-
-                    <button
-                      onClick={handleLike}
-                      aria-label={liked ? "Unlike post" : "Like post"}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 ${
-                        liked
-                          ? 'text-red-400 hover:bg-red-400/10'
-                          : 'text-korus-textTertiary hover:text-red-400 hover:bg-red-400/10'
-                      }`}
-                    >
-                      <svg className="w-4 h-4" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                      </svg>
-                      <span className="text-sm font-medium">{post.likes}</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setPostToTip(post);
-                        setShowTipModal(true);
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPost(post);
+                        setShowPostOptionsModal(true);
                       }}
-                      aria-label={`Send tip (${post.tips} SOL)`}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 ${
-                        tipped
-                          ? 'text-green-400 hover:bg-green-400/10'
-                          : 'text-korus-textTertiary hover:text-green-400 hover:bg-green-400/10'
-                      }`}
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-white/30 hover:text-white hover:bg-white/[0.06] transition-colors"
+                      aria-label="Post options"
                     >
-                      <span className="text-sm font-medium">$</span>
-                      <span className="text-sm font-medium">{post.tips} SOL</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setPostToShare(post);
-                        setShowShareModal(true);
-                      }}
-                      aria-label="Share post"
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 text-korus-textTertiary hover:text-korus-primary hover:bg-korus-primary/10"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
                       </svg>
                     </button>
                   </div>
                 </div>
-              </div>
-              </div>
+
+                {/* Post Text */}
+                <SafeContent
+                  content={post.content}
+                  className="text-white text-[17px] leading-relaxed mt-3.5 whitespace-pre-wrap break-words"
+                  allowLinks={true}
+                  allowFormatting={true}
+                />
+
+                {/* Post Image */}
+                {post.image && (
+                  <div className="mt-3.5 flex justify-center">
+                    <Image
+                      src={post.image}
+                      alt="Post content"
+                      width={600}
+                      height={400}
+                      className="max-w-full h-auto rounded-xl border border-white/[0.08]"
+                      style={{ maxHeight: '500px', width: 'auto', height: 'auto' }}
+                      onError={(e) => {
+                        // Hide broken image on error
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Full Timestamp */}
+                <p className="text-sm text-white/30 mt-3.5">
+                  {formatFullTimestamp(post.createdAt || post.time)}
+                </p>
+
+                {/* Stats Row */}
+                <div className="flex gap-5 py-3.5 mt-3.5 border-t border-white/[0.08] border-b border-white/[0.08]">
+                  <span className="text-sm text-white/50"><span className="text-white font-semibold">{post.comments}</span> Replies</span>
+                  <span className="text-sm text-white/50"><span className="text-white font-semibold">{post.likes}</span> Likes</span>
+                  <span className="text-sm text-white/50"><span className="text-white font-semibold">{post.reposts ?? 0}</span> Reposts</span>
+                  <span className="text-sm text-white/50"><span className="text-white font-semibold">{post.tips}</span> SOL tipped</span>
+                </div>
+
+                {/* Post Actions */}
+                <div className="flex justify-around py-2.5 border-b border-white/[0.08]">
+                  <button
+                    onClick={() => handleReply(post)}
+                    aria-label="Reply to post"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white/30 hover:text-korus-primary hover:bg-korus-primary/[0.08] transition-all"
+                  >
+                    <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    <span className="text-sm font-medium">{post.comments}</span>
+                  </button>
+
+                  <button
+                    onClick={handleLike}
+                    aria-label={liked ? "Unlike post" : "Like post"}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all ${
+                      liked
+                        ? 'text-red-400 hover:bg-red-400/10'
+                        : 'text-white/30 hover:text-red-400 hover:bg-red-400/10'
+                    }`}
+                  >
+                    <svg className="w-[18px] h-[18px]" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
+                    <span className="text-sm font-medium">{post.likes}</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setPostToTip(post);
+                      setShowTipModal(true);
+                    }}
+                    aria-label={`Send tip (${post.tips} SOL)`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all ${
+                      tipped
+                        ? 'text-green-400 hover:bg-green-400/10'
+                        : 'text-white/30 hover:text-green-400 hover:bg-green-400/10'
+                    }`}
+                  >
+                    <span className="text-sm font-medium">$</span>
+                    <span className="text-sm font-medium">{post.tips} SOL</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setPostToShare(post);
+                      setShowShareModal(true);
+                    }}
+                    aria-label="Share post"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white/30 hover:text-korus-primary hover:bg-korus-primary/[0.08] transition-all"
+                  >
+                    <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Inline Reply Composer */}
-            <div className="border-b border-korus-border/50">
-              <div className="px-6 py-4">
-                {/* Header with Avatar and Username */}
-                <div className="flex gap-3 items-center mb-3">
-                  {/* Avatar */}
-                  {currentUserAvatar ? (
-                    <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={currentUserAvatar}
-                        alt="Your avatar"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          logger.error('Failed to load avatar image:', currentUserAvatar);
-                          e.currentTarget.style.display = 'none';
-                        }}
-                        onLoad={() => {
-                          logger.log('✅ Avatar image loaded successfully:', currentUserAvatar);
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0">
-                      <span className="text-black font-bold text-sm">
-                        {publicKey?.toBase58().slice(0, 2).toUpperCase() || 'U'}
-                      </span>
+            <div className="px-5 py-4 border-b border-white/[0.08]">
+              <div className="flex gap-3">
+                {/* Avatar */}
+                {currentUserAvatar ? (
+                  <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={currentUserAvatar}
+                      alt="Your avatar"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        logger.error('Failed to load avatar image:', currentUserAvatar);
+                        e.currentTarget.style.display = 'none';
+                      }}
+                      onLoad={() => {
+                        logger.log('✅ Avatar image loaded successfully:', currentUserAvatar);
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0">
+                    <span className="text-black font-bold text-sm">
+                      {publicKey?.toBase58().slice(0, 2).toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                )}
+
+                {/* Reply Input Area */}
+                <div className="flex-1 min-w-0">
+                  <textarea
+                    value={inlineReplyContent}
+                    onChange={(e) => setInlineReplyContent(e.target.value)}
+                    placeholder="Post your reply"
+                    className="bg-transparent text-white text-[15px] placeholder-white/30 resize-none min-h-[28px] max-h-[300px] border-none outline-none w-full"
+                    rows={1}
+                  />
+
+                  {/* File Previews */}
+                  {selectedFiles.length > 0 && (
+                    <div className="grid grid-cols-2 gap-3 mt-3">
+                      {selectedFiles.map((file, index) => (
+                        <div key={index} className="relative group">
+                          {file.type.startsWith('image/') ? (
+                            <Image
+                              src={URL.createObjectURL(file)}
+                              alt="Upload preview"
+                              width={200}
+                              height={128}
+                              className="max-w-full h-auto rounded-xl border border-white/[0.08]"
+                            />
+                          ) : (
+                            <div className="w-full h-32 bg-white/[0.04] border border-white/[0.08] rounded-xl flex items-center justify-center">
+                              <div className="text-center">
+                                <svg className="w-8 h-8 mx-auto mb-2 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <p className="text-xs text-white/30 truncate px-2">{file.name}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          <button
+                            onClick={() => removeFile(index)}
+                            aria-label="Remove file"
+                            className="absolute top-2 right-2 w-6 h-6 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
-                  <div className="flex items-center gap-2">
-                    <span className="text-white font-medium">
-                      {currentUserProfile?.snsUsername || currentUserProfile?.username || publicKey?.toBase58().slice(0, 8) + '...'}
-                    </span>
-                    {currentUserProfile?.tier === 'premium' && (
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
-                        <circle cx="12" cy="12" r="10" fill="#FFD700"/>
-                        <path d="M12 6l1.545 3.13L17 9.635l-2.5 2.435L15.09 15.5 12 13.885 8.91 15.5l.59-3.43L7 9.635l3.455-.505L12 6z" fill="black"/>
-                      </svg>
-                    )}
-                  </div>
-                </div>
 
-                {/* Reply Input */}
-                <div className="pl-[52px]">
-                  <div className="flex-1">
-                    <textarea
-                      value={inlineReplyContent}
-                      onChange={(e) => setInlineReplyContent(e.target.value)}
-                      placeholder="What's on your mind?"
-                      className="w-full bg-transparent text-white text-base resize-none placeholder-korus-textSecondary min-h-[28px] max-h-[300px] leading-6"
-                      style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
-                      rows={1}
-                    />
+                  {/* Tools row */}
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.08]">
+                    <div className="flex items-center gap-1">
+                      {/* Media Upload */}
+                      <label className="w-9 h-9 rounded-lg flex items-center justify-center text-korus-primary/60 hover:text-korus-primary hover:bg-korus-primary/10 transition-all duration-200 cursor-pointer">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/*,video/*"
+                          multiple
+                          onChange={handleFileSelect}
+                        />
+                      </label>
 
-                    {/* File Previews */}
-                    {selectedFiles.length > 0 && (
-                      <div className="grid grid-cols-2 gap-3 mt-3">
-                        {selectedFiles.map((file, index) => (
-                          <div key={index} className="relative group">
-                            {file.type.startsWith('image/') ? (
-                              <Image
-                                src={URL.createObjectURL(file)}
-                                alt="Upload preview"
-                                width={200}
-                                height={128}
-                                className="max-w-full h-auto rounded-xl border border-korus-border"
-                              />
-                            ) : (
-                              <div className="w-full h-32 bg-korus-surface/40 border border-korus-border rounded-xl flex items-center justify-center">
-                                <div className="text-center">
-                                  <svg className="w-8 h-8 mx-auto mb-2 text-korus-textSecondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                  </svg>
-                                  <p className="text-xs text-korus-textSecondary truncate px-2">{file.name}</p>
-                                </div>
-                              </div>
-                            )}
+                      {/* GIF Button */}
+                      <button
+                        onClick={() => setShowGifPicker(!showGifPicker)}
+                        aria-label="Add GIF"
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 ${
+                          showGifPicker
+                            ? 'text-korus-primary bg-korus-primary/10'
+                            : 'text-korus-primary/60 hover:text-korus-primary hover:bg-korus-primary/10'
+                        }`}
+                      >
+                        <span className="text-xs font-bold">GIF</span>
+                      </button>
 
-                            <button
-                              onClick={() => removeFile(index)}
-                              aria-label="Remove file"
-                              className="absolute top-2 right-2 w-6 h-6 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                      {/* Emoji Button */}
+                      <button
+                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        aria-label="Add emoji"
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 ${
+                          showEmojiPicker
+                            ? 'text-korus-primary bg-korus-primary/10'
+                            : 'text-korus-primary/60 hover:text-korus-primary hover:bg-korus-primary/10'
+                        }`}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M16 10h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </button>
+                    </div>
 
-                    {/* Reply Actions */}
-                    <div className="flex items-center justify-between mt-3">
-                      <div className="flex items-center gap-1">
-                        {/* Media Upload */}
-                        <label className="flex items-center justify-center w-8 h-8 rounded-full text-korus-primary/60 hover:text-korus-primary hover:bg-korus-surface/20 transition-all duration-200 cursor-pointer">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <input
-                            type="file"
-                            className="hidden"
-                            accept="image/*,video/*"
-                            multiple
-                            onChange={handleFileSelect}
-                          />
-                        </label>
+                    <div className="flex items-center gap-2">
+                      {/* Character Counter - only show when typing */}
+                      {inlineReplyContent.length > 0 && (
+                        <div className={`text-xs font-medium ${
+                          inlineReplyContent.length > 280
+                            ? 'text-red-400'
+                            : inlineReplyContent.length > 224
+                            ? 'text-yellow-400'
+                            : 'text-white/30'
+                        }`}>
+                          {inlineReplyContent.length > 280 && `-${inlineReplyContent.length - 280}`}
+                          {inlineReplyContent.length <= 280 && `${280 - inlineReplyContent.length}`}
+                        </div>
+                      )}
 
-                        {/* GIF Button */}
-                        <button
-                          onClick={() => setShowGifPicker(!showGifPicker)}
-                          aria-label="Add GIF"
-                          className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${
-                            showGifPicker
-                              ? 'text-korus-primary bg-korus-primary/20'
-                              : 'text-korus-primary/60 hover:text-korus-primary hover:bg-korus-surface/20'
-                          }`}
-                        >
-                          <span className="text-xs font-bold">GIF</span>
-                        </button>
-
-                        {/* Emoji Button */}
-                        <button
-                          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                          aria-label="Add emoji"
-                          className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${
-                            showEmojiPicker
-                              ? 'text-korus-primary bg-korus-primary/20'
-                              : 'text-korus-primary/60 hover:text-korus-primary hover:bg-korus-surface/20'
-                          }`}
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M16 10h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </button>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {/* Character Counter - only show when typing */}
-                        {inlineReplyContent.length > 0 && (
-                          <div className={`text-xs font-medium ${
-                            inlineReplyContent.length > 280
-                              ? 'text-red-400'
-                              : inlineReplyContent.length > 224
-                              ? 'text-yellow-400'
-                              : 'text-korus-textSecondary/60'
-                          }`}>
-                            {inlineReplyContent.length > 280 && `-${inlineReplyContent.length - 280}`}
-                            {inlineReplyContent.length <= 280 && `${280 - inlineReplyContent.length}`}
-                          </div>
-                        )}
-
-                        {/* Reply Button */}
-                        <button
-                          onClick={handleInlineReply}
-                          disabled={!inlineReplyContent.trim() || inlineReplyContent.length > 280 || isPostingReply || !connected}
-                          className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${
-                            !inlineReplyContent.trim() || inlineReplyContent.length > 280 || isPostingReply || !connected
-                              ? 'bg-korus-primary/20 text-korus-primary/40 cursor-not-allowed'
-                              : 'bg-gradient-to-r from-korus-primary to-korus-secondary text-black hover:shadow-lg hover:shadow-korus-primary/20'
-                          }`}
-                        >
-                          {isPostingReply ? 'Posting...' : !connected ? 'Connect' : 'Reply'}
-                        </button>
-                      </div>
+                      {/* Reply Button */}
+                      <button
+                        onClick={handleInlineReply}
+                        disabled={!inlineReplyContent.trim() || inlineReplyContent.length > 280 || isPostingReply || !connected}
+                        className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                          !inlineReplyContent.trim() || inlineReplyContent.length > 280 || isPostingReply || !connected
+                            ? 'bg-korus-primary/20 text-korus-primary/40 cursor-not-allowed'
+                            : 'bg-korus-primary text-black hover:opacity-90'
+                        }`}
+                      >
+                        {isPostingReply ? 'Posting...' : !connected ? 'Connect' : 'Reply'}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1071,10 +1043,10 @@ export default function PostDetailPage() {
             </div>
 
             {/* Replies Section */}
-            <div className="border-l-2 border-korus-primary/20 ml-6">
+            <div>
               {replies.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-korus-textTertiary">No replies yet. Be the first to reply!</p>
+                  <p className="text-white/30">No replies yet. Be the first to reply!</p>
                 </div>
               ) : (
                 replies.map(reply => renderReply(reply))
