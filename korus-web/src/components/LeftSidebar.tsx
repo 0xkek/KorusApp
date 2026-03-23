@@ -218,12 +218,12 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
         {tabs.filter(tab => !tab.hidden).map((tab) => {
           const isActive = pathname === tab.path && !tab.disabled;
           const isDisabled = tab.disabled;
-          const className = `flex items-center gap-3.5 px-4 py-3 rounded-xl text-[15px] font-medium cursor-pointer transition-all duration-150 relative group mb-0.5 ${
+          const className = `flex items-center gap-3.5 px-4 py-3 rounded-xl text-[15px] cursor-pointer transition-all duration-150 relative group mb-0.5 ${
             isDisabled
-              ? 'text-white/30 opacity-50 cursor-not-allowed border border-white/[0.06] border-dashed'
+              ? 'text-white/30 opacity-50 cursor-not-allowed'
               : isActive
-              ? 'text-white bg-korus-primary/[0.1] border border-korus-primary/[0.15]'
-              : 'text-white/60 hover:bg-white/[0.06] hover:text-white'
+              ? 'text-white font-semibold'
+              : 'text-white/50 font-medium hover:bg-white/[0.04] hover:text-white'
           }`;
 
           const content = (
@@ -232,22 +232,22 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
                 isDisabled
                   ? 'text-white/30'
                   : isActive
-                  ? 'text-korus-primary'
-                  : 'text-white/60 group-hover:text-white'
+                  ? 'text-white'
+                  : 'text-white/50 group-hover:text-white'
               }`}>
                 {tab.icon}
               </div>
 
-              <span className={`text-[15px] font-medium hidden xl:block ${
+              <span className={`text-[15px] hidden xl:block ${
                 isDisabled
                   ? 'text-white/30'
                   : isActive
-                  ? 'text-white'
-                  : 'text-white/60 group-hover:text-white'
+                  ? 'text-white font-semibold'
+                  : 'text-white/50 font-medium group-hover:text-white'
               }`}>
                 {tab.name}
                 {isDisabled && (
-                  <span className="text-xs text-white/20 block">Coming Soon</span>
+                  <span className="text-[11px] text-white/20 block">Coming Soon</span>
                 )}
               </span>
 
