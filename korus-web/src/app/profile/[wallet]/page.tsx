@@ -82,7 +82,7 @@ export default function UserProfilePage() {
   return (
     <main className="min-h-screen bg-[#121212] relative overflow-hidden">
       {/* Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
+      <div className="fixed inset-0 bg-gradient-to-br from-[#121212] via-[#111111] to-[#121212]">
         <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#171717]/25 to-[#111111]/35" />
       </div>
 
@@ -96,9 +96,9 @@ export default function UserProfilePage() {
       <div className="relative z-10">
         <div className="flex min-h-screen max-w-[1280px] mx-auto">
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-white/[0.06]">
+          <div className="flex-1 min-w-0 border-x border-[#222222]">
             {/* Header */}
-            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-white/[0.06] z-10">
+            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-[#222222] z-10">
               <div className="flex items-center px-4 py-4">
                 <button
                   onClick={() => router.back()}
@@ -162,7 +162,7 @@ export default function UserProfilePage() {
                       <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${
                         userInfo.isPremium
                           ? 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/30'
-                          : 'bg-white/[0.06] text-[#a1a1a1] border border-white/15'
+                          : 'bg-white/[0.06] text-[#a1a1a1] border border-[#2a2a2a]'
                       }`}>
                         {userInfo.isPremium ? (
                           <>
@@ -207,7 +207,7 @@ export default function UserProfilePage() {
                             className={`px-2 py-1 rounded-lg text-xs font-medium ${
                               domain.favorite
                                 ? 'bg-korus-primary/20 text-korus-primary border border-korus-primary/30'
-                                : 'bg-white/[0.06] text-[#a1a1a1] border border-white/15'
+                                : 'bg-white/[0.06] text-[#a1a1a1] border border-[#2a2a2a]'
                             }`}
                           >
                             {domain.domain}
@@ -220,19 +220,19 @@ export default function UserProfilePage() {
 
                 {/* Stats Grid */}
                 <div className="flex gap-2 mb-6">
-                  <div className="flex-1 bg-white/[0.04] backdrop-blur-sm border border-white/15 rounded-2xl p-4">
+                  <div className="flex-1 bg-white/[0.04] backdrop-blur-sm border border-[#2a2a2a] rounded-2xl p-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-korus-primary mb-1">{stats.posts}</div>
                       <div className="text-xs text-[#a1a1a1] font-medium">Posts Made</div>
                     </div>
                   </div>
-                  <div className="flex-1 bg-white/[0.04] backdrop-blur-sm border border-white/15 rounded-2xl p-4">
+                  <div className="flex-1 bg-white/[0.04] backdrop-blur-sm border border-[#2a2a2a] rounded-2xl p-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-korus-primary mb-1">{stats.tipsReceived}</div>
                       <div className="text-xs text-[#a1a1a1] font-medium">Tips Received</div>
                     </div>
                   </div>
-                  <div className="flex-1 bg-white/[0.04] backdrop-blur-sm border border-white/15 rounded-2xl p-4">
+                  <div className="flex-1 bg-white/[0.04] backdrop-blur-sm border border-[#2a2a2a] rounded-2xl p-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-korus-primary mb-1">{stats.tipsGiven}</div>
                       <div className="text-xs text-[#a1a1a1] font-medium">Tips Given</div>
@@ -254,7 +254,7 @@ export default function UserProfilePage() {
                 </div>
 
                 {/* Reputation Score Card */}
-                <div className="bg-white/[0.04] backdrop-blur-sm border border-white/15 rounded-2xl p-6 mb-6">
+                <div className="bg-white/[0.04] backdrop-blur-sm border border-[#2a2a2a] rounded-2xl p-6 mb-6">
                   <div className="flex items-center justify-center">
                     <div className="text-center">
                       <div className="flex items-center justify-center gap-3 mb-2">
@@ -281,7 +281,7 @@ export default function UserProfilePage() {
                 </div>
 
                 {/* Privacy Notice */}
-                <div className="text-center py-16 bg-white/[0.04] backdrop-blur-sm border border-white/15 rounded-2xl">
+                <div className="text-center py-16 bg-white/[0.04] backdrop-blur-sm border border-[#2a2a2a] rounded-2xl">
                   <div className="text-5xl mb-4 opacity-60">🔒</div>
                   <p className="text-[#fafafa] text-lg font-medium mb-2">User activity is private</p>
                   <p className="text-[#a1a1a1] text-sm">

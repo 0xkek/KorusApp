@@ -43,7 +43,7 @@ export default function Header({
 
 
   return (
-    <header className="sticky top-0 left-0 right-0 z-50 border-b border-korus-primary/20 bg-gradient-to-r from-black/80 via-[#0a0a0a]/80 to-black/80 backdrop-blur-md shadow-[0_4px_20px_rgba(67,233,123,0.1)] w-full">
+    <header className="sticky top-0 left-0 right-0 z-50 border-b border-korus-primary/20 bg-gradient-to-r from-black/80 via-[#121212]/80 to-black/80 backdrop-blur-md shadow-[0_4px_20px_rgba(67,233,123,0.1)] w-full">
       <div className="w-full px-4">
         <div className="flex justify-between items-center h-16 max-w-7xl mx-auto gap-6">
           {/* Left: Profile Icon + Logo */}

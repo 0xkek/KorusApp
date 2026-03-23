@@ -1123,8 +1123,16 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#121212] relative overflow-hidden">
-      {/* Clean dark background */}
-      <div className="fixed inset-0 bg-[#121212]" />
+      {/* Standardized static background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-[#121212] via-[#171717] to-[#121212]">
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#171717]/25 to-[#151515]/35" />
+      </div>
+      {/* Static gradient orbs for visual depth */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-32 -right-32 w-[600px] h-[600px] bg-gradient-to-br from-korus-primary/8 to-korus-secondary/6 rounded-full blur-[80px]" />
+        <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-gradient-to-tr from-korus-secondary/6 to-korus-primary/8 rounded-full blur-[70px]" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-to-r from-korus-primary/4 to-korus-secondary/4 rounded-full blur-[60px]" />
+      </div>
 
       {/* Content wrapper */}
       <div className="relative z-10">
@@ -1137,10 +1145,10 @@ export default function Home() {
           notificationCount={notificationCount}
         />
         {/* Main Feed */}
-        <div className="flex-1 max-w-[640px] border-r border-white/[0.06]">
+        <div className="flex-1 max-w-[640px] border-r border-[#222222]">
         {/* Main app - only accessible when connected */}
             {/* Header Navigation */}
-            <div className="sticky top-0 z-10 bg-[#121212]/85 backdrop-blur-[16px] border-b border-white/[0.06]">
+            <div className="sticky top-0 z-10 bg-[#121212]/85 backdrop-blur-[16px] border-b border-[#222222]">
               {/* Mobile controls row */}
               <div className="flex md:hidden items-center justify-between px-2">
                 <button
@@ -1193,7 +1201,7 @@ export default function Home() {
             </div>
 
             {/* Compose Post */}
-            <div className="px-4 py-3 border-b border-white/[0.06] flex gap-3">
+            <div className="px-4 py-3 border-b border-[#222222] flex gap-3">
                 {userAvatar ? (
                   <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
                     <Image
@@ -1222,7 +1230,7 @@ export default function Home() {
 
                   {/* Inline Drawing Canvas */}
                   {showDrawCanvas && (
-                    <div className="mt-3 p-3 bg-white/[0.04] border border-white/15 rounded-xl">
+                    <div className="mt-3 p-3 bg-white/[0.04] border border-[#2a2a2a] rounded-xl">
                       <DrawingCanvasInline
                         onSave={handleDrawingSave}
                         onClose={() => setShowDrawCanvas(false)}
@@ -1241,10 +1249,10 @@ export default function Home() {
                               alt="Upload preview"
                               width={200}
                               height={128}
-                              className="max-w-full h-auto rounded-xl border border-white/[0.06]"
+                              className="max-w-full h-auto rounded-xl border border-[#222222]"
                             />
                           ) : (
-                            <div className="w-full h-32 bg-white/[0.06] border border-white/[0.06] rounded-xl flex items-center justify-center">
+                            <div className="w-full h-32 bg-white/[0.06] border border-[#222222] rounded-xl flex items-center justify-center">
                               <div className="text-center">
                                 <svg className="w-8 h-8 mx-auto mb-2 text-[#a1a1a1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -1268,7 +1276,7 @@ export default function Home() {
                   )}
 
                   {/* Post Options */}
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.06]">
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#222222]">
                     <div className="flex items-center gap-0.5">
                       {/* Image Upload */}
                       <label className="w-[34px] h-[34px] rounded-lg flex items-center justify-center text-[#737373] hover:text-[#b0b0b0] hover:bg-white/[0.06] transition-all cursor-pointer">
@@ -1322,7 +1330,7 @@ export default function Home() {
 
             {/* Shoutout Queue Indicator */}
             {shoutoutQueue.length > 0 && (
-              <div className="bg-white/[0.06] border border-white/[0.06] rounded-xl p-4 mb-4 backdrop-blur-sm">
+              <div className="bg-white/[0.06] border border-[#222222] rounded-xl p-4 mb-4 backdrop-blur-sm">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2 text-korus-primary">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1349,7 +1357,7 @@ export default function Home() {
               className={`transition-colors cursor-pointer group ${
                 post.isShoutout
                   ? 'shoutout-post border border-korus-primary bg-korus-primary/5 shadow-[0_4px_12px_rgba(var(--korus-primary-rgb),0.3)] hover:border-korus-primary hover:shadow-[0_8px_24px_rgba(var(--korus-primary-rgb),0.4)] hover:bg-korus-primary/[0.12]'
-                  : 'px-4 py-3 border-b border-white/[0.06] hover:bg-white/[0.04]'
+                  : 'px-4 py-3 border-b border-[#222222] hover:bg-white/[0.04]'
               }`}
               onClick={() => router.push(`/post/${post.id}`)}
             >
@@ -1482,7 +1490,7 @@ export default function Home() {
                         alt="Post content"
                         width={600}
                         height={400}
-                        className="max-w-full h-auto rounded-xl border border-white/[0.06]"
+                        className="max-w-full h-auto rounded-xl border border-[#222222]"
                         style={{ maxHeight: '500px', width: 'auto', height: 'auto' }}
                         onError={(e) => {
                           // Hide broken image on error
@@ -1814,9 +1822,9 @@ export default function Home() {
       {/* Emoji Picker Modal */}
       {showEmojiPicker && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowEmojiPicker(false)}>
-          <div className="bg-[#1e1e1e] border border-white/[0.06] rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-[#1e1e1e] border border-[#222222] rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-white/[0.06]">
+            <div className="flex items-center justify-between p-4 border-b border-[#222222]">
               <h3 className="text-lg font-bold text-[#fafafa]">Choose Emoji</h3>
               <button
                 onClick={() => setShowEmojiPicker(false)}

@@ -39,7 +39,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
       />
 
       {/* Modal */}
-      <div ref={modalRef} className="modal-content relative z-10 bg-[#1e1e1e] border border-white/[0.06] rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+      <div ref={modalRef} className="modal-content relative z-10 bg-[#1e1e1e] border border-[#222222] rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
         {/* Close button */}
         <button
           onClick={onClose}
@@ -168,7 +168,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
         )}
 
         {/* Footer */}
-        <div className="mt-6 pt-6 border-t border-white/[0.06] text-center">
+        <div className="mt-6 pt-6 border-t border-[#222222] text-center">
           <p className="text-[#a1a1a1] text-sm mb-3">New to Solana?</p>
           <a
             href="https://phantom.app"

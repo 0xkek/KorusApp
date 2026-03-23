@@ -66,7 +66,7 @@ export default function WelcomePage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#0a0a0a] via-[#0a0a0a] to-[#0a0a0a] relative overflow-hidden">
+    <main className="min-h-screen bg-gradient-to-b from-[#121212] via-[#121212] to-[#121212] relative overflow-hidden">
       {/* Animated gradient orbs */}
       <div className="fixed inset-0">
         {/* Primary orb - top right - hardcoded mint green */}
@@ -104,7 +104,7 @@ export default function WelcomePage() {
             DEV
           </button>
           {showDeveloperTools && (
-            <div className="absolute top-8 right-0 bg-[#121212] border border-white/[0.06] rounded p-3 text-xs text-[#fafafa] font-mono min-w-48">
+            <div className="absolute top-8 right-0 bg-[#121212] border border-[#222222] rounded p-3 text-xs text-[#fafafa] font-mono min-w-48">
               <div className="mb-2">Status: {connected ? 'Connected' : 'Disconnected'}</div>
               {connected && (
                 <button
@@ -159,7 +159,7 @@ export default function WelcomePage() {
             </div>
 
             {/* Connect Wallet Card */}
-            <div className="bg-[#171717]/50 border border-white/[0.06] rounded-3xl p-10 backdrop-blur-md mb-12 shadow-2xl shadow-black/50">
+            <div className="bg-[#171717]/50 border border-[#222222] rounded-3xl p-10 backdrop-blur-md mb-12 shadow-2xl shadow-black/50">
               <p className="text-[#fafafa] text-2xl mb-8 font-semibold">
                 Connect your wallet to get started
               </p>
@@ -167,7 +167,7 @@ export default function WelcomePage() {
                 <WalletButton />
               </div>
 
-              <div className="pt-8 border-t border-white/[0.06]">
+              <div className="pt-8 border-t border-[#222222]">
                 <p className="text-[#a1a1a1] text-base mb-6">New to Solana?</p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <a
@@ -198,17 +198,17 @@ export default function WelcomePage() {
 
             {/* Features Preview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-              <div className="bg-[#171717]/30 border border-white/[0.06] rounded-2xl p-8 backdrop-blur-sm hover:bg-[#171717]/50 transition-all">
+              <div className="bg-[#171717]/30 border border-[#222222] rounded-2xl p-8 backdrop-blur-sm hover:bg-[#171717]/50 transition-all">
                 <div className="text-4xl mb-4">💬</div>
                 <h3 className="text-[#fafafa] text-xl font-bold mb-2">Social Feed</h3>
                 <p className="text-[#a1a1a1] text-base">Share thoughts, engage with community, and build meaningful connections</p>
               </div>
-              <div className="bg-[#171717]/30 border border-white/[0.06] rounded-2xl p-8 backdrop-blur-sm hover:bg-[#171717]/50 transition-all">
+              <div className="bg-[#171717]/30 border border-[#222222] rounded-2xl p-8 backdrop-blur-sm hover:bg-[#171717]/50 transition-all">
                 <div className="text-4xl mb-4">🎮</div>
                 <h3 className="text-[#fafafa] text-xl font-bold mb-2">Play & Earn</h3>
                 <p className="text-[#a1a1a1] text-base">Challenge friends in games with SOL wagering and real rewards</p>
               </div>
-              <div className="bg-[#171717]/30 border border-white/[0.06] rounded-2xl p-8 backdrop-blur-sm hover:bg-[#171717]/50 transition-all">
+              <div className="bg-[#171717]/30 border border-[#222222] rounded-2xl p-8 backdrop-blur-sm hover:bg-[#171717]/50 transition-all">
                 <div className="text-4xl mb-4">💰</div>
                 <h3 className="text-[#fafafa] text-xl font-bold mb-2">Tip & Reward</h3>
                 <p className="text-[#a1a1a1] text-base">Support creators directly with SOL tips and participate in weekly rewards</p>

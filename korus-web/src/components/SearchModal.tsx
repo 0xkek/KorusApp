@@ -224,9 +224,9 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm overflow-y-auto pt-20 pb-20">
       <div ref={modalRef} className="relative w-full max-w-2xl mx-4">
-        <div className="bg-[#1e1e1e] border border-white/[0.06] rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-[#1e1e1e] border border-[#222222] rounded-2xl shadow-2xl overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[#222222]">
             <h2 className="text-2xl font-semibold text-[#fafafa]">Search Korus</h2>
             <button
               onClick={onClose}
@@ -239,7 +239,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
           </div>
 
           {/* Search Input */}
-          <div className="p-6 border-b border-white/[0.06]">
+          <div className="p-6 border-b border-[#222222]">
             <form onSubmit={handleSubmit}>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2">
@@ -255,7 +255,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
                   onFocus={() => setShowHistory(true)}
                   onBlur={() => setTimeout(() => setShowHistory(false), 200)}
                   placeholder="Search posts, users, or categories..."
-                  className="w-full pl-12 pr-24 py-3 bg-white/[0.06] border border-white/15 rounded-lg text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-all"
+                  className="w-full pl-12 pr-24 py-3 bg-white/[0.06] border border-[#2a2a2a] rounded-lg text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-all"
                 />
                 {searchQuery && (
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -285,7 +285,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
 
             {/* Search History */}
             {showHistory && searchHistory.length > 0 && (
-              <div className="mt-3 p-3 bg-white/[0.06] border border-white/15 rounded-lg">
+              <div className="mt-3 p-3 bg-white/[0.06] border border-[#2a2a2a] rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-semibold text-[#a1a1a1] uppercase">Recent Searches</span>
                   <button
@@ -321,7 +321,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
                   className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
                     (category === 'All' && !selectedCategory) || selectedCategory === category.toLowerCase()
                       ? 'bg-korus-primary/20 text-korus-primary border-2 border-korus-primary/30'
-                      : 'bg-white/[0.06] text-[#a1a1a1] border border-white/15 hover:bg-white/[0.12]'
+                      : 'bg-white/[0.06] text-[#a1a1a1] border border-[#2a2a2a] hover:bg-white/[0.12]'
                   }`}
                 >
                   {category}
@@ -333,7 +333,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
           {/* Search Results */}
           <div className="max-h-[60vh] overflow-y-auto">
             {/* Search Info */}
-            <div className="px-6 py-3 bg-white/[0.04] border-b border-white/[0.06]">
+            <div className="px-6 py-3 bg-white/[0.04] border-b border-[#222222]">
               <p className="text-sm text-[#a1a1a1]">
                 {searchQuery ? (
                   <>

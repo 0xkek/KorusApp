@@ -214,7 +214,7 @@ export function RockPaperScissorsGame({
               ℹ️
             </button>
             {showTimerInfo && (
-              <div className="absolute top-6 right-0 bg-[#171717] border border-white/[0.06] rounded-lg p-2 w-48 text-xs shadow-lg z-10">
+              <div className="absolute top-6 right-0 bg-[#171717] border border-[#222222] rounded-lg p-2 w-48 text-xs shadow-lg z-10">
                 <p className="text-[#fafafa]">Each player has 24 hours to make their move. If time expires, they lose!</p>
               </div>
             )}
@@ -371,7 +371,7 @@ export function RockPaperScissorsGame({
                 ? 'bg-gradient-to-br from-korus-primary to-korus-secondary border-3 border-korus-primary shadow-lg scale-105'
                 : selectedChoice === choice.id && canMakeChoice
                 ? 'bg-gradient-to-br from-korus-primary/40 to-korus-primary/20 border-2 border-korus-primary/80'
-                : 'bg-gradient-to-br from-[#171717] to-[#171717] border-2 border-white/[0.06] hover:border-korus-primary/50 hover:scale-105'
+                : 'bg-gradient-to-br from-[#171717] to-[#171717] border-2 border-[#222222] hover:border-korus-primary/50 hover:scale-105'
               }
               ${!canMakeChoice && !playerMove ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
               ${canMakeChoice ? 'hover:shadow-lg' : ''}

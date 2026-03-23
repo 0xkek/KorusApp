@@ -79,7 +79,7 @@ export default function NFTAvatarModal({
       onClick={onClose}
     >
       <div
-        className="bg-[#1e1e1e] border border-white/[0.06] rounded-2xl shadow-2xl p-6 max-w-4xl w-full mx-4 max-h-[85vh] overflow-hidden flex flex-col"
+        className="bg-[#1e1e1e] border border-[#222222] rounded-2xl shadow-2xl p-6 max-w-4xl w-full mx-4 max-h-[85vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -134,7 +134,7 @@ export default function NFTAvatarModal({
                         className={`group relative bg-white/[0.04] rounded-xl overflow-hidden border-2 transition-all duration-150 hover:scale-105 hover:shadow-lg ${
                           selectedNFT?.mint === nft.mint || currentAvatarNFT === nft.mint
                             ? 'border-korus-primary shadow-lg shadow-korus-primary/50'
-                            : 'border-transparent hover:border-white/[0.06]'
+                            : 'border-transparent hover:border-[#222222]'
                         }`}
                       >
                         <div className="aspect-square relative bg-[#111111]">
