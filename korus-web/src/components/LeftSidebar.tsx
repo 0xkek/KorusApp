@@ -156,7 +156,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
   ];
 
   return (
-    <nav className="sticky top-0 h-screen w-[260px] shrink-0 z-30 border-r border-[#1e2030] px-[16px] py-[24px] hidden md:flex flex-col bg-transparent" role="navigation" aria-label="Main navigation">
+    <nav className="sticky top-0 h-screen w-[260px] shrink-0 z-30 border-r border-[#2c2c2c] px-[16px] py-[24px] hidden md:flex flex-col bg-transparent" role="navigation" aria-label="Main navigation">
       {/* Logo */}
       <div className="flex items-center gap-[10px] px-[12px] mb-[32px]">
         <Link href="/" className="flex items-center gap-[10px]" aria-label="Korus Home">
@@ -174,10 +174,10 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
           const isDisabled = tab.disabled;
           const className = `flex items-center gap-[14px] px-[16px] py-[12px] rounded-[12px] text-[15px] cursor-pointer transition-all duration-150 relative group mb-[2px] ${
             isDisabled
-              ? 'text-[#8b8d9a] opacity-50 cursor-not-allowed'
+              ? 'text-[#888888] opacity-50 cursor-not-allowed'
               : isActive
-              ? 'text-[#f0f0f5] font-semibold'
-              : 'text-[#8b8d9a] font-medium hover:bg-white/[0.04] hover:text-[#f0f0f5]'
+              ? 'text-[#e8e8e8] font-semibold'
+              : 'text-[#888888] font-medium hover:bg-[#252525] hover:text-[#e8e8e8]'
           }`;
 
           const content = (
@@ -194,14 +194,14 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
 
               <span className={`text-[15px] hidden xl:block ${
                 isDisabled
-                  ? 'text-[#8b8d9a]'
+                  ? 'text-[#888888]'
                   : isActive
-                  ? 'text-[#f0f0f5] font-semibold'
-                  : 'text-[#8b8d9a] font-medium group-hover:text-[#f0f0f5]'
+                  ? 'text-[#e8e8e8] font-semibold'
+                  : 'text-[#888888] font-medium group-hover:text-[#e8e8e8]'
               }`}>
                 {tab.name}
                 {isDisabled && (
-                  <span className="text-[11px] text-[#8b8d9a]/50 block">Coming Soon</span>
+                  <span className="text-[11px] text-[#888888]/50 block">Coming Soon</span>
                 )}
               </span>
 
@@ -280,7 +280,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
 
       {/* User Profile */}
       {connected && publicKey && (
-        <div className="mt-[12px] p-[14px] rounded-[14px] bg-[#111218]">
+        <div className="mt-[12px] p-[14px] rounded-[14px] bg-[#1a1a1a]">
           <Link href="/profile" className="flex items-center gap-[10px] transition-all duration-200 cursor-pointer">
             {userAvatar ? (
               <div className="w-[36px] h-[36px] rounded-[10px] flex-shrink-0 overflow-hidden">
@@ -302,7 +302,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
             )}
             <div className="hidden xl:block flex-1 min-w-0">
               <div className="text-[13px] font-semibold text-white">{userDisplayName || 'korus.sol'}</div>
-              <div className="text-[11px] text-[#5c5e6e] font-mono truncate">
+              <div className="text-[11px] text-[#666666] font-mono truncate">
                 {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
               </div>
             </div>
