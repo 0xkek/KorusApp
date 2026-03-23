@@ -12,6 +12,7 @@ export interface AuthResponse {
     username?: string;
     displayName?: string;
     nftAvatar?: string;
+    themeColor?: string;
   };
 }
 

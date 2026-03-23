@@ -8,6 +8,7 @@ import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import PremiumUpgradeModal from '@/components/PremiumUpgradeModal';
 import { useSubscription } from '@/hooks/useSubscription';
+import { authAPI } from '@/lib/api';
 
 // TypeScript interfaces for better type safety
 interface ThemeOption {
@@ -104,17 +105,9 @@ export default function SettingsPage() {
         const token = localStorage.getItem('authToken');
         if (!token) return;
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.user?.themeColor) {
-            setProfileColor(data.user.themeColor);
-          }
+        const data = await authAPI.getProfile(token);
+        if (data?.themeColor) {
+          setProfileColor(data.themeColor);
         }
       } catch {
         // Failed to load profile color
@@ -162,53 +155,25 @@ export default function SettingsPage() {
         // Also update profile color in database to match the theme
         if (themeId) {
           const newProfileColor = themeToProfileColor[themeId];
-          console.log('🎨 Updating profile color to:', newProfileColor, 'for theme:', themeId);
           if (newProfileColor) {
             const token = localStorage.getItem('authToken');
-            console.log('🔑 Token exists:', !!token, 'API URL:', process.env.NEXT_PUBLIC_API_URL);
             if (token) {
               try {
-                console.log('📤 Making PUT request to update profile color...');
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`, {
-                  method: 'PUT',
-                  headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify({ themeColor: newProfileColor })
-                });
+                await authAPI.updateProfile({ themeColor: newProfileColor }, token);
+                setProfileColor(newProfileColor);
 
-                console.log('📥 Response received:', { status: response.status, ok: response.ok });
-
-                if (response.ok) {
-                  setProfileColor(newProfileColor);
-                  console.log('✅ Profile color updated successfully in database');
-
-                  // Broadcast theme change to update cached posts
-                  if (typeof window !== 'undefined') {
-                    window.dispatchEvent(new CustomEvent('themeColorUpdated', {
-                      detail: { newColor: newProfileColor }
-                    }));
-                  }
-
-                  showSuccess('Theme updated successfully!');
-                } else {
-                  const errorText = await response.text();
-                  console.error('❌ Failed to update profile color, response not ok:', errorText);
-                  showSuccess('Theme updated successfully!');
+                // Broadcast theme change to update cached posts
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('themeColorUpdated', {
+                    detail: { newColor: newProfileColor }
+                  }));
                 }
-              } catch (error) {
-                console.error('❌ Error updating profile color:', error);
-                showSuccess('Theme updated successfully!');
+              } catch {
+                // Profile color update failed silently — theme still applies locally
               }
-            } else {
-              console.error('❌ No auth token found');
-              showSuccess('Theme updated successfully!');
             }
-          } else {
-            console.error('❌ No profile color found for theme:', themeId);
-            showSuccess('Theme updated successfully!');
           }
+          showSuccess('Theme updated successfully!');
         } else {
           showSuccess('Theme updated successfully!');
         }
@@ -429,19 +394,9 @@ export default function SettingsPage() {
                               const token = localStorage.getItem('authToken');
                               if (!token) return;
 
-                              const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`, {
-                                method: 'PUT',
-                                headers: {
-                                  'Authorization': `Bearer ${token}`,
-                                  'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({ themeColor: colorOption.color })
-                              });
-
-                              if (response.ok) {
-                                setProfileColor(colorOption.color);
-                                showSuccess(`Profile color updated to ${colorOption.name}!`);
-                              }
+                              await authAPI.updateProfile({ themeColor: colorOption.color }, token);
+                              setProfileColor(colorOption.color);
+                              showSuccess(`Profile color updated to ${colorOption.name}!`);
                             } catch {
                               // Error handling
                             }
