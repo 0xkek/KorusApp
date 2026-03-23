@@ -156,7 +156,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
   ];
 
   return (
-    <nav className="sticky top-0 h-screen w-[260px] shrink-0 z-30 border-r border-[#363748] px-[16px] py-[24px] hidden md:flex flex-col bg-transparent" role="navigation" aria-label="Main navigation">
+    <nav className="sticky top-0 h-screen w-[260px] shrink-0 z-30 border-r border-[#1e2030] px-[16px] py-[24px] hidden md:flex flex-col bg-transparent" role="navigation" aria-label="Main navigation">
       {/* Logo */}
       <div className="flex items-center gap-[10px] px-[12px] mb-[32px]">
         <Link href="/" className="flex items-center gap-[10px]" aria-label="Korus Home">
@@ -177,7 +177,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
               ? 'text-[#8b8d9a] opacity-50 cursor-not-allowed'
               : isActive
               ? 'text-[#f0f0f5] font-semibold'
-              : 'text-[#8b8d9a] font-medium hover:bg-[#1e1f2a] hover:text-[#f0f0f5]'
+              : 'text-[#8b8d9a] font-medium hover:bg-white/[0.04] hover:text-[#f0f0f5]'
           }`;
 
           const content = (
@@ -271,7 +271,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
         <div className="mt-auto pt-[20px]">
           <button
             onClick={onPostButtonClick}
-            className="w-full bg-gradient-to-r from-korus-primary to-korus-secondary text-black text-[15px] font-bold rounded-[14px] p-[14px] hover:-translate-y-px hover:shadow-xl hover:shadow-korus-primary/35 transition-all duration-200 flex items-center justify-center"
+            className="w-full bg-gradient-to-r from-korus-primary to-korus-secondary text-black text-[15px] font-bold rounded-[14px] py-[12px] text-center hover:-translate-y-px hover:shadow-xl hover:shadow-korus-primary/35 transition-all duration-200 flex items-center justify-center"
           >
             <span>Post</span>
           </button>
@@ -280,12 +280,8 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
 
       {/* User Profile */}
       {connected && publicKey && (
-        <div className="mt-[12px] p-[14px] rounded-[14px] border border-[#363748] bg-[#14151f]">
-          <Link href="/profile" className="flex items-center justify-center gap-[10px] transition-all duration-200 cursor-pointer">
-            {(() => {
-              console.log('[LeftSidebar] Rendering, userAvatar state:', userAvatar);
-              return null;
-            })()}
+        <div className="mt-[12px] p-[14px] rounded-[14px] bg-[#111218]">
+          <Link href="/profile" className="flex items-center gap-[10px] transition-all duration-200 cursor-pointer">
             {userAvatar ? (
               <div className="w-[36px] h-[36px] rounded-[10px] flex-shrink-0 overflow-hidden">
                 <Image

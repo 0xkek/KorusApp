@@ -233,7 +233,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
       {/* Content based on showNotifications prop */}
       {showNotifications ? (
         /* Notifications Widget */
-        <div className="bg-[#14151f] border border-[#363748] rounded-[16px] p-[16px] mb-[16px]">
+        <div className="bg-[#111218] rounded-[16px] p-[16px] mb-[16px]">
           <h2 className="text-[18px] font-extrabold tracking-[-0.3px] mb-[14px]">Notifications</h2>
           <div role="list" aria-label="Notifications">
             {isLoading ? (
@@ -249,7 +249,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className="py-[10px] border-b border-[#363748] last:border-b-0 cursor-pointer"
+                  className="py-[10px] border-b border-[#1e2030] last:border-b-0 cursor-pointer"
                   role="listitem"
                   aria-label={`${notification.type} notification`}
                   tabIndex={0}
@@ -265,11 +265,11 @@ export default function RightSidebar({ showNotifications = false, onNotification
                     {/* User Avatar */}
                     <div className="flex-shrink-0">
                       {notification.fromUser ? (
-                        <div className="w-[32px] h-[32px] bg-[#1a1b24] rounded-full flex items-center justify-center text-xs font-bold text-white/60">
+                        <div className="w-[32px] h-[32px] bg-[#15161e] rounded-full flex items-center justify-center text-xs font-bold text-white/60">
                           {notification.fromUser.walletAddress.slice(0, 2).toUpperCase()}
                         </div>
                       ) : (
-                        <div className="w-[32px] h-[32px] rounded-full flex items-center justify-center text-xs bg-[#1a1b24] text-white/30">
+                        <div className="w-[32px] h-[32px] rounded-full flex items-center justify-center text-xs bg-[#15161e] text-white/30">
                           N
                         </div>
                       )}
@@ -282,13 +282,13 @@ export default function RightSidebar({ showNotifications = false, onNotification
                           <p className="text-[14px] font-bold mt-0.5 hover:text-korus-primary transition-colors">
                             {notification.title}
                           </p>
-                          <p className="text-[12px] text-[#6b6d7a] mt-0.5">
+                          <p className="text-[12px] text-[#5c5e6e] mt-0.5">
                             {notification.message}
                           </p>
 
                           {/* Show from user if present */}
                           {notification.fromUser && (
-                            <div className="mt-1 text-[12px] text-[#6b6d7a]">
+                            <div className="mt-1 text-[12px] text-[#5c5e6e]">
                               from {truncateAddress(notification.fromUser.walletAddress)}
                             </div>
                           )}
@@ -308,7 +308,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
                       </div>
 
                       {/* Timestamp */}
-                      <span className="text-[12px] text-[#6b6d7a] mt-1 block">
+                      <span className="text-[12px] text-[#5c5e6e] mt-1 block">
                         {formatTimeAgo(notification.createdAt)}
                       </span>
                     </div>
@@ -331,7 +331,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
         </div>
       ) : (
         /* Recent Activity Widget */
-        <div className="bg-[#14151f] border border-[#363748] rounded-[16px] p-[16px] mb-[16px]">
+        <div className="bg-[#111218] rounded-[16px] p-[16px] mb-[16px]">
           <h2 className="text-[18px] font-extrabold tracking-[-0.3px] mb-[14px]">Recent Activity</h2>
           <div>
             {isLoadingActivities ? (
@@ -356,9 +356,9 @@ export default function RightSidebar({ showNotifications = false, onNotification
                       router.push(`/games/${gameId}`);
                     }
                   }}
-                  className="py-[10px] border-b border-[#363748] last:border-b-0 cursor-pointer"
+                  className="py-[10px] border-b border-[#1e2030] last:border-b-0 cursor-pointer"
                 >
-                  <div className="text-[12px] text-[#6b6d7a]">
+                  <div className="text-[12px] text-[#5c5e6e]">
                     {activity.type === 'game'
                       ? `${getGameIcon(activity.title)} Game`
                       : `${getEventTypeIcon(activity.category || 'Other')} ${(activity.category || 'Other').replace('_', ' ')}`
@@ -369,9 +369,9 @@ export default function RightSidebar({ showNotifications = false, onNotification
                     {activity.title}
                   </div>
                   {activity.type === 'event' && activity.project && (
-                    <div className="text-[12px] text-[#6b6d7a] mt-0.5">by {activity.project}</div>
+                    <div className="text-[12px] text-[#5c5e6e] mt-0.5">by {activity.project}</div>
                   )}
-                  <div className="text-[12px] text-[#6b6d7a] mt-0.5">
+                  <div className="text-[12px] text-[#5c5e6e] mt-0.5">
                     {activity.type === 'game' ? (
                       <>Players: {activity.players} · {activity.wager} · {activity.timeLeft} left</>
                     ) : (
@@ -406,7 +406,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
       <div className="flex-1" />
 
       {/* Footer */}
-      <div className="text-[12px] text-[#6b6d7a] mt-[16px] px-1">
+      <div className="text-[12px] text-[#5c5e6e] mt-[16px] px-1">
         &copy; 2025 Korus &middot; Terms &middot; Privacy
       </div>
     </div>
