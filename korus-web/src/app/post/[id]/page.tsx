@@ -16,7 +16,6 @@ import { SafeContent } from '@/components/SafeContent';
 import { useToast } from '@/hooks/useToast';
 import { postsAPI, repliesAPI, uploadAPI, interactionsAPI, usersAPI } from '@/lib/api';
 import type { Post, Reply } from '@/types';
-import { MOCK_POSTS, MOCK_REPLIES } from '@/data/mockData';
 
 // Dynamically import modals
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
@@ -229,13 +228,7 @@ export default function PostDetailPage() {
           }
         }
       } catch (backendError) {
-        logger.error('Backend fetch failed, trying mock data:', backendError);
-        // Fallback to mock data
-        const foundPost = MOCK_POSTS.find(p => String(p.id) === postId);
-        if (foundPost) {
-          setPost(foundPost);
-          setReplies(MOCK_REPLIES);
-        }
+        logger.error('Backend fetch failed:', backendError);
       }
     } catch (error) {
       logger.error('Failed to load post:', error);
@@ -1104,7 +1097,7 @@ export default function PostDetailPage() {
       <SearchModal
         isOpen={showSearchModal}
         onClose={() => setShowSearchModal(false)}
-        allPosts={MOCK_POSTS}
+        allPosts={[]}
       />
 
       {/* Mobile Menu Modal */}

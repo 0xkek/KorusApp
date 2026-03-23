@@ -255,26 +255,6 @@ export default function RightSidebar({ showNotifications = false, onNotification
     }
   };
 
-  const whoToFollow = [
-    {
-      username: 'solana_labs',
-      name: 'Solana Labs',
-      verified: true,
-      followers: '2.1M',
-    },
-    {
-      username: 'phantom',
-      name: 'Phantom',
-      verified: true,
-      followers: '890K',
-    },
-    {
-      username: 'magic_eden',
-      name: 'Magic Eden',
-      verified: true,
-      followers: '654K',
-    },
-  ];
 
   return (
     <div
@@ -572,79 +552,10 @@ export default function RightSidebar({ showNotifications = false, onNotification
         </div>
       )}
 
-      {/* Who to follow */}
-      <div className="bg-korus-surface/40 rounded-2xl p-4 mb-6">
-        <h2 className="text-2xl font-bold text-korus-text mb-4">Who to follow</h2>
-        <div className="space-y-4">
-          {whoToFollow.map((user) => (
-            <div key={user.username} className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center">
-                  <span className="text-black font-bold text-sm">
-                    {user.username.slice(0, 2).toUpperCase()}
-                  </span>
-                </div>
-                <div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-korus-text font-medium text-sm">{user.name}</span>
-                    {user.verified && (
-                      <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
-                        <svg className="w-3 h-3" fill="black" viewBox="0 0 24 24">
-                          <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-                  <div className="text-korus-textSecondary text-xs">@{user.username}</div>
-                  <div className="text-korus-textTertiary text-xs">{user.followers} followers</div>
-                </div>
-              </div>
-              <button className="bg-korus-primary text-black font-medium px-4 py-1.5 rounded-full text-sm hover:bg-korus-secondary transition-colors">
-                Follow
-              </button>
-            </div>
-          ))}
-        </div>
-        <button className="text-korus-primary text-sm mt-3 hover:underline">
-          Show more
-        </button>
-      </div>
-
-      {/* Recent Games */}
-      <div className="bg-korus-surface/40 rounded-2xl p-4">
-        <h2 className="text-2xl font-bold text-korus-text mb-4">Recent Games</h2>
-        <div className="space-y-3">
-          <div className="hover:bg-korus-surface/60 p-2 rounded-lg transition-colors cursor-pointer">
-            <div className="text-korus-text font-medium">Tic Tac Toe</div>
-            <div className="text-korus-textSecondary text-sm">12 games played today</div>
-            <div className="text-korus-primary text-sm">Avg wager: 0.05 SOL</div>
-          </div>
-          <div className="hover:bg-korus-surface/60 p-2 rounded-lg transition-colors cursor-pointer">
-            <div className="text-korus-text font-medium">Rock Paper Scissors</div>
-            <div className="text-korus-textSecondary text-sm">8 games played today</div>
-            <div className="text-korus-primary text-sm">Avg wager: 0.1 SOL</div>
-          </div>
-          <div className="hover:bg-korus-surface/60 p-2 rounded-lg transition-colors cursor-pointer">
-            <div className="text-korus-text font-medium">Coin Flip</div>
-            <div className="text-korus-textSecondary text-sm">25 games played today</div>
-            <div className="text-korus-primary text-sm">Avg wager: 0.02 SOL</div>
-          </div>
-        </div>
-        <button className="text-korus-primary text-sm mt-3 hover:underline">
-          View all games
-        </button>
-      </div>
-
       {/* Footer */}
       <div className="mt-6 pt-4 border-t border-korus-border">
-        <div className="flex flex-wrap gap-2 text-korus-textTertiary text-xs">
-          <a href="#" className="hover:underline">Terms of Service</a>
-          <a href="#" className="hover:underline">Privacy Policy</a>
-          <a href="#" className="hover:underline">About</a>
-          <a href="#" className="hover:underline">Help</a>
-        </div>
-        <div className="text-korus-textTertiary text-xs mt-2">
-          © 2024 Korus
+        <div className="text-korus-textTertiary text-xs">
+          © 2025 Korus
         </div>
       </div>
     </div>
