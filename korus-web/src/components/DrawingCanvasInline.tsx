@@ -227,7 +227,7 @@ export default function DrawingCanvasInline({ onSave, onClose }: DrawingCanvasIn
           onMouseMove={draw}
           onMouseUp={stopDrawing}
           onMouseLeave={stopDrawing}
-          className="border-2 border-[#222222] rounded-xl cursor-crosshair bg-white shadow-lg"
+          className="border-2 border-[#2a2a2a] rounded-xl cursor-crosshair bg-white shadow-lg"
           style={{ width: '550px', height: '300px' }}
         />
       </div>

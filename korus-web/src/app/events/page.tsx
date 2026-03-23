@@ -226,10 +226,10 @@ export default function EventsPage() {
           />
 
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-[#222222]">
+          <div className="flex-1 min-w-0 border-x border-[#2a2a2a]">
 
             {/* Header Navigation */}
-            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-[#222222] z-10">
+            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-[#2a2a2a] z-10">
               <div className="flex">
                 {/* Mobile menu button */}
                 <button
@@ -355,7 +355,7 @@ export default function EventsPage() {
                     <div
                       key={event.id}
                       onClick={() => handleEventPress(event)}
-                      className="border border-[#222222] bg-[#171717] hover:bg-white/[0.04] hover:border-[#222222] transition-all duration-150 cursor-pointer rounded-xl overflow-hidden group"
+                      className="border border-[#2a2a2a] bg-[#171717] hover:bg-white/[0.04] hover:border-[#2a2a2a] transition-all duration-150 cursor-pointer rounded-xl overflow-hidden group"
                       style={{
                         borderColor: eventIsLive ? getEventTypeColor(event.type) : undefined
                       }}
@@ -480,7 +480,7 @@ export default function EventsPage() {
       {/* Event Details Modal */}
       {showEventModal && selectedEvent && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1e1e1e] border border-[#222222] rounded-2xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex justify-between items-center mb-6">
               <div
@@ -525,21 +525,21 @@ export default function EventsPage() {
 
               {/* Event Details Grid */}
               <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-[#262626] p-4 rounded-xl text-center border border-[#222222]">
+                <div className="bg-[#262626] p-4 rounded-xl text-center border border-[#2a2a2a]">
                   <div className="text-korus-primary text-xl mb-1">⏰</div>
                   <div className="text-xs text-[#737373]">Starts In</div>
                   <div className="font-semibold text-[#fafafa]">{formatTimeRemaining(selectedEvent.startDate)}</div>
                 </div>
 
                 {selectedEvent.maxSpots && (
-                  <div className="bg-[#262626] p-4 rounded-xl text-center border border-[#222222]">
+                  <div className="bg-[#262626] p-4 rounded-xl text-center border border-[#2a2a2a]">
                     <div className="text-korus-primary text-xl mb-1">👥</div>
                     <div className="text-xs text-[#737373]">Max Spots</div>
                     <div className="font-semibold text-[#fafafa]">{selectedEvent.maxSpots}</div>
                   </div>
                 )}
 
-                <div className="bg-[#262626] p-4 rounded-xl text-center border border-[#222222]">
+                <div className="bg-[#262626] p-4 rounded-xl text-center border border-[#2a2a2a]">
                   <div className="text-korus-primary text-xl mb-1">🔗</div>
                   <div className="text-xs text-[#737373]">Chain</div>
                   <div className="font-semibold text-[#fafafa]">Solana</div>

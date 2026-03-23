@@ -179,10 +179,10 @@ export default function ManageEventsPage() {
           />
 
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-[#222222]">
+          <div className="flex-1 min-w-0 border-x border-[#2a2a2a]">
 
             {/* Header */}
-            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-[#222222] z-10">
+            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-[#2a2a2a] z-10">
               <div className="px-6 py-4">
                 <div className="flex justify-between items-center">
                   <div>
@@ -222,7 +222,7 @@ export default function ManageEventsPage() {
                   {myEvents.map((event) => (
                     <div
                       key={event.id}
-                      className="border border-[#222222] bg-[#171717] rounded-xl overflow-hidden hover:bg-white/[0.04] duration-150"
+                      className="border border-[#2a2a2a] bg-[#171717] rounded-xl overflow-hidden hover:bg-white/[0.04] duration-150"
                     >
                       <div className="p-6">
                         <div className="flex gap-6">
@@ -318,9 +318,9 @@ export default function ManageEventsPage() {
       {/* Registrations Modal */}
       {showRegistrationsModal && selectedEvent && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1e1e1e] border border-[#222222] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+          <div className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
             {/* Header */}
-            <div className="px-6 py-4 border-b border-[#222222] flex items-center justify-between">
+            <div className="px-6 py-4 border-b border-[#2a2a2a] flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-[#fafafa]">{selectedEvent.title}</h2>
                 <p className="text-sm text-[#a1a1a1]">{registrations.length} registrations</p>
@@ -336,7 +336,7 @@ export default function ManageEventsPage() {
             </div>
 
             {/* Export Buttons */}
-            <div className="px-6 py-3 border-b border-[#222222] flex gap-3">
+            <div className="px-6 py-3 border-b border-[#2a2a2a] flex gap-3">
               <button
                 onClick={() => exportRegistrations('csv')}
                 className="px-4 py-2 bg-korus-primary/20 hover:bg-korus-primary/30 text-korus-primary font-semibold rounded-lg transition-colors text-sm"
@@ -368,7 +368,7 @@ export default function ManageEventsPage() {
                   {registrations.map((reg, index) => (
                     <div
                       key={reg.id}
-                      className="bg-[#171717] border border-[#222222] rounded-xl p-4 hover:bg-white/[0.04] duration-150"
+                      className="bg-[#171717] border border-[#2a2a2a] rounded-xl p-4 hover:bg-white/[0.04] duration-150"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">

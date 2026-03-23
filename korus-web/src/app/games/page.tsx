@@ -46,10 +46,10 @@ export default function GamesPage() {
           />
 
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-[#222222]">
+          <div className="flex-1 min-w-0 border-x border-[#2a2a2a]">
 
             {/* Header Navigation */}
-            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-[#222222] z-10">
+            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-[#2a2a2a] z-10">
               <div className="flex">
                 {/* Mobile menu button */}
                 <button

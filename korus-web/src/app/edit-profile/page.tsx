@@ -249,7 +249,7 @@ export default function EditProfilePage() {
       <div className="relative z-10">
         <div className="flex min-h-screen max-w-[1280px] mx-auto">
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-[#222222]">
+          <div className="flex-1 min-w-0 border-x border-[#2a2a2a]">
             {/* Header */}
             <div className="sticky top-0 z-20 bg-[#171717] backdrop-blur-md border-b border-[#2a2a2a]">
               <div className="px-4 py-4">
@@ -430,7 +430,7 @@ export default function EditProfilePage() {
                     className={`aspect-square rounded-xl border-2 transition-all hover:scale-105 ${
                       selectedThemeColor === theme.color
                         ? 'border-white shadow-lg'
-                        : 'border-[#222222] hover:border-white/20'
+                        : 'border-[#2a2a2a] hover:border-white/20'
                     }`}
                     style={{ backgroundColor: theme.color }}
                     title={theme.name}

@@ -310,10 +310,10 @@ export default function CreateEventPage() {
           />
 
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-[#222222]">
+          <div className="flex-1 min-w-0 border-x border-[#2a2a2a]">
 
             {/* Header */}
-            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-[#222222] z-10 px-6 py-4">
+            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-[#2a2a2a] z-10 px-6 py-4">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => router.back()}
@@ -413,7 +413,7 @@ export default function CreateEventPage() {
                       <img
                         src={imagePreview}
                         alt="Event preview"
-                        className="w-full h-64 object-cover rounded-xl border border-[#222222]"
+                        className="w-full h-64 object-cover rounded-xl border border-[#2a2a2a]"
                       />
                       <button
                         type="button"
@@ -512,7 +512,7 @@ export default function CreateEventPage() {
                   {formData.requirements && formData.requirements.length > 0 && (
                     <div className="space-y-2">
                       {formData.requirements.map((req, index) => (
-                        <div key={index} className="flex items-center gap-2 bg-white/[0.06] border border-[#222222] rounded-lg px-3 py-2">
+                        <div key={index} className="flex items-center gap-2 bg-white/[0.06] border border-[#2a2a2a] rounded-lg px-3 py-2">
                           <span className="text-korus-primary">✓</span>
                           <span className="flex-1 text-sm text-[#fafafa]">{req}</span>
                           <button
@@ -531,7 +531,7 @@ export default function CreateEventPage() {
                 </div>
 
                 {/* Advanced Settings */}
-                <div className="border border-[#222222] rounded-xl p-4 bg-[#171717]">
+                <div className="border border-[#2a2a2a] rounded-xl p-4 bg-[#171717]">
                   <h3 className="text-sm font-semibold text-[#fafafa] mb-4">Advanced Settings (optional)</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -575,7 +575,7 @@ export default function CreateEventPage() {
                         <span className="font-bold text-korus-primary">{EVENT_CREATION_FEE} SOL</span>
                       </div>
                       {connected && publicKey && (
-                        <div className="flex justify-between items-center text-sm mt-2 pt-2 border-t border-[#222222]">
+                        <div className="flex justify-between items-center text-sm mt-2 pt-2 border-t border-[#2a2a2a]">
                           <span className="text-[#a1a1a1]">Your Balance:</span>
                           <span className={`font-bold ${balance >= EVENT_CREATION_FEE + 0.001 ? 'text-green-400' : 'text-red-400'}`}>
                             {balance.toFixed(4)} SOL

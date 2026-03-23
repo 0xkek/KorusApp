@@ -81,7 +81,7 @@ export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, o
   if (!isOwnPost) {
     return (
       <div className="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#222222] rounded-2xl shadow-2xl max-w-md w-full border-2 shadow-xl shadow-red-500/20" style={{borderColor: '#ef4444'}}>
+        <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl shadow-2xl max-w-md w-full border-2 shadow-xl shadow-red-500/20" style={{borderColor: '#ef4444'}}>
           <div className="p-6 text-center">
             {/* Warning Icon */}
             <div className="mb-6 flex justify-center">
@@ -133,7 +133,7 @@ export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, o
   // Render delete confirmation modal for own posts
   return (
     <div className="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#222222] rounded-2xl shadow-2xl max-w-md w-full border-2 shadow-xl shadow-red-500/20" style={{borderColor: '#ef4444'}}>
+      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl shadow-2xl max-w-md w-full border-2 shadow-xl shadow-red-500/20" style={{borderColor: '#ef4444'}}>
         <div className="p-6 text-center">
           {/* Delete Icon */}
           <div className="mb-6 flex justify-center">

@@ -39,7 +39,7 @@ export function TicTacToeBoard({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getCellClassName = (cell: TicTacToeCell, _index: number) => {
     const baseClasses = 'w-24 h-24 flex items-center justify-center text-4xl font-bold rounded-lg duration-150';
-    const borderClasses = 'border-2 border-[#222222] hover:border-korus-primary';
+    const borderClasses = 'border-2 border-[#2a2a2a] hover:border-korus-primary';
     const bgClasses = cell === null && isMyTurn && !isGameOver
       ? 'bg-white/[0.06] hover:bg-white/[0.12] cursor-pointer'
       : 'bg-white/[0.12] cursor-not-allowed';

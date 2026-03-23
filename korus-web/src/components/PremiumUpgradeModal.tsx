@@ -160,7 +160,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
     >
       <div
         ref={modalRef}
-        className="bg-[#1e1e1e] border border-[#222222] rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4"
+        className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="text-center">
@@ -227,7 +227,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
               <button
                 onClick={() => handleUpgrade('monthly')}
                 disabled={isProcessing}
-                className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 white-text rounded-lg hover:shadow-lg font-semibold duration-150 border border-[#222222] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 white-text rounded-lg hover:shadow-lg font-semibold duration-150 border border-[#2a2a2a] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (
                   <div className="flex items-center justify-center gap-2">
@@ -249,7 +249,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
               <button
                 onClick={() => handleUpgrade('yearly')}
                 disabled={isProcessing}
-                className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 white-text rounded-lg hover:shadow-lg font-semibold duration-150 relative border border-[#222222] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 white-text rounded-lg hover:shadow-lg font-semibold duration-150 relative border border-[#2a2a2a] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {!isProcessing && (
                   <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">

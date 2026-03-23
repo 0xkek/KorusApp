@@ -164,9 +164,9 @@ export default function MobileMenuModal({ isOpen, onClose, onNotificationsToggle
       />
 
       {/* Mobile Menu */}
-      <div ref={modalRef} className="modal-content fixed top-0 left-0 bottom-0 w-80 bg-[#1e1e1e] border-r border-[#222222] z-50 md:hidden overflow-y-auto">
+      <div ref={modalRef} className="modal-content fixed top-0 left-0 bottom-0 w-80 bg-[#1e1e1e] border-r border-[#2a2a2a] z-50 md:hidden overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[#222222]">
+        <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a]">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center">
               <span className="text-black font-bold text-sm">K</span>
@@ -238,7 +238,7 @@ export default function MobileMenuModal({ isOpen, onClose, onNotificationsToggle
 
         {/* User Profile Section */}
         {connected && publicKey && (
-          <div className="p-4 border-t border-[#222222] mt-auto">
+          <div className="p-4 border-t border-[#2a2a2a] mt-auto">
             <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-korus-primary/10 to-korus-secondary/10 border border-korus-primary/30">
               {userAvatar ? (
                 <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden shadow-lg shadow-korus-primary/20">
@@ -268,7 +268,7 @@ export default function MobileMenuModal({ isOpen, onClose, onNotificationsToggle
         )}
 
         {/* Quick Actions */}
-        <div className="p-4 border-t border-[#222222]">
+        <div className="p-4 border-t border-[#2a2a2a]">
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => router.push('/games')}

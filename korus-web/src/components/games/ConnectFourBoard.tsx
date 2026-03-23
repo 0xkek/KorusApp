@@ -30,7 +30,7 @@ export function ConnectFourBoard({
     } else if (cell === 'yellow') {
       return `${baseClasses} bg-yellow-400 shadow-lg shadow-yellow-400/50`;
     }
-    return `${baseClasses} bg-white/[0.12] border border-[#222222]`;
+    return `${baseClasses} bg-white/[0.12] border border-[#2a2a2a]`;
   };
 
   const getColumnClassName = (col: number) => {
@@ -82,7 +82,7 @@ export function ConnectFourBoard({
       </div>
 
       {/* Board */}
-      <div className="bg-white/[0.06] p-4 rounded-xl border-2 border-[#222222]">
+      <div className="bg-white/[0.06] p-4 rounded-xl border-2 border-[#2a2a2a]">
         <div className="flex gap-2">
           {Array.from({ length: COLS }).map((_, col) => (
             <div
