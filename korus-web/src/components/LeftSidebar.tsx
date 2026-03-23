@@ -156,7 +156,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
   ];
 
   return (
-    <nav className="sticky top-0 h-screen w-[260px] shrink-0 z-30 border-r border-white/10 px-[16px] py-[24px] hidden md:flex flex-col bg-[#111111]" role="navigation" aria-label="Main navigation">
+    <nav className="sticky top-0 h-screen w-[260px] shrink-0 z-30 border-r border-white/[0.06] px-[16px] py-[24px] hidden md:flex flex-col bg-[#111111]" role="navigation" aria-label="Main navigation">
       {/* Logo */}
       <div className="flex items-center gap-[10px] px-[12px] mb-[32px]">
         <Link href="/" className="flex items-center gap-[10px]" aria-label="Korus Home">
@@ -245,7 +245,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
               >
                 {content}
                 {/* Tooltip on hover */}
-                <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#262626] border border-white/10 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50 whitespace-nowrap">
+                <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#262626] border border-white/[0.06] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50 whitespace-nowrap">
                   Feature coming soon
                 </div>
               </div>
@@ -280,7 +280,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
 
       {/* User Profile */}
       {connected && publicKey && (
-        <div className="mt-[12px] p-[14px] rounded-xl bg-[#171717] border border-white/10">
+        <div className="mt-[12px] p-[14px] rounded-xl bg-[#171717] border border-white/[0.06]">
           <Link href="/profile" className="flex items-center gap-[10px] transition-all duration-150 cursor-pointer">
             {userAvatar ? (
               <div className="w-[36px] h-[36px] rounded-[10px] flex-shrink-0 overflow-hidden">

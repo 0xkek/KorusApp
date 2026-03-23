@@ -248,7 +248,7 @@ export default function EventDetailsPage() {
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <main className="min-h-screen bg-[#121212] flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-korus-primary/20 border-t-korus-primary rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-[#a1a1a1]">Loading event...</p>
@@ -259,7 +259,7 @@ export default function EventDetailsPage() {
 
   if (!event) {
     return (
-      <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <main className="min-h-screen bg-[#121212] flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">❌</div>
           <h2 className="text-2xl font-semibold text-[#fafafa] mb-2">Event Not Found</h2>
@@ -276,7 +276,7 @@ export default function EventDetailsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
+    <main className="min-h-screen bg-[#121212] relative overflow-hidden">
       {/* Background */}
       <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
         <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#171717]/25 to-[#111111]/35" />
@@ -295,10 +295,10 @@ export default function EventDetailsPage() {
           />
 
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-white/10">
+          <div className="flex-1 min-w-0 border-x border-white/[0.06]">
 
             {/* Header */}
-            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-white/10 z-10 px-6 py-4">
+            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-white/[0.06] z-10 px-6 py-4">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => router.back()}
@@ -317,7 +317,7 @@ export default function EventDetailsPage() {
 
             <div className="max-w-5xl mx-auto px-6 py-8 space-y-6">
               {/* Event Header */}
-              <div className="border border-white/10 bg-[#171717] rounded-xl overflow-hidden">
+              <div className="border border-white/[0.06] bg-[#171717] rounded-xl overflow-hidden">
                 {event.imageUrl && (
                   <div className="w-full h-64 relative">
                     <Image
@@ -345,23 +345,23 @@ export default function EventDetailsPage() {
 
                   {/* Event Info Grid */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-[#262626] rounded-xl p-4 border border-white/10">
+                    <div className="bg-[#262626] rounded-xl p-4 border border-white/[0.06]">
                       <div className="text-[#737373] text-xs mb-1">Start Date</div>
                       <div className="text-[#fafafa] font-semibold text-sm">
                         {new Date(event.startDate).toLocaleDateString()}
                       </div>
                     </div>
-                    <div className="bg-[#262626] rounded-xl p-4 border border-white/10">
+                    <div className="bg-[#262626] rounded-xl p-4 border border-white/[0.06]">
                       <div className="text-[#737373] text-xs mb-1">End Date</div>
                       <div className="text-[#fafafa] font-semibold text-sm">
                         {new Date(event.endDate).toLocaleDateString()}
                       </div>
                     </div>
-                    <div className="bg-[#262626] rounded-xl p-4 border border-white/10">
+                    <div className="bg-[#262626] rounded-xl p-4 border border-white/[0.06]">
                       <div className="text-[#737373] text-xs mb-1">Registrations</div>
                       <div className="text-[#fafafa] font-semibold text-sm">{event.registrationCount}</div>
                     </div>
-                    <div className="bg-[#262626] rounded-xl p-4 border border-white/10">
+                    <div className="bg-[#262626] rounded-xl p-4 border border-white/[0.06]">
                       <div className="text-[#737373] text-xs mb-1">Views</div>
                       <div className="text-[#fafafa] font-semibold text-sm">{event.viewCount}</div>
                     </div>
@@ -386,7 +386,7 @@ export default function EventDetailsPage() {
 
               {/* Registration Section for Non-Creators */}
               {!isCreator && (
-                <div className="border border-white/10 bg-[#171717] rounded-xl p-6">
+                <div className="border border-white/[0.06] bg-[#171717] rounded-xl p-6">
                   <h3 className="text-lg font-semibold text-[#fafafa] mb-4">Join Whitelist</h3>
 
                   {!connected ? (
@@ -538,7 +538,7 @@ export default function EventDetailsPage() {
                   )}
 
                   {/* Export Section */}
-                  <div className="border border-white/10 bg-[#171717] rounded-xl p-6">
+                  <div className="border border-white/[0.06] bg-[#171717] rounded-xl p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
                         <h3 className="text-lg font-semibold text-[#fafafa] mb-1">Export Registrations</h3>
@@ -564,7 +564,7 @@ export default function EventDetailsPage() {
                   </div>
 
                   {/* Participants List */}
-                  <div className="border border-white/10 bg-[#171717] rounded-xl p-6">
+                  <div className="border border-white/[0.06] bg-[#171717] rounded-xl p-6">
                     <h3 className="text-lg font-semibold text-[#fafafa] mb-4">Participants ({registrations.length})</h3>
 
                     {isLoadingRegistrations ? (
@@ -582,7 +582,7 @@ export default function EventDetailsPage() {
                         {registrations.map((reg, index) => (
                           <div
                             key={reg.id}
-                            className="bg-[#171717] border border-white/10 rounded-xl p-4 hover:bg-white/[0.04] duration-150"
+                            className="bg-[#171717] border border-white/[0.06] rounded-xl p-4 hover:bg-white/[0.04] duration-150"
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-4">
@@ -656,7 +656,7 @@ export default function EventDetailsPage() {
       {/* Cancel Event Confirmation Modal */}
       {showCancelModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl max-w-md w-full">
+          <div className="bg-[#1e1e1e] border border-white/[0.06] rounded-2xl shadow-2xl max-w-md w-full">
             <div className="p-6">
               {/* Warning Icon */}
               <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">

@@ -96,7 +96,7 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
 
   if (loading) {
     return (
-      <div className="my-3 p-4 rounded-xl border border-white/10 bg-[#171717] flex items-center justify-center">
+      <div className="my-3 p-4 rounded-xl border border-white/[0.06] bg-[#171717] flex items-center justify-center">
         <div className="w-5 h-5 border-2 border-korus-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -117,10 +117,10 @@ export default function LinkPreview({ url }: LinkPreviewProps) {
   return (
     <button
       onClick={handlePress}
-      className="my-3 w-full rounded-xl overflow-hidden border border-white/10 bg-[#171717] hover:border-korus-primary/40 duration-150 group"
+      className="my-3 w-full rounded-xl overflow-hidden border border-white/[0.06] bg-[#171717] hover:border-korus-primary/40 duration-150 group"
     >
       {previewData.image && (
-        <div className="relative w-full h-[180px] bg-[#0a0a0a]">
+        <div className="relative w-full h-[180px] bg-[#121212]">
           <Image
             src={previewData.image}
             alt={previewData.title || 'Link preview'}

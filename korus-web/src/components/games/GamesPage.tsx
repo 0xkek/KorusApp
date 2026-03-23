@@ -429,7 +429,7 @@ export function GamesPage() {
       case 'waiting': return 'border-yellow-400 bg-yellow-400/10 text-yellow-400';
       case 'active': return 'border-green-400 bg-green-400/10 text-green-400';
       case 'completed': return 'border-blue-400 bg-blue-400/10 text-blue-400';
-      default: return 'border-white/10 bg-white/[0.06] text-[#a1a1a1]';
+      default: return 'border-white/[0.06] bg-white/[0.06] text-[#a1a1a1]';
     }
   };
 
@@ -606,7 +606,7 @@ export function GamesPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-white/10 mb-6">
+      <div className="flex border-b border-white/[0.06] mb-6">
         <button
           onClick={() => handleTabChange('lobby')}
           className={`relative px-6 py-3 font-semibold duration-150 ${
@@ -656,7 +656,7 @@ export function GamesPage() {
           {games.map((game) => (
             <div
               key={game.id}
-              className="border-b border-white/10 bg-white/[0.04]"
+              className="border-b border-white/[0.06] bg-white/[0.04]"
             >
               <div className="flex items-center gap-3 p-3">
                 {/* Game Icon */}
@@ -752,7 +752,7 @@ export function GamesPage() {
 
               {/* Inline Game Board */}
               {expandedGameId === game.id && (
-                <div className="px-6 pb-3 bg-[#171717] border-t border-white/10">
+                <div className="px-6 pb-3 bg-[#171717] border-t border-white/[0.06]">
                   <div className="py-3">
                     {game.gameType === 'tictactoe' && renderTicTacToe(game)}
                     {game.gameType === 'connectfour' && renderConnectFour(game)}
@@ -798,7 +798,7 @@ export function GamesPage() {
                 return (
                   <div
                     key={game.id}
-                    className="border-b border-white/10 bg-white/[0.04] hover:bg-white/[0.06] duration-150 cursor-pointer"
+                    className="border-b border-white/[0.06] bg-white/[0.04] hover:bg-white/[0.06] duration-150 cursor-pointer"
                     onClick={() => setExpandedGameId(expandedGameId === game.id ? null : game.id)}
                   >
                     <div className="flex items-center gap-3 p-3">
@@ -867,7 +867,7 @@ export function GamesPage() {
                                 e.stopPropagation();
                                 setExpandedGameId(expandedGameId === game.id ? null : game.id);
                               }}
-                              className="bg-[#171717] border border-white/10 text-[#fafafa] font-bold px-3 py-1 rounded-full hover:bg-[#171717] duration-150 text-xs"
+                              className="bg-[#171717] border border-white/[0.06] text-[#fafafa] font-bold px-3 py-1 rounded-full hover:bg-[#171717] duration-150 text-xs"
                             >
                               {expandedGameId === game.id ? 'Hide' : 'View'}
                             </button>
@@ -885,7 +885,7 @@ export function GamesPage() {
 
                     {/* Inline Game Board (view completed game state) */}
                     {expandedGameId === game.id && (
-                      <div className="px-6 pb-3 bg-[#171717] border-t border-white/10">
+                      <div className="px-6 pb-3 bg-[#171717] border-t border-white/[0.06]">
                         <div className="py-3">
                           {game.gameType === 'tictactoe' && renderTicTacToe(game)}
                           {game.gameType === 'connectfour' && renderConnectFour(game)}
@@ -908,7 +908,7 @@ export function GamesPage() {
           onClick={() => setShowCreateModal(false)}
         >
           <div
-            className="bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl p-8 max-w-lg w-full"
+            className="bg-[#1e1e1e] border border-white/[0.06] rounded-2xl shadow-2xl p-8 max-w-lg w-full"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -947,7 +947,7 @@ export function GamesPage() {
                     className={`p-3 rounded-lg border-2 duration-150 ${
                       newGame.type === gameType.id
                         ? 'border-korus-primary bg-korus-primary/20 text-[#fafafa]'
-                        : 'border-white/10 bg-white/[0.06] text-[#a1a1a1] hover:border-korus-primary/50'
+                        : 'border-white/[0.06] bg-white/[0.06] text-[#a1a1a1] hover:border-korus-primary/50'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     <div className="text-2xl mb-1">{gameType.icon}</div>
@@ -988,7 +988,7 @@ export function GamesPage() {
               <button
                 onClick={() => setShowCreateModal(false)}
                 disabled={isProcessing}
-                className="flex-1 bg-white/[0.06] border border-white/10 text-[#fafafa] font-semibold py-3 rounded-lg hover:bg-white/[0.08] duration-150 disabled:opacity-50"
+                className="flex-1 bg-white/[0.06] border border-white/[0.06] text-[#fafafa] font-semibold py-3 rounded-lg hover:bg-white/[0.08] duration-150 disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -1033,7 +1033,7 @@ export function GamesPage() {
           onClick={cancellingGame ? undefined : closeCancelModal}
         >
           <div
-            className={`bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl p-8 max-w-md w-full duration-150 duration-150 ${
+            className={`bg-[#1e1e1e] border border-white/[0.06] rounded-2xl shadow-2xl p-8 max-w-md w-full duration-150 duration-150 ${
               cancelModalClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
             }`}
             onClick={(e) => e.stopPropagation()}
@@ -1074,7 +1074,7 @@ export function GamesPage() {
               <button
                 onClick={closeCancelModal}
                 disabled={!!cancellingGame}
-                className="flex-1 bg-white/[0.06] border border-white/10 text-[#fafafa] font-semibold py-3 rounded-lg hover:bg-white/[0.08] duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-white/[0.06] border border-white/[0.06] text-[#fafafa] font-semibold py-3 rounded-lg hover:bg-white/[0.08] duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Keep Game
               </button>

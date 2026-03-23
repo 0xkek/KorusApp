@@ -233,12 +233,12 @@ export default function RightSidebar({ showNotifications = false, onNotification
       {/* Content based on showNotifications prop */}
       {showNotifications ? (
         /* Notifications Widget */
-        <div className="bg-[#171717] rounded-xl border border-white/10 p-[16px] mb-[16px]">
+        <div className="bg-[#171717] rounded-xl border border-white/[0.06] p-[16px] mb-[16px]">
           <h2 className="text-[18px] font-semibold tracking-[-0.3px] mb-[14px]">Notifications</h2>
           <div role="list" aria-label="Notifications">
             {isLoading ? (
               <div className="text-center py-8 text-[#525252]">
-                <div className="w-6 h-6 border-2 border-white/10 border-t-white/40 rounded-full animate-spin mx-auto mb-2"></div>
+                <div className="w-6 h-6 border-2 border-white/[0.06] border-t-white/40 rounded-full animate-spin mx-auto mb-2"></div>
                 <p className="text-xs">Loading notifications...</p>
               </div>
             ) : notifications.length === 0 ? (
@@ -331,12 +331,12 @@ export default function RightSidebar({ showNotifications = false, onNotification
         </div>
       ) : (
         /* Recent Activity Widget */
-        <div className="bg-[#171717] rounded-xl border border-white/10 p-[16px] mb-[16px]">
+        <div className="bg-[#171717] rounded-xl border border-white/[0.06] p-[16px] mb-[16px]">
           <h2 className="text-[18px] font-semibold tracking-[-0.3px] mb-[14px]">Recent Activity</h2>
           <div>
             {isLoadingActivities ? (
               <div className="text-center py-8 text-[#525252]">
-                <div className="w-6 h-6 border-2 border-white/10 border-t-white/40 rounded-full animate-spin mx-auto mb-2"></div>
+                <div className="w-6 h-6 border-2 border-white/[0.06] border-t-white/40 rounded-full animate-spin mx-auto mb-2"></div>
                 <p className="text-xs">Loading activities...</p>
               </div>
             ) : recentActivities.length === 0 ? (

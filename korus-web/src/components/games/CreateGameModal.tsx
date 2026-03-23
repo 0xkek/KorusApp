@@ -76,7 +76,7 @@ export function CreateGameModal({ postId, onClose, onGameCreated }: CreateGameMo
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl p-6 max-w-md w-full">
+      <div className="bg-[#1e1e1e] border border-white/[0.06] rounded-2xl shadow-2xl p-6 max-w-md w-full">
         <h2 className="text-2xl font-bold text-[#fafafa] mb-4">Create Game Challenge</h2>
 
         {/* Game Type Selection */}
@@ -89,7 +89,7 @@ export function CreateGameModal({ postId, onClose, onGameCreated }: CreateGameMo
               className={`p-3 rounded-lg border-2 duration-150 ${
                 gameType === 'tictactoe'
                   ? 'border-korus-primary bg-korus-primary/20 text-[#fafafa]'
-                  : 'border-white/10 bg-white/[0.06] text-[#a1a1a1] hover:border-korus-primary/50'
+                  : 'border-white/[0.06] bg-white/[0.06] text-[#a1a1a1] hover:border-korus-primary/50'
               }`}
               onClick={() => setGameType('tictactoe')}
             >
@@ -100,7 +100,7 @@ export function CreateGameModal({ postId, onClose, onGameCreated }: CreateGameMo
               className={`p-3 rounded-lg border-2 duration-150 ${
                 gameType === 'rps'
                   ? 'border-korus-primary bg-korus-primary/20 text-[#fafafa]'
-                  : 'border-white/10 bg-white/[0.06] text-[#a1a1a1] hover:border-korus-primary/50'
+                  : 'border-white/[0.06] bg-white/[0.06] text-[#a1a1a1] hover:border-korus-primary/50'
               }`}
               onClick={() => setGameType('rps')}
             >
@@ -111,7 +111,7 @@ export function CreateGameModal({ postId, onClose, onGameCreated }: CreateGameMo
               className={`p-3 rounded-lg border-2 duration-150 ${
                 gameType === 'connectfour'
                   ? 'border-korus-primary bg-korus-primary/20 text-[#fafafa]'
-                  : 'border-white/10 bg-white/[0.06] text-[#a1a1a1] hover:border-korus-primary/50'
+                  : 'border-white/[0.06] bg-white/[0.06] text-[#a1a1a1] hover:border-korus-primary/50'
               }`}
               onClick={() => setGameType('connectfour')}
             >

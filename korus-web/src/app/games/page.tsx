@@ -21,7 +21,7 @@ export default function GamesPage() {
 
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
+    <main className="min-h-screen bg-[#121212] relative overflow-hidden">
       {/* Standardized static background */}
       <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
         {/* Surface gradient overlay */}
@@ -46,10 +46,10 @@ export default function GamesPage() {
           />
 
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-white/10">
+          <div className="flex-1 min-w-0 border-x border-white/[0.06]">
 
             {/* Header Navigation */}
-            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-white/10 z-10">
+            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-white/[0.06] z-10">
               <div className="flex">
                 {/* Mobile menu button */}
                 <button

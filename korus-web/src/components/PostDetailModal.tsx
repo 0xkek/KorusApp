@@ -140,9 +140,9 @@ export default function PostDetailModal({
   return (
     <div className="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
       {/* Modal Container */}
-      <div ref={modalRef} className="modal-content bg-[#171717] backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[90vh] mx-4 border border-white/10 shadow-xl overflow-hidden">
+      <div ref={modalRef} className="modal-content bg-[#171717] backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[90vh] mx-4 border border-white/[0.06] shadow-xl overflow-hidden">
         {/* Modal Header */}
-        <div className="sticky top-0 bg-[#171717] backdrop-blur-md flex items-center justify-between p-4 border-b border-white/10">
+        <div className="sticky top-0 bg-[#171717] backdrop-blur-md flex items-center justify-between p-4 border-b border-white/[0.06]">
           <h2 className="heading-2 text-[#fafafa]">Post</h2>
           <button
             onClick={handleClose}
@@ -171,7 +171,7 @@ export default function PostDetailModal({
           )}
 
           {/* Main Post */}
-          <div className="p-6 border-b border-white/10">
+          <div className="p-6 border-b border-white/[0.06]">
             <div className="flex gap-4">
               {/* Avatar */}
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-lg font-bold text-black flex-shrink-0">
@@ -220,7 +220,7 @@ export default function PostDetailModal({
 
                 {/* Post Image */}
                 {post.image && (
-                  <div className="mb-4 rounded-2xl overflow-hidden border border-white/10">
+                  <div className="mb-4 rounded-2xl overflow-hidden border border-white/[0.06]">
                     <Image
                       src={post.image}
                       alt="Post content"
@@ -236,7 +236,7 @@ export default function PostDetailModal({
                 )}
 
                 {/* Post Stats */}
-                <div className="flex items-center gap-6 text-[#a1a1a1] text-sm mb-4 py-3 border-y border-white/10">
+                <div className="flex items-center gap-6 text-[#a1a1a1] text-sm mb-4 py-3 border-y border-white/[0.06]">
                   <span className="flex items-center gap-1">
                     <strong className="text-[#fafafa]">{post.replies}</strong>
                     <span>Replies</span>
@@ -259,7 +259,7 @@ export default function PostDetailModal({
                 <div className="flex items-center justify-between max-w-md">
                   <button
                     onClick={() => onReply?.(post)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-transparent hover:bg-white/[0.06] hover:border-white/10 transition-all duration-150 group"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-transparent hover:bg-white/[0.06] hover:border-white/[0.06] transition-all duration-150 group"
                   >
                     <svg className="w-5 h-5 text-[#737373] group-hover:text-korus-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -269,7 +269,7 @@ export default function PostDetailModal({
 
                   <button
                     onClick={() => onRepost?.(post.originalId || post.id)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full border border-transparent hover:bg-white/[0.06] hover:border-white/10 transition-all duration-150 group ${
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full border border-transparent hover:bg-white/[0.06] hover:border-white/[0.06] transition-all duration-150 group ${
                       repostedPosts.has(post.originalId || post.id) ? 'bg-korus-primary/10 border-korus-primary/20' : ''
                     }`}
                   >
@@ -285,7 +285,7 @@ export default function PostDetailModal({
 
                   <button
                     onClick={() => onLike?.(post.id)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full border border-transparent hover:bg-white/[0.06] hover:border-white/10 transition-all duration-150 group ${
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full border border-transparent hover:bg-white/[0.06] hover:border-white/[0.06] transition-all duration-150 group ${
                       likedPosts.has(post.id) ? 'bg-korus-primary/15 border-korus-primary/40' : ''
                     }`}
                   >
@@ -301,7 +301,7 @@ export default function PostDetailModal({
 
                   <button
                     onClick={() => onTip?.(post.user, post.id)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-transparent hover:bg-white/[0.06] hover:border-white/10 transition-all duration-150 group"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-transparent hover:bg-white/[0.06] hover:border-white/[0.06] transition-all duration-150 group"
                   >
                     <svg className="w-5 h-5 text-[#737373] group-hover:text-korus-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -311,7 +311,7 @@ export default function PostDetailModal({
 
                   <button
                     onClick={() => onShare?.(post)}
-                    className="flex items-center justify-center w-9 h-9 rounded-full text-[#737373] border border-transparent hover:bg-white/[0.06] hover:border-white/10 transition-all duration-150 group"
+                    className="flex items-center justify-center w-9 h-9 rounded-full text-[#737373] border border-transparent hover:bg-white/[0.06] hover:border-white/[0.06] transition-all duration-150 group"
                   >
                     <svg className="w-5 h-5 text-[#737373] group-hover:text-korus-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -337,7 +337,7 @@ export default function PostDetailModal({
             ) : (
               <div className="space-y-4">
                 {replies.map((reply) => (
-                  <div key={reply.id} className="flex gap-3 p-4 rounded-xl bg-white/[0.04] border border-white/10 hover:border-white/10 transition-colors">
+                  <div key={reply.id} className="flex gap-3 p-4 rounded-xl bg-white/[0.04] border border-white/[0.06] hover:border-white/[0.06] transition-colors">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-sm font-bold text-black flex-shrink-0">
                       {reply.user.slice(0, 2).toUpperCase()}
                     </div>

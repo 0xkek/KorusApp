@@ -224,9 +224,9 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm overflow-y-auto pt-20 pb-20">
       <div ref={modalRef} className="relative w-full max-w-2xl mx-4">
-        <div className="bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-[#1e1e1e] border border-white/[0.06] rounded-2xl shadow-2xl overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
             <h2 className="text-2xl font-semibold text-[#fafafa]">Search Korus</h2>
             <button
               onClick={onClose}
@@ -239,7 +239,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
           </div>
 
           {/* Search Input */}
-          <div className="p-6 border-b border-white/10">
+          <div className="p-6 border-b border-white/[0.06]">
             <form onSubmit={handleSubmit}>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2">
@@ -333,7 +333,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
           {/* Search Results */}
           <div className="max-h-[60vh] overflow-y-auto">
             {/* Search Info */}
-            <div className="px-6 py-3 bg-white/[0.04] border-b border-white/10">
+            <div className="px-6 py-3 bg-white/[0.04] border-b border-white/[0.06]">
               <p className="text-sm text-[#a1a1a1]">
                 {searchQuery ? (
                   <>

@@ -205,7 +205,7 @@ export default function EditProfilePage() {
 
   if (!connected) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-[#fafafa] flex items-center justify-center">
+      <div className="min-h-screen bg-[#121212] text-[#fafafa] flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Connect Your Wallet</h2>
           <p className="text-[#a1a1a1] mb-8">Please connect your wallet to edit your profile</p>
@@ -222,7 +222,7 @@ export default function EditProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-[#fafafa] flex items-center justify-center">
+      <div className="min-h-screen bg-[#121212] text-[#fafafa] flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-korus-primary border-t-transparent rounded-full animate-spin mb-4"></div>
           <p>Loading profile...</p>
@@ -232,7 +232,7 @@ export default function EditProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
+    <main className="min-h-screen bg-[#121212] relative overflow-hidden">
       {/* Background gradients */}
       <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
         <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#171717]/25 to-[#111111]/35" />
@@ -249,7 +249,7 @@ export default function EditProfilePage() {
       <div className="relative z-10">
         <div className="flex min-h-screen max-w-[1280px] mx-auto">
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-white/10">
+          <div className="flex-1 min-w-0 border-x border-white/[0.06]">
             {/* Header */}
             <div className="sticky top-0 z-20 bg-[#171717] backdrop-blur-md border-b border-white/15">
               <div className="px-4 py-4">
@@ -430,7 +430,7 @@ export default function EditProfilePage() {
                     className={`aspect-square rounded-xl border-2 transition-all hover:scale-105 ${
                       selectedThemeColor === theme.color
                         ? 'border-white shadow-lg'
-                        : 'border-white/10 hover:border-white/20'
+                        : 'border-white/[0.06] hover:border-white/20'
                     }`}
                     style={{ backgroundColor: theme.color }}
                     title={theme.name}

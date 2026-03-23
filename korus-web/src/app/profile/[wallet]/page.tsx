@@ -80,7 +80,7 @@ export default function UserProfilePage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
+    <main className="min-h-screen bg-[#121212] relative overflow-hidden">
       {/* Background */}
       <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
         <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#171717]/25 to-[#111111]/35" />
@@ -96,9 +96,9 @@ export default function UserProfilePage() {
       <div className="relative z-10">
         <div className="flex min-h-screen max-w-[1280px] mx-auto">
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-white/10">
+          <div className="flex-1 min-w-0 border-x border-white/[0.06]">
             {/* Header */}
-            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-white/10 z-10">
+            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-white/[0.06] z-10">
               <div className="flex items-center px-4 py-4">
                 <button
                   onClick={() => router.back()}

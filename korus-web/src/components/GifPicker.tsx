@@ -73,9 +73,9 @@ export default function GifPicker({ onSelect, onClose }: GifPickerProps) {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+      <div className="bg-[#1e1e1e] border border-white/[0.06] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+        <div className="p-4 border-b border-white/[0.06] flex items-center justify-between">
           <h3 className="text-lg font-bold text-[#fafafa]">Choose a GIF</h3>
           <button
             onClick={onClose}
@@ -89,7 +89,7 @@ export default function GifPicker({ onSelect, onClose }: GifPickerProps) {
         </div>
 
         {/* Search */}
-        <form onSubmit={handleSearch} className="p-4 border-b border-white/10">
+        <form onSubmit={handleSearch} className="p-4 border-b border-white/[0.06]">
           <div className="relative">
             <input
               type="text"
@@ -142,7 +142,7 @@ export default function GifPicker({ onSelect, onClose }: GifPickerProps) {
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-white/10 text-center">
+        <div className="p-3 border-t border-white/[0.06] text-center">
           <p className="text-xs text-[#737373]">
             Powered by <span className="text-korus-primary font-semibold">Tenor</span>
           </p>

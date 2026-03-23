@@ -239,7 +239,7 @@ export default function ProfilePage() {
   // Early return after all hooks are declared
   if (!connected) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <div className="min-h-screen bg-[#121212] flex items-center justify-center">
         <div className="text-[#fafafa]">Redirecting...</div>
       </div>
     );
@@ -350,7 +350,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
+    <main className="min-h-screen bg-[#121212] relative overflow-hidden">
       {/* Background */}
       <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
         <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#171717]/25 to-[#111111]/35" />
@@ -368,9 +368,9 @@ export default function ProfilePage() {
         {/* Main Content Container with sidebar layout */}
         <div className="flex min-h-screen max-w-[1280px] mx-auto">
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-white/10">
+          <div className="flex-1 min-w-0 border-x border-white/[0.06]">
             {/* Header */}
-            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-white/10 z-10">
+            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-white/[0.06] z-10">
               <div className="flex items-center px-4 py-4">
                 <button aria-label="Open mobile menu" className="md:hidden flex items-center justify-center w-12 h-12 text-[#fafafa] hover:bg-white/[0.04] transition-colors mr-2">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -619,7 +619,7 @@ export default function ProfilePage() {
                             setUsernameError('');
                             setTempUsernameValue(currentUsername || '');
                           }}
-                          className="w-full bg-white/[0.06] border border-white/15 rounded-xl p-4 hover:border-white/10 transition-colors"
+                          className="w-full bg-white/[0.06] border border-white/15 rounded-xl p-4 hover:border-white/[0.06] transition-colors"
                         >
                           <div className="flex items-center gap-3">
                             <svg className="w-5 h-5 text-korus-primary" fill="currentColor" viewBox="0 0 24 24">
@@ -692,7 +692,7 @@ export default function ProfilePage() {
                       <div className="relative z-50" ref={snsDropdownRef}>
                         <button
                           onClick={() => setShowSNSDropdown(!showSNSDropdown)}
-                          className="w-full bg-white/[0.06] border border-white/15 rounded-xl p-4 hover:border-white/10 transition-colors"
+                          className="w-full bg-white/[0.06] border border-white/15 rounded-xl p-4 hover:border-white/[0.06] transition-colors"
                           disabled={allDomainsLoading}
                         >
                           <div className="flex items-center justify-between">
@@ -714,7 +714,7 @@ export default function ProfilePage() {
 
                         {/* SNS Dropdown */}
                         {showSNSDropdown && (
-                          <div className="absolute top-full left-0 right-0 mt-2 bg-[#171717] backdrop-blur-xl border border-white/10 rounded-xl z-50 max-h-60 overflow-y-auto">
+                          <div className="absolute top-full left-0 right-0 mt-2 bg-[#171717] backdrop-blur-xl border border-white/[0.06] rounded-xl z-50 max-h-60 overflow-y-auto">
                             {allSNSDomains.map((domain, index) => (
                               <button
                                 key={index}
@@ -814,7 +814,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Tabs */}
-                <div className="bg-[#171717] border border-white/10 rounded-xl mb-6 relative z-10">
+                <div className="bg-[#171717] border border-white/[0.06] rounded-xl mb-6 relative z-10">
                   <div className="flex">
                     <button
                       onClick={() => setActiveTab('posts')}
@@ -943,7 +943,7 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   userPosts.map((post) => (
-                    <div key={post.id} className="bg-white/[0.04] backdrop-blur-sm border border-white/15 rounded-2xl p-6 hover:border-white/10 transition-all group">
+                    <div key={post.id} className="bg-white/[0.04] backdrop-blur-sm border border-white/15 rounded-2xl p-6 hover:border-white/[0.06] transition-all group">
                       <SafeContent
                         content={post.content}
                         as="p"
@@ -971,7 +971,7 @@ export default function ProfilePage() {
       {/* Username Warning Modal */}
       {showUsernameWarning && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#171717] backdrop-blur-xl border border-white/10 rounded-2xl p-6 max-w-md w-full mx-4">
+          <div className="bg-[#171717] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 max-w-md w-full mx-4">
             <div className="text-center">
               <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
