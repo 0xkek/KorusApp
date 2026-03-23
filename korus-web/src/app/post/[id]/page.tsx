@@ -447,7 +447,7 @@ export default function PostDetailPage() {
     return (
       <div key={reply.id}>
         {/* Reply Content */}
-        <div className="px-5 py-3.5 border-b border-white/[0.08] flex gap-3 hover:bg-white/[0.03] transition-colors">
+        <div className="px-5 py-[14px] border-b border-[#22232e] flex gap-3 hover:bg-[#1a1b24] transition-colors">
           {/* Avatar */}
           {reply.avatar ? (
             <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden">
@@ -471,7 +471,7 @@ export default function PostDetailPage() {
             <div className="flex items-center gap-1.5 mb-0.5">
               <Link
                 href={`/profile/${reply.wallet || reply.user}`}
-                className="font-semibold text-sm text-white hover:underline"
+                className="font-semibold text-sm text-[#f0f0f5] hover:underline"
               >
                 {truncateAddress(reply.user)}
               </Link>
@@ -482,25 +482,25 @@ export default function PostDetailPage() {
                   </svg>
                 </div>
               )}
-              <span className="text-[13px] text-white/50">@{truncateAddress(reply.user)}</span>
-              <span className="text-white/30">·</span>
-              <span className="text-[13px] text-white/30">{reply.createdAt ? formatRelativeTime(reply.createdAt) : reply.time}</span>
+              <span className="text-[13px] text-[#8b8d9a]">@{truncateAddress(reply.user)}</span>
+              <span className="text-[#5c5e6e]">·</span>
+              <span className="text-[13px] text-[#5c5e6e]">{reply.createdAt ? formatRelativeTime(reply.createdAt) : reply.time}</span>
             </div>
 
             {/* Content */}
             <SafeContent
               content={reply.content}
-              className="text-white text-sm leading-relaxed mb-2 whitespace-pre-wrap break-words"
+              className="text-[#f0f0f5] text-sm leading-[1.5] mb-2 whitespace-pre-wrap break-words"
               allowLinks={true}
               allowFormatting={true}
             />
 
             {/* Actions */}
-            <div className="flex items-center gap-4 -ml-2">
+            <div className="flex items-center gap-0.5 mt-2 -ml-2">
               <button
                 onClick={() => handleReply(reply)}
                 aria-label="Reply to comment"
-                className="flex items-center gap-1 px-2 py-1 rounded-full text-white/30 hover:text-korus-primary hover:bg-korus-primary/[0.08] transition-all"
+                className="flex items-center gap-1 px-2 py-1 rounded-full text-[#8b8d9a] hover:text-korus-primary hover:bg-korus-primary/[0.08] transition-all"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
@@ -514,7 +514,7 @@ export default function PostDetailPage() {
                 className={`flex items-center gap-1 px-2 py-1 rounded-full transition-all ${
                   likedReplies.has(reply.id)
                     ? 'text-red-400 hover:bg-red-400/10'
-                    : 'text-white/30 hover:text-red-400 hover:bg-red-400/10'
+                    : 'text-[#8b8d9a] hover:text-red-400 hover:bg-red-400/10'
                 }`}
               >
                 <svg className="w-4 h-4" fill={likedReplies.has(reply.id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
@@ -532,7 +532,7 @@ export default function PostDetailPage() {
                 className={`flex items-center gap-1 px-2 py-1 rounded-full transition-all ${
                   tippedReplies.has(String(reply.id))
                     ? 'text-green-400 hover:bg-green-400/10'
-                    : 'text-white/30 hover:text-green-400 hover:bg-green-400/10'
+                    : 'text-[#8b8d9a] hover:text-green-400 hover:bg-green-400/10'
                 }`}
               >
                 <span className="text-xs font-medium">$</span>
@@ -545,7 +545,7 @@ export default function PostDetailPage() {
                   setShowShareModal(true);
                 }}
                 aria-label="Share reply"
-                className="flex items-center gap-1 px-2 py-1 rounded-full text-white/30 hover:text-korus-primary hover:bg-korus-primary/[0.08] transition-all"
+                className="flex items-center gap-1 px-2 py-1 rounded-full text-[#8b8d9a] hover:text-korus-primary hover:bg-korus-primary/[0.08] transition-all"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
@@ -585,55 +585,55 @@ export default function PostDetailPage() {
   if (loading) {
     return (
       <main className="min-h-screen relative overflow-hidden">
-        <div className="fixed inset-0 bg-[#050508]" />
+        <div className="fixed inset-0 bg-[#0a0a0f]" />
         <div className="relative z-10">
           <div className="flex min-h-screen">
-            <div className="flex-1 ml-[270px] mr-[340px] max-w-[640px] border-x border-white/[0.08] xl:ml-[270px] xl:mr-[340px] lg:ml-[240px] lg:mr-[300px] md:ml-[200px] md:mr-0 sm:ml-0 sm:mr-0 max-sm:border-x-0">
+            <div className="flex-1 ml-[260px] mr-[320px] max-w-[640px] border-x border-[#22232e] xl:ml-[260px] xl:mr-[320px] lg:ml-[240px] lg:mr-[300px] md:ml-[200px] md:mr-0 sm:ml-0 sm:mr-0 max-sm:border-x-0">
               {/* Header skeleton */}
-              <div className="sticky top-0 z-10 bg-black/75 backdrop-blur-[16px] border-b border-white/[0.08]">
+              <div className="sticky top-0 z-10 bg-[#0a0a0f]/85 backdrop-blur-[16px] border-b border-[#22232e]">
                 <div className="flex items-center gap-4 px-5 py-3">
-                  <button onClick={() => router.back()} className="w-9 h-9 rounded-full flex items-center justify-center text-white hover:bg-white/[0.06] transition-colors">
+                  <button onClick={() => router.back()} className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-[#f0f0f5] hover:bg-[#1a1b24] transition-colors">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
                   </button>
-                  <span className="text-lg font-extrabold tracking-tight text-white">Post</span>
+                  <span className="text-[18px] font-[800] tracking-[-0.3px] text-[#f0f0f5]">Post</span>
                 </div>
               </div>
               {/* Post skeleton */}
               <div className="px-5 py-5 animate-pulse">
                 <div className="flex gap-3">
-                  <div className="w-10 h-10 rounded-full bg-white/[0.08]" />
+                  <div className="w-10 h-10 rounded-full bg-[#1a1b24]" />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="h-4 w-24 bg-white/[0.08] rounded" />
-                      <div className="h-4 w-16 bg-white/[0.06] rounded" />
+                      <div className="h-4 w-24 bg-[#1a1b24] rounded" />
+                      <div className="h-4 w-16 bg-[#22232e] rounded" />
                     </div>
-                    <div className="h-5 w-full bg-white/[0.06] rounded mb-2" />
-                    <div className="h-5 w-3/4 bg-white/[0.06] rounded mb-4" />
-                    <div className="h-3 w-32 bg-white/[0.06] rounded mt-3.5" />
-                    <div className="flex gap-5 py-3.5 mt-3.5 border-t border-white/[0.08] border-b border-white/[0.08]">
-                      <div className="h-4 w-16 bg-white/[0.06] rounded" />
-                      <div className="h-4 w-12 bg-white/[0.06] rounded" />
-                      <div className="h-4 w-16 bg-white/[0.06] rounded" />
-                      <div className="h-4 w-20 bg-white/[0.06] rounded" />
+                    <div className="h-5 w-full bg-[#22232e] rounded mb-2" />
+                    <div className="h-5 w-3/4 bg-[#22232e] rounded mb-4" />
+                    <div className="h-3 w-32 bg-[#22232e] rounded mt-3.5" />
+                    <div className="flex gap-5 py-3.5 mt-3.5 border-t border-[#22232e] border-b border-[#22232e]">
+                      <div className="h-4 w-16 bg-[#22232e] rounded" />
+                      <div className="h-4 w-12 bg-[#22232e] rounded" />
+                      <div className="h-4 w-16 bg-[#22232e] rounded" />
+                      <div className="h-4 w-20 bg-[#22232e] rounded" />
                     </div>
                   </div>
                 </div>
               </div>
               {/* Reply composer skeleton */}
-              <div className="px-5 py-4 border-b border-white/[0.08]">
-                <div className="h-10 w-full bg-white/[0.04] rounded-lg mb-4" />
+              <div className="px-5 py-4 border-b border-[#22232e]">
+                <div className="h-10 w-full bg-[#1a1b24] rounded-lg mb-4" />
               </div>
               {/* Reply skeletons */}
               {[1, 2].map(i => (
-                <div key={i} className="px-5 py-3.5 animate-pulse border-b border-white/[0.08]">
+                <div key={i} className="px-5 py-3.5 animate-pulse border-b border-[#22232e]">
                   <div className="flex gap-3">
-                    <div className="w-9 h-9 rounded-full bg-white/[0.08]" />
+                    <div className="w-9 h-9 rounded-full bg-[#1a1b24]" />
                     <div className="flex-1">
-                      <div className="h-3 w-20 bg-white/[0.08] rounded mb-2" />
-                      <div className="h-3 w-full bg-white/[0.06] rounded mb-1" />
-                      <div className="h-3 w-1/2 bg-white/[0.06] rounded" />
+                      <div className="h-3 w-20 bg-[#1a1b24] rounded mb-2" />
+                      <div className="h-3 w-full bg-[#22232e] rounded mb-1" />
+                      <div className="h-3 w-1/2 bg-[#22232e] rounded" />
                     </div>
                   </div>
                 </div>
@@ -650,11 +650,11 @@ export default function PostDetailPage() {
   if (!post) {
     return (
       <main className="min-h-screen relative overflow-hidden">
-        <div className="fixed inset-0 bg-[#050508]" />
+        <div className="fixed inset-0 bg-[#0a0a0f]" />
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4 text-white">Post Not Found</h2>
-            <p className="text-white/30 mb-8">The post you&apos;re looking for doesn&apos;t exist.</p>
+            <h2 className="text-2xl font-bold mb-4 text-[#f0f0f5]">Post Not Found</h2>
+            <p className="text-[#5c5e6e] mb-8">The post you&apos;re looking for doesn&apos;t exist.</p>
             <Link
               href="/"
               className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-200 hover:scale-[1.02]"
@@ -670,36 +670,36 @@ export default function PostDetailPage() {
   return (
     <main className="min-h-screen relative overflow-hidden">
       {/* Background */}
-      <div className="fixed inset-0 bg-[#050508]" />
+      <div className="fixed inset-0 bg-[#0a0a0f]" />
 
       {/* Content wrapper */}
       <div className="relative z-10">
         <div className="flex min-h-screen">
           {/* Main Content */}
-          <div className="flex-1 ml-[270px] mr-[340px] max-w-[640px] border-x border-white/[0.08] xl:ml-[270px] xl:mr-[340px] lg:ml-[240px] lg:mr-[300px] md:ml-[200px] md:mr-0 sm:ml-0 sm:mr-0 max-sm:border-x-0">
+          <div className="flex-1 ml-[260px] mr-[320px] max-w-[640px] border-x border-[#22232e] xl:ml-[260px] xl:mr-[320px] lg:ml-[240px] lg:mr-[300px] md:ml-[200px] md:mr-0 sm:ml-0 sm:mr-0 max-sm:border-x-0">
 
             {/* Header Navigation */}
-            <div className="sticky top-0 z-10 bg-black/75 backdrop-blur-[16px] border-b border-white/[0.08]">
+            <div className="sticky top-0 z-10 bg-[#0a0a0f]/85 backdrop-blur-[16px] border-b border-[#22232e]">
               <div className="flex items-center gap-4 px-5 py-3">
                 {/* Back button */}
                 <button
                   onClick={() => router.back()}
                   aria-label="Go back"
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-white hover:bg-white/[0.06] transition-colors"
+                  className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-[#f0f0f5] hover:bg-[#1a1b24] transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
                 </button>
 
-                <h1 className="text-lg font-extrabold tracking-tight text-white">Post</h1>
+                <h1 className="text-[18px] font-[800] tracking-[-0.3px] text-[#f0f0f5]">Post</h1>
 
                 <div className="ml-auto flex items-center">
                   {/* Mobile search */}
                   <button
                     onClick={() => setShowSearchModal(true)}
                     aria-label="Open search"
-                    className="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-white hover:bg-white/[0.06] transition-colors"
+                    className="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-[#f0f0f5] hover:bg-[#1a1b24] transition-colors"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -728,9 +728,9 @@ export default function PostDetailPage() {
                 </div>
               )}
 
-              <div className="px-5 py-5">
+              <div className="p-5">
                 {/* Author header */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3">
                   {/* Avatar */}
                   {post.avatar ? (
                     <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
@@ -753,7 +753,7 @@ export default function PostDetailPage() {
                     <div className="flex items-center gap-1.5">
                       <Link
                         href={`/profile/${post.wallet || post.user}`}
-                        className={`font-bold text-[15px] hover:underline cursor-pointer ${post.isShoutout ? 'text-korus-primary' : 'text-white'}`}
+                        className={`font-bold text-[15px] hover:underline cursor-pointer ${post.isShoutout ? 'text-korus-primary' : 'text-[#f0f0f5]'}`}
                       >
                         {truncateAddress(post.user)}
                       </Link>
@@ -767,7 +767,7 @@ export default function PostDetailPage() {
                         </div>
                       )}
                     </div>
-                    <span className="text-sm text-white/50">@{truncateAddress(post.user)}</span>
+                    <span className="text-sm text-[#8b8d9a]">@{truncateAddress(post.user)}</span>
                   </div>
 
                   {/* More button */}
@@ -778,7 +778,7 @@ export default function PostDetailPage() {
                         setSelectedPost(post);
                         setShowPostOptionsModal(true);
                       }}
-                      className="w-9 h-9 rounded-full flex items-center justify-center text-white/30 hover:text-white hover:bg-white/[0.06] transition-colors"
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-[#8b8d9a] hover:text-[#f0f0f5] hover:bg-[#1a1b24] transition-colors"
                       aria-label="Post options"
                     >
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -791,7 +791,7 @@ export default function PostDetailPage() {
                 {/* Post Text */}
                 <SafeContent
                   content={post.content}
-                  className="text-white text-[17px] leading-relaxed mt-3.5 whitespace-pre-wrap break-words"
+                  className="text-[#f0f0f5] text-[17px] leading-[1.6] mt-3 whitespace-pre-wrap break-words"
                   allowLinks={true}
                   allowFormatting={true}
                 />
@@ -804,7 +804,7 @@ export default function PostDetailPage() {
                       alt="Post content"
                       width={600}
                       height={400}
-                      className="max-w-full h-auto rounded-xl border border-white/[0.08]"
+                      className="max-w-full h-auto rounded-xl border border-[#22232e]"
                       style={{ maxHeight: '500px', width: 'auto', height: 'auto' }}
                       onError={(e) => {
                         // Hide broken image on error
@@ -815,29 +815,29 @@ export default function PostDetailPage() {
                 )}
 
                 {/* Full Timestamp */}
-                <p className="text-sm text-white/30 mt-3.5">
+                <p className="text-sm text-[#5c5e6e] mt-3.5">
                   {formatFullTimestamp(post.createdAt || post.time)}
                 </p>
 
                 {/* Stats Row */}
-                <div className="flex gap-5 py-3.5 mt-3.5 border-t border-white/[0.08] border-b border-white/[0.08]">
-                  <span className="text-sm text-white/50"><span className="text-white font-semibold">{post.comments}</span> Replies</span>
-                  <span className="text-sm text-white/50"><span className="text-white font-semibold">{post.likes}</span> Likes</span>
-                  <span className="text-sm text-white/50"><span className="text-white font-semibold">{post.reposts ?? 0}</span> Reposts</span>
-                  <span className="text-sm text-white/50"><span className="text-white font-semibold">{post.tips}</span> SOL tipped</span>
+                <div className="flex gap-5 py-[14px] mt-[14px] border-t border-[#22232e] border-b border-[#22232e]">
+                  <span className="text-sm text-[#8b8d9a]"><span className="text-[#f0f0f5] font-bold">{post.comments}</span> Replies</span>
+                  <span className="text-sm text-[#8b8d9a]"><span className="text-[#f0f0f5] font-bold">{post.likes}</span> Likes</span>
+                  <span className="text-sm text-[#8b8d9a]"><span className="text-[#f0f0f5] font-bold">{post.reposts ?? 0}</span> Reposts</span>
+                  <span className="text-sm text-[#8b8d9a]"><span className="text-[#f0f0f5] font-bold">{post.tips}</span> SOL tipped</span>
                 </div>
 
                 {/* Post Actions */}
-                <div className="flex justify-around py-2.5 border-b border-white/[0.08]">
+                <div className="flex justify-around py-2 border-b border-[#22232e]">
                   <button
                     onClick={() => handleReply(post)}
                     aria-label="Reply to post"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white/30 hover:text-korus-primary hover:bg-korus-primary/[0.08] transition-all"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[#8b8d9a] hover:text-korus-primary hover:bg-korus-primary/[0.08] transition-all"
                   >
                     <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
-                    <span className="text-sm font-medium">{post.comments}</span>
+                    <span className="text-[13px] font-medium">{post.comments}</span>
                   </button>
 
                   <button
@@ -846,13 +846,13 @@ export default function PostDetailPage() {
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all ${
                       liked
                         ? 'text-red-400 hover:bg-red-400/10'
-                        : 'text-white/30 hover:text-red-400 hover:bg-red-400/10'
+                        : 'text-[#8b8d9a] hover:text-red-400 hover:bg-red-400/10'
                     }`}
                   >
                     <svg className="w-[18px] h-[18px]" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                     </svg>
-                    <span className="text-sm font-medium">{post.likes}</span>
+                    <span className="text-[13px] font-medium">{post.likes}</span>
                   </button>
 
                   <button
@@ -864,11 +864,11 @@ export default function PostDetailPage() {
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all ${
                       tipped
                         ? 'text-green-400 hover:bg-green-400/10'
-                        : 'text-white/30 hover:text-green-400 hover:bg-green-400/10'
+                        : 'text-[#8b8d9a] hover:text-green-400 hover:bg-green-400/10'
                     }`}
                   >
-                    <span className="text-sm font-medium">$</span>
-                    <span className="text-sm font-medium">{post.tips} SOL</span>
+                    <span className="text-[13px] font-medium">$</span>
+                    <span className="text-[13px] font-medium">{post.tips} SOL</span>
                   </button>
 
                   <button
@@ -877,7 +877,7 @@ export default function PostDetailPage() {
                       setShowShareModal(true);
                     }}
                     aria-label="Share post"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white/30 hover:text-korus-primary hover:bg-korus-primary/[0.08] transition-all"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[#8b8d9a] hover:text-korus-primary hover:bg-korus-primary/[0.08] transition-all"
                   >
                     <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
@@ -888,11 +888,11 @@ export default function PostDetailPage() {
             </div>
 
             {/* Inline Reply Composer */}
-            <div className="px-5 py-4 border-b border-white/[0.08]">
+            <div className="px-5 py-4 border-b border-[#22232e]">
               <div className="flex gap-3">
                 {/* Avatar */}
                 {currentUserAvatar ? (
-                  <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
+                  <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={currentUserAvatar}
@@ -908,7 +908,7 @@ export default function PostDetailPage() {
                     />
                   </div>
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0">
                     <span className="text-black font-bold text-sm">
                       {publicKey?.toBase58().slice(0, 2).toUpperCase() || 'U'}
                     </span>
@@ -921,7 +921,7 @@ export default function PostDetailPage() {
                     value={inlineReplyContent}
                     onChange={(e) => setInlineReplyContent(e.target.value)}
                     placeholder="Post your reply"
-                    className="bg-transparent text-white text-[15px] placeholder-white/30 resize-none min-h-[28px] max-h-[300px] border-none outline-none w-full"
+                    className="bg-transparent text-[#f0f0f5] text-[15px] placeholder-[#5c5e6e] resize-none min-h-[28px] max-h-[300px] border-none outline-none w-full"
                     rows={1}
                   />
 
@@ -936,15 +936,15 @@ export default function PostDetailPage() {
                               alt="Upload preview"
                               width={200}
                               height={128}
-                              className="max-w-full h-auto rounded-xl border border-white/[0.08]"
+                              className="max-w-full h-auto rounded-xl border border-[#22232e]"
                             />
                           ) : (
-                            <div className="w-full h-32 bg-white/[0.04] border border-white/[0.08] rounded-xl flex items-center justify-center">
+                            <div className="w-full h-32 bg-[#1a1b24] border border-[#22232e] rounded-xl flex items-center justify-center">
                               <div className="text-center">
-                                <svg className="w-8 h-8 mx-auto mb-2 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-8 h-8 mx-auto mb-2 text-[#5c5e6e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
-                                <p className="text-xs text-white/30 truncate px-2">{file.name}</p>
+                                <p className="text-xs text-[#5c5e6e] truncate px-2">{file.name}</p>
                               </div>
                             </div>
                           )}
@@ -964,7 +964,7 @@ export default function PostDetailPage() {
                   )}
 
                   {/* Tools row */}
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.08]">
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#22232e]">
                     <div className="flex items-center gap-1">
                       {/* Media Upload */}
                       <label className="w-9 h-9 rounded-lg flex items-center justify-center text-korus-primary/60 hover:text-korus-primary hover:bg-korus-primary/10 transition-all duration-200 cursor-pointer">
@@ -1017,7 +1017,7 @@ export default function PostDetailPage() {
                             ? 'text-red-400'
                             : inlineReplyContent.length > 224
                             ? 'text-yellow-400'
-                            : 'text-white/30'
+                            : 'text-[#5c5e6e]'
                         }`}>
                           {inlineReplyContent.length > 280 && `-${inlineReplyContent.length - 280}`}
                           {inlineReplyContent.length <= 280 && `${280 - inlineReplyContent.length}`}
@@ -1028,7 +1028,7 @@ export default function PostDetailPage() {
                       <button
                         onClick={handleInlineReply}
                         disabled={!inlineReplyContent.trim() || inlineReplyContent.length > 280 || isPostingReply || !connected}
-                        className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                        className={`px-5 py-2 rounded-[20px] text-sm font-semibold transition-all duration-200 ${
                           !inlineReplyContent.trim() || inlineReplyContent.length > 280 || isPostingReply || !connected
                             ? 'bg-korus-primary/20 text-korus-primary/40 cursor-not-allowed'
                             : 'bg-korus-primary text-black hover:opacity-90'
@@ -1046,7 +1046,7 @@ export default function PostDetailPage() {
             <div>
               {replies.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-white/30">No replies yet. Be the first to reply!</p>
+                  <p className="text-[#5c5e6e]">No replies yet. Be the first to reply!</p>
                 </div>
               ) : (
                 replies.map(reply => renderReply(reply))

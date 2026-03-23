@@ -1124,23 +1124,23 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-korus-dark-100 relative overflow-hidden">
       {/* Clean dark background */}
-      <div className="fixed inset-0 bg-[#050508]" />
+      <div className="fixed inset-0 bg-[#0a0a0f]" />
 
       {/* Content wrapper */}
       <div className="relative z-10">
         {/* Main Content Container */}
       <div className="flex min-h-screen">
         {/* Main Feed */}
-        <div className="flex-1 sm:ml-0 sm:mr-0 md:ml-[270px] md:mr-[340px] max-w-[640px] border-x border-white/[0.08]">
+        <div className="flex-1 sm:ml-0 sm:mr-0 md:ml-[260px] md:mr-[320px] max-w-[640px] border-r border-[#22232e]">
         {/* Main app - only accessible when connected */}
             {/* Header Navigation */}
-            <div className="sticky top-0 z-10 bg-[#0a0a0f]/85 backdrop-blur-[16px] border-b border-white/[0.06]">
+            <div className="sticky top-0 z-10 bg-[#0a0a0f]/85 backdrop-blur-[16px] border-b border-[#22232e]">
               {/* Mobile controls row */}
               <div className="flex md:hidden items-center justify-between px-2">
                 <button
                   onClick={() => setShowMobileMenu(true)}
                   aria-label="Open mobile menu"
-                  className="flex items-center justify-center w-12 h-12 text-white hover:bg-white/[0.06] transition-colors"
+                  className="flex items-center justify-center w-12 h-12 text-white hover:bg-[#1a1b24] transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -1154,7 +1154,7 @@ export default function Home() {
                 <button
                   onClick={() => setShowSearchModal(true)}
                   aria-label="Open search"
-                  className="flex items-center justify-center w-12 h-12 text-white hover:bg-white/[0.06] transition-colors"
+                  className="flex items-center justify-center w-12 h-12 text-white hover:bg-[#1a1b24] transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -1166,20 +1166,20 @@ export default function Home() {
               <div className="flex">
                 <button
                   onClick={() => router.push('/')}
-                  className="flex-1 text-center py-4 text-sm font-semibold cursor-pointer transition-colors relative text-white"
+                  className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[#f0f0f5]"
                 >
                   Home
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-[3px] rounded-full bg-korus-primary" />
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-[3px] rounded-[3px] bg-korus-primary" />
                 </button>
                 <button
                   onClick={() => router.push('/games')}
-                  className="flex-1 text-center py-4 text-sm font-semibold cursor-pointer transition-colors relative text-white/50 hover:text-white hover:bg-white/[0.06]"
+                  className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[#8b8d9a] hover:text-[#f0f0f5] hover:bg-[#1a1b24]"
                 >
                   Games
                 </button>
                 <button
                   onClick={() => router.push('/events')}
-                  className="flex-1 text-center py-4 text-sm font-semibold cursor-pointer transition-colors relative text-white/50 hover:text-white hover:bg-white/[0.06]"
+                  className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[#8b8d9a] hover:text-[#f0f0f5] hover:bg-[#1a1b24]"
                 >
                   Events
                 </button>
@@ -1187,7 +1187,7 @@ export default function Home() {
             </div>
 
             {/* Compose Post */}
-            <div className="px-5 py-4 border-b border-white/[0.08] flex gap-3">
+            <div className="px-5 py-4 border-b border-[#22232e] flex gap-3">
                 {userAvatar ? (
                   <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
                     <Image
@@ -1210,7 +1210,7 @@ export default function Home() {
                     value={composeText}
                     onChange={(e) => setComposeText(e.target.value)}
                     placeholder="What's happening on Solana?"
-                    className="bg-transparent text-white text-[15px] placeholder-white/40 w-full resize-none min-h-[28px] border-none outline-none leading-relaxed"
+                    className="bg-transparent text-white text-[15px] placeholder-[#5c5e6e] w-full resize-none min-h-[48px] border-none outline-none leading-relaxed"
                     rows={1}
                   />
 
@@ -1262,10 +1262,10 @@ export default function Home() {
                   )}
 
                   {/* Post Options */}
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.06]">
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#22232e]">
                     <div className="flex items-center gap-0.5">
                       {/* Image Upload */}
-                      <label className="w-[34px] h-[34px] rounded-lg flex items-center justify-center text-korus-primary/60 hover:text-korus-primary hover:bg-korus-primary/10 transition-all cursor-pointer">
+                      <label className="w-[34px] h-[34px] rounded-lg flex items-center justify-center text-korus-primary/70 hover:text-korus-primary hover:bg-korus-primary/[0.12] transition-all cursor-pointer">
                         <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
@@ -1282,8 +1282,8 @@ export default function Home() {
                         onClick={() => setShowGifPicker(!showGifPicker)}
                         className={`w-[34px] h-[34px] rounded-lg flex items-center justify-center transition-all ${
                           showGifPicker
-                            ? 'text-korus-primary bg-korus-primary/10'
-                            : 'text-korus-primary/60 hover:text-korus-primary hover:bg-korus-primary/10'
+                            ? 'text-korus-primary bg-korus-primary/[0.12]'
+                            : 'text-korus-primary/70 hover:text-korus-primary hover:bg-korus-primary/[0.12]'
                         }`}
                       >
                         <span className="text-xs font-bold">GIF</span>
@@ -1293,8 +1293,8 @@ export default function Home() {
                         onClick={() => setShowDrawCanvas(!showDrawCanvas)}
                         className={`w-[34px] h-[34px] rounded-lg flex items-center justify-center transition-all ${
                           showDrawCanvas
-                            ? 'text-korus-primary bg-korus-primary/10'
-                            : 'text-korus-primary/60 hover:text-korus-primary hover:bg-korus-primary/10'
+                            ? 'text-korus-primary bg-korus-primary/[0.12]'
+                            : 'text-korus-primary/70 hover:text-korus-primary hover:bg-korus-primary/[0.12]'
                         }`}
                       >
                         <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1306,8 +1306,8 @@ export default function Home() {
                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                         className={`w-[34px] h-[34px] rounded-lg flex items-center justify-center transition-all ${
                           showEmojiPicker
-                            ? 'text-korus-primary bg-korus-primary/10'
-                            : 'text-korus-primary/60 hover:text-korus-primary hover:bg-korus-primary/10'
+                            ? 'text-korus-primary bg-korus-primary/[0.12]'
+                            : 'text-korus-primary/70 hover:text-korus-primary hover:bg-korus-primary/[0.12]'
                         }`}
                       >
                         <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1319,7 +1319,7 @@ export default function Home() {
                         disabled={!composeText.trim() && selectedFiles.length === 0}
                         className={`w-[34px] h-[34px] rounded-lg flex items-center justify-center transition-all ${
                           composeText.trim() || selectedFiles.length > 0
-                            ? 'text-korus-primary/60 hover:text-korus-primary hover:bg-korus-primary/10 cursor-pointer'
+                            ? 'text-korus-primary/70 hover:text-korus-primary hover:bg-korus-primary/[0.12] cursor-pointer'
                             : 'text-korus-primary/20 cursor-not-allowed'
                         }`}
                       >
@@ -1330,7 +1330,7 @@ export default function Home() {
                     <button
                       onClick={handleRegularPost}
                       disabled={!composeText.trim() && selectedFiles.length === 0}
-                      className="px-5 py-2 rounded-[20px] bg-korus-primary text-black text-[14px] font-semibold hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="px-5 py-2 rounded-[20px] bg-korus-primary text-black text-[14px] font-semibold hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed leading-none"
                     >
                       Post
                     </button>
@@ -1366,8 +1366,8 @@ export default function Home() {
               key={post.id}
               className={`transition-colors cursor-pointer group ${
                 post.isShoutout
-                  ? 'shoutout-post border border-korus-primary bg-korus-primary/5 shadow-[0_4px_12px_rgba(var(--korus-primary-rgb),0.3)] hover:border-korus-primary hover:shadow-[0_8px_24px_rgba(var(--korus-primary-rgb),0.4)] hover:bg-korus-primary/10'
-                  : 'px-5 py-4 border-b border-white/[0.08] hover:bg-white/[0.03]'
+                  ? 'shoutout-post border border-korus-primary bg-korus-primary/5 shadow-[0_4px_12px_rgba(var(--korus-primary-rgb),0.3)] hover:border-korus-primary hover:shadow-[0_8px_24px_rgba(var(--korus-primary-rgb),0.4)] hover:bg-korus-primary/[0.12]'
+                  : 'px-5 py-4 border-b border-[#22232e] hover:bg-[#1a1b24]'
               }`}
               onClick={() => router.push(`/post/${post.id}`)}
             >
@@ -1399,32 +1399,32 @@ export default function Home() {
                 </div>
               )}
 
-              <div className={`flex gap-3 ${post.isShoutout ? 'p-6' : ''}`}>
-                {/* Avatar */}
-                {post.avatar ? (
-                  <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
-                    <Image
-                      src={post.avatar}
-                      alt={`${post.user} avatar`}
-                      width={40}
-                      height={40}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-sm font-bold text-black flex-shrink-0">
-                    {post.user.slice(0, 2).toUpperCase()}
-                  </div>
-                )}
+              <div className={`${post.isShoutout ? 'p-6' : ''}`}>
+                {/* Post Header with Avatar */}
+                <div className="flex items-center gap-3">
+                  {/* Avatar */}
+                  {post.avatar ? (
+                    <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
+                      <Image
+                        src={post.avatar}
+                        alt={`${post.user} avatar`}
+                        width={40}
+                        height={40}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-[14px] font-bold text-black flex-shrink-0">
+                      {post.user.slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
 
-                {/* Post Content */}
-                <div className="flex-1 min-w-0">
-                  {/* Post Header */}
-                  <div className="flex items-center gap-1.5">
+                  {/* Header Info */}
+                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
                     <Link
                       href={`/profile/${post.wallet || post.user}`}
                       onClick={(e) => e.stopPropagation()}
-                      className={`font-bold text-[15px] hover:underline cursor-pointer ${post.isShoutout ? 'text-korus-primary' : 'text-white'}`}
+                      className={`font-bold text-[15px] hover:underline cursor-pointer ${post.isShoutout ? 'text-korus-primary' : 'text-[#f0f0f5]'}`}
                     >
                       {truncateAddress(post.user)}
                     </Link>
@@ -1438,9 +1438,9 @@ export default function Home() {
                       </div>
                     )}
 
-                    <span className="text-sm text-white/50">@{truncateAddress(post.user)}</span>
-                    <span className="text-white/30 text-xs">·</span>
-                    <span className="text-[13px] text-white/30 hover:underline cursor-pointer">{formatRelativeTime(post.createdAt || post.time)}</span>
+                    <span className="text-[14px] text-[#8b8d9a]">@{truncateAddress(post.user)}</span>
+                    <span className="text-[#5c5e6e] text-[12px]">·</span>
+                    <span className="text-[13px] text-[#5c5e6e] hover:underline cursor-pointer">{formatRelativeTime(post.createdAt || post.time)}</span>
 
                     {/* Sponsored Badge */}
                     {post.isSponsored && (
@@ -1456,7 +1456,7 @@ export default function Home() {
                           e.stopPropagation();
                           handlePostOptionsClick(post);
                         }}
-                        className="text-white/30 hover:text-white hover:bg-white/[0.06] rounded-full p-1 transition-colors opacity-0 group-hover:opacity-100"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-[#5c5e6e] hover:text-white hover:bg-[#1a1b24] transition-colors opacity-0 group-hover:opacity-100"
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
@@ -1464,12 +1464,15 @@ export default function Home() {
                       </button>
                     </div>
                   </div>
+                </div>
 
+                {/* Post Body - indented below avatar */}
+                <div className="ml-[52px] mt-0.5">
                   {/* Post Text */}
                   {post.content && (
                     <SafeContent
                       content={post.content}
-                      className="text-[15px] leading-relaxed text-white mt-1 whitespace-pre-wrap break-words"
+                      className="text-[15px] leading-[1.55] text-[#f0f0f5] whitespace-pre-wrap break-words"
                       allowLinks={true}
                       allowFormatting={true}
                     />
@@ -1508,12 +1511,12 @@ export default function Home() {
                   )}
 
                   {/* Post Actions */}
-                  <div className="flex items-center gap-1 mt-3 -ml-2">
+                  <div className="flex items-center gap-0.5 mt-3 -ml-2">
                     <button
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] transition-all ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] text-[13px] transition-all ${
                         postInteractions[post.id]?.replied
-                          ? 'text-korus-primary hover:bg-korus-primary/[0.08]'
-                          : 'text-white/30 hover:text-korus-primary hover:bg-korus-primary/[0.08]'
+                          ? 'text-korus-primary hover:bg-korus-primary/[0.12]'
+                          : 'text-[#5c5e6e] hover:text-korus-primary hover:bg-korus-primary/[0.12]'
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1528,10 +1531,10 @@ export default function Home() {
                     </button>
 
                     <button
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] transition-all ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] text-[13px] transition-all ${
                         postInteractions[post.id]?.liked
-                          ? 'text-red-400 hover:bg-red-400/10'
-                          : 'text-white/30 hover:text-korus-primary hover:bg-korus-primary/[0.08]'
+                          ? 'text-[#f43f5e] hover:bg-[rgba(244,63,94,0.12)]'
+                          : 'text-[#5c5e6e] hover:text-korus-primary hover:bg-korus-primary/[0.12]'
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1551,10 +1554,10 @@ export default function Home() {
                     </button>
 
                     <button
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] transition-all ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] text-[13px] transition-all ${
                         postInteractions[post.id]?.tipped
-                          ? 'text-green-400 hover:bg-green-400/10'
-                          : 'text-white/30 hover:text-korus-primary hover:bg-korus-primary/[0.08]'
+                          ? 'text-[#10b981] hover:bg-[rgba(16,185,129,0.12)]'
+                          : 'text-[#5c5e6e] hover:text-korus-primary hover:bg-korus-primary/[0.12]'
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1576,7 +1579,7 @@ export default function Home() {
                     </button>
 
                     <button
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] text-white/30 hover:text-korus-primary hover:bg-korus-primary/[0.08] transition-all"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] text-[13px] text-[#5c5e6e] hover:text-korus-primary hover:bg-korus-primary/[0.12] transition-all"
                       onClick={(e) => {
                         e.stopPropagation();
                         setPostToShare(post);
