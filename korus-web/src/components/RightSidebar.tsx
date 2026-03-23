@@ -249,7 +249,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className="py-[10px] border-b border-[#2c2c2c] last:border-b-0 cursor-pointer"
+                  className="py-[10px] px-2 -mx-2 border-b border-[#2c2c2c] last:border-b-0 cursor-pointer hover:bg-white/[0.04] rounded-lg transition-colors"
                   role="listitem"
                   aria-label={`${notification.type} notification`}
                   tabIndex={0}
@@ -279,7 +279,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="text-[14px] font-bold mt-0.5 hover:text-korus-primary transition-colors">
+                          <p className="text-[14px] font-bold mt-0.5 hover:text-white transition-colors">
                             {notification.title}
                           </p>
                           <p className="text-[12px] text-[#666666] mt-0.5">
@@ -322,7 +322,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
             <div className="pt-3">
               <button
                 onClick={handleMarkAllAsRead}
-                className="text-korus-primary text-[12px] hover:underline"
+                className="text-korus-primary text-[12px] hover:opacity-80"
               >
                 Mark all as read
               </button>
@@ -356,7 +356,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
                       router.push(`/games/${gameId}`);
                     }
                   }}
-                  className="py-[10px] border-b border-[#2c2c2c] last:border-b-0 cursor-pointer"
+                  className="py-[10px] px-2 -mx-2 border-b border-[#2c2c2c] last:border-b-0 cursor-pointer hover:bg-white/[0.04] rounded-lg transition-colors"
                 >
                   <div className="text-[12px] text-[#666666]">
                     {activity.type === 'game'
@@ -365,7 +365,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
                     }
                     {activity.type === 'event' && activity.premiumOnly && ' · Premium'}
                   </div>
-                  <div className="text-[14px] font-bold my-[2px] hover:text-korus-primary transition-colors">
+                  <div className="text-[14px] font-bold my-[2px] hover:text-white transition-colors">
                     {activity.title}
                   </div>
                   {activity.type === 'event' && activity.project && (
@@ -394,7 +394,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
           <div className="pt-3">
             <button
               onClick={() => router.push('/events')}
-              className="text-korus-primary text-[12px] hover:underline"
+              className="text-korus-primary text-[12px] hover:opacity-80"
             >
               View all activity
             </button>

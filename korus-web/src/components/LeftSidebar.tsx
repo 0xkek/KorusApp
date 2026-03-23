@@ -177,7 +177,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
               ? 'text-[#888888] opacity-50 cursor-not-allowed'
               : isActive
               ? 'text-[#e8e8e8] font-semibold'
-              : 'text-[#888888] font-medium hover:bg-[#252525] hover:text-[#e8e8e8]'
+              : 'text-[#888888] font-medium hover:bg-white/[0.06] hover:text-[#e8e8e8]'
           }`;
 
           const content = (
