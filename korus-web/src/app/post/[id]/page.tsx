@@ -597,12 +597,61 @@ export default function PostDetailPage() {
         <div className="fixed inset-0 bg-gradient-to-br from-korus-dark-100 via-korus-dark-200 to-korus-dark-100">
           <div className="absolute inset-0 bg-gradient-to-t from-transparent via-korus-dark-300/25 to-korus-dark-200/35" />
         </div>
-        <div className="relative z-10 flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="w-8 h-8 border-4 border-korus-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-korus-primary animate-pulse">Loading post...</p>
+        <div className="relative z-10">
+          <div className="flex min-h-screen">
+            <div className="flex-1 lg:ml-80 lg:mr-96 md:ml-64 md:mr-80 sm:ml-0 sm:mr-0 md:border-x md:border-korus-border bg-korus-surface/10 backdrop-blur-sm max-w-full overflow-hidden">
+              {/* Header skeleton */}
+              <div className="sticky top-0 bg-korus-dark-300/80 backdrop-blur-xl border-b border-korus-border z-10">
+                <div className="flex items-center px-4 py-3 gap-3">
+                  <button onClick={() => router.back()} className="text-white hover:bg-korus-surface/20 rounded-full p-2 transition-colors">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                  </button>
+                  <span className="text-white font-bold text-lg">Post</span>
+                </div>
+              </div>
+              {/* Post skeleton */}
+              <div className="px-6 py-6 animate-pulse">
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 rounded-full bg-korus-surface/30" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="h-4 w-24 bg-korus-surface/30 rounded" />
+                      <div className="h-4 w-16 bg-korus-surface/20 rounded" />
+                    </div>
+                    <div className="h-4 w-full bg-korus-surface/20 rounded mb-2" />
+                    <div className="h-4 w-3/4 bg-korus-surface/20 rounded mb-4" />
+                    <div className="flex gap-6 mt-4">
+                      <div className="h-4 w-12 bg-korus-surface/20 rounded" />
+                      <div className="h-4 w-12 bg-korus-surface/20 rounded" />
+                      <div className="h-4 w-12 bg-korus-surface/20 rounded" />
+                      <div className="h-4 w-12 bg-korus-surface/20 rounded" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* Reply skeletons */}
+              <div className="border-t border-korus-border/50 px-6 py-4">
+                <div className="h-10 w-full bg-korus-surface/15 rounded-lg mb-4" />
+              </div>
+              {[1, 2].map(i => (
+                <div key={i} className="px-6 py-4 animate-pulse border-b border-korus-border/20">
+                  <div className="flex gap-3">
+                    <div className="w-10 h-10 rounded-full bg-korus-surface/30" />
+                    <div className="flex-1">
+                      <div className="h-3 w-20 bg-korus-surface/30 rounded mb-2" />
+                      <div className="h-3 w-full bg-korus-surface/20 rounded mb-1" />
+                      <div className="h-3 w-1/2 bg-korus-surface/20 rounded" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
+        <LeftSidebar />
+        <RightSidebar />
       </main>
     );
   }
@@ -644,59 +693,32 @@ export default function PostDetailPage() {
 
             {/* Header Navigation */}
             <div className="sticky top-0 bg-korus-dark-300/80 backdrop-blur-xl border-b border-korus-border z-10">
-              <div className="flex">
-                {/* Mobile menu button */}
+              <div className="flex items-center px-2 py-1">
+                {/* Back button */}
                 <button
-                  onClick={() => setShowMobileMenu(true)}
-                  aria-label="Open mobile menu"
-                  className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors"
+                  onClick={() => router.back()}
+                  aria-label="Go back"
+                  className="flex items-center justify-center w-10 h-10 text-white hover:bg-korus-surface/20 rounded-full transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
                 </button>
 
-                {/* Logo on mobile */}
-                <div className="md:hidden flex items-center px-4">
-                  <div className="w-6 h-6 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center">
-                    <span className="text-black font-bold text-xs">K</span>
-                  </div>
-                </div>
+                <h1 className="text-white font-bold text-lg ml-4">Post</h1>
 
-                <div className="relative flex items-center justify-center w-full">
+                <div className="ml-auto flex items-center">
+                  {/* Mobile search */}
                   <button
-                    onClick={() => router.push('/')}
-                    className="relative px-4 py-4 text-white font-semibold hover:bg-korus-surface/20 transition-colors group"
+                    onClick={() => setShowSearchModal(true)}
+                    aria-label="Open search"
+                    className="md:hidden flex items-center justify-center w-10 h-10 text-white hover:bg-korus-surface/20 rounded-full transition-colors"
                   >
-                    <span className="relative z-10">Home</span>
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-korus-primary rounded-full"></div>
-                  </button>
-                  <button
-                    onClick={() => router.push('/games')}
-                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
-                  >
-                    <span className="relative z-10">Games</span>
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
-                  </button>
-                  <button
-                    onClick={() => router.push('/events')}
-                    className="relative px-4 py-4 text-korus-textSecondary font-semibold hover:bg-korus-surface/20 hover:text-white transition-colors group"
-                  >
-                    <span className="relative z-10">Events</span>
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
                   </button>
                 </div>
-
-                {/* Mobile search/menu */}
-                <button
-                  onClick={() => setShowSearchModal(true)}
-                  aria-label="Open search"
-                  className="md:hidden flex items-center justify-center w-12 h-12 text-white hover:bg-korus-surface/20 transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </button>
               </div>
             </div>
 
