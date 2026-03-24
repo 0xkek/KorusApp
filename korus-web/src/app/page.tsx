@@ -781,42 +781,43 @@ export default function Home() {
       let imageUrl: string | undefined;
       if (filesToUpload.length > 0) {
         const imageFile = filesToUpload[0]; // For now, support only one image
+        console.log('UPLOADING FILE:', imageFile.name, imageFile.size, imageFile.type);
         if (imageFile.type.startsWith('image/')) {
-          logger.log('Uploading image...');
           try {
             const uploadResponse = await uploadAPI.uploadImage(imageFile, token);
             imageUrl = uploadResponse.url;
-            logger.log('Image uploaded successfully:', imageUrl);
+            console.log('UPLOAD SUCCESS:', imageUrl);
           } catch (uploadError) {
-            logger.error('Failed to upload image:', uploadError);
+            console.error('UPLOAD FAILED:', uploadError);
             showError('Failed to upload image. Please try again.');
             return;
           }
+        } else {
+          console.log('FILE IS NOT IMAGE TYPE:', imageFile.type);
         }
       }
 
       // Prepare post data
       const postData: { topic: string; content?: string; subtopic: string; imageUrl?: string } = {
         topic: 'General',
-        subtopic: 'discussion', // Default subtopic
+        subtopic: 'discussion',
       };
 
-      // Only include content if there's actual text
       if (composeText.trim()) {
         postData.content = composeText.trim();
       }
 
-      // Add image URL if uploaded or GIF if selected
       if (selectedGif) {
-        postData.imageUrl = selectedGif; // GIFs are treated as images
+        postData.imageUrl = selectedGif;
       } else if (imageUrl) {
         postData.imageUrl = imageUrl;
       }
 
-      logger.log('Post data:', postData);
+      console.log('POST DATA:', JSON.stringify(postData));
 
       // Create post via backend API
       const newPost = await postsAPI.createPost(postData, token);
+      console.log('POST CREATED:', newPost);
 
       logger.log('Post created successfully:', newPost);
 
@@ -835,7 +836,7 @@ export default function Home() {
       setShowDrawCanvas(false);
       showSuccess('Post created successfully!');
     } catch (error) {
-      logger.error('Failed to create post:', error);
+      console.error('POST FAILED:', error);
       showError('Failed to create post. Please try again.');
     }
   };
