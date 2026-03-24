@@ -110,7 +110,7 @@ export default function Home() {
 
   // WebSocket connection ref
   const socketRef = useRef<Socket | null>(null);
-  const addedPostIds = useRef<Set<number>>(new Set());
+  const addedPostIds = useRef<Set<string | number>>(new Set());
 
   // Load more posts for infinite scroll (defined early to avoid hoisting issues)
   const loadMorePosts = useCallback(async () => {
