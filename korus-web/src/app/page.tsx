@@ -1177,7 +1177,7 @@ export default function Home() {
               </div>
 
               {/* Tabs */}
-              <div className="flex">
+              <div className="flex md:hidden">
                 <button
                   onClick={() => router.push('/')}
                   className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[#fafafa]"

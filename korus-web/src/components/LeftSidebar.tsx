@@ -35,51 +35,51 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
   // Fetch user avatar and display name
   useEffect(() => {
     const fetchUserAvatar = async () => {
-      console.log('[LeftSidebar] fetchUserAvatar called', { connected, publicKey: publicKey?.toBase58(), isAuthenticated, hasToken: !!token });
+      logger.log('[LeftSidebar] fetchUserAvatar called', { connected, publicKey: publicKey?.toBase58(), isAuthenticated, hasToken: !!token });
       if (connected && publicKey && isAuthenticated && token) {
         try {
           const url = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`;
-          console.log('[LeftSidebar] Fetching user data from:', url);
+          logger.log('[LeftSidebar] Fetching user data from:', url);
           const userResponse = await fetch(url, {
             headers: {
               'Authorization': `Bearer ${token}`
             }
           });
-          console.log('[LeftSidebar] User response status:', userResponse.status);
+          logger.log('[LeftSidebar] User response status:', userResponse.status);
           if (userResponse.ok) {
             const userData = await userResponse.json();
-            console.log('[LeftSidebar] User data:', userData);
+            logger.log('[LeftSidebar] User data:', userData);
             // Set display name from profile data
             const displayName = userData.user?.snsUsername || userData.user?.username || null;
             setUserDisplayName(displayName);
 
             if (userData.user?.nftAvatar) {
-              console.log('[LeftSidebar] nftAvatar found:', userData.user.nftAvatar);
+              logger.log('[LeftSidebar] nftAvatar found:', userData.user.nftAvatar);
               // Check if it's a URL (old data) or mint address (new data)
               const isUrl = userData.user.nftAvatar.startsWith('http://') || userData.user.nftAvatar.startsWith('https://');
-              console.log('[LeftSidebar] Is URL?', isUrl);
+              logger.log('[LeftSidebar] Is URL?', isUrl);
               if (isUrl) {
-                console.log('[LeftSidebar] Setting avatar URL:', userData.user.nftAvatar);
+                logger.log('[LeftSidebar] Setting avatar URL:', userData.user.nftAvatar);
                 setUserAvatar(userData.user.nftAvatar);
               } else {
                 // It's a mint address, fetch the NFT image
-                console.log('[LeftSidebar] Fetching NFT by mint:', userData.user.nftAvatar);
+                logger.log('[LeftSidebar] Fetching NFT by mint:', userData.user.nftAvatar);
                 const nft = await nftsAPI.getNFTByMint(userData.user.nftAvatar);
-                console.log('[LeftSidebar] NFT data:', nft);
+                logger.log('[LeftSidebar] NFT data:', nft);
                 if (nft?.image) {
-                  console.log('[LeftSidebar] Setting avatar image:', nft.image);
+                  logger.log('[LeftSidebar] Setting avatar image:', nft.image);
                   setUserAvatar(nft.image);
                 }
               }
             } else {
-              console.log('[LeftSidebar] No nftAvatar in user data');
+              logger.log('[LeftSidebar] No nftAvatar in user data');
             }
           }
         } catch (error) {
-          console.error('[LeftSidebar] Failed to fetch user avatar:', error);
+          logger.error('[LeftSidebar] Failed to fetch user avatar:', error);
         }
       } else {
-        console.log('[LeftSidebar] Not connected, no publicKey, or not authenticated');
+        logger.log('[LeftSidebar] Not connected, no publicKey, or not authenticated');
       }
     };
 
@@ -176,8 +176,8 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
             isDisabled
               ? 'text-[#525252] opacity-50 cursor-not-allowed'
               : isActive
-              ? 'bg-white/[0.08] text-[#fafafa] font-semibold'
-              : 'text-[#a1a1a1] font-medium hover:bg-white/[0.06] hover:text-[#fafafa]'
+              ? 'bg-white/[0.12] text-[#fafafa] font-semibold border-l-[3px] border-l-korus-primary'
+              : 'text-[#a1a1a1] font-medium hover:bg-white/[0.06] hover:text-[#fafafa] border-l-[3px] border-l-transparent'
           }`;
 
           const content = (
