@@ -83,7 +83,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1a1a1a;
+  background: #262626;
   border-radius: 4px;
 }
 
@@ -94,7 +94,7 @@ body {
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #1a1a1a #0a0a0a;
+  scrollbar-color: #262626 #0a0a0a;
 }
 
 /* ========================================

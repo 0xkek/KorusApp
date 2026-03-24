@@ -18,7 +18,7 @@ const PostCardComponent = ({ post }: PostCardProps) => {
   };
 
   return (
-    <div className="bg-[#141414] border border-[#1a1a1a] rounded-xl p-4 mb-4 hover:border-korus-primary/20 transition-all duration-150">
+    <div className="bg-[#141414] border border-[#262626] rounded-xl p-4 mb-4 hover:border-korus-primary/20 transition-all duration-150">
       {/* Post Header */}
       <div className="flex items-start gap-3 mb-3">
         <div className="w-10 h-10 rounded-full bg-gradient-to-r from-korus-primary to-korus-secondary flex-shrink-0"></div>
@@ -38,7 +38,7 @@ const PostCardComponent = ({ post }: PostCardProps) => {
       </div>
 
       {/* Post Actions */}
-      <div className="flex items-center gap-6 mt-4 pt-3 border-t border-[#1a1a1a] text-[#a1a1a1]">
+      <div className="flex items-center gap-6 mt-4 pt-3 border-t border-[#262626] text-[#a1a1a1]">
         <button
           onClick={handleLike}
           className={`flex items-center gap-2 hover:text-korus-primary transition-colors ${

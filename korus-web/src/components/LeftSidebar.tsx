@@ -157,7 +157,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
   return (
     <nav
       className="sticky top-0 h-screen w-[240px] shrink-0 z-30 hidden md:flex flex-col bg-transparent"
-      style={{ padding: '24px 16px', borderRight: '1px solid #1a1a1a' }}
+      style={{ padding: '24px 16px', borderRight: '1px solid #262626' }}
       role="navigation"
       aria-label="Main navigation"
     >
@@ -387,7 +387,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
               >
                 {contentWithAttrs}
                 {/* Tooltip on hover */}
-                <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#262626] border border-[#1a1a1a] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50 whitespace-nowrap">
+                <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#262626] border border-[#262626] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50 whitespace-nowrap">
                   Feature coming soon
                 </div>
               </div>

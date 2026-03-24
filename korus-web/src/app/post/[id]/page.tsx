@@ -447,7 +447,7 @@ export default function PostDetailPage() {
     return (
       <div key={reply.id}>
         {/* Reply Content */}
-        <div className="px-4 py-3 border-b border-[#1a1a1a] flex gap-3 hover:bg-white/[0.04] transition-colors duration-150">
+        <div className="px-4 py-3 border-b border-[#262626] flex gap-3 hover:bg-white/[0.04] transition-colors duration-150">
           {/* Avatar */}
           {reply.avatar ? (
             <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden">
@@ -588,9 +588,9 @@ export default function PostDetailPage() {
         <div className="fixed inset-0 bg-[#0a0a0a]" />
         <div className="relative z-10">
           <div className="flex min-h-screen">
-            <div className="flex-1 ml-[260px] mr-[320px] max-w-[640px] border-x border-[#1a1a1a] xl:ml-[260px] xl:mr-[320px] lg:ml-[240px] lg:mr-[300px] md:ml-[200px] md:mr-0 sm:ml-0 sm:mr-0 max-sm:border-x-0">
+            <div className="flex-1 ml-[260px] mr-[320px] max-w-[640px] border-x border-[#262626] xl:ml-[260px] xl:mr-[320px] lg:ml-[240px] lg:mr-[300px] md:ml-[200px] md:mr-0 sm:ml-0 sm:mr-0 max-sm:border-x-0">
               {/* Header skeleton */}
-              <div className="sticky top-0 z-10 bg-[#0a0a0a]/85 backdrop-blur-[16px] border-b border-[#1a1a1a]">
+              <div className="sticky top-0 z-10 bg-[#0a0a0a]/85 backdrop-blur-[16px] border-b border-[#262626]">
                 <div className="flex items-center gap-4 px-5 py-3">
                   <button onClick={() => router.back()} className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-[#fafafa] hover:bg-white/[0.06] transition-colors duration-150">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -612,7 +612,7 @@ export default function PostDetailPage() {
                     <div className="h-5 w-full bg-white/[0.06] rounded mb-2" />
                     <div className="h-5 w-3/4 bg-white/[0.06] rounded mb-4" />
                     <div className="h-3 w-32 bg-white/[0.06] rounded mt-3.5" />
-                    <div className="flex gap-5 py-3.5 mt-3.5 border-t border-[#1a1a1a] border-b border-[#1a1a1a]">
+                    <div className="flex gap-5 py-3.5 mt-3.5 border-t border-[#262626] border-b border-[#262626]">
                       <div className="h-4 w-16 bg-white/[0.06] rounded" />
                       <div className="h-4 w-12 bg-white/[0.06] rounded" />
                       <div className="h-4 w-16 bg-white/[0.06] rounded" />
@@ -622,12 +622,12 @@ export default function PostDetailPage() {
                 </div>
               </div>
               {/* Reply composer skeleton */}
-              <div className="px-4 py-3 border-b border-[#1a1a1a]">
+              <div className="px-4 py-3 border-b border-[#262626]">
                 <div className="h-10 w-full bg-white/[0.06] rounded-lg mb-4" />
               </div>
               {/* Reply skeletons */}
               {[1, 2].map(i => (
-                <div key={i} className="px-4 py-3 animate-pulse border-b border-[#1a1a1a]">
+                <div key={i} className="px-4 py-3 animate-pulse border-b border-[#262626]">
                   <div className="flex gap-3">
                     <div className="w-9 h-9 rounded-full bg-white/[0.06]" />
                     <div className="flex-1">
@@ -676,10 +676,10 @@ export default function PostDetailPage() {
       <div className="relative z-10">
         <div className="flex min-h-screen">
           {/* Main Content */}
-          <div className="flex-1 ml-[260px] mr-[320px] max-w-[640px] border-x border-[#1a1a1a] xl:ml-[260px] xl:mr-[320px] lg:ml-[240px] lg:mr-[300px] md:ml-[200px] md:mr-0 sm:ml-0 sm:mr-0 max-sm:border-x-0">
+          <div className="flex-1 ml-[260px] mr-[320px] max-w-[640px] border-x border-[#262626] xl:ml-[260px] xl:mr-[320px] lg:ml-[240px] lg:mr-[300px] md:ml-[200px] md:mr-0 sm:ml-0 sm:mr-0 max-sm:border-x-0">
 
             {/* Header Navigation */}
-            <div className="sticky top-0 z-10 bg-[#0a0a0a]/85 backdrop-blur-[16px] border-b border-[#1a1a1a]">
+            <div className="sticky top-0 z-10 bg-[#0a0a0a]/85 backdrop-blur-[16px] border-b border-[#262626]">
               <div className="flex items-center gap-4 px-5 py-3">
                 {/* Back button */}
                 <button
@@ -804,7 +804,7 @@ export default function PostDetailPage() {
                       alt="Post content"
                       width={600}
                       height={400}
-                      className="max-w-full h-auto rounded-xl border border-[#1a1a1a]"
+                      className="max-w-full h-auto rounded-xl border border-[#262626]"
                       style={{ maxHeight: '500px', width: 'auto', height: 'auto' }}
                       onError={(e) => {
                         // Hide broken image on error
@@ -820,7 +820,7 @@ export default function PostDetailPage() {
                 </p>
 
                 {/* Stats Row */}
-                <div className="flex gap-5 py-[14px] mt-[14px] border-t border-[#1a1a1a] border-b border-[#1a1a1a]">
+                <div className="flex gap-5 py-[14px] mt-[14px] border-t border-[#262626] border-b border-[#262626]">
                   <span className="text-sm text-[#a1a1a1]"><span className="text-[#fafafa] font-bold">{post.comments}</span> Replies</span>
                   <span className="text-sm text-[#a1a1a1]"><span className="text-[#fafafa] font-bold">{post.likes}</span> Likes</span>
                   <span className="text-sm text-[#a1a1a1]"><span className="text-[#fafafa] font-bold">{post.reposts ?? 0}</span> Reposts</span>
@@ -828,7 +828,7 @@ export default function PostDetailPage() {
                 </div>
 
                 {/* Post Actions */}
-                <div className="flex justify-around py-2 border-b border-[#1a1a1a]">
+                <div className="flex justify-around py-2 border-b border-[#262626]">
                   <button
                     onClick={() => handleReply(post)}
                     aria-label="Reply to post"
@@ -888,7 +888,7 @@ export default function PostDetailPage() {
             </div>
 
             {/* Inline Reply Composer */}
-            <div className="px-4 py-3 border-b border-[#1a1a1a]">
+            <div className="px-4 py-3 border-b border-[#262626]">
               <div className="flex gap-3">
                 {/* Avatar */}
                 {currentUserAvatar ? (
@@ -921,7 +921,7 @@ export default function PostDetailPage() {
                     value={inlineReplyContent}
                     onChange={(e) => setInlineReplyContent(e.target.value)}
                     placeholder="Post your reply"
-                    className="bg-white/[0.06] border border-[#1a1a1a] rounded-lg text-[#fafafa] text-[15px] placeholder-[#737373] resize-none min-h-[28px] max-h-[300px] outline-none w-full px-3 py-2 focus:border-white/25 transition-colors duration-150"
+                    className="bg-white/[0.06] border border-[#262626] rounded-lg text-[#fafafa] text-[15px] placeholder-[#737373] resize-none min-h-[28px] max-h-[300px] outline-none w-full px-3 py-2 focus:border-white/25 transition-colors duration-150"
                     rows={1}
                   />
 
@@ -936,10 +936,10 @@ export default function PostDetailPage() {
                               alt="Upload preview"
                               width={200}
                               height={128}
-                              className="max-w-full h-auto rounded-xl border border-[#1a1a1a]"
+                              className="max-w-full h-auto rounded-xl border border-[#262626]"
                             />
                           ) : (
-                            <div className="w-full h-32 bg-white/[0.06] border border-[#1a1a1a] rounded-lg flex items-center justify-center">
+                            <div className="w-full h-32 bg-white/[0.06] border border-[#262626] rounded-lg flex items-center justify-center">
                               <div className="text-center">
                                 <svg className="w-8 h-8 mx-auto mb-2 text-[#737373]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -964,7 +964,7 @@ export default function PostDetailPage() {
                   )}
 
                   {/* Tools row */}
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#1a1a1a]">
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#262626]">
                     <div className="flex items-center gap-1">
                       {/* Media Upload */}
                       <label className="w-9 h-9 rounded-lg flex items-center justify-center text-korus-primary/60 hover:text-korus-primary hover:bg-korus-primary/10 transition-all duration-150 cursor-pointer">
@@ -1133,13 +1133,13 @@ export default function PostDetailPage() {
       {/* Emoji Picker Modal */}
       {showEmojiPicker && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowEmojiPicker(false)}>
-          <div className="bg-[#141414] backdrop-blur-md rounded-2xl max-w-md w-full max-h-[80vh] border border-[#1a1a1a] shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-[#1a1a1a]">
+          <div className="bg-[#141414] backdrop-blur-md rounded-2xl max-w-md w-full max-h-[80vh] border border-[#262626] shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-[#262626]">
               <h3 className="text-lg font-bold text-[#fafafa]">Choose Emoji</h3>
               <button
                 onClick={() => setShowEmojiPicker(false)}
                 aria-label="Close emoji picker"
-                className="w-8 h-8 rounded-full flex items-center justify-center bg-white/[0.06] border border-[#1a1a1a] text-[#a1a1a1] hover:bg-white/[0.12] hover:text-[#fafafa] transition-all duration-150"
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-white/[0.06] border border-[#262626] text-[#a1a1a1] hover:bg-white/[0.12] hover:text-[#fafafa] transition-all duration-150"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1174,13 +1174,13 @@ export default function PostDetailPage() {
       {/* GIF Picker Modal */}
       {showGifPicker && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowGifPicker(false)}>
-          <div className="bg-[#141414] backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[80vh] border border-[#1a1a1a] shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-[#1a1a1a]">
+          <div className="bg-[#141414] backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[80vh] border border-[#262626] shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-[#262626]">
               <h3 className="text-lg font-bold text-[#fafafa]">Choose GIF</h3>
               <button
                 onClick={() => setShowGifPicker(false)}
                 aria-label="Close GIF picker"
-                className="w-8 h-8 rounded-full flex items-center justify-center bg-white/[0.06] border border-[#1a1a1a] text-[#a1a1a1] hover:bg-white/[0.12] hover:text-[#fafafa] transition-all duration-150"
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-white/[0.06] border border-[#262626] text-[#a1a1a1] hover:bg-white/[0.12] hover:text-[#fafafa] transition-all duration-150"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

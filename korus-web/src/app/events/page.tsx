@@ -226,10 +226,10 @@ export default function EventsPage() {
           />
 
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-[#1a1a1a]">
+          <div className="flex-1 min-w-0 border-x border-[#262626]">
 
             {/* Header Navigation */}
-            <div className="sticky top-0 bg-[#141414]/80 backdrop-blur-xl border-b border-[#1a1a1a] z-10">
+            <div className="sticky top-0 bg-[#141414]/80 backdrop-blur-xl border-b border-[#262626] z-10">
               <div className="flex">
                 {/* Mobile menu button */}
                 <button
@@ -355,7 +355,7 @@ export default function EventsPage() {
                     <div
                       key={event.id}
                       onClick={() => handleEventPress(event)}
-                      className="border border-[#1a1a1a] bg-[#141414] hover:bg-white/[0.04] hover:border-[#1a1a1a] transition-all duration-150 cursor-pointer rounded-xl overflow-hidden group"
+                      className="border border-[#262626] bg-[#141414] hover:bg-white/[0.04] hover:border-[#262626] transition-all duration-150 cursor-pointer rounded-xl overflow-hidden group"
                       style={{
                         borderColor: eventIsLive ? getEventTypeColor(event.type) : undefined
                       }}
@@ -480,7 +480,7 @@ export default function EventsPage() {
       {/* Event Details Modal */}
       {showEventModal && selectedEvent && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1e1e1e] border border-[#1a1a1a] rounded-2xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex justify-between items-center mb-6">
               <div
@@ -525,21 +525,21 @@ export default function EventsPage() {
 
               {/* Event Details Grid */}
               <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-[#262626] p-4 rounded-xl text-center border border-[#1a1a1a]">
+                <div className="bg-[#262626] p-4 rounded-xl text-center border border-[#262626]">
                   <div className="text-korus-primary text-xl mb-1">⏰</div>
                   <div className="text-xs text-[#737373]">Starts In</div>
                   <div className="font-semibold text-[#fafafa]">{formatTimeRemaining(selectedEvent.startDate)}</div>
                 </div>
 
                 {selectedEvent.maxSpots && (
-                  <div className="bg-[#262626] p-4 rounded-xl text-center border border-[#1a1a1a]">
+                  <div className="bg-[#262626] p-4 rounded-xl text-center border border-[#262626]">
                     <div className="text-korus-primary text-xl mb-1">👥</div>
                     <div className="text-xs text-[#737373]">Max Spots</div>
                     <div className="font-semibold text-[#fafafa]">{selectedEvent.maxSpots}</div>
                   </div>
                 )}
 
-                <div className="bg-[#262626] p-4 rounded-xl text-center border border-[#1a1a1a]">
+                <div className="bg-[#262626] p-4 rounded-xl text-center border border-[#262626]">
                   <div className="text-korus-primary text-xl mb-1">🔗</div>
                   <div className="text-xs text-[#737373]">Chain</div>
                   <div className="font-semibold text-[#fafafa]">Solana</div>
@@ -588,7 +588,7 @@ export default function EventsPage() {
               {/* Action Button */}
               <div className="mt-8">
                 {!connected ? (
-                  <button className="w-full bg-white/[0.08] border border-[#1a1a1a] text-[#fafafa] font-semibold py-4 rounded-lg hover:bg-white/[0.12] duration-150">
+                  <button className="w-full bg-white/[0.08] border border-[#262626] text-[#fafafa] font-semibold py-4 rounded-lg hover:bg-white/[0.12] duration-150">
                     Connect Wallet to Participate
                   </button>
                 ) : (

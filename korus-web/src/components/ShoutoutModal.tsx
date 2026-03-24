@@ -220,8 +220,8 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm,
 
   return (
     <div className="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget && !isProcessing) onClose(); }}>
-      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#1a1a1a] rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-[#1a1a1a]">
+      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-[#262626]">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 40%, transparent)' }}>
               <span className="text-2xl">📢</span>
@@ -341,8 +341,8 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm,
             </div>
           )}
         </div>
-        <div className="flex gap-3 p-6 border-t border-[#1a1a1a]">
-          <button onClick={onClose} disabled={isProcessing} className="flex-1 px-5 py-3 bg-white/[0.08] border border-[#1a1a1a] text-[#fafafa] font-semibold rounded-lg hover:bg-white/[0.12] duration-150 disabled:opacity-50 disabled:cursor-not-allowed">Cancel</button>
+        <div className="flex gap-3 p-6 border-t border-[#262626]">
+          <button onClick={onClose} disabled={isProcessing} className="flex-1 px-5 py-3 bg-white/[0.08] border border-[#262626] text-[#fafafa] font-semibold rounded-lg hover:bg-white/[0.12] duration-150 disabled:opacity-50 disabled:cursor-not-allowed">Cancel</button>
           <button onClick={handleConfirm} disabled={!selectedDuration || isProcessing || hasInsufficientFunds || !connected} className="flex-1 px-5 py-3 rounded-lg font-semibold transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] disabled:hover:scale-100" style={{ background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)', color: '#000000', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 30%, transparent)' }}>
             {isProcessing ? (
               <div className="flex items-center justify-center gap-2">

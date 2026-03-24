@@ -42,7 +42,7 @@ export default function ConfirmModal({
       />
 
       {/* Modal */}
-      <div ref={modalRef} className="modal-content relative bg-[#1e1e1e] border border-[#1a1a1a] rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+      <div ref={modalRef} className="modal-content relative bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
         {/* Header */}
         <div className="mb-4">
           <h3 className="text-xl font-semibold text-[#fafafa] mb-2">{title}</h3>

@@ -200,7 +200,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
   // Widget container styles
   const widgetStyle: React.CSSProperties = {
     background: '#141414',
-    border: '1px solid #1a1a1a',
+    border: '1px solid #262626',
     borderRadius: '16px',
     padding: '16px',
     marginBottom: '16px',
@@ -269,7 +269,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
                   }}
                   style={{
                     padding: '10px 0',
-                    borderTop: '1px solid #1a1a1a',
+                    borderTop: '1px solid #262626',
                     cursor: 'pointer',
                   }}
                   className="hover:opacity-80 transition-opacity"
@@ -393,7 +393,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
                     alignItems: 'center',
                     gap: '10px',
                     padding: '10px 0',
-                    borderTop: index > 0 ? '1px solid #1a1a1a' : 'none',
+                    borderTop: index > 0 ? '1px solid #262626' : 'none',
                     cursor: game.id.startsWith('placeholder-') ? 'default' : 'pointer',
                   }}
                   className={game.id.startsWith('placeholder-') ? '' : 'hover:opacity-80 transition-opacity'}
@@ -442,7 +442,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
                 key={item.id}
                 style={{
                   padding: '10px 0',
-                  borderTop: index > 0 ? '1px solid #1a1a1a' : 'none',
+                  borderTop: index > 0 ? '1px solid #262626' : 'none',
                   cursor: 'pointer',
                 }}
                 className="hover:opacity-80 transition-opacity"

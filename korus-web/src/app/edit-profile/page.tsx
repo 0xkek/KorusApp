@@ -249,9 +249,9 @@ export default function EditProfilePage() {
       <div className="relative z-10">
         <div className="flex min-h-screen max-w-[1280px] mx-auto">
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-[#1a1a1a]">
+          <div className="flex-1 min-w-0 border-x border-[#262626]">
             {/* Header */}
-            <div className="sticky top-0 z-20 bg-[#141414] backdrop-blur-md border-b border-[#1a1a1a]">
+            <div className="sticky top-0 z-20 bg-[#141414] backdrop-blur-md border-b border-[#262626]">
               <div className="px-4 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -320,7 +320,7 @@ export default function EditProfilePage() {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Enter your display name"
-                className="w-full bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
+                className="w-full bg-white/[0.06] border border-[#262626] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
                 maxLength={50}
               />
               <p className="text-[#a1a1a1] text-xs mt-1">This is how other users will see your name</p>
@@ -344,7 +344,7 @@ export default function EditProfilePage() {
                     setHasChanges(true);
                   }}
                   disabled={!isPremium && snsLoading}
-                  className="w-full bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-[#fafafa] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors disabled:opacity-50"
+                  className="w-full bg-white/[0.06] border border-[#262626] rounded-lg px-3 py-2.5 text-[#fafafa] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors disabled:opacity-50"
                 >
                   <option value="">None (use display name)</option>
                   {snsDomains.map((domain) => (
@@ -368,7 +368,7 @@ export default function EditProfilePage() {
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="Tell us about yourself..."
-                className="w-full bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors resize-none"
+                className="w-full bg-white/[0.06] border border-[#262626] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors resize-none"
                 rows={4}
                 maxLength={200}
               />
@@ -386,7 +386,7 @@ export default function EditProfilePage() {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="Where are you based?"
-                className="w-full bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
+                className="w-full bg-white/[0.06] border border-[#262626] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
                 maxLength={50}
               />
             </div>
@@ -399,7 +399,7 @@ export default function EditProfilePage() {
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
                 placeholder="https://yourwebsite.com"
-                className="w-full bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
+                className="w-full bg-white/[0.06] border border-[#262626] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
               />
             </div>
 
@@ -413,7 +413,7 @@ export default function EditProfilePage() {
                   value={twitter}
                   onChange={(e) => setTwitter(e.target.value.replace('@', ''))}
                   placeholder="username"
-                  className="w-full bg-white/[0.06] border border-[#1a1a1a] rounded-lg pl-8 pr-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
+                  className="w-full bg-white/[0.06] border border-[#262626] rounded-lg pl-8 pr-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
                   maxLength={15}
                 />
               </div>
@@ -430,7 +430,7 @@ export default function EditProfilePage() {
                     className={`aspect-square rounded-xl border-2 transition-all hover:scale-105 ${
                       selectedThemeColor === theme.color
                         ? 'border-white shadow-lg'
-                        : 'border-[#1a1a1a] hover:border-white/20'
+                        : 'border-[#262626] hover:border-white/20'
                     }`}
                     style={{ backgroundColor: theme.color }}
                     title={theme.name}

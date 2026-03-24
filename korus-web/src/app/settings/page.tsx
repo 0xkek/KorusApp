@@ -217,14 +217,14 @@ export default function SettingsPage() {
       <div className="relative z-10">
         <div className="flex min-h-screen max-w-[1280px] mx-auto">
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-[#1a1a1a]">
+          <div className="flex-1 min-w-0 border-x border-[#262626]">
 
             {/* Header */}
-            <div className="sticky top-0 bg-[#141414] backdrop-blur-xl border-b border-[#1a1a1a] z-10 p-4">
+            <div className="sticky top-0 bg-[#141414] backdrop-blur-xl border-b border-[#262626] z-10 p-4">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => router.back()}
-                  className="w-10 h-10 bg-white/[0.08] border border-[#1a1a1a] rounded-full flex items-center justify-center text-[#fafafa] font-bold hover:bg-white/[0.12] transition-all duration-150"
+                  className="w-10 h-10 bg-white/[0.08] border border-[#262626] rounded-full flex items-center justify-center text-[#fafafa] font-bold hover:bg-white/[0.12] transition-all duration-150"
                 >
                   ←
                 </button>
@@ -236,7 +236,7 @@ export default function SettingsPage() {
             <div className="p-6 space-y-6">
 
               {/* Premium Section */}
-              <div className="bg-[#141414] border border-[#1a1a1a] rounded-xl p-6">
+              <div className="bg-[#141414] border border-[#262626] rounded-xl p-6">
                 <h2 className="text-2xl font-bold text-[#fafafa] mb-4 flex items-center gap-2">
                   Premium Status
                   <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
@@ -256,7 +256,7 @@ export default function SettingsPage() {
                   </div>
                 ) : (
                   <div
-                    className="bg-white/[0.04] backdrop-blur-sm border border-[#1a1a1a] rounded-xl p-4"
+                    className="bg-white/[0.04] backdrop-blur-sm border border-[#262626] rounded-xl p-4"
                     style={{
                       boxShadow: '0 0 10px var(--korus-primary), 0 0 20px var(--korus-primary)'
                     }}
@@ -274,7 +274,7 @@ export default function SettingsPage() {
                 )}
 
                 {/* Premium Benefits Description */}
-                <div className="mt-4 p-4 bg-white/[0.04] rounded-xl border border-[#1a1a1a]">
+                <div className="mt-4 p-4 bg-white/[0.04] rounded-xl border border-[#262626]">
                   <div className="text-[#a1a1a1] text-sm space-y-2">
                     <p className="text-yellow-400 font-semibold mb-3">Premium Membership Includes:</p>
                     <div className="space-y-1">
@@ -291,12 +291,12 @@ export default function SettingsPage() {
 
 
               {/* Appearance Settings */}
-              <div className="bg-[#141414] border border-[#1a1a1a] rounded-xl p-6">
+              <div className="bg-[#141414] border border-[#262626] rounded-xl p-6">
                 <h2 className="text-2xl font-bold text-[#fafafa] mb-4">Appearance</h2>
                 <div className="space-y-4">
 
                   {/* Dark Mode */}
-                  <div className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[#1a1a1a]">
+                  <div className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[#262626]">
                     <div>
                       <div className="text-[#fafafa] font-medium">Dark Mode</div>
                       <div className="text-[#a1a1a1] text-sm">Available for all users</div>
@@ -321,7 +321,7 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Color Theme */}
-                  <div className="p-4 bg-white/[0.04] rounded-xl border border-[#1a1a1a]">
+                  <div className="p-4 bg-white/[0.04] rounded-xl border border-[#262626]">
                     <div className="text-[#fafafa] font-medium mb-3">Color Theme</div>
                     <div className="grid grid-cols-2 gap-3">
                       {themes.map((theme) => (
@@ -338,7 +338,7 @@ export default function SettingsPage() {
                           className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-150 ${
                             currentColorScheme === theme.id
                               ? 'border-korus-primary bg-korus-primary/10'
-                              : 'border-[#1a1a1a] hover:border-[#1a1a1a]'
+                              : 'border-[#262626] hover:border-[#262626]'
                           }`}
                         >
                           <div
@@ -366,9 +366,9 @@ export default function SettingsPage() {
               </div>
 
               {/* Profile Color */}
-              <div className="bg-[#141414] border border-[#1a1a1a] rounded-xl p-6">
+              <div className="bg-[#141414] border border-[#262626] rounded-xl p-6">
                 <h2 className="text-2xl font-bold text-[#fafafa] mb-4">Profile Color</h2>
-                <div className="p-4 bg-white/[0.04] rounded-xl border border-[#1a1a1a]">
+                <div className="p-4 bg-white/[0.04] rounded-xl border border-[#262626]">
                   <div className="text-[#fafafa] font-medium mb-2">Your Profile Theme</div>
                   <div className="text-[#a1a1a1] text-sm mb-4">
                     This color represents you on Korus - it appears on your posts, reposts, and profile. Your profile color automatically matches your chosen Color Theme above, but you can manually override it here if you prefer.
@@ -404,7 +404,7 @@ export default function SettingsPage() {
                           className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-150 ${
                             isSelected
                               ? 'border-korus-primary bg-korus-primary/10'
-                              : 'border-[#1a1a1a] hover:border-[#1a1a1a]'
+                              : 'border-[#262626] hover:border-[#262626]'
                           }`}
                           title={colorOption.name}
                         >
@@ -428,10 +428,10 @@ export default function SettingsPage() {
               </div>
 
               {/* Premium Features */}
-              <div className="bg-[#141414] border border-[#1a1a1a] rounded-xl p-6">
+              <div className="bg-[#141414] border border-[#262626] rounded-xl p-6">
                 <h2 className="text-2xl font-bold text-[#fafafa] mb-4">Premium Features</h2>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[#1a1a1a]">
+                  <div className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[#262626]">
                     <div>
                       <div className="text-[#fafafa] font-medium">Hide Shoutout</div>
                       <div className="text-[#a1a1a1] text-sm">Remove shoutout content from your feed</div>
@@ -476,12 +476,12 @@ export default function SettingsPage() {
 
 
               {/* Support & Information */}
-              <div className="bg-[#141414] border border-[#1a1a1a] rounded-xl p-6">
+              <div className="bg-[#141414] border border-[#262626] rounded-xl p-6">
                 <h2 className="text-[#fafafa] text-xl font-bold mb-4">Support & Information</h2>
                 <div className="space-y-3">
                   <button
                     onClick={() => setShowFAQModal(true)}
-                    className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[#1a1a1a] hover:bg-white/[0.06] transition-all duration-150 w-full"
+                    className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[#262626] hover:bg-white/[0.06] transition-all duration-150 w-full"
                   >
                     <div className="flex items-center gap-3">
                       <svg className="w-6 h-6 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -496,7 +496,7 @@ export default function SettingsPage() {
 
                   <button
                     onClick={() => setShowRulesModal(true)}
-                    className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[#1a1a1a] hover:bg-white/[0.06] transition-all duration-150 w-full"
+                    className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[#262626] hover:bg-white/[0.06] transition-all duration-150 w-full"
                   >
                     <div className="flex items-center gap-3">
                       <svg className="w-6 h-6 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -512,11 +512,11 @@ export default function SettingsPage() {
               </div>
 
               {/* Account */}
-              <div className="bg-[#141414] border border-[#1a1a1a] rounded-xl p-6">
+              <div className="bg-[#141414] border border-[#262626] rounded-xl p-6">
                 <h2 className="text-[#fafafa] text-xl font-bold mb-4">Account</h2>
                 <button
                   onClick={() => setShowLogoutConfirm(true)}
-                  className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[#1a1a1a] hover:bg-red-500/20 transition-all duration-150 w-full"
+                  className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[#262626] hover:bg-red-500/20 transition-all duration-150 w-full"
                 >
                   <div className="flex items-center gap-3">
                     <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -537,7 +537,7 @@ export default function SettingsPage() {
       {/* Modals */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#1e1e1e] backdrop-blur-xl border border-[#1a1a1a] rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+          <div className="bg-[#1e1e1e] backdrop-blur-xl border border-[#262626] rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
             <div className="text-center">
               <svg className="w-12 h-12 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -584,7 +584,7 @@ export default function SettingsPage() {
           onClick={() => setShowFAQModal(false)}
         >
           <div
-            className="bg-[#1e1e1e] backdrop-blur-xl border border-[#1a1a1a] rounded-2xl shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto"
+            className="bg-[#1e1e1e] backdrop-blur-xl border border-[#262626] rounded-2xl shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
@@ -632,7 +632,7 @@ export default function SettingsPage() {
           onClick={() => setShowRulesModal(false)}
         >
           <div
-            className="bg-[#1e1e1e] backdrop-blur-xl border border-[#1a1a1a] rounded-2xl shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto"
+            className="bg-[#1e1e1e] backdrop-blur-xl border border-[#262626] rounded-2xl shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">

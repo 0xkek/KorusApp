@@ -73,9 +73,9 @@ export default function GifPicker({ onSelect, onClose }: GifPickerProps) {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-[#1e1e1e] border border-[#1a1a1a] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+      <div className="bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-[#1a1a1a] flex items-center justify-between">
+        <div className="p-4 border-b border-[#262626] flex items-center justify-between">
           <h3 className="text-lg font-bold text-[#fafafa]">Choose a GIF</h3>
           <button
             onClick={onClose}
@@ -89,14 +89,14 @@ export default function GifPicker({ onSelect, onClose }: GifPickerProps) {
         </div>
 
         {/* Search */}
-        <form onSubmit={handleSearch} className="p-4 border-b border-[#1a1a1a]">
+        <form onSubmit={handleSearch} className="p-4 border-b border-[#262626]">
           <div className="relative">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search for GIFs..."
-              className="w-full bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-4 py-3 text-[#fafafa] placeholder-[#737373] focus:outline-none focus:border-korus-primary duration-150"
+              className="w-full bg-white/[0.06] border border-[#262626] rounded-lg px-4 py-3 text-[#fafafa] placeholder-[#737373] focus:outline-none focus:border-korus-primary duration-150"
             />
             <button
               type="submit"
@@ -142,7 +142,7 @@ export default function GifPicker({ onSelect, onClose }: GifPickerProps) {
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-[#1a1a1a] text-center">
+        <div className="p-3 border-t border-[#262626] text-center">
           <p className="text-xs text-[#737373]">
             Powered by <span className="text-korus-primary font-semibold">Tenor</span>
           </p>

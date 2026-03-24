@@ -257,7 +257,7 @@ export default function GamePlayPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
       {/* Header */}
-      <div className="bg-[#141414] border-b border-[#1a1a1a]">
+      <div className="bg-[#141414] border-b border-[#262626]">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between mb-4">
             <Button
@@ -291,7 +291,7 @@ export default function GamePlayPage() {
 
           {/* Players */}
           <div className="flex items-center gap-4">
-            <div className="flex-1 bg-[#141414] border border-[#1a1a1a] rounded-lg p-3">
+            <div className="flex-1 bg-[#141414] border border-[#262626] rounded-lg p-3">
               <div className="text-xs text-[#a1a1a1] mb-1">PLAYER 1</div>
               <div className="font-mono text-sm text-[#fafafa]">
                 {game.player1DisplayName || `${game.player1.slice(0, 6)}...${game.player1.slice(-4)}`}
@@ -305,7 +305,7 @@ export default function GamePlayPage() {
 
             <div className="text-[#a1a1a1] font-bold">VS</div>
 
-            <div className="flex-1 bg-[#141414] border border-[#1a1a1a] rounded-lg p-3">
+            <div className="flex-1 bg-[#141414] border border-[#262626] rounded-lg p-3">
               <div className="text-xs text-[#a1a1a1] mb-1">PLAYER 2</div>
               {game.player2 ? (
                 <>
@@ -348,7 +348,7 @@ export default function GamePlayPage() {
         )}
 
         {game.status === 'active' && !isMyTurn && isParticipant && (
-          <div className="mb-6 p-4 bg-[#141414] border border-[#1a1a1a] rounded-lg text-center">
+          <div className="mb-6 p-4 bg-[#141414] border border-[#262626] rounded-lg text-center">
             <p className="text-[#a1a1a1]">Waiting for opponent&apos;s move...</p>
           </div>
         )}
@@ -358,7 +358,7 @@ export default function GamePlayPage() {
             game.winner === publicKey?.toBase58()
               ? 'bg-green-500/20 border-green-500'
               : game.winner === 'draw'
-              ? 'bg-[#141414] border-[#1a1a1a]'
+              ? 'bg-[#141414] border-[#262626]'
               : 'bg-red-500/20 border-red-500'
           }`}>
             <p className={`font-bold text-lg ${
@@ -394,7 +394,7 @@ export default function GamePlayPage() {
         )}
 
         {/* Game Board */}
-        <div className="bg-[#141414] border border-[#1a1a1a] rounded-xl p-8">
+        <div className="bg-[#141414] border border-[#262626] rounded-xl p-8">
           {game.gameType === 'tictactoe' && renderTicTacToe()}
           {game.gameType === 'connectfour' && renderConnectFour()}
           {game.gameType === 'rps' && renderRPS()}

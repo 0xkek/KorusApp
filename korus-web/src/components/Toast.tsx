@@ -41,7 +41,7 @@ export function ToastComponent({ toast, onRemove }: ToastProps) {
   }, [toast.id, toast.duration, onRemove]);
 
   const getToastStyles = () => {
-    const baseStyles = "flex items-start gap-3 p-4 rounded-xl border border-[#1a1a1a] backdrop-blur-sm duration-150 shadow-2xl bg-[#141414]";
+    const baseStyles = "flex items-start gap-3 p-4 rounded-xl border border-[#262626] backdrop-blur-sm duration-150 shadow-2xl bg-[#141414]";
 
     switch (toast.type) {
       case 'success':

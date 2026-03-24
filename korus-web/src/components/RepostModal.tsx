@@ -83,9 +83,9 @@ export default function RepostModal({ isOpen, onClose, postId, postContent, post
 
   return (
     <div className="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget && !isProcessing) onClose(); }}>
-      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#1a1a1a] rounded-2xl shadow-2xl max-w-lg w-full">
+      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl max-w-lg w-full">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-[#1a1a1a]">
+        <div className="flex items-center justify-between p-6 border-b border-[#262626]">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 40%, transparent)' }}>
               <svg className="w-6 h-6" fill="none" stroke="#000000" strokeWidth={2.5} viewBox="0 0 24 24">
@@ -133,7 +133,7 @@ export default function RepostModal({ isOpen, onClose, postId, postContent, post
               onChange={(e) => setComment(e.target.value)}
               placeholder="Share your thoughts about this post..."
               maxLength={280}
-              className="w-full bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors resize-none"
+              className="w-full bg-white/[0.06] border border-[#262626] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors resize-none"
               style={{ borderColor: comment ? 'var(--korus-primary)' : '' }}
               rows={4}
             />
@@ -144,11 +144,11 @@ export default function RepostModal({ isOpen, onClose, postId, postContent, post
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3 p-6 border-t border-[#1a1a1a]">
+        <div className="flex gap-3 p-6 border-t border-[#262626]">
           <button
             onClick={onClose}
             disabled={isProcessing}
-            className="flex-1 px-5 py-3 bg-white/[0.08] border border-[#1a1a1a] text-[#fafafa] font-semibold rounded-lg hover:bg-white/[0.12] duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-5 py-3 bg-white/[0.08] border border-[#262626] text-[#fafafa] font-semibold rounded-lg hover:bg-white/[0.12] duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>

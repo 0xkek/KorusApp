@@ -81,7 +81,7 @@ export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, o
   if (!isOwnPost) {
     return (
       <div className="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#1a1a1a] rounded-2xl shadow-2xl max-w-md w-full border-2 shadow-xl shadow-red-500/20" style={{borderColor: '#ef4444'}}>
+        <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl max-w-md w-full border-2 shadow-xl shadow-red-500/20" style={{borderColor: '#ef4444'}}>
           <div className="p-6 text-center">
             {/* Warning Icon */}
             <div className="mb-6 flex justify-center">
@@ -105,7 +105,7 @@ export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, o
               <button
                 onClick={onClose}
                 disabled={isProcessing}
-                className="flex-1 py-4 px-6 bg-white/[0.08] border border-[#1a1a1a] text-[#fafafa] font-semibold rounded-lg hover:bg-white/[0.12] duration-150 disabled:opacity-50"
+                className="flex-1 py-4 px-6 bg-white/[0.08] border border-[#262626] text-[#fafafa] font-semibold rounded-lg hover:bg-white/[0.12] duration-150 disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -133,7 +133,7 @@ export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, o
   // Render delete confirmation modal for own posts
   return (
     <div className="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#1a1a1a] rounded-2xl shadow-2xl max-w-md w-full border-2 shadow-xl shadow-red-500/20" style={{borderColor: '#ef4444'}}>
+      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl max-w-md w-full border-2 shadow-xl shadow-red-500/20" style={{borderColor: '#ef4444'}}>
         <div className="p-6 text-center">
           {/* Delete Icon */}
           <div className="mb-6 flex justify-center">
@@ -157,7 +157,7 @@ export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, o
             <button
               onClick={onClose}
               disabled={isProcessing}
-              className="flex-1 py-4 px-6 bg-white/[0.08] border border-[#1a1a1a] text-[#fafafa] font-semibold rounded-lg hover:bg-white/[0.12] duration-150 disabled:opacity-50"
+              className="flex-1 py-4 px-6 bg-white/[0.08] border border-[#262626] text-[#fafafa] font-semibold rounded-lg hover:bg-white/[0.12] duration-150 disabled:opacity-50"
             >
               Cancel
             </button>
