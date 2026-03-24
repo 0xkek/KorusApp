@@ -69,7 +69,7 @@ export default function GamesPage() {
                   </div>
                 </div>
 
-                <div className="relative flex items-center justify-center w-full md:hidden">
+                <div className="relative flex items-center justify-center w-full">
                   <button
                     onClick={() => router.push('/')}
                     className="relative px-4 py-4 text-[#a1a1a1] font-semibold hover:bg-white/[0.04] hover:text-[#fafafa] transition-colors group"
