@@ -732,24 +732,26 @@ export default function Home() {
   };
 
   const handleRegularPost = async () => {
+    console.log('POST CLICKED', { selectedFiles: selectedFiles.length, composeText: composeText.trim().length, showDrawCanvas, connected, isAuthenticated, hasToken: !!token });
+
     if (!connected || !isAuthenticated || !token) {
       showError('Please connect your wallet and sign in to post');
       return;
     }
 
-    // Auto-save drawing: check canvas state OR look for a canvas element in the DOM
-    // (handleDrawingSave may have closed the canvas state but the DOM element could still exist)
-    let drawingFile: File | null = null;
-    const canvasEl = document.querySelector('canvas') as HTMLCanvasElement | null;
-    if (showDrawCanvas || canvasEl) {
+    // Use selectedFiles directly — drawing was already added by "Add Drawing" button
+    const filesToUpload = [...selectedFiles];
+    console.log('FILES TO UPLOAD', filesToUpload.length, filesToUpload.map(f => f.name));
+
+    // Also try to grab from canvas if it's still open
+    if (showDrawCanvas) {
       let dataUrl: string | null = null;
-      // Try ref first
       if (drawingSaveRef.current) {
         dataUrl = drawingSaveRef.current();
       }
-      // Fallback: grab the canvas element directly from the DOM
-      if (!dataUrl && canvasEl) {
-        dataUrl = canvasEl.toDataURL('image/png');
+      if (!dataUrl) {
+        const canvasEl = document.querySelector('canvas') as HTMLCanvasElement | null;
+        if (canvasEl) dataUrl = canvasEl.toDataURL('image/png');
       }
       if (dataUrl) {
         try {
@@ -759,7 +761,7 @@ export default function Home() {
           const n = bstr.length;
           const u8arr = new Uint8Array(n);
           for (let i = 0; i < n; i++) u8arr[i] = bstr.charCodeAt(i);
-          drawingFile = new File([u8arr], `drawing-${Date.now()}.png`, { type: mime });
+          filesToUpload.unshift(new File([u8arr], `drawing-${Date.now()}.png`, { type: mime }));
         } catch (e) {
           logger.error('Failed to convert drawing:', e);
         }
@@ -767,8 +769,11 @@ export default function Home() {
       }
     }
 
-    const filesToUpload = drawingFile ? [drawingFile, ...selectedFiles] : selectedFiles;
-    if (!composeText.trim() && filesToUpload.length === 0 && !selectedGif) return;
+    console.log('FINAL FILES', filesToUpload.length, 'text:', composeText.trim().length, 'gif:', selectedGif);
+    if (!composeText.trim() && filesToUpload.length === 0 && !selectedGif) {
+      console.log('EARLY RETURN - nothing to post');
+      return;
+    }
 
     try {
 
