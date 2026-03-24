@@ -225,9 +225,9 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
 
   return (
     <div className="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget && !isSending) onClose(); }}>
-      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl shadow-2xl max-w-md w-full">
+      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#1a1a1a] rounded-2xl shadow-2xl max-w-md w-full">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-[#2a2a2a]">
+        <div className="flex items-center justify-between p-6 border-b border-[#1a1a1a]">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 40%, transparent)' }}>
               <span className="text-2xl">💰</span>
@@ -264,7 +264,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
               You sent <span className="text-korus-primary font-bold">{successAmount.toFixed(3)} SOL</span> to {truncateAddress(recipientUser)}
             </p>
 
-            <div className="bg-white/[0.06] border border-[#2a2a2a] rounded-lg p-4 mb-6">
+            <div className="bg-white/[0.06] border border-[#1a1a1a] rounded-lg p-4 mb-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-[#a1a1a1]">Transaction</span>
                 <a
@@ -331,7 +331,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
                 value={customAmount}
                 onChange={handleCustomAmountChange}
                 placeholder="0.0"
-                className="w-full bg-white/[0.06] text-[#fafafa] text-lg font-medium pl-4 pr-16 py-3 rounded-lg border border-[#2a2a2a] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
+                className="w-full bg-white/[0.06] text-[#fafafa] text-lg font-medium pl-4 pr-16 py-3 rounded-lg border border-[#1a1a1a] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
                 style={{ borderColor: customAmount ? 'var(--korus-primary)' : '' }}
               />
               <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#a1a1a1] font-medium">
@@ -380,7 +380,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-6 mt-6 border-t border-[#2a2a2a]">
+          <div className="flex gap-3 pt-6 mt-6 border-t border-[#1a1a1a]">
             <Button
               onClick={onClose}
               disabled={isSending}

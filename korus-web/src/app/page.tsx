@@ -1122,16 +1122,16 @@ export default function Home() {
 
 
   return (
-    <main className="min-h-screen bg-[#121212] relative overflow-hidden">
+    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
       {/* Standardized static background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#121212] via-[#171717] to-[#121212]">
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#171717]/25 to-[#151515]/35" />
+      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#111111]/25 to-[#0f0f0f]/35" />
       </div>
       {/* Static gradient orbs for visual depth */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-32 -right-32 w-[600px] h-[600px] bg-gradient-to-br from-korus-primary/8 to-korus-secondary/6 rounded-full blur-[80px]" />
-        <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-gradient-to-tr from-korus-secondary/6 to-korus-primary/8 rounded-full blur-[70px]" />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-to-r from-korus-primary/4 to-korus-secondary/4 rounded-full blur-[60px]" />
+        <div className="absolute -top-32 -right-32 w-[600px] h-[600px] bg-gradient-to-br from-korus-primary/6 to-korus-secondary/4 rounded-full blur-[80px]" />
+        <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-gradient-to-tr from-korus-secondary/4 to-korus-primary/6 rounded-full blur-[70px]" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-to-r from-korus-primary/3 to-korus-secondary/3 rounded-full blur-[60px]" />
       </div>
 
       {/* Content wrapper */}
@@ -1145,10 +1145,10 @@ export default function Home() {
           notificationCount={notificationCount}
         />
         {/* Main Feed */}
-        <div className="flex-1 max-w-[640px] border-r border-[#2a2a2a]">
+        <div className="flex-1 max-w-[640px] border-r border-[#1a1a1a]">
         {/* Main app - only accessible when connected */}
             {/* Header Navigation */}
-            <div className="sticky top-0 z-10 bg-[#121212]/85 backdrop-blur-[16px] border-b border-[#2a2a2a]">
+            <div className="sticky top-0 z-10 bg-[#0a0a0a]/85 backdrop-blur-[12px] border-b border-[#1a1a1a]">
               {/* Mobile controls row */}
               <div className="flex md:hidden items-center justify-between px-2">
                 <button
@@ -1182,38 +1182,36 @@ export default function Home() {
                   onClick={() => router.push('/')}
                   className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[#fafafa]"
                 >
-                  Home
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-[3px] rounded-[3px] bg-korus-primary" />
+                  For You
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[40px] h-[3px] rounded-[3px] bg-[#43e97b]" />
                 </button>
                 <button
-                  onClick={() => router.push('/games')}
-                  className="flex-1 text-center py-4 text-[14px] cursor-pointer transition-colors duration-150 relative text-[#737373] hover:text-[#fafafa] hover:bg-white/[0.06]"
+                  className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors duration-150 relative text-[#737373] hover:text-[#a1a1a1] hover:bg-white/[0.02]"
                 >
-                  Games
+                  Following
                 </button>
                 <button
-                  onClick={() => router.push('/events')}
-                  className="flex-1 text-center py-4 text-[14px] cursor-pointer transition-colors duration-150 relative text-[#737373] hover:text-[#fafafa] hover:bg-white/[0.06]"
+                  className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors duration-150 relative text-[#737373] hover:text-[#a1a1a1] hover:bg-white/[0.02]"
                 >
-                  Events
+                  Trending
                 </button>
               </div>
             </div>
 
             {/* Compose Post */}
-            <div className="px-4 py-3 border-b border-[#2a2a2a] flex gap-3">
+            <div className="px-5 py-4 border-b border-[#1a1a1a] flex gap-3">
                 {userAvatar ? (
-                  <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
+                  <div className="w-[42px] h-[42px] rounded-full flex-shrink-0 overflow-hidden">
                     <Image
                       src={userAvatar}
                       alt="Your avatar"
-                      width={40}
-                      height={40}
+                      width={42}
+                      height={42}
                       className="w-full h-full object-cover"
                     />
                   </div>
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0">
+                  <div className="w-[42px] h-[42px] rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0">
                     <span className="text-black font-bold text-sm">
                       {publicKey?.toBase58().slice(0, 2).toUpperCase()}
                     </span>
@@ -1224,13 +1222,13 @@ export default function Home() {
                     value={composeText}
                     onChange={(e) => setComposeText(e.target.value)}
                     placeholder="What's happening on Solana?"
-                    className="bg-transparent text-[#fafafa] text-[15px] placeholder-[#737373] w-full resize-none min-h-[48px] border-none outline-none leading-relaxed"
+                    className="bg-transparent text-[#fafafa] text-[16px] placeholder-[#525252] w-full resize-none min-h-[48px] border-none outline-none leading-relaxed"
                     rows={1}
                   />
 
                   {/* Inline Drawing Canvas */}
                   {showDrawCanvas && (
-                    <div className="mt-3 p-3 bg-white/[0.04] border border-[#2a2a2a] rounded-xl">
+                    <div className="mt-3 p-3 bg-white/[0.04] border border-[#1a1a1a] rounded-xl">
                       <DrawingCanvasInline
                         onSave={handleDrawingSave}
                         onClose={() => setShowDrawCanvas(false)}
@@ -1249,10 +1247,10 @@ export default function Home() {
                               alt="Upload preview"
                               width={200}
                               height={128}
-                              className="max-w-full h-auto rounded-xl border border-[#2a2a2a]"
+                              className="max-w-full h-auto rounded-xl border border-[#1a1a1a]"
                             />
                           ) : (
-                            <div className="w-full h-32 bg-white/[0.06] border border-[#2a2a2a] rounded-xl flex items-center justify-center">
+                            <div className="w-full h-32 bg-white/[0.06] border border-[#1a1a1a] rounded-xl flex items-center justify-center">
                               <div className="text-center">
                                 <svg className="w-8 h-8 mx-auto mb-2 text-[#a1a1a1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -1276,10 +1274,10 @@ export default function Home() {
                   )}
 
                   {/* Post Options */}
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#2a2a2a]">
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#1a1a1a]">
                     <div className="flex items-center gap-0.5">
                       {/* Image Upload */}
-                      <label className="w-[34px] h-[34px] rounded-lg flex items-center justify-center text-[#737373] hover:text-[#b0b0b0] hover:bg-white/[0.06] transition-all cursor-pointer">
+                      <label className="w-[34px] h-[34px] rounded-lg flex items-center justify-center text-[#43e97b] hover:bg-[rgba(67,233,123,0.1)] transition-all cursor-pointer">
                         <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
@@ -1296,8 +1294,8 @@ export default function Home() {
                         onClick={() => setShowGifPicker(!showGifPicker)}
                         className={`w-[34px] h-[34px] rounded-lg flex items-center justify-center transition-all ${
                           showGifPicker
-                            ? 'text-korus-primary bg-white/[0.06]'
-                            : 'text-[#737373] hover:text-[#b0b0b0] hover:bg-white/[0.06]'
+                            ? 'text-[#43e97b] bg-[rgba(67,233,123,0.1)]'
+                            : 'text-[#43e97b] hover:bg-[rgba(67,233,123,0.1)]'
                         }`}
                       >
                         <span className="text-xs font-bold">GIF</span>
@@ -1307,8 +1305,8 @@ export default function Home() {
                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                         className={`w-[34px] h-[34px] rounded-lg flex items-center justify-center transition-all ${
                           showEmojiPicker
-                            ? 'text-korus-primary bg-white/[0.06]'
-                            : 'text-[#737373] hover:text-[#b0b0b0] hover:bg-white/[0.06]'
+                            ? 'text-[#43e97b] bg-[rgba(67,233,123,0.1)]'
+                            : 'text-[#43e97b] hover:bg-[rgba(67,233,123,0.1)]'
                         }`}
                       >
                         <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1320,7 +1318,7 @@ export default function Home() {
                     <button
                       onClick={handleRegularPost}
                       disabled={!composeText.trim() && selectedFiles.length === 0}
-                      className="px-5 py-2 rounded-[20px] bg-korus-primary text-black text-[14px] font-semibold hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed leading-none"
+                      className="px-5 py-2 rounded-[20px] bg-[#43e97b] text-black text-[14px] font-bold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed leading-none"
                     >
                       Post
                     </button>
@@ -1330,7 +1328,7 @@ export default function Home() {
 
             {/* Shoutout Queue Indicator */}
             {shoutoutQueue.length > 0 && (
-              <div className="bg-white/[0.06] border border-[#2a2a2a] rounded-xl p-4 mb-4 backdrop-blur-sm">
+              <div className="bg-white/[0.06] border border-[#1a1a1a] rounded-xl p-4 mb-4 backdrop-blur-sm">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2 text-korus-primary">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1357,21 +1355,17 @@ export default function Home() {
               className={`transition-colors cursor-pointer group ${
                 post.isShoutout
                   ? 'shoutout-post border border-korus-primary bg-korus-primary/5 shadow-[0_4px_12px_rgba(var(--korus-primary-rgb),0.3)] hover:border-korus-primary hover:shadow-[0_8px_24px_rgba(var(--korus-primary-rgb),0.4)] hover:bg-korus-primary/[0.12]'
-                  : 'px-4 py-3 border-b border-[#2a2a2a] hover:bg-white/[0.04]'
+                  : 'px-5 py-4 border-b border-[#1a1a1a] hover:bg-white/[0.02]'
               }`}
               onClick={() => router.push(`/post/${post.id}`)}
             >
               {/* Shoutout Banner */}
               {post.isShoutout && (
-                <div className="bg-gradient-to-r from-korus-primary to-korus-secondary px-5 py-3 flex items-center justify-between">
+                <div className="bg-gradient-to-br from-[rgba(67,233,123,0.12)] to-[rgba(56,249,215,0.08)] border border-[rgba(67,233,123,0.2)] rounded-[16px] px-4 py-3.5 mx-5 my-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="text-black text-lg">📢</span>
-                    <span className="text-black font-black text-lg tracking-[3px]">SHOUTOUT</span>
-                    <div className="flex gap-1">
-                      <span className="text-black text-sm">⭐</span>
-                      <span className="text-black text-sm">⭐</span>
-                      <span className="text-black text-sm">⭐</span>
-                    </div>
+                    <span className="text-lg">📢</span>
+                    <span className="text-[11px] font-bold text-[#43e97b] uppercase tracking-wider">SHOUTOUT</span>
+                    <span className="text-[14px] font-medium text-[#e5e5e5]">{post.content?.slice(0, 60)}{(post.content?.length ?? 0) > 60 ? '...' : ''}</span>
                   </div>
                   {post.shoutoutDuration && (post.shoutoutExpiresAt || post.shoutoutStartTime) && (
                     <ShoutoutCountdown
@@ -1394,17 +1388,17 @@ export default function Home() {
                 <div className="flex items-center gap-3">
                   {/* Avatar */}
                   {post.avatar ? (
-                    <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
+                    <div className="w-[42px] h-[42px] rounded-full flex-shrink-0 overflow-hidden">
                       <Image
                         src={post.avatar}
                         alt={`${post.user} avatar`}
-                        width={40}
-                        height={40}
+                        width={42}
+                        height={42}
                         className="w-full h-full object-cover"
                       />
                     </div>
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-[14px] font-bold text-black flex-shrink-0">
+                    <div className="w-[42px] h-[42px] rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-[14px] font-bold text-black flex-shrink-0">
                       {post.user.slice(0, 2).toUpperCase()}
                     </div>
                   )}
@@ -1429,8 +1423,8 @@ export default function Home() {
                     )}
 
                     <span className="text-[14px] text-[#a1a1a1]">@{truncateAddress(post.user)}</span>
-                    <span className="text-[#737373] text-[12px]">·</span>
-                    <span className="text-[13px] text-[#737373] hover:text-[#a1a1a1] cursor-pointer">{formatRelativeTime(post.createdAt || post.time)}</span>
+                    <span className="text-[#525252] text-[12px]">·</span>
+                    <span className="text-[13px] text-[#525252] hover:text-[#a1a1a1] cursor-pointer">{formatRelativeTime(post.createdAt || post.time)}</span>
 
                     {/* Sponsored Badge */}
                     {post.isSponsored && (
@@ -1462,7 +1456,7 @@ export default function Home() {
                   {post.content && (
                     <SafeContent
                       content={post.content}
-                      className="text-[15px] leading-[1.55] text-[#fafafa] whitespace-pre-wrap break-words"
+                      className="text-[15px] leading-[1.55] text-[#e5e5e5] whitespace-pre-wrap break-words"
                       allowLinks={true}
                       allowFormatting={true}
                     />
@@ -1490,7 +1484,7 @@ export default function Home() {
                         alt="Post content"
                         width={600}
                         height={400}
-                        className="max-w-full h-auto rounded-xl border border-[#2a2a2a]"
+                        className="max-w-full h-auto rounded-xl border border-[#1a1a1a]"
                         style={{ maxHeight: '500px', width: 'auto', height: 'auto' }}
                         onError={(e) => {
                           // Hide broken image on error
@@ -1505,8 +1499,8 @@ export default function Home() {
                     <button
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] text-[13px] transition-all duration-150 ${
                         postInteractions[post.id]?.replied
-                          ? 'text-blue-400 hover:bg-blue-500/10'
-                          : 'text-[#737373] hover:text-blue-400 hover:bg-blue-500/10'
+                          ? 'text-[#43e97b] hover:bg-[rgba(67,233,123,0.08)]'
+                          : 'text-[#737373] hover:text-[#43e97b] hover:bg-[rgba(67,233,123,0.08)]'
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1546,8 +1540,8 @@ export default function Home() {
                     <button
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] text-[13px] transition-all duration-150 ${
                         postInteractions[post.id]?.reposted
-                          ? 'text-green-400 hover:bg-green-500/10'
-                          : 'text-[#737373] hover:text-green-400 hover:bg-green-500/10'
+                          ? 'text-[#43e97b] hover:bg-[rgba(67,233,123,0.08)]'
+                          : 'text-[#737373] hover:text-[#43e97b] hover:bg-[rgba(67,233,123,0.08)]'
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1563,8 +1557,8 @@ export default function Home() {
                     <button
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] text-[13px] transition-all duration-150 ${
                         postInteractions[post.id]?.tipped
-                          ? 'text-amber-400 hover:bg-amber-500/10'
-                          : 'text-[#737373] hover:text-amber-400 hover:bg-amber-500/10'
+                          ? 'text-[#f59e0b] hover:bg-[rgba(245,158,11,0.08)]'
+                          : 'text-[#737373] hover:text-[#f59e0b] hover:bg-[rgba(245,158,11,0.08)]'
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1582,11 +1576,11 @@ export default function Home() {
                       <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span>{post.tips ? `${post.tips} SOL` : 'Tip'}</span>
+                      {post.tips ? <span className="text-[11px] font-semibold bg-[rgba(67,233,123,0.1)] text-[#43e97b] px-1.5 rounded-[6px]">{post.tips} SOL</span> : <span>Tip</span>}
                     </button>
 
                     <button
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] text-[13px] text-[#737373] hover:text-[#a1a1a1] hover:bg-white/[0.08] transition-all duration-150"
+                      className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] text-[13px] text-[#737373] hover:text-[#a1a1a1] hover:bg-white/[0.08] transition-all duration-150"
                       onClick={(e) => {
                         e.stopPropagation();
                         setPostToShare(post);
@@ -1822,9 +1816,9 @@ export default function Home() {
       {/* Emoji Picker Modal */}
       {showEmojiPicker && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowEmojiPicker(false)}>
-          <div className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-[#1e1e1e] border border-[#1a1a1a] rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a]">
+            <div className="flex items-center justify-between p-4 border-b border-[#1a1a1a]">
               <h3 className="text-lg font-bold text-[#fafafa]">Choose Emoji</h3>
               <button
                 onClick={() => setShowEmojiPicker(false)}

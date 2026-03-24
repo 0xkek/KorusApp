@@ -291,10 +291,10 @@ export default function CreateEventPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#121212] relative overflow-hidden">
+    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
       {/* Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#121212] via-[#111111] to-[#121212]">
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#171717]/25 to-[#111111]/35" />
+      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#111111]/25 to-[#111111]/35" />
       </div>
       <div className="fixed inset-0 overflow-hidden">
         <div className="absolute -top-32 -right-32 w-[600px] h-[600px] bg-gradient-to-br from-korus-primary/8 to-korus-secondary/6 rounded-full blur-[80px]" />
@@ -310,10 +310,10 @@ export default function CreateEventPage() {
           />
 
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-[#2a2a2a]">
+          <div className="flex-1 min-w-0 border-x border-[#1a1a1a]">
 
             {/* Header */}
-            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-[#2a2a2a] z-10 px-6 py-4">
+            <div className="sticky top-0 bg-[#141414]/80 backdrop-blur-xl border-b border-[#1a1a1a] z-10 px-6 py-4">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => router.back()}
@@ -339,7 +339,7 @@ export default function CreateEventPage() {
                   <select
                     value={formData.type}
                     onChange={(e) => handleInputChange('type', e.target.value as unknown)}
-                    className="w-full bg-white/[0.06] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-[#fafafa] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
+                    className="w-full bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-[#fafafa] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                   >
                     <option value="whitelist">Whitelist</option>
                     <option value="token_launch">Token Launch</option>
@@ -357,7 +357,7 @@ export default function CreateEventPage() {
                     value={formData.projectName}
                     onChange={(e) => handleInputChange('projectName', e.target.value)}
                     placeholder="e.g., SolanaMonkeys"
-                    className="w-full bg-white/[0.06] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
+                    className="w-full bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                   />
                 </div>
 
@@ -369,7 +369,7 @@ export default function CreateEventPage() {
                     value={formData.title}
                     onChange={(e) => handleInputChange('title', e.target.value)}
                     placeholder="e.g., Exclusive Whitelist for Gen 2 Mint"
-                    className="w-full bg-white/[0.06] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
+                    className="w-full bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                   />
                 </div>
 
@@ -381,7 +381,7 @@ export default function CreateEventPage() {
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     placeholder="Describe your event, what participants will get, and any important details..."
                     rows={5}
-                    className="w-full bg-white/[0.06] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none resize-none"
+                    className="w-full bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none resize-none"
                   />
                 </div>
 
@@ -390,7 +390,7 @@ export default function CreateEventPage() {
                   <label className="block text-sm font-medium text-[#fafafa] mb-2">Event Image (optional)</label>
 
                   {!imagePreview ? (
-                    <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-[#2a2a2a] rounded-lg cursor-pointer bg-white/[0.06] hover:bg-white/[0.08] duration-150 group">
+                    <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-[#1a1a1a] rounded-lg cursor-pointer bg-white/[0.06] hover:bg-white/[0.08] duration-150 group">
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <svg className="w-12 h-12 mb-3 text-[#737373] group-hover:text-korus-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -413,7 +413,7 @@ export default function CreateEventPage() {
                       <img
                         src={imagePreview}
                         alt="Event preview"
-                        className="w-full h-64 object-cover rounded-xl border border-[#2a2a2a]"
+                        className="w-full h-64 object-cover rounded-xl border border-[#1a1a1a]"
                       />
                       <button
                         type="button"
@@ -437,7 +437,7 @@ export default function CreateEventPage() {
                     value={formData.externalLink}
                     onChange={(e) => handleInputChange('externalLink', e.target.value)}
                     placeholder="https://your-project.com or www.korus.fun"
-                    className="w-full bg-white/[0.06] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
+                    className="w-full bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                   />
                   <p className="text-xs text-[#737373] mt-1">Link to your project website or mint page (with or without https://)</p>
                 </div>
@@ -450,7 +450,7 @@ export default function CreateEventPage() {
                       type="datetime-local"
                       value={formData.startDate}
                       onChange={(e) => handleInputChange('startDate', e.target.value)}
-                      className="w-full bg-white/[0.06] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-[#fafafa] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
+                      className="w-full bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-[#fafafa] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                     />
                   </div>
                   <div>
@@ -459,7 +459,7 @@ export default function CreateEventPage() {
                       type="datetime-local"
                       value={formData.endDate}
                       onChange={(e) => handleInputChange('endDate', e.target.value)}
-                      className="w-full bg-white/[0.06] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-[#fafafa] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
+                      className="w-full bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-[#fafafa] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                     />
                   </div>
                 </div>
@@ -470,7 +470,7 @@ export default function CreateEventPage() {
                   <select
                     value={formData.selectionMethod}
                     onChange={(e) => handleInputChange('selectionMethod', e.target.value as unknown)}
-                    className="w-full bg-white/[0.06] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-[#fafafa] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
+                    className="w-full bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-[#fafafa] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                   >
                     <option value="fcfs">First Come First Serve</option>
                     <option value="lottery">Lottery (Random Selection)</option>
@@ -485,7 +485,7 @@ export default function CreateEventPage() {
                     value={formData.maxSpots || ''}
                     onChange={(e) => handleInputChange('maxSpots', e.target.value ? parseInt(e.target.value) : undefined)}
                     placeholder="Leave empty for unlimited"
-                    className="w-full bg-white/[0.06] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
+                    className="w-full bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                   />
                 </div>
 
@@ -499,12 +499,12 @@ export default function CreateEventPage() {
                       onChange={(e) => setRequirementInput(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addRequirement())}
                       placeholder="e.g., Hold 1 Gen 1 NFT"
-                      className="flex-1 bg-white/[0.06] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
+                      className="flex-1 bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                     />
                     <button
                       type="button"
                       onClick={addRequirement}
-                      className="px-6 bg-white/[0.08] border border-[#2a2a2a] text-[#fafafa] rounded-lg hover:bg-white/[0.12] duration-150 font-medium"
+                      className="px-6 bg-white/[0.08] border border-[#1a1a1a] text-[#fafafa] rounded-lg hover:bg-white/[0.12] duration-150 font-medium"
                     >
                       Add
                     </button>
@@ -512,7 +512,7 @@ export default function CreateEventPage() {
                   {formData.requirements && formData.requirements.length > 0 && (
                     <div className="space-y-2">
                       {formData.requirements.map((req, index) => (
-                        <div key={index} className="flex items-center gap-2 bg-white/[0.06] border border-[#2a2a2a] rounded-lg px-3 py-2">
+                        <div key={index} className="flex items-center gap-2 bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-3 py-2">
                           <span className="text-korus-primary">✓</span>
                           <span className="flex-1 text-sm text-[#fafafa]">{req}</span>
                           <button
@@ -531,7 +531,7 @@ export default function CreateEventPage() {
                 </div>
 
                 {/* Advanced Settings */}
-                <div className="border border-[#2a2a2a] rounded-xl p-4 bg-[#171717]">
+                <div className="border border-[#1a1a1a] rounded-xl p-4 bg-[#141414]">
                   <h3 className="text-sm font-semibold text-[#fafafa] mb-4">Advanced Settings (optional)</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -541,7 +541,7 @@ export default function CreateEventPage() {
                         value={formData.minReputation || ''}
                         onChange={(e) => handleInputChange('minReputation', e.target.value ? parseInt(e.target.value) : undefined)}
                         placeholder="0"
-                        className="w-full bg-white/[0.06] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-[#fafafa] text-sm focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
+                        className="w-full bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-[#fafafa] text-sm focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                       />
                     </div>
                     <div>
@@ -551,7 +551,7 @@ export default function CreateEventPage() {
                         value={formData.minAccountAge || ''}
                         onChange={(e) => handleInputChange('minAccountAge', e.target.value ? parseInt(e.target.value) : undefined)}
                         placeholder="0"
-                        className="w-full bg-white/[0.06] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-[#fafafa] text-sm focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
+                        className="w-full bg-white/[0.06] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-[#fafafa] text-sm focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                       />
                     </div>
                   </div>
@@ -575,7 +575,7 @@ export default function CreateEventPage() {
                         <span className="font-bold text-korus-primary">{EVENT_CREATION_FEE} SOL</span>
                       </div>
                       {connected && publicKey && (
-                        <div className="flex justify-between items-center text-sm mt-2 pt-2 border-t border-[#2a2a2a]">
+                        <div className="flex justify-between items-center text-sm mt-2 pt-2 border-t border-[#1a1a1a]">
                           <span className="text-[#a1a1a1]">Your Balance:</span>
                           <span className={`font-bold ${balance >= EVENT_CREATION_FEE + 0.001 ? 'text-green-400' : 'text-red-400'}`}>
                             {balance.toFixed(4)} SOL
@@ -614,7 +614,7 @@ export default function CreateEventPage() {
                   <button
                     type="button"
                     onClick={() => router.back()}
-                    className="flex-1 bg-white/[0.08] border border-[#2a2a2a] text-[#fafafa] font-semibold py-3 rounded-lg hover:bg-white/[0.12] duration-150"
+                    className="flex-1 bg-white/[0.08] border border-[#1a1a1a] text-[#fafafa] font-semibold py-3 rounded-lg hover:bg-white/[0.12] duration-150"
                   >
                     Cancel
                   </button>

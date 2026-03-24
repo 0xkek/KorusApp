@@ -76,7 +76,7 @@ export function CreateGameModal({ postId, onClose, onGameCreated }: CreateGameMo
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl shadow-2xl p-6 max-w-md w-full">
+      <div className="bg-[#1e1e1e] border border-[#1a1a1a] rounded-2xl shadow-2xl p-6 max-w-md w-full">
         <h2 className="text-2xl font-bold text-[#fafafa] mb-4">Create Game Challenge</h2>
 
         {/* Game Type Selection */}
@@ -89,7 +89,7 @@ export function CreateGameModal({ postId, onClose, onGameCreated }: CreateGameMo
               className={`p-3 rounded-lg border-2 duration-150 ${
                 gameType === 'tictactoe'
                   ? 'border-korus-primary bg-korus-primary/20 text-[#fafafa]'
-                  : 'border-[#2a2a2a] bg-white/[0.06] text-[#a1a1a1] hover:border-korus-primary/50'
+                  : 'border-[#1a1a1a] bg-white/[0.06] text-[#a1a1a1] hover:border-korus-primary/50'
               }`}
               onClick={() => setGameType('tictactoe')}
             >
@@ -100,7 +100,7 @@ export function CreateGameModal({ postId, onClose, onGameCreated }: CreateGameMo
               className={`p-3 rounded-lg border-2 duration-150 ${
                 gameType === 'rps'
                   ? 'border-korus-primary bg-korus-primary/20 text-[#fafafa]'
-                  : 'border-[#2a2a2a] bg-white/[0.06] text-[#a1a1a1] hover:border-korus-primary/50'
+                  : 'border-[#1a1a1a] bg-white/[0.06] text-[#a1a1a1] hover:border-korus-primary/50'
               }`}
               onClick={() => setGameType('rps')}
             >
@@ -111,7 +111,7 @@ export function CreateGameModal({ postId, onClose, onGameCreated }: CreateGameMo
               className={`p-3 rounded-lg border-2 duration-150 ${
                 gameType === 'connectfour'
                   ? 'border-korus-primary bg-korus-primary/20 text-[#fafafa]'
-                  : 'border-[#2a2a2a] bg-white/[0.06] text-[#a1a1a1] hover:border-korus-primary/50'
+                  : 'border-[#1a1a1a] bg-white/[0.06] text-[#a1a1a1] hover:border-korus-primary/50'
               }`}
               onClick={() => setGameType('connectfour')}
             >
@@ -132,7 +132,7 @@ export function CreateGameModal({ postId, onClose, onGameCreated }: CreateGameMo
             min="0"
             value={wager}
             onChange={(e) => setWager(e.target.value)}
-            className="w-full px-4 py-2 bg-white/[0.06] border border-[#2a2a2a] rounded-lg text-[#fafafa] focus:border-korus-primary focus:outline-none duration-150"
+            className="w-full px-4 py-2 bg-white/[0.06] border border-[#1a1a1a] rounded-lg text-[#fafafa] focus:border-korus-primary focus:outline-none duration-150"
             placeholder="0.1"
           />
           <p className="text-xs text-[#a1a1a1] mt-1">

@@ -144,26 +144,43 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
       ),
     },
     {
-      name: 'Settings',
-      path: '/settings',
+      name: 'Wallet',
+      path: '/wallet',
       icon: (
         <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
         </svg>
       ),
     },
   ];
 
   return (
-    <nav className="sticky top-0 h-screen w-[260px] shrink-0 z-30 border-r border-[#2a2a2a] px-[16px] py-[24px] hidden md:flex flex-col bg-transparent" role="navigation" aria-label="Main navigation">
+    <nav
+      className="sticky top-0 h-screen w-[260px] shrink-0 z-30 hidden md:flex flex-col bg-transparent"
+      style={{ padding: '24px 16px', borderRight: '1px solid #1a1a1a' }}
+      role="navigation"
+      aria-label="Main navigation"
+    >
       {/* Logo */}
       <div className="flex items-center gap-[10px] px-[12px] mb-[32px]">
         <Link href="/" className="flex items-center gap-[10px]" aria-label="Korus Home">
-          <div className="w-[32px] h-[32px] bg-gradient-to-r from-korus-primary to-korus-secondary rounded-[10px] flex items-center justify-center">
-            <span className="text-white font-[800] text-[16px]">K</span>
+          <div
+            className="flex items-center justify-center"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              background: 'linear-gradient(135deg, #43e97b, #38f9d7)',
+            }}
+          >
+            <span className="text-white" style={{ fontWeight: 700, fontSize: 16 }}>K</span>
           </div>
-          <span className="text-white text-[20px] font-[800] tracking-[-0.5px] hidden xl:block">Korus</span>
+          <span
+            className="text-white hidden xl:block"
+            style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px' }}
+          >
+            Korus
+          </span>
         </Link>
       </div>
 
@@ -172,44 +189,167 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
         {tabs.map((tab) => {
           const isActive = pathname === tab.path && !tab.disabled;
           const isDisabled = tab.disabled;
-          const className = `flex items-center gap-[14px] px-[16px] py-[12px] rounded-[12px] text-[15px] cursor-pointer transition-all duration-150 relative group mb-[2px] ${
-            isDisabled
-              ? 'text-[#525252] opacity-50 cursor-not-allowed'
+
+          const itemStyle: React.CSSProperties = {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+            padding: '12px 16px',
+            borderRadius: 12,
+            fontSize: 15,
+            cursor: isDisabled ? 'not-allowed' : 'pointer',
+            transition: 'all 150ms',
+            marginBottom: 2,
+            position: 'relative',
+            textDecoration: 'none',
+            border: 'none',
+            outline: 'none',
+            width: '100%',
+            background: isDisabled
+              ? 'transparent'
               : isActive
-              ? 'bg-white/[0.12] text-[#fafafa] font-semibold border-l-[3px] border-l-korus-primary'
-              : 'text-[#a1a1a1] font-medium hover:bg-white/[0.06] hover:text-[#fafafa] border-l-[3px] border-l-transparent'
-          }`;
+              ? 'rgba(67,233,123,0.08)'
+              : 'transparent',
+            color: isDisabled
+              ? '#525252'
+              : isActive
+              ? '#fafafa'
+              : '#737373',
+            fontWeight: isDisabled
+              ? 500
+              : isActive
+              ? 600
+              : 500,
+            opacity: isDisabled ? 0.5 : 1,
+          };
+
+          const iconStyle: React.CSSProperties = {
+            width: 22,
+            height: 22,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'color 150ms, opacity 150ms',
+            opacity: isDisabled ? 0.7 : isActive ? 1 : 0.7,
+            color: isActive ? '#43e97b' : 'currentColor',
+          };
 
           const content = (
             <>
-              <div className={`w-[22px] h-[22px] flex items-center justify-center transition-colors ${
-                isDisabled
-                  ? 'opacity-70'
-                  : isActive
-                  ? 'opacity-100'
-                  : 'opacity-70 group-hover:opacity-100'
-              }`}>
+              <div style={iconStyle}>
                 {tab.icon}
               </div>
 
-              <span className={`text-[15px] hidden xl:block ${
-                isDisabled
-                  ? 'text-[#525252]'
-                  : isActive
-                  ? 'text-[#fafafa] font-semibold'
-                  : 'text-[#a1a1a1] font-medium group-hover:text-[#fafafa]'
-              }`}>
+              <span
+                className="hidden xl:block"
+                style={{
+                  fontSize: 15,
+                  color: isDisabled
+                    ? '#525252'
+                    : isActive
+                    ? '#fafafa'
+                    : '#737373',
+                  fontWeight: isDisabled
+                    ? 500
+                    : isActive
+                    ? 600
+                    : 500,
+                }}
+              >
                 {tab.name}
                 {isDisabled && (
-                  <span className="text-[11px] text-[#525252] block">Coming Soon</span>
+                  <span style={{ fontSize: 11, color: '#525252', display: 'block' }}>Coming Soon</span>
                 )}
               </span>
 
               {/* Badge */}
               {tab.badge && tab.badge > 0 && !isDisabled && (
                 <span
-                  className="bg-korus-primary text-black font-bold rounded-full w-5 h-5 hidden xl:flex xl:items-center xl:justify-center ml-auto text-xs"
-                  style={{lineHeight: '1', fontFamily: 'monospace'}}
+                  className="hidden xl:inline-flex xl:items-center xl:justify-center ml-auto"
+                  style={{
+                    backgroundColor: '#43e97b',
+                    color: '#000',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: '2px 7px',
+                    borderRadius: 10,
+                    lineHeight: '1',
+                    fontFamily: 'monospace',
+                  }}
+                  id={`${tab.name}-badge`}
+                  aria-label={`${tab.badge > 9 ? 'More than 9' : tab.badge} unread notifications`}
+                >
+                  {tab.badge > 9 ? '9+' : tab.badge}
+                </span>
+              )}
+            </>
+          );
+
+          const hoverHandlers = !isDisabled && !isActive ? {
+            onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+              e.currentTarget.style.color = '#e5e5e5';
+              // Update icon opacity
+              const iconEl = e.currentTarget.querySelector('[data-icon]') as HTMLElement;
+              if (iconEl) iconEl.style.opacity = '1';
+              // Update label color
+              const labelEl = e.currentTarget.querySelector('[data-label]') as HTMLElement;
+              if (labelEl) labelEl.style.color = '#e5e5e5';
+            },
+            onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = '#737373';
+              const iconEl = e.currentTarget.querySelector('[data-icon]') as HTMLElement;
+              if (iconEl) iconEl.style.opacity = '0.7';
+              const labelEl = e.currentTarget.querySelector('[data-label]') as HTMLElement;
+              if (labelEl) labelEl.style.color = '#737373';
+            },
+          } : {};
+
+          // Re-render content with data attributes for hover targeting
+          const contentWithAttrs = (
+            <>
+              <div style={iconStyle} data-icon="">
+                {tab.icon}
+              </div>
+
+              <span
+                className="hidden xl:block"
+                data-label=""
+                style={{
+                  fontSize: 15,
+                  color: isDisabled
+                    ? '#525252'
+                    : isActive
+                    ? '#fafafa'
+                    : '#737373',
+                  fontWeight: isDisabled
+                    ? 500
+                    : isActive
+                    ? 600
+                    : 500,
+                }}
+              >
+                {tab.name}
+                {isDisabled && (
+                  <span style={{ fontSize: 11, color: '#525252', display: 'block' }}>Coming Soon</span>
+                )}
+              </span>
+
+              {/* Badge */}
+              {tab.badge && tab.badge > 0 && !isDisabled && (
+                <span
+                  className="hidden xl:inline-flex xl:items-center xl:justify-center ml-auto"
+                  style={{
+                    backgroundColor: '#43e97b',
+                    color: '#000',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: '2px 7px',
+                    borderRadius: 10,
+                    lineHeight: '1',
+                    fontFamily: 'monospace',
+                  }}
                   id={`${tab.name}-badge`}
                   aria-label={`${tab.badge > 9 ? 'More than 9' : tab.badge} unread notifications`}
                 >
@@ -224,11 +364,12 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
               <button
                 key={tab.name}
                 onClick={tab.onClick}
-                className={className}
+                style={itemStyle}
                 aria-label={tab.name}
                 aria-describedby={tab.badge ? `${tab.name}-badge` : undefined}
+                {...hoverHandlers}
               >
-                {content}
+                {contentWithAttrs}
               </button>
             );
           }
@@ -237,15 +378,16 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
             return (
               <div
                 key={tab.name}
-                className={`${className} relative`}
+                style={itemStyle}
                 role="button"
                 aria-disabled="true"
                 aria-label={`${tab.name} (Coming Soon)`}
                 title={`${tab.name} - Coming Soon`}
+                className="group"
               >
-                {content}
+                {contentWithAttrs}
                 {/* Tooltip on hover */}
-                <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#262626] border border-[#2a2a2a] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50 whitespace-nowrap">
+                <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#262626] border border-[#1a1a1a] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50 whitespace-nowrap">
                   Feature coming soon
                 </div>
               </div>
@@ -256,11 +398,12 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
             <Link
               key={tab.name}
               href={tab.path || '#'}
-              className={className}
+              style={itemStyle}
               aria-label={tab.name}
               aria-current={isActive ? 'page' : undefined}
+              {...hoverHandlers}
             >
-              {content}
+              {contentWithAttrs}
             </Link>
           );
         })}
@@ -268,10 +411,33 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
 
       {/* Post Button */}
       {connected && onPostButtonClick && (
-        <div className="mt-auto pt-[20px]">
+        <div className="mt-auto" style={{ paddingTop: 20 }}>
           <button
             onClick={onPostButtonClick}
-            className="w-full bg-gradient-to-r from-korus-primary to-korus-secondary text-black text-[15px] font-bold rounded-[14px] py-[12px] text-center hover:-translate-y-px hover:shadow-xl hover:shadow-korus-primary/35 transition-all duration-150 flex items-center justify-center"
+            style={{
+              width: '100%',
+              background: 'linear-gradient(to right, #43e97b, #38f9d7)',
+              color: '#000',
+              fontSize: 15,
+              fontWeight: 700,
+              borderRadius: 14,
+              padding: 14,
+              textAlign: 'center' as const,
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 150ms',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 8px 25px rgba(67,233,123,0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
           >
             <span>Post</span>
           </button>
@@ -280,29 +446,53 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
 
       {/* User Profile */}
       {connected && publicKey && (
-        <div className="mt-[12px] p-[14px] rounded-xl bg-[#171717] border border-[#2a2a2a]">
-          <Link href="/profile" className="flex items-center gap-[10px] transition-all duration-150 cursor-pointer">
+        <div
+          style={{
+            marginTop: 12,
+            padding: 12,
+            borderRadius: 12,
+            transition: 'background 150ms',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+          }}
+        >
+          <Link href="/profile" className="flex items-center gap-[10px]" style={{ textDecoration: 'none', cursor: 'pointer', transition: 'all 150ms' }}>
             {userAvatar ? (
-              <div className="w-[36px] h-[36px] rounded-[10px] flex-shrink-0 overflow-hidden">
+              <div style={{ width: 38, height: 38, borderRadius: '50%', flexShrink: 0, overflow: 'hidden' }}>
                 <Image
                   src={userAvatar}
                   alt="Your avatar"
-                  width={36}
-                  height={36}
+                  width={38}
+                  height={38}
                   className="w-full h-full object-cover"
                   unoptimized
                 />
               </div>
             ) : (
-              <div className="w-[36px] h-[36px] bg-gradient-to-r from-korus-primary to-korus-secondary rounded-[10px] flex items-center justify-center flex-shrink-0">
-                <span className="text-black font-bold text-xs">
+              <div
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #43e97b, #38f9d7)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <span style={{ color: '#000', fontWeight: 700, fontSize: 12 }}>
                   {publicKey.toBase58().slice(0, 2).toUpperCase()}
                 </span>
               </div>
             )}
             <div className="hidden xl:block flex-1 min-w-0">
-              <div className="text-[13px] font-semibold text-white">{userDisplayName || 'korus.sol'}</div>
-              <div className="text-[11px] text-[#737373] font-mono truncate">
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{userDisplayName || 'korus.sol'}</div>
+              <div style={{ fontSize: 12, color: '#737373', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
               </div>
             </div>

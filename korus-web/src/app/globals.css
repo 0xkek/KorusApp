@@ -2,7 +2,7 @@
 
 /* Default fallback values - will be overridden by ThemeProvider */
 :root {
-  --background: #121212;
+  --background: #0a0a0a;
   --foreground: #ffffff;
   --korus-primary: #43e97b;
   --korus-secondary: #38f9d7;
@@ -13,7 +13,7 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--korus-primary);
   --color-secondary: var(--korus-secondary);
-  --color-surface: #171717;
+  --color-surface: #141414;
   --color-surface-light: #252525;
   --color-text: #ffffff;
   --color-text-secondary: rgba(255, 255, 255, 0.85);
@@ -79,11 +79,11 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #121212;
+  background: #0a0a0a;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #262626;
+  background: #1a1a1a;
   border-radius: 4px;
 }
 
@@ -94,7 +94,7 @@ body {
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #262626 #121212;
+  scrollbar-color: #1a1a1a #0a0a0a;
 }
 
 /* ========================================
@@ -352,10 +352,10 @@ textarea.bg-transparent:focus {
 }
 
 .wallet-adapter-modal-list .wallet-adapter-button {
-  background: #121212 !important;
+  background: #0a0a0a !important;
   border: 2px solid transparent !important;
   background-image:
-    linear-gradient(#121212, #121212),
+    linear-gradient(#0a0a0a, #0a0a0a),
     linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%) !important;
   background-origin: border-box !important;
   background-clip: padding-box, border-box !important;

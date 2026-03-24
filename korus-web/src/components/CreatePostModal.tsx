@@ -275,9 +275,9 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
       aria-modal="true"
       aria-labelledby="create-post-title"
     >
-      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl shadow-2xl max-w-2xl w-full">
+      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#1a1a1a] rounded-2xl shadow-2xl max-w-2xl w-full">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-[#2a2a2a]">
+        <div className="flex items-center justify-between p-6 border-b border-[#1a1a1a]">
           <h2 id="create-post-title" className="heading-2 text-[#fafafa] font-semibold">Create Post</h2>
           <button
             onClick={onClose}
@@ -328,7 +328,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
 
               {/* Inline Drawing Canvas */}
               {showDrawCanvas && (
-                <div className="mt-3 p-3 bg-white/[0.04] border border-[#2a2a2a] rounded-xl">
+                <div className="mt-3 p-3 bg-white/[0.04] border border-[#1a1a1a] rounded-xl">
                   <DrawingCanvasInline
                     onSave={handleDrawingSave}
                     onClose={() => setShowDrawCanvas(false)}
@@ -347,10 +347,10 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                           alt="Upload preview"
                           width={200}
                           height={128}
-                          className="max-w-full h-auto rounded-xl border border-[#2a2a2a]"
+                          className="max-w-full h-auto rounded-xl border border-[#1a1a1a]"
                         />
                       ) : (
-                        <div className="w-full h-32 bg-white/[0.06] border border-[#2a2a2a] rounded-xl flex items-center justify-center">
+                        <div className="w-full h-32 bg-white/[0.06] border border-[#1a1a1a] rounded-xl flex items-center justify-center">
                           <div className="text-center">
                             <svg className="w-8 h-8 mx-auto mb-2 text-[#a1a1a1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -380,7 +380,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                   {/* Media Upload */}
                   <label
                     aria-label="Upload images or videos"
-                    className="flex items-center justify-center w-10 h-10 bg-white/[0.06] backdrop-blur-sm border border-[#2a2a2a] rounded-xl text-korus-primary hover:bg-white/[0.12] hover:border-[#2a2a2a] transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer"
+                    className="flex items-center justify-center w-10 h-10 bg-white/[0.06] backdrop-blur-sm border border-[#1a1a1a] rounded-xl text-korus-primary hover:bg-white/[0.12] hover:border-[#1a1a1a] transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -398,7 +398,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                   {/* GIF Button */}
                   <button
                     aria-label="Add GIF"
-                    className="flex items-center justify-center w-10 h-10 bg-white/[0.06] backdrop-blur-sm border border-[#2a2a2a] rounded-xl text-korus-primary hover:bg-white/[0.12] hover:border-[#2a2a2a] transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10"
+                    className="flex items-center justify-center w-10 h-10 bg-white/[0.06] backdrop-blur-sm border border-[#1a1a1a] rounded-xl text-korus-primary hover:bg-white/[0.12] hover:border-[#1a1a1a] transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10"
                   >
                     <span className="text-xs font-bold">GIF</span>
                   </button>
@@ -410,7 +410,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                     className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10 ${
                       showEmojiPicker
                         ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
-                        : 'bg-white/[0.06] border-[#2a2a2a] text-korus-primary hover:bg-white/[0.12] hover:border-[#2a2a2a]'
+                        : 'bg-white/[0.06] border-[#1a1a1a] text-korus-primary hover:bg-white/[0.12] hover:border-[#1a1a1a]'
                     }`}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -425,7 +425,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                     className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10 ${
                       showDrawCanvas
                         ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
-                        : 'bg-white/[0.06] border-[#2a2a2a] text-korus-primary hover:bg-white/[0.12] hover:border-[#2a2a2a]'
+                        : 'bg-white/[0.06] border-[#1a1a1a] text-korus-primary hover:bg-white/[0.12] hover:border-[#1a1a1a]'
                     }`}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -442,7 +442,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                     aria-label="Create shoutout post"
                     className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm border rounded-xl transition-all duration-150 ${
                       content.trim() || selectedFiles.length > 0
-                        ? 'bg-white/[0.06] border-[#2a2a2a] text-korus-primary hover:bg-white/[0.12] hover:border-[#2a2a2a] hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer'
+                        ? 'bg-white/[0.06] border-[#1a1a1a] text-korus-primary hover:bg-white/[0.12] hover:border-[#1a1a1a] hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer'
                         : 'bg-white/[0.04] border-white/8 text-[#737373] cursor-not-allowed opacity-50'
                     }`}
                   >
@@ -456,7 +456,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                         ? 'border-red-500 text-red-500'
                         : characterCount > MAX_POST_LENGTH * 0.8
                         ? 'border-yellow-500 text-yellow-500'
-                        : 'border-[#2a2a2a] text-[#a1a1a1]'
+                        : 'border-[#1a1a1a] text-[#a1a1a1]'
                     }`}>
                       <span className="text-xs font-medium">
                         {isOverLimit ? `-${characterCount - MAX_POST_LENGTH}` : MAX_POST_LENGTH - characterCount}
@@ -513,9 +513,9 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
       {/* Emoji Picker Modal */}
       {showEmojiPicker && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4">
-          <div className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden">
+          <div className="bg-[#1e1e1e] border border-[#1a1a1a] rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a]">
+            <div className="flex items-center justify-between p-4 border-b border-[#1a1a1a]">
               <h3 className="text-lg font-semibold text-[#fafafa]">Choose Emoji</h3>
               <button
                 onClick={() => setShowEmojiPicker(false)}

@@ -27,7 +27,7 @@ export function Button({
 
   const variantStyles = {
     primary: 'bg-gradient-to-r from-korus-primary to-korus-secondary text-black hover:shadow-lg hover:shadow-korus-primary/30 hover:scale-[1.02] disabled:hover:scale-100',
-    secondary: 'bg-white/[0.12] border border-[#2a2a2a] text-[#fafafa] hover:bg-[#171717] hover:border-[#2a2a2a]',
+    secondary: 'bg-white/[0.12] border border-[#1a1a1a] text-[#fafafa] hover:bg-[#141414] hover:border-[#1a1a1a]',
     danger: 'bg-red-600 hover:bg-red-700 text-white border border-red-500 hover:shadow-lg hover:shadow-red-500/40 hover:scale-[1.02] disabled:hover:scale-100',
     ghost: 'bg-transparent text-[#a1a1a1] hover:bg-white/[0.06] hover:text-white',
   };

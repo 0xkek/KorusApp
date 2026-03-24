@@ -19,7 +19,7 @@ interface TextareaProps extends BaseInputProps, TextareaHTMLAttributes<HTMLTextA
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ variant = 'default', label, helperText, fullWidth = false, className = '', ...props }, ref) => {
-    const baseStyles = 'bg-white/[0.06] text-[#fafafa] px-4 py-3 rounded-lg border border-[#2a2a2a] transition-all duration-150';
+    const baseStyles = 'bg-white/[0.06] text-[#fafafa] px-4 py-3 rounded-lg border border-[#1a1a1a] transition-all duration-150';
 
     const variantStyles = {
       default: '',
@@ -53,7 +53,7 @@ Input.displayName = 'Input';
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ variant = 'default', label, helperText, fullWidth = false, className = '', rows = 4, ...props }, ref) => {
-    const baseStyles = 'bg-white/[0.06] text-[#fafafa] px-4 py-3 rounded-lg border border-[#2a2a2a] transition-all duration-150 resize-none';
+    const baseStyles = 'bg-white/[0.06] text-[#fafafa] px-4 py-3 rounded-lg border border-[#1a1a1a] transition-all duration-150 resize-none';
 
     const variantStyles = {
       default: '',

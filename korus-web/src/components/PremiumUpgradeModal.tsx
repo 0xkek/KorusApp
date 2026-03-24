@@ -160,7 +160,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
     >
       <div
         ref={modalRef}
-        className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4"
+        className="bg-[#1e1e1e] border border-[#1a1a1a] rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="text-center">
@@ -199,7 +199,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
             <div className="space-y-4">
               {/* Subscription Info */}
               {subscriptionStatus && (
-                <div className="bg-white/[0.06] border border-[#2a2a2a] rounded-lg p-4 text-left">
+                <div className="bg-white/[0.06] border border-[#1a1a1a] rounded-lg p-4 text-left">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[#737373] text-sm">Subscription Type:</span>
                     <span className="text-[#fafafa] font-medium capitalize">{subscriptionStatus.type || 'Premium'}</span>
@@ -227,7 +227,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
               <button
                 onClick={() => handleUpgrade('monthly')}
                 disabled={isProcessing}
-                className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 white-text rounded-lg hover:shadow-lg font-semibold duration-150 border border-[#2a2a2a] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 white-text rounded-lg hover:shadow-lg font-semibold duration-150 border border-[#1a1a1a] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (
                   <div className="flex items-center justify-center gap-2">
@@ -249,7 +249,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
               <button
                 onClick={() => handleUpgrade('yearly')}
                 disabled={isProcessing}
-                className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 white-text rounded-lg hover:shadow-lg font-semibold duration-150 relative border border-[#2a2a2a] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 white-text rounded-lg hover:shadow-lg font-semibold duration-150 relative border border-[#1a1a1a] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {!isProcessing && (
                   <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">
@@ -276,7 +276,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
               <button
                 onClick={onClose}
                 disabled={isProcessing}
-                className="w-full px-4 py-2 bg-white/[0.08] border border-[#2a2a2a] text-[#fafafa] rounded-lg hover:bg-white/[0.12] duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2 bg-white/[0.08] border border-[#1a1a1a] text-[#fafafa] rounded-lg hover:bg-white/[0.12] duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Maybe Later
               </button>

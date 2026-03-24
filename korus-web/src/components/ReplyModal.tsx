@@ -146,9 +146,9 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
 
   return (
     <div className="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#1a1a1a] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Modal Header */}
-        <div className="sticky top-0 bg-[#1e1e1e] backdrop-blur-md flex items-center justify-between p-6 border-b border-[#2a2a2a]">
+        <div className="sticky top-0 bg-[#1e1e1e] backdrop-blur-md flex items-center justify-between p-6 border-b border-[#1a1a1a]">
           <h2 className="heading-2 text-[#fafafa] font-semibold">Reply</h2>
           <button
             onClick={onClose}
@@ -161,7 +161,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
         </div>
 
         {/* Original Post */}
-        <div className="p-6 border-b border-[#2a2a2a]">
+        <div className="p-6 border-b border-[#1a1a1a]">
           <div className="flex gap-4">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-lg font-bold text-black flex-shrink-0">
               {post.user.slice(0, 2).toUpperCase()}
@@ -184,7 +184,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                 {post.content}
               </div>
               {post.image && (
-                <div className="mb-3 rounded-2xl overflow-hidden border border-[#2a2a2a] w-2/3">
+                <div className="mb-3 rounded-2xl overflow-hidden border border-[#1a1a1a] w-2/3">
                   <Image src={post.image} alt="Post content" width={400} height={300} className="w-full h-auto" />
                 </div>
               )}
@@ -225,10 +225,10 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                           alt="Upload preview"
                           width={200}
                           height={128}
-                          className="max-w-full h-auto rounded-xl border border-[#2a2a2a]"
+                          className="max-w-full h-auto rounded-xl border border-[#1a1a1a]"
                         />
                       ) : (
-                        <div className="w-full h-32 bg-white/[0.06] border border-[#2a2a2a] rounded-xl flex items-center justify-center">
+                        <div className="w-full h-32 bg-white/[0.06] border border-[#1a1a1a] rounded-xl flex items-center justify-center">
                           <div className="text-center">
                             <svg className="w-8 h-8 mx-auto mb-2 text-[#a1a1a1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -255,7 +255,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
               <div className="flex items-center justify-between mt-4">
                 <div className="flex items-center gap-2">
                   {/* Media Upload */}
-                  <label className="flex items-center justify-center w-10 h-10 bg-white/[0.06] backdrop-blur-sm border border-[#2a2a2a] rounded-xl text-korus-primary hover:bg-white/[0.12] hover:border-[#2a2a2a] transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer">
+                  <label className="flex items-center justify-center w-10 h-10 bg-white/[0.06] backdrop-blur-sm border border-[#1a1a1a] rounded-xl text-korus-primary hover:bg-white/[0.12] hover:border-[#1a1a1a] transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
@@ -274,7 +274,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                     className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10 ${
                       showGifPicker
                         ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
-                        : 'bg-white/[0.06] border-[#2a2a2a] text-korus-primary hover:bg-white/[0.12] hover:border-[#2a2a2a]'
+                        : 'bg-white/[0.06] border-[#1a1a1a] text-korus-primary hover:bg-white/[0.12] hover:border-[#1a1a1a]'
                     }`}
                   >
                     <span className="text-xs font-bold">GIF</span>
@@ -286,7 +286,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                     className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10 ${
                       showEmojiPicker
                         ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
-                        : 'bg-white/[0.06] border-[#2a2a2a] text-korus-primary hover:bg-white/[0.12] hover:border-[#2a2a2a]'
+                        : 'bg-white/[0.06] border-[#1a1a1a] text-korus-primary hover:bg-white/[0.12] hover:border-[#1a1a1a]'
                     }`}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -303,7 +303,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                         ? 'border-red-500 text-red-500'
                         : characterCount > maxCharacters * 0.8
                         ? 'border-yellow-500 text-yellow-500'
-                        : 'border-[#2a2a2a] text-[#a1a1a1]'
+                        : 'border-[#1a1a1a] text-[#a1a1a1]'
                     }`}>
                       <span className="text-xs font-medium">
                         {isOverLimit ? `-${characterCount - maxCharacters}` : maxCharacters - characterCount}
@@ -363,8 +363,8 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
       {/* Emoji Picker - Nested within backdrop */}
       {showEmojiPicker && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setShowEmojiPicker(false)}>
-          <div className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a]">
+          <div className="bg-[#1e1e1e] border border-[#1a1a1a] rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-[#1a1a1a]">
               <h3 className="text-lg font-semibold text-[#fafafa]">Choose Emoji</h3>
               <button
                 onClick={() => setShowEmojiPicker(false)}
@@ -402,8 +402,8 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
       {/* GIF Picker - Nested within backdrop */}
       {showGifPicker && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setShowGifPicker(false)}>
-          <div className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a]">
+          <div className="bg-[#1e1e1e] border border-[#1a1a1a] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-[#1a1a1a]">
               <h3 className="text-lg font-semibold text-[#fafafa]">Choose GIF</h3>
               <button
                 onClick={() => setShowGifPicker(false)}

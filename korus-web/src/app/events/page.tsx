@@ -201,11 +201,11 @@ export default function EventsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#121212] relative overflow-hidden">
+    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
       {/* Standardized static background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#121212] via-[#111111] to-[#121212]">
+      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
         {/* Surface gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#171717]/25 to-[#111111]/35" />
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#111111]/25 to-[#111111]/35" />
       </div>
       {/* Static gradient orbs for visual depth */}
       <div className="fixed inset-0 overflow-hidden">
@@ -226,10 +226,10 @@ export default function EventsPage() {
           />
 
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-[#2a2a2a]">
+          <div className="flex-1 min-w-0 border-x border-[#1a1a1a]">
 
             {/* Header Navigation */}
-            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-[#2a2a2a] z-10">
+            <div className="sticky top-0 bg-[#141414]/80 backdrop-blur-xl border-b border-[#1a1a1a] z-10">
               <div className="flex">
                 {/* Mobile menu button */}
                 <button
@@ -355,7 +355,7 @@ export default function EventsPage() {
                     <div
                       key={event.id}
                       onClick={() => handleEventPress(event)}
-                      className="border border-[#2a2a2a] bg-[#171717] hover:bg-white/[0.04] hover:border-[#2a2a2a] transition-all duration-150 cursor-pointer rounded-xl overflow-hidden group"
+                      className="border border-[#1a1a1a] bg-[#141414] hover:bg-white/[0.04] hover:border-[#1a1a1a] transition-all duration-150 cursor-pointer rounded-xl overflow-hidden group"
                       style={{
                         borderColor: eventIsLive ? getEventTypeColor(event.type) : undefined
                       }}
@@ -393,7 +393,7 @@ export default function EventsPage() {
                               className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
                                 eventIsLive
                                   ? 'bg-red-500 text-white'
-                                  : 'bg-[#171717] text-[#a1a1a1]'
+                                  : 'bg-[#141414] text-[#a1a1a1]'
                               }`}
                             >
                               {eventIsLive ? '🔴' : '⏰'}
@@ -480,7 +480,7 @@ export default function EventsPage() {
       {/* Event Details Modal */}
       {showEventModal && selectedEvent && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#1e1e1e] border border-[#1a1a1a] rounded-2xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex justify-between items-center mb-6">
               <div
@@ -496,7 +496,7 @@ export default function EventsPage() {
               <button
                 onClick={() => setShowEventModal(false)}
                 aria-label="Close event details"
-                className="w-8 h-8 rounded-full bg-white/[0.12] flex items-center justify-center hover:bg-[#171717] transition-all"
+                className="w-8 h-8 rounded-full bg-white/[0.12] flex items-center justify-center hover:bg-[#141414] transition-all"
               >
                 <svg className="w-5 h-5 text-[#fafafa]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -525,21 +525,21 @@ export default function EventsPage() {
 
               {/* Event Details Grid */}
               <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-[#262626] p-4 rounded-xl text-center border border-[#2a2a2a]">
+                <div className="bg-[#262626] p-4 rounded-xl text-center border border-[#1a1a1a]">
                   <div className="text-korus-primary text-xl mb-1">⏰</div>
                   <div className="text-xs text-[#737373]">Starts In</div>
                   <div className="font-semibold text-[#fafafa]">{formatTimeRemaining(selectedEvent.startDate)}</div>
                 </div>
 
                 {selectedEvent.maxSpots && (
-                  <div className="bg-[#262626] p-4 rounded-xl text-center border border-[#2a2a2a]">
+                  <div className="bg-[#262626] p-4 rounded-xl text-center border border-[#1a1a1a]">
                     <div className="text-korus-primary text-xl mb-1">👥</div>
                     <div className="text-xs text-[#737373]">Max Spots</div>
                     <div className="font-semibold text-[#fafafa]">{selectedEvent.maxSpots}</div>
                   </div>
                 )}
 
-                <div className="bg-[#262626] p-4 rounded-xl text-center border border-[#2a2a2a]">
+                <div className="bg-[#262626] p-4 rounded-xl text-center border border-[#1a1a1a]">
                   <div className="text-korus-primary text-xl mb-1">🔗</div>
                   <div className="text-xs text-[#737373]">Chain</div>
                   <div className="font-semibold text-[#fafafa]">Solana</div>
@@ -588,7 +588,7 @@ export default function EventsPage() {
               {/* Action Button */}
               <div className="mt-8">
                 {!connected ? (
-                  <button className="w-full bg-white/[0.08] border border-[#2a2a2a] text-[#fafafa] font-semibold py-4 rounded-lg hover:bg-white/[0.12] duration-150">
+                  <button className="w-full bg-white/[0.08] border border-[#1a1a1a] text-[#fafafa] font-semibold py-4 rounded-lg hover:bg-white/[0.12] duration-150">
                     Connect Wallet to Participate
                   </button>
                 ) : (

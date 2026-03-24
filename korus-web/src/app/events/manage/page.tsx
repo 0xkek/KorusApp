@@ -149,7 +149,7 @@ export default function ManageEventsPage() {
 
   if (!connected) {
     return (
-      <main className="min-h-screen bg-[#121212] flex items-center justify-center">
+      <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🔒</div>
           <h2 className="text-2xl font-semibold text-[#fafafa] mb-2">Wallet Not Connected</h2>
@@ -160,10 +160,10 @@ export default function ManageEventsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#121212] relative overflow-hidden">
+    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
       {/* Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#121212] via-[#111111] to-[#121212]">
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#171717]/25 to-[#111111]/35" />
+      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#111111]/25 to-[#111111]/35" />
       </div>
       <div className="fixed inset-0 overflow-hidden">
         <div className="absolute -top-32 -right-32 w-[600px] h-[600px] bg-gradient-to-br from-korus-primary/8 to-korus-secondary/6 rounded-full blur-[80px]" />
@@ -179,10 +179,10 @@ export default function ManageEventsPage() {
           />
 
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-[#2a2a2a]">
+          <div className="flex-1 min-w-0 border-x border-[#1a1a1a]">
 
             {/* Header */}
-            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-[#2a2a2a] z-10">
+            <div className="sticky top-0 bg-[#141414]/80 backdrop-blur-xl border-b border-[#1a1a1a] z-10">
               <div className="px-6 py-4">
                 <div className="flex justify-between items-center">
                   <div>
@@ -222,7 +222,7 @@ export default function ManageEventsPage() {
                   {myEvents.map((event) => (
                     <div
                       key={event.id}
-                      className="border border-[#2a2a2a] bg-[#171717] rounded-xl overflow-hidden hover:bg-white/[0.04] duration-150"
+                      className="border border-[#1a1a1a] bg-[#141414] rounded-xl overflow-hidden hover:bg-white/[0.04] duration-150"
                     >
                       <div className="p-6">
                         <div className="flex gap-6">
@@ -279,7 +279,7 @@ export default function ManageEventsPage() {
                             <div className="flex gap-3">
                               <button
                                 onClick={() => router.push(`/events/${event.id}`)}
-                                className="px-4 py-2 bg-white/[0.08] border border-[#2a2a2a] text-[#fafafa] font-semibold rounded-lg hover:bg-white/[0.12] duration-150 text-sm"
+                                className="px-4 py-2 bg-white/[0.08] border border-[#1a1a1a] text-[#fafafa] font-semibold rounded-lg hover:bg-white/[0.12] duration-150 text-sm"
                               >
                                 View Details
                               </button>
@@ -318,16 +318,16 @@ export default function ManageEventsPage() {
       {/* Registrations Modal */}
       {showRegistrationsModal && selectedEvent && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+          <div className="bg-[#1e1e1e] border border-[#1a1a1a] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
             {/* Header */}
-            <div className="px-6 py-4 border-b border-[#2a2a2a] flex items-center justify-between">
+            <div className="px-6 py-4 border-b border-[#1a1a1a] flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-[#fafafa]">{selectedEvent.title}</h2>
                 <p className="text-sm text-[#a1a1a1]">{registrations.length} registrations</p>
               </div>
               <button
                 onClick={() => setShowRegistrationsModal(false)}
-                className="w-8 h-8 rounded-full bg-white/[0.12] hover:bg-[#171717] flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-full bg-white/[0.12] hover:bg-[#141414] flex items-center justify-center transition-colors"
               >
                 <svg className="w-5 h-5 text-[#fafafa]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -336,7 +336,7 @@ export default function ManageEventsPage() {
             </div>
 
             {/* Export Buttons */}
-            <div className="px-6 py-3 border-b border-[#2a2a2a] flex gap-3">
+            <div className="px-6 py-3 border-b border-[#1a1a1a] flex gap-3">
               <button
                 onClick={() => exportRegistrations('csv')}
                 className="px-4 py-2 bg-korus-primary/20 hover:bg-korus-primary/30 text-korus-primary font-semibold rounded-lg transition-colors text-sm"
@@ -368,7 +368,7 @@ export default function ManageEventsPage() {
                   {registrations.map((reg, index) => (
                     <div
                       key={reg.id}
-                      className="bg-[#171717] border border-[#2a2a2a] rounded-xl p-4 hover:bg-white/[0.04] duration-150"
+                      className="bg-[#141414] border border-[#1a1a1a] rounded-xl p-4 hover:bg-white/[0.04] duration-150"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">

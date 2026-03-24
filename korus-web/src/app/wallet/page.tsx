@@ -80,11 +80,11 @@ export default function WalletPage() {
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {
     return (
-      <main className="min-h-screen bg-[#121212] relative overflow-hidden">
+      <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
         <div className="relative z-10">
           <div className="max-w-3xl mx-auto px-4 py-6 pb-24">
             <h2 className="text-3xl font-bold text-[#fafafa] mb-6">Wallet</h2>
-            <div className="bg-white/[0.06] backdrop-blur-sm rounded-2xl p-6 mb-6 border border-[#2a2a2a]">
+            <div className="bg-white/[0.06] backdrop-blur-sm rounded-2xl p-6 mb-6 border border-[#1a1a1a]">
               <div className="text-[#fafafa] text-sm mb-2 font-medium">SOL Balance</div>
               <div className="text-4xl font-bold text-korus-primary animate-pulse mb-4">Loading...</div>
             </div>
@@ -95,11 +95,11 @@ export default function WalletPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#121212] relative overflow-hidden">
+    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
       {/* Standardized static background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#121212] via-[#111111] to-[#121212]">
+      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
         {/* Surface gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#171717]/25 to-[#111111]/35" />
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#111111]/25 to-[#111111]/35" />
       </div>
       {/* Static gradient orbs for visual depth */}
       <div className="fixed inset-0 overflow-hidden">
@@ -119,9 +119,9 @@ export default function WalletPage() {
             onSearchClick={() => setShowSearchModal(true)}
           />
 
-          <div className="flex-1 min-w-0 border-x border-[#2a2a2a]">
+          <div className="flex-1 min-w-0 border-x border-[#1a1a1a]">
             {/* Feed Navigation */}
-            <div className="sticky top-0 bg-[#171717]/80 backdrop-blur-xl border-b border-[#2a2a2a] z-10">
+            <div className="sticky top-0 bg-[#141414]/80 backdrop-blur-xl border-b border-[#1a1a1a] z-10">
               <div className="flex">
                 {/* Mobile menu button */}
                 <button
@@ -182,7 +182,7 @@ export default function WalletPage() {
           <h2 className="text-3xl font-bold text-[#fafafa] mb-6">Wallet</h2>
 
           {/* Balance Card */}
-          <div className="bg-white/[0.06] backdrop-blur-sm rounded-2xl p-6 mb-6 border border-[#2a2a2a] shadow-lg transition-shadow duration-150">
+          <div className="bg-white/[0.06] backdrop-blur-sm rounded-2xl p-6 mb-6 border border-[#1a1a1a] shadow-lg transition-shadow duration-150">
             <div className="text-[#fafafa] text-sm mb-2 font-medium">SOL Balance</div>
             <div className="text-4xl font-bold text-[#fafafa] mb-4">
               {loading ? (
@@ -225,7 +225,7 @@ export default function WalletPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 ${
                   activeTab === tab
                     ? 'bg-gradient-to-r from-korus-primary to-korus-secondary'
-                    : 'bg-white/[0.08] hover:bg-white/[0.12] border border-[#2a2a2a]'
+                    : 'bg-white/[0.08] hover:bg-white/[0.12] border border-[#1a1a1a]'
                 }`}
                 style={activeTab === tab ? { color: '#000000' } : { color: 'var(--color-text)' }}
               >
@@ -235,7 +235,7 @@ export default function WalletPage() {
           </div>
 
           {/* Tab Content */}
-          <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-[#2a2a2a]">
+          <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-[#1a1a1a]">
             {activeTab === 'All' && (
               <div className="text-center py-20">
                 <div className="text-6xl mb-4 opacity-60">💳</div>
@@ -253,7 +253,7 @@ export default function WalletPage() {
                   </button>
                   <button
                     onClick={() => window.location.href = '/games'}
-                    className="bg-white/[0.06] border border-[#2a2a2a] text-[#fafafa] font-semibold px-6 py-3 rounded-xl hover:bg-white/[0.12] transition-all duration-150"
+                    className="bg-white/[0.06] border border-[#1a1a1a] text-[#fafafa] font-semibold px-6 py-3 rounded-xl hover:bg-white/[0.12] transition-all duration-150"
                   >
                     Play Games
                   </button>

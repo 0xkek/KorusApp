@@ -196,7 +196,7 @@ export default function DrawingCanvasInline({ onSave, onClose }: DrawingCanvasIn
           <button
             onClick={undo}
             disabled={historyIndex <= 0}
-            className="px-2 py-1 bg-white/[0.06] border border-[#2a2a2a] rounded text-white text-xs hover:bg-white/[0.12] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            className="px-2 py-1 bg-white/[0.06] border border-[#1a1a1a] rounded text-white text-xs hover:bg-white/[0.12] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             title="Undo"
           >
             ↶
@@ -204,14 +204,14 @@ export default function DrawingCanvasInline({ onSave, onClose }: DrawingCanvasIn
           <button
             onClick={redo}
             disabled={historyIndex >= canvasHistory.length - 1}
-            className="px-2 py-1 bg-white/[0.06] border border-[#2a2a2a] rounded text-white text-xs hover:bg-white/[0.12] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            className="px-2 py-1 bg-white/[0.06] border border-[#1a1a1a] rounded text-white text-xs hover:bg-white/[0.12] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             title="Redo"
           >
             ↷
           </button>
           <button
             onClick={clearCanvas}
-            className="px-2 py-1 bg-white/[0.06] border border-[#2a2a2a] rounded text-white text-xs hover:bg-white/[0.12] transition-all"
+            className="px-2 py-1 bg-white/[0.06] border border-[#1a1a1a] rounded text-white text-xs hover:bg-white/[0.12] transition-all"
             title="Clear"
           >
             Clear
@@ -227,7 +227,7 @@ export default function DrawingCanvasInline({ onSave, onClose }: DrawingCanvasIn
           onMouseMove={draw}
           onMouseUp={stopDrawing}
           onMouseLeave={stopDrawing}
-          className="border-2 border-[#2a2a2a] rounded-xl cursor-crosshair bg-white shadow-lg"
+          className="border-2 border-[#1a1a1a] rounded-xl cursor-crosshair bg-white shadow-lg"
           style={{ width: '550px', height: '300px' }}
         />
       </div>
