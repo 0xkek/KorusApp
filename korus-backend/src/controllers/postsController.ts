@@ -14,12 +14,14 @@ import { emitNewPost } from '../config/socket'
 // Helper function to resolve NFT avatar mints to image URLs
 async function resolveNFTAvatar(nftMint: string | null): Promise<string | null> {
   if (!nftMint) return null
+  // If it's already a URL, return as-is
+  if (nftMint.startsWith('http://') || nftMint.startsWith('https://')) return nftMint
   try {
     const nft = await getNFTByMint(nftMint)
-    return nft?.image || null
+    return nft?.image || nftMint // Fall back to original value if resolution fails
   } catch (error) {
     logger.error(`Failed to resolve NFT avatar ${nftMint}:`, error)
-    return null
+    return nftMint // Preserve original value on error
   }
 }
 
