@@ -173,7 +173,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
               background: 'linear-gradient(135deg, #43e97b, #38f9d7)',
             }}
           >
-            <span className="text-white" style={{ fontWeight: 700, fontSize: 16 }}>K</span>
+            <span style={{ fontWeight: 800, fontSize: 18, color: '#000' }}>K</span>
           </div>
           <span
             className="text-white hidden xl:block"

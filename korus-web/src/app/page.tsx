@@ -1318,7 +1318,8 @@ export default function Home() {
                     <button
                       onClick={handleRegularPost}
                       disabled={!composeText.trim() && selectedFiles.length === 0}
-                      className="px-5 py-2 rounded-[20px] bg-[#43e97b] text-black text-[14px] font-bold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed leading-none"
+                      className="px-5 py-2 rounded-[20px] bg-[#43e97b] text-[14px] font-bold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed leading-none"
+                      style={{ color: '#000' }}
                     >
                       Post
                     </button>
