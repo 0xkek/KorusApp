@@ -219,7 +219,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
         position: 'sticky',
         top: 0,
         height: '100vh',
-        width: '320px',
+        width: '300px',
         flexShrink: 0,
         zIndex: 30,
         padding: '20px 16px',

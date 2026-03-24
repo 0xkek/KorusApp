@@ -1145,7 +1145,7 @@ export default function Home() {
           notificationCount={notificationCount}
         />
         {/* Main Feed */}
-        <div className="flex-1 max-w-[640px] border-r border-[#1a1a1a]">
+        <div className="flex-1 min-w-0 border-r border-[#1a1a1a]">
         {/* Main app - only accessible when connected */}
             {/* Header Navigation */}
             <div className="sticky top-0 z-10 bg-[#0a0a0a]/85 backdrop-blur-[12px] border-b border-[#1a1a1a]">

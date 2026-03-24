@@ -156,7 +156,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
 
   return (
     <nav
-      className="sticky top-0 h-screen w-[260px] shrink-0 z-30 hidden md:flex flex-col bg-transparent"
+      className="sticky top-0 h-screen w-[240px] shrink-0 z-30 hidden md:flex flex-col bg-transparent"
       style={{ padding: '24px 16px', borderRight: '1px solid #1a1a1a' }}
       role="navigation"
       aria-label="Main navigation"
@@ -411,7 +411,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
 
       {/* Post Button */}
       {connected && onPostButtonClick && (
-        <div className="mt-auto" style={{ paddingTop: 20 }}>
+        <div style={{ paddingTop: 20 }}>
           <button
             onClick={onPostButtonClick}
             style={{
@@ -447,8 +447,8 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
       {/* User Profile */}
       {connected && publicKey && (
         <div
+          className="mt-auto"
           style={{
-            marginTop: 12,
             padding: 12,
             borderRadius: 12,
             transition: 'background 150ms',
