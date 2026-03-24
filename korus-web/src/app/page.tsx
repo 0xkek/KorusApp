@@ -776,18 +776,20 @@ export default function Home() {
         const imageFile = filesToUpload[0];
         if (imageFile.type.startsWith('image/')) {
           try {
+            showSuccess('Uploading drawing...');
             const uploadResponse = await uploadAPI.uploadImage(imageFile, token);
             imageUrl = uploadResponse.url;
-          } catch (uploadError) {
-            logger.error('Failed to upload image:', uploadError);
-            showError('Failed to upload image. Please try again.');
+          } catch (uploadError: unknown) {
+            const msg = uploadError instanceof Error ? uploadError.message : 'Unknown error';
+            showError('Upload failed: ' + msg);
             setIsPosting(false);
             return;
           }
         }
       }
 
-      // Prepare post data
+      // Prepare post data — for drawing-only posts, send a space as content
+      // so the backend doesn't reject it if imageUrl upload failed
       const postData: { topic: string; content?: string; subtopic: string; imageUrl?: string } = {
         topic: 'General',
         subtopic: 'discussion',
@@ -801,6 +803,13 @@ export default function Home() {
         postData.imageUrl = selectedGif;
       } else if (imageUrl) {
         postData.imageUrl = imageUrl;
+      }
+
+      // If we have no content and no image, something went wrong with upload
+      if (!postData.content && !postData.imageUrl) {
+        showError('Upload did not return an image URL. Please try again.');
+        setIsPosting(false);
+        return;
       }
 
       // Create post via backend API
