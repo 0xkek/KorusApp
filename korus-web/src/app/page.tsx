@@ -68,6 +68,7 @@ export default function Home() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [selectedGif, setSelectedGif] = useState<string | null>(null);
   const [showDrawCanvas, setShowDrawCanvas] = useState(false);
+  const [isPosting, setIsPosting] = useState(false);
   const drawingSaveRef = useRef<(() => string | null) | null>(null);
   const [shoutoutQueue, setShoutoutQueue] = useState<Post[]>([]); // Queue for pending shoutouts
   const [shoutoutQueueInfo, setShoutoutQueueInfo] = useState<{ activeShoutout: { id: string; duration: number; expiresAt: Date | string; content: string } | null; queuedShoutouts: Array<{ id: string; duration: number; expiresAt: Date | string; content: string }>}>({ activeShoutout: null, queuedShoutouts: [] });
@@ -732,23 +733,18 @@ export default function Home() {
   };
 
   const handleRegularPost = async () => {
-    console.log('POST CLICKED', { selectedFiles: selectedFiles.length, composeText: composeText.trim().length, showDrawCanvas, connected, isAuthenticated, hasToken: !!token });
-
+    if (isPosting) return; // Prevent double-call
     if (!connected || !isAuthenticated || !token) {
       showError('Please connect your wallet and sign in to post');
       return;
     }
 
-    // Use selectedFiles directly — drawing was already added by "Add Drawing" button
+    // Collect files: selectedFiles (from "Add Drawing" or file picker) + canvas if still open
     const filesToUpload = [...selectedFiles];
-    console.log('FILES TO UPLOAD', filesToUpload.length, filesToUpload.map(f => f.name));
 
-    // Also try to grab from canvas if it's still open
     if (showDrawCanvas) {
       let dataUrl: string | null = null;
-      if (drawingSaveRef.current) {
-        dataUrl = drawingSaveRef.current();
-      }
+      if (drawingSaveRef.current) dataUrl = drawingSaveRef.current();
       if (!dataUrl) {
         const canvasEl = document.querySelector('canvas') as HTMLCanvasElement | null;
         if (canvasEl) dataUrl = canvasEl.toDataURL('image/png');
@@ -758,9 +754,8 @@ export default function Home() {
           const parts = dataUrl.split(',');
           const mime = parts[0].match(/:(.*?);/)?.[1] || 'image/png';
           const bstr = atob(parts[1]);
-          const n = bstr.length;
-          const u8arr = new Uint8Array(n);
-          for (let i = 0; i < n; i++) u8arr[i] = bstr.charCodeAt(i);
+          const u8arr = new Uint8Array(bstr.length);
+          for (let i = 0; i < bstr.length; i++) u8arr[i] = bstr.charCodeAt(i);
           filesToUpload.unshift(new File([u8arr], `drawing-${Date.now()}.png`, { type: mime }));
         } catch (e) {
           logger.error('Failed to convert drawing:', e);
@@ -769,31 +764,26 @@ export default function Home() {
       }
     }
 
-    console.log('FINAL FILES', filesToUpload.length, 'text:', composeText.trim().length, 'gif:', selectedGif);
-    if (!composeText.trim() && filesToUpload.length === 0 && !selectedGif) {
-      console.log('EARLY RETURN - nothing to post');
-      return;
-    }
+    if (!composeText.trim() && filesToUpload.length === 0 && !selectedGif) return;
+
+    setIsPosting(true);
 
     try {
 
       // Upload images first if there are any
       let imageUrl: string | undefined;
       if (filesToUpload.length > 0) {
-        const imageFile = filesToUpload[0]; // For now, support only one image
-        console.log('UPLOADING FILE:', imageFile.name, imageFile.size, imageFile.type);
+        const imageFile = filesToUpload[0];
         if (imageFile.type.startsWith('image/')) {
           try {
             const uploadResponse = await uploadAPI.uploadImage(imageFile, token);
             imageUrl = uploadResponse.url;
-            console.log('UPLOAD SUCCESS:', imageUrl);
           } catch (uploadError) {
-            console.error('UPLOAD FAILED:', uploadError);
+            logger.error('Failed to upload image:', uploadError);
             showError('Failed to upload image. Please try again.');
+            setIsPosting(false);
             return;
           }
-        } else {
-          console.log('FILE IS NOT IMAGE TYPE:', imageFile.type);
         }
       }
 
@@ -813,11 +803,8 @@ export default function Home() {
         postData.imageUrl = imageUrl;
       }
 
-      console.log('POST DATA:', JSON.stringify(postData));
-
       // Create post via backend API
       const newPost = await postsAPI.createPost(postData, token);
-      console.log('POST CREATED:', newPost);
 
       logger.log('Post created successfully:', newPost);
 
@@ -836,8 +823,10 @@ export default function Home() {
       setShowDrawCanvas(false);
       showSuccess('Post created successfully!');
     } catch (error) {
-      console.error('POST FAILED:', error);
+      logger.error('Failed to create post:', error);
       showError('Failed to create post. Please try again.');
+    } finally {
+      setIsPosting(false);
     }
   };
 
@@ -1442,11 +1431,11 @@ export default function Home() {
 
                     <button
                       onClick={handleRegularPost}
-                      disabled={!composeText.trim() && selectedFiles.length === 0 && !showDrawCanvas}
+                      disabled={isPosting || (!composeText.trim() && selectedFiles.length === 0 && !showDrawCanvas)}
                       className="px-5 py-2 rounded-[20px] bg-[#43e97b] text-[14px] font-bold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed leading-none"
                       style={{ color: '#000' }}
                     >
-                      Post
+                      {isPosting ? 'Posting...' : 'Post'}
                     </button>
                   </div>
                 </div>
