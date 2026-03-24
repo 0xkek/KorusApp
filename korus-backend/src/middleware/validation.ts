@@ -59,7 +59,14 @@ export const validateCreatePost = [
   body('imageUrl')
     .optional()
     .trim()
-    .isURL().withMessage('Invalid image URL'),
+    .custom((value) => {
+      // Allow base64 data URIs (for drawing canvas uploads)
+      if (value.startsWith('data:image/')) return true;
+      // Allow regular HTTP/HTTPS URLs
+      const { isURL } = require('validator');
+      if (isURL(value)) return true;
+      throw new Error('Invalid image URL or data URI');
+    }),
 
   body('videoUrl')
     .optional()

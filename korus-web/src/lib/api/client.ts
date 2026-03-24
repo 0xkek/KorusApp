@@ -134,8 +134,11 @@ async function apiRequest<T>(
           csrfToken = null; // Clear cached token
           const newCsrf = await fetchCSRFToken();
           headers['x-csrf-token'] = newCsrf;
-          // Retry the request
-          const retryResponse = await fetch(url, { ...fetchOptions, headers });
+          // Retry the request (with timeout)
+          const retryController = new AbortController();
+          const retryTimeout = setTimeout(() => retryController.abort(), 30000);
+          const retryResponse = await fetch(url, { ...fetchOptions, headers, signal: retryController.signal });
+          clearTimeout(retryTimeout);
           if (retryResponse.ok) {
             const retryContentType = retryResponse.headers.get('content-type');
             if (retryResponse.status === 204 || !retryContentType?.includes('application/json')) {

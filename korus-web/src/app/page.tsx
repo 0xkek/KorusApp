@@ -810,10 +810,14 @@ export default function Home() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const post: any = (newPost as { post?: unknown }).post || newPost;
 
-      // Don't manually add the post - let WebSocket handle it for real-time sync
-      // The WebSocket will receive the post from backend and add it chronologically
-      // We don't need to manually insert it here as that would cause duplicates
-      logger.log('✅ Post created, WebSocket will add it to feed. Post ID:', post.id);
+      // Add post to feed immediately as fallback (WebSocket may not be connected)
+      // The WebSocket dedup logic (addedPostIds) will prevent duplicates if the event also arrives
+      setPosts(prev => {
+        const shoutouts = prev.filter(p => p.isShoutout);
+        const regularPosts = prev.filter(p => !p.isShoutout);
+        return [...shoutouts, post, ...regularPosts];
+      });
+      logger.log('✅ Post created and added to feed. Post ID:', post.id);
 
       setComposeText('');
       setSelectedFiles([]);
