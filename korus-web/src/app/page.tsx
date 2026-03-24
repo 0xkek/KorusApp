@@ -69,6 +69,7 @@ export default function Home() {
   const [selectedGif, setSelectedGif] = useState<string | null>(null);
   const [showDrawCanvas, setShowDrawCanvas] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
+  const [drawingDataUrl, setDrawingDataUrl] = useState<string | null>(null);
   const drawingSaveRef = useRef<(() => string | null) | null>(null);
   const [shoutoutQueue, setShoutoutQueue] = useState<Post[]>([]); // Queue for pending shoutouts
   const [shoutoutQueueInfo, setShoutoutQueueInfo] = useState<{ activeShoutout: { id: string; duration: number; expiresAt: Date | string; content: string } | null; queuedShoutouts: Array<{ id: string; duration: number; expiresAt: Date | string; content: string }>}>({ activeShoutout: null, queuedShoutouts: [] });
@@ -733,50 +734,37 @@ export default function Home() {
   };
 
   const handleRegularPost = async () => {
-    if (isPosting) return; // Prevent double-call
+    if (isPosting) return;
     if (!connected || !isAuthenticated || !token) {
       showError('Please connect your wallet and sign in to post');
       return;
     }
 
-    // Collect files: selectedFiles (from "Add Drawing" or file picker) + canvas if still open
-    const filesToUpload = [...selectedFiles];
-
-    if (showDrawCanvas) {
-      let dataUrl: string | null = null;
-      if (drawingSaveRef.current) dataUrl = drawingSaveRef.current();
-      if (!dataUrl) {
+    // Get drawing data URL: from saved state, or from canvas if still open
+    let drawingUrl = drawingDataUrl;
+    if (!drawingUrl && showDrawCanvas) {
+      if (drawingSaveRef.current) drawingUrl = drawingSaveRef.current();
+      if (!drawingUrl) {
         const canvasEl = document.querySelector('canvas') as HTMLCanvasElement | null;
-        if (canvasEl) dataUrl = canvasEl.toDataURL('image/png');
-      }
-      if (dataUrl) {
-        try {
-          const parts = dataUrl.split(',');
-          const mime = parts[0].match(/:(.*?);/)?.[1] || 'image/png';
-          const bstr = atob(parts[1]);
-          const u8arr = new Uint8Array(bstr.length);
-          for (let i = 0; i < bstr.length; i++) u8arr[i] = bstr.charCodeAt(i);
-          filesToUpload.unshift(new File([u8arr], `drawing-${Date.now()}.png`, { type: mime }));
-        } catch (e) {
-          logger.error('Failed to convert drawing:', e);
-        }
-        setShowDrawCanvas(false);
+        if (canvasEl) drawingUrl = canvasEl.toDataURL('image/png');
       }
     }
 
-    if (!composeText.trim() && filesToUpload.length === 0 && !selectedGif) return;
+    // Collect regular file uploads (non-drawing images from file picker)
+    const filesToUpload = [...selectedFiles];
+
+    if (!composeText.trim() && filesToUpload.length === 0 && !selectedGif && !drawingUrl) return;
 
     setIsPosting(true);
 
     try {
 
-      // Upload images first if there are any
+      // Upload regular files (from file picker) via the upload API
       let imageUrl: string | undefined;
       if (filesToUpload.length > 0) {
         const imageFile = filesToUpload[0];
         if (imageFile.type.startsWith('image/')) {
           try {
-            showSuccess('Uploading drawing...');
             const uploadResponse = await uploadAPI.uploadImage(imageFile, token);
             imageUrl = uploadResponse.url;
           } catch (uploadError: unknown) {
@@ -788,8 +776,7 @@ export default function Home() {
         }
       }
 
-      // Prepare post data — for drawing-only posts, send a space as content
-      // so the backend doesn't reject it if imageUrl upload failed
+      // Prepare post data
       const postData: { topic: string; content?: string; subtopic: string; imageUrl?: string } = {
         topic: 'General',
         subtopic: 'discussion',
@@ -799,15 +786,17 @@ export default function Home() {
         postData.content = composeText.trim();
       }
 
+      // Priority: GIF > uploaded file > drawing data URL (sent directly, backend uploads to Cloudinary)
       if (selectedGif) {
         postData.imageUrl = selectedGif;
       } else if (imageUrl) {
         postData.imageUrl = imageUrl;
+      } else if (drawingUrl) {
+        postData.imageUrl = drawingUrl;
       }
 
-      // If we have no content and no image, something went wrong with upload
       if (!postData.content && !postData.imageUrl) {
-        showError('Upload did not return an image URL. Please try again.');
+        showError('Nothing to post.');
         setIsPosting(false);
         return;
       }
@@ -829,6 +818,7 @@ export default function Home() {
       setComposeText('');
       setSelectedFiles([]);
       setSelectedGif(null);
+      setDrawingDataUrl(null);
       setShowDrawCanvas(false);
       showSuccess('Post created successfully!');
     } catch (error) {
@@ -872,22 +862,10 @@ export default function Home() {
   };
 
 
-  const handleDrawingSave = (drawingDataUrl: string) => {
-    try {
-      // Convert data URL to File using base64 decode (reliable, no fetch needed)
-      const parts = drawingDataUrl.split(',');
-      const mime = parts[0].match(/:(.*?);/)?.[1] || 'image/png';
-      const bstr = atob(parts[1]);
-      const n = bstr.length;
-      const u8arr = new Uint8Array(n);
-      for (let i = 0; i < n; i++) u8arr[i] = bstr.charCodeAt(i);
-      const file = new File([u8arr], `drawing-${Date.now()}.png`, { type: mime });
-      setSelectedFiles(prev => [...prev, file].slice(0, 4));
-      setShowDrawCanvas(false);
-      showSuccess('Drawing added to your post!');
-    } catch {
-      showError('Failed to save drawing');
-    }
+  const handleDrawingSave = (dataUrl: string) => {
+    setDrawingDataUrl(dataUrl);
+    setShowDrawCanvas(false);
+    showSuccess('Drawing added to your post!');
   };
 
   // Inline reply handler
@@ -1346,6 +1324,25 @@ export default function Home() {
                     </div>
                   )}
 
+                  {/* Drawing Preview */}
+                  {drawingDataUrl && (
+                    <div className="relative group mt-4 inline-block">
+                      <img
+                        src={drawingDataUrl}
+                        alt="Drawing preview"
+                        className="max-w-[200px] h-auto rounded-xl border border-[#262626]"
+                      />
+                      <button
+                        onClick={() => setDrawingDataUrl(null)}
+                        className="absolute top-2 right-2 w-6 h-6 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+
                   {/* File Previews */}
                   {selectedFiles.length > 0 && (
                     <div className="grid grid-cols-2 gap-3 mt-4">
@@ -1440,7 +1437,7 @@ export default function Home() {
 
                     <button
                       onClick={handleRegularPost}
-                      disabled={isPosting || (!composeText.trim() && selectedFiles.length === 0 && !showDrawCanvas)}
+                      disabled={isPosting || (!composeText.trim() && selectedFiles.length === 0 && !showDrawCanvas && !drawingDataUrl)}
                       className="px-5 py-2 rounded-[20px] bg-[#43e97b] text-[14px] font-bold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed leading-none"
                       style={{ color: '#000' }}
                     >

@@ -99,7 +99,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Request size limits to prevent JSON bomb attacks
-app.use(express.json({ limit: '100kb' }))
+app.use(express.json({ limit: '2mb' }))
 app.use(sanitizeBody) // Sanitize all inputs
 
 // Request/Response logging

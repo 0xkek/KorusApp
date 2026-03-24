@@ -44,7 +44,26 @@ async function transformPostAvatars(post: any): Promise<any> {
 export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Post>>) => {
   try {
     const walletAddress = req.userWallet!
-    const { content, imageUrl, videoUrl, shoutoutDuration, transactionSignature } = req.body
+    let { content, imageUrl, videoUrl, shoutoutDuration, transactionSignature } = req.body
+
+    // If imageUrl is a base64 data URL, upload it to Cloudinary
+    if (imageUrl && imageUrl.startsWith('data:image/')) {
+      try {
+        const cloudinary = (await import('../config/cloudinary')).default
+        const uploadResult = await cloudinary.uploader.upload(imageUrl, {
+          folder: 'korus-posts',
+          resource_type: 'image'
+        })
+        imageUrl = uploadResult.secure_url
+        logger.debug(`Base64 image uploaded to Cloudinary: ${imageUrl}`)
+      } catch (uploadError) {
+        logger.error('Failed to upload base64 image:', uploadError)
+        return res.status(400).json({
+          success: false,
+          error: 'Failed to upload image'
+        } as any)
+      }
+    }
 
     // Validate input - require either content or media
     if (!content && !imageUrl && !videoUrl) {
