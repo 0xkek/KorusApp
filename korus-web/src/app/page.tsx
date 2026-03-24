@@ -732,39 +732,27 @@ export default function Home() {
   };
 
   const handleRegularPost = async () => {
-    console.log('🖊️ handleRegularPost called', { connected, isAuthenticated, hasToken: !!token, showDrawCanvas, composeText: composeText.trim().length, selectedFilesCount: selectedFiles.length });
-    logger.log('🖊️ handleRegularPost called', { connected, isAuthenticated, hasToken: !!token, showDrawCanvas, composeText: composeText.trim().length, selectedFilesCount: selectedFiles.length });
-
     if (!connected || !isAuthenticated || !token) {
       showError('Please connect your wallet and sign in to post');
-      logger.log('🖊️ EARLY RETURN: not authenticated');
       return;
     }
 
-    // Auto-save drawing if canvas is open
+    // Auto-save drawing: check canvas state OR look for a canvas element in the DOM
+    // (handleDrawingSave may have closed the canvas state but the DOM element could still exist)
     let drawingFile: File | null = null;
-    if (showDrawCanvas) {
-      logger.log('🖊️ Drawing canvas is open, extracting...');
-      // Try ref first, then fall back to querying the DOM
+    const canvasEl = document.querySelector('canvas') as HTMLCanvasElement | null;
+    if (showDrawCanvas || canvasEl) {
       let dataUrl: string | null = null;
+      // Try ref first
       if (drawingSaveRef.current) {
         dataUrl = drawingSaveRef.current();
-        logger.log('🖊️ Got dataUrl from ref:', dataUrl ? `${dataUrl.substring(0, 50)}... (${dataUrl.length} chars)` : 'null');
-      } else {
-        logger.log('🖊️ drawingSaveRef.current is null');
       }
-      if (!dataUrl) {
-        // Fallback: grab the canvas element directly
-        const canvas = document.querySelector('canvas') as HTMLCanvasElement | null;
-        logger.log('🖊️ DOM canvas fallback:', canvas ? 'found' : 'not found');
-        if (canvas) {
-          dataUrl = canvas.toDataURL('image/png');
-          logger.log('🖊️ Got dataUrl from DOM:', dataUrl ? `${dataUrl.substring(0, 50)}... (${dataUrl.length} chars)` : 'null');
-        }
+      // Fallback: grab the canvas element directly from the DOM
+      if (!dataUrl && canvasEl) {
+        dataUrl = canvasEl.toDataURL('image/png');
       }
       if (dataUrl) {
         try {
-          // Convert data URL to File using base64 decode (more reliable than fetch)
           const parts = dataUrl.split(',');
           const mime = parts[0].match(/:(.*?);/)?.[1] || 'image/png';
           const bstr = atob(parts[1]);
@@ -772,22 +760,15 @@ export default function Home() {
           const u8arr = new Uint8Array(n);
           for (let i = 0; i < n; i++) u8arr[i] = bstr.charCodeAt(i);
           drawingFile = new File([u8arr], `drawing-${Date.now()}.png`, { type: mime });
-          logger.log('🖊️ Drawing file created:', drawingFile.name, drawingFile.size, 'bytes');
         } catch (e) {
-          logger.error('🖊️ Failed to convert drawing:', e);
+          logger.error('Failed to convert drawing:', e);
         }
         setShowDrawCanvas(false);
-      } else {
-        logger.log('🖊️ No dataUrl obtained from canvas');
       }
     }
 
     const filesToUpload = drawingFile ? [drawingFile, ...selectedFiles] : selectedFiles;
-    logger.log('🖊️ filesToUpload:', filesToUpload.length, 'composeText empty:', !composeText.trim(), 'selectedGif:', selectedGif);
-    if (!composeText.trim() && filesToUpload.length === 0 && !selectedGif) {
-      logger.log('🖊️ EARLY RETURN: nothing to post');
-      return;
-    }
+    if (!composeText.trim() && filesToUpload.length === 0 && !selectedGif) return;
 
     try {
 
@@ -888,18 +869,21 @@ export default function Home() {
 
 
   const handleDrawingSave = (drawingDataUrl: string) => {
-    // Convert data URL to File and add to selectedFiles
-    fetch(drawingDataUrl)
-      .then(res => res.blob())
-      .then(blob => {
-        const file = new File([blob], `drawing-${Date.now()}.png`, { type: 'image/png' });
-        setSelectedFiles(prev => [...prev, file].slice(0, 4));
-        setShowDrawCanvas(false);
-        showSuccess('Drawing added to your post!');
-      })
-      .catch(() => {
-        showError('Failed to save drawing');
-      });
+    try {
+      // Convert data URL to File using base64 decode (reliable, no fetch needed)
+      const parts = drawingDataUrl.split(',');
+      const mime = parts[0].match(/:(.*?);/)?.[1] || 'image/png';
+      const bstr = atob(parts[1]);
+      const n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      for (let i = 0; i < n; i++) u8arr[i] = bstr.charCodeAt(i);
+      const file = new File([u8arr], `drawing-${Date.now()}.png`, { type: mime });
+      setSelectedFiles(prev => [...prev, file].slice(0, 4));
+      setShowDrawCanvas(false);
+      showSuccess('Drawing added to your post!');
+    } catch {
+      showError('Failed to save drawing');
+    }
   };
 
   // Inline reply handler
