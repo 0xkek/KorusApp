@@ -19,7 +19,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import type { Post } from '@/types';
-import { postsAPI, uploadAPI, interactionsAPI, usersAPI, nftsAPI } from '@/lib/api';
+import { postsAPI, uploadAPI, interactionsAPI, usersAPI, nftsAPI, repliesAPI } from '@/lib/api';
 import { formatRelativeTime } from '@/utils/formatTime';
 
 // Dynamically import modals for code splitting
@@ -71,6 +71,10 @@ export default function Home() {
   const [shoutoutQueue, setShoutoutQueue] = useState<Post[]>([]); // Queue for pending shoutouts
   const [shoutoutQueueInfo, setShoutoutQueueInfo] = useState<{ activeShoutout: { id: string; duration: number; expiresAt: Date | string; content: string } | null; queuedShoutouts: Array<{ id: string; duration: number; expiresAt: Date | string; content: string }>}>({ activeShoutout: null, queuedShoutouts: [] });
   const [showSearchModal, setShowSearchModal] = useState(false);
+  const [inlineReplyPostId, setInlineReplyPostId] = useState<string | number | null>(null);
+  const [inlineReplyText, setInlineReplyText] = useState('');
+  const [isPostingInlineReply, setIsPostingInlineReply] = useState(false);
+  const inlineReplyRef = useRef<HTMLTextAreaElement>(null);
   const [, setCurrentUserTheme] = useState<string | undefined>(undefined);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
@@ -847,6 +851,42 @@ export default function Home() {
       });
   };
 
+  // Inline reply handler
+  const submitInlineReply = async (post: Post) => {
+    if (!connected || !isAuthenticated || !token) {
+      showError('Please connect your wallet and sign in to reply');
+      return;
+    }
+    if (!inlineReplyText.trim()) return;
+
+    setIsPostingInlineReply(true);
+    try {
+      const response = await repliesAPI.createReply(
+        String(post.id),
+        { content: inlineReplyText.trim() },
+        token
+      );
+
+      if (response.reply) {
+        setPosts(prev => prev.map(p => {
+          if (p.id === post.id) {
+            return { ...p, replies: p.replies + 1, comments: (p.comments || 0) + 1 } as Post;
+          }
+          return p;
+        }));
+        markReplied(post.id);
+        showSuccess('Reply posted!');
+      }
+
+      setInlineReplyText('');
+      setInlineReplyPostId(null);
+    } catch {
+      showError('Failed to post reply');
+    } finally {
+      setIsPostingInlineReply(false);
+    }
+  };
+
   // Interaction handlers
   const toggleLike = async (postId: number | string) => {
     if (!connected || !isAuthenticated || !token) {
@@ -1535,8 +1575,14 @@ export default function Home() {
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setPostToReply(post);
-                        setShowReplyModal(true);
+                        if (inlineReplyPostId === post.id) {
+                          setInlineReplyPostId(null);
+                          setInlineReplyText('');
+                        } else {
+                          setInlineReplyPostId(post.id);
+                          setInlineReplyText('');
+                          setTimeout(() => inlineReplyRef.current?.focus(), 50);
+                        }
                       }}
                     >
                       <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1623,6 +1669,49 @@ export default function Home() {
                       </svg>
                     </button>
                   </div>
+
+                  {/* Inline Reply */}
+                  {inlineReplyPostId === post.id && (
+                    <div className="mt-3 flex gap-3" onClick={(e) => e.stopPropagation()}>
+                      {userAvatar ? (
+                        <div className="w-[32px] h-[32px] rounded-full flex-shrink-0 overflow-hidden">
+                          <Image src={userAvatar} alt="You" width={32} height={32} className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="w-[32px] h-[32px] rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0">
+                          <span className="text-black font-bold text-[10px]">{publicKey?.toBase58().slice(0, 2).toUpperCase()}</span>
+                        </div>
+                      )}
+                      <div className="flex-1 flex gap-2">
+                        <textarea
+                          ref={inlineReplyRef}
+                          value={inlineReplyText}
+                          onChange={(e) => setInlineReplyText(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              submitInlineReply(post);
+                            }
+                            if (e.key === 'Escape') {
+                              setInlineReplyPostId(null);
+                              setInlineReplyText('');
+                            }
+                          }}
+                          placeholder="Post your reply..."
+                          className="flex-1 bg-[#1a1a1a] border border-[#262626] rounded-[16px] px-3 py-2 text-[14px] text-[#fafafa] placeholder-[#525252] resize-none outline-none focus:border-[#43e97b]/50 transition-colors min-h-[36px] max-h-[120px]"
+                          rows={1}
+                        />
+                        <button
+                          onClick={() => submitInlineReply(post)}
+                          disabled={!inlineReplyText.trim() || isPostingInlineReply}
+                          className="self-end px-4 py-1.5 rounded-[16px] bg-[#43e97b] text-[13px] font-bold hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                          style={{ color: '#000' }}
+                        >
+                          {isPostingInlineReply ? '...' : 'Reply'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
