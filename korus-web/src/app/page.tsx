@@ -68,7 +68,7 @@ export default function Home() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [selectedGif, setSelectedGif] = useState<string | null>(null);
   const [showDrawCanvas, setShowDrawCanvas] = useState(false);
-  const drawingSaveRef = useRef<(() => void) | null>(null);
+  const drawingSaveRef = useRef<(() => string | null) | null>(null);
   const [shoutoutQueue, setShoutoutQueue] = useState<Post[]>([]); // Queue for pending shoutouts
   const [shoutoutQueueInfo, setShoutoutQueueInfo] = useState<{ activeShoutout: { id: string; duration: number; expiresAt: Date | string; content: string } | null; queuedShoutouts: Array<{ id: string; duration: number; expiresAt: Date | string; content: string }>}>({ activeShoutout: null, queuedShoutouts: [] });
   const [showSearchModal, setShowSearchModal] = useState(false);
@@ -738,20 +738,26 @@ export default function Home() {
     }
 
     // Auto-save drawing if canvas is open
+    let drawingFile: File | null = null;
     if (showDrawCanvas && drawingSaveRef.current) {
-      drawingSaveRef.current();
-      // Wait a tick for the file to be added to selectedFiles
-      await new Promise(resolve => setTimeout(resolve, 100));
+      const dataUrl = drawingSaveRef.current();
+      if (dataUrl) {
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        drawingFile = new File([blob], `drawing-${Date.now()}.png`, { type: 'image/png' });
+        setShowDrawCanvas(false);
+      }
     }
 
-    if (!composeText.trim() && selectedFiles.length === 0 && !selectedGif) return;
+    const filesToUpload = drawingFile ? [drawingFile, ...selectedFiles] : selectedFiles;
+    if (!composeText.trim() && filesToUpload.length === 0 && !selectedGif) return;
 
     try {
 
       // Upload images first if there are any
       let imageUrl: string | undefined;
-      if (selectedFiles.length > 0) {
-        const imageFile = selectedFiles[0]; // For now, support only one image
+      if (filesToUpload.length > 0) {
+        const imageFile = filesToUpload[0]; // For now, support only one image
         if (imageFile.type.startsWith('image/')) {
           logger.log('Uploading image...');
           try {

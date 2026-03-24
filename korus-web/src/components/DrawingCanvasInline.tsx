@@ -6,7 +6,7 @@ import { Button } from '@/components/Button';
 interface DrawingCanvasInlineProps {
   onSave: (dataUrl: string) => void;
   onClose: () => void;
-  saveRef?: React.MutableRefObject<(() => void) | null>;
+  saveRef?: React.MutableRefObject<(() => string | null) | null>;
 }
 
 export default function DrawingCanvasInline({ onSave, onClose, saveRef }: DrawingCanvasInlineProps) {
@@ -132,9 +132,14 @@ export default function DrawingCanvasInline({ onSave, onClose, saveRef }: Drawin
     onSave(dataUrl);
   };
 
-  // Expose save function to parent via ref
+  // Expose a function that returns the canvas data URL (for auto-save on post)
   useEffect(() => {
-    if (saveRef) saveRef.current = handleSave;
+    if (saveRef) {
+      saveRef.current = () => {
+        if (!canvasRef.current) return null;
+        return canvasRef.current.toDataURL('image/png');
+      };
+    }
     return () => { if (saveRef) saveRef.current = null; };
   });
 
