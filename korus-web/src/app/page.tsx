@@ -895,54 +895,54 @@ export default function Home() {
     }
 
     try {
-      const postIdStr = String(postId);
-      const postIdNum = Number(postId);
-      const currentlyLiked = postInteractions[postIdNum]?.liked || false;
+      const id = String(postId);
+      const currentlyLiked = postInteractions[id]?.liked || postInteractions[postId]?.liked || false;
 
       // Optimistically update UI
       setPostInteractions(prev => ({
         ...prev,
-        [postIdNum]: {
-          ...prev[postIdNum],
+        [id]: {
+          ...prev[id],
+          ...prev[postId],
           liked: !currentlyLiked
         }
       }));
 
       // Update post like count optimistically
       setPosts(prev => prev.map(p => {
-        if (String(p.id) === postIdStr) {
+        if (String(p.id) === id) {
           return {
             ...p,
-            likes: currentlyLiked ? p.likes - 1 : p.likes + 1
+            likes: currentlyLiked ? Math.max(0, p.likes - 1) : p.likes + 1
           };
         }
         return p;
       }));
 
       // Call backend API
-      const response = await interactionsAPI.likePost(postIdStr, token);
+      const response = await interactionsAPI.likePost(id, token);
       logger.log('Like response:', response);
 
     } catch (error) {
       logger.error('Failed to like post:', error);
 
       // Revert on error
-      const postIdStr = String(postId);
-      const postIdNum = Number(postId);
+      const id = String(postId);
+      const currentlyLiked = postInteractions[id]?.liked || postInteractions[postId]?.liked || false;
       setPostInteractions(prev => ({
         ...prev,
-        [postIdNum]: {
-          ...prev[postIdNum],
-          liked: prev[postIdNum]?.liked || false
+        [id]: {
+          ...prev[id],
+          ...prev[postId],
+          liked: currentlyLiked
         }
       }));
 
       setPosts(prev => prev.map(p => {
-        if (String(p.id) === postIdStr) {
-          const wasLiked = postInteractions[postIdNum]?.liked || false;
+        if (String(p.id) === id) {
           return {
             ...p,
-            likes: wasLiked ? p.likes + 1 : p.likes - 1
+            likes: currentlyLiked ? p.likes + 1 : Math.max(0, p.likes - 1)
           };
         }
         return p;
