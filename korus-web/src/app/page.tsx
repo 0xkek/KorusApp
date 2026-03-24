@@ -74,6 +74,30 @@ export default function Home() {
   const [, setCurrentUserTheme] = useState<string | undefined>(undefined);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
+  // Resolve nftAvatar: could be a URL or a mint address
+  const resolveAvatar = useCallback(async (nftAvatar: string | null | undefined): Promise<string | undefined> => {
+    if (!nftAvatar) return undefined;
+    const isUrl = nftAvatar.startsWith('http://') || nftAvatar.startsWith('https://');
+    if (isUrl) return nftAvatar;
+    try {
+      const nft = await nftsAPI.getNFTByMint(nftAvatar);
+      return nft?.image || undefined;
+    } catch {
+      return undefined;
+    }
+  }, []);
+
+  // Resolve avatars for an array of transformed posts
+  const resolvePostAvatars = useCallback(async (transformedPosts: Post[]): Promise<Post[]> => {
+    const updated = await Promise.all(
+      transformedPosts.map(async (post) => {
+        const avatar = await resolveAvatar(post.avatar);
+        return { ...post, avatar } as Post;
+      })
+    );
+    return updated;
+  }, [resolveAvatar]);
+
   // Infinite scroll state
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -157,12 +181,15 @@ export default function Home() {
         };
         });
 
+        // Resolve avatars (mint address → image URL)
+        const postsWithAvatars = await resolvePostAvatars(transformedPosts as Post[]);
+
         // Track new post IDs
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        transformedPosts.forEach((post: any) => addedPostIds.current.add(post.id));
+        postsWithAvatars.forEach((post: any) => addedPostIds.current.add(post.id));
 
         // Append new posts to existing ones
-        setPosts(prev => [...prev, ...transformedPosts as Post[]]);
+        setPosts(prev => [...prev, ...postsWithAvatars]);
         setCurrentPage(nextPage);
         setHasMore(response.posts.length === POSTS_PER_PAGE);
       } else {
@@ -306,10 +333,13 @@ export default function Home() {
           return 0;
         });
 
-        // Track all post IDs
-        sortedPosts.forEach(post => addedPostIds.current.add(post.id));
+        // Resolve avatars (mint address → image URL)
+        const postsWithAvatars = await resolvePostAvatars(sortedPosts as Post[]);
 
-        setPosts(sortedPosts as Post[]);
+        // Track all post IDs
+        postsWithAvatars.forEach(post => addedPostIds.current.add(post.id));
+
+        setPosts(postsWithAvatars);
         setCurrentPage(1);
         setHasMore(response.posts.length === POSTS_PER_PAGE);
 
@@ -423,7 +453,7 @@ export default function Home() {
 
     // Listen for new posts (always set up fresh listener)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    socketRef.current.on('new_post', (newPost: any) => {
+    socketRef.current.on('new_post', async (newPost: any) => {
       logger.log('📨 Received new post via WebSocket:', newPost.id);
 
       // Transform the new post to match frontend format (same as in fetchPosts)
@@ -439,7 +469,7 @@ export default function Home() {
         reposts: newPost.repostCount || 0,
         tips: Number(newPost.tipAmount) || 0,
         image: newPost.imageUrl,
-        avatar: newPost.author?.nftAvatar || null,
+        avatar: await resolveAvatar(newPost.author?.nftAvatar),
         isPremium: newPost.author?.tier === 'premium',
         shoutoutExpiresAt: newPost.shoutoutExpiresAt,
         // Map originalPost to repostedPost for reposts
@@ -460,7 +490,7 @@ export default function Home() {
             createdAt: newPost.originalPost.createdAt,
             isPremium: newPost.originalPost.author?.tier === 'premium',
             image: newPost.originalPost.imageUrl,
-            avatar: newPost.originalPost.author?.nftAvatar || null,
+            avatar: await resolveAvatar(newPost.originalPost.author?.nftAvatar),
           } : newPost.originalReply ? {
             // Reply repost
             id: newPost.originalReply.id,
@@ -477,7 +507,7 @@ export default function Home() {
             createdAt: newPost.originalReply.createdAt,
             isPremium: newPost.originalReply.author?.tier === 'premium',
             image: newPost.originalReply.imageUrl,
-            avatar: newPost.originalReply.author?.nftAvatar || null,
+            avatar: await resolveAvatar(newPost.originalReply.author?.nftAvatar),
           } : undefined
         ) : undefined,
       };
@@ -883,7 +913,7 @@ export default function Home() {
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-  const handleRepostResponse = (postId: number, response: any) => {
+  const handleRepostResponse = async (postId: number, response: any) => {
     const isCurrentlyReposted = postInteractions[postId]?.reposted;
 
     if (response.success) {
@@ -908,7 +938,7 @@ export default function Home() {
             reposts: post.repostCount || 0,
             tips: Number(post.tipAmount) || 0,
             image: post.imageUrl,
-            avatar: post.author?.nftAvatar || null,
+            avatar: await resolveAvatar(post.author?.nftAvatar),
             isPremium: post.author?.tier === 'premium',
             shoutoutExpiresAt: post.shoutoutExpiresAt,
             repostedBy: post.isRepost ? (post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15)) : undefined,
@@ -929,7 +959,7 @@ export default function Home() {
                 createdAt: post.originalPost.createdAt,
                 isPremium: post.originalPost.author?.tier === 'premium',
                 image: post.originalPost.imageUrl,
-                avatar: post.originalPost.author?.nftAvatar || null,
+                avatar: await resolveAvatar(post.originalPost.author?.nftAvatar),
               } : post.originalReply ? {
                 // Reply repost
                 id: post.originalReply.id,
@@ -946,7 +976,7 @@ export default function Home() {
                 createdAt: post.originalReply.createdAt,
                 isPremium: post.originalReply.author?.tier === 'premium',
                 image: post.originalReply.imageUrl,
-                avatar: post.originalReply.author?.nftAvatar || null,
+                avatar: await resolveAvatar(post.originalReply.author?.nftAvatar),
               } : undefined
             ) : undefined,
           };
@@ -1010,7 +1040,7 @@ export default function Home() {
             reposts: repost.repostCount || 0,
             tips: Number(repost.tipAmount) || 0,
             image: repost.imageUrl,
-            avatar: repost.author?.nftAvatar || null,
+            avatar: await resolveAvatar(repost.author?.nftAvatar),
             isPremium: repost.author?.tier === 'premium',
             repostedBy: repost.author?.username || repost.author?.snsUsername || repost.authorWallet?.slice(0, 15),
             repostedPost: repost.originalPost ? {
@@ -1028,7 +1058,7 @@ export default function Home() {
               createdAt: repost.originalPost.createdAt,
               isPremium: repost.originalPost.author?.tier === 'premium',
               image: repost.originalPost.imageUrl,
-              avatar: repost.originalPost.author?.nftAvatar || null,
+              avatar: await resolveAvatar(repost.originalPost.author?.nftAvatar),
             } : repost.originalReply ? {
               // Reply repost
               id: repost.originalReply.id,
@@ -1045,7 +1075,7 @@ export default function Home() {
               createdAt: repost.originalReply.createdAt,
               isPremium: repost.originalReply.author?.tier === 'premium',
               image: repost.originalReply.imageUrl,
-              avatar: repost.originalReply.author?.nftAvatar || null,
+              avatar: await resolveAvatar(repost.originalReply.author?.nftAvatar),
             } : undefined,
           };
 
