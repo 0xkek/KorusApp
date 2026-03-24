@@ -68,6 +68,7 @@ export default function Home() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [selectedGif, setSelectedGif] = useState<string | null>(null);
   const [showDrawCanvas, setShowDrawCanvas] = useState(false);
+  const drawingSaveRef = useRef<(() => void) | null>(null);
   const [shoutoutQueue, setShoutoutQueue] = useState<Post[]>([]); // Queue for pending shoutouts
   const [shoutoutQueueInfo, setShoutoutQueueInfo] = useState<{ activeShoutout: { id: string; duration: number; expiresAt: Date | string; content: string } | null; queuedShoutouts: Array<{ id: string; duration: number; expiresAt: Date | string; content: string }>}>({ activeShoutout: null, queuedShoutouts: [] });
   const [showSearchModal, setShowSearchModal] = useState(false);
@@ -736,6 +737,13 @@ export default function Home() {
       return;
     }
 
+    // Auto-save drawing if canvas is open
+    if (showDrawCanvas && drawingSaveRef.current) {
+      drawingSaveRef.current();
+      // Wait a tick for the file to be added to selectedFiles
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
     if (!composeText.trim() && selectedFiles.length === 0 && !selectedGif) return;
 
     try {
@@ -1302,6 +1310,7 @@ export default function Home() {
                       <DrawingCanvasInline
                         onSave={handleDrawingSave}
                         onClose={() => setShowDrawCanvas(false)}
+                        saveRef={drawingSaveRef}
                       />
                     </div>
                   )}
@@ -1400,7 +1409,7 @@ export default function Home() {
 
                     <button
                       onClick={handleRegularPost}
-                      disabled={!composeText.trim() && selectedFiles.length === 0}
+                      disabled={!composeText.trim() && selectedFiles.length === 0 && !showDrawCanvas}
                       className="px-5 py-2 rounded-[20px] bg-[#43e97b] text-[14px] font-bold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed leading-none"
                       style={{ color: '#000' }}
                     >

@@ -6,9 +6,10 @@ import { Button } from '@/components/Button';
 interface DrawingCanvasInlineProps {
   onSave: (dataUrl: string) => void;
   onClose: () => void;
+  saveRef?: React.MutableRefObject<(() => void) | null>;
 }
 
-export default function DrawingCanvasInline({ onSave, onClose }: DrawingCanvasInlineProps) {
+export default function DrawingCanvasInline({ onSave, onClose, saveRef }: DrawingCanvasInlineProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentColor, setCurrentColor] = useState('#00F0FF'); // korus-primary
@@ -130,6 +131,12 @@ export default function DrawingCanvasInline({ onSave, onClose }: DrawingCanvasIn
     const dataUrl = canvasRef.current.toDataURL('image/png');
     onSave(dataUrl);
   };
+
+  // Expose save function to parent via ref
+  useEffect(() => {
+    if (saveRef) saveRef.current = handleSave;
+    return () => { if (saveRef) saveRef.current = null; };
+  });
 
   const colors = [
     '#00F0FF', // korus-primary
