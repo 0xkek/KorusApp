@@ -4,7 +4,6 @@
  * Uses Zustand for state management
  */
 
-import { logger } from '@/utils/logger';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useEffect, useCallback, useRef } from 'react';
 import { authAPI } from '@/lib/api';
@@ -18,176 +17,157 @@ export function useWalletAuth() {
 
   // Ref guard to prevent duplicate authenticate() calls
   const authAttemptedRef = useRef(false);
+  // Track publicKey string to detect wallet switches without re-renders
+  const lastWalletRef = useRef<string | null>(null);
 
-  // Use Zustand store for state management
-  const {
-    token,
-    isAuthenticated,
-    isAuthenticating,
-    error,
-    setToken,
-    setAuthenticating,
-    setError,
-    setLastAuthTime,
-    setHasAttemptedAuth,
-    clearAuth,
-  } = useAuthStore();
+  // Only subscribe to the fields consumers actually need for rendering.
+  // All other fields are read synchronously via getState() inside callbacks/effects.
+  const token = useAuthStore((s) => s.token);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isAuthenticating = useAuthStore((s) => s.isAuthenticating);
+  const error = useAuthStore((s) => s.error);
 
   // Authenticate with backend when wallet connects
   const authenticate = useCallback(async () => {
     if (!publicKey || !signMessage || !connected) {
-      clearAuth();
+      useAuthStore.getState().clearAuth();
       return;
     }
 
-    // Read isAuthenticating synchronously from store to avoid stale closure
-    const { isAuthenticating: currentlyAuthenticating } = useAuthStore.getState();
+    const state = useAuthStore.getState();
 
     // Prevent multiple simultaneous authentication attempts
-    if (currentlyAuthenticating) {
-      logger.log('Authentication already in progress, skipping...');
+    if (state.isAuthenticating) {
+      if (isDev) console.log('[Auth] Already in progress, skipping');
       return;
     }
 
-    setAuthenticating(true);
-    setError(null);
+    state.setAuthenticating(true);
+    state.setError(null);
 
-    // Set a timeout to force reset if wallet signature takes too long
+    // Timeout to force reset if wallet signature takes too long
     const timeoutId = setTimeout(() => {
-      logger.log('Authentication timeout - resetting state');
-      setError('Authentication timed out. Please try again.');
-      setAuthenticating(false);
-      authAttemptedRef.current = false; // Allow retry after timeout
-    }, 30000); // 30 second timeout
+      if (isDev) console.log('[Auth] Timeout — resetting');
+      const s = useAuthStore.getState();
+      s.setError('Authentication timed out. Please try again.');
+      s.setAuthenticating(false);
+      authAttemptedRef.current = false;
+    }, 30000);
 
     try {
-      logger.log('Starting wallet authentication...');
+      if (isDev) console.log('[Auth] Starting...');
 
-      // Create a message to sign
       const message = `Sign this message to authenticate with Korus.\n\nWallet: ${publicKey.toBase58()}\nTimestamp: ${Date.now()}`;
       const messageBytes = new TextEncoder().encode(message);
 
-      logger.log('Requesting signature from wallet...');
-      // Request signature from wallet
       const signature = await signMessage(messageBytes);
       const signatureBase58 = bs58.encode(signature);
 
-      logger.log('Signature received, verifying with backend...');
-      // Send to backend for verification
+      if (isDev) console.log('[Auth] Signature received, verifying...');
+
       const response = await authAPI.loginWithWallet({
         walletAddress: publicKey.toBase58(),
         signature: signatureBase58,
         message,
       });
 
-      // Clear timeout on success
       clearTimeout(timeoutId);
 
-      logger.log('Authentication successful!');
-      // Store token (Zustand will also persist it)
+      if (isDev) console.log('[Auth] Success');
+
       if (typeof window !== 'undefined') {
         localStorage.setItem('authToken', response.token);
       }
 
-      // Update auth state via Zustand
-      setToken(response.token);
-      setLastAuthTime(Date.now());
-    } catch (error) {
-      // Clear timeout on error
+      // Single batch: setToken sets token + isAuthenticated + clears error
+      const s = useAuthStore.getState();
+      s.setToken(response.token);
+      s.setLastAuthTime(Date.now());
+    } catch (err) {
       clearTimeout(timeoutId);
 
-      // Handle wallet rejection gracefully
-      const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
-      const isUserRejection = errorMessage.includes('closed') ||
-                              errorMessage.includes('rejected') ||
-                              errorMessage.includes('cancelled') ||
-                              errorMessage.includes('Plugin Closed') ||
-                              errorMessage.includes('User rejected');
+      const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
+      const isUserRejection =
+        errorMessage.includes('closed') ||
+        errorMessage.includes('rejected') ||
+        errorMessage.includes('cancelled') ||
+        errorMessage.includes('Plugin Closed') ||
+        errorMessage.includes('User rejected');
 
-      // Silently fail for user cancellations - don't log errors
-      if (!isUserRejection) {
-        logger.error('Authentication failed:', error);
-      } else {
-        logger.log('User cancelled authentication');
+      if (!isUserRejection && isDev) {
+        console.error('[Auth] Failed:', err);
       }
 
-      // Update error state (don't show error for user cancellation)
-      setError(isUserRejection ? null : errorMessage);
-      setAuthenticating(false);
-      // Only allow retry for non-user-rejection errors (e.g. network errors)
-      // User rejections should NOT reset the ref, or we get an infinite popup loop
+      const s = useAuthStore.getState();
+      s.setError(isUserRejection ? null : errorMessage);
+      s.setAuthenticating(false);
+
+      // Only allow retry for non-user-rejection errors
       if (!isUserRejection) {
         authAttemptedRef.current = false;
       }
     }
-  }, [publicKey, signMessage, connected, setAuthenticating, setError, setToken, setLastAuthTime, clearAuth]);
+  }, [publicKey, signMessage, connected]);
 
-  // Load token from storage on mount and handle auth when wallet connects
+  // Main auth effect — runs ONLY when connected/publicKey change
   useEffect(() => {
-    if (typeof window !== 'undefined' && connected && publicKey) {
-      // Read token and isAuthenticating synchronously from store
-      const { token: currentToken, isAuthenticating: currentlyAuthenticating } = useAuthStore.getState();
-
-      const storedToken = localStorage.getItem('authToken');
-
-      if (storedToken && !currentToken) {
-        // Token exists in localStorage but not in Zustand store
-        if (isDev) logger.log('Found stored auth token, updating store');
-        setToken(storedToken);
-        setHasAttemptedAuth(true);
-        authAttemptedRef.current = true;
-      } else if (!storedToken && !currentlyAuthenticating && !currentToken && !authAttemptedRef.current) {
-        // No token, not authenticating, not yet attempted — trigger auth
-        if (isDev) logger.log('No stored token found, triggering authentication...');
-        authAttemptedRef.current = true;
-        useAuthStore.getState().setHasAttemptedAuth(true);
-        authenticate();
+    if (typeof window === 'undefined' || !connected || !publicKey) {
+      if (!connected) {
+        authAttemptedRef.current = false;
       }
-    } else if (!connected) {
-      // Reset ref when wallet disconnects so re-connect triggers auth
+      return;
+    }
+
+    const walletAddress = publicKey.toBase58();
+
+    // Detect wallet switch
+    if (lastWalletRef.current && lastWalletRef.current !== walletAddress) {
+      if (isDev) console.log('[Auth] Wallet changed, clearing old auth');
+      localStorage.removeItem('authToken');
+      useAuthStore.getState().clearAuth();
       authAttemptedRef.current = false;
     }
-    // Only re-run when wallet connection state actually changes
+    lastWalletRef.current = walletAddress;
+
+    // Read store synchronously — no re-render from this
+    const state = useAuthStore.getState();
+    const storedToken = localStorage.getItem('authToken');
+
+    if (storedToken && !state.token) {
+      // Token in localStorage but not in store — restore it
+      if (isDev) console.log('[Auth] Restoring stored token');
+      state.setToken(storedToken);
+      state.setHasAttemptedAuth(true);
+      authAttemptedRef.current = true;
+    } else if (!storedToken && !state.isAuthenticating && !state.token && !authAttemptedRef.current) {
+      // No token anywhere, not in progress — trigger auth
+      if (isDev) console.log('[Auth] No token, triggering authentication');
+      authAttemptedRef.current = true;
+      state.setHasAttemptedAuth(true);
+      authenticate();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected, publicKey]);
 
-  // Clear auth when wallet disconnects OR changes
+  // Clear auth when wallet disconnects
   useEffect(() => {
     if (!connected) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('authToken');
       }
-      clearAuth();
+      useAuthStore.getState().clearAuth();
+      lastWalletRef.current = null;
     }
-  }, [connected, clearAuth]);
-
-  // Clear auth when publicKey changes (wallet switch)
-  useEffect(() => {
-    // Store the current publicKey to detect changes
-    const currentWallet = publicKey?.toBase58();
-    if (currentWallet && typeof window !== 'undefined') {
-      const storedWallet = localStorage.getItem('currentWallet');
-
-      if (storedWallet && storedWallet !== currentWallet) {
-        // Wallet changed - clear old auth
-        logger.log('Wallet changed, clearing old auth');
-        localStorage.removeItem('authToken');
-        clearAuth();
-        authAttemptedRef.current = false; // Allow auth for new wallet
-      }
-
-      // Update stored wallet
-      localStorage.setItem('currentWallet', currentWallet);
-    }
-  }, [publicKey, clearAuth]);
+  }, [connected]);
 
   const logout = useCallback(() => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('authToken');
     }
-    clearAuth();
+    useAuthStore.getState().clearAuth();
     authAttemptedRef.current = false;
-  }, [clearAuth]);
+    lastWalletRef.current = null;
+  }, []);
 
   return {
     token,

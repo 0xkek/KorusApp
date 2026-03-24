@@ -45,9 +45,15 @@ async function fetchCSRFToken(): Promise<string> {
   if (csrfToken) return csrfToken;
 
   const sid = getSessionId();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+
   const response = await fetch(`${API_BASE_URL}/api/auth/csrf`, {
     headers: { 'x-session-id': sid },
+    signal: controller.signal,
   });
+
+  clearTimeout(timeout);
 
   if (!response.ok) {
     throw new Error('Failed to fetch CSRF token');
@@ -97,11 +103,17 @@ async function apiRequest<T>(
     hasToken: !!token,
   });
 
+  const requestController = new AbortController();
+  const requestTimeout = setTimeout(() => requestController.abort(), 30000);
+
   try {
     const response = await fetch(url, {
       ...fetchOptions,
       headers,
+      signal: requestController.signal,
     });
+
+    clearTimeout(requestTimeout);
 
     logger.log('[API Client] Got response:', {
       url,
@@ -154,13 +166,17 @@ async function apiRequest<T>(
 
     return await response.json();
   } catch (error) {
+    clearTimeout(requestTimeout);
+
     if (error instanceof APIError) {
       throw error;
     }
 
-    // Network or other errors
+    // Provide clearer message for abort/timeout
+    const isAbort = error instanceof DOMException && error.name === 'AbortError';
+
     throw new APIError(
-      error instanceof Error ? error.message : 'Network error',
+      isAbort ? 'Request timed out' : (error instanceof Error ? error.message : 'Network error'),
       0,
       error
     );
