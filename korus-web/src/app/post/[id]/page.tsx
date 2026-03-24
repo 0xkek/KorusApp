@@ -511,13 +511,10 @@ export default function PostDetailPage() {
               <button
                 onClick={() => handleLikeReply(reply.id)}
                 aria-label={likedReplies.has(reply.id) ? "Unlike reply" : "Like reply"}
-                className={`flex items-center gap-1 px-2 py-1 rounded-full transition-all duration-150 ${
-                  likedReplies.has(reply.id)
-                    ? 'text-red-400 hover:bg-red-500/10'
-                    : 'text-[#a1a1a1] hover:text-red-400 hover:bg-red-500/10'
-                }`}
+                className="flex items-center gap-1 px-2 py-1 rounded-full transition-all duration-150 hover:bg-red-500/10"
+                style={{ color: likedReplies.has(reply.id) ? '#ef4444' : '#a1a1a1' }}
               >
-                <svg className="w-4 h-4" fill={likedReplies.has(reply.id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill={likedReplies.has(reply.id) ? '#ef4444' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                 </svg>
                 <span className="text-xs font-medium">{reply.likes}</span>
@@ -843,13 +840,10 @@ export default function PostDetailPage() {
                   <button
                     onClick={handleLike}
                     aria-label={liked ? "Unlike post" : "Like post"}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-150 ${
-                      liked
-                        ? 'text-red-400 hover:bg-red-500/10'
-                        : 'text-[#a1a1a1] hover:text-red-400 hover:bg-red-500/10'
-                    }`}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-150 hover:bg-red-500/10"
+                    style={{ color: liked ? '#ef4444' : '#a1a1a1' }}
                   >
-                    <svg className="w-[18px] h-[18px]" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-[18px] h-[18px]" fill={liked ? '#ef4444' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                     </svg>
                     <span className="text-[13px] font-medium">{post.likes}</span>

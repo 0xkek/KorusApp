@@ -1592,11 +1592,8 @@ export default function Home() {
                     </button>
 
                     <button
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] text-[13px] transition-all duration-150 ${
-                        postInteractions[post.id]?.liked
-                          ? 'text-red-400 hover:bg-red-500/10'
-                          : 'text-[#737373] hover:text-red-400 hover:bg-red-500/10'
-                      }`}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] text-[13px] transition-all duration-150 hover:bg-red-500/10"
+                      style={{ color: postInteractions[post.id]?.liked ? '#ef4444' : '#737373' }}
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleLike(post.id);
@@ -1608,7 +1605,7 @@ export default function Home() {
                         }
                       }}
                     >
-                      <svg className="w-[18px] h-[18px]" fill={postInteractions[post.id]?.liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-[18px] h-[18px]" fill={postInteractions[post.id]?.liked ? '#ef4444' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
                       <span>{post.likes}</span>
