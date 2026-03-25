@@ -146,6 +146,7 @@ function isSpamNFT(nft: any): boolean {
 
 /**
  * Fetch NFTs owned by a wallet using Helius DAS API
+ * Paginates through all Helius pages to get the complete collection
  */
 export async function fetchNFTsForWallet(
   walletAddress: string,
@@ -155,62 +156,67 @@ export async function fetchNFTsForWallet(
     includeSpam?: boolean
   }
 ): Promise<{ nfts: NFT[]; hasMore: boolean; totalBeforeFilter?: number; spamFiltered?: number }> {
-  const { page = 1, limit = 20, includeSpam = false } = options || {}
-  
+  const { page = 1, limit = 1000, includeSpam = false } = options || {}
+
   if (!HELIUS_RPC_URL) {
     return { nfts: [], hasMore: false }
   }
-  
+
   try {
     logger.debug(`Fetching NFTs for wallet: ${walletAddress}, page: ${page}`)
-    logger.debug(`Using Helius RPC URL: ${HELIUS_RPC_URL.substring(0, 50)}...`)
-    
-    // Use Helius DAS API for better performance
-    const response = await fetch(HELIUS_RPC_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: 'nft-fetch',
-        method: 'getAssetsByOwner',
-        params: {
-          ownerAddress: walletAddress,
-          page: 1,
-          limit: 200, // Get more to filter spam
-          displayOptions: {
-            showFungible: false,
-            showInscription: false,
-            showUnverifiedCollections: true,
-          },
+
+    // Paginate through all Helius pages to get complete NFT collection
+    const allAssets: any[] = []
+    let heliusPage = 1
+    const heliusPageSize = 1000 // Max per Helius DAS request
+
+    while (true) {
+      const response = await fetch(HELIUS_RPC_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      }),
-    })
-    
-    const data = await response.json()
-    
-    if (!response.ok || data.error) {
-      logger.error('Helius RPC error:', data.error || data)
-      return { nfts: [], hasMore: false }
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 'nft-fetch',
+          method: 'getAssetsByOwner',
+          params: {
+            ownerAddress: walletAddress,
+            page: heliusPage,
+            limit: heliusPageSize,
+            displayOptions: {
+              showFungible: false,
+              showInscription: false,
+              showUnverifiedCollections: true,
+            },
+          },
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || data.error) {
+        logger.error('Helius RPC error:', data.error || data)
+        break
+      }
+
+      const items = data.result?.items || []
+      allAssets.push(...items)
+
+      logger.debug(`Helius page ${heliusPage}: got ${items.length} assets (total so far: ${allAssets.length})`)
+
+      // If we got fewer than the page size, we've reached the end
+      if (items.length < heliusPageSize) break
+      heliusPage++
+
+      // Safety cap to prevent infinite loops
+      if (heliusPage > 10) break
     }
-    
-    const assets = data.result?.items || []
-    logger.debug(`Found ${assets.length} assets for wallet`)
-    
-    // Log first asset structure for debugging
-    if (assets.length > 0) {
-      logger.debug('First asset structure:', JSON.stringify({
-        id: assets[0].id,
-        name: assets[0].content?.metadata?.name,
-        image: assets[0].content?.links?.image,
-        files: assets[0].content?.files?.length,
-        collection: assets[0].grouping?.[0]?.collection_metadata?.name
-      }, null, 2))
-    }
-    
-    // Transform all assets (don't filter by image availability yet)
-    const transformedAssets = assets
+
+    logger.debug(`Found ${allAssets.length} total assets for wallet`)
+
+    // Transform all assets
+    const transformedAssets = allAssets
       .map((item: any) => {
         // Prefer CDN URLs for faster loading
         let imageUrl =
