@@ -303,3 +303,75 @@ export const likeReply = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Failed to like reply' })
   }
 }
+
+export const getUserReplies = async (req: Request, res: Response) => {
+  try {
+    const { walletAddress } = req.params
+    const { cursor, limit, maxId, sinceId } = req.query
+
+    const result = await CursorPagination.paginateQuery<any>(
+      prisma.reply,
+      {
+        cursor: cursor as string,
+        limit: limit ? parseInt(limit as string) : 30,
+        maxId: maxId as string,
+        sinceId: sinceId as string
+      },
+      {
+        where: {
+          authorWallet: walletAddress,
+          isHidden: false
+        },
+        include: {
+          author: {
+            select: {
+              walletAddress: true,
+              tier: true,
+              genesisVerified: true,
+              snsUsername: true,
+              username: true,
+              nftAvatar: true
+            }
+          },
+          post: {
+            select: {
+              id: true,
+              content: true,
+              authorWallet: true,
+              author: {
+                select: {
+                  username: true,
+                  snsUsername: true
+                }
+              }
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      }
+    )
+
+    const transformedReplies = await Promise.all(
+      result.data.map(async (reply: any) => {
+        if (reply.author?.nftAvatar) {
+          reply.author.nftAvatar = await resolveNFTAvatar(reply.author.nftAvatar)
+        }
+        return reply
+      })
+    )
+
+    res.json({
+      success: true,
+      replies: transformedReplies,
+      meta: result.meta,
+      pagination: {
+        limit: result.meta.resultCount,
+        cursor: result.meta.nextCursor,
+        hasMore: result.meta.hasMore
+      }
+    })
+  } catch (error) {
+    logger.error('Get user replies error:', error)
+    res.status(500).json({ error: 'Failed to get user replies' })
+  }
+}

@@ -60,6 +60,28 @@ export interface LikeReplyResponse {
   message: string;
 }
 
+export interface UserReply extends Reply {
+  post?: {
+    id: string;
+    content: string;
+    authorWallet: string;
+    author?: {
+      username?: string;
+      snsUsername?: string;
+    };
+  };
+}
+
+export interface GetUserRepliesResponse {
+  success: boolean;
+  replies: UserReply[];
+  meta: {
+    resultCount: number;
+    hasMore: boolean;
+    nextCursor?: string;
+  };
+}
+
 export const repliesAPI = {
   /**
    * Create a reply to a post
@@ -81,5 +103,17 @@ export const repliesAPI = {
    */
   async likeReply(replyId: string, token: string): Promise<LikeReplyResponse> {
     return api.post(`/api/replies/${replyId}/like`, {}, token);
+  },
+
+  /**
+   * Get all replies by a specific user
+   */
+  async getUserReplies(walletAddress: string, params?: {
+    limit?: number;
+  }): Promise<GetUserRepliesResponse> {
+    const searchParams = new URLSearchParams();
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    const query = searchParams.toString();
+    return api.get(`/api/replies/user/${walletAddress}${query ? `?${query}` : ''}`);
   }
 };

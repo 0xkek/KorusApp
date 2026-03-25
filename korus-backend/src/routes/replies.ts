@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { createReply, getReplies, likeReply } from '../controllers/repliesController'
+import { createReply, getReplies, likeReply, getUserReplies } from '../controllers/repliesController'
 import { authenticate } from '../middleware/auth'
 import { validateCreateReply, validateLike } from '../middleware/validation'
 import { checkSuspension, checkWarnings } from '../middleware/moderationCheck'
@@ -143,5 +143,8 @@ router.get('/:id/replies', readPostsRateLimiter, getReplies)
  *         $ref: '#/components/responses/RateLimitError'
  */
 router.post('/:id/like', authenticate, interactionsRateLimiter, validateLike, likeReply)
+
+// GET /api/replies/user/:walletAddress — get replies by a specific user
+router.get('/user/:walletAddress', readPostsRateLimiter, getUserReplies)
 
 export default router

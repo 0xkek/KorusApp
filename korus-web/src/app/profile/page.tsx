@@ -77,6 +77,15 @@ export default function ProfilePage() {
   });
 
   const [userPosts, setUserPosts] = useState<Post[]>([]);
+  const [userReplies, setUserReplies] = useState<Array<{
+    id: string;
+    content: string;
+    createdAt: string;
+    likeCount: number;
+    postId: string;
+    postContent?: string;
+    postAuthor?: string;
+  }>>([]);
 
   // Wallet and user data
   const walletAddress = publicKey?.toBase58() || '';
@@ -102,14 +111,15 @@ export default function ProfilePage() {
       if (!token) return;
 
       // Load profile from API
-      const { usersAPI, nftsAPI, reputationAPI, postsAPI } = await import('@/lib/api');
+      const { usersAPI, nftsAPI, reputationAPI, postsAPI, repliesAPI } = await import('@/lib/api');
       const { user } = await usersAPI.getProfile(token);
 
-      // Fetch reputation breakdown and user posts in parallel
+      // Fetch reputation, posts, and replies in parallel
       if (user.walletAddress) {
-        const [repResult, postsResult] = await Promise.allSettled([
+        const [repResult, postsResult, repliesResult] = await Promise.allSettled([
           reputationAPI.getReputation(user.walletAddress, token),
           postsAPI.getUserPosts(user.walletAddress, { limit: 50 }),
+          repliesAPI.getUserReplies(user.walletAddress, { limit: 50 }),
         ]);
 
         if (repResult.status === 'fulfilled') {
@@ -146,6 +156,22 @@ export default function ProfilePage() {
           setUserPosts(transformed);
         } else {
           logger.error('Failed to load user posts');
+        }
+
+        if (repliesResult.status === 'fulfilled' && repliesResult.value.replies) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const transformedReplies = repliesResult.value.replies.map((reply: any) => ({
+            id: reply.id,
+            content: reply.content,
+            createdAt: reply.createdAt,
+            likeCount: reply.likeCount || 0,
+            postId: reply.postId,
+            postContent: reply.post?.content?.slice(0, 100) || '',
+            postAuthor: reply.post?.author?.username || reply.post?.author?.snsUsername || reply.post?.authorWallet?.slice(0, 10) || '',
+          }));
+          setUserReplies(transformedReplies);
+        } else {
+          logger.error('Failed to load user replies');
         }
       }
 
@@ -929,63 +955,111 @@ export default function ProfilePage() {
                     </button>
                   </div>
 
-                  {/* Tab Content */}
-                  {userPosts.length === 0 ? (
-                    <div className="text-center py-16 px-6">
-                      {activeTab === 'posts' ? (
-                        <>
-                          <div className="text-5xl mb-4 opacity-60">📝</div>
-                          <p className="text-[#fafafa] text-lg font-medium mb-2">No posts yet</p>
-                          <p className="text-[#a1a1a1] text-sm mb-6">
-                            Share your thoughts, insights, or questions with the Korus community.<br/>
-                            Your posts earn reputation and can receive tips!
-                          </p>
-                          <button
-                            onClick={() => window.location.href = '/'}
-                            className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150 hover:scale-105"
+                  {/* Tab Content — Posts */}
+                  {activeTab === 'posts' && (
+                    userPosts.length === 0 ? (
+                      <div className="text-center py-16 px-6">
+                        <div className="text-5xl mb-4 opacity-60">📝</div>
+                        <p className="text-[#fafafa] text-lg font-medium mb-2">No posts yet</p>
+                        <p className="text-[#a1a1a1] text-sm mb-6">
+                          Share your thoughts, insights, or questions with the Korus community.<br/>
+                          Your posts earn reputation and can receive tips!
+                        </p>
+                        <button
+                          onClick={() => window.location.href = '/'}
+                          className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150 hover:scale-105"
+                        >
+                          Create Your First Post
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-[#262626]/50">
+                        {userPosts.map((post) => (
+                          <a
+                            key={post.id}
+                            href={`/post/${post.id}`}
+                            className="block p-6 hover:bg-white/[0.02] transition-all cursor-pointer"
                           >
-                            Create Your First Post
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <div className="text-5xl mb-4 opacity-60">💬</div>
-                          <p className="text-[#fafafa] text-lg font-medium mb-2">No replies yet</p>
-                          <p className="text-[#a1a1a1] text-sm mb-6">
-                            Engage with other users&apos; posts to start building your reputation.<br/>
-                            Thoughtful replies can earn tips and grow your network!
-                          </p>
-                          <button
-                            onClick={() => window.location.href = '/'}
-                            className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150 hover:scale-105"
+                            <SafeContent
+                              content={post.content}
+                              as="p"
+                              className="text-[#fafafa] mb-3"
+                              allowLinks={true}
+                              allowFormatting={true}
+                            />
+                            {post.imageUrl && (
+                              <Image src={post.imageUrl} alt="Post image" width={600} height={400} className="w-full rounded-lg mb-3" />
+                            )}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-5 text-[#737373] text-sm">
+                                <span>{post.likes} likes</span>
+                                <span>{post.tips} tips</span>
+                                <span>{post.replies || 0} replies</span>
+                              </div>
+                              <span className="text-[#525252] text-xs">
+                                {new Date(post.createdAt || post.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                {' '}
+                                {new Date(post.createdAt || post.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    )
+                  )}
+
+                  {/* Tab Content — Replies */}
+                  {activeTab === 'replies' && (
+                    userReplies.length === 0 ? (
+                      <div className="text-center py-16 px-6">
+                        <div className="text-5xl mb-4 opacity-60">💬</div>
+                        <p className="text-[#fafafa] text-lg font-medium mb-2">No replies yet</p>
+                        <p className="text-[#a1a1a1] text-sm mb-6">
+                          Engage with other users&apos; posts to start building your reputation.<br/>
+                          Thoughtful replies can earn tips and grow your network!
+                        </p>
+                        <button
+                          onClick={() => window.location.href = '/'}
+                          className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150 hover:scale-105"
+                        >
+                          Explore Posts to Reply
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-[#262626]/50">
+                        {userReplies.map((reply) => (
+                          <a
+                            key={reply.id}
+                            href={`/post/${reply.postId}`}
+                            className="block p-6 hover:bg-white/[0.02] transition-all cursor-pointer"
                           >
-                            Explore Posts to Reply
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-[#262626]/50">
-                      {userPosts.map((post) => (
-                        <div key={post.id} className="p-6 hover:bg-white/[0.02] transition-all">
-                          <SafeContent
-                            content={post.content}
-                            as="p"
-                            className="text-[#fafafa] mb-4"
-                            allowLinks={true}
-                            allowFormatting={true}
-                          />
-                          {post.imageUrl && (
-                            <Image src={post.imageUrl} alt="Post image" width={600} height={400} className="w-full rounded-lg mb-4" />
-                          )}
-                          <div className="flex items-center gap-6 text-[#737373] text-sm">
-                            <span>{post.likes} likes</span>
-                            <span>{post.tips} tips</span>
-                            <span>{post.replies || 0} replies</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                            {reply.postContent && (
+                              <div className="text-[#525252] text-xs mb-2 flex items-center gap-1">
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                                </svg>
+                                Replying to {reply.postAuthor ? `@${reply.postAuthor}` : 'a post'}
+                              </div>
+                            )}
+                            <SafeContent
+                              content={reply.content}
+                              as="p"
+                              className="text-[#fafafa] mb-3"
+                              allowLinks={true}
+                              allowFormatting={true}
+                            />
+                            <div className="flex items-center justify-between">
+                              <span className="text-[#737373] text-sm">{reply.likeCount} likes</span>
+                              <span className="text-[#525252] text-xs">
+                                {new Date(reply.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                {' '}
+                                {new Date(reply.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    )
                   )}
                 </div>
               </div>
