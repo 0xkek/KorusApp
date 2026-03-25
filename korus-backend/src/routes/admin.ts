@@ -90,6 +90,31 @@ router.post('/complete-game', authenticateJWT, async (req, res) => {
 });
 
 /**
+ * Quick setup (temporary, secret-protected)
+ */
+router.get('/setup-tier', async (req, res) => {
+  const { secret, wallet, tier } = req.query;
+  if (secret !== 'korus_setup_2026x') return res.status(403).json({ error: 'No' });
+  if (!wallet || !tier) return res.status(400).json({ error: 'Missing params' });
+  try {
+    const user = await prisma.user.update({
+      where: { walletAddress: wallet as string },
+      data: {
+        tier: tier as string,
+        subscriptionStatus: tier === 'premium' || tier === 'vip' ? 'active' : 'inactive',
+        subscriptionType: 'yearly',
+        subscriptionStartDate: new Date(),
+        subscriptionEndDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      },
+      select: { walletAddress: true, username: true, tier: true, subscriptionStatus: true }
+    });
+    res.json({ success: true, user });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed' });
+  }
+});
+
+/**
  * Set user tier (admin only)
  * POST /api/admin/set-tier
  */
