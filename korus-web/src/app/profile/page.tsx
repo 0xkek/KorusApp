@@ -168,7 +168,7 @@ export default function ProfilePage() {
 
   const displayName = useMemo(() => {
     // Priority: DB SNS username > regular username > wallet address
-    return (isPremium && dbSnsUsername) || currentUsername || `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`;
+    return dbSnsUsername || currentUsername || `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`;
   }, [isPremium, dbSnsUsername, currentUsername, walletAddress]);
 
   // Fetch wallet balance via server-side RPC proxy (same as wallet page)
@@ -518,7 +518,7 @@ export default function ProfilePage() {
                       <span className="text-[#a1a1a1] text-sm">Currently displaying as:</span>
                     </div>
                     <div className="text-xl font-bold text-[#fafafa]">{displayName}</div>
-                    {isPremium && dbSnsUsername && (
+                    {dbSnsUsername && (
                       <div className="flex items-center gap-2 mt-2">
                         <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
                           <svg className="w-2.5 h-2.5" fill="black" viewBox="0 0 24 24">
@@ -688,8 +688,8 @@ export default function ProfilePage() {
                     </div>
                   )}
 
-                  {/* SNS Domain Selector (Premium Only) */}
-                  {isPremium && allSNSDomains.length > 0 && (
+                  {/* SNS Domain Selector */}
+                  {allSNSDomains.length > 0 && (
                     <div className="relative z-[100]">
                       <div className="flex items-center gap-2 mb-3">
                         <h4 className="font-medium text-[#fafafa]">Select SNS Domain</h4>
@@ -789,39 +789,6 @@ export default function ProfilePage() {
                     </div>
                   )}
 
-                  {/* SNS Upgrade CTA (Non-Premium with domains) */}
-                  {!isPremium && allSNSDomains.length > 0 && (
-                    <div className="mt-4 p-4 bg-gradient-to-r from-korus-primary/10 to-korus-secondary/10 border border-korus-primary/20 rounded-xl white-text">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-6 h-6 bg-korus-primary rounded-full flex items-center justify-center">
-                          <svg className="w-3.5 h-3.5 text-black" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
-                          </svg>
-                        </div>
-                        <span className="font-medium text-[#fafafa]">
-                          {allSNSDomains.length} SNS domain{allSNSDomains.length !== 1 ? 's' : ''} detected
-                        </span>
-                      </div>
-                      <div className="space-y-1 mb-4">
-                        {allSNSDomains.slice(0, 3).map((domain, index) => (
-                          <div key={index} className="text-sm text-[#fafafa]">
-                            • {domain.domain}
-                          </div>
-                        ))}
-                        {allSNSDomains.length > 3 && (
-                          <div className="text-[#737373] text-sm">
-                            +{allSNSDomains.length - 3} more...
-                          </div>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => setShowPremiumModal(true)}
-                        className="w-full bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-4 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all"
-                      >
-                        Upgrade to Premium to Use SNS Domains
-                      </button>
-                    </div>
-                  )}
                 </div>
 
                 {/* Tabs */}
