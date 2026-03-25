@@ -718,7 +718,7 @@ export default function ProfilePage() {
                                 </svg>
                               </div>
                               <span className="text-[#fafafa]">
-                                {snsLoading ? 'Loading...' : (snsDomain ? snsDomain : 'Select SNS Domain')}
+                                {snsLoading ? 'Loading...' : (dbSnsUsername || snsDomain || 'Select SNS Domain')}
                               </span>
                             </div>
                             <svg className={`w-4 h-4 text-[#737373] transition-transform ${showSNSDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -776,10 +776,10 @@ export default function ProfilePage() {
                               >
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
-                                    <div className={`w-2 h-2 rounded-full ${domain.favorite ? 'bg-korus-primary' : 'bg-[#737373]'}`} />
+                                    <div className={`w-2 h-2 rounded-full ${domain.domain === (dbSnsUsername || snsDomain) ? 'bg-korus-primary' : 'bg-[#737373]'}`} />
                                     <span className="text-[#fafafa]">{domain.domain}</span>
                                   </div>
-                                  {domain.favorite && (
+                                  {domain.domain === (dbSnsUsername || snsDomain) && (
                                     <svg className="w-4 h-4 text-korus-primary" fill="currentColor" viewBox="0 0 24 24">
                                       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
                                     </svg>
