@@ -53,7 +53,7 @@ export default function ProfilePage() {
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
   const [usernameError, setUsernameError] = useState('');
   const [savingUsername, setSavingUsername] = useState(false);
-  const [showSNSDropdown, setShowSNSDropdown] = useState(false);
+  const [showIdentityDropdown, setShowIdentityDropdown] = useState(false);
   const [hasSetUsername, setHasSetUsername] = useState(false);
   const [hasLoadedProfile, setHasLoadedProfile] = useState(false);
   const [showUsernameWarning, setShowUsernameWarning] = useState(false);
@@ -235,11 +235,13 @@ export default function ProfilePage() {
     }
   }, []);
 
+  const truncatedWallet = `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`;
   const displayName = useMemo(() => {
+    // __wallet__ is a sentinel value meaning "user explicitly chose wallet address"
+    if (dbSnsUsername === '__wallet__') return truncatedWallet;
     // Priority: DB SNS username (user's explicit choice) > regular username > wallet address
-    // Note: on-chain snsDomain is NOT used as fallback — user must explicitly select it via the SNS selector
-    return dbSnsUsername || currentUsername || `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`;
-  }, [dbSnsUsername, currentUsername, walletAddress]);
+    return dbSnsUsername || currentUsername || truncatedWallet;
+  }, [dbSnsUsername, currentUsername, truncatedWallet]);
 
   // Fetch wallet balance via server-side RPC proxy (same as wallet page)
   useEffect(() => {
@@ -285,21 +287,21 @@ export default function ProfilePage() {
     }
   }, [connected, hasLoadedProfile, router, loadUserProfile]);
 
-  // Handle SNS dropdown outside click
+  // Handle identity dropdown outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (snsDropdownRef.current && !snsDropdownRef.current.contains(event.target as Node)) {
-        setShowSNSDropdown(false);
+        setShowIdentityDropdown(false);
       }
     };
 
-    if (showSNSDropdown) {
+    if (showIdentityDropdown) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => {
         document.removeEventListener('mousedown', handleClickOutside);
       };
     }
-  }, [showSNSDropdown]);
+  }, [showIdentityDropdown]);
 
   // Handle premium modal outside click
   useEffect(() => {
@@ -588,133 +590,176 @@ export default function ProfilePage() {
                 <div className="mb-6 bg-white/[0.04] backdrop-blur-sm border border-[#262626] rounded-2xl p-6 relative z-50">
                   <h3 className="text-lg font-bold text-[#fafafa] mb-4">Your Identity</h3>
 
-                  {/* Current Display Name */}
-                  <div className="mb-6 p-4 bg-white/[0.06] border border-[#262626] rounded-xl">
-                    <div className="flex items-center gap-3 mb-2">
-                      <svg className="w-5 h-5 text-korus-primary" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                      </svg>
-                      <span className="text-[#a1a1a1] text-sm">Currently displaying as:</span>
-                    </div>
-                    <div className="text-xl font-bold text-[#fafafa]">{displayName}</div>
-                    {dbSnsUsername && (
-                      <div className="flex items-center gap-2 mt-2">
-                        <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
-                          <svg className="w-2.5 h-2.5" fill="black" viewBox="0 0 24 24">
-                            <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
-                          </svg>
+                  {/* Display Name Dropdown */}
+                  <div className="relative z-[100]" ref={snsDropdownRef}>
+                    <button
+                      onClick={() => setShowIdentityDropdown(!showIdentityDropdown)}
+                      className="w-full p-4 bg-white/[0.06] border border-[#262626] rounded-xl hover:bg-white/[0.08] transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-[#a1a1a1] text-xs mb-1">Currently displaying as:</div>
+                          <div className="text-lg font-bold text-[#fafafa] flex items-center gap-2">
+                            {displayName}
+                            {dbSnsUsername && dbSnsUsername !== '__wallet__' && (
+                              <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
+                                <svg className="w-2.5 h-2.5" fill="black" viewBox="0 0 24 24">
+                                  <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-[#737373] text-xs mt-1">
+                            {dbSnsUsername === '__wallet__' ? 'Wallet Address' : dbSnsUsername ? 'SNS Domain' : currentUsername && displayName === currentUsername ? 'Custom Username' : 'Wallet Address'}
+                          </div>
                         </div>
-                        <span className="text-yellow-400 text-sm font-medium">SNS Domain Active</span>
+                        <svg className={`w-5 h-5 text-[#737373] transition-transform ${showIdentityDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
+                        </svg>
+                      </div>
+                    </button>
+
+                    {showIdentityDropdown && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-[#141414] backdrop-blur-xl border border-[#262626] rounded-xl z-50 max-h-80 overflow-y-auto shadow-xl">
+                        {/* Wallet Address option */}
+                        <button
+                          onClick={async () => {
+                            try {
+                              const token = localStorage.getItem('authToken');
+                              if (!token) return;
+                              const { usersAPI } = await import('@/lib/api');
+                              await usersAPI.updateProfile({ snsUsername: '__wallet__' }, token);
+                              setDbSnsUsername('__wallet__');
+                              setShowIdentityDropdown(false);
+                              showSuccess('Now displaying as wallet address');
+                            } catch {
+                              showError('Failed to update display preference');
+                            }
+                          }}
+                          className="w-full px-4 py-3 text-left hover:bg-white/[0.06] transition-colors border-b border-[#262626]"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="text-[#fafafa] font-medium">{`${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`}</div>
+                              <div className="text-[#737373] text-xs">Wallet Address</div>
+                            </div>
+                            {(dbSnsUsername === '__wallet__' || (!dbSnsUsername && !currentUsername)) && (
+                              <svg className="w-4 h-4 text-korus-primary" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                              </svg>
+                            )}
+                          </div>
+                        </button>
+
+                        {/* Custom Username option */}
+                        {currentUsername && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                const token = localStorage.getItem('authToken');
+                                if (!token) return;
+                                const { usersAPI } = await import('@/lib/api');
+                                // Clear SNS so username shows through
+                                await usersAPI.updateProfile({ snsUsername: '' }, token);
+                                setDbSnsUsername(null);
+                                setShowIdentityDropdown(false);
+                                showSuccess(`Now displaying as @${currentUsername}`);
+                              } catch {
+                                showError('Failed to update display preference');
+                              }
+                            }}
+                            className="w-full px-4 py-3 text-left hover:bg-white/[0.06] transition-colors border-b border-[#262626]"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="text-[#fafafa] font-medium">@{currentUsername}</div>
+                                <div className="text-[#737373] text-xs">Custom Username</div>
+                              </div>
+                              {!dbSnsUsername && currentUsername && displayName === currentUsername && (
+                                <svg className="w-4 h-4 text-korus-primary" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                                </svg>
+                              )}
+                            </div>
+                          </button>
+                        )}
+
+                        {/* SNS Domain options */}
+                        {allSNSDomains.map((domain, index) => (
+                          <button
+                            key={index}
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              try {
+                                await setFavoriteSNSDomain(walletAddress, domain.domain);
+                                const token = localStorage.getItem('authToken');
+                                if (!token) {
+                                  showError('Please reconnect your wallet');
+                                  return;
+                                }
+                                const { usersAPI } = await import('@/lib/api');
+                                await usersAPI.updateProfile({ snsUsername: domain.domain }, token);
+                                setDbSnsUsername(domain.domain);
+                                await setFavoriteSNSDomain(walletAddress, domain.domain);
+                                setShowIdentityDropdown(false);
+                                showSuccess(`Now displaying as ${domain.domain}`);
+                                refreshSNS();
+                                await refreshStatus();
+                              } catch (error) {
+                                const errorMessage = (error as { data?: { error?: string }, message?: string })?.data?.error || (error as Error)?.message || 'Failed to set SNS domain';
+                                showError(errorMessage);
+                                logger.error('Error setting SNS domain:', error);
+                              }
+                            }}
+                            className="w-full px-4 py-3 text-left hover:bg-white/[0.06] transition-colors border-b border-[#262626] last:border-b-0"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="text-[#fafafa] font-medium flex items-center gap-2">
+                                  {domain.domain}
+                                  <div className="w-3.5 h-3.5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
+                                    <svg className="w-2 h-2" fill="black" viewBox="0 0 24 24">
+                                      <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
+                                    </svg>
+                                  </div>
+                                </div>
+                                <div className="text-[#737373] text-xs">SNS Domain</div>
+                              </div>
+                              {domain.domain === dbSnsUsername && (
+                                <svg className="w-4 h-4 text-korus-primary" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                                </svg>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+
+                        {/* Set Username option if not yet set */}
+                        {!currentUsername && (
+                          <button
+                            onClick={() => {
+                              setShowIdentityDropdown(false);
+                              const canEdit = !hasSetUsername || isPremium;
+                              if (!canEdit) {
+                                showWarning('You have already set your username. Upgrade to Premium to change it anytime!');
+                                return;
+                              }
+                              setShowUsernameWarning(true);
+                            }}
+                            className="w-full px-4 py-3 text-left hover:bg-white/[0.06] transition-colors"
+                          >
+                            <div className="text-korus-primary font-medium text-sm">+ Set Custom Username</div>
+                            <div className="text-[#737373] text-xs">Free users can set once</div>
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
 
-                  {/* Identity Options Explanation */}
-                  <div className="space-y-4 mb-6">
-                    <div className="text-[#a1a1a1] text-sm">
-                      Choose how others see you on the platform:
-                    </div>
-
-                    {/* Option 1: Wallet Address (Default) — clickable to reset display name */}
-                    <button
-                      onClick={async () => {
-                        try {
-                          const token = localStorage.getItem('authToken');
-                          if (!token) return;
-                          const { usersAPI } = await import('@/lib/api');
-                          await usersAPI.updateProfile({ snsUsername: '' }, token);
-                          setDbSnsUsername(null);
-                          showSuccess('Now displaying as wallet address');
-                        } catch {
-                          showError('Failed to update display preference');
-                        }
-                      }}
-                      className="w-full flex items-start gap-3 p-3 bg-white/[0.04] rounded-lg hover:bg-white/[0.06] transition-colors text-left"
-                    >
-                      <div className="w-6 h-6 mt-0.5 bg-korus-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-bold text-korus-primary">1</span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-medium text-[#fafafa] mb-1">Wallet Address (Default)</div>
-                        <div className="text-[#737373] text-sm mb-2">
-                          {`${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`} • Always available
-                        </div>
-                        <div className="text-xs text-[#737373]">
-                          Click to use your wallet address as display name.
-                        </div>
-                      </div>
-                    </button>
-
-                    {/* Option 2: Username — clickable to expand editor */}
-                    <button
-                      onClick={() => {
-                        const canEdit = !hasSetUsername || isPremium;
-                        if (!canEdit) {
-                          showWarning('You have already set your username. Upgrade to Premium to change it anytime!');
-                          return;
-                        }
-                        if (!currentUsername && !isPremium) {
-                          setShowUsernameWarning(true);
-                          return;
-                        }
-                        setEditingUsername(!editingUsername);
-                        setUsernameError('');
-                        setTempUsernameValue(currentUsername || '');
-                      }}
-                      className="w-full flex items-start gap-3 p-3 bg-white/[0.04] rounded-lg hover:bg-white/[0.06] transition-colors text-left"
-                    >
-                      <div className="w-6 h-6 mt-0.5 bg-korus-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-bold text-korus-primary">2</span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <div className="font-medium text-[#fafafa] mb-1">Custom Username</div>
-                          <svg className="w-4 h-4 text-[#737373]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                          </svg>
-                        </div>
-                        <div className="text-[#737373] text-sm mb-2">
-                          {currentUsername ? `@${currentUsername}` : 'Not set'} •
-                          <span className="text-korus-primary ml-1">
-                            {!hasSetUsername ? 'Can set once (free)' : isPremium ? 'Can change anytime (premium)' : 'Locked (upgrade to change)'}
-                          </span>
-                        </div>
-                        <div className="text-xs text-[#737373]">
-                          Free users can set once. Premium users can change anytime.
-                        </div>
-                      </div>
-                    </button>
-
-                    {/* Option 3: SNS Domain */}
-                    <div className="flex items-start gap-3 p-3 bg-white/[0.04] rounded-lg">
-                      <div className="w-6 h-6 mt-0.5 bg-korus-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-bold text-korus-primary">3</span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-[#fafafa]">SNS Domain</span>
-                          <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
-                            <svg className="w-2.5 h-2.5" fill="black" viewBox="0 0 24 24">
-                              <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
-                            </svg>
-                          </div>
-                        </div>
-                        <div className="text-[#737373] text-sm mb-2">
-                          {allSNSDomains.length > 0
-                            ? `${allSNSDomains.length} domain${allSNSDomains.length !== 1 ? 's' : ''} found in wallet`
-                            : 'No domains found'
-                          } • Highest priority display
-                        </div>
-                        <div className="text-xs text-[#737373]">
-                          SNS domains override usernames when active.
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Username Editor — expands inline when editingUsername is true */}
                   {editingUsername && (
-                    <div className="mb-4 p-4 bg-white/[0.04] border border-[#262626] rounded-xl">
+                    <div className="mt-4 p-4 bg-white/[0.04] border border-[#262626] rounded-xl">
                       <div className="space-y-3">
                         <input
                           type="text"
@@ -757,107 +802,6 @@ export default function ProfilePage() {
                             {savingUsername ? 'Saving...' : 'Save'}
                           </button>
                         </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* SNS Domain Selector */}
-                  {allSNSDomains.length > 0 && (
-                    <div className="relative z-[100]">
-                      <div className="flex items-center gap-2 mb-3">
-                        <h4 className="font-medium text-[#fafafa]">Select SNS Domain</h4>
-                        <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
-                          <svg className="w-2.5 h-2.5" fill="black" viewBox="0 0 24 24">
-                            <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
-                          </svg>
-                        </div>
-                      </div>
-
-                      <div className="relative z-50" ref={snsDropdownRef}>
-                        <button
-                          onClick={() => setShowSNSDropdown(!showSNSDropdown)}
-                          className="w-full bg-white/[0.06] border border-[#262626] rounded-xl p-4 hover:border-[#262626] transition-colors"
-                          disabled={allDomainsLoading}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-6 h-6 bg-korus-primary rounded-full flex items-center justify-center">
-                                <svg className="w-3.5 h-3.5 text-black" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
-                                </svg>
-                              </div>
-                              <span className="text-[#fafafa]">
-                                {snsLoading ? 'Loading...' : (dbSnsUsername || snsDomain || 'Select SNS Domain')}
-                              </span>
-                            </div>
-                            <svg className={`w-4 h-4 text-[#737373] transition-transform ${showSNSDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
-                            </svg>
-                          </div>
-                        </button>
-
-                        {/* SNS Dropdown */}
-                        {showSNSDropdown && (
-                          <div className="absolute top-full left-0 right-0 mt-2 bg-[#141414] backdrop-blur-xl border border-[#262626] rounded-xl z-50 max-h-60 overflow-y-auto">
-                            {allSNSDomains.map((domain, index) => (
-                              <button
-                                key={index}
-                                onClick={async (e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  logger.log(`Clicked on domain: ${domain.domain}`);
-
-                                  try {
-                                    // Set as favorite in local cache
-                                    await setFavoriteSNSDomain(walletAddress, domain.domain);
-
-                                    // Save to backend
-                                    const token = localStorage.getItem('authToken');
-                                    if (!token) {
-                                      showError('Please reconnect your wallet');
-                                      return;
-                                    }
-
-                                    const { usersAPI } = await import('@/lib/api');
-                                    await usersAPI.updateProfile({ snsUsername: domain.domain }, token);
-
-                                    // Update local state immediately
-                                    setDbSnsUsername(domain.domain);
-
-                                    // Update local cache with new domain
-                                    await setFavoriteSNSDomain(walletAddress, domain.domain);
-
-                                    setShowSNSDropdown(false);
-                                    showSuccess(`SNS domain ${domain.domain} set successfully!`);
-
-                                    // Refresh SNS domain display
-                                    refreshSNS();
-
-                                    // Refresh subscription status to update display
-                                    await refreshStatus();
-                                  } catch (error) {
-                                    const errorMessage = (error as { data?: { error?: string }, message?: string })?.data?.error || (error as Error)?.message || 'Failed to set SNS domain';
-                                    showError(errorMessage);
-                                    logger.error('Error setting SNS domain:', error);
-                                  }
-                                }}
-                                className="w-full px-4 py-3 text-left hover:bg-korus-primary/20 hover:border-korus-primary/40 transition-colors border-b border-[#262626] last:border-b-0 cursor-pointer"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                    <div className={`w-2 h-2 rounded-full ${domain.domain === (dbSnsUsername || snsDomain) ? 'bg-korus-primary' : 'bg-[#737373]'}`} />
-                                    <span className="text-[#fafafa]">{domain.domain}</span>
-                                  </div>
-                                  {domain.domain === (dbSnsUsername || snsDomain) && (
-                                    <svg className="w-4 h-4 text-korus-primary" fill="currentColor" viewBox="0 0 24 24">
-                                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-                                    </svg>
-                                  )}
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     </div>
                   )}

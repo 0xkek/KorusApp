@@ -50,7 +50,8 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
             const userData = await userResponse.json();
             logger.log('[LeftSidebar] User data:', userData);
             // Set display name from profile data
-            const displayName = userData.user?.snsUsername || userData.user?.username || null;
+            const snsVal = userData.user?.snsUsername;
+            const displayName = (snsVal && snsVal !== '__wallet__') ? snsVal : userData.user?.username || null;
             setUserDisplayName(displayName);
 
             if (userData.user?.nftAvatar) {
