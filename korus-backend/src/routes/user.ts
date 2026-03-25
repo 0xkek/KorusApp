@@ -224,7 +224,8 @@ router.put('/profile', authenticate, async (req: AuthRequest, res) => {
         twitter: twitter || undefined,
         themeColor: themeColor || undefined,
         nftAvatar: nftAvatar || undefined,
-        snsUsername: snsUsername || undefined
+        // snsUsername can be explicitly set to null/empty to clear it
+        ...(snsUsername !== undefined && { snsUsername: snsUsername || null })
       },
       select: {
         walletAddress: true,

@@ -491,7 +491,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
               </div>
             )}
             <div className="hidden xl:block flex-1 min-w-0">
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{userDisplayName || 'korus.sol'}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{userDisplayName || `${publicKey.toBase58().slice(0, 4)}...${publicKey.toBase58().slice(-4)}`}</div>
               <div style={{ fontSize: 12, color: '#737373', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
               </div>
