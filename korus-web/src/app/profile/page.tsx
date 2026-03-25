@@ -23,12 +23,21 @@ const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: fal
 const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { ssr: false });
 const NFTAvatarModal = dynamic(() => import('@/components/NFTAvatarModal'), { ssr: false });
 
-interface UserStats {
-  posts: number;
-  replies: number;
-  likes: number;
-  tips: number;
-  repScore: number;
+interface ReputationBreakdown {
+  reputationScore: number;
+  contentScore: number;
+  engagementScore: number;
+  communityScore: number;
+  loyaltyScore: number;
+  loginStreak: number;
+  recentEvents: Array<{
+    id: string;
+    eventType: string;
+    points: number;
+    category: string;
+    description?: string;
+    createdAt: string;
+  }>;
 }
 
 export default function ProfilePage() {
@@ -53,12 +62,21 @@ export default function ProfilePage() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
-  const [userPosts] = useState<Post[]>([]); // Mock user posts (would come from API)
   const [selectedNFTAvatar, setSelectedNFTAvatar] = useState<NFT | null>(null); // NFT avatar
   const [showNFTAvatarModal, setShowNFTAvatarModal] = useState(false);
   const [balance, setBalance] = useState<number>(0);
   const [dbSnsUsername, setDbSnsUsername] = useState<string | null>(null); // SNS from database
-  const [reputationScore, setReputationScore] = useState<number>(0); // Backend reputation score
+  const [reputation, setReputation] = useState<ReputationBreakdown>({
+    reputationScore: 0,
+    contentScore: 0,
+    engagementScore: 0,
+    communityScore: 0,
+    loyaltyScore: 0,
+    loginStreak: 0,
+    recentEvents: [],
+  });
+
+  const [userPosts] = useState<Post[]>([]);
 
   // Wallet and user data
   const walletAddress = publicKey?.toBase58() || '';
@@ -75,16 +93,7 @@ export default function ProfilePage() {
   const snsDropdownRef = useRef<HTMLDivElement>(null);
   const premiumModalRef = useRef<HTMLDivElement>(null);
 
-  // Calculate stats with memoization for performance
-  const stats: UserStats = useMemo(() => {
-    return {
-      posts: userPosts.length,
-      replies: userPosts.reduce((sum, post) => sum + post.replies, 0),
-      likes: userPosts.reduce((sum, post) => sum + post.likes, 0),
-      tips: userPosts.reduce((sum, post) => sum + post.tips, 0),
-      repScore: reputationScore,
-    };
-  }, [userPosts, reputationScore]);
+  // No longer using fake stats — reputation data comes from the backend
 
   const loadUserProfile = useCallback(async () => {
     try {
@@ -96,11 +105,19 @@ export default function ProfilePage() {
       const { usersAPI, nftsAPI, reputationAPI } = await import('@/lib/api');
       const { user } = await usersAPI.getProfile(token);
 
-      // Fetch reputation score from backend
+      // Fetch reputation breakdown from backend
       if (user.walletAddress) {
         try {
-          const { reputation } = await reputationAPI.getReputation(user.walletAddress, token);
-          setReputationScore(reputation.reputationScore);
+          const { reputation: repData } = await reputationAPI.getReputation(user.walletAddress, token);
+          setReputation({
+            reputationScore: repData.reputationScore,
+            contentScore: repData.contentScore,
+            engagementScore: repData.engagementScore,
+            communityScore: repData.communityScore,
+            loyaltyScore: repData.loyaltyScore,
+            loginStreak: repData.loginStreak,
+            recentEvents: repData.recentEvents || [],
+          });
         } catch {
           logger.error('Failed to load reputation, using 0');
         }
@@ -806,7 +823,7 @@ export default function ProfilePage() {
                           : 'text-[#737373] hover:bg-white/[0.04] hover:text-[#a1a1a1] border-transparent'
                       }`}
                     >
-                      Posts ({stats.posts})
+                      Posts
                     </button>
                     <button
                       onClick={() => setActiveTab('replies')}
@@ -816,7 +833,7 @@ export default function ProfilePage() {
                           : 'text-[#737373] hover:bg-white/[0.04] hover:text-[#a1a1a1] border-transparent'
                       }`}
                     >
-                      Replies ({stats.replies})
+                      Replies
                     </button>
                   </div>
                 </div>
@@ -832,7 +849,7 @@ export default function ProfilePage() {
                       </div>
                       <h3 className="text-lg font-bold text-[#fafafa]">Reputation Score</h3>
                     </div>
-                    <div className="text-4xl font-bold text-korus-primary mb-4">{stats.repScore}</div>
+                    <div className="text-4xl font-bold text-korus-primary mb-4">{reputation.reputationScore}</div>
                   </div>
 
                   <div className="space-y-3">
@@ -841,36 +858,36 @@ export default function ProfilePage() {
                         <svg className="w-4 h-4 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
-                        <span className="text-[#a1a1a1] text-sm">Posts created</span>
+                        <span className="text-[#a1a1a1] text-sm">Content</span>
                       </div>
-                      <span className="text-korus-primary font-bold">+{stats.posts * 10}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-3 border-b border-[#262626]/20">
-                      <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                        </svg>
-                        <span className="text-[#a1a1a1] text-sm">Replies made</span>
-                      </div>
-                      <span className="text-korus-primary font-bold">+{stats.replies * 5}</span>
+                      <span className="text-korus-primary font-bold">+{reputation.contentScore}</span>
                     </div>
                     <div className="flex items-center justify-between py-3 border-b border-[#262626]/20">
                       <div className="flex items-center gap-2">
                         <svg className="w-4 h-4 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                         </svg>
-                        <span className="text-[#a1a1a1] text-sm">Likes received</span>
+                        <span className="text-[#a1a1a1] text-sm">Engagement</span>
                       </div>
-                      <span className="text-korus-primary font-bold">+{stats.likes * 2}</span>
+                      <span className="text-korus-primary font-bold">+{reputation.engagementScore}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-3 border-b border-[#262626]/20">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <span className="text-[#a1a1a1] text-sm">Community</span>
+                      </div>
+                      <span className="text-korus-primary font-bold">+{reputation.communityScore}</span>
                     </div>
                     <div className="flex items-center justify-between py-3">
                       <div className="flex items-center gap-2">
                         <svg className="w-4 h-4 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span className="text-[#a1a1a1] text-sm">Tips received</span>
+                        <span className="text-[#a1a1a1] text-sm">Loyalty</span>
                       </div>
-                      <span className="text-korus-primary font-bold">+{stats.tips * 20}</span>
+                      <span className="text-korus-primary font-bold">+{reputation.loyaltyScore}</span>
                     </div>
                   </div>
 
