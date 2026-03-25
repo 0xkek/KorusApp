@@ -145,7 +145,7 @@ export default function Home() {
           tips: Number(post.tipAmount) || 0,
           image: post.imageUrl,
           avatar: post.author?.nftAvatar || null,
-          isPremium: post.author?.tier === 'premium',
+          isPremium: post.author?.tier === 'premium' || !!post.author?.snsUsername,
           shoutoutExpiresAt: post.shoutoutExpiresAt,
           repostedBy: post.isRepost ? (post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15)) : undefined,
           repostedPost: post.isRepost ? (
@@ -163,7 +163,7 @@ export default function Home() {
               reposts: post.originalPost.repostCount || 0,
               time: new Date(post.originalPost.createdAt).toLocaleString(),
               createdAt: post.originalPost.createdAt,
-              isPremium: post.originalPost.author?.tier === 'premium',
+              isPremium: post.originalPost.author?.tier === 'premium' || !!post.originalPost.author?.snsUsername,
               image: post.originalPost.imageUrl,
               avatar: post.originalPost.author?.nftAvatar || null,
             } : post.originalReply ? {
@@ -180,7 +180,7 @@ export default function Home() {
               reposts: post.originalReply.repostCount || 0,
               time: new Date(post.originalReply.createdAt).toLocaleString(),
               createdAt: post.originalReply.createdAt,
-              isPremium: post.originalReply.author?.tier === 'premium',
+              isPremium: post.originalReply.author?.tier === 'premium' || !!post.originalReply.author?.snsUsername,
               image: post.originalReply.imageUrl,
               avatar: post.originalReply.author?.nftAvatar || null,
             } : undefined
@@ -291,7 +291,7 @@ export default function Home() {
           tips: Number(post.tipAmount) || 0,
           image: post.imageUrl,
           avatar: post.author?.nftAvatar || null,
-          isPremium: post.author?.tier === 'premium',
+          isPremium: post.author?.tier === 'premium' || !!post.author?.snsUsername,
           shoutoutExpiresAt: post.shoutoutExpiresAt,
           // Map originalPost to repostedPost for reposts
           repostedBy: post.isRepost ? (post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15)) : undefined,
@@ -310,7 +310,7 @@ export default function Home() {
               reposts: post.originalPost.repostCount || 0,
               time: new Date(post.originalPost.createdAt).toLocaleString(),
               createdAt: post.originalPost.createdAt,
-              isPremium: post.originalPost.author?.tier === 'premium',
+              isPremium: post.originalPost.author?.tier === 'premium' || !!post.originalPost.author?.snsUsername,
               image: post.originalPost.imageUrl,
               avatar: post.originalPost.author?.nftAvatar || null,
             } : post.originalReply ? {
@@ -327,7 +327,7 @@ export default function Home() {
               reposts: post.originalReply.repostCount || 0,
               time: new Date(post.originalReply.createdAt).toLocaleString(),
               createdAt: post.originalReply.createdAt,
-              isPremium: post.originalReply.author?.tier === 'premium',
+              isPremium: post.originalReply.author?.tier === 'premium' || !!post.originalReply.author?.snsUsername,
               image: post.originalReply.imageUrl,
               avatar: post.originalReply.author?.nftAvatar || null,
             } : undefined
@@ -477,7 +477,7 @@ export default function Home() {
         tips: Number(newPost.tipAmount) || 0,
         image: newPost.imageUrl,
         avatar: await resolveAvatar(newPost.author?.nftAvatar),
-        isPremium: newPost.author?.tier === 'premium',
+        isPremium: newPost.author?.tier === 'premium' || !!newPost.author?.snsUsername,
         shoutoutExpiresAt: newPost.shoutoutExpiresAt,
         // Map originalPost to repostedPost for reposts
         repostedBy: newPost.isRepost ? (newPost.author?.username || newPost.author?.snsUsername || newPost.authorWallet?.slice(0, 15)) : undefined,
@@ -495,7 +495,7 @@ export default function Home() {
             reposts: newPost.originalPost.repostCount || 0,
             time: new Date(newPost.originalPost.createdAt).toLocaleString(),
             createdAt: newPost.originalPost.createdAt,
-            isPremium: newPost.originalPost.author?.tier === 'premium',
+            isPremium: newPost.originalPost.author?.tier === 'premium' || !!newPost.originalPost.author?.snsUsername,
             image: newPost.originalPost.imageUrl,
             avatar: await resolveAvatar(newPost.originalPost.author?.nftAvatar),
           } : newPost.originalReply ? {
@@ -512,7 +512,7 @@ export default function Home() {
             reposts: newPost.originalReply.repostCount || 0,
             time: new Date(newPost.originalReply.createdAt).toLocaleString(),
             createdAt: newPost.originalReply.createdAt,
-            isPremium: newPost.originalReply.author?.tier === 'premium',
+            isPremium: newPost.originalReply.author?.tier === 'premium' || !!newPost.originalReply.author?.snsUsername,
             image: newPost.originalReply.imageUrl,
             avatar: await resolveAvatar(newPost.originalReply.author?.nftAvatar),
           } : undefined
@@ -1000,7 +1000,7 @@ export default function Home() {
             tips: Number(post.tipAmount) || 0,
             image: post.imageUrl,
             avatar: await resolveAvatar(post.author?.nftAvatar),
-            isPremium: post.author?.tier === 'premium',
+            isPremium: post.author?.tier === 'premium' || !!post.author?.snsUsername,
             shoutoutExpiresAt: post.shoutoutExpiresAt,
             repostedBy: post.isRepost ? (post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15)) : undefined,
             repostedPost: post.isRepost ? (
@@ -1018,7 +1018,7 @@ export default function Home() {
                 reposts: post.originalPost.repostCount || 0,
                 time: new Date(post.originalPost.createdAt).toLocaleString(),
                 createdAt: post.originalPost.createdAt,
-                isPremium: post.originalPost.author?.tier === 'premium',
+                isPremium: post.originalPost.author?.tier === 'premium' || !!post.originalPost.author?.snsUsername,
                 image: post.originalPost.imageUrl,
                 avatar: await resolveAvatar(post.originalPost.author?.nftAvatar),
               } : post.originalReply ? {
@@ -1035,7 +1035,7 @@ export default function Home() {
                 reposts: post.originalReply.repostCount || 0,
                 time: new Date(post.originalReply.createdAt).toLocaleString(),
                 createdAt: post.originalReply.createdAt,
-                isPremium: post.originalReply.author?.tier === 'premium',
+                isPremium: post.originalReply.author?.tier === 'premium' || !!post.originalReply.author?.snsUsername,
                 image: post.originalReply.imageUrl,
                 avatar: await resolveAvatar(post.originalReply.author?.nftAvatar),
               } : undefined
@@ -1108,7 +1108,7 @@ export default function Home() {
             tips: Number(repost.tipAmount) || 0,
             image: repost.imageUrl,
             avatar: await resolveAvatar(repost.author?.nftAvatar),
-            isPremium: repost.author?.tier === 'premium',
+            isPremium: repost.author?.tier === 'premium' || !!repost.author?.snsUsername,
             repostedBy: repost.author?.username || repost.author?.snsUsername || repost.authorWallet?.slice(0, 15),
             repostedPost: repost.originalPost ? {
               id: repost.originalPost.id,
@@ -1123,7 +1123,7 @@ export default function Home() {
               reposts: repost.originalPost.repostCount || 0,
               time: new Date(repost.originalPost.createdAt).toLocaleString(),
               createdAt: repost.originalPost.createdAt,
-              isPremium: repost.originalPost.author?.tier === 'premium',
+              isPremium: repost.originalPost.author?.tier === 'premium' || !!repost.originalPost.author?.snsUsername,
               image: repost.originalPost.imageUrl,
               avatar: await resolveAvatar(repost.originalPost.author?.nftAvatar),
             } : repost.originalReply ? {
@@ -1140,7 +1140,7 @@ export default function Home() {
               reposts: repost.originalReply.repostCount || 0,
               time: new Date(repost.originalReply.createdAt).toLocaleString(),
               createdAt: repost.originalReply.createdAt,
-              isPremium: repost.originalReply.author?.tier === 'premium',
+              isPremium: repost.originalReply.author?.tier === 'premium' || !!repost.originalReply.author?.snsUsername,
               image: repost.originalReply.imageUrl,
               avatar: await resolveAvatar(repost.originalReply.author?.nftAvatar),
             } : undefined,
