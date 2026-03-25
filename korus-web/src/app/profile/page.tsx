@@ -151,7 +151,7 @@ export default function ProfilePage() {
             createdAt: post.createdAt,
             imageUrl: post.imageUrl,
             avatar: post.author?.nftAvatar || null,
-            isPremium: post.author?.tier === 'premium' || !!post.author?.snsUsername,
+            isPremium: post.author?.tier === 'premium' || post.author?.tier === 'vip',
           }));
           setUserPosts(transformed);
         } else {
