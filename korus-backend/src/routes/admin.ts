@@ -1,10 +1,18 @@
 import { Router } from 'express';
-import { authenticate as authenticateJWT } from '../middleware/auth';
+import { authenticate as authenticateJWT, AuthRequest } from '../middleware/auth';
 import { isAuthorityConfigured } from '../config/gameAuthority';
 import { gameCompletionService } from '../services/gameCompletionService';
+import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
 
 const router = Router();
+const prisma = new PrismaClient();
+
+// Authority wallet that can perform admin actions
+const ADMIN_WALLETS = [
+  'G4WAtEdLYWpDoxNWKVbd2Pv9LoX2feFSxN7mWUXt3kGG',
+  '5S2AgyEURGvr4f4Lk3AJ6ei9U6RTzh2AthQiRwHWsV2L'
+];
 
 /**
  * Admin health check endpoint
@@ -78,6 +86,41 @@ router.post('/complete-game', authenticateJWT, async (req, res) => {
       success: false,
       error: 'Failed to complete game'
     });
+  }
+});
+
+/**
+ * Set user tier (admin only)
+ * POST /api/admin/set-tier
+ */
+router.post('/set-tier', authenticateJWT, async (req: AuthRequest, res) => {
+  try {
+    const callerWallet = req.userWallet;
+    if (!callerWallet || !ADMIN_WALLETS.includes(callerWallet)) {
+      return res.status(403).json({ success: false, error: 'Not authorized' });
+    }
+
+    const { walletAddress, tier } = req.body;
+    if (!walletAddress || !tier) {
+      return res.status(400).json({ success: false, error: 'walletAddress and tier required' });
+    }
+
+    const validTiers = ['standard', 'premium', 'vip'];
+    if (!validTiers.includes(tier)) {
+      return res.status(400).json({ success: false, error: `Invalid tier. Must be: ${validTiers.join(', ')}` });
+    }
+
+    const user = await prisma.user.update({
+      where: { walletAddress },
+      data: { tier },
+      select: { walletAddress: true, username: true, tier: true }
+    });
+
+    logger.log(`Admin ${callerWallet} set tier for ${walletAddress} to ${tier}`);
+    res.json({ success: true, user });
+  } catch (error) {
+    logger.error('Failed to set tier:', error);
+    res.status(500).json({ success: false, error: 'Failed to set tier' });
   }
 });
 
