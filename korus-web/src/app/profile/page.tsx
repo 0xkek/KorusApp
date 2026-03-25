@@ -882,42 +882,56 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between py-3 border-b border-[#262626]/20">
-                      <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                        </svg>
-                        <span className="text-[#a1a1a1] text-sm">Content</span>
+                    {[
+                      {
+                        label: 'Content',
+                        score: reputation.contentScore,
+                        icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
+                        tooltip: 'Posts created (+10 each), comments received (+3 each). Quality content drives your score.',
+                        border: true,
+                      },
+                      {
+                        label: 'Engagement',
+                        score: reputation.engagementScore,
+                        icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z',
+                        tooltip: 'Likes given (+1), likes received (+2), comments made (+5). Interact with others to grow.',
+                        border: true,
+                      },
+                      {
+                        label: 'Community',
+                        score: reputation.communityScore,
+                        icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
+                        tooltip: 'Tips sent (+10 per 100 lamports), tips received (+15 per 100 lamports), game wins (+20). Give back to grow.',
+                        border: true,
+                      },
+                      {
+                        label: 'Loyalty',
+                        score: reputation.loyaltyScore,
+                        icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+                        tooltip: 'Daily logins (+5 each). Consistent activity builds your loyalty score over time.',
+                        border: false,
+                      },
+                    ].map((cat) => (
+                      <div
+                        key={cat.label}
+                        className={`group relative flex items-center justify-between py-3 cursor-default ${cat.border ? 'border-b border-[#262626]/20' : ''}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={cat.icon}/>
+                          </svg>
+                          <span className="text-[#a1a1a1] text-sm">{cat.label}</span>
+                          <svg className="w-3.5 h-3.5 text-[#525252] group-hover:text-[#a1a1a1] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                          </svg>
+                        </div>
+                        <span className="text-korus-primary font-bold">+{cat.score}</span>
+                        {/* Tooltip */}
+                        <div className="absolute left-0 bottom-full mb-2 w-72 bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2 text-xs text-[#a1a1a1] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 shadow-lg pointer-events-none">
+                          {cat.tooltip}
+                        </div>
                       </div>
-                      <span className="text-korus-primary font-bold">+{reputation.contentScore}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-3 border-b border-[#262626]/20">
-                      <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                        </svg>
-                        <span className="text-[#a1a1a1] text-sm">Engagement</span>
-                      </div>
-                      <span className="text-korus-primary font-bold">+{reputation.engagementScore}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-3 border-b border-[#262626]/20">
-                      <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        <span className="text-[#a1a1a1] text-sm">Community</span>
-                      </div>
-                      <span className="text-korus-primary font-bold">+{reputation.communityScore}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-3">
-                      <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span className="text-[#a1a1a1] text-sm">Loyalty</span>
-                      </div>
-                      <span className="text-korus-primary font-bold">+{reputation.loyaltyScore}</span>
-                    </div>
+                    ))}
                   </div>
 
                   {isPremium && (
