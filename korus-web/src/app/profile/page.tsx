@@ -167,9 +167,9 @@ export default function ProfilePage() {
   }, []);
 
   const displayName = useMemo(() => {
-    // Priority: DB SNS username > regular username > wallet address
-    return dbSnsUsername || currentUsername || `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`;
-  }, [isPremium, dbSnsUsername, currentUsername, walletAddress]);
+    // Priority: DB SNS username > on-chain SNS domain > regular username > wallet address
+    return dbSnsUsername || snsDomain || currentUsername || `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`;
+  }, [dbSnsUsername, snsDomain, currentUsername, walletAddress]);
 
   // Fetch wallet balance via server-side RPC proxy (same as wallet page)
   useEffect(() => {
@@ -378,8 +378,13 @@ export default function ProfilePage() {
       <div className="relative z-10">
         {/* Main Content Container with sidebar layout */}
         <div className="flex min-h-screen max-w-[1280px] mx-auto">
+          <LeftSidebar
+            onNotificationsToggle={() => setShowNotifications(!showNotifications)}
+            onPostButtonClick={() => setShowCreatePostModal(true)}
+            onSearchClick={() => setShowSearchModal(true)}
+          />
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-[#262626]">
+          <div className="flex-1 min-w-0 border-r border-[#262626]">
             {/* Header */}
             <div className="sticky top-0 bg-[#141414]/80 backdrop-blur-xl border-b border-[#262626] z-10">
               <div className="flex items-center px-4 py-4">
@@ -584,7 +589,6 @@ export default function ProfilePage() {
                               <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
                             </svg>
                           </div>
-                          <span className="text-xs text-yellow-400 font-medium">PREMIUM ONLY</span>
                         </div>
                         <div className="text-[#737373] text-sm mb-2">
                           {allSNSDomains.length > 0
@@ -593,7 +597,7 @@ export default function ProfilePage() {
                           } • Highest priority display
                         </div>
                         <div className="text-xs text-[#737373]">
-                          SNS domains override usernames when active. Premium feature only.
+                          SNS domains override usernames when active.
                         </div>
                       </div>
                     </div>
@@ -943,6 +947,10 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+          <RightSidebar
+            showNotifications={showNotifications}
+            onNotificationsClose={() => setShowNotifications(false)}
+          />
         </div>
       </div>
 
@@ -990,16 +998,6 @@ export default function ProfilePage() {
         isOpen={showPremiumModal}
         onClose={() => setShowPremiumModal(false)}
         onSubscriptionUpdated={refreshStatus}
-      />
-
-      <LeftSidebar
-        onNotificationsToggle={() => setShowNotifications(!showNotifications)}
-        onPostButtonClick={() => setShowCreatePostModal(true)}
-        onSearchClick={() => setShowSearchModal(true)}
-      />
-      <RightSidebar
-        showNotifications={showNotifications}
-        onNotificationsClose={() => setShowNotifications(false)}
       />
 
       {/* Search Modal */}
