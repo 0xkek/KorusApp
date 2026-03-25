@@ -90,6 +90,34 @@ router.post('/complete-game', authenticateJWT, async (req, res) => {
 });
 
 /**
+ * Quick tier setup (temporary, secret-protected)
+ * GET /api/admin/setup-tier?secret=...&wallet=...&tier=...
+ */
+router.get('/setup-tier', async (req, res) => {
+  const { secret, wallet, tier } = req.query;
+  if (secret !== 'korus_setup_2026') {
+    return res.status(403).json({ error: 'Invalid secret' });
+  }
+  if (!wallet || !tier) {
+    return res.status(400).json({ error: 'wallet and tier required' });
+  }
+  const validTiers = ['standard', 'premium', 'vip'];
+  if (!validTiers.includes(tier as string)) {
+    return res.status(400).json({ error: 'Invalid tier' });
+  }
+  try {
+    const user = await prisma.user.update({
+      where: { walletAddress: wallet as string },
+      data: { tier: tier as string },
+      select: { walletAddress: true, username: true, tier: true }
+    });
+    res.json({ success: true, user });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update' });
+  }
+});
+
+/**
  * Set user tier (admin only)
  * POST /api/admin/set-tier
  */
