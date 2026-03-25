@@ -1075,8 +1075,8 @@ export default function Home() {
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const toggleRepost = async (postId: number, comment?: string) => {
-    const originalPost = posts.find(p => p.id === postId);
+  const toggleRepost = async (postId: number | string, comment?: string) => {
+    const originalPost = posts.find(p => String(p.id) === String(postId));
     if (!originalPost) return;
 
     // Prevent reposting your own post
@@ -1679,7 +1679,7 @@ export default function Home() {
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleRepost(Number(post.id));
+                        toggleRepost(post.id);
                       }}
                     >
                       <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
