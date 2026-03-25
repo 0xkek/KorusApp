@@ -812,32 +812,6 @@ export default function ProfilePage() {
 
                 </div>
 
-                {/* Tabs */}
-                <div className="bg-[#141414] border border-[#262626] rounded-xl mb-6 relative z-10">
-                  <div className="flex">
-                    <button
-                      onClick={() => setActiveTab('posts')}
-                      className={`flex-1 py-3 px-4 text-center transition-all duration-150 border-b-2 ${
-                        activeTab === 'posts'
-                          ? 'text-[#fafafa] font-semibold border-korus-primary'
-                          : 'text-[#737373] hover:bg-white/[0.04] hover:text-[#a1a1a1] border-transparent'
-                      }`}
-                    >
-                      Posts
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('replies')}
-                      className={`flex-1 py-3 px-4 text-center transition-all duration-150 border-b-2 ${
-                        activeTab === 'replies'
-                          ? 'text-[#fafafa] font-semibold border-korus-primary'
-                          : 'text-[#737373] hover:bg-white/[0.04] hover:text-[#a1a1a1] border-transparent'
-                      }`}
-                    >
-                      Replies
-                    </button>
-                  </div>
-                </div>
-
                 {/* Reputation Score Card */}
                 <div className="bg-white/[0.04] backdrop-blur-sm border border-[#262626] rounded-2xl p-6 mb-6">
                   <div className="text-center mb-6">
@@ -902,65 +876,92 @@ export default function ProfilePage() {
                     </div>
                   )}
                 </div>
-              </div>
 
-              {/* Posts Content */}
-              <div className="space-y-4">
-                {userPosts.length === 0 ? (
-                  <div className="text-center py-20 bg-white/[0.04] backdrop-blur-sm border border-[#262626] rounded-2xl">
-                    {activeTab === 'posts' ? (
-                      <>
-                        <div className="text-6xl mb-4 opacity-60">📝</div>
-                        <p className="text-[#fafafa] text-lg font-medium mb-2">No posts yet</p>
-                        <p className="text-[#a1a1a1] text-sm mb-6">
-                          Share your thoughts, insights, or questions with the Korus community.<br/>
-                          Your posts earn reputation and can receive tips!
-                        </p>
-                        <button
-                          onClick={() => window.location.href = '/'}
-                          className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150 hover:scale-105"
-                        >
-                          Create Your First Post
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <div className="text-6xl mb-4 opacity-60">💬</div>
-                        <p className="text-[#fafafa] text-lg font-medium mb-2">No replies yet</p>
-                        <p className="text-[#a1a1a1] text-sm mb-6">
-                          Engage with other users&apos; posts to start building your reputation.<br/>
-                          Thoughtful replies can earn tips and grow your network!
-                        </p>
-                        <button
-                          onClick={() => window.location.href = '/'}
-                          className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150 hover:scale-105"
-                        >
-                          Explore Posts to Reply
-                        </button>
-                      </>
-                    )}
+                {/* Posts & Replies */}
+                <div className="bg-white/[0.04] backdrop-blur-sm border border-[#262626] rounded-2xl overflow-hidden">
+                  {/* Tabs */}
+                  <div className="flex border-b border-[#262626]">
+                    <button
+                      onClick={() => setActiveTab('posts')}
+                      className={`flex-1 py-3 px-4 text-center transition-all duration-150 border-b-2 ${
+                        activeTab === 'posts'
+                          ? 'text-[#fafafa] font-semibold border-korus-primary'
+                          : 'text-[#737373] hover:bg-white/[0.04] hover:text-[#a1a1a1] border-transparent'
+                      }`}
+                    >
+                      Posts
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('replies')}
+                      className={`flex-1 py-3 px-4 text-center transition-all duration-150 border-b-2 ${
+                        activeTab === 'replies'
+                          ? 'text-[#fafafa] font-semibold border-korus-primary'
+                          : 'text-[#737373] hover:bg-white/[0.04] hover:text-[#a1a1a1] border-transparent'
+                      }`}
+                    >
+                      Replies
+                    </button>
                   </div>
-                ) : (
-                  userPosts.map((post) => (
-                    <div key={post.id} className="bg-white/[0.04] backdrop-blur-sm border border-[#262626] rounded-2xl p-6 hover:border-[#262626] transition-all group">
-                      <SafeContent
-                        content={post.content}
-                        as="p"
-                        className="text-[#fafafa] mb-4"
-                        allowLinks={true}
-                        allowFormatting={true}
-                      />
-                      {post.imageUrl && (
-                        <Image src={post.imageUrl} alt="Post image" width={600} height={400} className="w-full rounded-lg mb-4" />
+
+                  {/* Tab Content */}
+                  {userPosts.length === 0 ? (
+                    <div className="text-center py-16 px-6">
+                      {activeTab === 'posts' ? (
+                        <>
+                          <div className="text-5xl mb-4 opacity-60">📝</div>
+                          <p className="text-[#fafafa] text-lg font-medium mb-2">No posts yet</p>
+                          <p className="text-[#a1a1a1] text-sm mb-6">
+                            Share your thoughts, insights, or questions with the Korus community.<br/>
+                            Your posts earn reputation and can receive tips!
+                          </p>
+                          <button
+                            onClick={() => window.location.href = '/'}
+                            className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150 hover:scale-105"
+                          >
+                            Create Your First Post
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-5xl mb-4 opacity-60">💬</div>
+                          <p className="text-[#fafafa] text-lg font-medium mb-2">No replies yet</p>
+                          <p className="text-[#a1a1a1] text-sm mb-6">
+                            Engage with other users&apos; posts to start building your reputation.<br/>
+                            Thoughtful replies can earn tips and grow your network!
+                          </p>
+                          <button
+                            onClick={() => window.location.href = '/'}
+                            className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150 hover:scale-105"
+                          >
+                            Explore Posts to Reply
+                          </button>
+                        </>
                       )}
-                      <div className="flex items-center gap-6 text-[#737373] text-sm">
-                        <span>{post.likes} likes</span>
-                        <span>{post.tips} tips</span>
-                        <span>{post.replies || 0} replies</span>
-                      </div>
                     </div>
-                  ))
-                )}
+                  ) : (
+                    <div className="divide-y divide-[#262626]/50">
+                      {userPosts.map((post) => (
+                        <div key={post.id} className="p-6 hover:bg-white/[0.02] transition-all">
+                          <SafeContent
+                            content={post.content}
+                            as="p"
+                            className="text-[#fafafa] mb-4"
+                            allowLinks={true}
+                            allowFormatting={true}
+                          />
+                          {post.imageUrl && (
+                            <Image src={post.imageUrl} alt="Post image" width={600} height={400} className="w-full rounded-lg mb-4" />
+                          )}
+                          <div className="flex items-center gap-6 text-[#737373] text-sm">
+                            <span>{post.likes} likes</span>
+                            <span>{post.tips} tips</span>
+                            <span>{post.replies || 0} replies</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
