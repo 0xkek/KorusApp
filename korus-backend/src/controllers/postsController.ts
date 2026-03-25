@@ -197,7 +197,59 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
 
 export const getPosts = async (req: Request, res: Response) => {
   try {
-    const { cursor, limit, maxId, sinceId } = req.query
+    const { cursor, limit, maxId, sinceId, authorWallet } = req.query
+
+    // If filtering by author, return their posts directly (no shoutout logic needed)
+    if (authorWallet && typeof authorWallet === 'string') {
+      const result = await CursorPagination.paginateQuery<any>(
+        prisma.post,
+        {
+          cursor: cursor as string,
+          limit: limit ? parseInt(limit as string) : undefined,
+          maxId: maxId as string,
+          sinceId: sinceId as string
+        },
+        {
+          where: {
+            isHidden: false,
+            authorWallet: authorWallet,
+            game: null
+          },
+          include: {
+            author: {
+              select: {
+                walletAddress: true,
+                tier: true,
+                genesisVerified: true,
+                snsUsername: true,
+                username: true,
+                nftAvatar: true,
+                themeColor: true
+              }
+            }
+          },
+          orderBy: { createdAt: 'desc' }
+        }
+      )
+
+      const postsWithAvatars = await Promise.all(
+        result.data.map(async (post: any) => await transformPostAvatars({
+          ...post,
+          replies: []
+        }))
+      )
+
+      return res.json({
+        success: true,
+        posts: postsWithAvatars,
+        meta: result.meta,
+        pagination: {
+          limit: result.meta.resultCount,
+          cursor: result.meta.nextCursor,
+          hasMore: result.meta.hasMore
+        }
+      })
+    }
 
     // First, get active shoutout (only one at a time - the oldest one by creation)
     const now = new Date()

@@ -76,7 +76,7 @@ export default function ProfilePage() {
     recentEvents: [],
   });
 
-  const [userPosts] = useState<Post[]>([]);
+  const [userPosts, setUserPosts] = useState<Post[]>([]);
 
   // Wallet and user data
   const walletAddress = publicKey?.toBase58() || '';
@@ -102,13 +102,18 @@ export default function ProfilePage() {
       if (!token) return;
 
       // Load profile from API
-      const { usersAPI, nftsAPI, reputationAPI } = await import('@/lib/api');
+      const { usersAPI, nftsAPI, reputationAPI, postsAPI } = await import('@/lib/api');
       const { user } = await usersAPI.getProfile(token);
 
-      // Fetch reputation breakdown from backend
+      // Fetch reputation breakdown and user posts in parallel
       if (user.walletAddress) {
-        try {
-          const { reputation: repData } = await reputationAPI.getReputation(user.walletAddress, token);
+        const [repResult, postsResult] = await Promise.allSettled([
+          reputationAPI.getReputation(user.walletAddress, token),
+          postsAPI.getUserPosts(user.walletAddress, { limit: 50 }),
+        ]);
+
+        if (repResult.status === 'fulfilled') {
+          const repData = repResult.value.reputation;
           setReputation({
             reputationScore: repData.reputationScore,
             contentScore: repData.contentScore,
@@ -118,8 +123,29 @@ export default function ProfilePage() {
             loginStreak: repData.loginStreak,
             recentEvents: repData.recentEvents || [],
           });
-        } catch {
-          logger.error('Failed to load reputation, using 0');
+        } else {
+          logger.error('Failed to load reputation');
+        }
+
+        if (postsResult.status === 'fulfilled' && postsResult.value.posts) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const transformed = postsResult.value.posts.map((post: any) => ({
+            id: post.id,
+            user: post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15) || 'Unknown',
+            wallet: post.authorWallet,
+            content: post.content,
+            likes: post.likeCount || 0,
+            replies: post.replyCount || 0,
+            tips: Number(post.tipAmount) || 0,
+            time: new Date(post.createdAt).toLocaleString(),
+            createdAt: post.createdAt,
+            imageUrl: post.imageUrl,
+            avatar: post.author?.nftAvatar || null,
+            isPremium: post.author?.tier === 'premium' || !!post.author?.snsUsername,
+          }));
+          setUserPosts(transformed);
+        } else {
+          logger.error('Failed to load user posts');
         }
       }
 

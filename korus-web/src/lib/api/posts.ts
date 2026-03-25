@@ -30,6 +30,19 @@ export const postsAPI = {
   },
 
   /**
+   * Get posts by a specific wallet address
+   */
+  async getUserPosts(walletAddress: string, params?: {
+    limit?: number;
+  }): Promise<APIPostsResponse> {
+    const searchParams = new URLSearchParams();
+    searchParams.set('authorWallet', walletAddress);
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+
+    return api.get<APIPostsResponse>(`/api/posts?${searchParams.toString()}`);
+  },
+
+  /**
    * Get a single post by ID
    */
   async getPost(id: number | string, token?: string): Promise<APIPostResponse> {
