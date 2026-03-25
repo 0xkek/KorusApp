@@ -236,9 +236,10 @@ export default function ProfilePage() {
   }, []);
 
   const displayName = useMemo(() => {
-    // Priority: DB SNS username > on-chain SNS domain > regular username > wallet address
-    return dbSnsUsername || snsDomain || currentUsername || `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`;
-  }, [dbSnsUsername, snsDomain, currentUsername, walletAddress]);
+    // Priority: DB SNS username (user's explicit choice) > regular username > wallet address
+    // Note: on-chain snsDomain is NOT used as fallback — user must explicitly select it via the SNS selector
+    return dbSnsUsername || currentUsername || `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`;
+  }, [dbSnsUsername, currentUsername, walletAddress]);
 
   // Fetch wallet balance via server-side RPC proxy (same as wallet page)
   useEffect(() => {
@@ -617,17 +618,13 @@ export default function ProfilePage() {
                     {/* Option 1: Wallet Address (Default) — clickable to reset display name */}
                     <button
                       onClick={async () => {
-                        if (!dbSnsUsername && !currentUsername) {
-                          showSuccess('Wallet address is already your display name');
-                          return;
-                        }
                         try {
                           const token = localStorage.getItem('authToken');
                           if (!token) return;
                           const { usersAPI } = await import('@/lib/api');
                           await usersAPI.updateProfile({ snsUsername: '' }, token);
                           setDbSnsUsername(null);
-                          showSuccess('Display name reset to wallet address');
+                          showSuccess('Now displaying as wallet address');
                         } catch {
                           showError('Failed to update display preference');
                         }
