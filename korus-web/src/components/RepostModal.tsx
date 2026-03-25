@@ -20,7 +20,7 @@ interface RepostModalProps {
 
 export default function RepostModal({ isOpen, onClose, postId, postContent, postUser, onRepostSuccess, onSuccess }: RepostModalProps) {
   const { isAuthenticated, token } = useWalletAuth();
-  const { connected } = useWallet();
+  const { connected, publicKey } = useWallet();
   const { showSuccess, showError } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [comment, setComment] = useState('');
@@ -37,19 +37,21 @@ export default function RepostModal({ isOpen, onClose, postId, postContent, post
   const displayUser = truncateAddress(postUser);
 
   const handleRepost = async () => {
-    console.log('[RepostModal] handleRepost called, postId:', postId);
-    console.log('[RepostModal] connected:', connected, 'isAuthenticated:', isAuthenticated, 'hasToken:', !!token);
-
     if (!connected || !isAuthenticated || !token) {
-      console.error('[RepostModal] Missing auth requirements');
       showError('Please connect your wallet and sign in to repost');
+      return;
+    }
+
+    // Prevent reposting your own post
+    if (publicKey && postUser === publicKey.toBase58()) {
+      showError('You can\'t repost your own post');
+      onClose();
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      console.log('[RepostModal] Calling backend API - postId:', postId, 'comment:', comment.trim());
       logger.log('Reposting post/reply:', postId);
 
       // Call backend API to repost
@@ -59,7 +61,6 @@ export default function RepostModal({ isOpen, onClose, postId, postContent, post
         comment.trim() || undefined
       );
 
-      console.log('[RepostModal] Got response:', response);
       logger.log('Repost response:', response);
 
       // Call success callbacks - pass the response to the parent
