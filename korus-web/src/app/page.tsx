@@ -1079,6 +1079,12 @@ export default function Home() {
     const originalPost = posts.find(p => p.id === postId);
     if (!originalPost) return;
 
+    // Prevent reposting your own post
+    if (publicKey && (originalPost.wallet === publicKey.toBase58() || originalPost.user === publicKey.toBase58())) {
+      showError("You can't repost your own post");
+      return;
+    }
+
     const isCurrentlyReposted = postInteractions[postId]?.reposted;
 
     try {
