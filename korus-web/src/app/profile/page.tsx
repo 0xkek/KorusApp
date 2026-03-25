@@ -171,25 +171,36 @@ export default function ProfilePage() {
     return (isPremium && dbSnsUsername) || currentUsername || `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`;
   }, [isPremium, dbSnsUsername, currentUsername, walletAddress]);
 
-  // Fetch wallet balance
+  // Fetch wallet balance via server-side RPC proxy (same as wallet page)
   useEffect(() => {
     const fetchBalance = async () => {
-      if (publicKey && connection) {
-        try {
-          const lamports = await connection.getBalance(publicKey);
-          setBalance(lamports / LAMPORTS_PER_SOL);
-        } catch (error) {
-          logger.error('Failed to fetch balance:', error);
-        }
+      if (!publicKey) return;
+      try {
+        const rpcResponse = await fetch('/api/rpc', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'getBalance',
+            params: [publicKey.toBase58()],
+          }),
+        });
+        const rpcData = await rpcResponse.json();
+        if (rpcData.error) throw new Error(rpcData.error.message || 'RPC error');
+        const bal = rpcData.result?.value ?? 0;
+        setBalance(bal / LAMPORTS_PER_SOL);
+      } catch (error) {
+        logger.error('Failed to fetch balance:', error);
       }
     };
 
     fetchBalance();
 
-    // Refresh balance every 10 seconds
-    const interval = setInterval(fetchBalance, 10000);
+    // Refresh balance every 30 seconds
+    const interval = setInterval(fetchBalance, 30000);
     return () => clearInterval(interval);
-  }, [publicKey, connection]);
+  }, [publicKey]);
 
   useEffect(() => {
     if (!connected) {
