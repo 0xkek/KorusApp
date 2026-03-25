@@ -28,7 +28,7 @@ export const nftsAPI = {
    * Get all NFTs for a wallet address
    */
   async getNFTsForWallet(walletAddress: string): Promise<NFTsResponse> {
-    return api.get<NFTsResponse>(`/api/nfts/wallet/${walletAddress}`);
+    return api.get<NFTsResponse>(`/api/nfts/wallet/${walletAddress}?limit=1000`);
   },
 
   /**
