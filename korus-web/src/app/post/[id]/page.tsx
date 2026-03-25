@@ -584,8 +584,9 @@ export default function PostDetailPage() {
       <main className="min-h-screen relative overflow-hidden">
         <div className="fixed inset-0 bg-[#0a0a0a]" />
         <div className="relative z-10">
-          <div className="flex min-h-screen">
-            <div className="flex-1 ml-[260px] mr-[320px] max-w-[640px] border-x border-[#262626] xl:ml-[260px] xl:mr-[320px] lg:ml-[240px] lg:mr-[300px] md:ml-[200px] md:mr-0 sm:ml-0 sm:mr-0 max-sm:border-x-0">
+          <div className="flex min-h-screen max-w-[1280px] mx-auto">
+            <LeftSidebar />
+            <div className="flex-1 min-w-0 border-r border-[#262626]">
               {/* Header skeleton */}
               <div className="sticky top-0 z-10 bg-[#0a0a0a]/85 backdrop-blur-[16px] border-b border-[#262626]">
                 <div className="flex items-center gap-4 px-5 py-3">
@@ -636,10 +637,9 @@ export default function PostDetailPage() {
                 </div>
               ))}
             </div>
+            <RightSidebar />
           </div>
         </div>
-        <LeftSidebar />
-        <RightSidebar />
       </main>
     );
   }
@@ -671,9 +671,12 @@ export default function PostDetailPage() {
 
       {/* Content wrapper */}
       <div className="relative z-10">
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen max-w-[1280px] mx-auto">
+          <LeftSidebar
+            onSearchClick={() => setShowSearchModal(true)}
+          />
           {/* Main Content */}
-          <div className="flex-1 ml-[260px] mr-[320px] max-w-[640px] border-x border-[#262626] xl:ml-[260px] xl:mr-[320px] lg:ml-[240px] lg:mr-[300px] md:ml-[200px] md:mr-0 sm:ml-0 sm:mr-0 max-sm:border-x-0">
+          <div className="flex-1 min-w-0 border-r border-[#262626]">
 
             {/* Header Navigation */}
             <div className="sticky top-0 z-10 bg-[#0a0a0a]/85 backdrop-blur-[16px] border-b border-[#262626]">
@@ -1047,6 +1050,7 @@ export default function PostDetailPage() {
               )}
             </div>
           </div>
+          <RightSidebar />
         </div>
       </div>
 
@@ -1075,9 +1079,6 @@ export default function PostDetailPage() {
         postUser={selectedPost?.user || ''}
         isOwnPost={selectedPost?.user === publicKey?.toBase58()}
       />
-
-      <LeftSidebar />
-      <RightSidebar />
 
       {/* Search Modal */}
       <SearchModal
