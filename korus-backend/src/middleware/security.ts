@@ -31,6 +31,11 @@ export const validateCSRFToken = (req: Request, res: Response, next: NextFunctio
     return next()
   }
 
+  // Skip CSRF for admin endpoints (protected by wallet-based auth)
+  if (req.path.startsWith('/admin/')) {
+    return next()
+  }
+
   // Skip CSRF in development mode for easier testing
   if (process.env.NODE_ENV === 'development') {
     return next()
