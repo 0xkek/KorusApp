@@ -626,13 +626,34 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                    {/* Option 2: Username */}
-                    <div className="flex items-start gap-3 p-3 bg-white/[0.04] rounded-lg">
+                    {/* Option 2: Username — clickable to expand editor */}
+                    <button
+                      onClick={() => {
+                        const canEdit = !hasSetUsername || isPremium;
+                        if (!canEdit) {
+                          showWarning('You have already set your username. Upgrade to Premium to change it anytime!');
+                          return;
+                        }
+                        if (!currentUsername && !isPremium) {
+                          setShowUsernameWarning(true);
+                          return;
+                        }
+                        setEditingUsername(!editingUsername);
+                        setUsernameError('');
+                        setTempUsernameValue(currentUsername || '');
+                      }}
+                      className="w-full flex items-start gap-3 p-3 bg-white/[0.04] rounded-lg hover:bg-white/[0.06] transition-colors text-left"
+                    >
                       <div className="w-6 h-6 mt-0.5 bg-korus-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
                         <span className="text-xs font-bold text-korus-primary">2</span>
                       </div>
                       <div className="flex-1">
-                        <div className="font-medium text-[#fafafa] mb-1">Custom Username</div>
+                        <div className="flex items-center justify-between">
+                          <div className="font-medium text-[#fafafa] mb-1">Custom Username</div>
+                          <svg className="w-4 h-4 text-[#737373]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                          </svg>
+                        </div>
                         <div className="text-[#737373] text-sm mb-2">
                           {currentUsername ? `@${currentUsername}` : 'Not set'} •
                           <span className="text-korus-primary ml-1">
@@ -643,7 +664,7 @@ export default function ProfilePage() {
                           Free users can set once. Premium users can change anytime.
                         </div>
                       </div>
-                    </div>
+                    </button>
 
                     {/* Option 3: SNS Domain */}
                     <div className="flex items-start gap-3 p-3 bg-white/[0.04] rounded-lg">
@@ -672,92 +693,47 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  {/* Username Editor */}
-                  {!snsDomain && (
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-medium text-[#fafafa]">Set Username</h4>
-                        {hasSetUsername && !isPremium && (
-                          <svg className="w-4 h-4 text-[#737373]" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM15.1 8H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
-                          </svg>
-                        )}
-                      </div>
-
-                      {!editingUsername ? (
-                        <button
-                          onClick={() => {
-                            const canEdit = !hasSetUsername || isPremium;
-
-                            if (!canEdit) {
-                              showWarning('You have already set your username. Upgrade to Premium to change it anytime!');
-                              return;
-                            }
-
-                            if (!currentUsername && !isPremium) {
-                              setShowUsernameWarning(true);
-                              return;
-                            }
-
-                            setEditingUsername(true);
-                            setUsernameError('');
-                            setTempUsernameValue(currentUsername || '');
+                  {/* Username Editor — expands inline when editingUsername is true */}
+                  {editingUsername && (
+                    <div className="mb-4 p-4 bg-white/[0.04] border border-[#262626] rounded-xl">
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          value={tempUsernameValue}
+                          onChange={(e) => {
+                            const cleanedText = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
+                            setTempUsernameValue(cleanedText);
                           }}
-                          className="w-full bg-white/[0.06] border border-[#262626] rounded-xl p-4 hover:border-[#262626] transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            <svg className="w-5 h-5 text-korus-primary" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                            </svg>
-                            {currentUsername ? (
-                              <span className="text-[#fafafa]">@{currentUsername}</span>
-                            ) : (
-                              <span className="text-[#737373]">Set your username</span>
-                            )}
-                            <svg className="w-4 h-4 text-[#737373] ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                            </svg>
-                          </div>
-                        </button>
-                      ) : (
-                        <div className="space-y-3">
-                          <input
-                            type="text"
-                            value={tempUsernameValue}
-                            onChange={(e) => {
-                              const cleanedText = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
-                              setTempUsernameValue(cleanedText);
+                          placeholder="Enter username (3-20 chars, letters/numbers)"
+                          className="w-full bg-white/[0.06] border border-[#262626] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
+                          autoCapitalize="none"
+                          maxLength={20}
+                          autoCorrect="false"
+                          autoFocus
+                        />
+                        {usernameError && (
+                          <p className="text-red-400 text-sm">{usernameError}</p>
+                        )}
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => {
+                              setTempUsernameValue('');
+                              setEditingUsername(false);
+                              setUsernameError('');
                             }}
-                            placeholder="Enter username (3-20 chars, letters/numbers)"
-                            className="w-full bg-white/[0.06] border border-[#262626] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
-                            autoCapitalize="none"
-                            maxLength={20}
-                            autoCorrect="false"
-                          />
-                          {usernameError && (
-                            <p className="text-red-400 text-sm">{usernameError}</p>
-                          )}
-                          <div className="flex gap-3">
-                            <button
-                              onClick={() => {
-                                setTempUsernameValue('');
-                                setEditingUsername(false);
-                                setUsernameError('');
-                              }}
-                              className="flex-1 px-4 py-2 bg-white/[0.08] border border-[#262626] text-[#fafafa] rounded-lg hover:bg-white/[0.12] duration-150"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              onClick={handleSaveUsername}
-                              disabled={savingUsername || !!usernameError}
-                              className="flex-1 bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-4 py-2 rounded-lg disabled:opacity-50 hover:shadow-lg hover:shadow-korus-primary/30 transition-all"
-                            >
-                              {savingUsername ? 'Saving...' : 'Save'}
-                            </button>
-                          </div>
+                            className="flex-1 px-4 py-2 bg-white/[0.08] border border-[#262626] text-[#fafafa] rounded-lg hover:bg-white/[0.12] duration-150"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleSaveUsername}
+                            disabled={savingUsername || !!usernameError}
+                            className="flex-1 bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-4 py-2 rounded-lg disabled:opacity-50 hover:shadow-lg hover:shadow-korus-primary/30 transition-all"
+                          >
+                            {savingUsername ? 'Saving...' : 'Save'}
+                          </button>
                         </div>
-                      )}
+                      </div>
                     </div>
                   )}
 
