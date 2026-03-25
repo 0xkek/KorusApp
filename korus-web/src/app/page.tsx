@@ -14,7 +14,7 @@ import LinkPreview from '@/components/LinkPreview';
 import VideoPlayer from '@/components/VideoPlayer';
 import { FeedSkeleton } from '@/components/Skeleton';
 import { SafeContent } from '@/components/SafeContent';
-import { useToast } from '@/hooks/useToast';
+import { useToastContext } from '@/components/ToastProvider';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
@@ -38,7 +38,7 @@ const GifPicker = dynamic(() => import('@/components/GifPicker'), { ssr: false }
 export default function Home() {
   const { connected, publicKey } = useWallet();
   const router = useRouter();
-  const { showSuccess, showError } = useToast();
+  const { showSuccess, showError } = useToastContext();
   const { token, isAuthenticated } = useWalletAuth();
 
   // Truncate wallet address for display
