@@ -341,7 +341,11 @@ export default function ProfilePage() {
       return 'Username can only contain letters and numbers';
     }
     if (username.toLowerCase().endsWith('sol')) {
-      return 'Usernames ending with "sol" are reserved';
+      return 'Usernames ending with "sol" are reserved for SNS domains';
+    }
+    const reserved = ['admin', 'administrator', 'mod', 'moderator', 'korus', 'korusapp', 'system', 'support', 'anonymous', 'anon', 'null', 'undefined'];
+    if (reserved.includes(username.toLowerCase())) {
+      return `"${username}" is a reserved platform name and cannot be used`;
     }
     return '';
   };
@@ -610,8 +614,26 @@ export default function ProfilePage() {
                       Choose how others see you on the platform:
                     </div>
 
-                    {/* Option 1: Wallet Address (Default) */}
-                    <div className="flex items-start gap-3 p-3 bg-white/[0.04] rounded-lg">
+                    {/* Option 1: Wallet Address (Default) — clickable to reset display name */}
+                    <button
+                      onClick={async () => {
+                        if (!dbSnsUsername && !currentUsername) {
+                          showSuccess('Wallet address is already your display name');
+                          return;
+                        }
+                        try {
+                          const token = localStorage.getItem('authToken');
+                          if (!token) return;
+                          const { usersAPI } = await import('@/lib/api');
+                          await usersAPI.updateProfile({ snsUsername: '' }, token);
+                          setDbSnsUsername(null);
+                          showSuccess('Display name reset to wallet address');
+                        } catch {
+                          showError('Failed to update display preference');
+                        }
+                      }}
+                      className="w-full flex items-start gap-3 p-3 bg-white/[0.04] rounded-lg hover:bg-white/[0.06] transition-colors text-left"
+                    >
                       <div className="w-6 h-6 mt-0.5 bg-korus-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
                         <span className="text-xs font-bold text-korus-primary">1</span>
                       </div>
@@ -621,10 +643,10 @@ export default function ProfilePage() {
                           {`${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`} • Always available
                         </div>
                         <div className="text-xs text-[#737373]">
-                          Your truncated wallet address is shown by default when no other identity is set.
+                          Click to use your wallet address as display name.
                         </div>
                       </div>
-                    </div>
+                    </button>
 
                     {/* Option 2: Username — clickable to expand editor */}
                     <button
@@ -703,6 +725,11 @@ export default function ProfilePage() {
                           onChange={(e) => {
                             const cleanedText = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
                             setTempUsernameValue(cleanedText);
+                            if (cleanedText.length >= 3) {
+                              setUsernameError(validateUsername(cleanedText));
+                            } else {
+                              setUsernameError('');
+                            }
                           }}
                           placeholder="Enter username (3-20 chars, letters/numbers)"
                           className="w-full bg-white/[0.06] border border-[#262626] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
