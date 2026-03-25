@@ -58,7 +58,8 @@ export default function RootLayout({
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Korus.fun — Solana Social Platform" />
         <meta name="twitter:description" content="Connect, play, and earn on Solana." />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" href="/korus-icon.png" />
+        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
       </head>
       <body className={`${poppins.variable} font-sans antialiased bg-[#0a0a0a] text-[#fafafa]`}>
         <ErrorBoundary>
