@@ -22,6 +22,14 @@ async function resolveNFTAvatar(nftMint: string | null): Promise<string | null> 
   }
 }
 
+// Sanitize author display fields — __wallet__ is a sentinel meaning "show wallet address"
+function sanitizeAuthorDisplay(author: any) {
+  if (author?.snsUsername === '__wallet__') {
+    author.snsUsername = null
+    author.username = null
+  }
+}
+
 export const createReply = async (req: AuthRequest, res: Response) => {
   try {
     const { id: postId } = req.params
@@ -217,18 +225,23 @@ export const getReplies = async (req: Request, res: Response) => {
       }
     )
 
-    // Transform NFT avatar mint addresses to image URLs
+    // Transform NFT avatar mint addresses to image URLs and sanitize display
     const transformedReplies = await Promise.all(
       result.data.map(async (reply: any) => {
-        // Transform parent reply author avatar
-        if (reply.author?.nftAvatar) {
-          reply.author.nftAvatar = await resolveNFTAvatar(reply.author.nftAvatar)
+        if (reply.author) {
+          sanitizeAuthorDisplay(reply.author)
+          if (reply.author.nftAvatar) {
+            reply.author.nftAvatar = await resolveNFTAvatar(reply.author.nftAvatar)
+          }
         }
         // Transform child replies' author avatars
         if (reply.childReplies && Array.isArray(reply.childReplies)) {
           for (const childReply of reply.childReplies) {
-            if (childReply.author?.nftAvatar) {
-              childReply.author.nftAvatar = await resolveNFTAvatar(childReply.author.nftAvatar)
+            if (childReply.author) {
+              sanitizeAuthorDisplay(childReply.author)
+              if (childReply.author.nftAvatar) {
+                childReply.author.nftAvatar = await resolveNFTAvatar(childReply.author.nftAvatar)
+              }
             }
           }
         }
@@ -353,8 +366,11 @@ export const getUserReplies = async (req: Request, res: Response) => {
 
     const transformedReplies = await Promise.all(
       result.data.map(async (reply: any) => {
-        if (reply.author?.nftAvatar) {
-          reply.author.nftAvatar = await resolveNFTAvatar(reply.author.nftAvatar)
+        if (reply.author) {
+          sanitizeAuthorDisplay(reply.author)
+          if (reply.author.nftAvatar) {
+            reply.author.nftAvatar = await resolveNFTAvatar(reply.author.nftAvatar)
+          }
         }
         return reply
       })

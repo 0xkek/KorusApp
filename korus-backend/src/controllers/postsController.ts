@@ -25,16 +25,30 @@ async function resolveNFTAvatar(nftMint: string | null): Promise<string | null> 
   }
 }
 
+// Sanitize author display fields — __wallet__ is a sentinel meaning "show wallet address"
+function sanitizeAuthorDisplay(author: any) {
+  if (author?.snsUsername === '__wallet__') {
+    author.snsUsername = null
+    author.username = null
+  }
+}
+
 // Transform post author avatars from mint addresses to image URLs
 async function transformPostAvatars(post: any): Promise<any> {
-  if (post.author?.nftAvatar) {
-    post.author.nftAvatar = await resolveNFTAvatar(post.author.nftAvatar)
+  if (post.author) {
+    sanitizeAuthorDisplay(post.author)
+    if (post.author.nftAvatar) {
+      post.author.nftAvatar = await resolveNFTAvatar(post.author.nftAvatar)
+    }
   }
   // Transform reply authors' avatars
   if (post.replies && Array.isArray(post.replies)) {
     for (const reply of post.replies) {
-      if (reply.author?.nftAvatar) {
-        reply.author.nftAvatar = await resolveNFTAvatar(reply.author.nftAvatar)
+      if (reply.author) {
+        sanitizeAuthorDisplay(reply.author)
+        if (reply.author.nftAvatar) {
+          reply.author.nftAvatar = await resolveNFTAvatar(reply.author.nftAvatar)
+        }
       }
     }
   }
