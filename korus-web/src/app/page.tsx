@@ -1516,24 +1516,29 @@ export default function Home() {
             >
               {/* Shoutout Banner */}
               {post.isShoutout && (
-                <div className="bg-gradient-to-br from-[color-mix(in_srgb,var(--korus-primary)_12%,transparent)] to-[color-mix(in_srgb,var(--korus-secondary)_8%,transparent)] border border-[color-mix(in_srgb,var(--korus-primary)_20%,transparent)] rounded-[16px] px-4 py-3.5 mx-5 my-3 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg">📢</span>
-                    <span className="text-[11px] font-bold text-[var(--korus-primary)] uppercase tracking-wider">SHOUTOUT</span>
-                    <span className="text-[14px] font-medium text-[#e5e5e5]">{post.content?.slice(0, 60)}{(post.content?.length ?? 0) > 60 ? '...' : ''}</span>
+                <div className="bg-gradient-to-r from-[color-mix(in_srgb,var(--korus-primary)_15%,transparent)] to-[color-mix(in_srgb,var(--korus-secondary)_8%,transparent)] border border-[color-mix(in_srgb,var(--korus-primary)_25%,transparent)] rounded-[16px] px-4 py-3 mx-5 my-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <span className="text-xl flex-shrink-0">📢</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-black uppercase tracking-widest" style={{ color: 'var(--korus-primary)' }}>SHOUTOUT</span>
+                        <span className="text-[12px] font-semibold text-[var(--color-text-secondary)]">@{truncateAddress(post.user)}</span>
+                      </div>
+                      <p className="text-[13px] text-[var(--color-text)] mt-0.5 truncate">{post.content?.slice(0, 80)}{(post.content?.length ?? 0) > 80 ? '...' : ''}</p>
+                    </div>
                   </div>
                   {post.shoutoutDuration && (post.shoutoutExpiresAt || post.shoutoutStartTime) && (
-                    <ShoutoutCountdown
-                      expiresAt={post.shoutoutExpiresAt}
-                      startTime={post.shoutoutStartTime}
-                      duration={post.shoutoutDuration}
-                      onExpire={() => {
-                        // Remove the expired shoutout
-                        setPosts(prev => prev.filter(p => p.id !== post.id));
-                        // Activate next shoutout in queue
-                        activateNextShoutout();
-                      }}
-                    />
+                    <div className="flex-shrink-0">
+                      <ShoutoutCountdown
+                        expiresAt={post.shoutoutExpiresAt}
+                        startTime={post.shoutoutStartTime}
+                        duration={post.shoutoutDuration}
+                        onExpire={() => {
+                          setPosts(prev => prev.filter(p => p.id !== post.id));
+                          activateNextShoutout();
+                        }}
+                      />
+                    </div>
                   )}
                 </div>
               )}
