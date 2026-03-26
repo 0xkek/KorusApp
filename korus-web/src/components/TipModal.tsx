@@ -33,7 +33,7 @@ interface TipModalProps {
 export default function TipModal({ isOpen, onClose, recipientUser, postId, onTipSuccess }: TipModalProps) {
   const { connected, publicKey, signTransaction } = useWallet();
   const { token, isAuthenticated } = useWalletAuth();
-  const { showError } = useToast();
+  const { showError, showSuccess } = useToast();
   const [customAmount, setCustomAmount] = useState('');
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [isSending, setIsSending] = useState(false);
@@ -195,18 +195,23 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
         encoding: 'base64',
       }]);
 
-      // Poll for confirmation via proxy
-      const maxRetries = 30;
-      for (let i = 0; i < maxRetries; i++) {
-        const statusResult = await rpcCall('getSignatureStatuses', [[signature]]);
-        const status = statusResult?.value?.[0];
-        if (status) {
-          if (status.err) {
-            throw new Error(`Transaction failed: ${JSON.stringify(status.err)}`);
+      // Poll for confirmation via proxy (resilient — don't fail on poll errors)
+      for (let i = 0; i < 30; i++) {
+        try {
+          const statusResult = await rpcCall('getSignatureStatuses', [[signature]]);
+          const status = statusResult?.value?.[0];
+          if (status) {
+            if (status.err) {
+              throw new Error(`Transaction failed: ${JSON.stringify(status.err)}`);
+            }
+            if (status.confirmationStatus === 'confirmed' || status.confirmationStatus === 'finalized') {
+              break;
+            }
           }
-          if (status.confirmationStatus === 'confirmed' || status.confirmationStatus === 'finalized') {
-            break;
-          }
+        } catch (pollError) {
+          // If the tx itself failed, rethrow; otherwise keep polling
+          if (pollError instanceof Error && pollError.message.startsWith('Transaction failed')) throw pollError;
+          logger.error('Poll error (retrying):', pollError);
         }
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
@@ -231,6 +236,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
       setSuccessAmount(amount);
       setTxSignature(signature);
       setShowSuccessScreen(true);
+      showSuccess(`Tip of ${amount.toFixed(3)} SOL sent!`);
 
       // Reset form
       setSelectedAmount(null);
