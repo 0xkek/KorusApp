@@ -837,7 +837,7 @@ export default function ProfilePage() {
                       </div>
                       <h3 className="text-lg font-bold text-[#fafafa]">Reputation Score</h3>
                     </div>
-                    <div className="text-4xl font-bold text-korus-primary mb-4">{reputation.reputationScore}</div>
+                    <div className="text-4xl font-bold text-korus-primary mb-4">{isPremium ? reputation.reputationScore + Math.round((reputation.contentScore + reputation.engagementScore + reputation.communityScore + reputation.loyaltyScore) * 0.2) : reputation.reputationScore}</div>
                   </div>
 
                   <div className="space-y-3">
@@ -895,7 +895,7 @@ export default function ProfilePage() {
 
                   {isPremium && (() => {
                     const baseScore = reputation.contentScore + reputation.engagementScore + reputation.communityScore + reputation.loyaltyScore;
-                    const premiumBonus = reputation.reputationScore - baseScore;
+                    const premiumBonus = Math.round(baseScore * 0.2);
                     return (
                       <div className="group relative flex items-center justify-between py-3 mt-1 pt-4 border-t border-[#262626]/30 cursor-default">
                         <div className="flex items-center gap-2">
