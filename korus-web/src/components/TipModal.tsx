@@ -33,22 +33,34 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
   const [txSignature, setTxSignature] = useState('');
   const modalRef = useFocusTrap(isOpen);
 
-  // Fetch wallet balance
-  useEffect(() => {
-    const fetchBalance = async () => {
-      if (isOpen && connected && publicKey) {
-        try {
-          const lamports = await connection.getBalance(publicKey);
-          const solBalance = lamports / LAMPORTS_PER_SOL;
-          setBalance(solBalance);
-        } catch (error) {
-          logger.error('Failed to fetch balance:', error);
-        }
-      }
-    };
+  // Fetch wallet balance via server-side RPC proxy (uses correct mainnet endpoint)
+  const fetchBalance = async () => {
+    if (!publicKey) return;
+    try {
+      const res = await fetch('/api/rpc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'getBalance',
+          params: [publicKey.toBase58()],
+        }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      setBalance((data.result?.value ?? 0) / LAMPORTS_PER_SOL);
+    } catch (error) {
+      logger.error('Failed to fetch balance:', error);
+    }
+  };
 
-    fetchBalance();
-  }, [isOpen, connected, publicKey, connection]);
+  useEffect(() => {
+    if (isOpen && connected && publicKey) {
+      fetchBalance();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, connected, publicKey]);
 
   // Reset success screen when modal closes
   useEffect(() => {
@@ -182,8 +194,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
       );
 
       // Refresh balance
-      const lamports = await connection.getBalance(publicKey);
-      setBalance(lamports / LAMPORTS_PER_SOL);
+      await fetchBalance();
 
       // Call the success callback with the amount
       if (onTipSuccess) {
