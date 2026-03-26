@@ -1509,14 +1509,14 @@ export default function Home() {
               key={post.id}
               className={`transition-colors cursor-pointer group ${
                 post.isShoutout
-                  ? 'shoutout-post border border-korus-primary bg-korus-primary/5 shadow-[0_4px_12px_rgba(var(--korus-primary-rgb),0.3)] hover:border-korus-primary hover:shadow-[0_8px_24px_rgba(var(--korus-primary-rgb),0.4)] hover:bg-korus-primary/[0.12]'
+                  ? 'px-5 py-2'
                   : 'px-5 py-4 border-b border-[var(--color-border-light)] hover:bg-white/[0.02]'
               }`}
               onClick={() => router.push(`/post/${post.id}`)}
             >
-              {/* Shoutout Banner */}
+              {/* Shoutout Banner — standalone, no post card */}
               {post.isShoutout && (
-                <div className="bg-gradient-to-r from-[color-mix(in_srgb,var(--korus-primary)_15%,transparent)] to-[color-mix(in_srgb,var(--korus-secondary)_8%,transparent)] border border-[color-mix(in_srgb,var(--korus-primary)_25%,transparent)] rounded-[16px] px-4 py-3 mx-5 my-3 flex items-center justify-between gap-3">
+                <div className="bg-gradient-to-r from-[color-mix(in_srgb,var(--korus-primary)_15%,transparent)] to-[color-mix(in_srgb,var(--korus-secondary)_8%,transparent)] border border-[color-mix(in_srgb,var(--korus-primary)_25%,transparent)] rounded-[16px] px-4 py-3 flex items-center justify-between gap-3 hover:brightness-110 transition-all duration-150">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <span className="text-xl flex-shrink-0">📢</span>
                     <div className="min-w-0 flex-1">
@@ -1543,7 +1543,7 @@ export default function Home() {
                 </div>
               )}
 
-              <div className={`${post.isShoutout ? 'p-6' : ''}`}>
+              {!post.isShoutout && <div>
                 {/* Post Header with Avatar */}
                 <div className="flex items-center gap-3">
                   {/* Avatar */}
@@ -1799,7 +1799,7 @@ export default function Home() {
                     </div>
                   )}
                 </div>
-              </div>
+              </div>}
             </div>
           ))
           )}
