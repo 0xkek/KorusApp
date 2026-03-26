@@ -1522,9 +1522,9 @@ export default function Home() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2.5">
                         <span className="text-[14px] font-black uppercase tracking-widest" style={{ color: 'var(--korus-primary)' }}>SHOUTOUT</span>
-                        <span className="text-[14px] font-bold" style={{ color: '#ffffff' }}>@{truncateAddress(post.user)}</span>
+                        <span className="text-[14px] font-bold text-[var(--color-text)]">@{truncateAddress(post.user)}</span>
                       </div>
-                      <p className="text-[15px] font-medium mt-1 truncate" style={{ color: '#ffffff' }}>{post.content?.slice(0, 80)}{(post.content?.length ?? 0) > 80 ? '...' : ''}</p>
+                      <p className="text-[15px] font-medium text-[var(--color-text)] mt-1 truncate">{post.content?.slice(0, 80)}{(post.content?.length ?? 0) > 80 ? '...' : ''}</p>
                     </div>
                   </div>
                   {post.shoutoutDuration && (post.shoutoutExpiresAt || post.shoutoutStartTime) && (
