@@ -32,6 +32,14 @@ export const initializeSocket = (httpServer: HTTPServer) => {
   io.on('connection', (socket) => {
     logger.debug(`WebSocket client connected: ${socket.id}`)
 
+    // Allow clients to join their user-specific room for targeted notifications
+    socket.on('join_user', (walletAddress: string) => {
+      if (walletAddress && typeof walletAddress === 'string') {
+        socket.join(`user:${walletAddress}`)
+        logger.debug(`Socket ${socket.id} joined room user:${walletAddress}`)
+      }
+    })
+
     socket.on('disconnect', () => {
       logger.debug(`WebSocket client disconnected: ${socket.id}`)
     })
@@ -78,5 +86,15 @@ export const emitPostUpdate = (postId: string, updates: any) => {
   if (io) {
     io.emit('post_update', { postId, updates })
     logger.debug(`Emitted post update: ${postId}`)
+  }
+}
+
+/**
+ * Emit a notification to a specific user's room
+ */
+export const emitNotification = (userId: string, notification: any) => {
+  if (io) {
+    io.to(`user:${userId}`).emit('new_notification', notification)
+    logger.debug(`Emitted notification to user:${userId}`)
   }
 }

@@ -19,7 +19,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import type { Post } from '@/types';
-import { postsAPI, uploadAPI, interactionsAPI, usersAPI, nftsAPI, repliesAPI } from '@/lib/api';
+import { postsAPI, uploadAPI, interactionsAPI, usersAPI, nftsAPI, repliesAPI, notificationsAPI } from '@/lib/api';
 import { formatRelativeTime } from '@/utils/formatTime';
 
 // Dynamically import modals for code splitting
@@ -685,6 +685,44 @@ export default function Home() {
       }
     };
   }, []);
+
+  // Join user room for targeted notifications + listen for new_notification events
+  useEffect(() => {
+    if (!socketRef.current || !connected || !isAuthenticated || !publicKey) return;
+
+    const walletAddress = publicKey.toBase58();
+
+    // Join user-specific room
+    socketRef.current.emit('join_user', walletAddress);
+
+    // Listen for real-time notifications
+    socketRef.current.off('new_notification');
+    socketRef.current.on('new_notification', () => {
+      setNotificationCount(prev => prev + 1);
+    });
+
+    return () => {
+      socketRef.current?.off('new_notification');
+    };
+  }, [connected, isAuthenticated, publicKey]);
+
+  // Poll notifications count every 30s as fallback
+  useEffect(() => {
+    if (!connected || !isAuthenticated || !token) return;
+
+    const fetchUnreadCount = async () => {
+      try {
+        const response = await notificationsAPI.getNotifications(token, true);
+        setNotificationCount(response.notifications.length);
+      } catch {
+        // silent
+      }
+    };
+
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, [connected, isAuthenticated, token]);
 
   // Fetch user interactions for loaded posts
   useEffect(() => {

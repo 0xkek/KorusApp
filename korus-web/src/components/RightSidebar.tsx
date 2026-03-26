@@ -76,13 +76,18 @@ export default function RightSidebar({ showNotifications = false, onNotification
     fetchLiveGames();
   }, []);
 
-  // Fetch notifications when connected and authenticated
+  // Fetch notifications when connected and authenticated, poll every 30s when visible
   useEffect(() => {
     if (connected && isAuthenticated && token) {
       fetchNotifications();
+
+      if (showNotifications) {
+        const interval = setInterval(fetchNotifications, 30000);
+        return () => clearInterval(interval);
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connected, isAuthenticated, token]);
+  }, [connected, isAuthenticated, token, showNotifications]);
 
   const fetchLiveGames = async () => {
     setIsLoadingGames(true);

@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { logger } from './logger';
+import { emitNotification } from '../config/socket';
 
 const prisma = new PrismaClient();
 
@@ -37,7 +38,7 @@ export async function createNotification({
   };
 
   try {
-    await prisma.notification.create({
+    const notification = await prisma.notification.create({
       data: {
         userId,
         type,
@@ -48,7 +49,18 @@ export async function createNotification({
         amount,
         read: false,
       },
+      include: {
+        fromUser: {
+          select: { walletAddress: true },
+        },
+        post: {
+          select: { id: true, content: true },
+        },
+      },
     });
+
+    // Push real-time notification via Socket.IO
+    emitNotification(userId, notification);
   } catch (error) {
     logger.error('Error creating notification:', error);
   }
