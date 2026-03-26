@@ -195,52 +195,36 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
         encoding: 'base64',
       }]);
 
-      // Poll for confirmation via proxy (resilient — don't fail on poll errors)
-      for (let i = 0; i < 30; i++) {
-        try {
-          const statusResult = await rpcCall('getSignatureStatuses', [[signature]]);
-          const status = statusResult?.value?.[0];
-          if (status) {
-            if (status.err) {
-              throw new Error(`Transaction failed: ${JSON.stringify(status.err)}`);
-            }
-            if (status.confirmationStatus === 'confirmed' || status.confirmationStatus === 'finalized') {
-              break;
-            }
-          }
-        } catch (pollError) {
-          // If the tx itself failed, rethrow; otherwise keep polling
-          if (pollError instanceof Error && pollError.message.startsWith('Transaction failed')) throw pollError;
-          logger.error('Poll error (retrying):', pollError);
-        }
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
-
-      // Record tip in backend
-      await interactionsAPI.tipPost(
-        String(postId),
-        amount,
-        signature,
-        token
-      );
-
-      // Refresh balance
-      await fetchBalance();
-
-      // Call the success callback with the amount
-      if (onTipSuccess) {
-        onTipSuccess(amount);
-      }
-
-      // Show success screen
+      // Show success immediately — the on-chain tx was sent successfully
       setSuccessAmount(amount);
       setTxSignature(signature);
       setShowSuccessScreen(true);
       showSuccess(`Tip of ${amount.toFixed(3)} SOL sent!`);
 
+      // Call the success callback
+      if (onTipSuccess) {
+        onTipSuccess(amount);
+      }
+
       // Reset form
       setSelectedAmount(null);
       setCustomAmount('');
+
+      // Record tip in backend (non-blocking — don't fail the UX if backend is slow)
+      // Backend verifies on-chain then records tip, awards rep, sends notification
+      interactionsAPI.tipPost(
+        String(postId),
+        amount,
+        signature,
+        token
+      ).then(() => {
+        logger.log('Tip recorded in backend');
+      }).catch((err) => {
+        logger.error('Failed to record tip in backend (on-chain tx succeeded):', err);
+      });
+
+      // Refresh balance in background
+      fetchBalance();
     } catch (error: unknown) {
       logger.error('Failed to send tip:', error);
 
