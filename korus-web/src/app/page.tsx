@@ -1917,7 +1917,7 @@ export default function Home() {
             // Transform the backend response to match the frontend Post type
             const transformedPost = {
               ...post,
-              user: post.authorWallet || post.author?.walletAddress || publicKey?.toBase58() || 'Unknown',
+              user: post.author?.username || post.author?.snsUsername || post.authorWallet || post.author?.walletAddress || publicKey?.toBase58() || 'Unknown',
               wallet: post.authorWallet,
               likes: post.likeCount || 0,
               replies: post.replyCount || 0,
