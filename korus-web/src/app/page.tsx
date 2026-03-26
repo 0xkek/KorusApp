@@ -1521,8 +1521,8 @@ export default function Home() {
                     <span className="text-2xl flex-shrink-0">📢</span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2.5">
-                        <span className="text-[12px] font-black uppercase tracking-widest" style={{ color: 'var(--korus-primary)' }}>SHOUTOUT</span>
-                        <span className="text-[13px] font-semibold text-[var(--color-text)]">@{truncateAddress(post.user)}</span>
+                        <span className="text-[14px] font-black uppercase tracking-widest" style={{ color: 'var(--korus-primary)' }}>SHOUTOUT</span>
+                        <span className="text-[14px] font-bold text-white">@{truncateAddress(post.user)}</span>
                       </div>
                       <p className="text-[15px] font-medium text-white mt-1 truncate">{post.content?.slice(0, 80)}{(post.content?.length ?? 0) > 80 ? '...' : ''}</p>
                     </div>
