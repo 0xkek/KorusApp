@@ -227,21 +227,36 @@ export class SolPaymentService {
         rpc: MAINNET_RPC_URL.replace(/api-key=.*/, 'api-key=***')
       });
 
-      // Get transaction details from mainnet blockchain (retry up to 10 times, tx may not be indexed yet)
+      // Get transaction details from mainnet blockchain (retry up to 15 times, tx may not be indexed yet)
       let transaction = null;
-      for (let attempt = 0; attempt < 10; attempt++) {
-        transaction = await mainnetConnection.getTransaction(transactionSignature, {
-          maxSupportedTransactionVersion: 0
-        });
+      for (let attempt = 0; attempt < 15; attempt++) {
+        try {
+          transaction = await mainnetConnection.getTransaction(transactionSignature, {
+            maxSupportedTransactionVersion: 0,
+            commitment: 'confirmed',
+          });
+        } catch (rpcErr) {
+          logger.warn(`getTransaction RPC error (attempt ${attempt + 1}/15):`, rpcErr);
+        }
         if (transaction) break;
-        logger.debug(`Transaction not found yet, retrying (${attempt + 1}/10)...`, { signature: transactionSignature });
+        logger.info(`Transaction not found yet (attempt ${attempt + 1}/15), waiting...`, { signature: transactionSignature });
         await new Promise(resolve => setTimeout(resolve, 3000));
       }
 
       if (!transaction) {
-        logger.warn('Transaction not found on blockchain after retries', { signature: transactionSignature });
+        logger.error('Transaction not found on blockchain after 15 retries', {
+          signature: transactionSignature,
+          rpcUrl: MAINNET_RPC_URL.replace(/api-key=.*/, 'api-key=***'),
+        });
         return { valid: false, error: 'Transaction not found on blockchain' };
       }
+
+      logger.info('Transaction found on-chain', {
+        signature: transactionSignature,
+        slot: transaction.slot,
+        blockTime: transaction.blockTime,
+        err: transaction.meta?.err,
+      });
 
       // Check if transaction was successful
       if (transaction.meta?.err) {
@@ -271,6 +286,20 @@ export class SolPaymentService {
       const preBalances = transaction.meta?.preBalances || [];
       const postBalances = transaction.meta?.postBalances || [];
       const accountKeys = transaction.transaction.message.staticAccountKeys || transaction.transaction.message.getAccountKeys?.() || [];
+
+      // Debug: log all account keys in the transaction
+      const keyStrings = [];
+      for (let i = 0; i < accountKeys.length; i++) {
+        keyStrings.push(accountKeys[i].toBase58());
+      }
+      logger.info('Transaction account keys', {
+        signature: transactionSignature,
+        keys: keyStrings,
+        expectedFrom: fromWallet,
+        expectedTo: toWallet,
+        preBalances,
+        postBalances,
+      });
 
       let fromIndex = -1;
       let toIndex = -1;
