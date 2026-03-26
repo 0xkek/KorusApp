@@ -696,18 +696,19 @@ export default function Home() {
   // Modal handlers
   const handlePostCreate = (post: Post) => {
     if (post.isShoutout) {
-      // Check if there's already an active shoutout
+      // Check if there's already an active shoutout in the feed
       const hasActiveShoutout = posts.some(p => p.isShoutout);
 
       if (hasActiveShoutout) {
-        // Add to queue instead of replacing
+        // Add to queue — timer does NOT start until it becomes active
         setShoutoutQueue(prev => [...prev, post]);
         showSuccess(`Shoutout queued! Position in queue: ${shoutoutQueue.length + 1}`);
       } else {
-        // No active shoutout, display immediately
+        // No active shoutout — activate immediately with timer starting now
+        const activePost = { ...post, shoutoutStartTime: Date.now() };
         setPosts(prev => {
           const regularPosts = prev.filter(p => !p.isShoutout);
-          return [post, ...regularPosts];
+          return [activePost, ...regularPosts];
         });
         showSuccess('Shoutout created successfully!');
       }
@@ -1503,8 +1504,18 @@ export default function Home() {
           {isLoading ? (
             <FeedSkeleton count={5} />
           ) : (
-            // Deduplicate posts and optionally hide shoutouts
-            Array.from(new Map(posts.map(post => [post.id, post])).values()).filter(post => !hideShoutouts || !post.isShoutout).map((post) => (
+            // Deduplicate posts, only show the first (active) shoutout, hide rest
+            (() => {
+              let shoutoutShown = false;
+              return Array.from(new Map(posts.map(post => [post.id, post])).values()).filter(post => {
+                if (post.isShoutout) {
+                  if (hideShoutouts || shoutoutShown) return false;
+                  shoutoutShown = true;
+                  return true;
+                }
+                return true;
+              });
+            })().map((post) => (
             <div
               key={post.id}
               className={`transition-colors cursor-pointer group ${
@@ -1915,6 +1926,8 @@ export default function Home() {
             logger.log('Extracted post:', post);
 
             // Transform the backend response to match the frontend Post type
+            // Don't set shoutoutStartTime here — handlePostCreate will set it
+            // only if this shoutout becomes immediately active (no queue)
             const transformedPost = {
               ...post,
               user: post.author?.username || post.author?.snsUsername || post.authorWallet || post.author?.walletAddress || publicKey?.toBase58() || 'Unknown',
@@ -1927,7 +1940,6 @@ export default function Home() {
               isShoutout: true,
               isSponsored: false,
               shoutoutDuration: duration,
-              shoutoutStartTime: Date.now(),
             };
             logger.log('Transformed shoutout post:', transformedPost);
 
