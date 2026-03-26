@@ -227,13 +227,19 @@ export class SolPaymentService {
         rpc: MAINNET_RPC_URL.replace(/api-key=.*/, 'api-key=***')
       });
 
-      // Get transaction details from mainnet blockchain
-      const transaction = await mainnetConnection.getTransaction(transactionSignature, {
-        maxSupportedTransactionVersion: 0
-      });
+      // Get transaction details from mainnet blockchain (retry up to 10 times, tx may not be indexed yet)
+      let transaction = null;
+      for (let attempt = 0; attempt < 10; attempt++) {
+        transaction = await mainnetConnection.getTransaction(transactionSignature, {
+          maxSupportedTransactionVersion: 0
+        });
+        if (transaction) break;
+        logger.debug(`Transaction not found yet, retrying (${attempt + 1}/10)...`, { signature: transactionSignature });
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
 
       if (!transaction) {
-        logger.warn('Transaction not found on blockchain', { signature: transactionSignature });
+        logger.warn('Transaction not found on blockchain after retries', { signature: transactionSignature });
         return { valid: false, error: 'Transaction not found on blockchain' };
       }
 
