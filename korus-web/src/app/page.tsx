@@ -2,7 +2,7 @@
 import { logger } from '@/utils/logger';
 import Image from 'next/image';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -78,6 +78,27 @@ export default function Home() {
   const [inlineReplyText, setInlineReplyText] = useState('');
   const [isPostingInlineReply, setIsPostingInlineReply] = useState(false);
   const [hideShoutouts, setHideShoutouts] = useState(false);
+
+  // Compute effective queue info from actual feed state
+  const effectiveQueueInfo = useMemo(() => {
+    const activeShoutout = posts.find(p => p.isShoutout);
+    const queuedFromPosts = posts.filter(p => p.isShoutout).slice(1);
+    const allQueued = [...queuedFromPosts, ...shoutoutQueue];
+    return {
+      activeShoutout: activeShoutout ? {
+        id: String(activeShoutout.id),
+        duration: activeShoutout.shoutoutDuration || 10,
+        expiresAt: activeShoutout.shoutoutExpiresAt || new Date(),
+        content: activeShoutout.content || '',
+      } : null,
+      queuedShoutouts: allQueued.map(p => ({
+        id: String(p.id),
+        duration: p.shoutoutDuration || 10,
+        expiresAt: p.shoutoutExpiresAt || new Date(),
+        content: p.content || '',
+      })),
+    };
+  }, [posts, shoutoutQueue]);
 
   // Load hide shoutout preference from localStorage
   useEffect(() => {
@@ -1865,7 +1886,7 @@ export default function Home() {
         isOpen={showCreatePostModal}
         onClose={() => setShowCreatePostModal(false)}
         onPostCreate={handlePostCreate}
-        queueInfo={shoutoutQueueInfo}
+        queueInfo={effectiveQueueInfo}
       />
 
       <PostOptionsModal
@@ -1979,7 +2000,7 @@ export default function Home() {
             showError((error as Error)?.message || 'Failed to create shoutout post');
           }
         }}
-        queueInfo={shoutoutQueueInfo}
+        queueInfo={effectiveQueueInfo}
       />
 
       <TipModal
