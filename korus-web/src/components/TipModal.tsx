@@ -2,13 +2,25 @@
 import { logger } from '@/utils/logger';
 
 import { useState, useEffect } from 'react';
-import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { Button } from '@/components/ui';
 import { interactionsAPI } from '@/lib/api';
+
+// Helper to call RPC via server-side proxy (uses correct mainnet endpoint)
+async function rpcCall(method: string, params: unknown[]) {
+  const response = await fetch('/api/rpc', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+  });
+  const data = await response.json();
+  if (data.error) throw new Error(data.error.message || 'RPC error');
+  return data.result;
+}
 
 interface TipModalProps {
   isOpen: boolean;
@@ -19,8 +31,7 @@ interface TipModalProps {
 }
 
 export default function TipModal({ isOpen, onClose, recipientUser, postId, onTipSuccess }: TipModalProps) {
-  const { connected, publicKey, sendTransaction, signTransaction } = useWallet();
-  const { connection } = useConnection();
+  const { connected, publicKey, signTransaction } = useWallet();
   const { token, isAuthenticated } = useWalletAuth();
   const { showError } = useToast();
   const [customAmount, setCustomAmount] = useState('');
@@ -111,7 +122,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
   };
 
   const handleSendTip = async () => {
-    if (!connected || !publicKey || !sendTransaction) {
+    if (!connected || !publicKey || !signTransaction) {
       showError('Please connect your wallet to send tips');
       return;
     }
@@ -150,8 +161,16 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
         return;
       }
 
+      // Get latest blockhash via proxy
+      const blockhashResult = await rpcCall('getLatestBlockhash', [{ commitment: 'finalized' }]);
+      const blockhash = blockhashResult.value.blockhash;
+      const lastValidBlockHeight = blockhashResult.value.lastValidBlockHeight;
+
       // Create transaction
-      const transaction = new Transaction().add(
+      const transaction = new Transaction();
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = publicKey;
+      transaction.add(
         SystemProgram.transfer({
           fromPubkey: publicKey,
           toPubkey: recipientPubkey,
@@ -159,31 +178,38 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
         })
       );
 
-      // Get latest blockhash with commitment
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
-      transaction.recentBlockhash = blockhash;
-      transaction.feePayer = publicKey;
-
-      // Try to use signTransaction if available, otherwise fall back to sendTransaction
-      let signature: string;
-
-      if (signTransaction) {
-        // Sign the transaction
-        const signedTransaction = await signTransaction(transaction);
-
-        // Serialize and send the signed transaction
-        const rawTransaction = signedTransaction.serialize();
-        signature = await connection.sendRawTransaction(rawTransaction, {
-          skipPreflight: false,
-          maxRetries: 3
-        });
-      } else {
-        // Fall back to sendTransaction (auto-signs and sends)
-        signature = await sendTransaction(transaction, connection);
+      if (!signTransaction) {
+        throw new Error('Wallet does not support signing transactions');
       }
 
-      // Wait for confirmation with timeout protection
-      await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+      // Sign the transaction via wallet
+      const signedTransaction = await signTransaction(transaction);
+
+      // Send the signed transaction via proxy
+      const rawTransaction = signedTransaction.serialize();
+      const base64Tx = Buffer.from(rawTransaction).toString('base64');
+      const signature: string = await rpcCall('sendTransaction', [base64Tx, {
+        skipPreflight: false,
+        preflightCommitment: 'confirmed',
+        maxRetries: 5,
+        encoding: 'base64',
+      }]);
+
+      // Poll for confirmation via proxy
+      const maxRetries = 30;
+      for (let i = 0; i < maxRetries; i++) {
+        const statusResult = await rpcCall('getSignatureStatuses', [[signature]]);
+        const status = statusResult?.value?.[0];
+        if (status) {
+          if (status.err) {
+            throw new Error(`Transaction failed: ${JSON.stringify(status.err)}`);
+          }
+          if (status.confirmationStatus === 'confirmed' || status.confirmationStatus === 'finalized') {
+            break;
+          }
+        }
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
 
       // Record tip in backend
       await interactionsAPI.tipPost(
