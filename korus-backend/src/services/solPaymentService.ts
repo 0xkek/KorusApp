@@ -3,8 +3,15 @@ import prisma from '../config/database';
 import { logger } from '../utils/logger';
 import { connection as solanaConnection, TREASURY_WALLET } from '../config/solana';
 
-// Use the connection from solana config (already configured for devnet/mainnet)
+// Use the connection from solana config for game-related operations (devnet)
 const connection = solanaConnection;
+
+// Dedicated mainnet connection for payment verification (tips, shoutouts)
+// Falls back to the shared connection if no mainnet RPC is configured
+const MAINNET_RPC_URL = process.env.HELIUS_API_KEY
+  ? `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`
+  : process.env.SOLANA_MAINNET_RPC_URL || process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
+const mainnetConnection = new Connection(MAINNET_RPC_URL, 'confirmed');
 
 // Platform wallet that receives SOL payments (use TREASURY_WALLET from config)
 const PLATFORM_WALLET = TREASURY_WALLET.toBase58();
@@ -202,6 +209,7 @@ export class SolPaymentService {
   /**
    * Verify a transaction exists and matches expected parameters
    * This is for direct payments (shoutouts, tips) that don't credit balance
+   * Uses mainnet connection since payments happen on mainnet
    */
   static async verifyTransaction(
     fromWallet: string,
@@ -211,15 +219,16 @@ export class SolPaymentService {
     maxAgeMinutes: number = 5
   ): Promise<{ valid: boolean; error?: string; actualAmount?: number }> {
     try {
-      logger.debug('Verifying transaction', {
+      logger.debug('Verifying transaction on mainnet', {
         from: fromWallet,
         to: toWallet,
         signature: transactionSignature,
-        expectedAmount
+        expectedAmount,
+        rpc: MAINNET_RPC_URL.replace(/api-key=.*/, 'api-key=***')
       });
 
-      // Get transaction details from blockchain
-      const transaction = await connection.getTransaction(transactionSignature, {
+      // Get transaction details from mainnet blockchain
+      const transaction = await mainnetConnection.getTransaction(transactionSignature, {
         maxSupportedTransactionVersion: 0
       });
 
