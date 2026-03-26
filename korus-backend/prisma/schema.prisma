@@ -27,6 +27,7 @@ model User {
   location                 String?             @db.VarChar(100)
   loginStreak              Int                 @default(0)
   loyaltyScore             Int                 @default(0)
+  shoutoutScore            Int                 @default(0)
   nftAvatar                String?
   pushNotificationsEnabled Boolean             @default(true)
   pushToken                String?             @db.VarChar(255)

@@ -17,6 +17,7 @@ export const getUserReputation = async (req: Request, res: Response) => {
         engagementScore: true,
         communityScore: true,
         loyaltyScore: true,
+        shoutoutScore: true,
         tier: true,
         genesisVerified: true,
         loginStreak: true,

@@ -29,6 +29,7 @@ interface ReputationBreakdown {
   engagementScore: number;
   communityScore: number;
   loyaltyScore: number;
+  shoutoutScore: number;
   loginStreak: number;
   recentEvents: Array<{
     id: string;
@@ -72,6 +73,7 @@ export default function ProfilePage() {
     engagementScore: 0,
     communityScore: 0,
     loyaltyScore: 0,
+    shoutoutScore: 0,
     loginStreak: 0,
     recentEvents: [],
   });
@@ -130,6 +132,7 @@ export default function ProfilePage() {
             engagementScore: repData.engagementScore,
             communityScore: repData.communityScore,
             loyaltyScore: repData.loyaltyScore,
+            shoutoutScore: repData.shoutoutScore || 0,
             loginStreak: repData.loginStreak,
             recentEvents: repData.recentEvents || [],
           });
@@ -861,7 +864,7 @@ export default function ProfilePage() {
                       </div>
                       <h3 className="text-lg font-bold text-[var(--color-text)]">Reputation Score</h3>
                     </div>
-                    <div className="text-4xl font-bold text-korus-primary mb-4">{isPremium ? reputation.reputationScore + Math.round((reputation.contentScore + reputation.engagementScore + reputation.communityScore + reputation.loyaltyScore) * 0.2) : reputation.reputationScore}</div>
+                    <div className="text-4xl font-bold text-korus-primary mb-4">{isPremium ? reputation.reputationScore + Math.round((reputation.contentScore + reputation.engagementScore + reputation.communityScore + reputation.shoutoutScore + reputation.loyaltyScore) * 0.2) : reputation.reputationScore}</div>
                   </div>
 
                   <div className="space-y-3">
@@ -885,6 +888,13 @@ export default function ProfilePage() {
                         score: reputation.communityScore,
                         icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
                         tooltip: 'Tips sent (+10 per 100 lamports), tips received (+15 per 100 lamports), game wins (+20). Give back to grow.',
+                        border: true,
+                      },
+                      {
+                        label: 'Shoutouts',
+                        score: reputation.shoutoutScore,
+                        icon: 'M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z',
+                        tooltip: 'Purchase shoutouts to pin your message (+25 base, +10 per 0.1 SOL spent). Support the platform and get visibility.',
                         border: true,
                       },
                       {
@@ -918,7 +928,7 @@ export default function ProfilePage() {
                   </div>
 
                   {isPremium && (() => {
-                    const baseScore = reputation.contentScore + reputation.engagementScore + reputation.communityScore + reputation.loyaltyScore;
+                    const baseScore = reputation.contentScore + reputation.engagementScore + reputation.communityScore + reputation.shoutoutScore + reputation.loyaltyScore;
                     const premiumBonus = Math.round(baseScore * 0.2);
                     return (
                       <div className="group relative flex items-center justify-between py-3 mt-1 pt-4 border-t border-[var(--color-border-light)]/30 cursor-default">

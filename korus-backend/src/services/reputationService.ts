@@ -125,6 +125,11 @@ class ReputationService {
           break;
       }
 
+      // Also track shoutout-specific score
+      if (data.eventType === 'shoutout_purchased') {
+        updates.shoutoutScore = { increment: finalPoints };
+      }
+
       await prisma.user.update({
         where: { walletAddress: data.userWallet },
         data: updates,
@@ -409,6 +414,7 @@ class ReputationService {
         engagementScore: true,
         communityScore: true,
         loyaltyScore: true,
+        shoutoutScore: true,
         tier: true,
         genesisVerified: true,
       },

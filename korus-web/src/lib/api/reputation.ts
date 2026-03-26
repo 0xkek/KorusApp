@@ -29,6 +29,7 @@ export interface ReputationData {
   engagementScore: number;
   communityScore: number;
   loyaltyScore: number;
+  shoutoutScore: number;
   tier: ReputationTier;
   genesisVerified: boolean;
   loginStreak: number;
