@@ -96,6 +96,7 @@ model Post {
   shoutoutDuration Int?           // Duration in minutes
   shoutoutExpiresAt DateTime?     // When the shoutout expires
   shoutoutPrice    Decimal?       @db.Decimal(18, 6) // Price paid in SOL
+  shoutoutTxSignature String?    @db.VarChar(128)   // On-chain payment tx signature
   game             Game?
   notifications    Notification[]
   author           User           @relation("AuthoredPosts", fields: [authorWallet], references: [walletAddress])

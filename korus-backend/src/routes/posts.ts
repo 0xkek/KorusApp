@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { createPost, getPosts, getSinglePost, deletePost } from '../controllers/postsController'
+import { createPost, getPosts, getSinglePost, deletePost, getShoutoutsByWallet } from '../controllers/postsController'
 import { authenticate } from '../middleware/auth'
 import { validateCreatePost, validateGetPosts } from '../middleware/validation'
 import { checkSuspension, checkWarnings } from '../middleware/moderationCheck'
@@ -79,6 +79,7 @@ router.get('/', burstProtection, readPostsRateLimiter, validateGetPosts, getPost
  *       429:
  *         $ref: '#/components/responses/RateLimitError'
  */
+router.get('/shoutouts/:walletAddress', readPostsRateLimiter, getShoutoutsByWallet)
 router.get('/:id', readPostsRateLimiter, getSinglePost)
 
 /**

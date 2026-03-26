@@ -39,6 +39,10 @@ class ReputationService {
     GAME_LOST: 5, // Participation points
     GAME_WAGER_BONUS_PER_100: 5, // Extra points based on wager size
     
+    // Shoutouts
+    SHOUTOUT_PURCHASED: 25, // Base points for purchasing a shoutout
+    SHOUTOUT_PER_100: 10,   // Extra points per 0.1 SOL spent
+
     // Loyalty
     DAILY_LOGIN: 5,
     STREAK_BONUS_PER_DAY: 1, // Max 30
@@ -239,6 +243,26 @@ class ReputationService {
       points,
       description: `Received ${amount} SOL tip`,
       metadata: { amount },
+    });
+  }
+
+  /**
+   * Handle shoutout purchase
+   */
+  async onShoutoutPurchased(walletAddress: string, price: number, duration: number): Promise<void> {
+    if (!isReputationEnabled()) return;
+    // price is in SOL (e.g., 0.05), convert to lamport-scale for point calc
+    const priceInLamports = Math.round(price * 1000);
+    const points = this.POINTS.SHOUTOUT_PURCHASED +
+      Math.floor(priceInLamports / 100) * this.POINTS.SHOUTOUT_PER_100;
+
+    await this.addReputation({
+      userWallet: walletAddress,
+      eventType: 'shoutout_purchased',
+      category: 'community',
+      points,
+      description: `Purchased ${duration}min shoutout for ${price} SOL`,
+      metadata: { price, duration },
     });
   }
 

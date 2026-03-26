@@ -152,7 +152,8 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
         isShoutout: true,
         shoutoutDuration,
         shoutoutExpiresAt: null, // Will be set when this shoutout becomes active
-        shoutoutPrice: price
+        shoutoutPrice: price,
+        shoutoutTxSignature: transactionSignature
       }
     }
 
@@ -188,9 +189,13 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
     // await autoModerate('post', post.id, content)
 
     // Award reputation points for creating a post
-    // Update reputation for post creation
     const hasMedia = !!(imageUrl || videoUrl);
     await reputationService.onPostCreated(walletAddress, hasMedia)
+
+    // Award extra reputation for shoutout purchase
+    if (shoutoutData.isShoutout && shoutoutData.shoutoutPrice) {
+      await reputationService.onShoutoutPurchased(walletAddress, shoutoutData.shoutoutPrice, shoutoutData.shoutoutDuration)
+    }
 
     // Transform NFT avatar mint address to image URL
     const transformedPost = await transformPostAvatars(post)
@@ -535,5 +540,48 @@ export const deletePost = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     logger.error('Delete post error:', error)
     res.status(500).json({ success: false, error: 'Failed to delete post' })
+  }
+}
+
+export const getShoutoutsByWallet = async (req: Request, res: Response) => {
+  try {
+    const { walletAddress } = req.params
+
+    const shoutouts = await prisma.post.findMany({
+      where: {
+        authorWallet: walletAddress,
+        isShoutout: true,
+      },
+      select: {
+        id: true,
+        content: true,
+        shoutoutDuration: true,
+        shoutoutPrice: true,
+        shoutoutTxSignature: true,
+        shoutoutExpiresAt: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    })
+
+    res.json({
+      success: true,
+      shoutouts: shoutouts.map(s => ({
+        id: s.id,
+        content: s.content.substring(0, 100),
+        duration: s.shoutoutDuration,
+        price: s.shoutoutPrice ? Number(s.shoutoutPrice) : 0,
+        txSignature: s.shoutoutTxSignature,
+        expiresAt: s.shoutoutExpiresAt,
+        createdAt: s.createdAt,
+        status: !s.shoutoutExpiresAt ? 'queued'
+          : new Date(s.shoutoutExpiresAt) > new Date() ? 'active'
+          : 'expired',
+      })),
+    })
+  } catch (error) {
+    logger.error('Get shoutouts by wallet error:', error)
+    res.status(500).json({ success: false, error: 'Failed to get shoutouts' })
   }
 }

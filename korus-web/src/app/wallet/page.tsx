@@ -14,6 +14,17 @@ const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: fal
 const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { ssr: false });
 const MobileMenuModal = dynamic(() => import('@/components/MobileMenuModal'), { ssr: false });
 
+interface ShoutoutTx {
+  id: string;
+  content: string;
+  duration: number;
+  price: number;
+  txSignature: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+  status: 'queued' | 'active' | 'expired';
+}
+
 export default function WalletPage() {
   const { connected, publicKey } = useWallet();
   const { showError, showSuccess } = useToastContext();
@@ -27,6 +38,8 @@ export default function WalletPage() {
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [shoutouts, setShoutouts] = useState<ShoutoutTx[]>([]);
+  const [shoutoutsLoading, setShoutoutsLoading] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -44,7 +57,6 @@ export default function WalletPage() {
     setLoading(true);
     setHasError(false);
     try {
-      // Use the server-side RPC proxy to avoid exposing the API key
       const rpcResponse = await fetch('/api/rpc', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -65,17 +77,47 @@ export default function WalletPage() {
     } catch {
       setHasError(true);
       showError('Unable to fetch wallet balance. Please check your connection and try again.');
-      setBalance(null); // Don't show misleading 0.0
+      setBalance(null);
     } finally {
       setLoading(false);
     }
   }, [publicKey, mounted, hasError, showSuccess, showError]);
 
+  const fetchShoutouts = useCallback(async () => {
+    if (!publicKey || !mounted) return;
+    setShoutoutsLoading(true);
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+      const res = await fetch(`${API_URL}/api/posts/shoutouts/${publicKey.toBase58()}`);
+      const data = await res.json();
+      if (data.success) {
+        setShoutouts(data.shoutouts);
+      }
+    } catch {
+      // Silently fail — shoutouts are supplementary
+    } finally {
+      setShoutoutsLoading(false);
+    }
+  }, [publicKey, mounted]);
+
   useEffect(() => {
     if (mounted && connected && publicKey) {
       fetchBalance();
+      fetchShoutouts();
     }
-  }, [mounted, connected, publicKey, fetchBalance]);
+  }, [mounted, connected, publicKey, fetchBalance, fetchShoutouts]);
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const formatTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const totalSpent = shoutouts.reduce((sum, s) => sum + s.price, 0);
 
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {
@@ -98,16 +140,11 @@ export default function WalletPage() {
     <main className="min-h-screen bg-[var(--color-background)] relative overflow-hidden">
       {/* Standardized static background */}
       <div className="fixed inset-0 bg-gradient-to-br from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)]">
-        {/* Surface gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[var(--color-surface)]/25 to-[var(--color-surface)]/35" />
       </div>
-      {/* Static gradient orbs for visual depth */}
       <div className="fixed inset-0 overflow-hidden">
-        {/* Primary gradient orb */}
         <div className="absolute -top-32 -right-32 w-[600px] h-[600px] bg-gradient-to-br from-korus-primary/8 to-korus-secondary/6 rounded-full blur-[80px]" />
-        {/* Secondary gradient orb */}
         <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-gradient-to-tr from-korus-secondary/6 to-korus-primary/8 rounded-full blur-[70px]" />
-        {/* Accent orb for depth */}
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-to-r from-korus-primary/4 to-korus-secondary/4 rounded-full blur-[60px]" />
       </div>
 
@@ -171,12 +208,12 @@ export default function WalletPage() {
           </div>
 
           {/* Activity Tabs */}
-          <div className="flex gap-2 mb-6">
-            {['All', 'Tips', 'Games', 'Events'].map((tab) => (
+          <div className="flex gap-2 mb-6 overflow-x-auto">
+            {['All', 'Shoutouts', 'Tips', 'Games', 'Events'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 ${
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 whitespace-nowrap ${
                   activeTab === tab
                     ? 'bg-gradient-to-r from-korus-primary to-korus-secondary'
                     : 'bg-white/[0.08] hover:bg-white/[0.12] border border-[var(--color-border-light)]'
@@ -212,6 +249,87 @@ export default function WalletPage() {
                     Play Games
                   </button>
                 </div>
+              </div>
+            )}
+
+            {activeTab === 'Shoutouts' && (
+              <div>
+                {shoutoutsLoading ? (
+                  <div className="text-center py-20">
+                    <div className="text-korus-primary animate-pulse text-lg">Loading shoutouts...</div>
+                  </div>
+                ) : shoutouts.length === 0 ? (
+                  <div className="text-center py-20">
+                    <div className="text-6xl mb-4 opacity-60">📣</div>
+                    <p className="text-[var(--color-text)] text-lg font-medium">No shoutouts yet</p>
+                    <p className="text-[var(--color-text-secondary)] text-sm mt-2 mb-6">
+                      Your shoutout purchases will appear here.<br/>
+                      Create a shoutout to pin your message at the top of the feed!
+                    </p>
+                    <button
+                      onClick={() => window.location.href = '/'}
+                      className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150"
+                    >
+                      Create Shoutout
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    {/* Summary */}
+                    <div className="p-4 border-b border-[var(--color-border-light)]">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-[var(--color-text-secondary)] text-sm">Total Shoutouts</span>
+                          <p className="text-[var(--color-text)] text-xl font-bold">{shoutouts.length}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[var(--color-text-secondary)] text-sm">Total Spent</span>
+                          <p className="text-korus-primary text-xl font-bold">{totalSpent.toFixed(2)} SOL</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* List */}
+                    <div className="divide-y divide-[var(--color-border-light)]">
+                      {shoutouts.map((s) => (
+                        <div key={s.id} className="p-4 hover:bg-white/[0.02] transition-colors">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-lg">📣</span>
+                                <span className="text-[var(--color-text)] font-medium truncate">{s.content}</span>
+                              </div>
+                              <div className="flex items-center gap-3 text-xs text-[var(--color-text-secondary)]">
+                                <span>{formatDate(s.createdAt)} at {formatTime(s.createdAt)}</span>
+                                <span>{s.duration}min</span>
+                                {s.txSignature && (
+                                  <a
+                                    href={`https://solscan.io/tx/${s.txSignature}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-korus-primary hover:underline"
+                                  >
+                                    View Tx
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-[var(--color-text)] font-semibold">{s.price} SOL</p>
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                s.status === 'active' ? 'bg-green-500/20 text-green-400' :
+                                s.status === 'queued' ? 'bg-yellow-500/20 text-yellow-400' :
+                                'bg-white/[0.08] text-[var(--color-text-secondary)]'
+                              }`}>
+                                {s.status}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
