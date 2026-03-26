@@ -1455,14 +1455,28 @@ export default function Home() {
                       </button>
                     </div>
 
-                    <button
-                      onClick={handleRegularPost}
-                      disabled={isPosting || (!composeText.trim() && selectedFiles.length === 0 && !showDrawCanvas && !drawingDataUrl)}
-                      className="px-5 py-2 rounded-[20px] bg-[var(--korus-primary)] text-[14px] font-bold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed leading-none"
-                      style={{ color: '#000' }}
-                    >
-                      {isPosting ? 'Posting...' : 'Post'}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          if (composeText.trim() || selectedFiles.length > 0 || drawingDataUrl) {
+                            setShowShoutoutModal(true);
+                          }
+                        }}
+                        disabled={isPosting || (!composeText.trim() && selectedFiles.length === 0 && !drawingDataUrl)}
+                        className="px-4 py-2 rounded-[20px] border border-[var(--korus-primary)] text-[13px] font-bold hover:bg-[color-mix(in_srgb,var(--korus-primary)_10%,transparent)] transition-all disabled:opacity-40 disabled:cursor-not-allowed leading-none"
+                        style={{ color: 'var(--korus-primary)' }}
+                      >
+                        📢 Boost
+                      </button>
+                      <button
+                        onClick={handleRegularPost}
+                        disabled={isPosting || (!composeText.trim() && selectedFiles.length === 0 && !showDrawCanvas && !drawingDataUrl)}
+                        className="px-5 py-2 rounded-[20px] bg-[var(--korus-primary)] text-[14px] font-bold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed leading-none"
+                        style={{ color: '#000' }}
+                      >
+                        {isPosting ? 'Posting...' : 'Post'}
+                      </button>
+                    </div>
                   </div>
                 </div>
             </div>
