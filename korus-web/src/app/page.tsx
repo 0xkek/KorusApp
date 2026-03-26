@@ -350,8 +350,24 @@ export default function Home() {
           return 0;
         });
 
+        // Only the first shoutout should have an active timer.
+        // Strip expiresAt/startTime from queued shoutouts so their
+        // timer only starts when they become active.
+        let firstShoutoutSeen = false;
+        const postsWithTimers = sortedPosts.map(p => {
+          if (p.isShoutout) {
+            if (!firstShoutoutSeen) {
+              firstShoutoutSeen = true;
+              return p; // Keep timer for the active shoutout
+            }
+            // Queued shoutout — clear timer so it doesn't tick while waiting
+            return { ...p, shoutoutExpiresAt: undefined, shoutoutStartTime: undefined };
+          }
+          return p;
+        });
+
         // Resolve avatars (mint address → image URL)
-        const postsWithAvatars = await resolvePostAvatars(sortedPosts as Post[]);
+        const postsWithAvatars = await resolvePostAvatars(postsWithTimers as Post[]);
 
         // Track all post IDs
         postsWithAvatars.forEach(post => addedPostIds.current.add(post.id));
