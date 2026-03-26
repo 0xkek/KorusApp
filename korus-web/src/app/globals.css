@@ -570,16 +570,20 @@ textarea.bg-transparent:focus {
   }
 }
 
-/* Force black text on gradient buttons - except those with white-text class */
-.bg-gradient-to-r:not(.white-text),
-.bg-gradient-to-br:not(.white-text),
-.bg-korus-primary:not(.white-text) {
+/* Force black text on gradient buttons - only actual buttons, not containers */
+button.bg-gradient-to-r:not(.white-text),
+button.bg-gradient-to-br:not(.white-text),
+button.bg-korus-primary:not(.white-text),
+a.bg-gradient-to-r:not(.white-text),
+a.bg-gradient-to-br:not(.white-text) {
   color: #000000 !important;
 }
 
-.bg-gradient-to-r:not(.white-text) *,
-.bg-gradient-to-br:not(.white-text) *,
-.bg-korus-primary:not(.white-text) * {
+button.bg-gradient-to-r:not(.white-text) *,
+button.bg-gradient-to-br:not(.white-text) *,
+button.bg-korus-primary:not(.white-text) *,
+a.bg-gradient-to-r:not(.white-text) *,
+a.bg-gradient-to-br:not(.white-text) * {
   color: #000000 !important;
 }
 
