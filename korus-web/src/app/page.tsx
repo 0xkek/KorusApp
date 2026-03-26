@@ -739,12 +739,11 @@ export default function Home() {
     }
   };
 
-  // Function to activate the next shoutout in queue or from backend-loaded posts
-  // When a shoutout becomes active, it gets a fresh timer (now + duration)
-  const activateNextShoutout = () => {
+  // Remove expired shoutout and activate the next one in a single state update
+  const handleShoutoutExpire = (expiredId: string | number) => {
     const now = Date.now();
 
-    // First check the local queue (manually created shoutouts waiting)
+    // First check the local queue
     if (shoutoutQueue.length > 0) {
       const [nextShoutout, ...remainingQueue] = shoutoutQueue;
       const duration = nextShoutout.shoutoutDuration || 10;
@@ -756,8 +755,8 @@ export default function Home() {
       };
 
       setPosts(prev => {
-        const regularPosts = prev.filter(p => !p.isShoutout);
-        return [activatedShoutout, ...regularPosts];
+        const withoutExpired = prev.filter(p => p.id !== expiredId && !p.isShoutout);
+        return [activatedShoutout, ...withoutExpired];
       });
 
       setShoutoutQueue(remainingQueue);
@@ -765,13 +764,14 @@ export default function Home() {
       return;
     }
 
-    // Then check if there are more shoutouts in posts (from backend)
-    // These need a fresh timer since their original expiresAt may have passed
+    // Check if there are more shoutouts in posts (from backend)
+    // Remove the expired one and give the next one a fresh timer
     setPosts(prev => {
-      const nextShoutout = prev.find(p => p.isShoutout);
+      const withoutExpired = prev.filter(p => p.id !== expiredId);
+      const nextShoutout = withoutExpired.find(p => p.isShoutout);
       if (nextShoutout) {
         const duration = nextShoutout.shoutoutDuration || 10;
-        return prev.map(p =>
+        return withoutExpired.map(p =>
           p.id === nextShoutout.id
             ? {
                 ...p,
@@ -781,7 +781,7 @@ export default function Home() {
             : p
         );
       }
-      return prev;
+      return withoutExpired;
     });
   };
 
@@ -1585,10 +1585,7 @@ export default function Home() {
                         expiresAt={post.shoutoutExpiresAt}
                         startTime={post.shoutoutStartTime}
                         duration={post.shoutoutDuration}
-                        onExpire={() => {
-                          setPosts(prev => prev.filter(p => p.id !== post.id));
-                          activateNextShoutout();
-                        }}
+                        onExpire={() => handleShoutoutExpire(post.id)}
                       />
                     </div>
                   )}
