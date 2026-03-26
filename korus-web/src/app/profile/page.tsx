@@ -893,16 +893,29 @@ export default function ProfilePage() {
                     ))}
                   </div>
 
-                  {isPremium && (
-                    <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t border-[#262626]/30">
-                      <div className="w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
-                        <svg className="w-2.5 h-2.5 text-black" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
-                        </svg>
+                  {isPremium && (() => {
+                    const baseScore = reputation.contentScore + reputation.engagementScore + reputation.communityScore + reputation.loyaltyScore;
+                    const premiumBonus = reputation.reputationScore - baseScore;
+                    return (
+                      <div className="group relative flex items-center justify-between py-3 mt-1 pt-4 border-t border-[#262626]/30 cursor-default">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg className="w-2.5 h-2.5 text-black" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
+                            </svg>
+                          </div>
+                          <span className="text-yellow-400 text-sm">Premium Bonus</span>
+                          <svg className="w-3.5 h-3.5 text-[#525252] group-hover:text-[#a1a1a1] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                          </svg>
+                        </div>
+                        <span className="text-yellow-400 font-bold">+{premiumBonus}</span>
+                        <div className="absolute left-0 bottom-full mb-2 w-72 bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2 text-xs text-[#a1a1a1] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 shadow-lg pointer-events-none">
+                          Premium members earn 20% bonus on all reputation points. This is your accumulated premium bonus.
+                        </div>
                       </div>
-                      <span className="text-yellow-400 text-sm font-medium">+20% Premium Bonus</span>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
 
                 {/* Posts & Replies */}
