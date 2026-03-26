@@ -35,7 +35,7 @@ export const CustomWalletButton = () => {
     <>
       <button
         onClick={() => setModalOpen(true)}
-        className="px-6 py-2 rounded-lg font-semibold transition-all hover:shadow-[0_0_20px_rgba(67,233,123,0.3)] hover:-translate-y-0.5"
+        className="px-6 py-2 rounded-lg font-semibold transition-all hover:shadow-[0_0_20px_color-mix(in_srgb,var(--korus-primary)_30%,transparent)] hover:-translate-y-0.5"
         style={{
           background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)',
           color: '#000000',

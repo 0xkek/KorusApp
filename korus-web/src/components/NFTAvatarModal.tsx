@@ -137,7 +137,7 @@ export default function NFTAvatarModal({
                             : 'border-transparent hover:border-[var(--color-border-light)]'
                         }`}
                       >
-                        <div className="aspect-square relative bg-[#111111]">
+                        <div className="aspect-square relative bg-[var(--color-surface)]">
                           {nft.image ? (
                             <Image
                               src={nft.image}

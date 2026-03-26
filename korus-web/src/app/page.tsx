@@ -1290,7 +1290,7 @@ export default function Home() {
                   className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[var(--color-text)]"
                 >
                   For You
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[40px] h-[3px] rounded-[3px] bg-[#43e97b]" />
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[40px] h-[3px] rounded-[3px] bg-[var(--korus-primary)]" />
                 </button>
                 <button
                   className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors duration-150 relative text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.02]"
@@ -1404,7 +1404,7 @@ export default function Home() {
                   <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--color-border-light)]">
                     <div className="flex items-center gap-0.5">
                       {/* Image Upload */}
-                      <label className="w-[34px] h-[34px] rounded-lg flex items-center justify-center text-[#43e97b] hover:bg-[rgba(67,233,123,0.1)] transition-all cursor-pointer">
+                      <label className="w-[34px] h-[34px] rounded-lg flex items-center justify-center text-[var(--korus-primary)] hover:bg-[color-mix(in_srgb,var(--korus-primary)_10%,transparent)] transition-all cursor-pointer">
                         <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
@@ -1421,8 +1421,8 @@ export default function Home() {
                         onClick={() => setShowGifPicker(!showGifPicker)}
                         className={`w-[34px] h-[34px] rounded-lg flex items-center justify-center transition-all ${
                           showGifPicker
-                            ? 'text-[#43e97b] bg-[rgba(67,233,123,0.1)]'
-                            : 'text-[#43e97b] hover:bg-[rgba(67,233,123,0.1)]'
+                            ? 'text-[var(--korus-primary)] bg-[color-mix(in_srgb,var(--korus-primary)_10%,transparent)]'
+                            : 'text-[var(--korus-primary)] hover:bg-[color-mix(in_srgb,var(--korus-primary)_10%,transparent)]'
                         }`}
                       >
                         <span className="text-xs font-bold">GIF</span>
@@ -1432,8 +1432,8 @@ export default function Home() {
                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                         className={`w-[34px] h-[34px] rounded-lg flex items-center justify-center transition-all ${
                           showEmojiPicker
-                            ? 'text-[#43e97b] bg-[rgba(67,233,123,0.1)]'
-                            : 'text-[#43e97b] hover:bg-[rgba(67,233,123,0.1)]'
+                            ? 'text-[var(--korus-primary)] bg-[color-mix(in_srgb,var(--korus-primary)_10%,transparent)]'
+                            : 'text-[var(--korus-primary)] hover:bg-[color-mix(in_srgb,var(--korus-primary)_10%,transparent)]'
                         }`}
                       >
                         <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1445,8 +1445,8 @@ export default function Home() {
                         onClick={() => setShowDrawCanvas(!showDrawCanvas)}
                         className={`w-[34px] h-[34px] rounded-lg flex items-center justify-center transition-all ${
                           showDrawCanvas
-                            ? 'text-[#43e97b] bg-[rgba(67,233,123,0.1)]'
-                            : 'text-[#43e97b] hover:bg-[rgba(67,233,123,0.1)]'
+                            ? 'text-[var(--korus-primary)] bg-[color-mix(in_srgb,var(--korus-primary)_10%,transparent)]'
+                            : 'text-[var(--korus-primary)] hover:bg-[color-mix(in_srgb,var(--korus-primary)_10%,transparent)]'
                         }`}
                       >
                         <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1458,7 +1458,7 @@ export default function Home() {
                     <button
                       onClick={handleRegularPost}
                       disabled={isPosting || (!composeText.trim() && selectedFiles.length === 0 && !showDrawCanvas && !drawingDataUrl)}
-                      className="px-5 py-2 rounded-[20px] bg-[#43e97b] text-[14px] font-bold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed leading-none"
+                      className="px-5 py-2 rounded-[20px] bg-[var(--korus-primary)] text-[14px] font-bold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed leading-none"
                       style={{ color: '#000' }}
                     >
                       {isPosting ? 'Posting...' : 'Post'}
@@ -1502,10 +1502,10 @@ export default function Home() {
             >
               {/* Shoutout Banner */}
               {post.isShoutout && (
-                <div className="bg-gradient-to-br from-[rgba(67,233,123,0.12)] to-[rgba(56,249,215,0.08)] border border-[rgba(67,233,123,0.2)] rounded-[16px] px-4 py-3.5 mx-5 my-3 flex items-center justify-between">
+                <div className="bg-gradient-to-br from-[color-mix(in_srgb,var(--korus-primary)_12%,transparent)] to-[color-mix(in_srgb,var(--korus-secondary)_8%,transparent)] border border-[color-mix(in_srgb,var(--korus-primary)_20%,transparent)] rounded-[16px] px-4 py-3.5 mx-5 my-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="text-lg">📢</span>
-                    <span className="text-[11px] font-bold text-[#43e97b] uppercase tracking-wider">SHOUTOUT</span>
+                    <span className="text-[11px] font-bold text-[var(--korus-primary)] uppercase tracking-wider">SHOUTOUT</span>
                     <span className="text-[14px] font-medium text-[#e5e5e5]">{post.content?.slice(0, 60)}{(post.content?.length ?? 0) > 60 ? '...' : ''}</span>
                   </div>
                   {post.shoutoutDuration && (post.shoutoutExpiresAt || post.shoutoutStartTime) && (
@@ -1640,8 +1640,8 @@ export default function Home() {
                     <button
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] text-[13px] transition-all duration-150 ${
                         postInteractions[post.id]?.replied
-                          ? 'text-[#43e97b] hover:bg-[rgba(67,233,123,0.08)]'
-                          : 'text-[var(--color-text-tertiary)] hover:text-[#43e97b] hover:bg-[rgba(67,233,123,0.08)]'
+                          ? 'text-[var(--korus-primary)] hover:bg-[color-mix(in_srgb,var(--korus-primary)_8%,transparent)]'
+                          : 'text-[var(--color-text-tertiary)] hover:text-[var(--korus-primary)] hover:bg-[color-mix(in_srgb,var(--korus-primary)_8%,transparent)]'
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1684,8 +1684,8 @@ export default function Home() {
                     <button
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] text-[13px] transition-all duration-150 ${
                         postInteractions[post.id]?.reposted
-                          ? 'text-[#43e97b] hover:bg-[rgba(67,233,123,0.08)]'
-                          : 'text-[var(--color-text-tertiary)] hover:text-[#43e97b] hover:bg-[rgba(67,233,123,0.08)]'
+                          ? 'text-[var(--korus-primary)] hover:bg-[color-mix(in_srgb,var(--korus-primary)_8%,transparent)]'
+                          : 'text-[var(--color-text-tertiary)] hover:text-[var(--korus-primary)] hover:bg-[color-mix(in_srgb,var(--korus-primary)_8%,transparent)]'
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1720,7 +1720,7 @@ export default function Home() {
                       <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      {post.tips ? <span className="text-[11px] font-semibold bg-[rgba(67,233,123,0.1)] text-[#43e97b] px-1.5 rounded-[6px]">{post.tips} SOL</span> : <span>Tip</span>}
+                      {post.tips ? <span className="text-[11px] font-semibold bg-[color-mix(in_srgb,var(--korus-primary)_10%,transparent)] text-[var(--korus-primary)] px-1.5 rounded-[6px]">{post.tips} SOL</span> : <span>Tip</span>}
                     </button>
 
                     <button
@@ -1765,13 +1765,13 @@ export default function Home() {
                             }
                           }}
                           placeholder="Post your reply..."
-                          className="flex-1 bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-[16px] px-3 py-2 text-[14px] text-[var(--color-text)] placeholder-[#525252] resize-none outline-none focus:border-[#43e97b]/50 transition-colors min-h-[36px] max-h-[120px]"
+                          className="flex-1 bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-[16px] px-3 py-2 text-[14px] text-[var(--color-text)] placeholder-[#525252] resize-none outline-none focus:border-[var(--korus-primary)]/50 transition-colors min-h-[36px] max-h-[120px]"
                           rows={1}
                         />
                         <button
                           onClick={() => submitInlineReply(post)}
                           disabled={!inlineReplyText.trim() || isPostingInlineReply}
-                          className="self-end px-4 py-1.5 rounded-[16px] bg-[#43e97b] text-[13px] font-bold hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="self-end px-4 py-1.5 rounded-[16px] bg-[var(--korus-primary)] text-[13px] font-bold hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                           style={{ color: '#000' }}
                         >
                           {isPostingInlineReply ? '...' : 'Reply'}

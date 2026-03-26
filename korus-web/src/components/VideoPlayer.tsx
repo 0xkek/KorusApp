@@ -99,7 +99,7 @@ export default function VideoPlayer({ videoUrl }: VideoPlayerProps) {
         }}
       >
         {!isPlaying && (
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-korus-primary/80 to-korus-secondary/80 backdrop-blur-sm flex items-center justify-center hover:scale-110 transition-transform shadow-[0_0_20px_rgba(67,233,123,0.5)]">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-korus-primary/80 to-korus-secondary/80 backdrop-blur-sm flex items-center justify-center hover:scale-110 transition-transform shadow-[0_0_20px_color-mix(in_srgb,var(--korus-primary)_50%,transparent)]">
             <svg
               className="w-8 h-8 text-white ml-1"
               fill="currentColor"

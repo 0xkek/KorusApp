@@ -181,7 +181,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
               width: 36,
               height: 36,
               borderRadius: 10,
-              background: 'linear-gradient(135deg, #43e97b, #38f9d7)',
+              background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))',
             }}
           >
             <span style={{ fontWeight: 800, fontSize: 18, color: '#000' }}>K</span>
@@ -427,7 +427,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
             onClick={onPostButtonClick}
             style={{
               width: '100%',
-              background: 'linear-gradient(to right, #43e97b, #38f9d7)',
+              background: 'linear-gradient(to right, var(--korus-primary), var(--korus-secondary))',
               color: '#000',
               fontSize: 15,
               fontWeight: 700,
@@ -443,7 +443,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(67,233,123,0.3)';
+              e.currentTarget.style.boxShadow = '0 8px 25px color-mix(in srgb, var(--korus-primary) 30%, transparent)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
@@ -489,7 +489,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
                   width: 38,
                   height: 38,
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #43e97b, #38f9d7)',
+                  background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',

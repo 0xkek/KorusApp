@@ -129,7 +129,7 @@ export default function UserProfilePage() {
                     {favoriteDomain ? (
                       <>
                         <div className="flex items-center justify-center gap-2 mb-1">
-                          <h2 className="text-2xl font-bold text-korus-primary" style={{ textShadow: '0 0 12px rgba(67, 233, 123, 0.4)' }}>
+                          <h2 className="text-2xl font-bold text-korus-primary" style={{ textShadow: '0 0 12px color-mix(in srgb, var(--korus-primary) 40%, transparent)' }}>
                             {favoriteDomain}
                           </h2>
                           {userInfo.isPremium && (
@@ -179,7 +179,7 @@ export default function UserProfilePage() {
 
                     {/* Wallet Address */}
                     <div className="flex items-center justify-center gap-2 mb-4">
-                      <span className="text-[var(--color-text-tertiary)] text-xs font-mono" style={{ textShadow: '0 0 8px rgba(67, 233, 123, 0.2)' }}>
+                      <span className="text-[var(--color-text-tertiary)] text-xs font-mono" style={{ textShadow: '0 0 8px color-mix(in srgb, var(--korus-primary) 20%, transparent)' }}>
                         {profileWallet}
                       </span>
                       <button

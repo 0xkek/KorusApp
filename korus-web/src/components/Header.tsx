@@ -43,7 +43,7 @@ export default function Header({
 
 
   return (
-    <header className="sticky top-0 left-0 right-0 z-50 border-b border-korus-primary/20 bg-gradient-to-r from-black/80 via-[#0a0a0a]/80 to-black/80 backdrop-blur-md shadow-[0_4px_20px_rgba(67,233,123,0.1)] w-full">
+    <header className="sticky top-0 left-0 right-0 z-50 border-b border-korus-primary/20 bg-gradient-to-r from-black/80 via-[#0a0a0a]/80 to-black/80 backdrop-blur-md shadow-[0_4px_20px_color-mix(in_srgb,var(--korus-primary)_10%,transparent)] w-full">
       <div className="w-full px-4">
         <div className="flex justify-between items-center h-16 max-w-7xl mx-auto gap-6">
           {/* Left: Profile Icon + Logo */}
@@ -59,7 +59,7 @@ export default function Header({
             )}
 
             <h1
-              className="text-2xl font-bold bg-gradient-to-r from-korus-primary to-korus-secondary bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(67,233,123,0.5)] flex-shrink-0"
+              className="text-2xl font-bold bg-gradient-to-r from-korus-primary to-korus-secondary bg-clip-text text-transparent drop-shadow-[0_0_15px_color-mix(in_srgb,var(--korus-primary)_50%,transparent)] flex-shrink-0"
               style={{
                 background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)',
                 WebkitBackgroundClip: 'text',
@@ -84,7 +84,7 @@ export default function Header({
                   onClick={() => handleCategoryClick(category)}
                   className={`px-6 py-2 rounded-lg font-bold text-sm transition-all border-2 ${
                     isActive
-                      ? 'bg-gradient-to-r from-korus-primary to-korus-secondary border-transparent shadow-[0_0_15px_rgba(67,233,123,0.4)]'
+                      ? 'bg-gradient-to-r from-korus-primary to-korus-secondary border-transparent shadow-[0_0_15px_color-mix(in_srgb,var(--korus-primary)_40%,transparent)]'
                       : 'border-korus-primary/20 hover:border-korus-primary/40'
                   }`}
                   style={isActive ?

@@ -65,7 +65,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
                 <button
                   key={wallet.adapter.name}
                   onClick={() => handleWalletClick(wallet.adapter.name)}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl bg-black border-2 border-transparent hover:shadow-[0_0_30px_rgba(67,233,123,0.4)] hover:-translate-y-1 transition-all"
+                  className="w-full flex items-center gap-4 p-4 rounded-xl bg-black border-2 border-transparent hover:shadow-[0_0_30px_color-mix(in_srgb,var(--korus-primary)_40%,transparent)] hover:-translate-y-1 transition-all"
                   style={{
                     backgroundImage: `
                       linear-gradient(#0a0a0a, #0a0a0a),
@@ -128,7 +128,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
                 <button
                   key={wallet.adapter.name}
                   onClick={() => handleWalletClick(wallet.adapter.name)}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl bg-black border-2 border-transparent hover:shadow-[0_0_30px_rgba(67,233,123,0.4)] hover:-translate-y-1 transition-all"
+                  className="w-full flex items-center gap-4 p-4 rounded-xl bg-black border-2 border-transparent hover:shadow-[0_0_30px_color-mix(in_srgb,var(--korus-primary)_40%,transparent)] hover:-translate-y-1 transition-all"
                   style={{
                     backgroundImage: `
                       linear-gradient(#0a0a0a, #0a0a0a),
