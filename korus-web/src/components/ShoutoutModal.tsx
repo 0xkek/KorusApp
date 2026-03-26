@@ -2,10 +2,22 @@
 import { logger } from '@/utils/logger';
 
 import { useState, useEffect } from 'react';
-import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
+
+// Helper to call RPC via our server-side proxy (avoids public RPC 403 errors)
+async function rpcCall(method: string, params: unknown[]) {
+  const response = await fetch('/api/rpc', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+  });
+  const data = await response.json();
+  if (data.error) throw new Error(data.error.message || 'RPC error');
+  return data.result;
+}
 
 // Treasury wallet that receives shoutout payments
 const TREASURY_WALLET = process.env.NEXT_PUBLIC_TREASURY_WALLET || 'ByqqYGErKfyLHHd3NjgMnbbxQdPs1kFrPVWPUHUsD31W';
@@ -32,8 +44,7 @@ interface ShoutoutModalProps {
 }
 
 export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm, queueInfo }: ShoutoutModalProps) {
-  const { connected, publicKey, sendTransaction, signTransaction } = useWallet();
-  const { connection } = useConnection();
+  const { connected, publicKey, signTransaction } = useWallet();
   const { showSuccess, showError } = useToast();
   const [selectedDuration, setSelectedDuration] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -45,8 +56,8 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm,
     const fetchBalance = async () => {
       if (isOpen && connected && publicKey) {
         try {
-          const lamports = await connection.getBalance(publicKey);
-          const solBalance = lamports / LAMPORTS_PER_SOL;
+          const result = await rpcCall('getBalance', [publicKey.toBase58()]);
+          const solBalance = (result?.value ?? 0) / LAMPORTS_PER_SOL;
           setWalletBalance(solBalance);
         } catch (error) {
           logger.error('Failed to fetch balance:', error);
@@ -58,7 +69,7 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm,
       setSelectedDuration(null);
       fetchBalance();
     }
-  }, [isOpen, connected, publicKey, connection]);
+  }, [isOpen, connected, publicKey]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -137,8 +148,10 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm,
       // Calculate transfer amount in lamports
       const lamports = Math.floor(selectedOption.price * LAMPORTS_PER_SOL);
 
-      // Get latest blockhash with commitment
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
+      // Get latest blockhash via proxy
+      const blockhashResult = await rpcCall('getLatestBlockhash', [{ commitment: 'finalized' }]);
+      const blockhash = blockhashResult.value.blockhash;
+      const lastValidBlockHeight = blockhashResult.value.lastValidBlockHeight;
 
       // Create transaction
       const transaction = new Transaction();
@@ -152,43 +165,43 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm,
         })
       );
 
-      // Try to use signTransaction if available, otherwise fall back to sendTransaction
-      let signature: string;
-
-      if (signTransaction) {
-        // Sign the transaction
-        const signedTransaction = await signTransaction(transaction);
-
-        // Serialize and send the signed transaction
-        const rawTransaction = signedTransaction.serialize();
-        signature = await connection.sendRawTransaction(rawTransaction, {
-          skipPreflight: false,
-          preflightCommitment: 'confirmed',
-          maxRetries: 5,
-        });
-      } else {
-        // Fall back to sendTransaction (auto-signs and sends)
-        signature = await sendTransaction(transaction, connection, {
-          skipPreflight: false,
-          preflightCommitment: 'confirmed',
-          maxRetries: 5,
-        });
+      if (!signTransaction) {
+        throw new Error('Wallet does not support signing transactions');
       }
 
-      // Wait for confirmation with timeout
-      const confirmation = await connection.confirmTransaction({
-        signature,
-        blockhash,
-        lastValidBlockHeight,
-      }, 'confirmed');
+      // Sign the transaction via wallet
+      const signedTransaction = await signTransaction(transaction);
 
-      if (confirmation.value.err) {
-        throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
+      // Send the signed transaction via proxy
+      const rawTransaction = signedTransaction.serialize();
+      const base64Tx = Buffer.from(rawTransaction).toString('base64');
+      const signature: string = await rpcCall('sendTransaction', [base64Tx, {
+        skipPreflight: false,
+        preflightCommitment: 'confirmed',
+        maxRetries: 5,
+        encoding: 'base64',
+      }]);
+
+      // Poll for confirmation via proxy
+      const maxRetries = 30;
+      for (let i = 0; i < maxRetries; i++) {
+        const statusResult = await rpcCall('getSignatureStatuses', [[signature]]);
+        const status = statusResult?.value?.[0];
+        if (status) {
+          if (status.err) {
+            throw new Error(`Transaction failed: ${JSON.stringify(status.err)}`);
+          }
+          if (status.confirmationStatus === 'confirmed' || status.confirmationStatus === 'finalized') {
+            break;
+          }
+        }
+        // Wait 2 seconds before polling again
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
 
-      // Refresh balance
-      const newBalance = await connection.getBalance(publicKey);
-      setWalletBalance(newBalance / LAMPORTS_PER_SOL);
+      // Refresh balance via proxy
+      const balResult = await rpcCall('getBalance', [publicKey.toBase58()]);
+      setWalletBalance((balResult?.value ?? 0) / LAMPORTS_PER_SOL);
 
       // Call onConfirm with the transaction signature
       onConfirm?.(selectedDuration, selectedOption.price, signature);
