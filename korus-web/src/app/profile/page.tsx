@@ -660,55 +660,80 @@ export default function ProfilePage() {
                           </div>
                         </button>
 
-                        {/* Custom Username option */}
+                        {/* Custom Username option — select existing username as display */}
                         {currentUsername && (
-                          <button
-                            onClick={async () => {
-                              try {
-                                const token = localStorage.getItem('authToken');
-                                if (!token) return;
-                                const { usersAPI } = await import('@/lib/api');
-                                // Clear SNS so username shows through
-                                await usersAPI.updateProfile({ snsUsername: '' }, token);
-                                setDbSnsUsername(null);
-                                setShowIdentityDropdown(false);
-                                showSuccess(`Now displaying as @${currentUsername}`);
-                              } catch {
-                                showError('Failed to update display preference');
-                              }
-                            }}
-                            className="w-full px-4 py-3 text-left hover:bg-white/[0.06] transition-colors border-b border-[#262626]"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <div className="text-[#fafafa] font-medium flex items-center gap-2">
-                                  @{currentUsername}
-                                  {isPremium && (
-                                    <div className="w-3.5 h-3.5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
-                                      <svg className="w-2 h-2" fill="black" viewBox="0 0 24 24">
-                                        <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
-                                      </svg>
-                                    </div>
-                                  )}
+                          <div className="border-b border-[#262626]">
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const token = localStorage.getItem('authToken');
+                                  if (!token) return;
+                                  const { usersAPI } = await import('@/lib/api');
+                                  await usersAPI.updateProfile({ snsUsername: '' }, token);
+                                  setDbSnsUsername(null);
+                                  setShowIdentityDropdown(false);
+                                  showSuccess(`Now displaying as @${currentUsername}`);
+                                } catch {
+                                  showError('Failed to update display preference');
+                                }
+                              }}
+                              className="w-full px-4 py-3 text-left hover:bg-white/[0.06] transition-colors"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <div className="text-[#fafafa] font-medium flex items-center gap-2">
+                                    @{currentUsername}
+                                    {isPremium && (
+                                      <div className="w-3.5 h-3.5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
+                                        <svg className="w-2 h-2" fill="black" viewBox="0 0 24 24">
+                                          <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
+                                        </svg>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="text-[#737373] text-xs">Custom Username</div>
                                 </div>
-                                <div className="text-[#737373] text-xs">Custom Username</div>
+                                {!dbSnsUsername && currentUsername && displayName === currentUsername && (
+                                  <svg className="w-4 h-4 text-korus-primary" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                                  </svg>
+                                )}
                               </div>
-                              {!dbSnsUsername && currentUsername && displayName === currentUsername && (
-                                <svg className="w-4 h-4 text-korus-primary" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-                                </svg>
-                              )}
-                            </div>
-                          </button>
+                            </button>
+                            {/* Change Username — premium only */}
+                            {isPremium && (
+                              <button
+                                onClick={() => {
+                                  setShowIdentityDropdown(false);
+                                  setEditingUsername(true);
+                                  setTempUsernameValue(currentUsername || '');
+                                  setUsernameError('');
+                                }}
+                                className="w-full px-4 py-2 pb-3 text-left hover:bg-white/[0.06] transition-colors"
+                              >
+                                <div className="text-korus-primary text-xs font-medium flex items-center gap-1">
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                  </svg>
+                                  Change Username
+                                </div>
+                              </button>
+                            )}
+                          </div>
                         )}
 
-                        {/* SNS Domain options */}
+                        {/* SNS Domain options — premium only */}
                         {allSNSDomains.map((domain, index) => (
                           <button
                             key={index}
                             onClick={async (e) => {
                               e.preventDefault();
                               e.stopPropagation();
+                              if (!isPremium) {
+                                setShowIdentityDropdown(false);
+                                setShowPremiumModal(true);
+                                return;
+                              }
                               try {
                                 await setFavoriteSNSDomain(walletAddress, domain.domain);
                                 const token = localStorage.getItem('authToken');
@@ -736,11 +761,15 @@ export default function ProfilePage() {
                               <div>
                                 <div className="text-[#fafafa] font-medium flex items-center gap-2">
                                   {domain.domain}
-                                  <div className="w-3.5 h-3.5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
-                                    <svg className="w-2 h-2" fill="black" viewBox="0 0 24 24">
-                                      <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
-                                    </svg>
-                                  </div>
+                                  {isPremium ? (
+                                    <div className="w-3.5 h-3.5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
+                                      <svg className="w-2 h-2" fill="black" viewBox="0 0 24 24">
+                                        <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
+                                      </svg>
+                                    </div>
+                                  ) : (
+                                    <span className="text-[10px] bg-yellow-500 text-black px-1.5 py-0.5 rounded-full font-bold">PREMIUM</span>
+                                  )}
                                 </div>
                                 <div className="text-[#737373] text-xs">SNS Domain</div>
                               </div>
@@ -758,11 +787,6 @@ export default function ProfilePage() {
                           <button
                             onClick={() => {
                               setShowIdentityDropdown(false);
-                              const canEdit = !hasSetUsername || isPremium;
-                              if (!canEdit) {
-                                showWarning('You have already set your username. Upgrade to Premium to change it anytime!');
-                                return;
-                              }
                               setShowUsernameWarning(true);
                             }}
                             className="w-full px-4 py-3 text-left hover:bg-white/[0.06] transition-colors"

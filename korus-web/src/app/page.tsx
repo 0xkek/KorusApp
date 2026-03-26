@@ -77,6 +77,16 @@ export default function Home() {
   const [inlineReplyPostId, setInlineReplyPostId] = useState<string | number | null>(null);
   const [inlineReplyText, setInlineReplyText] = useState('');
   const [isPostingInlineReply, setIsPostingInlineReply] = useState(false);
+  const [hideShoutouts, setHideShoutouts] = useState(false);
+
+  // Load hide shoutout preference from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        setHideShoutouts(localStorage.getItem('korus-hide-shoutout') === 'true');
+      } catch { /* ignore */ }
+    }
+  }, []);
   const inlineReplyRef = useRef<HTMLTextAreaElement>(null);
   const [, setCurrentUserTheme] = useState<string | undefined>(undefined);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
@@ -1479,8 +1489,8 @@ export default function Home() {
           {isLoading ? (
             <FeedSkeleton count={5} />
           ) : (
-            // Deduplicate posts before rendering to prevent React key errors
-            Array.from(new Map(posts.map(post => [post.id, post])).values()).map((post) => (
+            // Deduplicate posts and optionally hide shoutouts
+            Array.from(new Map(posts.map(post => [post.id, post])).values()).filter(post => !hideShoutouts || !post.isShoutout).map((post) => (
             <div
               key={post.id}
               className={`transition-colors cursor-pointer group ${
