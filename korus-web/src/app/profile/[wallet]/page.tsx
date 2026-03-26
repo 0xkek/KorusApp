@@ -80,10 +80,10 @@ export default function UserProfilePage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
+    <main className="min-h-screen bg-[var(--color-background)] relative overflow-hidden">
       {/* Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#111111]/25 to-[#111111]/35" />
+      <div className="fixed inset-0 bg-gradient-to-br from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)]">
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[var(--color-surface)]/25 to-[var(--color-surface)]/35" />
       </div>
 
       {/* Static gradient orbs */}
@@ -96,19 +96,19 @@ export default function UserProfilePage() {
       <div className="relative z-10">
         <div className="flex min-h-screen max-w-[1280px] mx-auto">
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-[#262626]">
+          <div className="flex-1 min-w-0 border-x border-[var(--color-border-light)]">
             {/* Header */}
-            <div className="sticky top-0 bg-[#141414]/80 backdrop-blur-xl border-b border-[#262626] z-10">
+            <div className="sticky top-0 bg-[var(--color-surface)]/80 backdrop-blur-xl border-b border-[var(--color-border-light)] z-10">
               <div className="flex items-center px-4 py-4">
                 <button
                   onClick={() => router.back()}
                   className="p-2 hover:bg-white/[0.04] rounded-full transition-colors mr-3"
                 >
-                  <svg className="w-6 h-6 text-[#fafafa]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-[var(--color-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-                <h1 className="text-3xl font-bold text-[#fafafa]">Profile</h1>
+                <h1 className="text-3xl font-bold text-[var(--color-text)]">Profile</h1>
               </div>
             </div>
 
@@ -140,11 +140,11 @@ export default function UserProfilePage() {
                             </div>
                           )}
                         </div>
-                        <p className="text-[#fafafa] text-base mb-2">@{displayName}</p>
+                        <p className="text-[var(--color-text)] text-base mb-2">@{displayName}</p>
                       </>
                     ) : (
                       <div className="flex items-center justify-center gap-2 mb-2">
-                        <h2 className="text-2xl font-bold text-[#fafafa]">
+                        <h2 className="text-2xl font-bold text-[var(--color-text)]">
                           {displayName}
                         </h2>
                         {userInfo.isPremium && (
@@ -162,7 +162,7 @@ export default function UserProfilePage() {
                       <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${
                         userInfo.isPremium
                           ? 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/30'
-                          : 'bg-white/[0.06] text-[#a1a1a1] border border-[#262626]'
+                          : 'bg-white/[0.06] text-[var(--color-text-secondary)] border border-[var(--color-border-light)]'
                       }`}>
                         {userInfo.isPremium ? (
                           <>
@@ -179,7 +179,7 @@ export default function UserProfilePage() {
 
                     {/* Wallet Address */}
                     <div className="flex items-center justify-center gap-2 mb-4">
-                      <span className="text-[#737373] text-xs font-mono" style={{ textShadow: '0 0 8px rgba(67, 233, 123, 0.2)' }}>
+                      <span className="text-[var(--color-text-tertiary)] text-xs font-mono" style={{ textShadow: '0 0 8px rgba(67, 233, 123, 0.2)' }}>
                         {profileWallet}
                       </span>
                       <button
@@ -207,7 +207,7 @@ export default function UserProfilePage() {
                             className={`px-2 py-1 rounded-lg text-xs font-medium ${
                               domain.favorite
                                 ? 'bg-korus-primary/20 text-korus-primary border border-korus-primary/30'
-                                : 'bg-white/[0.06] text-[#a1a1a1] border border-[#262626]'
+                                : 'bg-white/[0.06] text-[var(--color-text-secondary)] border border-[var(--color-border-light)]'
                             }`}
                           >
                             {domain.domain}
@@ -220,22 +220,22 @@ export default function UserProfilePage() {
 
                 {/* Stats Grid */}
                 <div className="flex gap-2 mb-6">
-                  <div className="flex-1 bg-white/[0.04] backdrop-blur-sm border border-[#262626] rounded-2xl p-4">
+                  <div className="flex-1 bg-white/[0.04] backdrop-blur-sm border border-[var(--color-border-light)] rounded-2xl p-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-korus-primary mb-1">{stats.posts}</div>
-                      <div className="text-xs text-[#a1a1a1] font-medium">Posts Made</div>
+                      <div className="text-xs text-[var(--color-text-secondary)] font-medium">Posts Made</div>
                     </div>
                   </div>
-                  <div className="flex-1 bg-white/[0.04] backdrop-blur-sm border border-[#262626] rounded-2xl p-4">
+                  <div className="flex-1 bg-white/[0.04] backdrop-blur-sm border border-[var(--color-border-light)] rounded-2xl p-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-korus-primary mb-1">{stats.tipsReceived}</div>
-                      <div className="text-xs text-[#a1a1a1] font-medium">Tips Received</div>
+                      <div className="text-xs text-[var(--color-text-secondary)] font-medium">Tips Received</div>
                     </div>
                   </div>
-                  <div className="flex-1 bg-white/[0.04] backdrop-blur-sm border border-[#262626] rounded-2xl p-4">
+                  <div className="flex-1 bg-white/[0.04] backdrop-blur-sm border border-[var(--color-border-light)] rounded-2xl p-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-korus-primary mb-1">{stats.tipsGiven}</div>
-                      <div className="text-xs text-[#a1a1a1] font-medium">Tips Given</div>
+                      <div className="text-xs text-[var(--color-text-secondary)] font-medium">Tips Given</div>
                     </div>
                   </div>
                 </div>
@@ -254,7 +254,7 @@ export default function UserProfilePage() {
                 </div>
 
                 {/* Reputation Score Card */}
-                <div className="bg-white/[0.04] backdrop-blur-sm border border-[#262626] rounded-2xl p-6 mb-6">
+                <div className="bg-white/[0.04] backdrop-blur-sm border border-[var(--color-border-light)] rounded-2xl p-6 mb-6">
                   <div className="flex items-center justify-center">
                     <div className="text-center">
                       <div className="flex items-center justify-center gap-3 mb-2">
@@ -264,7 +264,7 @@ export default function UserProfilePage() {
                           </svg>
                         </div>
                       </div>
-                      <h3 className="text-sm font-medium text-[#a1a1a1] mb-2">Reputation Score</h3>
+                      <h3 className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">Reputation Score</h3>
                       <div className="text-4xl font-bold text-korus-primary">{stats.repScore}</div>
                       {userInfo.isPremium && (
                         <div className="flex items-center justify-center gap-2 mt-3">
@@ -281,10 +281,10 @@ export default function UserProfilePage() {
                 </div>
 
                 {/* Privacy Notice */}
-                <div className="text-center py-16 bg-white/[0.04] backdrop-blur-sm border border-[#262626] rounded-2xl">
+                <div className="text-center py-16 bg-white/[0.04] backdrop-blur-sm border border-[var(--color-border-light)] rounded-2xl">
                   <div className="text-5xl mb-4 opacity-60">🔒</div>
-                  <p className="text-[#fafafa] text-lg font-medium mb-2">User activity is private</p>
-                  <p className="text-[#a1a1a1] text-sm">
+                  <p className="text-[var(--color-text)] text-lg font-medium mb-2">User activity is private</p>
+                  <p className="text-[var(--color-text-secondary)] text-sm">
                     Posts and replies are only visible to the account owner
                   </p>
                 </div>

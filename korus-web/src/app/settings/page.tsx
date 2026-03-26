@@ -197,11 +197,11 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
+    <main className="min-h-screen bg-[var(--color-background)] relative overflow-hidden">
       {/* Standardized static background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
+      <div className="fixed inset-0 bg-gradient-to-br from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)]">
         {/* Surface gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#111111]/25 to-[#111111]/35" />
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[var(--color-surface)]/25 to-[var(--color-surface)]/35" />
       </div>
       {/* Static gradient orbs for visual depth */}
       <div className="fixed inset-0 overflow-hidden">
@@ -218,18 +218,18 @@ export default function SettingsPage() {
         <div className="flex min-h-screen max-w-[1280px] mx-auto">
           <LeftSidebar onNotificationsToggle={() => setShowNotifications(!showNotifications)} />
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-r border-[#262626]">
+          <div className="flex-1 min-w-0 border-r border-[var(--color-border-light)]">
 
             {/* Header */}
-            <div className="sticky top-0 bg-[#0a0a0a]/85 backdrop-blur-[12px] border-b border-[#262626] z-10 p-4">
+            <div className="sticky top-0 bg-[var(--color-background)]/85 backdrop-blur-[12px] border-b border-[var(--color-border-light)] z-10 p-4">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => router.back()}
-                  className="w-10 h-10 bg-white/[0.08] border border-[#262626] rounded-full flex items-center justify-center text-[#fafafa] font-bold hover:bg-white/[0.12] transition-all duration-150"
+                  className="w-10 h-10 bg-white/[0.08] border border-[var(--color-border-light)] rounded-full flex items-center justify-center text-[var(--color-text)] font-bold hover:bg-white/[0.12] transition-all duration-150"
                 >
                   ←
                 </button>
-                <h1 className="text-3xl font-bold text-[#fafafa]">Settings</h1>
+                <h1 className="text-3xl font-bold text-[var(--color-text)]">Settings</h1>
               </div>
             </div>
 
@@ -237,8 +237,8 @@ export default function SettingsPage() {
             <div className="p-6 space-y-6">
 
               {/* Premium Section */}
-              <div className="bg-[#141414] border border-[#262626] rounded-xl p-6">
-                <h2 className="text-2xl font-bold text-[#fafafa] mb-4 flex items-center gap-2">
+              <div className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-xl p-6">
+                <h2 className="text-2xl font-bold text-[var(--color-text)] mb-4 flex items-center gap-2">
                   Premium Status
                   <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
                     <svg className="w-4 h-4" fill="black" viewBox="0 0 24 24">
@@ -257,14 +257,14 @@ export default function SettingsPage() {
                   </div>
                 ) : (
                   <div
-                    className="bg-white/[0.04] backdrop-blur-sm border border-[#262626] rounded-xl p-4"
+                    className="bg-white/[0.04] backdrop-blur-sm border border-[var(--color-border-light)] rounded-xl p-4"
                     style={{
                       boxShadow: '0 0 10px var(--korus-primary), 0 0 20px var(--korus-primary)'
                     }}
                   >
                     <div
                       onClick={() => setShowPremiumModal(true)}
-                      className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-4 w-full font-bold hover:shadow-lg transition-all duration-150 cursor-pointer text-[#fafafa] white-text text-center flex items-center justify-center gap-3"
+                      className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-4 w-full font-bold hover:shadow-lg transition-all duration-150 cursor-pointer text-[var(--color-text)] white-text text-center flex items-center justify-center gap-3"
                     >
                       <div>
                         <div>Upgrade to Premium</div>
@@ -275,8 +275,8 @@ export default function SettingsPage() {
                 )}
 
                 {/* Premium Benefits Description */}
-                <div className="mt-4 p-4 bg-white/[0.04] rounded-xl border border-[#262626]">
-                  <div className="text-[#a1a1a1] text-sm space-y-2">
+                <div className="mt-4 p-4 bg-white/[0.04] rounded-xl border border-[var(--color-border-light)]">
+                  <div className="text-[var(--color-text-secondary)] text-sm space-y-2">
                     <p className="text-yellow-400 font-semibold mb-3">Premium Membership Includes:</p>
                     <div className="space-y-1">
                       <p>• Ad-free browsing with hidden shoutout posts</p>
@@ -292,15 +292,15 @@ export default function SettingsPage() {
 
 
               {/* Appearance Settings */}
-              <div className="bg-[#141414] border border-[#262626] rounded-xl p-6">
-                <h2 className="text-2xl font-bold text-[#fafafa] mb-4">Appearance</h2>
+              <div className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-xl p-6">
+                <h2 className="text-2xl font-bold text-[var(--color-text)] mb-4">Appearance</h2>
                 <div className="space-y-4">
 
                   {/* Dark Mode */}
-                  <div className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[#262626]">
+                  <div className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[var(--color-border-light)]">
                     <div>
-                      <div className="text-[#fafafa] font-medium">Dark Mode</div>
-                      <div className="text-[#a1a1a1] text-sm">Available for all users</div>
+                      <div className="text-[var(--color-text)] font-medium">Dark Mode</div>
+                      <div className="text-[var(--color-text-secondary)] text-sm">Available for all users</div>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -322,8 +322,8 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Color Theme */}
-                  <div className="p-4 bg-white/[0.04] rounded-xl border border-[#262626]">
-                    <div className="text-[#fafafa] font-medium mb-3">Color Theme</div>
+                  <div className="p-4 bg-white/[0.04] rounded-xl border border-[var(--color-border-light)]">
+                    <div className="text-[var(--color-text)] font-medium mb-3">Color Theme</div>
                     <div className="grid grid-cols-2 gap-3">
                       {themes.map((theme) => (
                         <button
@@ -339,7 +339,7 @@ export default function SettingsPage() {
                           className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-150 ${
                             currentColorScheme === theme.id
                               ? 'border-korus-primary bg-korus-primary/10'
-                              : 'border-[#262626] hover:border-[#262626]'
+                              : 'border-[var(--color-border-light)] hover:border-[var(--color-border-light)]'
                           }`}
                         >
                           <div
@@ -349,7 +349,7 @@ export default function SettingsPage() {
                             }}
                           />
                           <div className="flex-1 text-left">
-                            <div className="text-[#fafafa] text-sm font-medium">{theme.name}</div>
+                            <div className="text-[var(--color-text)] text-sm font-medium">{theme.name}</div>
                             {!theme.free && !isPremium && (
                               <div className="text-yellow-400 text-xs">PREMIUM</div>
                             )}
@@ -367,11 +367,11 @@ export default function SettingsPage() {
               </div>
 
               {/* Profile Color */}
-              <div className="bg-[#141414] border border-[#262626] rounded-xl p-6">
-                <h2 className="text-2xl font-bold text-[#fafafa] mb-4">Profile Color</h2>
-                <div className="p-4 bg-white/[0.04] rounded-xl border border-[#262626]">
-                  <div className="text-[#fafafa] font-medium mb-2">Your Profile Theme</div>
-                  <div className="text-[#a1a1a1] text-sm mb-4">
+              <div className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-xl p-6">
+                <h2 className="text-2xl font-bold text-[var(--color-text)] mb-4">Profile Color</h2>
+                <div className="p-4 bg-white/[0.04] rounded-xl border border-[var(--color-border-light)]">
+                  <div className="text-[var(--color-text)] font-medium mb-2">Your Profile Theme</div>
+                  <div className="text-[var(--color-text-secondary)] text-sm mb-4">
                     This color represents you on Korus - it appears on your posts, reposts, and profile. Your profile color automatically matches your chosen Color Theme above, but you can manually override it here if you prefer.
                   </div>
                   <div className="grid grid-cols-4 gap-3">
@@ -405,7 +405,7 @@ export default function SettingsPage() {
                           className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-150 ${
                             isSelected
                               ? 'border-korus-primary bg-korus-primary/10'
-                              : 'border-[#262626] hover:border-[#262626]'
+                              : 'border-[var(--color-border-light)] hover:border-[var(--color-border-light)]'
                           }`}
                           title={colorOption.name}
                         >
@@ -415,12 +415,12 @@ export default function SettingsPage() {
                               style={{ background: `linear-gradient(135deg, ${colorOption.color}, ${colorOption.color}dd)` }}
                             />
                             {isSelected && (
-                              <svg className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-[#fafafa]" fill="currentColor" viewBox="0 0 24 24">
+                              <svg className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-[var(--color-text)]" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                               </svg>
                             )}
                           </div>
-                          <span className="text-[#a1a1a1] text-xs">{colorOption.name}</span>
+                          <span className="text-[var(--color-text-secondary)] text-xs">{colorOption.name}</span>
                         </button>
                       );
                     })}
@@ -429,17 +429,17 @@ export default function SettingsPage() {
               </div>
 
               {/* Premium Features */}
-              <div className="bg-[#141414] border border-[#262626] rounded-xl p-6">
-                <h2 className="text-2xl font-bold text-[#fafafa] mb-4">Premium Features</h2>
+              <div className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-xl p-6">
+                <h2 className="text-2xl font-bold text-[var(--color-text)] mb-4">Premium Features</h2>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[#262626]">
+                  <div className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[var(--color-border-light)]">
                     <div>
-                      <div className="text-[#fafafa] font-medium">Hide Shoutout</div>
-                      <div className="text-[#a1a1a1] text-sm">Remove shoutout content from your feed</div>
+                      <div className="text-[var(--color-text)] font-medium">Hide Shoutout</div>
+                      <div className="text-[var(--color-text-secondary)] text-sm">Remove shoutout content from your feed</div>
                     </div>
                     <div className="flex items-center gap-2">
                       {!isPremium && (
-                        <span className="text-xs bg-yellow-500 text-[#fafafa] px-2 py-1 rounded-full font-bold">PREMIUM</span>
+                        <span className="text-xs bg-yellow-500 text-[var(--color-text)] px-2 py-1 rounded-full font-bold">PREMIUM</span>
                       )}
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
@@ -477,35 +477,35 @@ export default function SettingsPage() {
 
 
               {/* Support & Information */}
-              <div className="bg-[#141414] border border-[#262626] rounded-xl p-6">
-                <h2 className="text-[#fafafa] text-xl font-bold mb-4">Support & Information</h2>
+              <div className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-xl p-6">
+                <h2 className="text-[var(--color-text)] text-xl font-bold mb-4">Support & Information</h2>
                 <div className="space-y-3">
                   <button
                     onClick={() => setShowFAQModal(true)}
-                    className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[#262626] hover:bg-white/[0.06] transition-all duration-150 w-full"
+                    className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[var(--color-border-light)] hover:bg-white/[0.06] transition-all duration-150 w-full"
                   >
                     <div className="flex items-center gap-3">
                       <svg className="w-6 h-6 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span className="text-[#fafafa] font-medium">FAQ</span>
+                      <span className="text-[var(--color-text)] font-medium">FAQ</span>
                     </div>
-                    <svg className="w-5 h-5 text-[#a1a1a1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-[var(--color-text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
 
                   <button
                     onClick={() => setShowRulesModal(true)}
-                    className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[#262626] hover:bg-white/[0.06] transition-all duration-150 w-full"
+                    className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[var(--color-border-light)] hover:bg-white/[0.06] transition-all duration-150 w-full"
                   >
                     <div className="flex items-center gap-3">
                       <svg className="w-6 h-6 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                       </svg>
-                      <span className="text-[#fafafa] font-medium">Community Rules</span>
+                      <span className="text-[var(--color-text)] font-medium">Community Rules</span>
                     </div>
-                    <svg className="w-5 h-5 text-[#a1a1a1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-[var(--color-text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
@@ -513,11 +513,11 @@ export default function SettingsPage() {
               </div>
 
               {/* Account */}
-              <div className="bg-[#141414] border border-[#262626] rounded-xl p-6">
-                <h2 className="text-[#fafafa] text-xl font-bold mb-4">Account</h2>
+              <div className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-xl p-6">
+                <h2 className="text-[var(--color-text)] text-xl font-bold mb-4">Account</h2>
                 <button
                   onClick={() => setShowLogoutConfirm(true)}
-                  className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[#262626] hover:bg-red-500/20 transition-all duration-150 w-full"
+                  className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-[var(--color-border-light)] hover:bg-red-500/20 transition-all duration-150 w-full"
                 >
                   <div className="flex items-center gap-3">
                     <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -525,7 +525,7 @@ export default function SettingsPage() {
                     </svg>
                     <span className="text-red-400 font-medium">Logout</span>
                   </div>
-                  <svg className="w-5 h-5 text-[#a1a1a1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-[var(--color-text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
@@ -541,25 +541,25 @@ export default function SettingsPage() {
 
       {/* Modals */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#1e1e1e] backdrop-blur-xl border border-[#262626] rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[var(--color-surface)] backdrop-blur-xl border border-[var(--color-border-light)] rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
             <div className="text-center">
               <svg className="w-12 h-12 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              <h3 className="text-[#fafafa] text-xl font-bold mb-2">Logout from Korus?</h3>
-              <p className="text-[#a1a1a1] mb-6">This will disconnect your wallet and you&apos;ll need to reconnect to use the app again.</p>
+              <h3 className="text-[var(--color-text)] text-xl font-bold mb-2">Logout from Korus?</h3>
+              <p className="text-[var(--color-text-secondary)] mb-6">This will disconnect your wallet and you&apos;ll need to reconnect to use the app again.</p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowLogoutConfirm(false)}
-                  className="flex-1 px-4 py-2 bg-white/[0.08] text-[#fafafa] rounded-xl hover:bg-white/[0.12] transition-colors"
+                  className="flex-1 px-4 py-2 bg-white/[0.08] text-[var(--color-text)] rounded-xl hover:bg-white/[0.12] transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleLogout}
                   disabled={isLoggingOut}
-                  className="flex-1 px-4 py-2 bg-red-600 text-[#fafafa] rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 bg-red-600 text-[var(--color-text)] rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoggingOut ? (
                     <div className="flex items-center justify-center gap-2">
@@ -585,20 +585,20 @@ export default function SettingsPage() {
       {/* FAQ Modal */}
       {showFAQModal && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
+          className="fixed inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm flex items-center justify-center z-50"
           onClick={() => setShowFAQModal(false)}
         >
           <div
-            className="bg-[#1e1e1e] backdrop-blur-xl border border-[#262626] rounded-2xl shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto"
+            className="bg-[var(--color-surface)] backdrop-blur-xl border border-[var(--color-border-light)] rounded-2xl shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-[#fafafa] text-xl font-bold">Frequently Asked Questions</h3>
+              <h3 className="text-[var(--color-text)] text-xl font-bold">Frequently Asked Questions</h3>
               <button
                 onClick={() => setShowFAQModal(false)}
                 className="w-8 h-8 bg-white/[0.08] rounded-full flex items-center justify-center hover:bg-white/[0.12] transition-colors"
               >
-                <svg className="w-5 h-5 text-[#fafafa]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-[var(--color-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -606,22 +606,22 @@ export default function SettingsPage() {
 
             <div className="space-y-6">
               <div className="bg-white/[0.04] rounded-xl p-4">
-                <h4 className="text-[#fafafa] font-semibold mb-2">What is Korus?</h4>
-                <p className="text-[#a1a1a1] text-sm">
+                <h4 className="text-[var(--color-text)] font-semibold mb-2">What is Korus?</h4>
+                <p className="text-[var(--color-text-secondary)] text-sm">
                   Korus is a Web3 social platform where authentic conversations meet blockchain innovation. Share thoughts, earn rewards, and connect with a community that values real engagement.
                 </p>
               </div>
 
               <div className="bg-white/[0.04] rounded-xl p-4">
-                <h4 className="text-[#fafafa] font-semibold mb-2">How do I earn SOL?</h4>
-                <p className="text-[#a1a1a1] text-sm">
+                <h4 className="text-[var(--color-text)] font-semibold mb-2">How do I earn SOL?</h4>
+                <p className="text-[var(--color-text-secondary)] text-sm">
                   You earn SOL by receiving tips from other users who appreciate your content. Create valuable posts and engage meaningfully with the community.
                 </p>
               </div>
 
               <div className="bg-white/[0.04] rounded-xl p-4">
-                <h4 className="text-[#fafafa] font-semibold mb-2">What&apos;s included in Premium?</h4>
-                <p className="text-[#a1a1a1] text-sm">
+                <h4 className="text-[var(--color-text)] font-semibold mb-2">What&apos;s included in Premium?</h4>
+                <p className="text-[var(--color-text-secondary)] text-sm">
                   Premium members get exclusive color themes, gold verified badge, ability to use SNS domains as display names, and can hide sponsored posts for a cleaner feed.
                 </p>
               </div>
@@ -633,20 +633,20 @@ export default function SettingsPage() {
       {/* Community Rules Modal */}
       {showRulesModal && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
+          className="fixed inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm flex items-center justify-center z-50"
           onClick={() => setShowRulesModal(false)}
         >
           <div
-            className="bg-[#1e1e1e] backdrop-blur-xl border border-[#262626] rounded-2xl shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto"
+            className="bg-[var(--color-surface)] backdrop-blur-xl border border-[var(--color-border-light)] rounded-2xl shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-[#fafafa] text-xl font-bold">Community Rules</h3>
+              <h3 className="text-[var(--color-text)] text-xl font-bold">Community Rules</h3>
               <button
                 onClick={() => setShowRulesModal(false)}
                 className="w-8 h-8 bg-white/[0.08] rounded-full flex items-center justify-center hover:bg-white/[0.12] transition-colors"
               >
-                <svg className="w-5 h-5 text-[#fafafa]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-[var(--color-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -659,8 +659,8 @@ export default function SettingsPage() {
                     <span className="text-korus-primary font-bold text-sm">1</span>
                   </div>
                   <div>
-                    <h4 className="text-[#fafafa] font-semibold mb-1">Be Authentic</h4>
-                    <p className="text-[#a1a1a1] text-sm">Share genuine thoughts and experiences. No fake accounts or impersonation.</p>
+                    <h4 className="text-[var(--color-text)] font-semibold mb-1">Be Authentic</h4>
+                    <p className="text-[var(--color-text-secondary)] text-sm">Share genuine thoughts and experiences. No fake accounts or impersonation.</p>
                   </div>
                 </div>
               </div>
@@ -671,8 +671,8 @@ export default function SettingsPage() {
                     <span className="text-korus-primary font-bold text-sm">2</span>
                   </div>
                   <div>
-                    <h4 className="text-[#fafafa] font-semibold mb-1">Respect Everyone</h4>
-                    <p className="text-[#a1a1a1] text-sm">Treat all community members with kindness. No harassment, hate speech, or discrimination.</p>
+                    <h4 className="text-[var(--color-text)] font-semibold mb-1">Respect Everyone</h4>
+                    <p className="text-[var(--color-text-secondary)] text-sm">Treat all community members with kindness. No harassment, hate speech, or discrimination.</p>
                   </div>
                 </div>
               </div>
@@ -683,8 +683,8 @@ export default function SettingsPage() {
                     <span className="text-korus-primary font-bold text-sm">3</span>
                   </div>
                   <div>
-                    <h4 className="text-[#fafafa] font-semibold mb-1">Quality Over Quantity</h4>
-                    <p className="text-[#a1a1a1] text-sm">Focus on meaningful contributions. Avoid spam, repetitive content, or low-effort posts.</p>
+                    <h4 className="text-[var(--color-text)] font-semibold mb-1">Quality Over Quantity</h4>
+                    <p className="text-[var(--color-text-secondary)] text-sm">Focus on meaningful contributions. Avoid spam, repetitive content, or low-effort posts.</p>
                   </div>
                 </div>
               </div>
@@ -695,8 +695,8 @@ export default function SettingsPage() {
                     <span className="text-korus-primary font-bold text-sm">4</span>
                   </div>
                   <div>
-                    <h4 className="text-[#fafafa] font-semibold mb-1">Protect Privacy</h4>
-                    <p className="text-[#a1a1a1] text-sm">Never share personal information of others. Respect everyone&apos;s privacy and security.</p>
+                    <h4 className="text-[var(--color-text)] font-semibold mb-1">Protect Privacy</h4>
+                    <p className="text-[var(--color-text-secondary)] text-sm">Never share personal information of others. Respect everyone&apos;s privacy and security.</p>
                   </div>
                 </div>
               </div>
@@ -707,8 +707,8 @@ export default function SettingsPage() {
                     <span className="text-korus-primary font-bold text-sm">5</span>
                   </div>
                   <div>
-                    <h4 className="text-[#fafafa] font-semibold mb-1">Stay On Topic</h4>
-                    <p className="text-[#a1a1a1] text-sm">Post content in relevant categories. Keep discussions focused and constructive.</p>
+                    <h4 className="text-[var(--color-text)] font-semibold mb-1">Stay On Topic</h4>
+                    <p className="text-[var(--color-text-secondary)] text-sm">Post content in relevant categories. Keep discussions focused and constructive.</p>
                   </div>
                 </div>
               </div>
@@ -726,12 +726,12 @@ export default function SettingsPage() {
       {/* Success Toast Notification */}
       {successMessage && (
         <div className="fixed bottom-4 right-4 z-50 max-w-sm">
-          <div className="bg-[#1e1e1e] backdrop-blur-xl border border-korus-primary rounded-xl p-4 shadow-lg">
+          <div className="bg-[var(--color-surface)] backdrop-blur-xl border border-korus-primary rounded-xl p-4 shadow-lg">
             <div className="flex items-center gap-3">
               <svg className="w-6 h-6 text-korus-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
-              <span className="text-[#fafafa] font-medium">{successMessage}</span>
+              <span className="text-[var(--color-text)] font-medium">{successMessage}</span>
             </div>
           </div>
         </div>

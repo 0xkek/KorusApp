@@ -30,7 +30,7 @@ export function ConnectFourBoard({
     } else if (cell === 'yellow') {
       return `${baseClasses} bg-yellow-400 shadow-lg shadow-yellow-400/50`;
     }
-    return `${baseClasses} bg-white/[0.12] border border-[#262626]`;
+    return `${baseClasses} bg-white/[0.12] border border-[var(--color-border-light)]`;
   };
 
   const getColumnClassName = (col: number) => {
@@ -57,7 +57,7 @@ export function ConnectFourBoard({
         {isGameOver ? (
           <div className="text-xl font-bold">
             {winner === 'draw' ? (
-              <span className="text-[#a1a1a1]">Game ended in a draw!</span>
+              <span className="text-[var(--color-text-secondary)]">Game ended in a draw!</span>
             ) : winner === playerColor ? (
               <span className="text-korus-primary">You won! 🎉</span>
             ) : (
@@ -75,14 +75,14 @@ export function ConnectFourBoard({
                 )
               </span>
             ) : (
-              <span className="text-[#a1a1a1]">Opponent&apos;s turn...</span>
+              <span className="text-[var(--color-text-secondary)]">Opponent&apos;s turn...</span>
             )}
           </div>
         )}
       </div>
 
       {/* Board */}
-      <div className="bg-white/[0.06] p-4 rounded-xl border-2 border-[#262626]">
+      <div className="bg-white/[0.06] p-4 rounded-xl border-2 border-[var(--color-border-light)]">
         <div className="flex gap-2">
           {Array.from({ length: COLS }).map((_, col) => (
             <div
@@ -100,7 +100,7 @@ export function ConnectFourBoard({
 
       {/* Instructions */}
       {!isGameOver && isMyTurn && (
-        <div className="text-sm text-[#a1a1a1]">
+        <div className="text-sm text-[var(--color-text-secondary)]">
           Click on a column to drop your piece
         </div>
       )}

@@ -447,7 +447,7 @@ export default function PostDetailPage() {
     return (
       <div key={reply.id}>
         {/* Reply Content */}
-        <div className="px-4 py-3 border-b border-[#262626] flex gap-3 hover:bg-white/[0.04] transition-colors duration-150">
+        <div className="px-4 py-3 border-b border-[var(--color-border-light)] flex gap-3 hover:bg-white/[0.04] transition-colors duration-150">
           {/* Avatar */}
           {reply.avatar ? (
             <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden">
@@ -471,7 +471,7 @@ export default function PostDetailPage() {
             <div className="flex items-center gap-1.5 mb-0.5">
               <Link
                 href={`/profile/${reply.wallet || reply.user}`}
-                className="font-semibold text-sm text-[#fafafa] hover:underline"
+                className="font-semibold text-sm text-[var(--color-text)] hover:underline"
               >
                 {truncateAddress(reply.user)}
               </Link>
@@ -482,15 +482,15 @@ export default function PostDetailPage() {
                   </svg>
                 </div>
               )}
-              <span className="text-[13px] text-[#a1a1a1]">@{truncateAddress(reply.user)}</span>
-              <span className="text-[#737373]">·</span>
-              <span className="text-[13px] text-[#737373]">{reply.createdAt ? formatRelativeTime(reply.createdAt) : reply.time}</span>
+              <span className="text-[13px] text-[var(--color-text-secondary)]">@{truncateAddress(reply.user)}</span>
+              <span className="text-[var(--color-text-tertiary)]">·</span>
+              <span className="text-[13px] text-[var(--color-text-tertiary)]">{reply.createdAt ? formatRelativeTime(reply.createdAt) : reply.time}</span>
             </div>
 
             {/* Content */}
             <SafeContent
               content={reply.content}
-              className="text-[#fafafa] text-sm leading-[1.5] mb-2 whitespace-pre-wrap break-words"
+              className="text-[var(--color-text)] text-sm leading-[1.5] mb-2 whitespace-pre-wrap break-words"
               allowLinks={true}
               allowFormatting={true}
             />
@@ -500,7 +500,7 @@ export default function PostDetailPage() {
               <button
                 onClick={() => handleReply(reply)}
                 aria-label="Reply to comment"
-                className="flex items-center gap-1 px-2 py-1 rounded-full text-[#a1a1a1] hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-150"
+                className="flex items-center gap-1 px-2 py-1 rounded-full text-[var(--color-text-secondary)] hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-150"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
@@ -529,7 +529,7 @@ export default function PostDetailPage() {
                 className={`flex items-center gap-1 px-2 py-1 rounded-full transition-all duration-150 ${
                   tippedReplies.has(String(reply.id))
                     ? 'text-amber-400 hover:bg-amber-500/10'
-                    : 'text-[#a1a1a1] hover:text-amber-400 hover:bg-amber-500/10'
+                    : 'text-[var(--color-text-secondary)] hover:text-amber-400 hover:bg-amber-500/10'
                 }`}
               >
                 <span className="text-xs font-medium">$</span>
@@ -542,7 +542,7 @@ export default function PostDetailPage() {
                   setShowShareModal(true);
                 }}
                 aria-label="Share reply"
-                className="flex items-center gap-1 px-2 py-1 rounded-full text-[#a1a1a1] hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-150"
+                className="flex items-center gap-1 px-2 py-1 rounded-full text-[var(--color-text-secondary)] hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-150"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
@@ -582,20 +582,20 @@ export default function PostDetailPage() {
   if (loading) {
     return (
       <main className="min-h-screen relative overflow-hidden">
-        <div className="fixed inset-0 bg-[#0a0a0a]" />
+        <div className="fixed inset-0 bg-[var(--color-background)]" />
         <div className="relative z-10">
           <div className="flex min-h-screen max-w-[1280px] mx-auto">
             <LeftSidebar />
-            <div className="flex-1 min-w-0 border-r border-[#262626]">
+            <div className="flex-1 min-w-0 border-r border-[var(--color-border-light)]">
               {/* Header skeleton */}
-              <div className="sticky top-0 z-10 bg-[#0a0a0a]/85 backdrop-blur-[16px] border-b border-[#262626]">
+              <div className="sticky top-0 z-10 bg-[var(--color-background)]/85 backdrop-blur-[16px] border-b border-[var(--color-border-light)]">
                 <div className="flex items-center gap-4 px-5 py-3">
-                  <button onClick={() => router.back()} className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-[#fafafa] hover:bg-white/[0.06] transition-colors duration-150">
+                  <button onClick={() => router.back()} className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-[var(--color-text)] hover:bg-white/[0.06] transition-colors duration-150">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
                   </button>
-                  <span className="text-[18px] font-[800] tracking-[-0.3px] text-[#fafafa]">Post</span>
+                  <span className="text-[18px] font-[800] tracking-[-0.3px] text-[var(--color-text)]">Post</span>
                 </div>
               </div>
               {/* Post skeleton */}
@@ -610,7 +610,7 @@ export default function PostDetailPage() {
                     <div className="h-5 w-full bg-white/[0.06] rounded mb-2" />
                     <div className="h-5 w-3/4 bg-white/[0.06] rounded mb-4" />
                     <div className="h-3 w-32 bg-white/[0.06] rounded mt-3.5" />
-                    <div className="flex gap-5 py-3.5 mt-3.5 border-t border-[#262626] border-b border-[#262626]">
+                    <div className="flex gap-5 py-3.5 mt-3.5 border-t border-[var(--color-border-light)] border-b border-[var(--color-border-light)]">
                       <div className="h-4 w-16 bg-white/[0.06] rounded" />
                       <div className="h-4 w-12 bg-white/[0.06] rounded" />
                       <div className="h-4 w-16 bg-white/[0.06] rounded" />
@@ -620,12 +620,12 @@ export default function PostDetailPage() {
                 </div>
               </div>
               {/* Reply composer skeleton */}
-              <div className="px-4 py-3 border-b border-[#262626]">
+              <div className="px-4 py-3 border-b border-[var(--color-border-light)]">
                 <div className="h-10 w-full bg-white/[0.06] rounded-lg mb-4" />
               </div>
               {/* Reply skeletons */}
               {[1, 2].map(i => (
-                <div key={i} className="px-4 py-3 animate-pulse border-b border-[#262626]">
+                <div key={i} className="px-4 py-3 animate-pulse border-b border-[var(--color-border-light)]">
                   <div className="flex gap-3">
                     <div className="w-9 h-9 rounded-full bg-white/[0.06]" />
                     <div className="flex-1">
@@ -647,11 +647,11 @@ export default function PostDetailPage() {
   if (!post) {
     return (
       <main className="min-h-screen relative overflow-hidden">
-        <div className="fixed inset-0 bg-[#0a0a0a]" />
+        <div className="fixed inset-0 bg-[var(--color-background)]" />
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4 text-[#fafafa]">Post Not Found</h2>
-            <p className="text-[#737373] mb-8">The post you&apos;re looking for doesn&apos;t exist.</p>
+            <h2 className="text-2xl font-bold mb-4 text-[var(--color-text)]">Post Not Found</h2>
+            <p className="text-[var(--color-text-tertiary)] mb-8">The post you&apos;re looking for doesn&apos;t exist.</p>
             <Link
               href="/"
               className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150 hover:scale-[1.02]"
@@ -667,7 +667,7 @@ export default function PostDetailPage() {
   return (
     <main className="min-h-screen relative overflow-hidden">
       {/* Background */}
-      <div className="fixed inset-0 bg-[#0a0a0a]" />
+      <div className="fixed inset-0 bg-[var(--color-background)]" />
 
       {/* Content wrapper */}
       <div className="relative z-10">
@@ -676,30 +676,30 @@ export default function PostDetailPage() {
             onSearchClick={() => setShowSearchModal(true)}
           />
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-r border-[#262626]">
+          <div className="flex-1 min-w-0 border-r border-[var(--color-border-light)]">
 
             {/* Header Navigation */}
-            <div className="sticky top-0 z-10 bg-[#0a0a0a]/85 backdrop-blur-[16px] border-b border-[#262626]">
+            <div className="sticky top-0 z-10 bg-[var(--color-background)]/85 backdrop-blur-[16px] border-b border-[var(--color-border-light)]">
               <div className="flex items-center gap-4 px-5 py-3">
                 {/* Back button */}
                 <button
                   onClick={() => router.back()}
                   aria-label="Go back"
-                  className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-[#fafafa] hover:bg-white/[0.06] transition-colors duration-150"
+                  className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-[var(--color-text)] hover:bg-white/[0.06] transition-colors duration-150"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
                 </button>
 
-                <h1 className="text-[18px] font-[800] tracking-[-0.3px] text-[#fafafa]">Post</h1>
+                <h1 className="text-[18px] font-[800] tracking-[-0.3px] text-[var(--color-text)]">Post</h1>
 
                 <div className="ml-auto flex items-center">
                   {/* Mobile search */}
                   <button
                     onClick={() => setShowSearchModal(true)}
                     aria-label="Open search"
-                    className="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-[#fafafa] hover:bg-white/[0.06] transition-colors duration-150"
+                    className="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-[var(--color-text)] hover:bg-white/[0.06] transition-colors duration-150"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -753,7 +753,7 @@ export default function PostDetailPage() {
                     <div className="flex items-center gap-1.5">
                       <Link
                         href={`/profile/${post.wallet || post.user}`}
-                        className={`font-bold text-[15px] hover:underline cursor-pointer ${post.isShoutout ? 'text-korus-primary' : 'text-[#fafafa]'}`}
+                        className={`font-bold text-[15px] hover:underline cursor-pointer ${post.isShoutout ? 'text-korus-primary' : 'text-[var(--color-text)]'}`}
                       >
                         {truncateAddress(post.user)}
                       </Link>
@@ -767,7 +767,7 @@ export default function PostDetailPage() {
                         </div>
                       )}
                     </div>
-                    <span className="text-sm text-[#a1a1a1]">@{truncateAddress(post.user)}</span>
+                    <span className="text-sm text-[var(--color-text-secondary)]">@{truncateAddress(post.user)}</span>
                   </div>
 
                   {/* More button */}
@@ -778,7 +778,7 @@ export default function PostDetailPage() {
                         setSelectedPost(post);
                         setShowPostOptionsModal(true);
                       }}
-                      className="w-9 h-9 rounded-full flex items-center justify-center text-[#a1a1a1] hover:text-[#fafafa] hover:bg-white/[0.06] transition-colors duration-150"
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-[var(--color-text-secondary)] hover:text-[var(--color-text)] hover:bg-white/[0.06] transition-colors duration-150"
                       aria-label="Post options"
                     >
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -791,7 +791,7 @@ export default function PostDetailPage() {
                 {/* Post Text */}
                 <SafeContent
                   content={post.content}
-                  className="text-[#fafafa] text-[17px] leading-[1.6] mt-3 whitespace-pre-wrap break-words"
+                  className="text-[var(--color-text)] text-[17px] leading-[1.6] mt-3 whitespace-pre-wrap break-words"
                   allowLinks={true}
                   allowFormatting={true}
                 />
@@ -804,7 +804,7 @@ export default function PostDetailPage() {
                       alt="Post content"
                       width={600}
                       height={400}
-                      className="max-w-full h-auto rounded-xl border border-[#262626]"
+                      className="max-w-full h-auto rounded-xl border border-[var(--color-border-light)]"
                       style={{ maxHeight: '500px', width: 'auto', height: 'auto' }}
                       onError={(e) => {
                         // Hide broken image on error
@@ -815,24 +815,24 @@ export default function PostDetailPage() {
                 )}
 
                 {/* Full Timestamp */}
-                <p className="text-sm text-[#737373] mt-3.5">
+                <p className="text-sm text-[var(--color-text-tertiary)] mt-3.5">
                   {formatFullTimestamp(post.createdAt || post.time)}
                 </p>
 
                 {/* Stats Row */}
-                <div className="flex gap-5 py-[14px] mt-[14px] border-t border-[#262626] border-b border-[#262626]">
-                  <span className="text-sm text-[#a1a1a1]"><span className="text-[#fafafa] font-bold">{post.comments}</span> Replies</span>
-                  <span className="text-sm text-[#a1a1a1]"><span className="text-[#fafafa] font-bold">{post.likes}</span> Likes</span>
-                  <span className="text-sm text-[#a1a1a1]"><span className="text-[#fafafa] font-bold">{post.reposts ?? 0}</span> Reposts</span>
-                  <span className="text-sm text-[#a1a1a1]"><span className="text-[#fafafa] font-bold">{post.tips}</span> SOL tipped</span>
+                <div className="flex gap-5 py-[14px] mt-[14px] border-t border-[var(--color-border-light)] border-b border-[var(--color-border-light)]">
+                  <span className="text-sm text-[var(--color-text-secondary)]"><span className="text-[var(--color-text)] font-bold">{post.comments}</span> Replies</span>
+                  <span className="text-sm text-[var(--color-text-secondary)]"><span className="text-[var(--color-text)] font-bold">{post.likes}</span> Likes</span>
+                  <span className="text-sm text-[var(--color-text-secondary)]"><span className="text-[var(--color-text)] font-bold">{post.reposts ?? 0}</span> Reposts</span>
+                  <span className="text-sm text-[var(--color-text-secondary)]"><span className="text-[var(--color-text)] font-bold">{post.tips}</span> SOL tipped</span>
                 </div>
 
                 {/* Post Actions */}
-                <div className="flex justify-around py-2 border-b border-[#262626]">
+                <div className="flex justify-around py-2 border-b border-[var(--color-border-light)]">
                   <button
                     onClick={() => handleReply(post)}
                     aria-label="Reply to post"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[#a1a1a1] hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-150"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[var(--color-text-secondary)] hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-150"
                   >
                     <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -861,7 +861,7 @@ export default function PostDetailPage() {
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-150 ${
                       tipped
                         ? 'text-amber-400 hover:bg-amber-500/10'
-                        : 'text-[#a1a1a1] hover:text-amber-400 hover:bg-amber-500/10'
+                        : 'text-[var(--color-text-secondary)] hover:text-amber-400 hover:bg-amber-500/10'
                     }`}
                   >
                     <span className="text-[13px] font-medium">$</span>
@@ -874,7 +874,7 @@ export default function PostDetailPage() {
                       setShowShareModal(true);
                     }}
                     aria-label="Share post"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[#a1a1a1] hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-150"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[var(--color-text-secondary)] hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-150"
                   >
                     <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
@@ -885,7 +885,7 @@ export default function PostDetailPage() {
             </div>
 
             {/* Inline Reply Composer */}
-            <div className="px-4 py-3 border-b border-[#262626]">
+            <div className="px-4 py-3 border-b border-[var(--color-border-light)]">
               <div className="flex gap-3">
                 {/* Avatar */}
                 {currentUserAvatar ? (
@@ -918,7 +918,7 @@ export default function PostDetailPage() {
                     value={inlineReplyContent}
                     onChange={(e) => setInlineReplyContent(e.target.value)}
                     placeholder="Post your reply"
-                    className="bg-white/[0.06] border border-[#262626] rounded-lg text-[#fafafa] text-[15px] placeholder-[#737373] resize-none min-h-[28px] max-h-[300px] outline-none w-full px-3 py-2 focus:border-white/25 transition-colors duration-150"
+                    className="bg-white/[0.06] border border-[var(--color-border-light)] rounded-lg text-[var(--color-text)] text-[15px] placeholder-[#737373] resize-none min-h-[28px] max-h-[300px] outline-none w-full px-3 py-2 focus:border-white/25 transition-colors duration-150"
                     rows={1}
                   />
 
@@ -933,15 +933,15 @@ export default function PostDetailPage() {
                               alt="Upload preview"
                               width={200}
                               height={128}
-                              className="max-w-full h-auto rounded-xl border border-[#262626]"
+                              className="max-w-full h-auto rounded-xl border border-[var(--color-border-light)]"
                             />
                           ) : (
-                            <div className="w-full h-32 bg-white/[0.06] border border-[#262626] rounded-lg flex items-center justify-center">
+                            <div className="w-full h-32 bg-white/[0.06] border border-[var(--color-border-light)] rounded-lg flex items-center justify-center">
                               <div className="text-center">
-                                <svg className="w-8 h-8 mx-auto mb-2 text-[#737373]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-8 h-8 mx-auto mb-2 text-[var(--color-text-tertiary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
-                                <p className="text-xs text-[#737373] truncate px-2">{file.name}</p>
+                                <p className="text-xs text-[var(--color-text-tertiary)] truncate px-2">{file.name}</p>
                               </div>
                             </div>
                           )}
@@ -949,7 +949,7 @@ export default function PostDetailPage() {
                           <button
                             onClick={() => removeFile(index)}
                             aria-label="Remove file"
-                            className="absolute top-2 right-2 w-6 h-6 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-[#fafafa] opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-2 right-2 w-6 h-6 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-[var(--color-text)] opacity-0 group-hover:opacity-100 transition-opacity"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -961,7 +961,7 @@ export default function PostDetailPage() {
                   )}
 
                   {/* Tools row */}
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#262626]">
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--color-border-light)]">
                     <div className="flex items-center gap-1">
                       {/* Media Upload */}
                       <label className="w-9 h-9 rounded-lg flex items-center justify-center text-korus-primary/60 hover:text-korus-primary hover:bg-korus-primary/10 transition-all duration-150 cursor-pointer">
@@ -1014,7 +1014,7 @@ export default function PostDetailPage() {
                             ? 'text-red-400'
                             : inlineReplyContent.length > 224
                             ? 'text-yellow-400'
-                            : 'text-[#737373]'
+                            : 'text-[var(--color-text-tertiary)]'
                         }`}>
                           {inlineReplyContent.length > 280 && `-${inlineReplyContent.length - 280}`}
                           {inlineReplyContent.length <= 280 && `${280 - inlineReplyContent.length}`}
@@ -1043,7 +1043,7 @@ export default function PostDetailPage() {
             <div>
               {replies.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-[#737373]">No replies yet. Be the first to reply!</p>
+                  <p className="text-[var(--color-text-tertiary)]">No replies yet. Be the first to reply!</p>
                 </div>
               ) : (
                 replies.map(reply => renderReply(reply))
@@ -1128,13 +1128,13 @@ export default function PostDetailPage() {
       {/* Emoji Picker Modal */}
       {showEmojiPicker && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowEmojiPicker(false)}>
-          <div className="bg-[#141414] backdrop-blur-md rounded-2xl max-w-md w-full max-h-[80vh] border border-[#262626] shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-[#262626]">
-              <h3 className="text-lg font-bold text-[#fafafa]">Choose Emoji</h3>
+          <div className="bg-[var(--color-surface)] backdrop-blur-md rounded-2xl max-w-md w-full max-h-[80vh] border border-[var(--color-border-light)] shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-[var(--color-border-light)]">
+              <h3 className="text-lg font-bold text-[var(--color-text)]">Choose Emoji</h3>
               <button
                 onClick={() => setShowEmojiPicker(false)}
                 aria-label="Close emoji picker"
-                className="w-8 h-8 rounded-full flex items-center justify-center bg-white/[0.06] border border-[#262626] text-[#a1a1a1] hover:bg-white/[0.12] hover:text-[#fafafa] transition-all duration-150"
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-white/[0.06] border border-[var(--color-border-light)] text-[var(--color-text-secondary)] hover:bg-white/[0.12] hover:text-[var(--color-text)] transition-all duration-150"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1169,13 +1169,13 @@ export default function PostDetailPage() {
       {/* GIF Picker Modal */}
       {showGifPicker && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowGifPicker(false)}>
-          <div className="bg-[#141414] backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[80vh] border border-[#262626] shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-[#262626]">
-              <h3 className="text-lg font-bold text-[#fafafa]">Choose GIF</h3>
+          <div className="bg-[var(--color-surface)] backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[80vh] border border-[var(--color-border-light)] shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-[var(--color-border-light)]">
+              <h3 className="text-lg font-bold text-[var(--color-text)]">Choose GIF</h3>
               <button
                 onClick={() => setShowGifPicker(false)}
                 aria-label="Close GIF picker"
-                className="w-8 h-8 rounded-full flex items-center justify-center bg-white/[0.06] border border-[#262626] text-[#a1a1a1] hover:bg-white/[0.12] hover:text-[#fafafa] transition-all duration-150"
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-white/[0.06] border border-[var(--color-border-light)] text-[var(--color-text-secondary)] hover:bg-white/[0.12] hover:text-[var(--color-text)] transition-all duration-150"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1185,8 +1185,8 @@ export default function PostDetailPage() {
             <div className="p-4 overflow-y-auto max-h-[60vh]">
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">🎬</div>
-                <p className="text-[#fafafa] text-lg font-medium">GIF Integration Coming Soon</p>
-                <p className="text-[#a1a1a1] text-sm mt-2">
+                <p className="text-[var(--color-text)] text-lg font-medium">GIF Integration Coming Soon</p>
+                <p className="text-[var(--color-text-secondary)] text-sm mt-2">
                   We&apos;ll integrate with Tenor or Giphy API to bring you the best GIFs
                 </p>
               </div>

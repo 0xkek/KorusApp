@@ -72,14 +72,14 @@ export default function GifPicker({ onSelect, onClose }: GifPickerProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-[#262626] flex items-center justify-between">
-          <h3 className="text-lg font-bold text-[#fafafa]">Choose a GIF</h3>
+        <div className="p-4 border-b border-[var(--color-border-light)] flex items-center justify-between">
+          <h3 className="text-lg font-bold text-[var(--color-text)]">Choose a GIF</h3>
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[#fafafa] duration-150 flex items-center justify-center"
+            className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[var(--color-text)] duration-150 flex items-center justify-center"
             aria-label="Close GIF picker"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -89,14 +89,14 @@ export default function GifPicker({ onSelect, onClose }: GifPickerProps) {
         </div>
 
         {/* Search */}
-        <form onSubmit={handleSearch} className="p-4 border-b border-[#262626]">
+        <form onSubmit={handleSearch} className="p-4 border-b border-[var(--color-border-light)]">
           <div className="relative">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search for GIFs..."
-              className="w-full bg-white/[0.06] border border-[#262626] rounded-lg px-4 py-3 text-[#fafafa] placeholder-[#737373] focus:outline-none focus:border-korus-primary duration-150"
+              className="w-full bg-white/[0.06] border border-[var(--color-border-light)] rounded-lg px-4 py-3 text-[var(--color-text)] placeholder-[#737373] focus:outline-none focus:border-korus-primary duration-150"
             />
             <button
               type="submit"
@@ -135,15 +135,15 @@ export default function GifPicker({ onSelect, onClose }: GifPickerProps) {
               ))}
             </div>
           ) : (
-            <div className="flex items-center justify-center h-48 text-[#a1a1a1]">
+            <div className="flex items-center justify-center h-48 text-[var(--color-text-secondary)]">
               <p>No GIFs found. Try a different search term.</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-[#262626] text-center">
-          <p className="text-xs text-[#737373]">
+        <div className="p-3 border-t border-[var(--color-border-light)] text-center">
+          <p className="text-xs text-[var(--color-text-tertiary)]">
             Powered by <span className="text-korus-primary font-semibold">Tenor</span>
           </p>
         </div>

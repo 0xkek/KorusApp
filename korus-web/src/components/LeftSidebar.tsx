@@ -168,7 +168,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
   return (
     <nav
       className="sticky top-0 h-screen w-[240px] shrink-0 z-30 hidden md:flex flex-col bg-transparent"
-      style={{ padding: '24px 16px', borderRight: '1px solid #262626' }}
+      style={{ padding: '24px 16px', borderRight: '1px solid var(--color-border-light)' }}
       role="navigation"
       aria-label="Main navigation"
     >
@@ -219,13 +219,13 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
             background: isDisabled
               ? 'transparent'
               : isActive
-              ? 'rgba(67,233,123,0.08)'
+              ? 'color-mix(in srgb, var(--color-primary) 8%, transparent)'
               : 'transparent',
             color: isDisabled
-              ? '#525252'
+              ? 'var(--color-text-tertiary)'
               : isActive
-              ? '#fafafa'
-              : '#737373',
+              ? 'var(--color-text)'
+              : 'var(--color-text-tertiary)',
             fontWeight: isDisabled
               ? 500
               : isActive
@@ -242,7 +242,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
             justifyContent: 'center',
             transition: 'color 150ms, opacity 150ms',
             opacity: isDisabled ? 0.7 : isActive ? 1 : 0.7,
-            color: isActive ? '#43e97b' : 'currentColor',
+            color: isActive ? 'var(--color-primary)' : 'currentColor',
           };
 
           const content = (
@@ -256,10 +256,10 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
                 style={{
                   fontSize: 15,
                   color: isDisabled
-                    ? '#525252'
+                    ? 'var(--color-text-tertiary)'
                     : isActive
-                    ? '#fafafa'
-                    : '#737373',
+                    ? 'var(--color-text)'
+                    : 'var(--color-text-tertiary)',
                   fontWeight: isDisabled
                     ? 500
                     : isActive
@@ -269,7 +269,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
               >
                 {tab.name}
                 {isDisabled && (
-                  <span style={{ fontSize: 11, color: '#525252', display: 'block' }}>Coming Soon</span>
+                  <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)', display: 'block' }}>Coming Soon</span>
                 )}
               </span>
 
@@ -278,7 +278,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
                 <span
                   className="hidden xl:inline-flex xl:items-center xl:justify-center ml-auto"
                   style={{
-                    backgroundColor: '#43e97b',
+                    backgroundColor: 'var(--color-primary)',
                     color: '#000',
                     fontSize: 11,
                     fontWeight: 700,
@@ -298,22 +298,22 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
 
           const hoverHandlers = !isDisabled && !isActive ? {
             onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-              e.currentTarget.style.color = '#e5e5e5';
+              e.currentTarget.style.background = 'color-mix(in srgb, var(--color-text) 5%, transparent)';
+              e.currentTarget.style.color = 'var(--color-text)';
               // Update icon opacity
               const iconEl = e.currentTarget.querySelector('[data-icon]') as HTMLElement;
               if (iconEl) iconEl.style.opacity = '1';
               // Update label color
               const labelEl = e.currentTarget.querySelector('[data-label]') as HTMLElement;
-              if (labelEl) labelEl.style.color = '#e5e5e5';
+              if (labelEl) labelEl.style.color = 'var(--color-text)';
             },
             onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
               e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = '#737373';
+              e.currentTarget.style.color = 'var(--color-text-tertiary)';
               const iconEl = e.currentTarget.querySelector('[data-icon]') as HTMLElement;
               if (iconEl) iconEl.style.opacity = '0.7';
               const labelEl = e.currentTarget.querySelector('[data-label]') as HTMLElement;
-              if (labelEl) labelEl.style.color = '#737373';
+              if (labelEl) labelEl.style.color = 'var(--color-text-tertiary)';
             },
           } : {};
 
@@ -330,10 +330,10 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
                 style={{
                   fontSize: 15,
                   color: isDisabled
-                    ? '#525252'
+                    ? 'var(--color-text-tertiary)'
                     : isActive
-                    ? '#fafafa'
-                    : '#737373',
+                    ? 'var(--color-text)'
+                    : 'var(--color-text-tertiary)',
                   fontWeight: isDisabled
                     ? 500
                     : isActive
@@ -343,7 +343,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
               >
                 {tab.name}
                 {isDisabled && (
-                  <span style={{ fontSize: 11, color: '#525252', display: 'block' }}>Coming Soon</span>
+                  <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)', display: 'block' }}>Coming Soon</span>
                 )}
               </span>
 
@@ -352,7 +352,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
                 <span
                   className="hidden xl:inline-flex xl:items-center xl:justify-center ml-auto"
                   style={{
-                    backgroundColor: '#43e97b',
+                    backgroundColor: 'var(--color-primary)',
                     color: '#000',
                     fontSize: 11,
                     fontWeight: 700,
@@ -398,7 +398,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
               >
                 {contentWithAttrs}
                 {/* Tooltip on hover */}
-                <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#262626] border border-[#262626] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50 whitespace-nowrap">
+                <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[var(--color-surface-light)] border border-[var(--color-border-light)] text-[var(--color-text)] text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50 whitespace-nowrap">
                   Feature coming soon
                 </div>
               </div>
@@ -465,7 +465,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
             transition: 'background 150ms',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+            e.currentTarget.style.background = 'color-mix(in srgb, var(--color-text) 5%, transparent)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'transparent';
@@ -502,8 +502,8 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
               </div>
             )}
             <div className="hidden xl:block flex-1 min-w-0">
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{userDisplayName || `${publicKey.toBase58().slice(0, 4)}...${publicKey.toBase58().slice(-4)}`}</div>
-              <div style={{ fontSize: 12, color: '#737373', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)' }}>{userDisplayName || `${publicKey.toBase58().slice(0, 4)}...${publicKey.toBase58().slice(-4)}`}</div>
+              <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
               </div>
             </div>

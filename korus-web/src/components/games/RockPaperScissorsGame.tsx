@@ -191,31 +191,31 @@ export function RockPaperScissorsGame({
       {/* Game Info Bar - Players */}
       <div className="flex items-center justify-between mb-2 px-2 text-xs">
         <div className="flex items-center gap-2">
-          <span className="text-[#a1a1a1]">Players:</span>
+          <span className="text-[var(--color-text-secondary)]">Players:</span>
           <span className="font-semibold text-korus-primary">
             {getDisplayName(player1Address, player1DisplayName)}
           </span>
-          <span className="text-[#a1a1a1]">vs</span>
+          <span className="text-[var(--color-text-secondary)]">vs</span>
           <span className="font-semibold text-korus-secondary">
             {getDisplayName(player2Address, player2DisplayName)}
           </span>
         </div>
         {!isGameOver && timeLeft && (
           <div className="flex items-center gap-1.5 relative">
-            <span className="text-[#a1a1a1]">⏱</span>
-            <span className={`font-semibold ${timeLeft === 'Expired' ? 'text-red-400' : 'text-[#fafafa]'}`}>
+            <span className="text-[var(--color-text-secondary)]">⏱</span>
+            <span className={`font-semibold ${timeLeft === 'Expired' ? 'text-red-400' : 'text-[var(--color-text)]'}`}>
               {timeLeft}
             </span>
             <button
               onClick={() => setShowTimerInfo(!showTimerInfo)}
-              className="ml-1 text-[#a1a1a1] hover:text-[#fafafa] duration-150"
+              className="ml-1 text-[var(--color-text-secondary)] hover:text-[var(--color-text)] duration-150"
               aria-label="Timer info"
             >
               ℹ️
             </button>
             {showTimerInfo && (
-              <div className="absolute top-6 right-0 bg-[#141414] border border-[#262626] rounded-lg p-2 w-48 text-xs shadow-lg z-10">
-                <p className="text-[#fafafa]">Each player has 24 hours to make their move. If time expires, they lose!</p>
+              <div className="absolute top-6 right-0 bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-lg p-2 w-48 text-xs shadow-lg z-10">
+                <p className="text-[var(--color-text)]">Each player has 24 hours to make their move. If time expires, they lose!</p>
               </div>
             )}
           </div>
@@ -226,9 +226,9 @@ export function RockPaperScissorsGame({
       {!isGameOver && currentRound > 1 && (
         <div className="flex items-center justify-center mb-3 px-2 text-xs">
           <div className="flex items-center gap-2">
-            <span className="text-[#a1a1a1]">Round:</span>
-            <span className="font-bold text-[#fafafa]">{currentRound}</span>
-            <span className="text-[#a1a1a1] text-[10px]">(Draw - play again!)</span>
+            <span className="text-[var(--color-text-secondary)]">Round:</span>
+            <span className="font-bold text-[var(--color-text)]">{currentRound}</span>
+            <span className="text-[var(--color-text-secondary)] text-[10px]">(Draw - play again!)</span>
           </div>
         </div>
       )}
@@ -238,14 +238,14 @@ export function RockPaperScissorsGame({
         <div className="mb-3 text-center">
           {!playerMove && (
             <p className={`text-xs font-semibold ${
-              canMakeChoice ? 'text-korus-primary' : 'text-[#a1a1a1]'
+              canMakeChoice ? 'text-korus-primary' : 'text-[var(--color-text-secondary)]'
             }`}>
               {canMakeChoice ? '👉 Make your choice!' : '⏳ Waiting for your turn...'}
             </p>
           )}
 
           {playerMove && (
-            <p className="text-xs font-semibold text-[#a1a1a1]">
+            <p className="text-xs font-semibold text-[var(--color-text-secondary)]">
               ⏳ Waiting for opponent...
             </p>
           )}
@@ -371,7 +371,7 @@ export function RockPaperScissorsGame({
                 ? 'bg-gradient-to-br from-korus-primary to-korus-secondary border-3 border-korus-primary shadow-lg scale-105'
                 : selectedChoice === choice.id && canMakeChoice
                 ? 'bg-gradient-to-br from-korus-primary/40 to-korus-primary/20 border-2 border-korus-primary/80'
-                : 'bg-gradient-to-br from-[#141414] to-[#141414] border-2 border-[#262626] hover:border-korus-primary/50 hover:scale-105'
+                : 'bg-gradient-to-br from-[#141414] to-[#141414] border-2 border-[var(--color-border-light)] hover:border-korus-primary/50 hover:scale-105'
               }
               ${!canMakeChoice && !playerMove ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
               ${canMakeChoice ? 'hover:shadow-lg' : ''}
@@ -391,7 +391,7 @@ export function RockPaperScissorsGame({
             </span>
             {playerMove === choice.id && (
               <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                <span className="text-[#fafafa] text-xs font-bold">✓</span>
+                <span className="text-[var(--color-text)] text-xs font-bold">✓</span>
               </div>
             )}
           </button>
@@ -403,16 +403,16 @@ export function RockPaperScissorsGame({
         <div className="flex items-center justify-between px-2 text-xs bg-white/[0.06] rounded-lg py-1.5">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
-              <span className="text-[#a1a1a1]">Wager:</span>
+              <span className="text-[var(--color-text-secondary)]">Wager:</span>
               <span className="font-bold text-korus-primary">{wagerAmount} SOL</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-[#a1a1a1]">Korus Fee (2%):</span>
+              <span className="text-[var(--color-text-secondary)]">Korus Fee (2%):</span>
               <span className="font-semibold text-yellow-400">{korusFee.toFixed(4)} SOL</span>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[#a1a1a1]">Winner gets:</span>
+            <span className="text-[var(--color-text-secondary)]">Winner gets:</span>
             <span className="font-bold text-green-400">{winnerPayout.toFixed(4)} SOL</span>
           </div>
         </div>

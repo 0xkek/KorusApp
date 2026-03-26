@@ -46,7 +46,7 @@ export function Skeleton({
 
 export function PostSkeleton() {
   return (
-    <div className="bg-[#141414] border border-[#262626] rounded-xl p-4 mb-4">
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-xl p-4 mb-4">
       {/* Header */}
       <div className="flex items-start gap-3 mb-3">
         <Skeleton variant="circular" width={40} height={40} />
@@ -64,7 +64,7 @@ export function PostSkeleton() {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-6 pt-3 border-t border-[#262626]">
+      <div className="flex items-center gap-6 pt-3 border-t border-[var(--color-border-light)]">
         <Skeleton variant="rectangular" width={60} height={24} />
         <Skeleton variant="rectangular" width={60} height={24} />
         <Skeleton variant="rectangular" width={80} height={24} />

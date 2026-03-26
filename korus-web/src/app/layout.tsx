@@ -61,7 +61,7 @@ export default function RootLayout({
         <link rel="icon" type="image/png" href="/korus-icon.png" />
         <link rel="icon" type="image/svg+xml" href="/icon.svg" />
       </head>
-      <body className={`${poppins.variable} font-sans antialiased bg-[#0a0a0a] text-[#fafafa]`}>
+      <body className={`${poppins.variable} font-sans antialiased`} style={{ background: 'var(--color-background)', color: 'var(--color-text)' }}>
         <ErrorBoundary>
           <ThemeProvider>
             <WalletContextProvider>

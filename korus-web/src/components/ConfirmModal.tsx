@@ -37,16 +37,16 @@ export default function ConfirmModal({
     <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div ref={modalRef} className="modal-content relative bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+      <div ref={modalRef} className="modal-content relative bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
         {/* Header */}
         <div className="mb-4">
-          <h3 className="text-xl font-semibold text-[#fafafa] mb-2">{title}</h3>
-          <p className="text-[#a1a1a1] leading-relaxed">{message}</p>
+          <h3 className="text-xl font-semibold text-[var(--color-text)] mb-2">{title}</h3>
+          <p className="text-[var(--color-text-secondary)] leading-relaxed">{message}</p>
         </div>
 
         {/* Actions */}

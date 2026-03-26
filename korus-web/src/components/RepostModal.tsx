@@ -83,10 +83,10 @@ export default function RepostModal({ isOpen, onClose, postId, postContent, post
   };
 
   return (
-    <div className="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget && !isProcessing) onClose(); }}>
-      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl max-w-lg w-full">
+    <div className="modal-backdrop fixed inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget && !isProcessing) onClose(); }}>
+      <div ref={modalRef} className="modal-content bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl shadow-2xl max-w-lg w-full">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-[#262626]">
+        <div className="flex items-center justify-between p-6 border-b border-[var(--color-border-light)]">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 40%, transparent)' }}>
               <svg className="w-6 h-6" fill="none" stroke="#000000" strokeWidth={2.5} viewBox="0 0 24 24">
@@ -94,14 +94,14 @@ export default function RepostModal({ isOpen, onClose, postId, postContent, post
               </svg>
             </div>
             <div>
-              <h2 className="heading-2 text-[#fafafa] font-semibold">Repost</h2>
-              <p className="text-sm text-[#a1a1a1]">Share this post with your followers</p>
+              <h2 className="heading-2 text-[var(--color-text)] font-semibold">Repost</h2>
+              <p className="text-sm text-[var(--color-text-secondary)]">Share this post with your followers</p>
             </div>
           </div>
           <button
             onClick={onClose}
             disabled={isProcessing}
-            className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[#fafafa] transition-colors duration-150 flex items-center justify-center disabled:opacity-50"
+            className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[var(--color-text)] transition-colors duration-150 flex items-center justify-center disabled:opacity-50"
             aria-label="Close modal"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,36 +120,36 @@ export default function RepostModal({ isOpen, onClose, postId, postContent, post
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))', color: '#000000' }}>
                   {postUser.slice(0, 2).toUpperCase()}
                 </div>
-                <span className="text-[#fafafa] font-medium truncate">{displayUser}</span>
+                <span className="text-[var(--color-text)] font-medium truncate">{displayUser}</span>
               </div>
-              <p className="text-sm leading-relaxed line-clamp-3 text-[#fafafa]">{postContent}</p>
+              <p className="text-sm leading-relaxed line-clamp-3 text-[var(--color-text)]">{postContent}</p>
             </div>
           </div>
 
           {/* Comment Input */}
           <div>
-            <h3 className="label text-[#fafafa] mb-3">Add your thoughts (optional)</h3>
+            <h3 className="label text-[var(--color-text)] mb-3">Add your thoughts (optional)</h3>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Share your thoughts about this post..."
               maxLength={280}
-              className="w-full bg-white/[0.06] border border-[#262626] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors resize-none"
+              className="w-full bg-white/[0.06] border border-[var(--color-border-light)] rounded-lg px-3 py-2.5 text-[var(--color-text)] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors resize-none"
               style={{ borderColor: comment ? 'var(--korus-primary)' : '' }}
               rows={4}
             />
             <div className="flex justify-end mt-1">
-              <span className="text-xs text-[#a1a1a1]">{comment.length}/280</span>
+              <span className="text-xs text-[var(--color-text-secondary)]">{comment.length}/280</span>
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3 p-6 border-t border-[#262626]">
+        <div className="flex gap-3 p-6 border-t border-[var(--color-border-light)]">
           <button
             onClick={onClose}
             disabled={isProcessing}
-            className="flex-1 px-5 py-3 bg-white/[0.08] border border-[#262626] text-[#fafafa] font-semibold rounded-lg hover:bg-white/[0.12] duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-5 py-3 bg-white/[0.08] border border-[var(--color-border-light)] text-[var(--color-text)] font-semibold rounded-lg hover:bg-white/[0.12] duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>

@@ -145,14 +145,14 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
   const isOverLimit = characterCount > maxCharacters;
 
   return (
-    <div className="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="modal-backdrop fixed inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div ref={modalRef} className="modal-content bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Modal Header */}
-        <div className="sticky top-0 bg-[#1e1e1e] backdrop-blur-md flex items-center justify-between p-6 border-b border-[#262626]">
-          <h2 className="heading-2 text-[#fafafa] font-semibold">Reply</h2>
+        <div className="sticky top-0 bg-[var(--color-surface)] backdrop-blur-md flex items-center justify-between p-6 border-b border-[var(--color-border-light)]">
+          <h2 className="heading-2 text-[var(--color-text)] font-semibold">Reply</h2>
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[#fafafa] transition-colors duration-150 flex items-center justify-center"
+            className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[var(--color-text)] transition-colors duration-150 flex items-center justify-center"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -161,14 +161,14 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
         </div>
 
         {/* Original Post */}
-        <div className="p-6 border-b border-[#262626]">
+        <div className="p-6 border-b border-[var(--color-border-light)]">
           <div className="flex gap-4">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-lg font-bold text-black flex-shrink-0">
               {post.user.slice(0, 2).toUpperCase()}
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <span className="font-bold text-[#fafafa]">{truncateAddress(post.user)}</span>
+                <span className="font-bold text-[var(--color-text)]">{truncateAddress(post.user)}</span>
                 {post.isPremium && (
                   <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
                     <svg className="w-3 h-3" fill="black" viewBox="0 0 24 24">
@@ -176,19 +176,19 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                     </svg>
                   </div>
                 )}
-                <span className="text-[#a1a1a1]">@{truncateAddress(post.user)}</span>
-                <span className="text-[#a1a1a1]">·</span>
-                <span className="text-[#a1a1a1]">{post.time}</span>
+                <span className="text-[var(--color-text-secondary)]">@{truncateAddress(post.user)}</span>
+                <span className="text-[var(--color-text-secondary)]">·</span>
+                <span className="text-[var(--color-text-secondary)]">{post.time}</span>
               </div>
-              <div className="text-[#fafafa] text-base leading-normal mb-3 whitespace-pre-wrap break-words">
+              <div className="text-[var(--color-text)] text-base leading-normal mb-3 whitespace-pre-wrap break-words">
                 {post.content}
               </div>
               {post.image && (
-                <div className="mb-3 rounded-2xl overflow-hidden border border-[#262626] w-2/3">
+                <div className="mb-3 rounded-2xl overflow-hidden border border-[var(--color-border-light)] w-2/3">
                   <Image src={post.image} alt="Post content" width={400} height={300} className="w-full h-auto" />
                 </div>
               )}
-              <div className="text-[#a1a1a1] text-sm">
+              <div className="text-[var(--color-text-secondary)] text-sm">
                 Replying to <span className="text-korus-primary">@{truncateAddress(post.user)}</span>
               </div>
             </div>
@@ -209,7 +209,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}
                 placeholder="Post your reply"
-                className="w-full bg-transparent text-[#fafafa] text-lg resize-none outline-none placeholder-neutral-600 min-h-[80px] max-h-[120px]"
+                className="w-full bg-transparent text-[var(--color-text)] text-lg resize-none outline-none placeholder-neutral-600 min-h-[80px] max-h-[120px]"
                 rows={3}
                 autoFocus
               />
@@ -225,15 +225,15 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                           alt="Upload preview"
                           width={200}
                           height={128}
-                          className="max-w-full h-auto rounded-xl border border-[#262626]"
+                          className="max-w-full h-auto rounded-xl border border-[var(--color-border-light)]"
                         />
                       ) : (
-                        <div className="w-full h-32 bg-white/[0.06] border border-[#262626] rounded-xl flex items-center justify-center">
+                        <div className="w-full h-32 bg-white/[0.06] border border-[var(--color-border-light)] rounded-xl flex items-center justify-center">
                           <div className="text-center">
-                            <svg className="w-8 h-8 mx-auto mb-2 text-[#a1a1a1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-8 h-8 mx-auto mb-2 text-[var(--color-text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
-                            <p className="text-xs text-[#a1a1a1] truncate">{file.name}</p>
+                            <p className="text-xs text-[var(--color-text-secondary)] truncate">{file.name}</p>
                           </div>
                         </div>
                       )}
@@ -255,7 +255,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
               <div className="flex items-center justify-between mt-4">
                 <div className="flex items-center gap-2">
                   {/* Media Upload */}
-                  <label className="flex items-center justify-center w-10 h-10 bg-white/[0.06] backdrop-blur-sm border border-[#262626] rounded-xl text-korus-primary hover:bg-white/[0.12] hover:border-[#262626] transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer">
+                  <label className="flex items-center justify-center w-10 h-10 bg-white/[0.06] backdrop-blur-sm border border-[var(--color-border-light)] rounded-xl text-korus-primary hover:bg-white/[0.12] hover:border-[var(--color-border-light)] transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
@@ -274,7 +274,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                     className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10 ${
                       showGifPicker
                         ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
-                        : 'bg-white/[0.06] border-[#262626] text-korus-primary hover:bg-white/[0.12] hover:border-[#262626]'
+                        : 'bg-white/[0.06] border-[var(--color-border-light)] text-korus-primary hover:bg-white/[0.12] hover:border-[var(--color-border-light)]'
                     }`}
                   >
                     <span className="text-xs font-bold">GIF</span>
@@ -286,7 +286,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                     className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10 ${
                       showEmojiPicker
                         ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
-                        : 'bg-white/[0.06] border-[#262626] text-korus-primary hover:bg-white/[0.12] hover:border-[#262626]'
+                        : 'bg-white/[0.06] border-[var(--color-border-light)] text-korus-primary hover:bg-white/[0.12] hover:border-[var(--color-border-light)]'
                     }`}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -303,7 +303,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                         ? 'border-red-500 text-red-500'
                         : characterCount > maxCharacters * 0.8
                         ? 'border-yellow-500 text-yellow-500'
-                        : 'border-[#262626] text-[#a1a1a1]'
+                        : 'border-[var(--color-border-light)] text-[var(--color-text-secondary)]'
                     }`}>
                       <span className="text-xs font-medium">
                         {isOverLimit ? `-${characterCount - maxCharacters}` : maxCharacters - characterCount}
@@ -362,13 +362,13 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
 
       {/* Emoji Picker - Nested within backdrop */}
       {showEmojiPicker && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setShowEmojiPicker(false)}>
-          <div className="bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-[#262626]">
-              <h3 className="text-lg font-semibold text-[#fafafa]">Choose Emoji</h3>
+        <div className="fixed inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setShowEmojiPicker(false)}>
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-[var(--color-border-light)]">
+              <h3 className="text-lg font-semibold text-[var(--color-text)]">Choose Emoji</h3>
               <button
                 onClick={() => setShowEmojiPicker(false)}
-                className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[#fafafa] transition-colors duration-150 flex items-center justify-center"
+                className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[var(--color-text)] transition-colors duration-150 flex items-center justify-center"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -401,13 +401,13 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
 
       {/* GIF Picker - Nested within backdrop */}
       {showGifPicker && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setShowGifPicker(false)}>
-          <div className="bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-[#262626]">
-              <h3 className="text-lg font-semibold text-[#fafafa]">Choose GIF</h3>
+        <div className="fixed inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setShowGifPicker(false)}>
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-[var(--color-border-light)]">
+              <h3 className="text-lg font-semibold text-[var(--color-text)]">Choose GIF</h3>
               <button
                 onClick={() => setShowGifPicker(false)}
-                className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[#fafafa] transition-colors duration-150 flex items-center justify-center"
+                className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[var(--color-text)] transition-colors duration-150 flex items-center justify-center"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -417,8 +417,8 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
             <div className="p-4 overflow-y-auto max-h-[60vh]">
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">🎬</div>
-                <p className="text-[#fafafa] text-lg font-medium">GIF Integration Coming Soon</p>
-                <p className="text-[#a1a1a1] text-sm mt-2">
+                <p className="text-[var(--color-text)] text-lg font-medium">GIF Integration Coming Soon</p>
+                <p className="text-[var(--color-text-secondary)] text-sm mt-2">
                   We&apos;ll integrate with Tenor or Giphy API to bring you the best GIFs
                 </p>
               </div>

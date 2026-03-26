@@ -80,12 +80,12 @@ export default function WalletPage() {
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {
     return (
-      <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
+      <main className="min-h-screen bg-[var(--color-background)] relative overflow-hidden">
         <div className="relative z-10">
           <div className="max-w-3xl mx-auto px-4 py-6 pb-24">
-            <h2 className="text-3xl font-bold text-[#fafafa] mb-6">Wallet</h2>
-            <div className="bg-white/[0.06] backdrop-blur-sm rounded-2xl p-6 mb-6 border border-[#262626]">
-              <div className="text-[#fafafa] text-sm mb-2 font-medium">SOL Balance</div>
+            <h2 className="text-3xl font-bold text-[var(--color-text)] mb-6">Wallet</h2>
+            <div className="bg-white/[0.06] backdrop-blur-sm rounded-2xl p-6 mb-6 border border-[var(--color-border-light)]">
+              <div className="text-[var(--color-text)] text-sm mb-2 font-medium">SOL Balance</div>
               <div className="text-4xl font-bold text-korus-primary animate-pulse mb-4">Loading...</div>
             </div>
           </div>
@@ -95,11 +95,11 @@ export default function WalletPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
+    <main className="min-h-screen bg-[var(--color-background)] relative overflow-hidden">
       {/* Standardized static background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
+      <div className="fixed inset-0 bg-gradient-to-br from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)]">
         {/* Surface gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#111111]/25 to-[#111111]/35" />
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[var(--color-surface)]/25 to-[#111111]/35" />
       </div>
       {/* Static gradient orbs for visual depth */}
       <div className="fixed inset-0 overflow-hidden">
@@ -119,44 +119,44 @@ export default function WalletPage() {
             onSearchClick={() => setShowSearchModal(true)}
           />
 
-          <div className="flex-1 min-w-0 border-r border-[#262626]">
+          <div className="flex-1 min-w-0 border-r border-[var(--color-border-light)]">
             {/* Header */}
-            <div className="sticky top-0 bg-[#0a0a0a]/85 backdrop-blur-[12px] border-b border-[#262626] z-10 p-4">
+            <div className="sticky top-0 bg-[var(--color-background)]/85 backdrop-blur-[12px] border-b border-[var(--color-border-light)] z-10 p-4">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => router.back()}
-                  className="w-10 h-10 bg-white/[0.08] border border-[#262626] rounded-full flex items-center justify-center text-[#fafafa] font-bold hover:bg-white/[0.12] transition-all duration-150"
+                  className="w-10 h-10 bg-white/[0.08] border border-[var(--color-border-light)] rounded-full flex items-center justify-center text-[var(--color-text)] font-bold hover:bg-white/[0.12] transition-all duration-150"
                 >
                   ←
                 </button>
-                <h1 className="text-3xl font-bold text-[#fafafa]">Wallet</h1>
+                <h1 className="text-3xl font-bold text-[var(--color-text)]">Wallet</h1>
               </div>
             </div>
 
             <div className="p-6 pb-24">
 
           {/* Balance Card */}
-          <div className="bg-white/[0.06] backdrop-blur-sm rounded-2xl p-6 mb-6 border border-[#262626] shadow-lg transition-shadow duration-150">
-            <div className="text-[#fafafa] text-sm mb-2 font-medium">SOL Balance</div>
-            <div className="text-4xl font-bold text-[#fafafa] mb-4">
+          <div className="bg-white/[0.06] backdrop-blur-sm rounded-2xl p-6 mb-6 border border-[var(--color-border-light)] shadow-lg transition-shadow duration-150">
+            <div className="text-[var(--color-text)] text-sm mb-2 font-medium">SOL Balance</div>
+            <div className="text-4xl font-bold text-[var(--color-text)] mb-4">
               {loading ? (
                 <span className="text-korus-primary animate-pulse">Loading...</span>
               ) : hasError ? (
                 <div className="flex flex-col gap-2">
                   <span className="text-red-400">Unable to load balance</span>
-                  <span className="text-[#a1a1a1] text-sm">
+                  <span className="text-[var(--color-text-secondary)] text-sm">
                     Check your connection or try again
                   </span>
                 </div>
               ) : balance !== null ? (
-                <span className="text-[#fafafa]">
+                <span className="text-[var(--color-text)]">
                   {balance.toFixed(4)} SOL
                 </span>
               ) : (
-                <span className="text-[#a1a1a1]">--</span>
+                <span className="text-[var(--color-text-secondary)]">--</span>
               )}
             </div>
-            <div className="text-[#fafafa] text-xs font-mono bg-white/[0.12] rounded-lg p-2 mb-4">
+            <div className="text-[var(--color-text)] text-xs font-mono bg-white/[0.12] rounded-lg p-2 mb-4">
               {publicKey?.toString().slice(0, 20)}...{publicKey?.toString().slice(-20)}
             </div>
             <button
@@ -179,7 +179,7 @@ export default function WalletPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 ${
                   activeTab === tab
                     ? 'bg-gradient-to-r from-korus-primary to-korus-secondary'
-                    : 'bg-white/[0.08] hover:bg-white/[0.12] border border-[#262626]'
+                    : 'bg-white/[0.08] hover:bg-white/[0.12] border border-[var(--color-border-light)]'
                 }`}
                 style={activeTab === tab ? { color: '#000000' } : { color: 'var(--color-text)' }}
               >
@@ -189,12 +189,12 @@ export default function WalletPage() {
           </div>
 
           {/* Tab Content */}
-          <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-[#262626]">
+          <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-[var(--color-border-light)]">
             {activeTab === 'All' && (
               <div className="text-center py-20">
                 <div className="text-6xl mb-4 opacity-60">💳</div>
-                <p className="text-[#fafafa] text-lg font-medium">No transactions yet</p>
-                <p className="text-[#a1a1a1] text-sm mt-2 mb-6">
+                <p className="text-[var(--color-text)] text-lg font-medium">No transactions yet</p>
+                <p className="text-[var(--color-text-secondary)] text-sm mt-2 mb-6">
                   All your SOL transactions will appear here.<br/>
                   Start by exploring posts, games, and events to build activity.
                 </p>
@@ -207,7 +207,7 @@ export default function WalletPage() {
                   </button>
                   <button
                     onClick={() => window.location.href = '/games'}
-                    className="bg-white/[0.06] border border-[#262626] text-[#fafafa] font-semibold px-6 py-3 rounded-xl hover:bg-white/[0.12] transition-all duration-150"
+                    className="bg-white/[0.06] border border-[var(--color-border-light)] text-[var(--color-text)] font-semibold px-6 py-3 rounded-xl hover:bg-white/[0.12] transition-all duration-150"
                   >
                     Play Games
                   </button>
@@ -218,8 +218,8 @@ export default function WalletPage() {
             {activeTab === 'Tips' && (
               <div className="text-center py-20">
                 <div className="text-6xl mb-4 opacity-60">💰</div>
-                <p className="text-[#fafafa] text-lg font-medium">No tips yet</p>
-                <p className="text-[#a1a1a1] text-sm mt-2 mb-6">
+                <p className="text-[var(--color-text)] text-lg font-medium">No tips yet</p>
+                <p className="text-[var(--color-text-secondary)] text-sm mt-2 mb-6">
                   Tips you send and receive will appear here.<br/>
                   Start engaging with quality content to earn tips!
                 </p>
@@ -235,8 +235,8 @@ export default function WalletPage() {
             {activeTab === 'Games' && (
               <div className="text-center py-20">
                 <div className="text-6xl mb-4 opacity-60">🎮</div>
-                <p className="text-[#fafafa] text-lg font-medium">No game activity</p>
-                <p className="text-[#a1a1a1] text-sm mt-2 mb-6">
+                <p className="text-[var(--color-text)] text-lg font-medium">No game activity</p>
+                <p className="text-[var(--color-text-secondary)] text-sm mt-2 mb-6">
                   Your game winnings, losses, and rewards will appear here.<br/>
                   Join games to start earning SOL!
                 </p>
@@ -252,8 +252,8 @@ export default function WalletPage() {
             {activeTab === 'Events' && (
               <div className="text-center py-20">
                 <div className="text-6xl mb-4 opacity-60">🎪</div>
-                <p className="text-[#fafafa] text-lg font-medium">No event activity</p>
-                <p className="text-[#a1a1a1] text-sm mt-2 mb-6">
+                <p className="text-[var(--color-text)] text-lg font-medium">No event activity</p>
+                <p className="text-[var(--color-text-secondary)] text-sm mt-2 mb-6">
                   Event rewards, airdrops, and participation fees will appear here.<br/>
                   Join exclusive events to earn unique rewards!
                 </p>

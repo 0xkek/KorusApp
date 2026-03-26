@@ -224,23 +224,23 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
   const isInsufficientFunds = finalAmount > balance;
 
   return (
-    <div className="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget && !isSending) onClose(); }}>
-      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl max-w-md w-full">
+    <div className="modal-backdrop fixed inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget && !isSending) onClose(); }}>
+      <div ref={modalRef} className="modal-content bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl shadow-2xl max-w-md w-full">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-[#262626]">
+        <div className="flex items-center justify-between p-6 border-b border-[var(--color-border-light)]">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 40%, transparent)' }}>
               <span className="text-2xl">💰</span>
             </div>
             <div>
-              <h2 className="heading-2 text-[#fafafa] font-semibold">Send Tip</h2>
-              <p className="text-sm text-[#a1a1a1]">to {displayUser}</p>
+              <h2 className="heading-2 text-[var(--color-text)] font-semibold">Send Tip</h2>
+              <p className="text-sm text-[var(--color-text-secondary)]">to {displayUser}</p>
             </div>
           </div>
           <button
             onClick={onClose}
             disabled={isSending}
-            className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[#fafafa] transition-colors duration-150 flex items-center justify-center disabled:opacity-50"
+            className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[var(--color-text)] transition-colors duration-150 flex items-center justify-center disabled:opacity-50"
             aria-label="Close modal"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -259,14 +259,14 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
               </svg>
             </div>
 
-            <h3 className="text-2xl font-semibold text-[#fafafa] mb-2">Tip Sent Successfully!</h3>
-            <p className="text-[#a1a1a1] mb-6">
+            <h3 className="text-2xl font-semibold text-[var(--color-text)] mb-2">Tip Sent Successfully!</h3>
+            <p className="text-[var(--color-text-secondary)] mb-6">
               You sent <span className="text-korus-primary font-bold">{successAmount.toFixed(3)} SOL</span> to {truncateAddress(recipientUser)}
             </p>
 
-            <div className="bg-white/[0.06] border border-[#262626] rounded-lg p-4 mb-6">
+            <div className="bg-white/[0.06] border border-[var(--color-border-light)] rounded-lg p-4 mb-6">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-[#a1a1a1]">Transaction</span>
+                <span className="text-sm text-[var(--color-text-secondary)]">Transaction</span>
                 <a
                   href={`https://solscan.io/tx/${txSignature}`}
                   target="_blank"
@@ -279,7 +279,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
                   </svg>
                 </a>
               </div>
-              <div className="text-xs text-[#737373] font-mono break-all">
+              <div className="text-xs text-[var(--color-text-tertiary)] font-mono break-all">
                 {txSignature}
               </div>
             </div>
@@ -297,14 +297,14 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
           {/* Balance Display */}
           {connected && (
             <div className="flex items-center justify-between p-3 rounded-xl border" style={{ backgroundColor: 'color-mix(in srgb, var(--korus-primary) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--korus-primary) 30%, transparent)' }}>
-              <span className="text-sm text-[#a1a1a1]">Your Balance</span>
+              <span className="text-sm text-[var(--color-text-secondary)]">Your Balance</span>
               <span className="text-base font-bold text-korus-primary">{balance.toFixed(3)} SOL</span>
             </div>
           )}
 
           {/* Preset Amounts */}
           <div>
-            <h3 className="label text-[#fafafa] mb-3">Quick Amounts</h3>
+            <h3 className="label text-[var(--color-text)] mb-3">Quick Amounts</h3>
             <div className="grid grid-cols-3 gap-2">
               {presetAmounts.map((amount) => (
                 <button
@@ -316,7 +316,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
                     borderColor: selectedAmount === amount ? 'var(--korus-primary)' : 'color-mix(in srgb, var(--korus-primary) 20%, transparent)'
                   }}
                 >
-                  <div className="text-sm font-medium text-[#fafafa]">{amount} SOL</div>
+                  <div className="text-sm font-medium text-[var(--color-text)]">{amount} SOL</div>
                 </button>
               ))}
             </div>
@@ -324,17 +324,17 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
 
           {/* Custom Amount */}
           <div>
-            <h3 className="label text-[#fafafa] mb-3">Custom Amount</h3>
+            <h3 className="label text-[var(--color-text)] mb-3">Custom Amount</h3>
             <div className="relative">
               <input
                 type="text"
                 value={customAmount}
                 onChange={handleCustomAmountChange}
                 placeholder="0.0"
-                className="w-full bg-white/[0.06] text-[#fafafa] text-lg font-medium pl-4 pr-16 py-3 rounded-lg border border-[#262626] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
+                className="w-full bg-white/[0.06] text-[var(--color-text)] text-lg font-medium pl-4 pr-16 py-3 rounded-lg border border-[var(--color-border-light)] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
                 style={{ borderColor: customAmount ? 'var(--korus-primary)' : '' }}
               />
-              <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#a1a1a1] font-medium">
+              <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[var(--color-text-secondary)] font-medium">
                 SOL
               </span>
             </div>
@@ -352,12 +352,12 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
           {finalAmount > 0 && (
             <div className="p-4 border-2 rounded-xl shadow-lg" style={{ background: 'linear-gradient(90deg, color-mix(in srgb, var(--korus-primary) 10%, transparent), color-mix(in srgb, var(--korus-secondary) 10%, transparent))', borderColor: 'color-mix(in srgb, var(--korus-primary) 30%, transparent)', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--korus-primary) 10%, transparent)' }}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-[#a1a1a1]">Tip Amount</span>
-                <span className="text-sm font-bold text-[#fafafa]">{finalAmount.toFixed(3)} SOL</span>
+                <span className="text-sm text-[var(--color-text-secondary)]">Tip Amount</span>
+                <span className="text-sm font-bold text-[var(--color-text)]">{finalAmount.toFixed(3)} SOL</span>
               </div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-[#a1a1a1]">Network Fee</span>
-                <span className="text-sm font-bold text-[#fafafa]">~0.0005 SOL</span>
+                <span className="text-sm text-[var(--color-text-secondary)]">Network Fee</span>
+                <span className="text-sm font-bold text-[var(--color-text)]">~0.0005 SOL</span>
               </div>
               <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'color-mix(in srgb, var(--korus-primary) 30%, transparent)' }}>
                 <span className="text-base font-bold text-korus-primary">Total</span>
@@ -380,7 +380,7 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-6 mt-6 border-t border-[#262626]">
+          <div className="flex gap-3 pt-6 mt-6 border-t border-[var(--color-border-light)]">
             <Button
               onClick={onClose}
               disabled={isSending}

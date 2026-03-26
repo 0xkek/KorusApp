@@ -41,19 +41,19 @@ export function ToastComponent({ toast, onRemove }: ToastProps) {
   }, [toast.id, toast.duration, onRemove]);
 
   const getToastStyles = () => {
-    const baseStyles = "flex items-start gap-3 p-4 rounded-xl border border-[#262626] backdrop-blur-sm duration-150 shadow-2xl bg-[#141414]";
+    const baseStyles = "flex items-start gap-3 p-4 rounded-xl border border-[var(--color-border-light)] backdrop-blur-sm duration-150 shadow-2xl bg-[var(--color-surface)]";
 
     switch (toast.type) {
       case 'success':
-        return `${baseStyles} border-l-4 border-l-green-500 text-[#fafafa]`;
+        return `${baseStyles} border-l-4 border-l-green-500 text-[var(--color-text)]`;
       case 'error':
-        return `${baseStyles} border-l-4 border-l-red-500 text-[#fafafa]`;
+        return `${baseStyles} border-l-4 border-l-red-500 text-[var(--color-text)]`;
       case 'warning':
-        return `${baseStyles} border-l-4 border-l-yellow-500 text-[#fafafa]`;
+        return `${baseStyles} border-l-4 border-l-yellow-500 text-[var(--color-text)]`;
       case 'info':
-        return `${baseStyles} border-l-4 border-l-blue-500 text-[#fafafa]`;
+        return `${baseStyles} border-l-4 border-l-blue-500 text-[var(--color-text)]`;
       default:
-        return `${baseStyles} text-[#fafafa]`;
+        return `${baseStyles} text-[var(--color-text)]`;
     }
   };
 
@@ -106,7 +106,7 @@ export function ToastComponent({ toast, onRemove }: ToastProps) {
           }
           exitTimeoutRef.current = setTimeout(() => onRemove(toast.id), 300);
         }}
-        className="text-[#737373] hover:text-[#fafafa] duration-150 p-1 -m-1"
+        className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text)] duration-150 p-1 -m-1"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

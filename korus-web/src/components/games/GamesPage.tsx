@@ -429,7 +429,7 @@ export function GamesPage() {
       case 'waiting': return 'border-yellow-400 bg-yellow-400/10 text-yellow-400';
       case 'active': return 'border-green-400 bg-green-400/10 text-green-400';
       case 'completed': return 'border-blue-400 bg-blue-400/10 text-blue-400';
-      default: return 'border-[#262626] bg-white/[0.06] text-[#a1a1a1]';
+      default: return 'border-[var(--color-border-light)] bg-white/[0.06] text-[var(--color-text-secondary)]';
     }
   };
 
@@ -590,10 +590,10 @@ export function GamesPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-4xl font-bold mb-2 text-[#fafafa]">
+          <h1 className="text-4xl font-bold mb-2 text-[var(--color-text)]">
             🎮 Games Hub
           </h1>
-          <p className="text-[#a1a1a1]">Join or create games with SOL wagers</p>
+          <p className="text-[var(--color-text-secondary)]">Join or create games with SOL wagers</p>
         </div>
         {activeTab === 'lobby' && (
           <button
@@ -606,13 +606,13 @@ export function GamesPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-[#262626] mb-6">
+      <div className="flex border-b border-[var(--color-border-light)] mb-6">
         <button
           onClick={() => handleTabChange('lobby')}
           className={`relative px-6 py-3 font-semibold duration-150 ${
             activeTab === 'lobby'
-              ? 'text-[#fafafa]'
-              : 'text-[#a1a1a1] hover:text-[#fafafa]'
+              ? 'text-[var(--color-text)]'
+              : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
           }`}
         >
           Lobby
@@ -624,8 +624,8 @@ export function GamesPage() {
           onClick={() => handleTabChange('completed')}
           className={`relative px-6 py-3 font-semibold duration-150 ${
             activeTab === 'completed'
-              ? 'text-[#fafafa]'
-              : 'text-[#a1a1a1] hover:text-[#fafafa]'
+              ? 'text-[var(--color-text)]'
+              : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
           }`}
         >
           Completed
@@ -641,13 +641,13 @@ export function GamesPage() {
           {loading ? (
             <div className="text-center py-20">
               <div className="w-8 h-8 border-4 border-korus-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-[#a1a1a1]">Loading games...</p>
+              <p className="text-[var(--color-text-secondary)]">Loading games...</p>
             </div>
           ) : games.length === 0 ? (
             <div className="text-center py-20">
               <div className="text-6xl mb-4 opacity-60">🎮</div>
-              <p className="text-[#fafafa] text-lg font-medium">No games available</p>
-              <p className="text-[#a1a1a1] text-sm mt-2">
+              <p className="text-[var(--color-text)] text-lg font-medium">No games available</p>
+              <p className="text-[var(--color-text-secondary)] text-sm mt-2">
                 Create a game to get started!
               </p>
             </div>
@@ -656,7 +656,7 @@ export function GamesPage() {
           {games.map((game) => (
             <div
               key={game.id}
-              className="border-b border-[#262626] bg-white/[0.04]"
+              className="border-b border-[var(--color-border-light)] bg-white/[0.04]"
             >
               <div className="flex items-center gap-3 p-3">
                 {/* Game Icon */}
@@ -669,20 +669,20 @@ export function GamesPage() {
                   <div className="flex items-center justify-between gap-3">
                     {/* Left: Game info */}
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="font-bold text-[#fafafa] capitalize">
+                      <span className="font-bold text-[var(--color-text)] capitalize">
                         {game.gameType?.replace('_', ' ') || 'Game'}
                       </span>
-                      <span className="text-[#a1a1a1]">•</span>
-                      <span className="text-[#a1a1a1]">
+                      <span className="text-[var(--color-text-secondary)]">•</span>
+                      <span className="text-[var(--color-text-secondary)]">
                         💰 {game.wager} SOL
                       </span>
-                      <span className="text-[#a1a1a1]">•</span>
-                      <span className="text-[#a1a1a1]">
+                      <span className="text-[var(--color-text-secondary)]">•</span>
+                      <span className="text-[var(--color-text-secondary)]">
                         {formatTimeAgo(game.createdAt)}
                       </span>
                       {game.status === 'waiting' && game.expiresAt && (
                         <>
-                          <span className="text-[#a1a1a1]">•</span>
+                          <span className="text-[var(--color-text-secondary)]">•</span>
                           <GameCountdown
                             expiresAt={game.expiresAt}
                             onExpire={() => loadGames()}
@@ -716,7 +716,7 @@ export function GamesPage() {
                             handleCancelGame(game);
                           }}
                           disabled={cancellingGame === game.id}
-                          className="bg-red-600 text-[#fafafa] font-bold px-3 py-1 rounded-full hover:bg-red-700 duration-150 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="bg-red-600 text-[var(--color-text)] font-bold px-3 py-1 rounded-full hover:bg-red-700 duration-150 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {cancellingGame === game.id ? (
                             parseFloat(game.wager || '0') > 0 ? 'Refunding...' : 'Cancelling...'
@@ -729,7 +729,7 @@ export function GamesPage() {
                             e.stopPropagation();
                             setExpandedGameId(null);
                           }}
-                          className="bg-[#262626] text-[#fafafa] font-bold px-3 py-1 rounded-full hover:bg-[#303030] duration-150 text-xs"
+                          className="bg-[#262626] text-[var(--color-text)] font-bold px-3 py-1 rounded-full hover:bg-[#303030] duration-150 text-xs"
                         >
                           Collapse
                         </button>
@@ -740,7 +740,7 @@ export function GamesPage() {
                             e.stopPropagation();
                             setExpandedGameId(game.id);
                           }}
-                          className="bg-green-600 text-[#fafafa] font-bold px-3 py-1 rounded-full hover:bg-green-700 duration-150 text-xs"
+                          className="bg-green-600 text-[var(--color-text)] font-bold px-3 py-1 rounded-full hover:bg-green-700 duration-150 text-xs"
                         >
                           Play →
                         </button>
@@ -752,7 +752,7 @@ export function GamesPage() {
 
               {/* Inline Game Board */}
               {expandedGameId === game.id && (
-                <div className="px-6 pb-3 bg-[#141414] border-t border-[#262626]">
+                <div className="px-6 pb-3 bg-[var(--color-surface)] border-t border-[var(--color-border-light)]">
                   <div className="py-3">
                     {game.gameType === 'tictactoe' && renderTicTacToe(game)}
                     {game.gameType === 'connectfour' && renderConnectFour(game)}
@@ -773,13 +773,13 @@ export function GamesPage() {
           {completedLoading ? (
             <div className="text-center py-20">
               <div className="w-8 h-8 border-4 border-korus-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-[#a1a1a1]">Loading completed games...</p>
+              <p className="text-[var(--color-text-secondary)]">Loading completed games...</p>
             </div>
           ) : completedGames.length === 0 ? (
             <div className="text-center py-20">
               <div className="text-6xl mb-4 opacity-60">🏆</div>
-              <p className="text-[#fafafa] text-lg font-medium">No completed games yet</p>
-              <p className="text-[#a1a1a1] text-sm mt-2">
+              <p className="text-[var(--color-text)] text-lg font-medium">No completed games yet</p>
+              <p className="text-[var(--color-text-secondary)] text-sm mt-2">
                 Completed games will appear here
               </p>
             </div>
@@ -798,7 +798,7 @@ export function GamesPage() {
                 return (
                   <div
                     key={game.id}
-                    className="border-b border-[#262626] bg-white/[0.04] hover:bg-white/[0.06] duration-150 cursor-pointer"
+                    className="border-b border-[var(--color-border-light)] bg-white/[0.04] hover:bg-white/[0.06] duration-150 cursor-pointer"
                     onClick={() => setExpandedGameId(expandedGameId === game.id ? null : game.id)}
                   >
                     <div className="flex items-center gap-3 p-3">
@@ -812,10 +812,10 @@ export function GamesPage() {
                         <div className="flex items-center justify-between gap-3">
                           {/* Left: Game info */}
                           <div className="flex items-center gap-2 text-sm flex-wrap">
-                            <span className="font-bold text-[#fafafa] capitalize">
+                            <span className="font-bold text-[var(--color-text)] capitalize">
                               {game.gameType?.replace('_', ' ') || 'Game'}
                             </span>
-                            <span className="text-[#a1a1a1]">|</span>
+                            <span className="text-[var(--color-text-secondary)]">|</span>
                             {isDraw ? (
                               <span className="text-yellow-400 font-semibold">Draw</span>
                             ) : isUserWinner ? (
@@ -829,19 +829,19 @@ export function GamesPage() {
                             )}
                             {wagerAmount > 0 && (
                               <>
-                                <span className="text-[#a1a1a1]">|</span>
-                                <span className="text-[#a1a1a1]">
+                                <span className="text-[var(--color-text-secondary)]">|</span>
+                                <span className="text-[var(--color-text-secondary)]">
                                   Wager: {wagerAmount} SOL
                                 </span>
                                 {!isDraw && (
-                                  <span className={`font-semibold ${isUserWinner ? 'text-green-400' : isUserLoser ? 'text-red-400' : 'text-[#a1a1a1]'}`}>
+                                  <span className={`font-semibold ${isUserWinner ? 'text-green-400' : isUserLoser ? 'text-red-400' : 'text-[var(--color-text-secondary)]'}`}>
                                     {isUserWinner ? `+${payoutAmount} SOL` : isUserLoser ? `-${wagerAmount} SOL` : `Payout: ${payoutAmount} SOL`}
                                   </span>
                                 )}
                               </>
                             )}
-                            <span className="text-[#a1a1a1]">|</span>
-                            <span className="text-[#a1a1a1]">
+                            <span className="text-[var(--color-text-secondary)]">|</span>
+                            <span className="text-[var(--color-text-secondary)]">
                               {formatTimeAgo(game.updatedAt || game.createdAt)}
                             </span>
                           </div>
@@ -867,7 +867,7 @@ export function GamesPage() {
                                 e.stopPropagation();
                                 setExpandedGameId(expandedGameId === game.id ? null : game.id);
                               }}
-                              className="bg-[#141414] border border-[#262626] text-[#fafafa] font-bold px-3 py-1 rounded-full hover:bg-[#141414] duration-150 text-xs"
+                              className="bg-[var(--color-surface)] border border-[var(--color-border-light)] text-[var(--color-text)] font-bold px-3 py-1 rounded-full hover:bg-[var(--color-surface)] duration-150 text-xs"
                             >
                               {expandedGameId === game.id ? 'Hide' : 'View'}
                             </button>
@@ -875,7 +875,7 @@ export function GamesPage() {
                         </div>
 
                         {/* Players row */}
-                        <div className="flex items-center gap-2 text-xs text-[#a1a1a1] mt-1">
+                        <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)] mt-1">
                           <span>{game.player1DisplayName || `${game.player1.slice(0, 4)}...${game.player1.slice(-4)}`}</span>
                           <span>vs</span>
                           <span>{game.player2 ? (game.player2DisplayName || `${game.player2.slice(0, 4)}...${game.player2.slice(-4)}`) : 'N/A'}</span>
@@ -885,7 +885,7 @@ export function GamesPage() {
 
                     {/* Inline Game Board (view completed game state) */}
                     {expandedGameId === game.id && (
-                      <div className="px-6 pb-3 bg-[#141414] border-t border-[#262626]">
+                      <div className="px-6 pb-3 bg-[var(--color-surface)] border-t border-[var(--color-border-light)]">
                         <div className="py-3">
                           {game.gameType === 'tictactoe' && renderTicTacToe(game)}
                           {game.gameType === 'connectfour' && renderConnectFour(game)}
@@ -904,21 +904,21 @@ export function GamesPage() {
       {/* Create Game Modal - Rendered via Portal */}
       {showCreateModal && typeof window !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-[var(--color-overlay-background)] backdrop-blur-sm"
           onClick={() => setShowCreateModal(false)}
         >
           <div
-            className="bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl p-8 max-w-lg w-full"
+            className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl shadow-2xl p-8 max-w-lg w-full"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-[#fafafa]">Create New Game</h2>
+              <h2 className="text-2xl font-bold text-[var(--color-text)]">Create New Game</h2>
               <button
                 onClick={() => setShowCreateModal(false)}
                 disabled={isProcessing}
                 aria-label="Close modal"
-                className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[#fafafa] duration-150 flex items-center justify-center disabled:opacity-50"
+                className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[var(--color-text)] duration-150 flex items-center justify-center disabled:opacity-50"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -928,7 +928,7 @@ export function GamesPage() {
 
             {/* Game Type Selection */}
             <div className="mb-6">
-              <label className="block text-sm font-semibold text-[#a1a1a1] mb-3">
+              <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-3">
                 Game Type
               </label>
               <div className="grid grid-cols-3 gap-3">
@@ -946,8 +946,8 @@ export function GamesPage() {
                     disabled={isProcessing}
                     className={`p-3 rounded-lg border-2 duration-150 ${
                       newGame.type === gameType.id
-                        ? 'border-korus-primary bg-korus-primary/20 text-[#fafafa]'
-                        : 'border-[#262626] bg-white/[0.06] text-[#a1a1a1] hover:border-korus-primary/50'
+                        ? 'border-korus-primary bg-korus-primary/20 text-[var(--color-text)]'
+                        : 'border-[var(--color-border-light)] bg-white/[0.06] text-[var(--color-text-secondary)] hover:border-korus-primary/50'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     <div className="text-2xl mb-1">{gameType.icon}</div>
@@ -959,7 +959,7 @@ export function GamesPage() {
 
             {/* Wager Input */}
             <div className="mb-6">
-              <label className="block text-sm font-semibold text-[#a1a1a1] mb-2">
+              <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
                 Wager (SOL)
               </label>
               <input
@@ -970,7 +970,7 @@ export function GamesPage() {
                 value={newGame.wager}
                 onChange={(e) => setNewGame(prev => ({ ...prev, wager: parseFloat(e.target.value) || 0 }))}
                 disabled={isProcessing}
-                className="w-full px-4 py-2 bg-white/[0.06] border border-[#262626] rounded-lg text-[#fafafa] focus:border-korus-primary focus:outline-none disabled:opacity-50 duration-150"
+                className="w-full px-4 py-2 bg-white/[0.06] border border-[var(--color-border-light)] rounded-lg text-[var(--color-text)] focus:border-korus-primary focus:outline-none disabled:opacity-50 duration-150"
                 placeholder="0.1"
               />
               {newGame.wager > 0 && (newGame.wager < 0.01 || newGame.wager > 1.0) && (
@@ -978,7 +978,7 @@ export function GamesPage() {
                   Wager must be between 0.01 and 1.0 SOL
                 </p>
               )}
-              <p className="text-xs text-[#a1a1a1] mt-1">
+              <p className="text-xs text-[var(--color-text-secondary)] mt-1">
                 Set to 0 for a friendly game (no blockchain escrow). Wagered games: 0.01 - 1.0 SOL.
               </p>
             </div>
@@ -988,7 +988,7 @@ export function GamesPage() {
               <button
                 onClick={() => setShowCreateModal(false)}
                 disabled={isProcessing}
-                className="flex-1 bg-white/[0.06] border border-[#262626] text-[#fafafa] font-semibold py-3 rounded-lg hover:bg-white/[0.08] duration-150 disabled:opacity-50"
+                className="flex-1 bg-white/[0.06] border border-[var(--color-border-light)] text-[var(--color-text)] font-semibold py-3 rounded-lg hover:bg-white/[0.08] duration-150 disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -1015,7 +1015,7 @@ export function GamesPage() {
             </div>
 
             {!connected && (
-              <p className="text-center text-[#a1a1a1] text-sm mt-4">
+              <p className="text-center text-[var(--color-text-secondary)] text-sm mt-4">
                 Connect your wallet to create games
               </p>
             )}
@@ -1027,30 +1027,30 @@ export function GamesPage() {
       {/* Cancel Confirmation Modal - Rendered via Portal */}
       {showCancelModal && gameToCancelData && typeof window !== 'undefined' && createPortal(
         <div
-          className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-150 ${
+          className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-[var(--color-overlay-background)] backdrop-blur-sm transition-opacity duration-150 ${
             cancelModalClosing ? 'opacity-0' : 'opacity-100'
           }`}
           onClick={cancellingGame ? undefined : closeCancelModal}
         >
           <div
-            className={`bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl p-8 max-w-md w-full duration-150 duration-150 ${
+            className={`bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl shadow-2xl p-8 max-w-md w-full duration-150 duration-150 ${
               cancelModalClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
             }`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Loading Overlay */}
             {cancellingGame && (
-              <div className="absolute inset-0 bg-[#1e1e1e]/95 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center z-10">
+              <div className="absolute inset-0 bg-[var(--color-surface)]/95 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center z-10">
                 <div className="w-12 h-12 border-4 border-korus-primary/30 border-t-korus-primary rounded-full animate-spin mb-4"></div>
-                <p className="text-[#fafafa] font-semibold text-lg">{cancelStatus}</p>
-                <p className="text-[#a1a1a1] text-sm mt-2">Please wait...</p>
+                <p className="text-[var(--color-text)] font-semibold text-lg">{cancelStatus}</p>
+                <p className="text-[var(--color-text-secondary)] text-sm mt-2">Please wait...</p>
               </div>
             )}
 
             {/* Modal Header */}
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-[#fafafa] mb-2">Cancel Game</h2>
-              <p className="text-[#a1a1a1] text-sm">
+              <h2 className="text-2xl font-bold text-[var(--color-text)] mb-2">Cancel Game</h2>
+              <p className="text-[var(--color-text-secondary)] text-sm">
                 {gameToCancelData.hasWager
                   ? `Are you sure you want to cancel this game? Your wager of ${gameToCancelData.wagerAmount} SOL will be refunded to your wallet.`
                   : 'Are you sure you want to cancel this game?'}
@@ -1061,7 +1061,7 @@ export function GamesPage() {
             {gameToCancelData.hasWager && (
               <div className="mb-6 p-4 bg-korus-primary/10 border border-korus-primary/20 rounded-lg">
                 <div className="flex items-center justify-between">
-                  <span className="text-[#a1a1a1] text-sm">Refund Amount</span>
+                  <span className="text-[var(--color-text-secondary)] text-sm">Refund Amount</span>
                   <span className="text-korus-primary font-bold text-lg">
                     💰 {gameToCancelData.wagerAmount} SOL
                   </span>
@@ -1074,14 +1074,14 @@ export function GamesPage() {
               <button
                 onClick={closeCancelModal}
                 disabled={!!cancellingGame}
-                className="flex-1 bg-white/[0.06] border border-[#262626] text-[#fafafa] font-semibold py-3 rounded-lg hover:bg-white/[0.08] duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-white/[0.06] border border-[var(--color-border-light)] text-[var(--color-text)] font-semibold py-3 rounded-lg hover:bg-white/[0.08] duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Keep Game
               </button>
               <button
                 onClick={confirmCancelGame}
                 disabled={!!cancellingGame}
-                className="flex-1 bg-red-600 text-[#fafafa] font-bold py-3 rounded-lg hover:bg-red-700 duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-red-600 text-[var(--color-text)] font-bold py-3 rounded-lg hover:bg-red-700 duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {gameToCancelData.hasWager ? `Cancel & Refund` : 'Cancel Game'}
               </button>

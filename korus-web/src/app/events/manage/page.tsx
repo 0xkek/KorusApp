@@ -133,13 +133,13 @@ export default function ManageEventsPage() {
 
   const getStatusBadge = (event: eventsAPI.Event) => {
     if (event.status === 'closed') {
-      return <span className="px-3 py-1 bg-[#525252]/20 text-[#a1a1a1] text-xs font-bold rounded-full">Closed</span>;
+      return <span className="px-3 py-1 bg-[#525252]/20 text-[var(--color-text-secondary)] text-xs font-bold rounded-full">Closed</span>;
     }
     if (event.status === 'cancelled') {
       return <span className="px-3 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded-full">Cancelled</span>;
     }
     if (new Date(event.endDate) < new Date()) {
-      return <span className="px-3 py-1 bg-[#525252]/20 text-[#a1a1a1] text-xs font-bold rounded-full">Ended</span>;
+      return <span className="px-3 py-1 bg-[#525252]/20 text-[var(--color-text-secondary)] text-xs font-bold rounded-full">Ended</span>;
     }
     if (new Date(event.startDate) > new Date()) {
       return <span className="px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-bold rounded-full">Upcoming</span>;
@@ -149,21 +149,21 @@ export default function ManageEventsPage() {
 
   if (!connected) {
     return (
-      <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <main className="min-h-screen bg-[var(--color-background)] flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🔒</div>
-          <h2 className="text-2xl font-semibold text-[#fafafa] mb-2">Wallet Not Connected</h2>
-          <p className="text-[#a1a1a1]">Please connect your wallet to manage events</p>
+          <h2 className="text-2xl font-semibold text-[var(--color-text)] mb-2">Wallet Not Connected</h2>
+          <p className="text-[var(--color-text-secondary)]">Please connect your wallet to manage events</p>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
+    <main className="min-h-screen bg-[var(--color-background)] relative overflow-hidden">
       {/* Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#111111]/25 to-[#111111]/35" />
+      <div className="fixed inset-0 bg-gradient-to-br from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)]">
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[var(--color-surface)]/25 to-[#111111]/35" />
       </div>
       <div className="fixed inset-0 overflow-hidden">
         <div className="absolute -top-32 -right-32 w-[600px] h-[600px] bg-gradient-to-br from-korus-primary/8 to-korus-secondary/6 rounded-full blur-[80px]" />
@@ -179,15 +179,15 @@ export default function ManageEventsPage() {
           />
 
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-[#262626]">
+          <div className="flex-1 min-w-0 border-x border-[var(--color-border-light)]">
 
             {/* Header */}
-            <div className="sticky top-0 bg-[#141414]/80 backdrop-blur-xl border-b border-[#262626] z-10">
+            <div className="sticky top-0 bg-[var(--color-surface)]/80 backdrop-blur-xl border-b border-[var(--color-border-light)] z-10">
               <div className="px-6 py-4">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h1 className="text-2xl font-semibold text-[#fafafa]">My Events</h1>
-                    <p className="text-[#a1a1a1] text-sm">Manage your community events and whitelists</p>
+                    <h1 className="text-2xl font-semibold text-[var(--color-text)]">My Events</h1>
+                    <p className="text-[var(--color-text-secondary)] text-sm">Manage your community events and whitelists</p>
                   </div>
                   <button
                     onClick={() => router.push('/events/create')}
@@ -203,13 +203,13 @@ export default function ManageEventsPage() {
               {isLoading ? (
                 <div className="text-center py-20">
                   <div className="w-12 h-12 border-4 border-korus-primary/20 border-t-korus-primary rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-[#a1a1a1]">Loading your events...</p>
+                  <p className="text-[var(--color-text-secondary)]">Loading your events...</p>
                 </div>
               ) : myEvents.length === 0 ? (
                 <div className="text-center py-20">
                   <div className="text-6xl mb-4">📅</div>
-                  <h3 className="text-xl font-semibold text-[#fafafa] mb-2">No Events Yet</h3>
-                  <p className="text-[#a1a1a1] mb-6">Create your first event to get started</p>
+                  <h3 className="text-xl font-semibold text-[var(--color-text)] mb-2">No Events Yet</h3>
+                  <p className="text-[var(--color-text-secondary)] mb-6">Create your first event to get started</p>
                   <button
                     onClick={() => router.push('/events/create')}
                     className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-semibold px-8 py-3 rounded-lg hover:shadow-lg duration-150"
@@ -222,7 +222,7 @@ export default function ManageEventsPage() {
                   {myEvents.map((event) => (
                     <div
                       key={event.id}
-                      className="border border-[#262626] bg-[#141414] rounded-xl overflow-hidden hover:bg-white/[0.04] duration-150"
+                      className="border border-[var(--color-border-light)] bg-[var(--color-surface)] rounded-xl overflow-hidden hover:bg-white/[0.04] duration-150"
                     >
                       <div className="p-6">
                         <div className="flex gap-6">
@@ -245,32 +245,32 @@ export default function ManageEventsPage() {
                               <div>
                                 <div className="flex items-center gap-3 mb-2">
                                   <span className="text-2xl">{getEventTypeIcon(event.type)}</span>
-                                  <h3 className="text-xl font-semibold text-[#fafafa]">{event.title}</h3>
+                                  <h3 className="text-xl font-semibold text-[var(--color-text)]">{event.title}</h3>
                                   {getStatusBadge(event)}
                                 </div>
                                 <p className="text-korus-primary font-medium text-sm">{event.projectName}</p>
                               </div>
                             </div>
 
-                            <p className="text-[#a1a1a1] text-sm mb-4 line-clamp-2">{event.description}</p>
+                            <p className="text-[var(--color-text-secondary)] text-sm mb-4 line-clamp-2">{event.description}</p>
 
                             {/* Stats */}
                             <div className="flex items-center gap-6 text-sm mb-4">
                               <div className="flex items-center gap-2">
-                                <span className="text-[#737373]">👥</span>
-                                <span className="text-[#fafafa] font-medium">{event.registrationCount}</span>
-                                <span className="text-[#737373]">registrations</span>
+                                <span className="text-[var(--color-text-tertiary)]">👥</span>
+                                <span className="text-[var(--color-text)] font-medium">{event.registrationCount}</span>
+                                <span className="text-[var(--color-text-tertiary)]">registrations</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="text-[#737373]">👁️</span>
-                                <span className="text-[#fafafa] font-medium">{event.viewCount}</span>
-                                <span className="text-[#737373]">views</span>
+                                <span className="text-[var(--color-text-tertiary)]">👁️</span>
+                                <span className="text-[var(--color-text)] font-medium">{event.viewCount}</span>
+                                <span className="text-[var(--color-text-tertiary)]">views</span>
                               </div>
                               {event.maxSpots && (
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[#737373]">🎯</span>
-                                  <span className="text-[#fafafa] font-medium">{event.maxSpots}</span>
-                                  <span className="text-[#737373]">max spots</span>
+                                  <span className="text-[var(--color-text-tertiary)]">🎯</span>
+                                  <span className="text-[var(--color-text)] font-medium">{event.maxSpots}</span>
+                                  <span className="text-[var(--color-text-tertiary)]">max spots</span>
                                 </div>
                               )}
                             </div>
@@ -279,7 +279,7 @@ export default function ManageEventsPage() {
                             <div className="flex gap-3">
                               <button
                                 onClick={() => router.push(`/events/${event.id}`)}
-                                className="px-4 py-2 bg-white/[0.08] border border-[#262626] text-[#fafafa] font-semibold rounded-lg hover:bg-white/[0.12] duration-150 text-sm"
+                                className="px-4 py-2 bg-white/[0.08] border border-[var(--color-border-light)] text-[var(--color-text)] font-semibold rounded-lg hover:bg-white/[0.12] duration-150 text-sm"
                               >
                                 View Details
                               </button>
@@ -317,26 +317,26 @@ export default function ManageEventsPage() {
 
       {/* Registrations Modal */}
       {showRegistrationsModal && selectedEvent && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <div className="fixed inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#1e1e1e] border border-[var(--color-border-light)] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
             {/* Header */}
-            <div className="px-6 py-4 border-b border-[#262626] flex items-center justify-between">
+            <div className="px-6 py-4 border-b border-[var(--color-border-light)] flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-[#fafafa]">{selectedEvent.title}</h2>
-                <p className="text-sm text-[#a1a1a1]">{registrations.length} registrations</p>
+                <h2 className="text-xl font-semibold text-[var(--color-text)]">{selectedEvent.title}</h2>
+                <p className="text-sm text-[var(--color-text-secondary)]">{registrations.length} registrations</p>
               </div>
               <button
                 onClick={() => setShowRegistrationsModal(false)}
-                className="w-8 h-8 rounded-full bg-white/[0.12] hover:bg-[#141414] flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-full bg-white/[0.12] hover:bg-[var(--color-surface)] flex items-center justify-center transition-colors"
               >
-                <svg className="w-5 h-5 text-[#fafafa]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-[var(--color-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
             {/* Export Buttons */}
-            <div className="px-6 py-3 border-b border-[#262626] flex gap-3">
+            <div className="px-6 py-3 border-b border-[var(--color-border-light)] flex gap-3">
               <button
                 onClick={() => exportRegistrations('csv')}
                 className="px-4 py-2 bg-korus-primary/20 hover:bg-korus-primary/30 text-korus-primary font-semibold rounded-lg transition-colors text-sm"
@@ -356,19 +356,19 @@ export default function ManageEventsPage() {
               {isLoadingRegistrations ? (
                 <div className="text-center py-12">
                   <div className="w-8 h-8 border-4 border-korus-primary/20 border-t-korus-primary rounded-full animate-spin mx-auto mb-3"></div>
-                  <p className="text-[#a1a1a1] text-sm">Loading registrations...</p>
+                  <p className="text-[var(--color-text-secondary)] text-sm">Loading registrations...</p>
                 </div>
               ) : registrations.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-4xl mb-3">📭</div>
-                  <p className="text-[#a1a1a1]">No registrations yet</p>
+                  <p className="text-[var(--color-text-secondary)]">No registrations yet</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {registrations.map((reg, index) => (
                     <div
                       key={reg.id}
-                      className="bg-[#141414] border border-[#262626] rounded-xl p-4 hover:bg-white/[0.04] duration-150"
+                      className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-xl p-4 hover:bg-white/[0.04] duration-150"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -376,10 +376,10 @@ export default function ManageEventsPage() {
                             <span className="text-black font-bold text-sm">#{index + 1}</span>
                           </div>
                           <div>
-                            <div className="font-mono text-[#fafafa] text-sm">
+                            <div className="font-mono text-[var(--color-text)] text-sm">
                               {reg.walletAddress.slice(0, 8)}...{reg.walletAddress.slice(-6)}
                             </div>
-                            <div className="text-xs text-[#737373]">
+                            <div className="text-xs text-[var(--color-text-tertiary)]">
                               {new Date(reg.registeredAt).toLocaleDateString()} at {new Date(reg.registeredAt).toLocaleTimeString()}
                             </div>
                           </div>

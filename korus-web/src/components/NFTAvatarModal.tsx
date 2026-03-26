@@ -75,19 +75,19 @@ export default function NFTAvatarModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
+      className="fixed inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm flex items-center justify-center z-50"
       onClick={onClose}
     >
       <div
-        className="bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl p-6 max-w-4xl w-full mx-4 max-h-[85vh] overflow-hidden flex flex-col"
+        className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl shadow-2xl p-6 max-w-4xl w-full mx-4 max-h-[85vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-[#fafafa] text-2xl font-semibold">Choose NFT Avatar</h3>
+          <h3 className="text-[var(--color-text)] text-2xl font-semibold">Choose NFT Avatar</h3>
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[#fafafa] transition-colors duration-150 flex items-center justify-center"
+            className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[var(--color-text)] transition-colors duration-150 flex items-center justify-center"
           >
             <svg
               className="w-6 h-6"
@@ -109,16 +109,16 @@ export default function NFTAvatarModal({
         {loading ? (
           <div className="flex-1 flex flex-col items-center justify-center">
             <div className="w-12 h-12 border-4 border-korus-primary border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-[#a1a1a1]">Loading your NFTs...</p>
+            <p className="text-[var(--color-text-secondary)]">Loading your NFTs...</p>
           </div>
         ) : (
           <>
             {nfts.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
-                <p className="text-[#a1a1a1] text-lg mb-2">
+                <p className="text-[var(--color-text-secondary)] text-lg mb-2">
                   {publicKey ? 'No NFTs found in your wallet' : 'No wallet connected'}
                 </p>
-                <p className="text-[#737373] text-sm">
+                <p className="text-[var(--color-text-tertiary)] text-sm">
                   Your NFTs will appear here once they&apos;re loaded
                 </p>
               </div>
@@ -134,7 +134,7 @@ export default function NFTAvatarModal({
                         className={`group relative bg-white/[0.04] rounded-xl overflow-hidden border-2 transition-all duration-150 hover:scale-105 hover:shadow-lg ${
                           selectedNFT?.mint === nft.mint || currentAvatarNFT === nft.mint
                             ? 'border-korus-primary shadow-lg shadow-korus-primary/50'
-                            : 'border-transparent hover:border-[#262626]'
+                            : 'border-transparent hover:border-[var(--color-border-light)]'
                         }`}
                       >
                         <div className="aspect-square relative bg-[#111111]">
@@ -149,7 +149,7 @@ export default function NFTAvatarModal({
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
                               <svg
-                                className="w-12 h-12 text-[#737373]"
+                                className="w-12 h-12 text-[var(--color-text-tertiary)]"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -165,7 +165,7 @@ export default function NFTAvatarModal({
                           )}
                         </div>
                         <div className="p-3 bg-gradient-to-t from-black/80 to-transparent absolute bottom-0 left-0 right-0">
-                          <p className="text-[#fafafa] text-sm font-medium truncate">
+                          <p className="text-[var(--color-text)] text-sm font-medium truncate">
                             {nft.name}
                           </p>
                           {nft.collection?.name && (

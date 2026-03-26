@@ -159,23 +159,23 @@ export default function MobileMenuModal({ isOpen, onClose, onNotificationsToggle
     <>
       {/* Overlay */}
       <div
-        className="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+        className="modal-backdrop fixed inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm z-40 md:hidden"
         onClick={onClose}
       />
 
       {/* Mobile Menu */}
-      <div ref={modalRef} className="modal-content fixed top-0 left-0 bottom-0 w-80 bg-[#1e1e1e] border-r border-[#262626] z-50 md:hidden overflow-y-auto">
+      <div ref={modalRef} className="modal-content fixed top-0 left-0 bottom-0 w-80 bg-[var(--color-surface)] border-r border-[var(--color-border-light)] z-50 md:hidden overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[#262626]">
+        <div className="flex items-center justify-between p-4 border-b border-[var(--color-border-light)]">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center">
               <span className="text-black font-bold text-sm">K</span>
             </div>
-            <span className="text-[#fafafa] text-xl font-bold">Korus</span>
+            <span className="text-[var(--color-text)] text-xl font-bold">Korus</span>
           </div>
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[#fafafa] transition-colors duration-150 flex items-center justify-center"
+            className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[var(--color-text)] transition-colors duration-150 flex items-center justify-center"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -196,32 +196,32 @@ export default function MobileMenuModal({ isOpen, onClose, onNotificationsToggle
                 disabled={isDisabled}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-150 text-left ${
                   isDisabled
-                    ? 'text-[#a1a1a1] opacity-60 cursor-not-allowed'
+                    ? 'text-[var(--color-text-secondary)] opacity-60 cursor-not-allowed'
                     : isActive
                     ? 'bg-korus-primary text-black shadow-lg shadow-korus-primary/40'
-                    : 'text-[#a1a1a1] hover:bg-white/[0.06] hover:text-[#fafafa]'
+                    : 'text-[var(--color-text-secondary)] hover:bg-white/[0.06] hover:text-[var(--color-text)]'
                 }`}
               >
                 <div className={`transition-colors ${
                   isDisabled
-                    ? 'text-[#a1a1a1]'
+                    ? 'text-[var(--color-text-secondary)]'
                     : isActive
                     ? 'text-black'
-                    : 'text-[#a1a1a1]'
+                    : 'text-[var(--color-text-secondary)]'
                 }`}>
                   {tab.icon}
                 </div>
 
                 <span className={`font-medium flex-1 ${
                   isDisabled
-                    ? 'text-[#a1a1a1]'
+                    ? 'text-[var(--color-text-secondary)]'
                     : isActive
                     ? 'text-black'
-                    : 'text-[#a1a1a1]'
+                    : 'text-[var(--color-text-secondary)]'
                 }`}>
                   {tab.name}
                   {isDisabled && (
-                    <span className="text-xs text-[#737373] block">Coming Soon</span>
+                    <span className="text-xs text-[var(--color-text-tertiary)] block">Coming Soon</span>
                   )}
                 </span>
 
@@ -238,7 +238,7 @@ export default function MobileMenuModal({ isOpen, onClose, onNotificationsToggle
 
         {/* User Profile Section */}
         {connected && publicKey && (
-          <div className="p-4 border-t border-[#262626] mt-auto">
+          <div className="p-4 border-t border-[var(--color-border-light)] mt-auto">
             <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-korus-primary/10 to-korus-secondary/10 border border-korus-primary/30">
               {userAvatar ? (
                 <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden shadow-lg shadow-korus-primary/20">
@@ -258,7 +258,7 @@ export default function MobileMenuModal({ isOpen, onClose, onNotificationsToggle
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <div className="text-[#a1a1a1] text-xs mb-1">Connected with:</div>
+                <div className="text-[var(--color-text-secondary)] text-xs mb-1">Connected with:</div>
                 <div className="text-korus-primary font-mono text-xs font-semibold truncate">
                   {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
                 </div>
@@ -268,11 +268,11 @@ export default function MobileMenuModal({ isOpen, onClose, onNotificationsToggle
         )}
 
         {/* Quick Actions */}
-        <div className="p-4 border-t border-[#262626]">
+        <div className="p-4 border-t border-[var(--color-border-light)]">
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => router.push('/games')}
-              className="flex items-center justify-center gap-2 p-3 bg-white/[0.06] border border-[#262626] rounded-lg text-[#a1a1a1] hover:bg-white/[0.12] hover:text-[#fafafa] transition-all duration-150"
+              className="flex items-center justify-center gap-2 p-3 bg-white/[0.06] border border-[var(--color-border-light)] rounded-lg text-[var(--color-text-secondary)] hover:bg-white/[0.12] hover:text-[var(--color-text)] transition-all duration-150"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M16 10h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -281,7 +281,7 @@ export default function MobileMenuModal({ isOpen, onClose, onNotificationsToggle
             </button>
             <button
               onClick={() => router.push('/events')}
-              className="flex items-center justify-center gap-2 p-3 bg-white/[0.06] border border-[#262626] rounded-lg text-[#a1a1a1] hover:bg-white/[0.12] hover:text-[#fafafa] transition-all duration-150"
+              className="flex items-center justify-center gap-2 p-3 bg-white/[0.06] border border-[var(--color-border-light)] rounded-lg text-[var(--color-text-secondary)] hover:bg-white/[0.12] hover:text-[var(--color-text)] transition-all duration-150"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />

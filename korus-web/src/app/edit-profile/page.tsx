@@ -205,10 +205,10 @@ export default function EditProfilePage() {
 
   if (!connected) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-[#fafafa] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Connect Your Wallet</h2>
-          <p className="text-[#a1a1a1] mb-8">Please connect your wallet to edit your profile</p>
+          <p className="text-[var(--color-text-secondary)] mb-8">Please connect your wallet to edit your profile</p>
           <Link
             href="/"
             className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-lg hover:shadow-lg transition-all"
@@ -222,7 +222,7 @@ export default function EditProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-[#fafafa] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-korus-primary border-t-transparent rounded-full animate-spin mb-4"></div>
           <p>Loading profile...</p>
@@ -232,10 +232,10 @@ export default function EditProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
+    <main className="min-h-screen bg-[var(--color-background)] relative overflow-hidden">
       {/* Background gradients */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#111111]/25 to-[#111111]/35" />
+      <div className="fixed inset-0 bg-gradient-to-br from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)]">
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[var(--color-surface)]/25 to-[var(--color-surface)]/35" />
       </div>
 
       {/* Animated gradient orbs */}
@@ -249,9 +249,9 @@ export default function EditProfilePage() {
       <div className="relative z-10">
         <div className="flex min-h-screen max-w-[1280px] mx-auto">
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-[#262626]">
+          <div className="flex-1 min-w-0 border-x border-[var(--color-border-light)]">
             {/* Header */}
-            <div className="sticky top-0 z-20 bg-[#141414] backdrop-blur-md border-b border-[#262626]">
+            <div className="sticky top-0 z-20 bg-[var(--color-surface)] backdrop-blur-md border-b border-[var(--color-border-light)]">
               <div className="px-4 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -263,7 +263,7 @@ export default function EditProfilePage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                       </svg>
                     </button>
-                    <h1 className="text-3xl font-bold text-[#fafafa]">Edit Profile</h1>
+                    <h1 className="text-3xl font-bold text-[var(--color-text)]">Edit Profile</h1>
                   </div>
                   <button
                     onClick={handleSave}
@@ -307,7 +307,7 @@ export default function EditProfilePage() {
                 </div>
               </button>
             </div>
-            <p className="text-[#a1a1a1] text-sm">Click to change your avatar</p>
+            <p className="text-[var(--color-text-secondary)] text-sm">Click to change your avatar</p>
           </div>
 
           {/* Form Fields */}
@@ -320,10 +320,10 @@ export default function EditProfilePage() {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Enter your display name"
-                className="w-full bg-white/[0.06] border border-[#262626] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
+                className="w-full bg-white/[0.06] border border-[var(--color-border-light)] rounded-lg px-3 py-2.5 text-[var(--color-text)] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
                 maxLength={50}
               />
-              <p className="text-[#a1a1a1] text-xs mt-1">This is how other users will see your name</p>
+              <p className="text-[var(--color-text-secondary)] text-xs mt-1">This is how other users will see your name</p>
             </div>
 
             {/* SNS Domain Selection */}
@@ -344,7 +344,7 @@ export default function EditProfilePage() {
                     setHasChanges(true);
                   }}
                   disabled={!isPremium && snsLoading}
-                  className="w-full bg-white/[0.06] border border-[#262626] rounded-lg px-3 py-2.5 text-[#fafafa] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors disabled:opacity-50"
+                  className="w-full bg-white/[0.06] border border-[var(--color-border-light)] rounded-lg px-3 py-2.5 text-[var(--color-text)] focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors disabled:opacity-50"
                 >
                   <option value="">None (use display name)</option>
                   {snsDomains.map((domain) => (
@@ -353,7 +353,7 @@ export default function EditProfilePage() {
                     </option>
                   ))}
                 </select>
-                <p className="text-[#a1a1a1] text-xs mt-1">
+                <p className="text-[var(--color-text-secondary)] text-xs mt-1">
                   {isPremium
                     ? 'Choose which SNS domain to display on your profile'
                     : 'Upgrade to Premium to use your SNS domains'}
@@ -368,13 +368,13 @@ export default function EditProfilePage() {
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="Tell us about yourself..."
-                className="w-full bg-white/[0.06] border border-[#262626] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors resize-none"
+                className="w-full bg-white/[0.06] border border-[var(--color-border-light)] rounded-lg px-3 py-2.5 text-[var(--color-text)] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors resize-none"
                 rows={4}
                 maxLength={200}
               />
               <div className="flex justify-between items-center mt-1">
-                <p className="text-[#a1a1a1] text-xs">Share a bit about yourself</p>
-                <span className="text-[#a1a1a1] text-xs">{bio.length}/200</span>
+                <p className="text-[var(--color-text-secondary)] text-xs">Share a bit about yourself</p>
+                <span className="text-[var(--color-text-secondary)] text-xs">{bio.length}/200</span>
               </div>
             </div>
 
@@ -386,7 +386,7 @@ export default function EditProfilePage() {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="Where are you based?"
-                className="w-full bg-white/[0.06] border border-[#262626] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
+                className="w-full bg-white/[0.06] border border-[var(--color-border-light)] rounded-lg px-3 py-2.5 text-[var(--color-text)] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
                 maxLength={50}
               />
             </div>
@@ -399,7 +399,7 @@ export default function EditProfilePage() {
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
                 placeholder="https://yourwebsite.com"
-                className="w-full bg-white/[0.06] border border-[#262626] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
+                className="w-full bg-white/[0.06] border border-[var(--color-border-light)] rounded-lg px-3 py-2.5 text-[var(--color-text)] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
               />
             </div>
 
@@ -407,13 +407,13 @@ export default function EditProfilePage() {
             <div>
               <label className="block text-sm font-medium mb-2">Twitter</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#a1a1a1]">@</span>
+                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[var(--color-text-secondary)]">@</span>
                 <input
                   type="text"
                   value={twitter}
                   onChange={(e) => setTwitter(e.target.value.replace('@', ''))}
                   placeholder="username"
-                  className="w-full bg-white/[0.06] border border-[#262626] rounded-lg pl-8 pr-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
+                  className="w-full bg-white/[0.06] border border-[var(--color-border-light)] rounded-lg pl-8 pr-3 py-2.5 text-[var(--color-text)] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none transition-colors"
                   maxLength={15}
                 />
               </div>
@@ -430,20 +430,20 @@ export default function EditProfilePage() {
                     className={`aspect-square rounded-xl border-2 transition-all hover:scale-105 ${
                       selectedThemeColor === theme.color
                         ? 'border-white shadow-lg'
-                        : 'border-[#262626] hover:border-white/20'
+                        : 'border-[var(--color-border-light)] hover:border-white/20'
                     }`}
                     style={{ backgroundColor: theme.color }}
                     title={theme.name}
                   >
                     {selectedThemeColor === theme.color && (
-                      <svg className="w-6 h-6 text-[#fafafa] mx-auto" fill="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-6 h-6 text-[var(--color-text)] mx-auto" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
                       </svg>
                     )}
                   </button>
                 ))}
               </div>
-              <p className="text-[#a1a1a1] text-xs mt-2">Choose your personal theme color</p>
+              <p className="text-[var(--color-text-secondary)] text-xs mt-2">Choose your personal theme color</p>
             </div>
 
             {/* Premium Features */}
@@ -457,7 +457,7 @@ export default function EditProfilePage() {
                   </div>
                   <div>
                     <h3 className="text-yellow-400 font-semibold mb-1">Unlock Premium Features</h3>
-                    <p className="text-[#a1a1a1] text-sm mb-3">
+                    <p className="text-[var(--color-text-secondary)] text-sm mb-3">
                       Get access to custom banners, more theme colors, and advanced profile customization.
                     </p>
                     <Link

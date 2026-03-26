@@ -199,8 +199,8 @@ export default function RightSidebar({ showNotifications = false, onNotification
 
   // Widget container styles
   const widgetStyle: React.CSSProperties = {
-    background: '#141414',
-    border: '1px solid #262626',
+    background: 'var(--color-surface)',
+    border: '1px solid var(--color-border-light)',
     borderRadius: '16px',
     padding: '16px',
     marginBottom: '16px',
@@ -210,7 +210,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
     fontSize: '18px',
     fontWeight: 700,
     marginBottom: '14px',
-    color: '#fafafa',
+    color: 'var(--color-text)',
   };
 
   return (
@@ -235,7 +235,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
           <h2 style={widgetTitleStyle}>Notifications</h2>
           <div role="list" aria-label="Notifications">
             {isLoading ? (
-              <div style={{ textAlign: 'center', padding: '32px 0', color: '#525252' }}>
+              <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--color-text-tertiary)' }}>
                 <div
                   style={{
                     width: '24px',
@@ -250,7 +250,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
                 <p style={{ fontSize: '12px' }}>Loading notifications...</p>
               </div>
             ) : notifications.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '32px 0', color: '#525252' }}>
+              <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--color-text-tertiary)' }}>
                 <p style={{ fontSize: '14px' }}>No notifications yet</p>
               </div>
             ) : (
@@ -269,7 +269,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
                   }}
                   style={{
                     padding: '10px 0',
-                    borderTop: '1px solid #262626',
+                    borderTop: '1px solid var(--color-border-light)',
                     cursor: 'pointer',
                   }}
                   className="hover:opacity-80 transition-opacity"
@@ -297,14 +297,14 @@ export default function RightSidebar({ showNotifications = false, onNotification
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between' }}>
                         <div style={{ flex: 1 }}>
-                          <p style={{ fontSize: '13px', fontWeight: 600, color: '#fafafa' }}>
+                          <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text)' }}>
                             {notification.title}
                           </p>
-                          <p style={{ fontSize: '12px', color: '#737373', marginTop: '2px' }}>
+                          <p style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', marginTop: '2px' }}>
                             {notification.message}
                           </p>
                           {notification.fromUser && (
-                            <p style={{ fontSize: '12px', color: '#737373', marginTop: '4px' }}>
+                            <p style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', marginTop: '4px' }}>
                               from {truncateAddress(notification.fromUser.walletAddress)}
                             </p>
                           )}
@@ -328,7 +328,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
                           />
                         )}
                       </div>
-                      <span style={{ fontSize: '12px', color: '#737373', marginTop: '4px', display: 'block' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', marginTop: '4px', display: 'block' }}>
                         {formatTimeAgo(notification.createdAt)}
                       </span>
                     </div>
@@ -364,7 +364,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
               <span role="img" aria-label="live">&#x1F534;</span> Live Games
             </h2>
             {isLoadingGames ? (
-              <div style={{ textAlign: 'center', padding: '24px 0', color: '#525252' }}>
+              <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--color-text-tertiary)' }}>
                 <div
                   style={{
                     width: '24px',
@@ -393,7 +393,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
                     alignItems: 'center',
                     gap: '10px',
                     padding: '10px 0',
-                    borderTop: index > 0 ? '1px solid #262626' : 'none',
+                    borderTop: index > 0 ? '1px solid var(--color-border-light)' : 'none',
                     cursor: game.id.startsWith('placeholder-') ? 'default' : 'pointer',
                   }}
                   className={game.id.startsWith('placeholder-') ? '' : 'hover:opacity-80 transition-opacity'}
@@ -411,10 +411,10 @@ export default function RightSidebar({ showNotifications = false, onNotification
                   />
                   {/* Game info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#fafafa' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text)' }}>
                       {game.title}
                     </div>
-                    <div style={{ fontSize: '12px', color: '#737373' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)' }}>
                       {game.detail}
                     </div>
                   </div>
@@ -423,7 +423,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
                     style={{
                       fontSize: '12px',
                       fontWeight: 700,
-                      color: '#43e97b',
+                      color: 'var(--color-primary)',
                       flexShrink: 0,
                     }}
                   >
@@ -442,18 +442,18 @@ export default function RightSidebar({ showNotifications = false, onNotification
                 key={item.id}
                 style={{
                   padding: '10px 0',
-                  borderTop: index > 0 ? '1px solid #262626' : 'none',
+                  borderTop: index > 0 ? '1px solid var(--color-border-light)' : 'none',
                   cursor: 'pointer',
                 }}
                 className="hover:opacity-80 transition-opacity"
               >
-                <div style={{ fontSize: '12px', color: '#525252' }}>
+                <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)' }}>
                   {item.label}
                 </div>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: '#fafafa', marginTop: '2px' }}>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text)', marginTop: '2px' }}>
                   {item.topic}
                 </div>
-                <div style={{ fontSize: '12px', color: '#737373', marginTop: '2px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', marginTop: '2px' }}>
                   {item.posts}
                 </div>
               </div>
@@ -505,7 +505,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
                   {tipper.avatar}
                 </div>
                 {/* Name */}
-                <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#fafafa', minWidth: 0 }}>
+                <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: 'var(--color-text)', minWidth: 0 }}>
                   {tipper.name}
                 </div>
                 {/* SOL total */}
@@ -513,7 +513,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
                   style={{
                     fontSize: '13px',
                     fontWeight: 700,
-                    color: '#43e97b',
+                    color: 'var(--color-primary)',
                     flexShrink: 0,
                   }}
                 >
@@ -537,7 +537,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
               href="#"
               style={{
                 fontSize: '12px',
-                color: '#525252',
+                color: 'var(--color-text-tertiary)',
                 textDecoration: 'none',
               }}
               onMouseEnter={(e) => { (e.target as HTMLAnchorElement).style.textDecoration = 'underline'; }}

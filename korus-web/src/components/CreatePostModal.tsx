@@ -269,20 +269,20 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
 
   return (
     <div
-      className="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="modal-backdrop fixed inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === e.currentTarget && !isPosting) onClose(); }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="create-post-title"
     >
-      <div ref={modalRef} className="modal-content bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl max-w-2xl w-full">
+      <div ref={modalRef} className="modal-content bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl shadow-2xl max-w-2xl w-full">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-[#262626]">
-          <h2 id="create-post-title" className="heading-2 text-[#fafafa] font-semibold">Create Post</h2>
+        <div className="flex items-center justify-between p-6 border-b border-[var(--color-border-light)]">
+          <h2 id="create-post-title" className="heading-2 text-[var(--color-text)] font-semibold">Create Post</h2>
           <button
             onClick={onClose}
             aria-label="Close create post modal"
-            className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[#fafafa] transition-colors duration-150 flex items-center justify-center"
+            className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[var(--color-text)] transition-colors duration-150 flex items-center justify-center"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -318,7 +318,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="What's on your mind? Share your experience, ask for advice, or offer support..."
-                className={`w-full bg-transparent text-[#fafafa] text-base resize-none placeholder-neutral-600 max-h-[300px] ${showDrawCanvas ? 'min-h-[80px]' : 'min-h-[150px]'}`}
+                className={`w-full bg-transparent text-[var(--color-text)] text-base resize-none placeholder-neutral-600 max-h-[300px] ${showDrawCanvas ? 'min-h-[80px]' : 'min-h-[150px]'}`}
                 style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
                 rows={showDrawCanvas ? 3 : 6}
                 autoFocus
@@ -328,7 +328,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
 
               {/* Inline Drawing Canvas */}
               {showDrawCanvas && (
-                <div className="mt-3 p-3 bg-white/[0.04] border border-[#262626] rounded-xl">
+                <div className="mt-3 p-3 bg-white/[0.04] border border-[var(--color-border-light)] rounded-xl">
                   <DrawingCanvasInline
                     onSave={handleDrawingSave}
                     onClose={() => setShowDrawCanvas(false)}
@@ -347,15 +347,15 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                           alt="Upload preview"
                           width={200}
                           height={128}
-                          className="max-w-full h-auto rounded-xl border border-[#262626]"
+                          className="max-w-full h-auto rounded-xl border border-[var(--color-border-light)]"
                         />
                       ) : (
-                        <div className="w-full h-32 bg-white/[0.06] border border-[#262626] rounded-xl flex items-center justify-center">
+                        <div className="w-full h-32 bg-white/[0.06] border border-[var(--color-border-light)] rounded-xl flex items-center justify-center">
                           <div className="text-center">
-                            <svg className="w-8 h-8 mx-auto mb-2 text-[#a1a1a1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-8 h-8 mx-auto mb-2 text-[var(--color-text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
-                            <p className="text-xs text-[#a1a1a1] truncate">{file.name}</p>
+                            <p className="text-xs text-[var(--color-text-secondary)] truncate">{file.name}</p>
                           </div>
                         </div>
                       )}
@@ -380,7 +380,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                   {/* Media Upload */}
                   <label
                     aria-label="Upload images or videos"
-                    className="flex items-center justify-center w-10 h-10 bg-white/[0.06] backdrop-blur-sm border border-[#262626] rounded-xl text-korus-primary hover:bg-white/[0.12] hover:border-[#262626] transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer"
+                    className="flex items-center justify-center w-10 h-10 bg-white/[0.06] backdrop-blur-sm border border-[var(--color-border-light)] rounded-xl text-korus-primary hover:bg-white/[0.12] hover:border-[var(--color-border-light)] transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -398,7 +398,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                   {/* GIF Button */}
                   <button
                     aria-label="Add GIF"
-                    className="flex items-center justify-center w-10 h-10 bg-white/[0.06] backdrop-blur-sm border border-[#262626] rounded-xl text-korus-primary hover:bg-white/[0.12] hover:border-[#262626] transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10"
+                    className="flex items-center justify-center w-10 h-10 bg-white/[0.06] backdrop-blur-sm border border-[var(--color-border-light)] rounded-xl text-korus-primary hover:bg-white/[0.12] hover:border-[var(--color-border-light)] transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10"
                   >
                     <span className="text-xs font-bold">GIF</span>
                   </button>
@@ -410,7 +410,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                     className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10 ${
                       showEmojiPicker
                         ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
-                        : 'bg-white/[0.06] border-[#262626] text-korus-primary hover:bg-white/[0.12] hover:border-[#262626]'
+                        : 'bg-white/[0.06] border-[var(--color-border-light)] text-korus-primary hover:bg-white/[0.12] hover:border-[var(--color-border-light)]'
                     }`}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -425,7 +425,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                     className={`flex items-center justify-center w-10 h-10 backdrop-blur-sm border rounded-xl transition-all duration-150 hover:shadow-lg hover:shadow-korus-primary/10 ${
                       showDrawCanvas
                         ? 'bg-korus-primary/20 border-korus-primary text-korus-primary'
-                        : 'bg-white/[0.06] border-[#262626] text-korus-primary hover:bg-white/[0.12] hover:border-[#262626]'
+                        : 'bg-white/[0.06] border-[var(--color-border-light)] text-korus-primary hover:bg-white/[0.12] hover:border-[var(--color-border-light)]'
                     }`}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -442,8 +442,8 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                     aria-label="Create shoutout post"
                     className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm border rounded-xl transition-all duration-150 ${
                       content.trim() || selectedFiles.length > 0
-                        ? 'bg-white/[0.06] border-[#262626] text-korus-primary hover:bg-white/[0.12] hover:border-[#262626] hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer'
-                        : 'bg-white/[0.04] border-white/8 text-[#737373] cursor-not-allowed opacity-50'
+                        ? 'bg-white/[0.06] border-[var(--color-border-light)] text-korus-primary hover:bg-white/[0.12] hover:border-[var(--color-border-light)] hover:shadow-lg hover:shadow-korus-primary/10 cursor-pointer'
+                        : 'bg-white/[0.04] border-white/8 text-[var(--color-text-tertiary)] cursor-not-allowed opacity-50'
                     }`}
                   >
                     <span className="text-sm font-medium">📢 Shoutout</span>
@@ -456,7 +456,7 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
                         ? 'border-red-500 text-red-500'
                         : characterCount > MAX_POST_LENGTH * 0.8
                         ? 'border-yellow-500 text-yellow-500'
-                        : 'border-[#262626] text-[#a1a1a1]'
+                        : 'border-[var(--color-border-light)] text-[var(--color-text-secondary)]'
                     }`}>
                       <span className="text-xs font-medium">
                         {isOverLimit ? `-${characterCount - MAX_POST_LENGTH}` : MAX_POST_LENGTH - characterCount}
@@ -512,15 +512,15 @@ export default function CreatePostModal({ isOpen, onClose, initialContent = '', 
 
       {/* Emoji Picker Modal */}
       {showEmojiPicker && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4">
-          <div className="bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden">
+        <div className="fixed inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm z-[99999] flex items-center justify-center p-4">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-[#262626]">
-              <h3 className="text-lg font-semibold text-[#fafafa]">Choose Emoji</h3>
+            <div className="flex items-center justify-between p-4 border-b border-[var(--color-border-light)]">
+              <h3 className="text-lg font-semibold text-[var(--color-text)]">Choose Emoji</h3>
               <button
                 onClick={() => setShowEmojiPicker(false)}
                 aria-label="Close emoji picker"
-                className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[#fafafa] transition-colors duration-150 flex items-center justify-center"
+                className="w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[var(--color-text)] transition-colors duration-150 flex items-center justify-center"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

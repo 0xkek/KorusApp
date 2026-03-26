@@ -19,7 +19,7 @@ interface TextareaProps extends BaseInputProps, TextareaHTMLAttributes<HTMLTextA
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ variant = 'default', label, helperText, fullWidth = false, className = '', ...props }, ref) => {
-    const baseStyles = 'bg-white/[0.06] text-[#fafafa] px-4 py-3 rounded-lg border border-[#262626] transition-all duration-150';
+    const baseStyles = 'bg-white/[0.06] text-[var(--color-text)] px-4 py-3 rounded-lg border border-[var(--color-border-light)] transition-all duration-150';
 
     const variantStyles = {
       default: '',
@@ -32,7 +32,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className={widthStyles}>
         {label && (
-          <label className="label text-[#fafafa] mb-2 block">{label}</label>
+          <label className="label text-[var(--color-text)] mb-2 block">{label}</label>
         )}
         <input
           ref={ref}
@@ -40,7 +40,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           {...props}
         />
         {helperText && (
-          <p className={`text-xs mt-1 ${variant === 'error' ? 'text-red-400' : 'text-[#a1a1a1]'}`}>
+          <p className={`text-xs mt-1 ${variant === 'error' ? 'text-red-400' : 'text-[var(--color-text-secondary)]'}`}>
             {helperText}
           </p>
         )}
@@ -53,7 +53,7 @@ Input.displayName = 'Input';
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ variant = 'default', label, helperText, fullWidth = false, className = '', rows = 4, ...props }, ref) => {
-    const baseStyles = 'bg-white/[0.06] text-[#fafafa] px-4 py-3 rounded-lg border border-[#262626] transition-all duration-150 resize-none';
+    const baseStyles = 'bg-white/[0.06] text-[var(--color-text)] px-4 py-3 rounded-lg border border-[var(--color-border-light)] transition-all duration-150 resize-none';
 
     const variantStyles = {
       default: '',
@@ -66,7 +66,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className={widthStyles}>
         {label && (
-          <label className="label text-[#fafafa] mb-2 block">{label}</label>
+          <label className="label text-[var(--color-text)] mb-2 block">{label}</label>
         )}
         <textarea
           ref={ref}
@@ -75,7 +75,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           {...props}
         />
         {helperText && (
-          <p className={`text-xs mt-1 ${variant === 'error' ? 'text-red-400' : 'text-[#a1a1a1]'}`}>
+          <p className={`text-xs mt-1 ${variant === 'error' ? 'text-red-400' : 'text-[var(--color-text-secondary)]'}`}>
             {helperText}
           </p>
         )}

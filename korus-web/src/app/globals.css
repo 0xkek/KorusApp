@@ -79,22 +79,22 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0a0a0a;
+  background: var(--color-background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #262626;
+  background: var(--color-surface-light);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #333333;
+  background: var(--color-text-tertiary);
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #262626 #0a0a0a;
+  scrollbar-color: var(--color-surface-light) var(--color-background);
 }
 
 /* ========================================
@@ -103,7 +103,7 @@ body {
 
 ::selection {
   background: color-mix(in srgb, var(--korus-primary) 30%, transparent);
-  color: #fafafa;
+  color: var(--color-text);
 }
 
 /* ========================================
@@ -343,7 +343,7 @@ textarea.bg-transparent:focus {
 }
 
 .wallet-adapter-modal-wrapper {
-  background: rgba(10, 10, 10, 0.95) !important;
+  background: var(--color-overlay-background) !important;
   backdrop-filter: blur(10px) !important;
 }
 

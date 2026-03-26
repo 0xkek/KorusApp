@@ -128,10 +128,10 @@ export default function GamePlayPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-korus-primary mx-auto mb-4"></div>
-          <p className="text-[#a1a1a1]">Loading game...</p>
+          <p className="text-[var(--color-text-secondary)]">Loading game...</p>
         </div>
       </div>
     );
@@ -139,7 +139,7 @@ export default function GamePlayPage() {
 
   if (error || !game) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-500 mb-4">{error || 'Game not found'}</p>
           <Button onClick={() => router.push('/games')}>Back to Games</Button>
@@ -255,9 +255,9 @@ export default function GamePlayPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="min-h-screen bg-[var(--color-background)]">
       {/* Header */}
-      <div className="bg-[#141414] border-b border-[#262626]">
+      <div className="bg-[var(--color-surface)] border-b border-[var(--color-border-light)]">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between mb-4">
             <Button
@@ -271,49 +271,49 @@ export default function GamePlayPage() {
               {game.status === 'active' && (
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-[#a1a1a1]">LIVE</span>
+                  <span className="text-sm text-[var(--color-text-secondary)]">LIVE</span>
                 </div>
               )}
               {game.status === 'waiting' && (
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-[#a1a1a1]">WAITING</span>
+                  <span className="text-sm text-[var(--color-text-secondary)]">WAITING</span>
                 </div>
               )}
 
-              <div className="bg-gradient-to-r from-korus-primary to-korus-secondary text-[#fafafa] px-4 py-2 rounded-lg font-bold">
+              <div className="bg-gradient-to-r from-korus-primary to-korus-secondary text-[var(--color-text)] px-4 py-2 rounded-lg font-bold">
                 {game.wager} SOL
               </div>
             </div>
           </div>
 
-          <h1 className="text-3xl font-bold text-[#fafafa] mb-2">{getGameName()}</h1>
+          <h1 className="text-3xl font-bold text-[var(--color-text)] mb-2">{getGameName()}</h1>
 
           {/* Players */}
           <div className="flex items-center gap-4">
-            <div className="flex-1 bg-[#141414] border border-[#262626] rounded-lg p-3">
-              <div className="text-xs text-[#a1a1a1] mb-1">PLAYER 1</div>
-              <div className="font-mono text-sm text-[#fafafa]">
+            <div className="flex-1 bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-lg p-3">
+              <div className="text-xs text-[var(--color-text-secondary)] mb-1">PLAYER 1</div>
+              <div className="font-mono text-sm text-[var(--color-text)]">
                 {game.player1DisplayName || `${game.player1.slice(0, 6)}...${game.player1.slice(-4)}`}
               </div>
               {isPlayer1 && (
-                <div className="inline-block mt-1 px-2 py-0.5 bg-korus-primary text-[#fafafa] text-xs rounded">
+                <div className="inline-block mt-1 px-2 py-0.5 bg-korus-primary text-[var(--color-text)] text-xs rounded">
                   YOU
                 </div>
               )}
             </div>
 
-            <div className="text-[#a1a1a1] font-bold">VS</div>
+            <div className="text-[var(--color-text-secondary)] font-bold">VS</div>
 
-            <div className="flex-1 bg-[#141414] border border-[#262626] rounded-lg p-3">
-              <div className="text-xs text-[#a1a1a1] mb-1">PLAYER 2</div>
+            <div className="flex-1 bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-lg p-3">
+              <div className="text-xs text-[var(--color-text-secondary)] mb-1">PLAYER 2</div>
               {game.player2 ? (
                 <>
-                  <div className="font-mono text-sm text-[#fafafa]">
+                  <div className="font-mono text-sm text-[var(--color-text)]">
                     {game.player2DisplayName || `${game.player2.slice(0, 6)}...${game.player2.slice(-4)}`}
                   </div>
                   {isPlayer2 && (
-                    <div className="inline-block mt-1 px-2 py-0.5 bg-korus-secondary text-[#fafafa] text-xs rounded">
+                    <div className="inline-block mt-1 px-2 py-0.5 bg-korus-secondary text-[var(--color-text)] text-xs rounded">
                       YOU
                     </div>
                   )}
@@ -348,8 +348,8 @@ export default function GamePlayPage() {
         )}
 
         {game.status === 'active' && !isMyTurn && isParticipant && (
-          <div className="mb-6 p-4 bg-[#141414] border border-[#262626] rounded-lg text-center">
-            <p className="text-[#a1a1a1]">Waiting for opponent&apos;s move...</p>
+          <div className="mb-6 p-4 bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-lg text-center">
+            <p className="text-[var(--color-text-secondary)]">Waiting for opponent&apos;s move...</p>
           </div>
         )}
 
@@ -358,14 +358,14 @@ export default function GamePlayPage() {
             game.winner === publicKey?.toBase58()
               ? 'bg-green-500/20 border-green-500'
               : game.winner === 'draw'
-              ? 'bg-[#141414] border-[#262626]'
+              ? 'bg-[var(--color-surface)] border-[var(--color-border-light)]'
               : 'bg-red-500/20 border-red-500'
           }`}>
             <p className={`font-bold text-lg ${
               game.winner === publicKey?.toBase58()
                 ? 'text-green-500'
                 : game.winner === 'draw'
-                ? 'text-[#a1a1a1]'
+                ? 'text-[var(--color-text-secondary)]'
                 : 'text-red-500'
             }`}>
               {game.winner === 'draw'
@@ -394,7 +394,7 @@ export default function GamePlayPage() {
         )}
 
         {/* Game Board */}
-        <div className="bg-[#141414] border border-[#262626] rounded-xl p-8">
+        <div className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-xl p-8">
           {game.gameType === 'tictactoe' && renderTicTacToe()}
           {game.gameType === 'connectfour' && renderConnectFour()}
           {game.gameType === 'rps' && renderRPS()}

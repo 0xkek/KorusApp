@@ -232,13 +232,13 @@ export default function EventDetailsPage() {
 
   const getStatusBadge = (event: eventsAPI.Event) => {
     if (event.status === 'closed') {
-      return <span className="px-3 py-1 bg-[#525252]/20 text-[#a1a1a1] text-xs font-bold rounded-full">Closed</span>;
+      return <span className="px-3 py-1 bg-[#525252]/20 text-[var(--color-text-secondary)] text-xs font-bold rounded-full">Closed</span>;
     }
     if (event.status === 'cancelled') {
       return <span className="px-3 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded-full">Cancelled</span>;
     }
     if (new Date(event.endDate) < new Date()) {
-      return <span className="px-3 py-1 bg-[#525252]/20 text-[#a1a1a1] text-xs font-bold rounded-full">Ended</span>;
+      return <span className="px-3 py-1 bg-[#525252]/20 text-[var(--color-text-secondary)] text-xs font-bold rounded-full">Ended</span>;
     }
     if (new Date(event.startDate) > new Date()) {
       return <span className="px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-bold rounded-full">Upcoming</span>;
@@ -248,10 +248,10 @@ export default function EventDetailsPage() {
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <main className="min-h-screen bg-[var(--color-background)] flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-korus-primary/20 border-t-korus-primary rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[#a1a1a1]">Loading event...</p>
+          <p className="text-[var(--color-text-secondary)]">Loading event...</p>
         </div>
       </main>
     );
@@ -259,11 +259,11 @@ export default function EventDetailsPage() {
 
   if (!event) {
     return (
-      <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <main className="min-h-screen bg-[var(--color-background)] flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">❌</div>
-          <h2 className="text-2xl font-semibold text-[#fafafa] mb-2">Event Not Found</h2>
-          <p className="text-[#a1a1a1] mb-6">This event doesn&apos;t exist or has been removed</p>
+          <h2 className="text-2xl font-semibold text-[var(--color-text)] mb-2">Event Not Found</h2>
+          <p className="text-[var(--color-text-secondary)] mb-6">This event doesn&apos;t exist or has been removed</p>
           <button
             onClick={() => router.back()}
             className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-semibold px-6 py-3 rounded-lg duration-150"
@@ -276,10 +276,10 @@ export default function EventDetailsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
+    <main className="min-h-screen bg-[var(--color-background)] relative overflow-hidden">
       {/* Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#111111]/25 to-[#111111]/35" />
+      <div className="fixed inset-0 bg-gradient-to-br from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)]">
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[var(--color-surface)]/25 to-[var(--color-surface)]/35" />
       </div>
       <div className="fixed inset-0 overflow-hidden">
         <div className="absolute -top-32 -right-32 w-[600px] h-[600px] bg-gradient-to-br from-korus-primary/8 to-korus-secondary/6 rounded-full blur-[80px]" />
@@ -295,29 +295,29 @@ export default function EventDetailsPage() {
           />
 
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-[#262626]">
+          <div className="flex-1 min-w-0 border-x border-[var(--color-border-light)]">
 
             {/* Header */}
-            <div className="sticky top-0 bg-[#141414]/80 backdrop-blur-xl border-b border-[#262626] z-10 px-6 py-4">
+            <div className="sticky top-0 bg-[var(--color-surface)]/80 backdrop-blur-xl border-b border-[var(--color-border-light)] z-10 px-6 py-4">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => router.back()}
                   className="w-10 h-10 rounded-full bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors"
                 >
-                  <svg className="w-5 h-5 text-[#fafafa]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-[var(--color-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
                 <div>
-                  <h1 className="text-2xl font-semibold text-[#fafafa]">Event Details</h1>
-                  <p className="text-[#a1a1a1] text-sm">{event.projectName}</p>
+                  <h1 className="text-2xl font-semibold text-[var(--color-text)]">Event Details</h1>
+                  <p className="text-[var(--color-text-secondary)] text-sm">{event.projectName}</p>
                 </div>
               </div>
             </div>
 
             <div className="max-w-5xl mx-auto px-6 py-8 space-y-6">
               {/* Event Header */}
-              <div className="border border-[#262626] bg-[#141414] rounded-xl overflow-hidden">
+              <div className="border border-[var(--color-border-light)] bg-[var(--color-surface)] rounded-xl overflow-hidden">
                 {event.imageUrl && (
                   <div className="w-full h-64 relative">
                     <Image
@@ -334,36 +334,36 @@ export default function EventDetailsPage() {
                     <div className="flex items-center gap-3">
                       <span className="text-4xl">{getEventTypeIcon(event.type)}</span>
                       <div>
-                        <h2 className="text-2xl font-semibold text-[#fafafa] mb-1">{event.title}</h2>
+                        <h2 className="text-2xl font-semibold text-[var(--color-text)] mb-1">{event.title}</h2>
                         <p className="text-korus-primary font-medium">{event.projectName}</p>
                       </div>
                     </div>
                     {getStatusBadge(event)}
                   </div>
 
-                  <p className="text-[#a1a1a1] mb-6">{event.description}</p>
+                  <p className="text-[var(--color-text-secondary)] mb-6">{event.description}</p>
 
                   {/* Event Info Grid */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-[#262626] rounded-xl p-4 border border-[#262626]">
-                      <div className="text-[#737373] text-xs mb-1">Start Date</div>
-                      <div className="text-[#fafafa] font-semibold text-sm">
+                    <div className="bg-[var(--color-surface-light)] rounded-xl p-4 border border-[var(--color-border-light)]">
+                      <div className="text-[var(--color-text-tertiary)] text-xs mb-1">Start Date</div>
+                      <div className="text-[var(--color-text)] font-semibold text-sm">
                         {new Date(event.startDate).toLocaleDateString()}
                       </div>
                     </div>
-                    <div className="bg-[#262626] rounded-xl p-4 border border-[#262626]">
-                      <div className="text-[#737373] text-xs mb-1">End Date</div>
-                      <div className="text-[#fafafa] font-semibold text-sm">
+                    <div className="bg-[var(--color-surface-light)] rounded-xl p-4 border border-[var(--color-border-light)]">
+                      <div className="text-[var(--color-text-tertiary)] text-xs mb-1">End Date</div>
+                      <div className="text-[var(--color-text)] font-semibold text-sm">
                         {new Date(event.endDate).toLocaleDateString()}
                       </div>
                     </div>
-                    <div className="bg-[#262626] rounded-xl p-4 border border-[#262626]">
-                      <div className="text-[#737373] text-xs mb-1">Registrations</div>
-                      <div className="text-[#fafafa] font-semibold text-sm">{event.registrationCount}</div>
+                    <div className="bg-[var(--color-surface-light)] rounded-xl p-4 border border-[var(--color-border-light)]">
+                      <div className="text-[var(--color-text-tertiary)] text-xs mb-1">Registrations</div>
+                      <div className="text-[var(--color-text)] font-semibold text-sm">{event.registrationCount}</div>
                     </div>
-                    <div className="bg-[#262626] rounded-xl p-4 border border-[#262626]">
-                      <div className="text-[#737373] text-xs mb-1">Views</div>
-                      <div className="text-[#fafafa] font-semibold text-sm">{event.viewCount}</div>
+                    <div className="bg-[var(--color-surface-light)] rounded-xl p-4 border border-[var(--color-border-light)]">
+                      <div className="text-[var(--color-text-tertiary)] text-xs mb-1">Views</div>
+                      <div className="text-[var(--color-text)] font-semibold text-sm">{event.viewCount}</div>
                     </div>
                   </div>
 
@@ -386,13 +386,13 @@ export default function EventDetailsPage() {
 
               {/* Registration Section for Non-Creators */}
               {!isCreator && (
-                <div className="border border-[#262626] bg-[#141414] rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-[#fafafa] mb-4">Join Whitelist</h3>
+                <div className="border border-[var(--color-border-light)] bg-[var(--color-surface)] rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4">Join Whitelist</h3>
 
                   {!connected ? (
                     <div className="text-center py-8">
                       <div className="text-4xl mb-3">🔒</div>
-                      <p className="text-[#a1a1a1] mb-4">Connect your wallet to register</p>
+                      <p className="text-[var(--color-text-secondary)] mb-4">Connect your wallet to register</p>
                       <button
                         onClick={() => showError('Please connect your wallet using the button in the sidebar')}
                         className="px-6 py-3 bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-semibold rounded-lg hover:shadow-lg duration-150"
@@ -408,7 +408,7 @@ export default function EventDetailsPage() {
                         </svg>
                       </div>
                       <h4 className="text-xl font-semibold text-green-400 mb-2">Successfully Registered!</h4>
-                      <p className="text-[#a1a1a1] mb-4">
+                      <p className="text-[var(--color-text-secondary)] mb-4">
                         You&apos;re on the whitelist for this event
                       </p>
                       {registrationStatus?.position && (
@@ -416,7 +416,7 @@ export default function EventDetailsPage() {
                           Position #{registrationStatus.position}
                         </div>
                       )}
-                      <div className="mt-4 text-xs text-[#737373]">
+                      <div className="mt-4 text-xs text-[var(--color-text-tertiary)]">
                         Registered on {registrationStatus?.registeredAt ? new Date(registrationStatus.registeredAt).toLocaleDateString() : ''}
                       </div>
                     </div>
@@ -424,27 +424,27 @@ export default function EventDetailsPage() {
                     <div className="text-center py-8">
                       <div className="text-4xl mb-3">❌</div>
                       <p className="text-red-400 font-semibold mb-2">Event Cancelled</p>
-                      <p className="text-[#a1a1a1] text-sm">This event has been cancelled by the creator</p>
+                      <p className="text-[var(--color-text-secondary)] text-sm">This event has been cancelled by the creator</p>
                     </div>
                   ) : event.status === 'closed' || new Date(event.endDate) < new Date() ? (
                     <div className="text-center py-8">
                       <div className="text-4xl mb-3">🔒</div>
-                      <p className="text-[#a1a1a1] font-semibold mb-2">Registration Closed</p>
-                      <p className="text-[#a1a1a1] text-sm">This event is no longer accepting registrations</p>
+                      <p className="text-[var(--color-text-secondary)] font-semibold mb-2">Registration Closed</p>
+                      <p className="text-[var(--color-text-secondary)] text-sm">This event is no longer accepting registrations</p>
                     </div>
                   ) : new Date(event.startDate) > new Date() ? (
                     <div className="text-center py-8">
                       <div className="text-4xl mb-3">⏰</div>
-                      <p className="text-[#a1a1a1] font-semibold mb-2">Not Started Yet</p>
-                      <p className="text-[#a1a1a1] text-sm">
+                      <p className="text-[var(--color-text-secondary)] font-semibold mb-2">Not Started Yet</p>
+                      <p className="text-[var(--color-text-secondary)] text-sm">
                         Registration opens on {new Date(event.startDate).toLocaleDateString()}
                       </p>
                     </div>
                   ) : event.maxSpots && event.registrationCount >= event.maxSpots ? (
                     <div className="text-center py-8">
                       <div className="text-4xl mb-3">😢</div>
-                      <p className="text-[#a1a1a1] font-semibold mb-2">Whitelist Full</p>
-                      <p className="text-[#a1a1a1] text-sm">
+                      <p className="text-[var(--color-text-secondary)] font-semibold mb-2">Whitelist Full</p>
+                      <p className="text-[var(--color-text-secondary)] text-sm">
                         All {event.maxSpots} spots have been filled
                       </p>
                     </div>
@@ -453,10 +453,10 @@ export default function EventDetailsPage() {
                       {/* Requirements Check */}
                       {event.requirements && event.requirements.length > 0 && (
                         <div className="mb-6">
-                          <h4 className="text-sm font-semibold text-[#fafafa] mb-3">Requirements</h4>
+                          <h4 className="text-sm font-semibold text-[var(--color-text)] mb-3">Requirements</h4>
                           <div className="space-y-2">
                             {event.requirements.map((req, index) => (
-                              <div key={index} className="flex items-center gap-2 text-sm text-[#a1a1a1]">
+                              <div key={index} className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
                                 <svg className="w-4 h-4 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
@@ -471,7 +471,7 @@ export default function EventDetailsPage() {
                       {event.maxSpots && (
                         <div className="mb-6">
                           <div className="flex justify-between items-center mb-2">
-                            <span className="text-sm text-[#a1a1a1]">
+                            <span className="text-sm text-[var(--color-text-secondary)]">
                               {event.registrationCount} / {event.maxSpots} spots filled
                             </span>
                             <span className="text-sm font-medium text-korus-primary">
@@ -503,7 +503,7 @@ export default function EventDetailsPage() {
                         )}
                       </button>
 
-                      <p className="text-xs text-[#737373] mt-3 text-center">
+                      <p className="text-xs text-[var(--color-text-tertiary)] mt-3 text-center">
                         You&apos;ll be asked to sign a message with your wallet to verify ownership
                       </p>
                     </>
@@ -538,11 +538,11 @@ export default function EventDetailsPage() {
                   )}
 
                   {/* Export Section */}
-                  <div className="border border-[#262626] bg-[#141414] rounded-xl p-6">
+                  <div className="border border-[var(--color-border-light)] bg-[var(--color-surface)] rounded-xl p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-[#fafafa] mb-1">Export Registrations</h3>
-                        <p className="text-[#a1a1a1] text-sm">Download all participant wallet addresses</p>
+                        <h3 className="text-lg font-semibold text-[var(--color-text)] mb-1">Export Registrations</h3>
+                        <p className="text-[var(--color-text-secondary)] text-sm">Download all participant wallet addresses</p>
                       </div>
                       <div className="flex gap-3">
                         <button
@@ -564,25 +564,25 @@ export default function EventDetailsPage() {
                   </div>
 
                   {/* Participants List */}
-                  <div className="border border-[#262626] bg-[#141414] rounded-xl p-6">
-                    <h3 className="text-lg font-semibold text-[#fafafa] mb-4">Participants ({registrations.length})</h3>
+                  <div className="border border-[var(--color-border-light)] bg-[var(--color-surface)] rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4">Participants ({registrations.length})</h3>
 
                     {isLoadingRegistrations ? (
                       <div className="text-center py-12">
                         <div className="w-8 h-8 border-4 border-korus-primary/20 border-t-korus-primary rounded-full animate-spin mx-auto mb-3"></div>
-                        <p className="text-[#a1a1a1] text-sm">Loading participants...</p>
+                        <p className="text-[var(--color-text-secondary)] text-sm">Loading participants...</p>
                       </div>
                     ) : registrations.length === 0 ? (
                       <div className="text-center py-12">
                         <div className="text-4xl mb-3">📭</div>
-                        <p className="text-[#a1a1a1]">No participants yet</p>
+                        <p className="text-[var(--color-text-secondary)]">No participants yet</p>
                       </div>
                     ) : (
                       <div className="space-y-3 max-h-96 overflow-y-auto">
                         {registrations.map((reg, index) => (
                           <div
                             key={reg.id}
-                            className="bg-[#141414] border border-[#262626] rounded-xl p-4 hover:bg-white/[0.04] duration-150"
+                            className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-xl p-4 hover:bg-white/[0.04] duration-150"
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-4">
@@ -590,10 +590,10 @@ export default function EventDetailsPage() {
                                   <span className="text-black font-bold text-sm">#{index + 1}</span>
                                 </div>
                                 <div>
-                                  <div className="font-mono text-[#fafafa] text-sm">
+                                  <div className="font-mono text-[var(--color-text)] text-sm">
                                     {reg.walletAddress}
                                   </div>
-                                  <div className="text-xs text-[#737373]">
+                                  <div className="text-xs text-[var(--color-text-tertiary)]">
                                     Registered {new Date(reg.registeredAt).toLocaleDateString()} at {new Date(reg.registeredAt).toLocaleTimeString()}
                                   </div>
                                 </div>
@@ -655,8 +655,8 @@ export default function EventDetailsPage() {
 
       {/* Cancel Event Confirmation Modal */}
       {showCancelModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl max-w-md w-full">
+        <div className="fixed inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl shadow-2xl max-w-md w-full">
             <div className="p-6">
               {/* Warning Icon */}
               <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -665,11 +665,11 @@ export default function EventDetailsPage() {
                 </svg>
               </div>
 
-              <h2 className="text-2xl font-semibold text-[#fafafa] text-center mb-3">Cancel Event?</h2>
+              <h2 className="text-2xl font-semibold text-[var(--color-text)] text-center mb-3">Cancel Event?</h2>
 
               <div className="space-y-3 mb-6">
-                <p className="text-[#a1a1a1] text-sm text-center">
-                  Are you sure you want to cancel <strong className="text-[#fafafa]">{event?.title}</strong>?
+                <p className="text-[var(--color-text-secondary)] text-sm text-center">
+                  Are you sure you want to cancel <strong className="text-[var(--color-text)]">{event?.title}</strong>?
                 </p>
 
                 {/* Warning Box */}
@@ -701,7 +701,7 @@ export default function EventDetailsPage() {
                 <button
                   onClick={() => setShowCancelModal(false)}
                   disabled={isCancelling}
-                  className="flex-1 px-4 py-3 bg-white/[0.08] border border-[#262626] text-[#fafafa] font-semibold rounded-lg hover:bg-white/[0.12] duration-150 disabled:opacity-50"
+                  className="flex-1 px-4 py-3 bg-white/[0.08] border border-[var(--color-border-light)] text-[var(--color-text)] font-semibold rounded-lg hover:bg-white/[0.12] duration-150 disabled:opacity-50"
                 >
                   Keep Event
                 </button>

@@ -75,21 +75,21 @@ export function CreateGameModal({ postId, onClose, onGameCreated }: CreateGameMo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#1e1e1e] border border-[#262626] rounded-2xl shadow-2xl p-6 max-w-md w-full">
-        <h2 className="text-2xl font-bold text-[#fafafa] mb-4">Create Game Challenge</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay-background)] backdrop-blur-sm">
+      <div className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl shadow-2xl p-6 max-w-md w-full">
+        <h2 className="text-2xl font-bold text-[var(--color-text)] mb-4">Create Game Challenge</h2>
 
         {/* Game Type Selection */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-[#a1a1a1] mb-2">
+          <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
             Game Type
           </label>
           <div className="grid grid-cols-3 gap-2">
             <button
               className={`p-3 rounded-lg border-2 duration-150 ${
                 gameType === 'tictactoe'
-                  ? 'border-korus-primary bg-korus-primary/20 text-[#fafafa]'
-                  : 'border-[#262626] bg-white/[0.06] text-[#a1a1a1] hover:border-korus-primary/50'
+                  ? 'border-korus-primary bg-korus-primary/20 text-[var(--color-text)]'
+                  : 'border-[var(--color-border-light)] bg-white/[0.06] text-[var(--color-text-secondary)] hover:border-korus-primary/50'
               }`}
               onClick={() => setGameType('tictactoe')}
             >
@@ -99,8 +99,8 @@ export function CreateGameModal({ postId, onClose, onGameCreated }: CreateGameMo
             <button
               className={`p-3 rounded-lg border-2 duration-150 ${
                 gameType === 'rps'
-                  ? 'border-korus-primary bg-korus-primary/20 text-[#fafafa]'
-                  : 'border-[#262626] bg-white/[0.06] text-[#a1a1a1] hover:border-korus-primary/50'
+                  ? 'border-korus-primary bg-korus-primary/20 text-[var(--color-text)]'
+                  : 'border-[var(--color-border-light)] bg-white/[0.06] text-[var(--color-text-secondary)] hover:border-korus-primary/50'
               }`}
               onClick={() => setGameType('rps')}
             >
@@ -110,8 +110,8 @@ export function CreateGameModal({ postId, onClose, onGameCreated }: CreateGameMo
             <button
               className={`p-3 rounded-lg border-2 duration-150 ${
                 gameType === 'connectfour'
-                  ? 'border-korus-primary bg-korus-primary/20 text-[#fafafa]'
-                  : 'border-[#262626] bg-white/[0.06] text-[#a1a1a1] hover:border-korus-primary/50'
+                  ? 'border-korus-primary bg-korus-primary/20 text-[var(--color-text)]'
+                  : 'border-[var(--color-border-light)] bg-white/[0.06] text-[var(--color-text-secondary)] hover:border-korus-primary/50'
               }`}
               onClick={() => setGameType('connectfour')}
             >
@@ -123,7 +123,7 @@ export function CreateGameModal({ postId, onClose, onGameCreated }: CreateGameMo
 
         {/* Wager Input */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-[#a1a1a1] mb-2">
+          <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
             Wager (SOL)
           </label>
           <input
@@ -132,10 +132,10 @@ export function CreateGameModal({ postId, onClose, onGameCreated }: CreateGameMo
             min="0"
             value={wager}
             onChange={(e) => setWager(e.target.value)}
-            className="w-full px-4 py-2 bg-white/[0.06] border border-[#262626] rounded-lg text-[#fafafa] focus:border-korus-primary focus:outline-none duration-150"
+            className="w-full px-4 py-2 bg-white/[0.06] border border-[var(--color-border-light)] rounded-lg text-[var(--color-text)] focus:border-korus-primary focus:outline-none duration-150"
             placeholder="0.1"
           />
-          <p className="text-xs text-[#a1a1a1] mt-1">
+          <p className="text-xs text-[var(--color-text-secondary)] mt-1">
             Set to 0 for a friendly game (no blockchain escrow)
           </p>
         </div>

@@ -322,8 +322,8 @@ export default function ProfilePage() {
   // Early return after all hooks are declared
   if (!connected) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="text-[#fafafa]">Redirecting...</div>
+      <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center">
+        <div className="text-[var(--color-text)]">Redirecting...</div>
       </div>
     );
   }
@@ -437,10 +437,10 @@ export default function ProfilePage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
+    <main className="min-h-screen bg-[var(--color-background)] relative overflow-hidden">
       {/* Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#111111]/25 to-[#111111]/35" />
+      <div className="fixed inset-0 bg-gradient-to-br from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)]">
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[var(--color-surface)]/25 to-[#111111]/35" />
       </div>
 
       {/* Static gradient orbs for visual depth */}
@@ -460,11 +460,11 @@ export default function ProfilePage() {
             onSearchClick={() => setShowSearchModal(true)}
           />
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-r border-[#262626]">
+          <div className="flex-1 min-w-0 border-r border-[var(--color-border-light)]">
             {/* Header */}
-            <div className="sticky top-0 bg-[#141414]/80 backdrop-blur-xl border-b border-[#262626] z-10">
+            <div className="sticky top-0 bg-[var(--color-surface)]/80 backdrop-blur-xl border-b border-[var(--color-border-light)] z-10">
               <div className="flex items-center px-4 py-4">
-                <button aria-label="Open mobile menu" className="md:hidden flex items-center justify-center w-12 h-12 text-[#fafafa] hover:bg-white/[0.04] transition-colors mr-2">
+                <button aria-label="Open mobile menu" className="md:hidden flex items-center justify-center w-12 h-12 text-[var(--color-text)] hover:bg-white/[0.04] transition-colors mr-2">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
@@ -474,11 +474,11 @@ export default function ProfilePage() {
                   aria-label="Go back"
                   className="p-2 hover:bg-white/[0.04] rounded-full transition-colors mr-3"
                 >
-                  <svg className="w-6 h-6 text-[#fafafa]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-[var(--color-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-                <h1 className="text-3xl font-bold text-[#fafafa] flex-1">Profile</h1>
+                <h1 className="text-3xl font-bold text-[var(--color-text)] flex-1">Profile</h1>
               </div>
             </div>
 
@@ -527,7 +527,7 @@ export default function ProfilePage() {
                       aria-label="Change avatar"
                       className="relative group rounded-full"
                     >
-                      <div className="w-32 h-32 bg-[#1a1a1a] rounded-full flex items-center justify-center text-5xl font-bold text-[#fafafa] shadow-lg transition-all duration-150 border-2 border-[#262626]">
+                      <div className="w-32 h-32 bg-[var(--color-surface)] rounded-full flex items-center justify-center text-5xl font-bold text-[var(--color-text)] shadow-lg transition-all duration-150 border-2 border-[var(--color-border-light)]">
                         {selectedNFTAvatar ? (
                           <Image
                             src={selectedNFTAvatar.image || selectedNFTAvatar.uri}
@@ -553,7 +553,7 @@ export default function ProfilePage() {
 
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-2 mb-2">
-                      <h2 className={`text-2xl font-bold ${snsDomain ? 'text-korus-primary' : 'text-[#fafafa]'}`}>
+                      <h2 className={`text-2xl font-bold ${snsDomain ? 'text-korus-primary' : 'text-[var(--color-text)]'}`}>
                         {displayName}
                       </h2>
                       {isPremium && (
@@ -566,7 +566,7 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="flex items-center justify-center gap-2 mb-4">
-                      <span className="text-[#737373] text-sm font-mono">{walletAddress}</span>
+                      <span className="text-[var(--color-text-tertiary)] text-sm font-mono">{walletAddress}</span>
                       <button
                         onClick={handleCopyWallet}
                         aria-label={copied ? "Copied!" : "Copy wallet address"}
@@ -587,19 +587,19 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Identity Options Section */}
-                <div className="mb-6 bg-white/[0.04] backdrop-blur-sm border border-[#262626] rounded-2xl p-6 relative z-50">
-                  <h3 className="text-lg font-bold text-[#fafafa] mb-4">Your Identity</h3>
+                <div className="mb-6 bg-white/[0.04] backdrop-blur-sm border border-[var(--color-border-light)] rounded-2xl p-6 relative z-50">
+                  <h3 className="text-lg font-bold text-[var(--color-text)] mb-4">Your Identity</h3>
 
                   {/* Display Name Dropdown */}
                   <div className="relative z-[100]" ref={snsDropdownRef}>
                     <button
                       onClick={() => setShowIdentityDropdown(!showIdentityDropdown)}
-                      className="w-full p-4 bg-white/[0.06] border border-[#262626] rounded-xl hover:bg-white/[0.08] transition-colors"
+                      className="w-full p-4 bg-white/[0.06] border border-[var(--color-border-light)] rounded-xl hover:bg-white/[0.08] transition-colors"
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-[#a1a1a1] text-xs mb-1">Currently displaying as:</div>
-                          <div className="text-lg font-bold text-[#fafafa] flex items-center gap-2">
+                          <div className="text-[var(--color-text-secondary)] text-xs mb-1">Currently displaying as:</div>
+                          <div className="text-lg font-bold text-[var(--color-text)] flex items-center gap-2">
                             {displayName}
                             {isPremium && (
                               <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
@@ -609,18 +609,18 @@ export default function ProfilePage() {
                               </div>
                             )}
                           </div>
-                          <div className="text-[#737373] text-xs mt-1">
+                          <div className="text-[var(--color-text-tertiary)] text-xs mt-1">
                             {dbSnsUsername === '__wallet__' ? 'Wallet Address' : dbSnsUsername ? 'SNS Domain' : currentUsername && displayName === currentUsername ? 'Custom Username' : 'Wallet Address'}
                           </div>
                         </div>
-                        <svg className={`w-5 h-5 text-[#737373] transition-transform ${showIdentityDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className={`w-5 h-5 text-[var(--color-text-tertiary)] transition-transform ${showIdentityDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
                         </svg>
                       </div>
                     </button>
 
                     {showIdentityDropdown && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-[#141414] backdrop-blur-xl border border-[#262626] rounded-xl z-50 max-h-80 overflow-y-auto shadow-xl">
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--color-surface)] backdrop-blur-xl border border-[var(--color-border-light)] rounded-xl z-50 max-h-80 overflow-y-auto shadow-xl">
                         {/* Wallet Address option */}
                         <button
                           onClick={async () => {
@@ -636,11 +636,11 @@ export default function ProfilePage() {
                               showError('Failed to update display preference');
                             }
                           }}
-                          className="w-full px-4 py-3 text-left hover:bg-white/[0.06] transition-colors border-b border-[#262626]"
+                          className="w-full px-4 py-3 text-left hover:bg-white/[0.06] transition-colors border-b border-[var(--color-border-light)]"
                         >
                           <div className="flex items-center justify-between">
                             <div>
-                              <div className="text-[#fafafa] font-medium flex items-center gap-2">
+                              <div className="text-[var(--color-text)] font-medium flex items-center gap-2">
                                 {`${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`}
                                 {isPremium && (
                                   <div className="w-3.5 h-3.5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
@@ -650,7 +650,7 @@ export default function ProfilePage() {
                                   </div>
                                 )}
                               </div>
-                              <div className="text-[#737373] text-xs">Wallet Address</div>
+                              <div className="text-[var(--color-text-tertiary)] text-xs">Wallet Address</div>
                             </div>
                             {(dbSnsUsername === '__wallet__' || (!dbSnsUsername && !currentUsername)) && (
                               <svg className="w-4 h-4 text-korus-primary" fill="currentColor" viewBox="0 0 24 24">
@@ -662,7 +662,7 @@ export default function ProfilePage() {
 
                         {/* Custom Username option — select existing username as display */}
                         {currentUsername && (
-                          <div className="border-b border-[#262626]">
+                          <div className="border-b border-[var(--color-border-light)]">
                             <button
                               onClick={async () => {
                                 try {
@@ -681,7 +681,7 @@ export default function ProfilePage() {
                             >
                               <div className="flex items-center justify-between">
                                 <div>
-                                  <div className="text-[#fafafa] font-medium flex items-center gap-2">
+                                  <div className="text-[var(--color-text)] font-medium flex items-center gap-2">
                                     @{currentUsername}
                                     {isPremium && (
                                       <div className="w-3.5 h-3.5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
@@ -691,7 +691,7 @@ export default function ProfilePage() {
                                       </div>
                                     )}
                                   </div>
-                                  <div className="text-[#737373] text-xs">Custom Username</div>
+                                  <div className="text-[var(--color-text-tertiary)] text-xs">Custom Username</div>
                                 </div>
                                 {!dbSnsUsername && currentUsername && displayName === currentUsername && (
                                   <svg className="w-4 h-4 text-korus-primary" fill="currentColor" viewBox="0 0 24 24">
@@ -755,11 +755,11 @@ export default function ProfilePage() {
                                 logger.error('Error setting SNS domain:', error);
                               }
                             }}
-                            className="w-full px-4 py-3 text-left hover:bg-white/[0.06] transition-colors border-b border-[#262626] last:border-b-0"
+                            className="w-full px-4 py-3 text-left hover:bg-white/[0.06] transition-colors border-b border-[var(--color-border-light)] last:border-b-0"
                           >
                             <div className="flex items-center justify-between">
                               <div>
-                                <div className="text-[#fafafa] font-medium flex items-center gap-2">
+                                <div className="text-[var(--color-text)] font-medium flex items-center gap-2">
                                   {domain.domain}
                                   {isPremium ? (
                                     <div className="w-3.5 h-3.5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
@@ -771,7 +771,7 @@ export default function ProfilePage() {
                                     <span className="text-[10px] bg-yellow-500 text-black px-1.5 py-0.5 rounded-full font-bold">PREMIUM</span>
                                   )}
                                 </div>
-                                <div className="text-[#737373] text-xs">SNS Domain</div>
+                                <div className="text-[var(--color-text-tertiary)] text-xs">SNS Domain</div>
                               </div>
                               {domain.domain === dbSnsUsername && (
                                 <svg className="w-4 h-4 text-korus-primary" fill="currentColor" viewBox="0 0 24 24">
@@ -792,7 +792,7 @@ export default function ProfilePage() {
                             className="w-full px-4 py-3 text-left hover:bg-white/[0.06] transition-colors"
                           >
                             <div className="text-korus-primary font-medium text-sm">+ Set Custom Username</div>
-                            <div className="text-[#737373] text-xs">Free users can set once</div>
+                            <div className="text-[var(--color-text-tertiary)] text-xs">Free users can set once</div>
                           </button>
                         )}
                       </div>
@@ -801,7 +801,7 @@ export default function ProfilePage() {
 
                   {/* Username Editor — expands inline when editingUsername is true */}
                   {editingUsername && (
-                    <div className="mt-4 p-4 bg-white/[0.04] border border-[#262626] rounded-xl">
+                    <div className="mt-4 p-4 bg-white/[0.04] border border-[var(--color-border-light)] rounded-xl">
                       <div className="space-y-3">
                         <input
                           type="text"
@@ -816,7 +816,7 @@ export default function ProfilePage() {
                             }
                           }}
                           placeholder="Enter username (3-20 chars, letters/numbers)"
-                          className="w-full bg-white/[0.06] border border-[#262626] rounded-lg px-3 py-2.5 text-[#fafafa] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
+                          className="w-full bg-white/[0.06] border border-[var(--color-border-light)] rounded-lg px-3 py-2.5 text-[var(--color-text)] placeholder-neutral-600 focus:border-korus-primary/50 focus:ring-1 focus:ring-korus-primary/20 outline-none"
                           autoCapitalize="none"
                           maxLength={20}
                           autoCorrect="false"
@@ -832,7 +832,7 @@ export default function ProfilePage() {
                               setEditingUsername(false);
                               setUsernameError('');
                             }}
-                            className="flex-1 px-4 py-2 bg-white/[0.08] border border-[#262626] text-[#fafafa] rounded-lg hover:bg-white/[0.12] duration-150"
+                            className="flex-1 px-4 py-2 bg-white/[0.08] border border-[var(--color-border-light)] text-[var(--color-text)] rounded-lg hover:bg-white/[0.12] duration-150"
                           >
                             Cancel
                           </button>
@@ -851,7 +851,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Reputation Score Card */}
-                <div className="bg-white/[0.04] backdrop-blur-sm border border-[#262626] rounded-2xl p-6 mb-6">
+                <div className="bg-white/[0.04] backdrop-blur-sm border border-[var(--color-border-light)] rounded-2xl p-6 mb-6">
                   <div className="text-center mb-6">
                     <div className="flex items-center justify-center gap-3 mb-2">
                       <div className="w-9 h-9 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center shadow-lg shadow-korus-primary/20">
@@ -859,7 +859,7 @@ export default function ProfilePage() {
                           <path d="M6 3h12l4 6-10 12L2 9l4-6z"/>
                         </svg>
                       </div>
-                      <h3 className="text-lg font-bold text-[#fafafa]">Reputation Score</h3>
+                      <h3 className="text-lg font-bold text-[var(--color-text)]">Reputation Score</h3>
                     </div>
                     <div className="text-4xl font-bold text-korus-primary mb-4">{isPremium ? reputation.reputationScore + Math.round((reputation.contentScore + reputation.engagementScore + reputation.communityScore + reputation.loyaltyScore) * 0.2) : reputation.reputationScore}</div>
                   </div>
@@ -897,20 +897,20 @@ export default function ProfilePage() {
                     ].map((cat) => (
                       <div
                         key={cat.label}
-                        className={`group relative flex items-center justify-between py-3 cursor-default ${cat.border ? 'border-b border-[#262626]/20' : ''}`}
+                        className={`group relative flex items-center justify-between py-3 cursor-default ${cat.border ? 'border-b border-[var(--color-border-light)]/20' : ''}`}
                       >
                         <div className="flex items-center gap-2">
                           <svg className="w-4 h-4 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={cat.icon}/>
                           </svg>
-                          <span className="text-[#a1a1a1] text-sm">{cat.label}</span>
-                          <svg className="w-3.5 h-3.5 text-[#525252] group-hover:text-[#a1a1a1] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <span className="text-[var(--color-text-secondary)] text-sm">{cat.label}</span>
+                          <svg className="w-3.5 h-3.5 text-[#525252] group-hover:text-[var(--color-text-secondary)] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                           </svg>
                         </div>
                         <span className="text-korus-primary font-bold">+{cat.score}</span>
                         {/* Tooltip */}
-                        <div className="absolute left-0 bottom-full mb-2 w-72 bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2 text-xs text-[#a1a1a1] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 shadow-lg pointer-events-none">
+                        <div className="absolute left-0 bottom-full mb-2 w-72 bg-[var(--color-surface)] border border-[#333] rounded-lg px-3 py-2 text-xs text-[var(--color-text-secondary)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 shadow-lg pointer-events-none">
                           {cat.tooltip}
                         </div>
                       </div>
@@ -921,7 +921,7 @@ export default function ProfilePage() {
                     const baseScore = reputation.contentScore + reputation.engagementScore + reputation.communityScore + reputation.loyaltyScore;
                     const premiumBonus = Math.round(baseScore * 0.2);
                     return (
-                      <div className="group relative flex items-center justify-between py-3 mt-1 pt-4 border-t border-[#262626]/30 cursor-default">
+                      <div className="group relative flex items-center justify-between py-3 mt-1 pt-4 border-t border-[var(--color-border-light)]/30 cursor-default">
                         <div className="flex items-center gap-2">
                           <div className="w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center flex-shrink-0">
                             <svg className="w-2.5 h-2.5 text-black" fill="currentColor" viewBox="0 0 24 24">
@@ -929,12 +929,12 @@ export default function ProfilePage() {
                             </svg>
                           </div>
                           <span className="text-yellow-400 text-sm">Premium Bonus</span>
-                          <svg className="w-3.5 h-3.5 text-[#525252] group-hover:text-[#a1a1a1] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-3.5 h-3.5 text-[#525252] group-hover:text-[var(--color-text-secondary)] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                           </svg>
                         </div>
                         <span className="text-yellow-400 font-bold">+{premiumBonus}</span>
-                        <div className="absolute left-0 bottom-full mb-2 w-72 bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2 text-xs text-[#a1a1a1] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 shadow-lg pointer-events-none">
+                        <div className="absolute left-0 bottom-full mb-2 w-72 bg-[var(--color-surface)] border border-[#333] rounded-lg px-3 py-2 text-xs text-[var(--color-text-secondary)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 shadow-lg pointer-events-none">
                           Premium members earn 20% bonus on all reputation points. This is your accumulated premium bonus.
                         </div>
                       </div>
@@ -943,15 +943,15 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Posts & Replies */}
-                <div className="bg-white/[0.04] backdrop-blur-sm border border-[#262626] rounded-2xl overflow-hidden">
+                <div className="bg-white/[0.04] backdrop-blur-sm border border-[var(--color-border-light)] rounded-2xl overflow-hidden">
                   {/* Tabs */}
-                  <div className="flex border-b border-[#262626]">
+                  <div className="flex border-b border-[var(--color-border-light)]">
                     <button
                       onClick={() => setActiveTab('posts')}
                       className={`flex-1 py-3 px-4 text-center transition-all duration-150 border-b-2 ${
                         activeTab === 'posts'
-                          ? 'text-[#fafafa] font-semibold border-korus-primary'
-                          : 'text-[#737373] hover:bg-white/[0.04] hover:text-[#a1a1a1] border-transparent'
+                          ? 'text-[var(--color-text)] font-semibold border-korus-primary'
+                          : 'text-[var(--color-text-tertiary)] hover:bg-white/[0.04] hover:text-[var(--color-text-secondary)] border-transparent'
                       }`}
                     >
                       Posts
@@ -960,8 +960,8 @@ export default function ProfilePage() {
                       onClick={() => setActiveTab('replies')}
                       className={`flex-1 py-3 px-4 text-center transition-all duration-150 border-b-2 ${
                         activeTab === 'replies'
-                          ? 'text-[#fafafa] font-semibold border-korus-primary'
-                          : 'text-[#737373] hover:bg-white/[0.04] hover:text-[#a1a1a1] border-transparent'
+                          ? 'text-[var(--color-text)] font-semibold border-korus-primary'
+                          : 'text-[var(--color-text-tertiary)] hover:bg-white/[0.04] hover:text-[var(--color-text-secondary)] border-transparent'
                       }`}
                     >
                       Replies
@@ -973,8 +973,8 @@ export default function ProfilePage() {
                     userPosts.length === 0 ? (
                       <div className="text-center py-16 px-6">
                         <div className="text-5xl mb-4 opacity-60">📝</div>
-                        <p className="text-[#fafafa] text-lg font-medium mb-2">No posts yet</p>
-                        <p className="text-[#a1a1a1] text-sm mb-6">
+                        <p className="text-[var(--color-text)] text-lg font-medium mb-2">No posts yet</p>
+                        <p className="text-[var(--color-text-secondary)] text-sm mb-6">
                           Share your thoughts, insights, or questions with the Korus community.<br/>
                           Your posts earn reputation and can receive tips!
                         </p>
@@ -996,7 +996,7 @@ export default function ProfilePage() {
                             <SafeContent
                               content={post.content}
                               as="p"
-                              className="text-[#fafafa] mb-3"
+                              className="text-[var(--color-text)] mb-3"
                               allowLinks={true}
                               allowFormatting={true}
                             />
@@ -1004,7 +1004,7 @@ export default function ProfilePage() {
                               <Image src={post.imageUrl} alt="Post image" width={600} height={400} className="w-full rounded-lg mb-3" />
                             )}
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-5 text-[#737373] text-sm">
+                              <div className="flex items-center gap-5 text-[var(--color-text-tertiary)] text-sm">
                                 <span>{post.likes} likes</span>
                                 <span>{post.tips} tips</span>
                                 <span>{post.replies || 0} replies</span>
@@ -1026,8 +1026,8 @@ export default function ProfilePage() {
                     userReplies.length === 0 ? (
                       <div className="text-center py-16 px-6">
                         <div className="text-5xl mb-4 opacity-60">💬</div>
-                        <p className="text-[#fafafa] text-lg font-medium mb-2">No replies yet</p>
-                        <p className="text-[#a1a1a1] text-sm mb-6">
+                        <p className="text-[var(--color-text)] text-lg font-medium mb-2">No replies yet</p>
+                        <p className="text-[var(--color-text-secondary)] text-sm mb-6">
                           Engage with other users&apos; posts to start building your reputation.<br/>
                           Thoughtful replies can earn tips and grow your network!
                         </p>
@@ -1057,12 +1057,12 @@ export default function ProfilePage() {
                             <SafeContent
                               content={reply.content}
                               as="p"
-                              className="text-[#fafafa] mb-3"
+                              className="text-[var(--color-text)] mb-3"
                               allowLinks={true}
                               allowFormatting={true}
                             />
                             <div className="flex items-center justify-between">
-                              <span className="text-[#737373] text-sm">{reply.likeCount} likes</span>
+                              <span className="text-[var(--color-text-tertiary)] text-sm">{reply.likeCount} likes</span>
                               <span className="text-[#525252] text-xs">
                                 {new Date(reply.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                 {' '}
@@ -1087,23 +1087,23 @@ export default function ProfilePage() {
 
       {/* Username Warning Modal */}
       {showUsernameWarning && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#141414] backdrop-blur-xl border border-[#262626] rounded-2xl p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[var(--color-surface)] backdrop-blur-xl border border-[var(--color-border-light)] rounded-2xl p-6 max-w-md w-full mx-4">
             <div className="text-center">
               <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.268 16.5C3.498 18.333 4.46 20 6 20z" />
                 </svg>
               </div>
-              <h3 className="text-[#fafafa] text-xl font-bold mb-2">Choose Wisely!</h3>
-              <p className="text-[#a1a1a1] mb-6">
+              <h3 className="text-[var(--color-text)] text-xl font-bold mb-2">Choose Wisely!</h3>
+              <p className="text-[var(--color-text-secondary)] mb-6">
                 As a free user, you can only set your username <strong>ONCE</strong>. Choose wisely!
                 Premium users can change their username anytime.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowUsernameWarning(false)}
-                  className="flex-1 px-4 py-2 bg-white/[0.08] border border-[#262626] text-[#fafafa] rounded-lg hover:bg-white/[0.12] duration-150"
+                  className="flex-1 px-4 py-2 bg-white/[0.08] border border-[var(--color-border-light)] text-[var(--color-text)] rounded-lg hover:bg-white/[0.12] duration-150"
                 >
                   Cancel
                 </button>

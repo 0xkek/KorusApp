@@ -161,7 +161,7 @@ export default function DrawingCanvasInline({ onSave, onClose, saveRef }: Drawin
         <h3 className="text-white text-sm font-bold">Draw Something</h3>
         <button
           onClick={onClose}
-          className="w-6 h-6 rounded-full flex items-center justify-center text-[#a1a1a1] hover:text-white hover:bg-white/[0.06] transition-all"
+          className="w-6 h-6 rounded-full flex items-center justify-center text-[var(--color-text-secondary)] hover:text-white hover:bg-white/[0.06] transition-all"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -173,7 +173,7 @@ export default function DrawingCanvasInline({ onSave, onClose, saveRef }: Drawin
       <div className="flex items-center gap-2 flex-wrap">
         {/* Color Palette */}
         <div className="flex items-center gap-1">
-          <span className="text-[#a1a1a1] text-xs">Colors:</span>
+          <span className="text-[var(--color-text-secondary)] text-xs">Colors:</span>
           {colors.map((color) => (
             <button
               key={color}
@@ -191,7 +191,7 @@ export default function DrawingCanvasInline({ onSave, onClose, saveRef }: Drawin
 
         {/* Brush Size */}
         <div className="flex items-center gap-1.5 ml-2">
-          <span className="text-[#a1a1a1] text-xs">Size:</span>
+          <span className="text-[var(--color-text-secondary)] text-xs">Size:</span>
           <input
             type="range"
             min="1"
@@ -208,7 +208,7 @@ export default function DrawingCanvasInline({ onSave, onClose, saveRef }: Drawin
           <button
             onClick={undo}
             disabled={historyIndex <= 0}
-            className="px-2 py-1 bg-white/[0.06] border border-[#262626] rounded text-white text-xs hover:bg-white/[0.12] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            className="px-2 py-1 bg-white/[0.06] border border-[var(--color-border-light)] rounded text-white text-xs hover:bg-white/[0.12] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             title="Undo"
           >
             ↶
@@ -216,14 +216,14 @@ export default function DrawingCanvasInline({ onSave, onClose, saveRef }: Drawin
           <button
             onClick={redo}
             disabled={historyIndex >= canvasHistory.length - 1}
-            className="px-2 py-1 bg-white/[0.06] border border-[#262626] rounded text-white text-xs hover:bg-white/[0.12] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            className="px-2 py-1 bg-white/[0.06] border border-[var(--color-border-light)] rounded text-white text-xs hover:bg-white/[0.12] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             title="Redo"
           >
             ↷
           </button>
           <button
             onClick={clearCanvas}
-            className="px-2 py-1 bg-white/[0.06] border border-[#262626] rounded text-white text-xs hover:bg-white/[0.12] transition-all"
+            className="px-2 py-1 bg-white/[0.06] border border-[var(--color-border-light)] rounded text-white text-xs hover:bg-white/[0.12] transition-all"
             title="Clear"
           >
             Clear
@@ -239,7 +239,7 @@ export default function DrawingCanvasInline({ onSave, onClose, saveRef }: Drawin
           onMouseMove={draw}
           onMouseUp={stopDrawing}
           onMouseLeave={stopDrawing}
-          className="border-2 border-[#262626] rounded-xl cursor-crosshair bg-white shadow-lg"
+          className="border-2 border-[var(--color-border-light)] rounded-xl cursor-crosshair bg-white shadow-lg"
           style={{ width: '550px', height: '300px' }}
         />
       </div>
