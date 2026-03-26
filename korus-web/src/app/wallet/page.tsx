@@ -119,67 +119,21 @@ export default function WalletPage() {
             onSearchClick={() => setShowSearchModal(true)}
           />
 
-          <div className="flex-1 min-w-0 border-x border-[#262626]">
-            {/* Feed Navigation */}
-            <div className="sticky top-0 bg-[#141414]/80 backdrop-blur-xl border-b border-[#262626] z-10">
-              <div className="flex">
-                {/* Mobile menu button */}
+          <div className="flex-1 min-w-0 border-r border-[#262626]">
+            {/* Header */}
+            <div className="sticky top-0 bg-[#0a0a0a]/85 backdrop-blur-[12px] border-b border-[#262626] z-10 p-4">
+              <div className="flex items-center gap-4">
                 <button
-                  onClick={() => setShowMobileMenu(true)}
-                  aria-label="Open mobile menu"
-                  className="md:hidden flex items-center justify-center w-12 h-12 text-[#fafafa] hover:bg-white/[0.04] transition-colors"
+                  onClick={() => router.back()}
+                  className="w-10 h-10 bg-white/[0.08] border border-[#262626] rounded-full flex items-center justify-center text-[#fafafa] font-bold hover:bg-white/[0.12] transition-all duration-150"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
+                  ←
                 </button>
-
-                {/* Logo on mobile */}
-                <div className="md:hidden flex items-center px-4">
-                  <div className="w-6 h-6 bg-gradient-to-r from-korus-primary to-korus-secondary rounded-full flex items-center justify-center">
-                    <span className="text-black font-bold text-xs">K</span>
-                  </div>
-                </div>
-
-                <div className="relative flex items-center justify-center w-full">
-                  <button
-                    onClick={() => router.push('/')}
-                    className="relative px-4 py-4 text-[#a1a1a1] font-semibold hover:bg-white/[0.04] hover:text-[#fafafa] transition-colors group"
-                  >
-                    <span className="relative z-10">Home</span>
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
-                  </button>
-                  <button
-                    onClick={() => router.push('/games')}
-                    className="relative px-4 py-4 text-[#a1a1a1] font-semibold hover:bg-white/[0.04] hover:text-[#fafafa] transition-colors group"
-                  >
-                    <span className="relative z-10">Games</span>
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
-                  </button>
-                  <button
-                    onClick={() => router.push('/events')}
-                    className="relative px-4 py-4 text-[#a1a1a1] font-semibold hover:bg-white/[0.04] hover:text-[#fafafa] transition-colors group"
-                  >
-                    <span className="relative z-10">Events</span>
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent group-hover:bg-korus-primary/50 rounded-full transition-colors"></div>
-                  </button>
-                </div>
-
-                {/* Mobile search/menu */}
-                <button
-                  onClick={() => setShowSearchModal(true)}
-                  aria-label="Open search"
-                  className="md:hidden flex items-center justify-center w-12 h-12 text-[#fafafa] hover:bg-white/[0.04] transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </button>
+                <h1 className="text-3xl font-bold text-[#fafafa]">Wallet</h1>
               </div>
             </div>
 
-            <div className="max-w-3xl mx-auto px-4 py-6 pb-24">
-          <h2 className="text-3xl font-bold text-[#fafafa] mb-6">Wallet</h2>
+            <div className="p-6 pb-24">
 
           {/* Balance Card */}
           <div className="bg-white/[0.06] backdrop-blur-sm rounded-2xl p-6 mb-6 border border-[#262626] shadow-lg transition-shadow duration-150">
