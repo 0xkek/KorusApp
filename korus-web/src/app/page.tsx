@@ -1516,15 +1516,15 @@ export default function Home() {
             >
               {/* Shoutout Banner — standalone, no post card */}
               {post.isShoutout && (
-                <div className="bg-gradient-to-r from-[color-mix(in_srgb,var(--korus-primary)_15%,transparent)] to-[color-mix(in_srgb,var(--korus-secondary)_8%,transparent)] border border-[color-mix(in_srgb,var(--korus-primary)_25%,transparent)] rounded-[16px] px-4 py-3 flex items-center justify-between gap-3 hover:brightness-110 transition-all duration-150">
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <span className="text-xl flex-shrink-0">📢</span>
+                <div className="bg-gradient-to-r from-[color-mix(in_srgb,var(--korus-primary)_20%,transparent)] to-[color-mix(in_srgb,var(--korus-secondary)_12%,transparent)] border border-[color-mix(in_srgb,var(--korus-primary)_30%,transparent)] rounded-[16px] px-5 py-4 flex items-center justify-between gap-3 hover:brightness-110 transition-all duration-150">
+                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                    <span className="text-2xl flex-shrink-0">📢</span>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-black uppercase tracking-widest" style={{ color: 'var(--korus-primary)' }}>SHOUTOUT</span>
-                        <span className="text-[12px] font-semibold text-[var(--color-text-secondary)]">@{truncateAddress(post.user)}</span>
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-[12px] font-black uppercase tracking-widest" style={{ color: 'var(--korus-primary)' }}>SHOUTOUT</span>
+                        <span className="text-[13px] font-semibold text-[var(--color-text)]">@{truncateAddress(post.user)}</span>
                       </div>
-                      <p className="text-[13px] text-[var(--color-text)] mt-0.5 truncate">{post.content?.slice(0, 80)}{(post.content?.length ?? 0) > 80 ? '...' : ''}</p>
+                      <p className="text-[15px] font-medium text-white mt-1 truncate">{post.content?.slice(0, 80)}{(post.content?.length ?? 0) > 80 ? '...' : ''}</p>
                     </div>
                   </div>
                   {post.shoutoutDuration && (post.shoutoutExpiresAt || post.shoutoutStartTime) && (
