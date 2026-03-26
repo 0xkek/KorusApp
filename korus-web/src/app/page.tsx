@@ -723,12 +723,12 @@ export default function Home() {
     }
   };
 
-  // Function to activate the next shoutout in queue
+  // Function to activate the next shoutout in queue or from backend-loaded posts
   const activateNextShoutout = () => {
+    // First check the local queue (manually created shoutouts waiting)
     if (shoutoutQueue.length > 0) {
       const [nextShoutout, ...remainingQueue] = shoutoutQueue;
 
-      // Update the start time to now (when it actually starts)
       const activatedShoutout = {
         ...nextShoutout,
         shoutoutStartTime: Date.now()
@@ -741,7 +741,23 @@ export default function Home() {
 
       setShoutoutQueue(remainingQueue);
       showSuccess('Next shoutout is now active!');
+      return;
     }
+
+    // Then check if there are more shoutouts already in posts (from backend)
+    // The expired one was just removed, so any remaining shoutout needs a fresh timer
+    setPosts(prev => {
+      const nextShoutout = prev.find(p => p.isShoutout);
+      if (nextShoutout && !nextShoutout.shoutoutStartTime) {
+        // Activate it with a fresh timer
+        return prev.map(p =>
+          p.id === nextShoutout.id
+            ? { ...p, shoutoutStartTime: Date.now() }
+            : p
+        );
+      }
+      return prev;
+    });
   };
 
   const handleRegularPost = async () => {
