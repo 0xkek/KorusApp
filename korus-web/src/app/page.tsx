@@ -350,17 +350,32 @@ export default function Home() {
           return 0;
         });
 
-        // Only the first shoutout should have an active timer.
-        // Strip expiresAt/startTime from queued shoutouts so their
-        // timer only starts when they become active.
+        // Only the first shoutout is active.
+        // Use its backend expiresAt if valid, otherwise give it a fresh timer.
+        // All other shoutouts are queued — strip their timers entirely.
+        const now = Date.now();
         let firstShoutoutSeen = false;
         const postsWithTimers = sortedPosts.map(p => {
           if (p.isShoutout) {
             if (!firstShoutoutSeen) {
               firstShoutoutSeen = true;
-              return p; // Keep timer for the active shoutout
+              // Check if the backend expiresAt is still in the future
+              const expiresAt = p.shoutoutExpiresAt
+                ? new Date(p.shoutoutExpiresAt).getTime()
+                : 0;
+              if (expiresAt > now) {
+                // Valid timer from backend — use it
+                return p;
+              }
+              // Timer expired or missing — give a fresh one based on duration
+              const duration = p.shoutoutDuration || 10;
+              return {
+                ...p,
+                shoutoutStartTime: now,
+                shoutoutExpiresAt: new Date(now + duration * 60 * 1000).toISOString(),
+              };
             }
-            // Queued shoutout — clear timer so it doesn't tick while waiting
+            // Queued shoutout — clear timer
             return { ...p, shoutoutExpiresAt: undefined, shoutoutStartTime: undefined };
           }
           return p;
@@ -739,52 +754,15 @@ export default function Home() {
     }
   };
 
-  // Remove expired shoutout and activate the next one in a single state update
+  // When a shoutout expires, remove it and refetch posts so the backend
+  // serves the next queued shoutout with a fresh timer
   const handleShoutoutExpire = (expiredId: string | number) => {
-    const now = Date.now();
-    logger.log('Shoutout expired:', expiredId, 'Queue length:', shoutoutQueue.length);
-
-    // First check the local queue
-    if (shoutoutQueue.length > 0) {
-      const [nextShoutout, ...remainingQueue] = shoutoutQueue;
-      const duration = nextShoutout.shoutoutDuration || 10;
-
-      const activatedShoutout = {
-        ...nextShoutout,
-        shoutoutStartTime: now,
-        shoutoutExpiresAt: new Date(now + duration * 60 * 1000).toISOString(),
-      };
-
-      setPosts(prev => {
-        const withoutExpired = prev.filter(p => p.id !== expiredId && !p.isShoutout);
-        return [activatedShoutout, ...withoutExpired];
-      });
-
-      setShoutoutQueue(remainingQueue);
-      showSuccess('Next shoutout is now active!');
-      return;
-    }
-
-    // Check if there are more shoutouts in posts (from backend)
-    // Remove the expired one and give the next one a fresh timer
-    setPosts(prev => {
-      const withoutExpired = prev.filter(p => p.id !== expiredId);
-      const nextShoutout = withoutExpired.find(p => p.isShoutout);
-      logger.log('Looking for next shoutout in posts:', nextShoutout?.id, 'isShoutout:', nextShoutout?.isShoutout, 'duration:', nextShoutout?.shoutoutDuration);
-      if (nextShoutout) {
-        const duration = nextShoutout.shoutoutDuration || 10;
-        return withoutExpired.map(p =>
-          p.id === nextShoutout.id
-            ? {
-                ...p,
-                shoutoutStartTime: now,
-                shoutoutExpiresAt: new Date(now + duration * 60 * 1000).toISOString(),
-              }
-            : p
-        );
-      }
-      return withoutExpired;
-    });
+    logger.log('Shoutout expired:', expiredId);
+    // Remove expired shoutout immediately for instant UI feedback
+    setPosts(prev => prev.filter(p => p.id !== expiredId));
+    setShoutoutQueue([]);
+    // Refetch posts — backend will serve the next active shoutout
+    fetchPosts();
   };
 
   const handleRegularPost = async () => {
