@@ -372,23 +372,26 @@ export default function Home() {
           return 0;
         });
 
-        // Only the first shoutout is active.
-        // If it's the same one we were already showing, keep its timer.
-        // If it's a NEW active shoutout (promoted from queue), give it a fresh timer.
-        // All other shoutouts are queued — strip their timers entirely.
+        // Only the first shoutout is active — all others are queued (hidden).
+        // Trust the backend's expiresAt if it exists and hasn't expired.
+        // Only assign a fresh timer if the backend didn't provide one.
         const now = Date.now();
         let firstShoutoutSeen = false;
         const postsWithTimers = sortedPosts.map(p => {
           if (p.isShoutout) {
             if (!firstShoutoutSeen) {
               firstShoutoutSeen = true;
-              // Is this the same shoutout that was already active?
-              if (activeShoutoutIdRef.current === p.id) {
-                // Same shoutout — keep its existing timer from backend
+              activeShoutoutIdRef.current = p.id;
+
+              // Check if backend already provided a valid expiresAt
+              const backendExpiry = p.shoutoutExpiresAt
+                ? new Date(p.shoutoutExpiresAt).getTime()
+                : 0;
+              if (backendExpiry > now) {
+                // Backend timer is still valid — use it as-is
                 return p;
               }
-              // New active shoutout — give it a fresh timer
-              activeShoutoutIdRef.current = p.id;
+              // No valid backend timer — assign a fresh one
               const duration = p.shoutoutDuration || 10;
               return {
                 ...p,
@@ -396,7 +399,7 @@ export default function Home() {
                 shoutoutExpiresAt: new Date(now + duration * 60 * 1000).toISOString(),
               };
             }
-            // Queued shoutout — clear timer
+            // Queued shoutout — clear timer so it doesn't tick while waiting
             return { ...p, shoutoutExpiresAt: undefined, shoutoutStartTime: undefined };
           }
           return p;
@@ -748,23 +751,24 @@ export default function Home() {
   // Modal handlers
   const handlePostCreate = (post: Post) => {
     if (post.isShoutout) {
-      // Check if there's already an active shoutout in the feed
-      const hasActiveShoutout = posts.some(p => p.isShoutout);
+      // Use setPosts callback to read latest state (avoids stale closure)
+      setPosts(prev => {
+        const hasActiveShoutout = prev.some(p => p.isShoutout);
 
-      if (hasActiveShoutout) {
-        // Add to queue — timer does NOT start until it becomes active
-        setShoutoutQueue(prev => [...prev, post]);
-        showSuccess(`Shoutout queued! Position in queue: ${shoutoutQueue.length + 1}`);
-      } else {
-        // No active shoutout — activate immediately with timer starting now
-        const activePost = { ...post, shoutoutStartTime: Date.now() };
-        activeShoutoutIdRef.current = post.id;
-        setPosts(prev => {
+        if (hasActiveShoutout) {
+          // Add to queue — timer does NOT start until it becomes active
+          setShoutoutQueue(q => [...q, post]);
+          showSuccess('Shoutout queued! It will go live when the current one expires.');
+          return prev; // Don't modify posts — just queue it
+        } else {
+          // No active shoutout — activate immediately with timer starting now
+          const activePost = { ...post, shoutoutStartTime: Date.now() };
+          activeShoutoutIdRef.current = post.id;
           const regularPosts = prev.filter(p => !p.isShoutout);
+          showSuccess('Shoutout created successfully!');
           return [activePost, ...regularPosts];
-        });
-        showSuccess('Shoutout created successfully!');
-      }
+        }
+      });
     } else {
       // Regular post: insert after shoutouts
       setPosts(prev => {
