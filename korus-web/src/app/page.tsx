@@ -742,6 +742,7 @@ export default function Home() {
   // Remove expired shoutout and activate the next one in a single state update
   const handleShoutoutExpire = (expiredId: string | number) => {
     const now = Date.now();
+    logger.log('Shoutout expired:', expiredId, 'Queue length:', shoutoutQueue.length);
 
     // First check the local queue
     if (shoutoutQueue.length > 0) {
@@ -769,6 +770,7 @@ export default function Home() {
     setPosts(prev => {
       const withoutExpired = prev.filter(p => p.id !== expiredId);
       const nextShoutout = withoutExpired.find(p => p.isShoutout);
+      logger.log('Looking for next shoutout in posts:', nextShoutout?.id, 'isShoutout:', nextShoutout?.isShoutout, 'duration:', nextShoutout?.shoutoutDuration);
       if (nextShoutout) {
         const duration = nextShoutout.shoutoutDuration || 10;
         return withoutExpired.map(p =>
