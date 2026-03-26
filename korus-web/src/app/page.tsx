@@ -72,6 +72,7 @@ export default function Home() {
   const [drawingDataUrl, setDrawingDataUrl] = useState<string | null>(null);
   const drawingSaveRef = useRef<(() => string | null) | null>(null);
   const [shoutoutQueue, setShoutoutQueue] = useState<Post[]>([]); // Queue for pending shoutouts
+  const activeShoutoutIdRef = useRef<string | number | null>(null); // Track which shoutout is currently active
   const [shoutoutQueueInfo, setShoutoutQueueInfo] = useState<{ activeShoutout: { id: string; duration: number; expiresAt: Date | string; content: string } | null; queuedShoutouts: Array<{ id: string; duration: number; expiresAt: Date | string; content: string }>}>({ activeShoutout: null, queuedShoutouts: [] });
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [inlineReplyPostId, setInlineReplyPostId] = useState<string | number | null>(null);
@@ -372,7 +373,8 @@ export default function Home() {
         });
 
         // Only the first shoutout is active.
-        // Use its backend expiresAt if valid, otherwise give it a fresh timer.
+        // If it's the same one we were already showing, keep its timer.
+        // If it's a NEW active shoutout (promoted from queue), give it a fresh timer.
         // All other shoutouts are queued — strip their timers entirely.
         const now = Date.now();
         let firstShoutoutSeen = false;
@@ -380,15 +382,13 @@ export default function Home() {
           if (p.isShoutout) {
             if (!firstShoutoutSeen) {
               firstShoutoutSeen = true;
-              // Check if the backend expiresAt is still in the future
-              const expiresAt = p.shoutoutExpiresAt
-                ? new Date(p.shoutoutExpiresAt).getTime()
-                : 0;
-              if (expiresAt > now) {
-                // Valid timer from backend — use it
+              // Is this the same shoutout that was already active?
+              if (activeShoutoutIdRef.current === p.id) {
+                // Same shoutout — keep its existing timer from backend
                 return p;
               }
-              // Timer expired or missing — give a fresh one based on duration
+              // New active shoutout — give it a fresh timer
+              activeShoutoutIdRef.current = p.id;
               const duration = p.shoutoutDuration || 10;
               return {
                 ...p,
@@ -758,6 +758,7 @@ export default function Home() {
       } else {
         // No active shoutout — activate immediately with timer starting now
         const activePost = { ...post, shoutoutStartTime: Date.now() };
+        activeShoutoutIdRef.current = post.id;
         setPosts(prev => {
           const regularPosts = prev.filter(p => !p.isShoutout);
           return [activePost, ...regularPosts];
