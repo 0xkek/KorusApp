@@ -84,7 +84,23 @@ export default function Home() {
   const effectiveQueueInfo = useMemo(() => {
     const activeShoutout = posts.find(p => p.isShoutout);
     const queuedFromPosts = posts.filter(p => p.isShoutout).slice(1);
-    const allQueued = [...queuedFromPosts, ...shoutoutQueue];
+    // Merge local queue + backend queue, deduplicating by id
+    const seenIds = new Set<string>();
+    const allQueued: Array<{ id: string; duration: number; expiresAt: string | Date; content: string }> = [];
+    for (const p of [...queuedFromPosts, ...shoutoutQueue]) {
+      const sid = String(p.id);
+      if (!seenIds.has(sid)) {
+        seenIds.add(sid);
+        allQueued.push({ id: sid, duration: p.shoutoutDuration || 10, expiresAt: p.shoutoutExpiresAt || new Date(), content: p.content || '' });
+      }
+    }
+    for (const q of shoutoutQueueInfo.queuedShoutouts) {
+      const sid = String(q.id);
+      if (!seenIds.has(sid)) {
+        seenIds.add(sid);
+        allQueued.push({ id: sid, duration: q.duration || 10, expiresAt: q.expiresAt || new Date(), content: q.content || '' });
+      }
+    }
     return {
       activeShoutout: activeShoutout ? {
         id: String(activeShoutout.id),
@@ -92,14 +108,9 @@ export default function Home() {
         expiresAt: activeShoutout.shoutoutExpiresAt || new Date(),
         content: activeShoutout.content || '',
       } : null,
-      queuedShoutouts: allQueued.map(p => ({
-        id: String(p.id),
-        duration: p.shoutoutDuration || 10,
-        expiresAt: p.shoutoutExpiresAt || new Date(),
-        content: p.content || '',
-      })),
+      queuedShoutouts: allQueued,
     };
-  }, [posts, shoutoutQueue]);
+  }, [posts, shoutoutQueue, shoutoutQueueInfo]);
 
   // Load hide shoutout preference from localStorage
   useEffect(() => {
@@ -579,8 +590,18 @@ export default function Home() {
         addedPostIds.current.add(transformedPost.id);
         logger.log('✨ Adding new post to feed:', transformedPost.id);
 
-        // If it's a shoutout, add at the beginning
+        // If it's a shoutout, check queue logic
         if (transformedPost.isShoutout) {
+          const hasActiveShoutout = prevPosts.some(p => p.isShoutout);
+          if (hasActiveShoutout) {
+            // Queue it, don't show in feed
+            setShoutoutQueue(q => {
+              if (q.some(s => s.id === transformedPost.id)) return q;
+              return [...q, transformedPost as Post];
+            });
+            return prevPosts;
+          }
+          // No active shoutout — this becomes active
           return [transformedPost as Post, ...prevPosts];
         }
 
@@ -731,6 +752,8 @@ export default function Home() {
   // Modal handlers
   const handlePostCreate = (post: Post) => {
     if (post.isShoutout) {
+      // Mark as seen BEFORE setPosts so socket handler's dedup catches it immediately
+      addedPostIds.current.add(post.id);
       // Use setPosts callback to read latest state (avoids stale closure)
       setPosts(prev => {
         const hasActiveShoutout = prev.some(p => p.isShoutout);
@@ -1516,7 +1539,7 @@ export default function Home() {
             </div>
 
             {/* Shoutout Queue Indicator */}
-            {shoutoutQueue.length > 0 && (
+            {effectiveQueueInfo.queuedShoutouts.length > 0 && (
               <div className="bg-white/[0.06] border border-[var(--color-border-light)] rounded-xl p-4 mb-4 backdrop-blur-sm">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2 text-korus-primary">
@@ -1526,7 +1549,7 @@ export default function Home() {
                     <span className="font-bold">Shoutout Queue:</span>
                   </div>
                   <span className="text-white">
-                    {shoutoutQueue.length} shoutout{shoutoutQueue.length > 1 ? 's' : ''} waiting
+                    {effectiveQueueInfo.queuedShoutouts.length} shoutout{effectiveQueueInfo.queuedShoutouts.length > 1 ? 's' : ''} waiting
                   </span>
                 </div>
               </div>

@@ -49,3 +49,4 @@ app-example
 authority-keypair.json
 *-keypair.json
 mainnet-*.json
+.vercel
