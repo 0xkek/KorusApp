@@ -145,14 +145,13 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
 
       logger.info(`Shoutout payment verified successfully - User: ${walletAddress}, Amount: ${verification.actualAmount} SOL, Tx: ${transactionSignature}`)
 
-      // Set shoutout fields
-      const expiresAt = new Date()
-      expiresAt.setMinutes(expiresAt.getMinutes() + shoutoutDuration)
-      
+      // Set shoutout fields — do NOT set expiresAt yet.
+      // The timer only starts when the shoutout becomes the active one
+      // (i.e., when getPosts serves it as the active shoutout).
       shoutoutData = {
         isShoutout: true,
         shoutoutDuration,
-        shoutoutExpiresAt: expiresAt,
+        shoutoutExpiresAt: null, // Will be set when this shoutout becomes active
         shoutoutPrice: price
       }
     }
@@ -265,14 +264,14 @@ export const getPosts = async (req: Request, res: Response) => {
       })
     }
 
-    // First, get active shoutout (only one at a time - the oldest one by creation)
+    // First, check for an already-activated shoutout (has expiresAt in the future)
     const now = new Date()
-    const activeShoutout = await prisma.post.findFirst({
+    let activeShoutout = await prisma.post.findFirst({
       where: {
         isHidden: false,
         isShoutout: true,
         shoutoutExpiresAt: {
-          gt: now // Greater than current time (not expired)
+          gt: now // Already activated and not expired
         }
       },
       include: {
@@ -293,18 +292,55 @@ export const getPosts = async (req: Request, res: Response) => {
       }
     })
 
+    // If no active shoutout, check for a queued one (expiresAt is null = never activated)
+    // and activate it by setting its expiresAt NOW
+    if (!activeShoutout) {
+      const nextQueued = await prisma.post.findFirst({
+        where: {
+          isHidden: false,
+          isShoutout: true,
+          shoutoutExpiresAt: null // Not yet activated
+        },
+        orderBy: {
+          createdAt: 'asc' // FIFO — oldest first
+        }
+      })
+
+      if (nextQueued) {
+        const expiresAt = new Date()
+        expiresAt.setMinutes(expiresAt.getMinutes() + (nextQueued.shoutoutDuration || 10))
+
+        activeShoutout = await prisma.post.update({
+          where: { id: nextQueued.id },
+          data: { shoutoutExpiresAt: expiresAt },
+          include: {
+            author: {
+              select: {
+                walletAddress: true,
+                tier: true,
+                genesisVerified: true,
+                snsUsername: true,
+                username: true,
+                nftAvatar: true,
+                themeColor: true
+              }
+            }
+          }
+        })
+        logger.info(`Activated queued shoutout ${nextQueued.id} — expires at ${expiresAt.toISOString()}`)
+      }
+    }
+
     // Convert to array for consistency with existing code
     const activeShoutouts = activeShoutout ? [activeShoutout] : []
 
-    // Get queued shoutouts (all other non-expired shoutouts that aren't currently active)
+    // Get queued shoutouts (expiresAt is null = waiting to be activated)
     const queuedShoutouts = await prisma.post.findMany({
       where: {
         isHidden: false,
         isShoutout: true,
-        shoutoutExpiresAt: {
-          gt: now
-        },
-        // Exclude the active shoutout from the queue
+        shoutoutExpiresAt: null, // Only those not yet activated
+        // Exclude the active shoutout (shouldn't match since it now has expiresAt, but just in case)
         ...(activeShoutout ? { id: { not: activeShoutout.id } } : {})
       },
       select: {
