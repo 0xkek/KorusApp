@@ -1466,7 +1466,7 @@ export default function Home() {
                         className="px-4 py-2 rounded-[20px] border border-[var(--korus-primary)] text-[13px] font-bold hover:bg-[color-mix(in_srgb,var(--korus-primary)_10%,transparent)] transition-all disabled:opacity-40 disabled:cursor-not-allowed leading-none"
                         style={{ color: 'var(--korus-primary)' }}
                       >
-                        📢 Boost
+                        📢 Shoutout
                       </button>
                       <button
                         onClick={handleRegularPost}
