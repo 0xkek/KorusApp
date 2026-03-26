@@ -270,17 +270,17 @@ export default function ShoutoutModal({ isOpen, onClose, postContent, onConfirm,
 
           {waitTimeMinutes === 0 && (
             <div className="flex items-center gap-3 p-4 rounded-xl border" style={{
-              backgroundColor: 'rgba(34, 197, 94, 0.1)',
-              borderColor: 'rgba(34, 197, 94, 0.3)'
+              backgroundColor: 'color-mix(in srgb, var(--korus-primary) 10%, transparent)',
+              borderColor: 'color-mix(in srgb, var(--korus-primary) 30%, transparent)'
             }}>
               <div className="flex-shrink-0">
-                <svg className="w-6 h-6" style={{ color: '#22c55e' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" style={{ color: 'var(--korus-primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
               <div className="flex-1">
-                <div className="text-sm font-semibold mb-1" style={{ color: '#22c55e' }}>Post Immediately</div>
-                <div className="text-xs" style={{ color: '#bbf7d0' }}>
+                <div className="text-sm font-semibold mb-1" style={{ color: 'var(--korus-primary)' }}>Post Immediately</div>
+                <div className="text-xs" style={{ color: 'color-mix(in srgb, var(--korus-primary) 70%, white)' }}>
                   No queue! Your shoutout will be posted right away
                 </div>
               </div>
