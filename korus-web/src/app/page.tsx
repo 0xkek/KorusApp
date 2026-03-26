@@ -372,35 +372,15 @@ export default function Home() {
           return 0;
         });
 
-        // Only the first shoutout is active — all others are queued (hidden).
-        // Trust the backend's expiresAt if it exists and hasn't expired.
-        // Only assign a fresh timer if the backend didn't provide one.
-        const now = Date.now();
-        let firstShoutoutSeen = false;
+        // The backend only sends the active shoutout in the posts array
+        // (queued ones are in shoutoutQueue metadata only).
+        // The active shoutout always has expiresAt set by the backend — trust it.
+        // This means refreshing doesn't reset the timer.
         const postsWithTimers = sortedPosts.map(p => {
           if (p.isShoutout) {
-            if (!firstShoutoutSeen) {
-              firstShoutoutSeen = true;
-              activeShoutoutIdRef.current = p.id;
-
-              // Check if backend already provided a valid expiresAt
-              const backendExpiry = p.shoutoutExpiresAt
-                ? new Date(p.shoutoutExpiresAt).getTime()
-                : 0;
-              if (backendExpiry > now) {
-                // Backend timer is still valid — use it as-is
-                return p;
-              }
-              // No valid backend timer — assign a fresh one
-              const duration = p.shoutoutDuration || 10;
-              return {
-                ...p,
-                shoutoutStartTime: now,
-                shoutoutExpiresAt: new Date(now + duration * 60 * 1000).toISOString(),
-              };
-            }
-            // Queued shoutout — clear timer so it doesn't tick while waiting
-            return { ...p, shoutoutExpiresAt: undefined, shoutoutStartTime: undefined };
+            activeShoutoutIdRef.current = p.id;
+            // Backend sets expiresAt when it activates the shoutout — just use it
+            return p;
           }
           return p;
         });
@@ -762,7 +742,13 @@ export default function Home() {
           return prev; // Don't modify posts — just queue it
         } else {
           // No active shoutout — activate immediately with timer starting now
-          const activePost = { ...post, shoutoutStartTime: Date.now() };
+          const now = Date.now();
+          const duration = post.shoutoutDuration || 10;
+          const activePost = {
+            ...post,
+            shoutoutStartTime: now,
+            shoutoutExpiresAt: new Date(now + duration * 60 * 1000).toISOString(),
+          };
           activeShoutoutIdRef.current = post.id;
           const regularPosts = prev.filter(p => !p.isShoutout);
           showSuccess('Shoutout created successfully!');
