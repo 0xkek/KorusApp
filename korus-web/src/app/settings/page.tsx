@@ -216,11 +216,12 @@ export default function SettingsPage() {
       {/* Content wrapper */}
       <div className="relative z-10">
         <div className="flex min-h-screen max-w-[1280px] mx-auto">
+          <LeftSidebar onNotificationsToggle={() => setShowNotifications(!showNotifications)} />
           {/* Main Content */}
-          <div className="flex-1 min-w-0 border-x border-[#262626]">
+          <div className="flex-1 min-w-0 border-r border-[#262626]">
 
             {/* Header */}
-            <div className="sticky top-0 bg-[#141414] backdrop-blur-xl border-b border-[#262626] z-10 p-4">
+            <div className="sticky top-0 bg-[#0a0a0a]/85 backdrop-blur-[12px] border-b border-[#262626] z-10 p-4">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => router.back()}
@@ -531,6 +532,10 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+          <RightSidebar
+            showNotifications={showNotifications}
+            onNotificationsClose={() => setShowNotifications(false)}
+          />
         </div>
       </div>
 
@@ -732,11 +737,6 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <LeftSidebar onNotificationsToggle={() => setShowNotifications(!showNotifications)} />
-      <RightSidebar
-        showNotifications={showNotifications}
-        onNotificationsClose={() => setShowNotifications(false)}
-      />
     </main>
   );
 }
