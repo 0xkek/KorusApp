@@ -28,6 +28,7 @@ const PostOptionsModal = dynamic(() => import('@/components/PostOptionsModal'), 
 const MobileMenuModal = dynamic(() => import('@/components/MobileMenuModal'), { ssr: false });
 const ShoutoutModal = dynamic(() => import('@/components/ShoutoutModal'), { ssr: false });
 const TipModal = dynamic(() => import('@/components/TipModal'), { ssr: false });
+const EmojiPicker = dynamic(() => import('@/components/EmojiPicker'), { ssr: false });
 const ShareModal = dynamic(() => import('@/components/ShareModal'), { ssr: false });
 const ReplyModal = dynamic(() => import('@/components/ReplyModal'), { ssr: false });
 const DrawingCanvasInline = dynamic(() => import('@/components/DrawingCanvasInline'), { ssr: false });
@@ -2086,44 +2087,10 @@ export default function Home() {
 
       {/* Emoji Picker Modal */}
       {showEmojiPicker && (
-        <div className="fixed inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowEmojiPicker(false)}>
-          <div className="bg-[#1e1e1e] border border-[var(--color-border-light)] rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-[var(--color-border-light)]">
-              <h3 className="text-lg font-bold text-[var(--color-text)]">Choose Emoji</h3>
-              <button
-                onClick={() => setShowEmojiPicker(false)}
-                className="w-9 h-9 rounded-full flex items-center justify-center text-neutral-400 hover:bg-white/[0.08] hover:text-[var(--color-text)] transition-all duration-150"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Scrollable Emoji Grid */}
-            <div className="p-4 overflow-y-auto max-h-[60vh]">
-              <div className="grid grid-cols-8 gap-2">
-                {['😀', '😂', '🤣', '😊', '😍', '🥰', '😘', '🤔', '😎', '😢', '😭', '😡', '🤯', '🥳', '😴', '🤤',
-                  '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '👋', '🤚', '🖐️', '✋', '👏', '🙌', '🤝', '🙏', '✊',
-                  '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘',
-                  '🎉', '🎊', '🎈', '🎁', '🎂', '🎄', '🎃', '✨', '🎯', '🎪', '🎨', '🎭', '🎬', '🎮', '🎵', '🎶',
-                  '🔥', '💯', '💫', '⭐', '🌟', '⚡', '💥', '💨', '🌈', '☀️', '🌙', '⭐', '🌊', '🌍', '🌎', '🌏',
-                  '💰', '💸', '💵', '💎', '🚀', '📈', '📉', '💹', '🏦', '💳', '⚖️', '🎯', '✅', '❌', '⚠️', '💯',
-                  '🍕', '🍔', '🍟', '🌭', '🍿', '🧂', '🥓', '🍳', '🧀', '🥞', '🧇', '🍞', '🥖', '🥨', '🥯', '🥐',
-                  '☕', '🍵', '🧃', '🥤', '🍻', '🍷', '🥂', '🍾', '🍸', '🍹', '🍺', '🥃', '🥛', '🧋', '🧊', '🍯'].map((emoji, index) => (
-                  <button
-                    key={`emoji-${index}-${emoji}`}
-                    onClick={() => handleEmojiSelect(emoji)}
-                    className="w-10 h-10 text-xl hover:bg-white/[0.12] rounded-lg transition-colors flex items-center justify-center hover:scale-110 transform"
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        <EmojiPicker
+          onSelect={handleEmojiSelect}
+          onClose={() => setShowEmojiPicker(false)}
+        />
       )}
 
       {/* GIF Picker Modal */}

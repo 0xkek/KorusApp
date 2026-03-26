@@ -13,6 +13,7 @@ import RightSidebar from '@/components/RightSidebar';
 import ReplyModal from '@/components/ReplyModal';
 import PostOptionsModal from '@/components/PostOptionsModal';
 import { SafeContent } from '@/components/SafeContent';
+import EmojiPicker from '@/components/EmojiPicker';
 import { formatRelativeTime, formatFullTimestamp } from '@/utils/formatTime';
 import { useToast } from '@/hooks/useToast';
 import { postsAPI, repliesAPI, uploadAPI, interactionsAPI, usersAPI } from '@/lib/api';
@@ -1127,43 +1128,10 @@ export default function PostDetailPage() {
 
       {/* Emoji Picker Modal */}
       {showEmojiPicker && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowEmojiPicker(false)}>
-          <div className="bg-[var(--color-surface)] backdrop-blur-md rounded-2xl max-w-md w-full max-h-[80vh] border border-[var(--color-border-light)] shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-[var(--color-border-light)]">
-              <h3 className="text-lg font-bold text-[var(--color-text)]">Choose Emoji</h3>
-              <button
-                onClick={() => setShowEmojiPicker(false)}
-                aria-label="Close emoji picker"
-                className="w-8 h-8 rounded-full flex items-center justify-center bg-white/[0.06] border border-[var(--color-border-light)] text-[var(--color-text-secondary)] hover:bg-white/[0.12] hover:text-[var(--color-text)] transition-all duration-150"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-4 overflow-y-auto max-h-[60vh]">
-              <div className="grid grid-cols-8 gap-2">
-                {['😀', '😂', '🤣', '😊', '😍', '🥰', '😘', '🤔', '😎', '😢', '😭', '😡', '🤯', '🥳', '😴', '🤤',
-                  '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '👋', '🤚', '🖐️', '✋', '👏', '🙌', '🤝', '🙏', '✊',
-                  '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘',
-                  '🎉', '🎊', '🎈', '🎁', '🎂', '🎄', '🎃', '✨', '🎯', '🎪', '🎨', '🎭', '🎬', '🎮', '🎵', '🎶',
-                  '🔥', '💯', '💫', '⭐', '🌟', '⚡', '💥', '💨', '🌈', '☀️', '🌙', '⭐', '🌊', '🌍', '🌎', '🌏',
-                  '💰', '💸', '💵', '💎', '🚀', '📈', '📉', '💹', '🏦', '💳', '⚖️', '🎯', '✅', '❌', '⚠️', '💯',
-                  '🍕', '🍔', '🍟', '🌭', '🍿', '🧂', '🥓', '🍳', '🧀', '🥞', '🧇', '🍞', '🥖', '🥨', '🥯', '🥐',
-                  '☕', '🍵', '🧃', '🥤', '🍻', '🍷', '🥂', '🍾', '🍸', '🍹', '🍺', '🥃', '🥛', '🧋', '🧊', '🍯'].map((emoji, index) => (
-                  <button
-                    key={`emoji-${index}-${emoji}`}
-                    onClick={() => handleEmojiSelect(emoji)}
-                    aria-label={`Insert ${emoji}`}
-                    className="w-10 h-10 text-xl hover:bg-white/[0.12] rounded-lg transition-colors flex items-center justify-center hover:scale-110 transform"
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        <EmojiPicker
+          onSelect={handleEmojiSelect}
+          onClose={() => setShowEmojiPicker(false)}
+        />
       )}
 
       {/* GIF Picker Modal */}
