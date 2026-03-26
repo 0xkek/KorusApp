@@ -76,7 +76,6 @@ export default function SettingsPage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [profileColor, setProfileColor] = useState<string>('#43E97B');
 
   // Debounced values for localStorage optimization
   const debouncedHideShoutout = useDebounce(hideSponsoredPosts, 500);
@@ -98,26 +97,6 @@ export default function SettingsPage() {
     }
   }, [connected, router]);
 
-  // Load user's profile color
-  useEffect(() => {
-    const fetchProfileColor = async () => {
-      try {
-        const token = localStorage.getItem('authToken');
-        if (!token) return;
-
-        const data = await authAPI.getProfile(token);
-        if (data?.themeColor) {
-          setProfileColor(data.themeColor);
-        }
-      } catch {
-        // Failed to load profile color
-      }
-    };
-
-    if (connected && mounted) {
-      fetchProfileColor();
-    }
-  }, [connected, mounted]);
 
   const handleLogout = useCallback(async () => {
     setIsLoggingOut(true);
@@ -160,7 +139,6 @@ export default function SettingsPage() {
             if (token) {
               try {
                 await authAPI.updateProfile({ themeColor: newProfileColor }, token);
-                setProfileColor(newProfileColor);
 
                 // Broadcast theme change to update cached posts
                 if (typeof window !== 'undefined') {
@@ -366,67 +344,6 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Profile Color */}
-              <div className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-xl p-6">
-                <h2 className="text-2xl font-bold text-[var(--color-text)] mb-4">Profile Color</h2>
-                <div className="p-4 bg-white/[0.04] rounded-xl border border-[var(--color-border-light)]">
-                  <div className="text-[var(--color-text)] font-medium mb-2">Your Profile Theme</div>
-                  <div className="text-[var(--color-text-secondary)] text-sm mb-4">
-                    This color represents you on Korus - it appears on your posts, reposts, and profile. Your profile color automatically matches your chosen Color Theme above, but you can manually override it here if you prefer.
-                  </div>
-                  <div className="grid grid-cols-4 gap-3">
-                    {[
-                      { name: 'Green', color: '#43E97B' },
-                      { name: 'Purple', color: '#9945FF' },
-                      { name: 'Orange', color: '#FF6B35' },
-                      { name: 'Blue', color: '#00D4FF' },
-                      { name: 'Pink', color: '#FF6B9D' },
-                      { name: 'Gold', color: '#FFD700' },
-                      { name: 'Cyan', color: '#00FFF0' },
-                      { name: 'Red', color: '#FF4757' },
-                    ].map((colorOption) => {
-                      const isSelected = profileColor.toUpperCase() === colorOption.color.toUpperCase();
-
-                      return (
-                        <button
-                          key={colorOption.color}
-                          onClick={async () => {
-                            try {
-                              const token = localStorage.getItem('authToken');
-                              if (!token) return;
-
-                              await authAPI.updateProfile({ themeColor: colorOption.color }, token);
-                              setProfileColor(colorOption.color);
-                              showSuccess(`Profile color updated to ${colorOption.name}!`);
-                            } catch {
-                              // Error handling
-                            }
-                          }}
-                          className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-150 ${
-                            isSelected
-                              ? 'border-korus-primary bg-korus-primary/10'
-                              : 'border-[var(--color-border-light)] hover:border-[var(--color-border-light)]'
-                          }`}
-                          title={colorOption.name}
-                        >
-                          <div className="relative">
-                            <div
-                              className="w-12 h-12 rounded-full"
-                              style={{ background: `linear-gradient(135deg, ${colorOption.color}, ${colorOption.color}dd)` }}
-                            />
-                            {isSelected && (
-                              <svg className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-[var(--color-text)]" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                              </svg>
-                            )}
-                          </div>
-                          <span className="text-[var(--color-text-secondary)] text-xs">{colorOption.name}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
 
               {/* Premium Features */}
               <div className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-xl p-6">
