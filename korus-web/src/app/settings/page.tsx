@@ -221,7 +221,7 @@ export default function SettingsPage() {
           <div className="flex-1 min-w-0 border-r border-[var(--color-border-light)]">
 
             {/* Header */}
-            <div className="sticky top-0 bg-[var(--color-background)]/85 backdrop-blur-[12px] border-b border-[var(--color-border-light)] z-10 p-4">
+            <div className="sticky top-0 bg-[var(--color-surface)]/80 backdrop-blur-xl border-b border-[var(--color-border-light)] z-10 p-4">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => router.back()}
