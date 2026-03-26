@@ -1232,7 +1232,7 @@ export default function Home() {
     <main className="min-h-screen bg-[var(--color-background)] relative overflow-hidden">
       {/* Standardized static background */}
       <div className="fixed inset-0 bg-gradient-to-br from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)]">
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[var(--color-surface)] to-[#0f0f0f]/35" />
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[var(--color-surface)]/25 to-[var(--color-surface)]/35" />
       </div>
       {/* Static gradient orbs for visual depth */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
