@@ -402,6 +402,11 @@ export default function UserProfilePage() {
 
       <div className="relative z-10">
         <div className="flex min-h-screen max-w-[1280px] mx-auto">
+          <LeftSidebar
+            onNotificationsToggle={() => setShowNotifications(!showNotifications)}
+            onPostButtonClick={() => setShowCreatePostModal(true)}
+            onSearchClick={() => setShowSearchModal(true)}
+          />
           <div className="flex-1 min-w-0 border-x border-[var(--color-border-light)]">
 
             {/* Sticky Top Bar */}
@@ -803,6 +808,10 @@ export default function UserProfilePage() {
             )}
 
           </div>
+          <RightSidebar
+            showNotifications={showNotifications}
+            onNotificationsClose={() => setShowNotifications(false)}
+          />
         </div>
       </div>
 
@@ -845,15 +854,6 @@ export default function UserProfilePage() {
         onPostCreate={() => { setShowCreatePostModal(false); fetchUserPosts(); }}
       />
 
-      <LeftSidebar
-        onNotificationsToggle={() => setShowNotifications(!showNotifications)}
-        onPostButtonClick={() => setShowCreatePostModal(true)}
-        onSearchClick={() => setShowSearchModal(true)}
-      />
-      <RightSidebar
-        showNotifications={showNotifications}
-        onNotificationsClose={() => setShowNotifications(false)}
-      />
     </main>
   );
 }
