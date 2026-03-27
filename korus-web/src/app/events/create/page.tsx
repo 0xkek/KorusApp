@@ -3,8 +3,8 @@ import { logger } from '@/utils/logger';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useWallet, useConnection } from '@solana/wallet-adapter-react';
-import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { Connection, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import { useToast } from '@/hooks/useToast';
@@ -25,8 +25,11 @@ const PLATFORM_WALLET = new PublicKey('ByqqYGErKfyLHHd3NjgMnbbxQdPs1kFrPVWPUHUsD
 export default function CreateEventPage() {
   const router = useRouter();
   const { connected, publicKey, signTransaction } = useWallet();
-  const { connection } = useConnection();
   const { token, isAuthenticated } = useWalletAuth();
+
+  // Use RPC proxy for all Solana operations
+  const rpcUrl = typeof window !== 'undefined' ? `${window.location.origin}/api/rpc` : '/api/rpc';
+  const connection = new Connection(rpcUrl, 'confirmed');
   const { showSuccess, showError } = useToast();
   const { isPremium } = useSubscription();
 
@@ -84,26 +87,15 @@ export default function CreateEventPage() {
     const fetchBalance = async () => {
       if (connected && publicKey) {
         try {
-          const rpcResponse = await fetch('/api/rpc', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              jsonrpc: '2.0',
-              id: 1,
-              method: 'getBalance',
-              params: [publicKey.toBase58()],
-            }),
-          });
-          const rpcData = await rpcResponse.json();
-          if (rpcData.error) throw new Error(rpcData.error.message || 'RPC error');
-          const bal = rpcData.result?.value ?? 0;
-          setBalance(bal / LAMPORTS_PER_SOL);
+          const lamports = await connection.getBalance(publicKey);
+          setBalance(lamports / LAMPORTS_PER_SOL);
         } catch (error) {
           logger.error('Failed to fetch balance:', error);
         }
       }
     };
     fetchBalance();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected, publicKey]);
 
   // Cleanup object URL on unmount
@@ -307,15 +299,10 @@ export default function CreateEventPage() {
       await eventsAPI.createEvent(eventData, token);
       showSuccess('Event created successfully!');
 
-      // Refresh balance via RPC proxy
+      // Refresh balance
       try {
-        const rpcRes = await fetch('/api/rpc', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getBalance', params: [publicKey.toBase58()] }),
-        });
-        const rpcData = await rpcRes.json();
-        if (!rpcData.error) setBalance((rpcData.result?.value ?? 0) / LAMPORTS_PER_SOL);
+        const newLamports = await connection.getBalance(publicKey);
+        setBalance(newLamports / LAMPORTS_PER_SOL);
       } catch { /* non-critical */ }
 
       router.push(`/events/manage`);
