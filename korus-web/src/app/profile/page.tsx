@@ -151,7 +151,7 @@ export default function ProfilePage() {
 
         if (postsResult.status === 'fulfilled' && postsResult.value.posts) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const transformed = postsResult.value.posts.map((post: any) => ({
+          const transformed = postsResult.value.posts.filter((post: any) => post.content?.trim() || post.imageUrl).map((post: any) => ({
             id: post.id,
             user: post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15) || 'Unknown',
             wallet: post.authorWallet,
