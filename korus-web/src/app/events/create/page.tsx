@@ -157,8 +157,8 @@ export default function CreateEventPage() {
     setFormData(prev => ({ ...prev, imageUrl: '' }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     logger.log('handleSubmit called', { connected, isAuthenticated, hasToken: !!token, hasPublicKey: !!publicKey, balance, eventCreationFee, formData });
 
     if (!connected) {
@@ -662,7 +662,8 @@ export default function CreateEventPage() {
                     Cancel
                   </button>
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={() => handleSubmit()}
                     disabled={isSubmitting || isUploadingImage || isProcessingPayment || !connected || !isAuthenticated || (balance < eventCreationFee + 0.001)}
                     className="flex-1 bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-semibold py-3 rounded-lg hover:shadow-lg hover:shadow-korus-primary/20 duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
