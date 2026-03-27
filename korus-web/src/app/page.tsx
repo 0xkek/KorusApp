@@ -1436,7 +1436,7 @@ export default function Home() {
                   onClick={() => router.push('/')}
                   className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[var(--color-text)]"
                 >
-                  For You
+                  Home
                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[40px] h-[3px] rounded-[3px] bg-[var(--korus-primary)]" />
                 </button>
                 <button
