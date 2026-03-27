@@ -521,25 +521,67 @@ export default function SettingsPage() {
               </button>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div className="bg-white/[0.04] rounded-xl p-4">
                 <h4 className="text-[var(--color-text)] font-semibold mb-2">What is Korus?</h4>
                 <p className="text-[var(--color-text-secondary)] text-sm">
-                  Korus is a Web3 social platform where authentic conversations meet blockchain innovation. Share thoughts, earn rewards, and connect with a community that values real engagement.
+                  Korus is a Solana-native social platform where you connect your wallet, post content, tip creators with real SOL, and build reputation through genuine engagement. No emails, no passwords &mdash; just your wallet.
                 </p>
               </div>
 
               <div className="bg-white/[0.04] rounded-xl p-4">
-                <h4 className="text-[var(--color-text)] font-semibold mb-2">How do I earn SOL?</h4>
+                <h4 className="text-[var(--color-text)] font-semibold mb-2">How do I sign up?</h4>
                 <p className="text-[var(--color-text-secondary)] text-sm">
-                  You earn SOL by receiving tips from other users who appreciate your content. Create valuable posts and engage meaningfully with the community.
+                  Connect a Solana wallet (like Phantom or Solflare) and sign a message to verify ownership. That&apos;s it &mdash; your wallet address is your account. You can set a username and profile picture afterwards.
+                </p>
+              </div>
+
+              <div className="bg-white/[0.04] rounded-xl p-4">
+                <h4 className="text-[var(--color-text)] font-semibold mb-2">How do tips work?</h4>
+                <p className="text-[var(--color-text-secondary)] text-sm">
+                  You can tip any post with real SOL directly from your wallet. Tips go straight to the post author&apos;s wallet on-chain. The minimum tip is 0.001 SOL. You need SOL in your connected wallet to send tips.
+                </p>
+              </div>
+
+              <div className="bg-white/[0.04] rounded-xl p-4">
+                <h4 className="text-[var(--color-text)] font-semibold mb-2">What are Shoutouts?</h4>
+                <p className="text-[var(--color-text-secondary)] text-sm">
+                  Shoutouts are paid temporary posts that appear at the top of the feed for a set duration. Pay SOL to boost your message to the entire community. If someone else already has an active shoutout, yours gets queued.
+                </p>
+              </div>
+
+              <div className="bg-white/[0.04] rounded-xl p-4">
+                <h4 className="text-[var(--color-text)] font-semibold mb-2">What is the reputation system?</h4>
+                <p className="text-[var(--color-text-secondary)] text-sm">
+                  You earn reputation points by posting, receiving likes and tips, winning games, and maintaining daily streaks. Your reputation tier (Seedling to Celestial) is displayed on your profile and shows your standing in the community.
+                </p>
+              </div>
+
+              <div className="bg-white/[0.04] rounded-xl p-4">
+                <h4 className="text-[var(--color-text)] font-semibold mb-2">What are the games?</h4>
+                <p className="text-[var(--color-text-secondary)] text-sm">
+                  Korus has built-in P2P games (Tic-Tac-Toe, Connect 4, Rock Paper Scissors, Coin Flip) where you can wager SOL against other users. Funds are held in an on-chain escrow smart contract and released to the winner automatically.
                 </p>
               </div>
 
               <div className="bg-white/[0.04] rounded-xl p-4">
                 <h4 className="text-[var(--color-text)] font-semibold mb-2">What&apos;s included in Premium?</h4>
                 <p className="text-[var(--color-text-secondary)] text-sm">
-                  Premium members get exclusive color themes, gold verified badge, ability to use SNS domains as display names, and can hide sponsored posts for a cleaner feed.
+                  Premium members get exclusive color themes, a gold verified badge, the ability to use SNS domains (.sol) as display names, and can hide sponsored posts for a cleaner feed. Premium costs 0.1 SOL/month or 1 SOL/year.
+                </p>
+              </div>
+
+              <div className="bg-white/[0.04] rounded-xl p-4">
+                <h4 className="text-[var(--color-text)] font-semibold mb-2">Is my SOL safe?</h4>
+                <p className="text-[var(--color-text-secondary)] text-sm">
+                  Korus never has access to your private keys. All transactions require your explicit wallet approval. Tips and game wagers happen on-chain via Solana. That said, this platform is experimental software &mdash; please read the disclaimer in Community Rules.
+                </p>
+              </div>
+
+              <div className="bg-white/[0.04] rounded-xl p-4">
+                <h4 className="text-[var(--color-text)] font-semibold mb-2">How do I report a post or user?</h4>
+                <p className="text-[var(--color-text-secondary)] text-sm">
+                  Click the three-dot menu on any post and select &quot;Report&quot;. Our moderation system reviews reports and can remove content or suspend accounts that violate community rules.
                 </p>
               </div>
             </div>
@@ -577,7 +619,7 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <h4 className="text-[var(--color-text)] font-semibold mb-1">Be Authentic</h4>
-                    <p className="text-[var(--color-text-secondary)] text-sm">Share genuine thoughts and experiences. No fake accounts or impersonation.</p>
+                    <p className="text-[var(--color-text-secondary)] text-sm">Share genuine thoughts and experiences. No fake accounts, impersonation, or misleading identities. One wallet, one account.</p>
                   </div>
                 </div>
               </div>
@@ -589,7 +631,7 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <h4 className="text-[var(--color-text)] font-semibold mb-1">Respect Everyone</h4>
-                    <p className="text-[var(--color-text-secondary)] text-sm">Treat all community members with kindness. No harassment, hate speech, or discrimination.</p>
+                    <p className="text-[var(--color-text-secondary)] text-sm">Treat all community members with kindness. No harassment, hate speech, threats, doxxing, or discrimination of any kind.</p>
                   </div>
                 </div>
               </div>
@@ -600,8 +642,8 @@ export default function SettingsPage() {
                     <span className="text-korus-primary font-bold text-sm">3</span>
                   </div>
                   <div>
-                    <h4 className="text-[var(--color-text)] font-semibold mb-1">Quality Over Quantity</h4>
-                    <p className="text-[var(--color-text-secondary)] text-sm">Focus on meaningful contributions. Avoid spam, repetitive content, or low-effort posts.</p>
+                    <h4 className="text-[var(--color-text)] font-semibold mb-1">No Spam or Manipulation</h4>
+                    <p className="text-[var(--color-text-secondary)] text-sm">No spam, bot activity, repetitive posts, or engagement farming. Do not abuse tipping, shoutouts, or games to manipulate visibility or rankings.</p>
                   </div>
                 </div>
               </div>
@@ -612,8 +654,8 @@ export default function SettingsPage() {
                     <span className="text-korus-primary font-bold text-sm">4</span>
                   </div>
                   <div>
-                    <h4 className="text-[var(--color-text)] font-semibold mb-1">Protect Privacy</h4>
-                    <p className="text-[var(--color-text-secondary)] text-sm">Never share personal information of others. Respect everyone&apos;s privacy and security.</p>
+                    <h4 className="text-[var(--color-text)] font-semibold mb-1">No Scams or Financial Advice</h4>
+                    <p className="text-[var(--color-text-secondary)] text-sm">Do not promote scams, rug pulls, phishing links, or fraudulent projects. Do not post misleading financial advice. Korus is not a financial platform.</p>
                   </div>
                 </div>
               </div>
@@ -624,8 +666,44 @@ export default function SettingsPage() {
                     <span className="text-korus-primary font-bold text-sm">5</span>
                   </div>
                   <div>
-                    <h4 className="text-[var(--color-text)] font-semibold mb-1">Stay On Topic</h4>
-                    <p className="text-[var(--color-text-secondary)] text-sm">Post content in relevant categories. Keep discussions focused and constructive.</p>
+                    <h4 className="text-[var(--color-text)] font-semibold mb-1">Protect Privacy</h4>
+                    <p className="text-[var(--color-text-secondary)] text-sm">Never share personal information of others. Do not post private wallet addresses, real names, or identifying details without consent.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white/[0.04] rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-korus-primary/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-korus-primary font-bold text-sm">6</span>
+                  </div>
+                  <div>
+                    <h4 className="text-[var(--color-text)] font-semibold mb-1">No NSFW or Illegal Content</h4>
+                    <p className="text-[var(--color-text-secondary)] text-sm">Do not post explicit, violent, or illegal content. This includes but is not limited to pornography, gore, drug solicitation, or content that violates applicable laws.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white/[0.04] rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-korus-primary/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-korus-primary font-bold text-sm">7</span>
+                  </div>
+                  <div>
+                    <h4 className="text-[var(--color-text)] font-semibold mb-1">Fair Play in Games</h4>
+                    <p className="text-[var(--color-text-secondary)] text-sm">Play games honestly. Do not exploit bugs, collude with other players, or use automated tools to gain unfair advantages in wagered games.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white/[0.04] rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-korus-primary/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-korus-primary font-bold text-sm">8</span>
+                  </div>
+                  <div>
+                    <h4 className="text-[var(--color-text)] font-semibold mb-1">Respect the Platform</h4>
+                    <p className="text-[var(--color-text-secondary)] text-sm">Do not attempt to exploit, hack, or abuse Korus systems, smart contracts, or APIs. Report bugs responsibly instead of exploiting them.</p>
                   </div>
                 </div>
               </div>
@@ -633,6 +711,13 @@ export default function SettingsPage() {
               <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
                 <p className="text-yellow-400 text-sm font-medium text-center">
                   Violation of these rules may result in content removal or account suspension.
+                </p>
+              </div>
+
+              <div className="mt-2 p-4 bg-white/[0.02] border border-[var(--color-border-light)] rounded-xl">
+                <h4 className="text-[var(--color-text)] font-semibold mb-2 text-sm">Disclaimer</h4>
+                <p className="text-[var(--color-text-tertiary)] text-xs leading-relaxed">
+                  Korus is experimental software built by a small independent team. This platform involves real cryptocurrency (SOL) transactions on the Solana blockchain. By using Korus, you acknowledge that: (1) all on-chain transactions (tips, shoutouts, game wagers, subscriptions) are final and irreversible; (2) the Korus team is not responsible for any financial losses, including but not limited to SOL sent to wrong addresses, failed transactions, smart contract bugs, or lost funds; (3) this platform is provided &quot;as is&quot; without warranties of any kind; (4) you are solely responsible for securing your wallet and private keys; (5) Korus does not provide financial advice and nothing on this platform should be interpreted as such. Use at your own risk. Korus reserves the right to modify, suspend, or discontinue any feature at any time.
                 </p>
               </div>
             </div>
