@@ -39,6 +39,8 @@ export default function CreateEventPage() {
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [showValidationModal, setShowValidationModal] = useState(false);
   const [eventCreationFee, setEventCreationFee] = useState(DEFAULT_EVENT_FEE);
 
   // Fetch event creation fee from backend
@@ -81,6 +83,8 @@ export default function CreateEventPage() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [balance, setBalance] = useState<number>(0);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [createdEventTitle, setCreatedEventTitle] = useState('');
 
   // Fetch wallet balance via RPC proxy
   useEffect(() => {
@@ -161,37 +165,28 @@ export default function CreateEventPage() {
     if (e) e.preventDefault();
     logger.log('handleSubmit called', { connected, isAuthenticated, hasToken: !!token, hasPublicKey: !!publicKey, balance, eventCreationFee, formData });
 
-    if (!connected) {
-      showError('Please connect your wallet first');
+    if (!connected || !isAuthenticated || !token || !publicKey) {
+      showError('Please connect and authenticate your wallet first');
       return;
     }
 
-    if (!isAuthenticated || !token) {
-      showError('Please authenticate your wallet');
-      return;
+    // Collect all validation errors
+    const errors: string[] = [];
+    if (!formData.projectName.trim()) errors.push('Project Name');
+    if (!formData.title.trim()) errors.push('Event Title');
+    if (!formData.description.trim()) errors.push('Description');
+    if (!formData.startDate) errors.push('Start Date');
+    if (!formData.endDate) errors.push('End Date');
+    if (formData.startDate && formData.endDate && new Date(formData.endDate) <= new Date(formData.startDate)) {
+      errors.push('End Date must be after Start Date');
     }
-
-    if (!publicKey) {
-      showError('Wallet not connected properly');
-      return;
-    }
-
-    // Validation
-    if (!formData.projectName || !formData.title || !formData.description) {
-      showError('Please fill in all required fields');
-      return;
-    }
-
-    if (!formData.startDate || !formData.endDate) {
-      showError('Please set start and end dates');
-      return;
-    }
-
-    // External link is optional
-
-    // Check balance (0.001 SOL buffer for network fees)
     if (balance < eventCreationFee + 0.001) {
-      showError(`Insufficient balance. You need ${eventCreationFee} SOL + network fees to create an event. Current balance: ${balance.toFixed(4)} SOL`);
+      errors.push(`Insufficient balance (need ${eventCreationFee} SOL + fees, have ${balance.toFixed(4)} SOL)`);
+    }
+
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      setShowValidationModal(true);
       return;
     }
 
@@ -295,7 +290,6 @@ export default function CreateEventPage() {
       // Step 3: Create event with uploaded image URL
       const eventData = { ...formData, imageUrl };
       await eventsAPI.createEvent(eventData, token);
-      showSuccess('Event created successfully!');
 
       // Refresh balance
       try {
@@ -303,7 +297,9 @@ export default function CreateEventPage() {
         setBalance(newLamports / LAMPORTS_PER_SOL);
       } catch { /* non-critical */ }
 
-      router.push(`/events/manage`);
+      // Show success modal
+      setCreatedEventTitle(formData.title);
+      setShowSuccessModal(true);
     } catch (error: unknown) {
       logger.error('Failed to create event:', error);
       showError((error as Error).message || 'Failed to create event');
@@ -721,6 +717,71 @@ export default function CreateEventPage() {
         isOpen={showMobileMenu}
         onClose={() => setShowMobileMenu(false)}
       />
+
+      {/* Validation Errors Modal */}
+      {showValidationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-1.964-1.333-2.732 0L3.732 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-[var(--color-text)]">Missing Information</h3>
+            </div>
+            <p className="text-sm text-[var(--color-text-secondary)] mb-4">Please fill in the following before creating your event:</p>
+            <ul className="space-y-2 mb-6">
+              {validationErrors.map((error, i) => (
+                <li key={i} className="flex items-center gap-2 text-sm text-red-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
+                  {error}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => setShowValidationModal(false)}
+              className="w-full py-2.5 bg-white/[0.08] border border-[var(--color-border-light)] text-[var(--color-text)] font-medium rounded-lg hover:bg-white/[0.12] transition-colors"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl text-center">
+            <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-5">
+              <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-[var(--color-text)] mb-2">Event Created!</h3>
+            <p className="text-sm text-[var(--color-text-secondary)] mb-1">
+              Payment of <span className="text-korus-primary font-semibold">{eventCreationFee} SOL</span> confirmed.
+            </p>
+            <p className="text-sm text-[var(--color-text-secondary)] mb-6">
+              Your event <span className="text-[var(--color-text)] font-medium">&quot;{createdEventTitle}&quot;</span> is now live on the Events page.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => router.push('/events')}
+                className="flex-1 py-2.5 bg-white/[0.08] border border-[var(--color-border-light)] text-[var(--color-text)] font-medium rounded-lg hover:bg-white/[0.12] transition-colors"
+              >
+                View Events
+              </button>
+              <button
+                onClick={() => router.push('/events/manage')}
+                className="flex-1 py-2.5 bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-semibold rounded-lg hover:shadow-lg hover:shadow-korus-primary/20 transition-all"
+              >
+                Manage Events
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -406,7 +406,7 @@ model Event {
   title             String                  @db.VarChar(200)
   description       String                  @db.Text
   imageUrl          String?                 @db.VarChar(500)
-  externalLink      String                  @db.VarChar(500) // Project website/Discord
+  externalLink      String?                 @db.VarChar(500) // Project website/Discord (optional)
 
   // Whitelist Configuration
   maxSpots          Int?                    // null = unlimited

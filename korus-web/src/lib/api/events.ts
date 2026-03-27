@@ -7,7 +7,7 @@ export interface Event {
   title: string;
   description: string;
   imageUrl?: string;
-  externalLink: string;
+  externalLink?: string;
   maxSpots?: number;
   startDate: string;
   endDate: string;
@@ -50,7 +50,7 @@ export interface CreateEventData {
   title: string;
   description: string;
   imageUrl?: string;
-  externalLink: string;
+  externalLink?: string;
   maxSpots?: number;
   startDate: string;
   endDate: string;

@@ -69,22 +69,9 @@ export default function EventsPage() {
     fetchEvents();
   }, [showError]);
 
-  // Filter events based on premium status
-  const currentTime = new Date();
-  const premiumTimeAdvantage = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
-
-  const visibleEvents = events.filter(event => {
-    const eventStartTime = new Date(event.startDate);
-
-    // Premium users see events 12 hours early (before start time)
-    if (isPremium) {
-      const premiumVisibleTime = new Date(eventStartTime.getTime() - premiumTimeAdvantage);
-      return currentTime >= premiumVisibleTime;
-    }
-
-    // Basic users only see events at start time or after
-    return currentTime >= eventStartTime;
-  });
+  // All active events are visible to everyone.
+  // Premium 12hr early access applies to registration, not visibility.
+  const visibleEvents = events;
 
   const getEventTypeIcon = (type: Event['type']) => {
     switch (type) {

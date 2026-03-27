@@ -143,7 +143,7 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
         title,
         description,
         imageUrl,
-        externalLink,
+        externalLink: externalLink || null,
         maxSpots: maxSpots ? parseInt(maxSpots) : null,
         startDate: start,
         endDate: end,
