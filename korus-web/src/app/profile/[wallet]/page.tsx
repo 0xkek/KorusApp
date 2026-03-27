@@ -54,6 +54,16 @@ export default function UserProfilePage() {
   const [hasMore, setHasMore] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'posts' | 'replies'>('posts');
+  const [userReplies, setUserReplies] = useState<Array<{
+    id: string;
+    content: string;
+    createdAt: string;
+    likeCount: number;
+    postId: string;
+    postContent?: string;
+    postAuthor?: string;
+  }>>([]);
+  const [isLoadingReplies, setIsLoadingReplies] = useState(false);
 
   // --- UI state ---
   const [showTipModal, setShowTipModal] = useState(false);
@@ -226,6 +236,38 @@ export default function UserProfilePage() {
   useEffect(() => {
     fetchUserPosts();
   }, [fetchUserPosts]);
+
+  // --- Fetch user replies ---
+  const fetchUserReplies = useCallback(async () => {
+    if (!profileWallet) return;
+    setIsLoadingReplies(true);
+    try {
+      const response = await repliesAPI.getUserReplies(profileWallet, { limit: 50 });
+      if (response.replies && response.replies.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const transformed = response.replies.map((reply: any) => ({
+          id: reply.id,
+          content: reply.content,
+          createdAt: reply.createdAt,
+          likeCount: reply.likeCount || 0,
+          postId: reply.postId,
+          postContent: reply.post?.content?.slice(0, 100) || '',
+          postAuthor: reply.post?.author?.username || reply.post?.author?.snsUsername || reply.post?.authorWallet?.slice(0, 10) || '',
+        }));
+        setUserReplies(transformed);
+      } else {
+        setUserReplies([]);
+      }
+    } catch {
+      setUserReplies([]);
+    } finally {
+      setIsLoadingReplies(false);
+    }
+  }, [profileWallet]);
+
+  useEffect(() => {
+    fetchUserReplies();
+  }, [fetchUserReplies]);
 
   // --- Load more posts ---
   const loadMorePosts = useCallback(async () => {
@@ -800,11 +842,49 @@ export default function UserProfilePage() {
               </>
             )}
 
-            {/* Replies Tab - placeholder */}
+            {/* Replies Tab */}
             {activeTab === 'replies' && (
-              <div className="text-center py-16">
-                <p className="text-[var(--color-text-tertiary)] text-[15px]">Replies coming soon</p>
-              </div>
+              isLoadingReplies ? (
+                <div className="text-center py-16">
+                  <div className="w-6 h-6 border-2 border-[var(--korus-primary)] border-t-transparent rounded-full animate-spin mx-auto" />
+                </div>
+              ) : userReplies.length === 0 ? (
+                <div className="text-center py-16">
+                  <p className="text-[var(--color-text-tertiary)] text-[15px]">No replies yet</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-[#262626]/50">
+                  {userReplies.map((reply) => (
+                    <Link
+                      key={reply.id}
+                      href={`/post/${reply.postId}`}
+                      className="block p-4 hover:bg-white/[0.02] transition-all"
+                    >
+                      {reply.postContent && (
+                        <div className="text-[var(--color-text-tertiary)] text-[12px] mb-2 flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                          </svg>
+                          Replying to {reply.postAuthor ? `@${reply.postAuthor}` : 'a post'}
+                        </div>
+                      )}
+                      <SafeContent
+                        content={reply.content}
+                        as="p"
+                        className="text-[var(--color-text)] text-[15px] mb-2"
+                        allowLinks={true}
+                        allowFormatting={true}
+                      />
+                      <div className="flex items-center justify-between">
+                        <span className="text-[var(--color-text-tertiary)] text-[13px]">{reply.likeCount} likes</span>
+                        <span className="text-[var(--color-text-tertiary)] text-[12px]">
+                          {formatRelativeTime(reply.createdAt)}
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )
             )}
 
           </div>
