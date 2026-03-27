@@ -32,6 +32,8 @@ router.get('/profile', authenticate, async (req: AuthRequest, res) => {
         themeColor: true,
         tier: true,
         reputationScore: true,
+        followerCount: true,
+        followingCount: true,
         createdAt: true
       }
     });
@@ -184,7 +186,9 @@ router.get('/by-username/:username', async (req, res) => {
         bio: true,
         nftAvatar: true,
         tier: true,
-        reputationScore: true
+        reputationScore: true,
+        followerCount: true,
+        followingCount: true,
       }
     });
 

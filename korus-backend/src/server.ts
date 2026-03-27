@@ -41,6 +41,7 @@ import subscriptionRoutes from './routes/subscription'
 import uploadRoutes from './routes/upload'
 import eventsRoutes from './routes/events'
 import adminRoutes from './routes/admin'
+import followsRoutes from './routes/follows'
 
 dotenv.config()
 
@@ -154,6 +155,7 @@ app.use('/api/subscription', subscriptionRoutes)
 app.use('/api/upload', uploadRoutes)
 app.use('/api/events', eventsRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api/follows', followsRoutes)
 
 // Debug endpoints removed for production security
 

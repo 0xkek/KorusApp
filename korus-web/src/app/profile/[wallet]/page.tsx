@@ -2,10 +2,13 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import dynamic from 'next/dynamic';
 import { fetchSNSDomains, getFavoriteSNSDomain, SNSDomain } from '@/utils/sns';
+import { followsAPI } from '@/lib/api/follows';
 import type { Post, UserStats } from '@/types/post';
 
 const TipModal = dynamic(() => import('@/components/TipModal'), { ssr: false });
@@ -26,6 +29,13 @@ export default function UserProfilePage() {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
   const [reputationScore, setReputationScore] = useState<number>(0);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
+  const { connected, publicKey } = useWallet();
+  const { token, isAuthenticated } = useWalletAuth();
+  const isOwnProfile = publicKey?.toBase58() === profileWallet;
 
   // Mock user data for the profile being viewed
   const userInfo = {
@@ -53,7 +63,7 @@ export default function UserProfilePage() {
 
   const displayName = userInfo.username || `${profileWallet.slice(0, 4)}...${profileWallet.slice(-4)}`;
 
-  // Fetch SNS domains and reputation on mount
+  // Fetch SNS domains, reputation, and follow data on mount
   useEffect(() => {
     if (profileWallet) {
       fetchSNSDomains(profileWallet).then(domains => {
@@ -66,12 +76,40 @@ export default function UserProfilePage() {
       import('@/lib/api').then(({ reputationAPI }) => {
         reputationAPI.getReputation(profileWallet).then(({ reputation }) => {
           setReputationScore(reputation.reputationScore);
-        }).catch(() => {
-          // Silently fail — score stays at 0
-        });
+        }).catch(() => {});
       });
+      // Fetch follower/following counts
+      followsAPI.getFollowers(profileWallet).then(res => {
+        setFollowerCount(res.count);
+      }).catch(() => {});
+      followsAPI.getFollowing(profileWallet).then(res => {
+        setFollowingCount(res.count);
+      }).catch(() => {});
     }
   }, [profileWallet]);
+
+  // Check if current user follows this profile
+  useEffect(() => {
+    if (isAuthenticated && token && profileWallet && !isOwnProfile) {
+      followsAPI.checkFollowing([profileWallet], token).then(res => {
+        setIsFollowing(res.following[profileWallet] || false);
+      }).catch(() => {});
+    }
+  }, [isAuthenticated, token, profileWallet, isOwnProfile]);
+
+  const handleToggleFollow = async () => {
+    if (!isAuthenticated || !token) return;
+    setIsFollowLoading(true);
+    try {
+      const res = await followsAPI.toggleFollow(profileWallet, token);
+      setIsFollowing(res.following);
+      setFollowerCount(prev => res.following ? prev + 1 : Math.max(0, prev - 1));
+    } catch {
+      // silently fail
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
 
   const handleCopyWallet = () => {
     navigator.clipboard.writeText(profileWallet);
@@ -240,16 +278,42 @@ export default function UserProfilePage() {
                   </div>
                 </div>
 
-                {/* Tip Button */}
-                <div className="mb-6">
+                {/* Follower / Following Counts */}
+                <div className="flex items-center justify-center gap-6 mb-6">
+                  <div className="text-center">
+                    <span className="text-lg font-bold text-[var(--color-text)]">{followerCount}</span>
+                    <span className="text-sm text-[var(--color-text-tertiary)] ml-1.5">Followers</span>
+                  </div>
+                  <div className="w-px h-5 bg-[var(--color-border-light)]" />
+                  <div className="text-center">
+                    <span className="text-lg font-bold text-[var(--color-text)]">{followingCount}</span>
+                    <span className="text-sm text-[var(--color-text-tertiary)] ml-1.5">Following</span>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 mb-6">
+                  {!isOwnProfile && connected && (
+                    <button
+                      onClick={handleToggleFollow}
+                      disabled={isFollowLoading}
+                      className={`flex-1 font-bold py-3 px-6 rounded-xl transition-all duration-150 flex items-center justify-center gap-2 ${
+                        isFollowing
+                          ? 'bg-white/[0.06] text-[var(--color-text)] border border-[var(--color-border-light)] hover:border-red-500/50 hover:text-red-400'
+                          : 'bg-gradient-to-r from-korus-primary to-korus-secondary text-black hover:shadow-lg hover:shadow-korus-primary/30'
+                      }`}
+                    >
+                      {isFollowLoading ? '...' : isFollowing ? 'Following' : 'Follow'}
+                    </button>
+                  )}
                   <button
                     onClick={() => setShowTipModal(true)}
-                    className="w-full bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold py-3 px-6 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150 flex items-center justify-center gap-2"
+                    className={`${!isOwnProfile && connected ? 'flex-1' : 'w-full'} bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold py-3 px-6 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150 flex items-center justify-center gap-2`}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
                     </svg>
-                    Tip User
+                    Tip
                   </button>
                 </div>
 

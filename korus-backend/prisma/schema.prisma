@@ -66,6 +66,10 @@ model User {
   reports                  Report[]
   tokenDistributions       TokenDistribution[]
   subscriptionPayments     SubscriptionPayment[]
+  followers                Follow[]            @relation("Following") // users who follow this user
+  following                Follow[]            @relation("Followers") // users this user follows
+  followerCount            Int                 @default(0)
+  followingCount           Int                 @default(0)
 
   @@index([tier, createdAt(sort: Desc)])
   @@index([totalInteractionScore(sort: Desc)])
@@ -74,6 +78,21 @@ model User {
   @@index([createdAt(sort: Desc)])
   @@index([isSuspended, suspendedUntil])
   @@map("users")
+}
+
+model Follow {
+  id              String   @id @default(cuid())
+  followerWallet  String   @db.VarChar(44)
+  followingWallet String   @db.VarChar(44)
+  createdAt       DateTime @default(now())
+
+  follower        User     @relation("Followers", fields: [followerWallet], references: [walletAddress])
+  following       User     @relation("Following", fields: [followingWallet], references: [walletAddress])
+
+  @@unique([followerWallet, followingWallet])
+  @@index([followerWallet])
+  @@index([followingWallet])
+  @@map("follows")
 }
 
 model Post {

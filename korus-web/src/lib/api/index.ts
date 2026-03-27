@@ -16,3 +16,4 @@ export * from './games';
 export * from './subscription';
 export * from './nfts';
 export * from './reputation';
+export * from './follows';

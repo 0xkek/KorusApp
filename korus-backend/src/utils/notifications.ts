@@ -12,7 +12,7 @@ export async function createNotification({
   amount,
 }: {
   userId: string;
-  type: 'like' | 'reply' | 'tip' | 'mention';
+  type: 'like' | 'reply' | 'tip' | 'mention' | 'follow';
   fromUserId: string;
   postId?: string;
   amount?: number;
@@ -28,6 +28,7 @@ export async function createNotification({
     reply: 'New reply to your post',
     tip: 'You received a tip!',
     mention: 'You were mentioned',
+    follow: 'New follower',
   };
 
   const messages: Record<string, string> = {
@@ -35,6 +36,7 @@ export async function createNotification({
     reply: 'replied to your post',
     tip: `tipped you ${amount || 0} SOL`,
     mention: 'mentioned you in a post',
+    follow: 'started following you',
   };
 
   try {

@@ -19,7 +19,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import type { Post } from '@/types';
-import { postsAPI, uploadAPI, interactionsAPI, usersAPI, nftsAPI, repliesAPI, notificationsAPI } from '@/lib/api';
+import { postsAPI, uploadAPI, interactionsAPI, usersAPI, nftsAPI, repliesAPI, notificationsAPI, followsAPI } from '@/lib/api';
 import { formatRelativeTime } from '@/utils/formatTime';
 
 // Dynamically import modals for code splitting
@@ -80,6 +80,11 @@ export default function Home() {
   const [inlineReplyText, setInlineReplyText] = useState('');
   const [isPostingInlineReply, setIsPostingInlineReply] = useState(false);
   const [hideShoutouts, setHideShoutouts] = useState(false);
+  const [feedTab, setFeedTab] = useState<'home' | 'following'>('home');
+  const [followingPosts, setFollowingPosts] = useState<Post[]>([]);
+  const [isLoadingFollowing, setIsLoadingFollowing] = useState(false);
+  const [followingHasMore, setFollowingHasMore] = useState(false);
+  const [followingCursor, setFollowingCursor] = useState<string | null>(null);
 
   // Compute effective queue info from actual feed state
   const effectiveQueueInfo = useMemo(() => {
@@ -426,11 +431,82 @@ export default function Home() {
     }
   };
 
+  // Fetch following feed
+  const fetchFollowingPosts = async (loadMore = false) => {
+    if (!token) return;
+    setIsLoadingFollowing(true);
+    try {
+      const res = await followsAPI.getFollowingFeed(token, {
+        limit: POSTS_PER_PAGE,
+        ...(loadMore && followingCursor ? { cursor: followingCursor } : {})
+      });
+      if (res.posts && res.posts.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const transformed = res.posts.map((post: any) => ({
+          ...post,
+          user: post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15) || 'Unknown',
+          wallet: post.authorWallet,
+          userTheme: post.author?.themeColor,
+          time: new Date(post.createdAt).toLocaleString(),
+          createdAt: post.createdAt,
+          likes: post.likeCount || 0,
+          comments: post.replyCount || 0,
+          reposts: post.repostCount || 0,
+          tips: Number(post.tipAmount) || 0,
+          image: post.imageUrl,
+          avatar: post.author?.nftAvatar || null,
+          isPremium: post.author?.tier === 'premium' || post.author?.tier === 'vip',
+          repostedBy: post.isRepost ? (post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15)) : undefined,
+          repostedPost: post.isRepost && post.originalPost ? {
+            id: post.originalPost.id,
+            user: post.originalPost.author?.username || post.originalPost.author?.snsUsername || post.originalPost.authorWallet?.slice(0, 15) || 'Unknown',
+            wallet: post.originalPost.authorWallet,
+            userTheme: post.originalPost.author?.themeColor,
+            content: post.originalPost.content || '',
+            likes: post.originalPost.likeCount || 0,
+            comments: post.originalPost.replyCount || 0,
+            reposts: post.originalPost.repostCount || 0,
+            tips: Number(post.originalPost.tipAmount) || 0,
+            time: new Date(post.originalPost.createdAt).toLocaleString(),
+            createdAt: post.originalPost.createdAt,
+            isPremium: post.originalPost.author?.tier === 'premium' || post.originalPost.author?.tier === 'vip',
+            image: post.originalPost.imageUrl,
+            avatar: post.originalPost.author?.nftAvatar || null,
+          } : undefined,
+        }));
+        const postsWithAvatars = await resolvePostAvatars(transformed as Post[]);
+        if (loadMore) {
+          setFollowingPosts(prev => [...prev, ...postsWithAvatars]);
+        } else {
+          setFollowingPosts(postsWithAvatars);
+        }
+        setFollowingHasMore(res.pagination.hasMore);
+        setFollowingCursor(res.pagination.cursor);
+      } else {
+        if (!loadMore) setFollowingPosts([]);
+        setFollowingHasMore(false);
+      }
+    } catch (error) {
+      logger.error('Failed to fetch following feed:', error);
+      if (!loadMore) setFollowingPosts([]);
+    } finally {
+      setIsLoadingFollowing(false);
+    }
+  };
+
   // Initialize posts when component mounts (run once)
   useEffect(() => {
     fetchPosts();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Fetch following feed when tab changes
+  useEffect(() => {
+    if (feedTab === 'following' && isAuthenticated && token && followingPosts.length === 0) {
+      fetchFollowingPosts();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feedTab, isAuthenticated, token]);
 
   // Refetch posts when page becomes visible (throttled to max once per 30 seconds)
   useEffect(() => {
@@ -1433,16 +1509,18 @@ export default function Home() {
               {/* Tabs */}
               <div className="flex">
                 <button
-                  onClick={() => router.push('/')}
-                  className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative text-[var(--color-text)]"
+                  onClick={() => setFeedTab('home')}
+                  className={`flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors relative ${feedTab === 'home' ? 'text-[var(--color-text)]' : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.02]'}`}
                 >
                   Home
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[40px] h-[3px] rounded-[3px] bg-[var(--korus-primary)]" />
+                  {feedTab === 'home' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[40px] h-[3px] rounded-[3px] bg-[var(--korus-primary)]" />}
                 </button>
                 <button
-                  className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors duration-150 relative text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.02]"
+                  onClick={() => setFeedTab('following')}
+                  className={`flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors duration-150 relative ${feedTab === 'following' ? 'text-[var(--color-text)]' : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.02]'}`}
                 >
                   Following
+                  {feedTab === 'following' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[40px] h-[3px] rounded-[3px] bg-[var(--korus-primary)]" />}
                 </button>
                 <button
                   className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors duration-150 relative text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.02]"
@@ -1647,7 +1725,67 @@ export default function Home() {
 
             {/* Feed Posts */}
             <div>
-          {isLoading ? (
+          {feedTab === 'following' ? (
+            // Following feed
+            isLoadingFollowing ? (
+              <FeedSkeleton count={5} />
+            ) : followingPosts.length === 0 ? (
+              <div className="py-16 text-center text-[var(--color-text-tertiary)]">
+                <svg className="w-12 h-12 mx-auto mb-4 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <p className="text-[15px] font-medium mb-1">No posts yet</p>
+                <p className="text-[13px]">{isAuthenticated ? 'Follow users to see their posts here' : 'Connect your wallet to use the following feed'}</p>
+              </div>
+            ) : (
+              followingPosts.map((post) => (
+                <div key={post.id} className="px-5 py-4 border-b border-[var(--color-border-light)] cursor-pointer hover:bg-white/[0.02] transition-colors"
+                  onClick={() => router.push(`/post/${post.repostedPost?.id || post.id}`)}
+                >
+                  {post.repostedBy && (
+                    <div className="flex items-center gap-2 ml-[52px] mb-1.5 text-[13px] text-[var(--color-text-tertiary)]">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      <span><Link href={`/profile/${post.wallet}`} onClick={(e) => e.stopPropagation()} className="hover:underline">{post.repostedBy}</Link> reposted</span>
+                    </div>
+                  )}
+                  <div className="flex gap-3">
+                    <div className="w-[42px] h-[42px] rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex-shrink-0 overflow-hidden">
+                      {(post.repostedPost?.avatar || post.avatar) ? (
+                        <Image src={(post.repostedPost?.avatar || post.avatar) as string} alt="" width={42} height={42} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-black font-bold text-sm">{((post.repostedPost?.user || post.user) as string)?.slice(0, 2).toUpperCase()}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Link href={`/profile/${post.repostedPost?.wallet || post.wallet}`} onClick={(e) => e.stopPropagation()} className="font-bold text-[15px] text-[var(--color-text)] hover:underline truncate">
+                          {post.repostedPost?.user || post.user}
+                        </Link>
+                        <span className="text-[var(--color-text-tertiary)] text-[13px] flex-shrink-0">{formatRelativeTime((post.repostedPost?.createdAt || post.createdAt) as string)}</span>
+                      </div>
+                      <div className="text-[15px] text-[var(--color-text)] whitespace-pre-wrap break-words mb-2">
+                        <SafeContent content={(post.repostedPost?.content || post.content) as string} />
+                      </div>
+                      {(post.repostedPost?.image || post.image) && (
+                        <div className="mb-3 flex justify-center">
+                          <Image src={(post.repostedPost?.image || post.image) as string} alt="" width={600} height={400} className="max-w-full h-auto rounded-xl border border-[var(--color-border-light)]" style={{ maxHeight: '500px', width: 'auto', height: 'auto' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                        </div>
+                      )}
+                      <div className="flex items-center gap-4 text-[13px] text-[var(--color-text-tertiary)]">
+                        <span>{(post.repostedPost || post).comments ?? 0} replies</span>
+                        <span>{(post.repostedPost || post).likes ?? 0} likes</span>
+                        <span>{(post.repostedPost || post).reposts ?? 0} reposts</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )
+          ) : isLoading ? (
             <FeedSkeleton count={5} />
           ) : (
             // Deduplicate posts, only show the first (active) shoutout, hide rest
