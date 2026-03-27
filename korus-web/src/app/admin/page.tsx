@@ -94,6 +94,7 @@ export default function AdminDashboard() {
     try {
       const data = await api.get<{ success: boolean; stats: PlatformStats }>('/api/admin/stats', token);
       if (data.success) setStats(data.stats);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(e.message || 'Failed to load stats');
     }
@@ -176,8 +177,8 @@ export default function AdminDashboard() {
   }
 
   const truncate = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-  const displayName = (u: { username?: string | null; snsUsername?: string | null; displayName?: string | null; wallet?: string; walletAddress?: string }) => {
-    return u.username || u.snsUsername || u.displayName || truncate((u as any).walletAddress || (u as any).wallet || '');
+  const displayName = (u: { username?: string | null; snsUsername?: string | null; displayName?: string | null; wallet?: string | null; walletAddress?: string | null }) => {
+    return u.username || u.snsUsername || u.displayName || truncate(u.walletAddress || u.wallet || '');
   };
 
   return (
@@ -522,6 +523,7 @@ export default function AdminDashboard() {
                       } else {
                         setPremiumResult(`Error: ${data.error}`);
                       }
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     } catch (e: any) {
                       setPremiumResult(`Error: ${e.message}`);
                     } finally {
@@ -569,6 +571,7 @@ export default function AdminDashboard() {
                       } else {
                         setRevokeResult(`Error: ${data.error}`);
                       }
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     } catch (e: any) {
                       setRevokeResult(`Error: ${e.message}`);
                     } finally {
@@ -646,6 +649,7 @@ export default function AdminDashboard() {
                       } else {
                         setAdminResult(`Error: ${data.error}`);
                       }
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     } catch (e: any) {
                       setAdminResult(`Error: ${e.message}`);
                     } finally {
