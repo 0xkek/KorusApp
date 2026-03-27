@@ -7,12 +7,14 @@ import { connection as solanaConnection, TREASURY_WALLET } from '../config/solan
 const connection = solanaConnection;
 
 // Dedicated mainnet connection for payment verification (tips, shoutouts)
-// Use explicit mainnet RPC env var, or SOLANA_RPC_URL if it's mainnet, or public fallback
-// Note: HELIUS_API_KEY may be expired — don't auto-construct Helius URL from it
-const MAINNET_RPC_URL = process.env.SOLANA_MAINNET_RPC_URL
-  || process.env.SOLANA_RPC_URL
-  || 'https://api.mainnet-beta.solana.com';
+// Always use public mainnet RPC as primary — env-var RPCs may have expired API keys
+const PUBLIC_MAINNET_RPC = 'https://api.mainnet-beta.solana.com';
+const MAINNET_RPC_URL = process.env.SOLANA_MAINNET_RPC_URL || PUBLIC_MAINNET_RPC;
 const mainnetConnection = new Connection(MAINNET_RPC_URL, 'confirmed');
+// Fallback connection in case primary fails (e.g. expired Helius key)
+const fallbackMainnetConnection = MAINNET_RPC_URL !== PUBLIC_MAINNET_RPC
+  ? new Connection(PUBLIC_MAINNET_RPC, 'confirmed')
+  : null;
 
 // Platform wallet that receives SOL payments (use TREASURY_WALLET from config)
 const PLATFORM_WALLET = TREASURY_WALLET.toBase58();
@@ -228,26 +230,43 @@ export class SolPaymentService {
         rpc: MAINNET_RPC_URL.replace(/api-key=.*/, 'api-key=***')
       });
 
-      // Get transaction details from mainnet blockchain (retry up to 15 times, tx may not be indexed yet)
+      // Get transaction details from mainnet blockchain
+      // Try primary connection first, then fallback to public RPC if primary keeps failing
       let transaction = null;
-      for (let attempt = 0; attempt < 15; attempt++) {
-        try {
-          transaction = await mainnetConnection.getTransaction(transactionSignature, {
-            maxSupportedTransactionVersion: 0,
-            commitment: 'confirmed',
-          });
-        } catch (rpcErr) {
-          logger.warn(`getTransaction RPC error (attempt ${attempt + 1}/15):`, rpcErr);
+      const connections: { conn: Connection; label: string }[] = [
+        { conn: mainnetConnection, label: MAINNET_RPC_URL.replace(/api-key=.*/, 'api-key=***') },
+      ];
+      if (fallbackMainnetConnection) {
+        connections.push({ conn: fallbackMainnetConnection, label: PUBLIC_MAINNET_RPC });
+      }
+
+      for (const { conn, label } of connections) {
+        for (let attempt = 0; attempt < 10; attempt++) {
+          try {
+            transaction = await conn.getTransaction(transactionSignature, {
+              maxSupportedTransactionVersion: 0,
+              commitment: 'confirmed',
+            });
+          } catch (rpcErr: any) {
+            const msg = rpcErr?.message || '';
+            logger.warn(`getTransaction RPC error on ${label} (attempt ${attempt + 1}/10):`, rpcErr);
+            // If we get 401/403, skip remaining retries on this connection
+            if (msg.includes('401') || msg.includes('403') || msg.includes('Unauthorized')) {
+              logger.warn(`Auth error on ${label}, switching to fallback`);
+              break;
+            }
+          }
+          if (transaction) break;
+          logger.info(`Transaction not found yet on ${label} (attempt ${attempt + 1}/10), waiting...`, { signature: transactionSignature });
+          await new Promise(resolve => setTimeout(resolve, 2000));
         }
         if (transaction) break;
-        logger.info(`Transaction not found yet (attempt ${attempt + 1}/15), waiting...`, { signature: transactionSignature });
-        await new Promise(resolve => setTimeout(resolve, 3000));
       }
 
       if (!transaction) {
-        logger.error('Transaction not found on blockchain after 15 retries', {
+        logger.error('Transaction not found on blockchain after retries on all RPCs', {
           signature: transactionSignature,
-          rpcUrl: MAINNET_RPC_URL.replace(/api-key=.*/, 'api-key=***'),
+          rpcs: connections.map(c => c.label),
         });
         return { valid: false, error: 'Transaction not found on blockchain' };
       }
