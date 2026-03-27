@@ -85,6 +85,9 @@ export default function AdminDashboard() {
   const [adminWallet, setAdminWallet] = useState('');
   const [adminLoading, setAdminLoading] = useState(false);
   const [adminResult, setAdminResult] = useState('');
+  const [eventFee, setEventFee] = useState('0.1');
+  const [eventFeeLoading, setEventFeeLoading] = useState(false);
+  const [eventFeeResult, setEventFeeResult] = useState('');
 
   const wallet = publicKey?.toBase58() || '';
   const isAdmin = ADMIN_WALLETS.includes(wallet);
@@ -140,15 +143,23 @@ export default function AdminDashboard() {
     } catch { /* silent */ }
   }, [token]);
 
+  const loadEventFee = useCallback(async () => {
+    if (!token) return;
+    try {
+      const data = await api.get<{ success: boolean; key: string; value: string | null }>('/api/admin/config/event_creation_fee', token);
+      if (data.success && data.value) setEventFee(data.value);
+    } catch { /* silent */ }
+  }, [token]);
+
   useEffect(() => {
     if (!isAdmin || !token) {
       setLoading(false);
       return;
     }
     setLoading(true);
-    Promise.all([loadStats(), loadLeaderboard(), loadUsers(), loadTips()])
+    Promise.all([loadStats(), loadLeaderboard(), loadUsers(), loadTips(), loadEventFee()])
       .finally(() => setLoading(false));
-  }, [isAdmin, token, loadStats, loadLeaderboard, loadUsers, loadTips]);
+  }, [isAdmin, token, loadStats, loadLeaderboard, loadUsers, loadTips, loadEventFee]);
 
   // Search debounce
   useEffect(() => {
@@ -665,6 +676,65 @@ export default function AdminDashboard() {
               {adminResult && (
                 <p className={`text-xs mt-3 ${adminResult.startsWith('Error') ? 'text-red-400' : 'text-green-400'}`}>
                   {adminResult}
+                </p>
+              )}
+            </div>
+
+            {/* Event Creation Fee */}
+            <div className="bg-[#111] border border-[#222] rounded-xl p-5">
+              <h3 className="text-sm font-semibold mb-2">Event Creation Fee</h3>
+              <p className="text-[var(--color-text-tertiary)] text-xs mb-4">
+                SOL amount charged to create an event. Changes take effect immediately.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex items-center gap-2 flex-1">
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={eventFee}
+                    onChange={(e) => setEventFee(e.target.value)}
+                    className="flex-1 bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] outline-none focus:border-[var(--korus-primary)]/50"
+                  />
+                  <span className="text-sm text-[var(--color-text-secondary)]">SOL</span>
+                </div>
+                <button
+                  onClick={async () => {
+                    if (!token) return;
+                    const fee = parseFloat(eventFee);
+                    if (isNaN(fee) || fee < 0) {
+                      setEventFeeResult('Error: Invalid fee amount');
+                      return;
+                    }
+                    setEventFeeLoading(true);
+                    setEventFeeResult('');
+                    try {
+                      const data = await api.put<{ success: boolean; value?: string; error?: string }>(
+                        '/api/admin/config/event_creation_fee',
+                        { value: String(fee) },
+                        token
+                      );
+                      if (data.success) {
+                        setEventFeeResult(`Fee updated to ${data.value} SOL`);
+                      } else {
+                        setEventFeeResult(`Error: ${data.error}`);
+                      }
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    } catch (e: any) {
+                      setEventFeeResult(`Error: ${e.message}`);
+                    } finally {
+                      setEventFeeLoading(false);
+                    }
+                  }}
+                  disabled={eventFeeLoading}
+                  className="px-6 py-2 bg-[var(--korus-primary)] text-black font-bold rounded-lg text-sm hover:brightness-110 transition-all disabled:opacity-40"
+                >
+                  {eventFeeLoading ? '...' : 'Update Fee'}
+                </button>
+              </div>
+              {eventFeeResult && (
+                <p className={`text-xs mt-3 ${eventFeeResult.startsWith('Error') ? 'text-red-400' : 'text-green-400'}`}>
+                  {eventFeeResult}
                 </p>
               )}
             </div>

@@ -19,8 +19,7 @@ const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: fal
 const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { ssr: false });
 const MobileMenuModal = dynamic(() => import('@/components/MobileMenuModal'), { ssr: false });
 
-// Event creation fee in SOL
-const EVENT_CREATION_FEE = 1; // 1 SOL fee to create an event
+const DEFAULT_EVENT_FEE = 0.1;
 const PLATFORM_WALLET = new PublicKey('ByqqYGErKfyLHHd3NjgMnbbxQdPs1kFrPVWPUHUsD31W'); // Korus Treasury Wallet
 
 export default function CreateEventPage() {
@@ -37,6 +36,24 @@ export default function CreateEventPage() {
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [eventCreationFee, setEventCreationFee] = useState(DEFAULT_EVENT_FEE);
+
+  // Fetch event creation fee from backend
+  useEffect(() => {
+    const fetchFee = async () => {
+      try {
+        const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+        const res = await fetch(`${API_BASE}/api/events/config/creation-fee`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.fee) setEventCreationFee(data.fee);
+        }
+      } catch {
+        // fallback to default
+      }
+    };
+    fetchFee();
+  }, []);
 
   // Form State
   const [formData, setFormData] = useState<eventsAPI.CreateEventData>({
@@ -171,8 +188,8 @@ export default function CreateEventPage() {
     }
 
     // Check balance (0.001 SOL buffer for network fees)
-    if (balance < EVENT_CREATION_FEE + 0.001) {
-      showError(`Insufficient balance. You need ${EVENT_CREATION_FEE} SOL + network fees to create an event. Current balance: ${balance.toFixed(4)} SOL`);
+    if (balance < eventCreationFee + 0.001) {
+      showError(`Insufficient balance. You need ${eventCreationFee} SOL + network fees to create an event. Current balance: ${balance.toFixed(4)} SOL`);
       return;
     }
 
@@ -188,7 +205,7 @@ export default function CreateEventPage() {
           SystemProgram.transfer({
             fromPubkey: publicKey,
             toPubkey: PLATFORM_WALLET,
-            lamports: Math.floor(EVENT_CREATION_FEE * LAMPORTS_PER_SOL),
+            lamports: Math.floor(eventCreationFee * LAMPORTS_PER_SOL),
           })
         );
 
@@ -234,7 +251,7 @@ export default function CreateEventPage() {
         }, 'confirmed');
 
         logger.log('Payment successful!', signature);
-        showSuccess(`Payment of ${EVENT_CREATION_FEE} SOL confirmed!`);
+        showSuccess(`Payment of ${eventCreationFee} SOL confirmed!`);
       } catch (paymentError) {
         logger.error('Payment failed:', paymentError);
         let errorMsg = 'Payment failed';
@@ -587,16 +604,16 @@ export default function CreateEventPage() {
                     <div className="flex-1">
                       <h3 className="text-sm font-semibold text-[var(--color-text)] mb-1">Event Creation Fee</h3>
                       <p className="text-xs text-[var(--color-text-secondary)] mb-3">
-                        Creating events requires a {EVENT_CREATION_FEE} SOL payment to prevent spam and ensure quality submissions.
+                        Creating events requires a {eventCreationFee} SOL payment to prevent spam and ensure quality submissions.
                       </p>
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-[var(--color-text-secondary)]">Creation Fee:</span>
-                        <span className="font-bold text-korus-primary">{EVENT_CREATION_FEE} SOL</span>
+                        <span className="font-bold text-korus-primary">{eventCreationFee} SOL</span>
                       </div>
                       {connected && publicKey && (
                         <div className="flex justify-between items-center text-sm mt-2 pt-2 border-t border-[var(--color-border-light)]">
                           <span className="text-[var(--color-text-secondary)]">Your Balance:</span>
-                          <span className={`font-bold ${balance >= EVENT_CREATION_FEE + 0.001 ? 'text-green-400' : 'text-red-400'}`}>
+                          <span className={`font-bold ${balance >= eventCreationFee + 0.001 ? 'text-green-400' : 'text-red-400'}`}>
                             {balance.toFixed(4)} SOL
                           </span>
                         </div>
@@ -617,10 +634,10 @@ export default function CreateEventPage() {
                         </div>
                       </div>
 
-                      {connected && publicKey && balance < EVENT_CREATION_FEE + 0.001 && (
+                      {connected && publicKey && balance < eventCreationFee + 0.001 && (
                         <div className="mt-3 p-2 bg-red-500/10 border border-red-500/30 rounded-lg">
                           <p className="text-xs text-red-400">
-                            ⚠️ Insufficient balance. You need at least {EVENT_CREATION_FEE} SOL + network fees.
+                            ⚠️ Insufficient balance. You need at least {eventCreationFee} SOL + network fees.
                           </p>
                         </div>
                       )}
@@ -639,7 +656,7 @@ export default function CreateEventPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={isSubmitting || isUploadingImage || isProcessingPayment || !connected || !isAuthenticated || (balance < EVENT_CREATION_FEE + 0.001)}
+                    disabled={isSubmitting || isUploadingImage || isProcessingPayment || !connected || !isAuthenticated || (balance < eventCreationFee + 0.001)}
                     className="flex-1 bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-semibold py-3 rounded-lg hover:shadow-lg hover:shadow-korus-primary/20 duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isProcessingPayment ? (
@@ -658,7 +675,7 @@ export default function CreateEventPage() {
                         Creating Event...
                       </div>
                     ) : (
-                      `Create Event (${EVENT_CREATION_FEE} SOL)`
+                      `Create Event (${eventCreationFee} SOL)`
                     )}
                   </button>
                 </div>

@@ -1,5 +1,6 @@
 import express from 'express';
 import { authenticate } from '../middleware/auth';
+import { PrismaClient } from '@prisma/client';
 import {
   getEvents,
   getEvent,
@@ -14,9 +15,22 @@ import {
 } from '../controllers/eventsController';
 
 const router = express.Router();
+const prisma = new PrismaClient();
 
 // Public routes
 router.get('/', getEvents);
+
+// Public: get event creation fee
+router.get('/config/creation-fee', async (_req, res) => {
+  try {
+    const config = await prisma.platformConfig.findUnique({
+      where: { key: 'event_creation_fee' }
+    });
+    res.json({ success: true, fee: config ? parseFloat(config.value) : 0.1 });
+  } catch {
+    res.json({ success: true, fee: 0.1 }); // fallback
+  }
+});
 
 // Protected routes (require authentication)
 // IMPORTANT: Specific routes like /my-events must come before /:id to prevent route collision

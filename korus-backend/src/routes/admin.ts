@@ -495,4 +495,53 @@ router.get('/tips-leaderboard', authenticateJWT, async (req: AuthRequest, res) =
   }
 });
 
+// ==================== Platform Config ====================
+
+// GET /api/admin/config/:key — get a config value (admin only)
+router.get('/config/:key', authenticateJWT, async (req, res) => {
+  try {
+    const walletAddress = (req as AuthRequest).userWallet;
+    if (!walletAddress || !ADMIN_WALLETS.includes(walletAddress)) {
+      return res.status(403).json({ success: false, error: 'Admin access required' });
+    }
+
+    const config = await prisma.platformConfig.findUnique({
+      where: { key: req.params.key }
+    });
+
+    res.json({ success: true, key: req.params.key, value: config?.value || null });
+  } catch (error) {
+    logger.error('Admin get config error:', error);
+    res.status(500).json({ success: false, error: 'Failed to get config' });
+  }
+});
+
+// PUT /api/admin/config/:key — set a config value (admin only)
+router.put('/config/:key', authenticateJWT, async (req, res) => {
+  try {
+    const walletAddress = (req as AuthRequest).userWallet;
+    if (!walletAddress || !ADMIN_WALLETS.includes(walletAddress)) {
+      return res.status(403).json({ success: false, error: 'Admin access required' });
+    }
+
+    const { value } = req.body;
+    if (value === undefined || value === null) {
+      return res.status(400).json({ success: false, error: 'Value is required' });
+    }
+
+    const config = await prisma.platformConfig.upsert({
+      where: { key: req.params.key },
+      update: { value: String(value) },
+      create: { key: req.params.key, value: String(value) }
+    });
+
+    logger.debug(`Admin config updated: ${req.params.key} = ${value} by ${walletAddress}`);
+
+    res.json({ success: true, key: config.key, value: config.value });
+  } catch (error) {
+    logger.error('Admin set config error:', error);
+    res.status(500).json({ success: false, error: 'Failed to set config' });
+  }
+});
+
 export default router;

@@ -478,3 +478,11 @@ model WhitelistRegistration {
   @@index([eventId, position])
   @@map("whitelist_registrations")
 }
+
+model PlatformConfig {
+  key       String   @id @db.VarChar(100)
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+
+  @@map("platform_config")
+}
