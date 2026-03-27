@@ -7,10 +7,11 @@ import { connection as solanaConnection, TREASURY_WALLET } from '../config/solan
 const connection = solanaConnection;
 
 // Dedicated mainnet connection for payment verification (tips, shoutouts)
-// Falls back to the shared connection if no mainnet RPC is configured
-const MAINNET_RPC_URL = process.env.HELIUS_API_KEY
-  ? `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`
-  : process.env.SOLANA_MAINNET_RPC_URL || process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
+// Use explicit mainnet RPC env var, or SOLANA_RPC_URL if it's mainnet, or public fallback
+// Note: HELIUS_API_KEY may be expired — don't auto-construct Helius URL from it
+const MAINNET_RPC_URL = process.env.SOLANA_MAINNET_RPC_URL
+  || process.env.SOLANA_RPC_URL
+  || 'https://api.mainnet-beta.solana.com';
 const mainnetConnection = new Connection(MAINNET_RPC_URL, 'confirmed');
 
 // Platform wallet that receives SOL payments (use TREASURY_WALLET from config)
