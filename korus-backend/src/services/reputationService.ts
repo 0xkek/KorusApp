@@ -222,7 +222,8 @@ class ReputationService {
    */
   async onTipSent(walletAddress: string, amount: number): Promise<void> {
     if (!isReputationEnabled()) return;
-    const points = Math.floor(amount / 100) * this.POINTS.TIP_SENT_PER_100;
+    // amount is in SOL — minimum 1 point for any tip, plus 10 points per 0.1 SOL
+    const points = Math.max(1, Math.floor(amount / 0.1) * this.POINTS.TIP_SENT_PER_100);
     
     await this.addReputation({
       userWallet: walletAddress,
@@ -239,7 +240,8 @@ class ReputationService {
    */
   async onTipReceived(authorWallet: string, amount: number): Promise<void> {
     if (!isReputationEnabled()) return;
-    const points = Math.floor(amount / 100) * this.POINTS.TIP_RECEIVED_PER_100;
+    // amount is in SOL — minimum 1 point for any tip, plus 15 points per 0.1 SOL
+    const points = Math.max(1, Math.floor(amount / 0.1) * this.POINTS.TIP_RECEIVED_PER_100);
     
     await this.addReputation({
       userWallet: authorWallet,

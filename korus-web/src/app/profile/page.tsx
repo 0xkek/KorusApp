@@ -124,6 +124,15 @@ export default function ProfilePage() {
           repliesAPI.getUserReplies(user.walletAddress, { limit: 50 }),
         ]);
 
+        // Debug: log raw API results
+        logger.log('Profile API results:', {
+          repStatus: repResult.status,
+          postsStatus: postsResult.status,
+          repliesStatus: repliesResult.status,
+          postsValue: postsResult.status === 'fulfilled' ? { postCount: postsResult.value.posts?.length, hasPostsKey: 'posts' in postsResult.value } : { reason: (postsResult as PromiseRejectedResult).reason?.message },
+          repliesValue: repliesResult.status === 'fulfilled' ? { replyCount: repliesResult.value.replies?.length, hasRepliesKey: 'replies' in repliesResult.value, keys: Object.keys(repliesResult.value) } : { reason: (repliesResult as PromiseRejectedResult).reason?.message },
+        });
+
         if (repResult.status === 'fulfilled') {
           const repData = repResult.value.reputation;
           setReputation({
@@ -137,7 +146,7 @@ export default function ProfilePage() {
             recentEvents: repData.recentEvents || [],
           });
         } else {
-          logger.error('Failed to load reputation');
+          logger.error('Failed to load reputation:', (repResult as PromiseRejectedResult).reason);
         }
 
         if (postsResult.status === 'fulfilled' && postsResult.value.posts) {
@@ -158,7 +167,7 @@ export default function ProfilePage() {
           }));
           setUserPosts(transformed);
         } else {
-          logger.error('Failed to load user posts');
+          logger.error('Failed to load user posts:', postsResult.status === 'rejected' ? (postsResult as PromiseRejectedResult).reason : postsResult.value);
         }
 
         if (repliesResult.status === 'fulfilled' && repliesResult.value.replies) {
@@ -174,7 +183,7 @@ export default function ProfilePage() {
           }));
           setUserReplies(transformedReplies);
         } else {
-          logger.error('Failed to load user replies');
+          logger.error('Failed to load user replies:', repliesResult.status === 'rejected' ? (repliesResult as PromiseRejectedResult).reason : repliesResult.value);
         }
       }
 
