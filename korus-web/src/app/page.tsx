@@ -1296,6 +1296,17 @@ export default function Home() {
             reposted: !isCurrentlyReposted
           }
         }));
+
+        // Update repost count on the original post
+        setPosts(prev => prev.map(p => {
+          if (String(p.id) === String(postId)) {
+            return {
+              ...p,
+              reposts: !isCurrentlyReposted ? (p.reposts ?? 0) + 1 : Math.max(0, (p.reposts ?? 0) - 1)
+            };
+          }
+          return p;
+        }));
       }
     } catch (error) {
       logger.error('Failed to toggle repost:', error);
@@ -1618,7 +1629,7 @@ export default function Home() {
                   ? 'px-5 py-2'
                   : 'px-5 py-4 border-b border-[var(--color-border-light)] hover:bg-white/[0.02]'
               }`}
-              onClick={() => router.push(`/post/${post.id}`)}
+              onClick={() => router.push(`/post/${post.repostedPost?.id || post.id}`)}
             >
               {/* Shoutout Banner — standalone, no post card */}
               {post.isShoutout && (
@@ -1647,37 +1658,67 @@ export default function Home() {
               )}
 
               {!post.isShoutout && <div>
+                {/* Repost Header */}
+                {post.repostedBy && (
+                  <div className="flex items-center gap-2 ml-[52px] mb-1.5 text-[13px] text-[var(--color-text-tertiary)]">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>
+                      <Link
+                        href={`/profile/${post.wallet}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="font-semibold hover:underline"
+                      >
+                        {truncateAddress(post.repostedBy)}
+                      </Link>
+                      {' '}reposted
+                    </span>
+                  </div>
+                )}
+
                 {/* Post Header with Avatar */}
                 <div className="flex items-center gap-3">
-                  {/* Avatar */}
-                  {post.avatar ? (
-                    <div className="w-[42px] h-[42px] rounded-full flex-shrink-0 overflow-hidden">
-                      <Image
-                        src={post.avatar}
-                        alt={`${post.user} avatar`}
-                        width={42}
-                        height={42}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-[42px] h-[42px] rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-[14px] font-bold text-black flex-shrink-0">
-                      {post.user.slice(0, 2).toUpperCase()}
-                    </div>
-                  )}
+                  {/* Avatar — for reposts show the original post author */}
+                  {(() => {
+                    const displayAvatar = post.repostedPost?.avatar || post.avatar;
+                    const displayUser = post.repostedPost?.user || post.user;
+                    return displayAvatar ? (
+                      <div className="w-[42px] h-[42px] rounded-full flex-shrink-0 overflow-hidden">
+                        <Image
+                          src={displayAvatar}
+                          alt={`${displayUser} avatar`}
+                          width={42}
+                          height={42}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-[42px] h-[42px] rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-[14px] font-bold text-black flex-shrink-0">
+                        {displayUser.slice(0, 2).toUpperCase()}
+                      </div>
+                    );
+                  })()}
 
-                  {/* Header Info */}
+                  {/* Header Info — for reposts, show original post author */}
+                  {(() => {
+                    const displayPost = post.repostedPost || post;
+                    const displayWallet = displayPost.wallet || displayPost.user;
+                    const displayUser = displayPost.user;
+                    const displayPremium = displayPost.isPremium;
+                    const displayTime = displayPost.createdAt || displayPost.time;
+                    return (
                   <div className="flex items-center gap-1.5 flex-1 min-w-0">
                     <Link
-                      href={`/profile/${post.wallet || post.user}`}
+                      href={`/profile/${displayWallet}`}
                       onClick={(e) => e.stopPropagation()}
                       className={`font-bold text-[15px] hover:underline cursor-pointer ${post.isShoutout ? 'text-korus-primary' : 'text-[var(--color-text)]'}`}
                     >
-                      {truncateAddress(post.user)}
+                      {truncateAddress(displayUser)}
                     </Link>
 
                     {/* Premium Badge */}
-                    {post.isPremium && (
+                    {displayPremium && (
                       <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
                         <svg className="w-3 h-3" fill="black" viewBox="0 0 24 24">
                           <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
@@ -1685,9 +1726,9 @@ export default function Home() {
                       </div>
                     )}
 
-                    <span className="text-[14px] text-[var(--color-text-secondary)]">@{truncateAddress(post.user)}</span>
+                    <span className="text-[14px] text-[var(--color-text-secondary)]">@{truncateAddress(displayUser)}</span>
                     <span className="text-[#525252] text-[12px]">·</span>
-                    <span className="text-[13px] text-[#525252] hover:text-[var(--color-text-secondary)] cursor-pointer">{formatRelativeTime(post.createdAt || post.time)}</span>
+                    <span className="text-[13px] text-[#525252] hover:text-[var(--color-text-secondary)] cursor-pointer">{formatRelativeTime(displayTime)}</span>
 
                     {/* Sponsored Badge */}
                     {post.isSponsored && (
@@ -1711,14 +1752,16 @@ export default function Home() {
                       </button>
                     </div>
                   </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Post Body - indented below avatar */}
                 <div className="ml-[52px] mt-0.5">
-                  {/* Post Text */}
-                  {post.content && (
+                  {/* Post Text — for reposts, show original post content */}
+                  {(post.repostedPost?.content || post.content) && (
                     <SafeContent
-                      content={post.content}
+                      content={post.repostedPost?.content || post.content}
                       className="text-[15px] leading-[1.55] text-[#e5e5e5] whitespace-pre-wrap break-words"
                       allowLinks={true}
                       allowFormatting={true}
@@ -1726,7 +1769,7 @@ export default function Home() {
                   )}
 
                   {/* Link Preview */}
-                  {extractUrls(post.content).map((url, index) => (
+                  {extractUrls(post.repostedPost?.content || post.content).map((url, index) => (
                     <div key={index} className="mb-3">
                       <LinkPreview url={url} />
                     </div>
@@ -1739,11 +1782,11 @@ export default function Home() {
                     </div>
                   )}
 
-                  {/* Post Image */}
-                  {post.image && (
+                  {/* Post Image — for reposts, show original post image */}
+                  {(post.repostedPost?.image || post.image) && (
                     <div className="mb-3 flex justify-center">
                       <Image
-                        src={post.image}
+                        src={(post.repostedPost?.image || post.image) as string}
                         alt="Post content"
                         width={600}
                         height={400}
