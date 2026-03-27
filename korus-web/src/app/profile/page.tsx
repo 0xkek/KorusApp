@@ -525,7 +525,7 @@ export default function ProfilePage() {
 
                   {/* Balance Card */}
                   <div className="bg-gradient-to-r from-korus-primary to-korus-secondary rounded-xl px-4 py-2 shadow-lg shadow-korus-primary/20">
-                    <div className="text-black font-bold text-lg">
+                    <div className="font-bold text-lg" style={{ color: '#000' }}>
                       {balance.toFixed(2)} SOL
                     </div>
                   </div>
