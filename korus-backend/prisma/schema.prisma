@@ -98,9 +98,16 @@ model Post {
   shoutoutExpiresAt DateTime?     // When the shoutout expires
   shoutoutPrice    Decimal?       @db.Decimal(18, 6) // Price paid in SOL
   shoutoutTxSignature String?    @db.VarChar(128)   // On-chain payment tx signature
+  isRepost         Boolean        @default(false)
+  originalPostId   String?        // ID of the original post being reposted
+  originalReplyId  String?        // ID of the original reply being reposted
+  repostCount      Int            @default(0)
+  repostComment    String?        // Optional comment on a repost (quote repost)
   game             Game?
   notifications    Notification[]
   author           User           @relation("AuthoredPosts", fields: [authorWallet], references: [walletAddress])
+  originalPost     Post?          @relation("Reposts", fields: [originalPostId], references: [id])
+  reposts          Post[]         @relation("Reposts")
   replies          Reply[]
   sponsoredPost    SponsoredPost?
 
@@ -112,6 +119,7 @@ model Post {
   @@index([isHidden, createdAt(sort: Desc)])
   @@index([flaggedCount(sort: Desc)])
   @@index([isShoutout, shoutoutExpiresAt(sort: Desc)])
+  @@index([originalPostId])
   @@map("posts")
 }
 

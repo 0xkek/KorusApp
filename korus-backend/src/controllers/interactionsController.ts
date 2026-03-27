@@ -5,7 +5,7 @@ import { AuthRequest } from '../middleware/auth'
 import { reputationService } from '../services/reputationService'
 import { createNotification } from '../utils/notifications'
 import SolPaymentService from '../services/solPaymentService'
-import { emitPostUpdate } from '../config/socket'
+import { emitPostUpdate, emitNewPost } from '../config/socket'
 
 export const likePost = async (req: AuthRequest, res: Response) => {
   try {
@@ -305,14 +305,26 @@ export const getUserInteractions = async (req: AuthRequest, res: Response) => {
       }
     })
 
+    // Check which posts the user has reposted
+    const userReposts = await prisma.post.findMany({
+      where: {
+        authorWallet: walletAddress,
+        isRepost: true,
+        originalPostId: { in: postIds.map(id => String(id)) }
+      },
+      select: { originalPostId: true }
+    })
+    const repostedPostIds = new Set(userReposts.map(r => r.originalPostId).filter(Boolean))
+
     // Create a map of postId/replyId -> interaction types
-    const interactionMap: Record<string, { liked: boolean; tipped: boolean }> = {}
+    const interactionMap: Record<string, { liked: boolean; tipped: boolean; reposted: boolean }> = {}
 
     // Initialize all items as not interacted
     postIds.forEach(id => {
       interactionMap[String(id)] = {
         liked: false,
-        tipped: false
+        tipped: false,
+        reposted: repostedPostIds.has(String(id))
       }
     })
 
@@ -321,7 +333,8 @@ export const getUserInteractions = async (req: AuthRequest, res: Response) => {
       if (!interactionMap[interaction.targetId]) {
         interactionMap[interaction.targetId] = {
           liked: false,
-          tipped: false
+          tipped: false,
+          reposted: repostedPostIds.has(interaction.targetId)
         }
       }
 
@@ -342,5 +355,98 @@ export const getUserInteractions = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     logger.error('Get user interactions error:', error)
     res.status(500).json({ error: 'Failed to get user interactions' })
+  }
+}
+
+const authorSelect = {
+  walletAddress: true,
+  tier: true,
+  genesisVerified: true,
+  snsUsername: true,
+  username: true,
+  nftAvatar: true,
+  themeColor: true
+}
+
+export const repostPost = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params
+    const walletAddress = req.userWallet!
+    const { comment } = req.body
+
+    // Check if post exists
+    const post = await prisma.post.findUnique({ where: { id } })
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' })
+    }
+
+    // Can't repost your own post
+    if (post.authorWallet === walletAddress) {
+      return res.status(400).json({ error: 'Cannot repost your own post' })
+    }
+
+    // Check if user already reposted this post
+    const existingRepost = await prisma.post.findFirst({
+      where: {
+        authorWallet: walletAddress,
+        isRepost: true,
+        originalPostId: id
+      }
+    })
+
+    if (existingRepost) {
+      // Undo repost — delete the repost post and decrement count
+      await prisma.post.delete({ where: { id: existingRepost.id } })
+      await prisma.post.update({
+        where: { id },
+        data: { repostCount: { decrement: 1 } }
+      })
+
+      return res.json({
+        success: true,
+        reposted: false,
+        message: 'Repost removed'
+      })
+    }
+
+    // Create repost as a new post that references the original
+    const repost = await prisma.post.create({
+      data: {
+        authorWallet: walletAddress,
+        content: comment || '',
+        isRepost: true,
+        originalPostId: id,
+        repostComment: comment || null
+      },
+      include: {
+        author: { select: authorSelect },
+        originalPost: {
+          include: {
+            author: { select: authorSelect }
+          }
+        }
+      }
+    })
+
+    // Increment repost count on original post
+    await prisma.post.update({
+      where: { id },
+      data: { repostCount: { increment: 1 } }
+    })
+
+    // Emit via WebSocket
+    emitNewPost(repost)
+
+    logger.info(`${walletAddress} reposted post ${id}`)
+
+    res.json({
+      success: true,
+      reposted: true,
+      repostPost: repost,
+      message: 'Reposted successfully'
+    })
+  } catch (error) {
+    logger.error('Repost error:', error)
+    res.status(500).json({ error: 'Failed to repost' })
   }
 }

@@ -386,6 +386,21 @@ export const getPosts = async (req: Request, res: Response) => {
               nftAvatar: true,
               themeColor: true
             }
+          },
+          originalPost: {
+            include: {
+              author: {
+                select: {
+                  walletAddress: true,
+                  tier: true,
+                  genesisVerified: true,
+                  snsUsername: true,
+                  username: true,
+                  nftAvatar: true,
+                  themeColor: true
+                }
+              }
+            }
           }
         },
         orderBy: { createdAt: 'desc' }

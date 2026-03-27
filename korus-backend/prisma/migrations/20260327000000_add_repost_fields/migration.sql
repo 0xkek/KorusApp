@@ -1,0 +1,12 @@
+-- AlterTable
+ALTER TABLE "Post" ADD COLUMN IF NOT EXISTS "isRepost" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Post" ADD COLUMN IF NOT EXISTS "originalPostId" TEXT;
+ALTER TABLE "Post" ADD COLUMN IF NOT EXISTS "originalReplyId" TEXT;
+ALTER TABLE "Post" ADD COLUMN IF NOT EXISTS "repostCount" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "Post" ADD COLUMN IF NOT EXISTS "repostComment" TEXT;
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "Post_originalPostId_idx" ON "Post"("originalPostId");
+
+-- AddForeignKey
+ALTER TABLE "Post" ADD CONSTRAINT "Post_originalPostId_fkey" FOREIGN KEY ("originalPostId") REFERENCES "Post"("id") ON DELETE SET NULL ON UPDATE CASCADE;

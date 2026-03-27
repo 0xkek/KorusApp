@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { getPostInteractions, likePost, tipPost, getUserInteractions } from '../controllers/interactionsController'
+import { getPostInteractions, likePost, tipPost, getUserInteractions, repostPost } from '../controllers/interactionsController'
 import { authenticate } from '../middleware/auth'
 import { requireTokenFeatures } from '../middleware/tokenFeatures'
 import { validateLike, validateTip, validateBatchInteractions } from '../middleware/validation'
@@ -104,6 +104,7 @@ router.post('/posts/:id/like', authenticate, validateLike, likePost)
  *         description: Token features are disabled
  */
 router.post('/posts/:id/tip', authenticate, requireTokenFeatures, validateTip, tipPost)
+router.post('/posts/:id/repost', authenticate, repostPost)
 
 /**
  * @swagger
