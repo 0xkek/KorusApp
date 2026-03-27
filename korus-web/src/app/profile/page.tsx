@@ -889,14 +889,14 @@ export default function ProfilePage() {
                         label: 'Engagement',
                         score: reputation.engagementScore,
                         icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z',
-                        tooltip: 'Likes given (+1), likes received (+2), comments made (+5). Interact with others to grow.',
+                        tooltip: 'Likes given (+1), likes received (+2), comments made (+5), tips sent (+10 per 0.1 SOL), tips received (+15 per 0.1 SOL). Interact with others to grow.',
                         border: true,
                       },
                       {
                         label: 'Community',
                         score: reputation.communityScore,
                         icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
-                        tooltip: 'Tips sent (+10 per 100 lamports), tips received (+15 per 100 lamports), game wins (+20). Give back to grow.',
+                        tooltip: 'Follows, game wins (+20). Build your network and give back to grow.',
                         border: true,
                       },
                       {
