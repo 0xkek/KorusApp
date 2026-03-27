@@ -244,7 +244,11 @@ export const getPosts = async (req: Request, res: Response) => {
           where: {
             isHidden: false,
             authorWallet: authorWallet,
-            game: null
+            game: null,
+            OR: [
+              { content: { not: '' } },
+              { imageUrl: { not: null } },
+            ],
           },
           include: {
             author: {
