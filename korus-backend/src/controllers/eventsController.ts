@@ -119,7 +119,7 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
     } = req.body;
 
     // Validation
-    if (!type || !projectName || !title || !description || !externalLink || !startDate || !endDate) {
+    if (!type || !projectName || !title || !description || !startDate || !endDate) {
       return res.status(400).json({
         success: false,
         error: 'Missing required fields'

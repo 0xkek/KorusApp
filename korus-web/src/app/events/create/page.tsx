@@ -187,10 +187,7 @@ export default function CreateEventPage() {
       return;
     }
 
-    if (!formData.externalLink) {
-      showError('Please provide an external link');
-      return;
-    }
+    // External link is optional
 
     // Check balance (0.001 SOL buffer for network fees)
     if (balance < eventCreationFee + 0.001) {
@@ -474,7 +471,7 @@ export default function CreateEventPage() {
 
                 {/* External Link */}
                 <div>
-                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">External Link *</label>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">External Link (optional)</label>
                   <input
                     type="text"
                     value={formData.externalLink}
