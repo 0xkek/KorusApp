@@ -79,20 +79,32 @@ export default function CreateEventPage() {
   const [balance, setBalance] = useState<number>(0);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
-  // Fetch wallet balance
+  // Fetch wallet balance via RPC proxy
   useEffect(() => {
     const fetchBalance = async () => {
       if (connected && publicKey) {
         try {
-          const lamports = await connection.getBalance(publicKey);
-          setBalance(lamports / LAMPORTS_PER_SOL);
+          const rpcResponse = await fetch('/api/rpc', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: 1,
+              method: 'getBalance',
+              params: [publicKey.toBase58()],
+            }),
+          });
+          const rpcData = await rpcResponse.json();
+          if (rpcData.error) throw new Error(rpcData.error.message || 'RPC error');
+          const bal = rpcData.result?.value ?? 0;
+          setBalance(bal / LAMPORTS_PER_SOL);
         } catch (error) {
           logger.error('Failed to fetch balance:', error);
         }
       }
     };
     fetchBalance();
-  }, [connected, publicKey, connection]);
+  }, [connected, publicKey]);
 
   // Cleanup object URL on unmount
   useEffect(() => {
@@ -295,9 +307,16 @@ export default function CreateEventPage() {
       await eventsAPI.createEvent(eventData, token);
       showSuccess('Event created successfully!');
 
-      // Refresh balance
-      const newLamports = await connection.getBalance(publicKey);
-      setBalance(newLamports / LAMPORTS_PER_SOL);
+      // Refresh balance via RPC proxy
+      try {
+        const rpcRes = await fetch('/api/rpc', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getBalance', params: [publicKey.toBase58()] }),
+        });
+        const rpcData = await rpcRes.json();
+        if (!rpcData.error) setBalance((rpcData.result?.value ?? 0) / LAMPORTS_PER_SOL);
+      } catch { /* non-critical */ }
 
       router.push(`/events/manage`);
     } catch (error: unknown) {
