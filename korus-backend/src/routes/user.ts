@@ -204,6 +204,46 @@ router.get('/by-username/:username', async (req, res) => {
 });
 
 /**
+ * GET /api/user/by-wallet/:wallet
+ * Get public user profile by wallet address
+ */
+router.get('/by-wallet/:wallet', async (req, res) => {
+  try {
+    const { wallet } = req.params;
+
+    if (!wallet || wallet.length < 32 || wallet.length > 44) {
+      return res.status(400).json({ error: 'Invalid wallet address' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { walletAddress: wallet },
+      select: {
+        walletAddress: true,
+        username: true,
+        displayName: true,
+        bio: true,
+        nftAvatar: true,
+        snsUsername: true,
+        tier: true,
+        reputationScore: true,
+        followerCount: true,
+        followingCount: true,
+        createdAt: true,
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ user });
+  } catch (error) {
+    logger.error('Error fetching user by wallet:', error);
+    res.status(500).json({ error: 'Failed to fetch user' });
+  }
+});
+
+/**
  * PUT /api/user/profile
  * Update user profile
  */

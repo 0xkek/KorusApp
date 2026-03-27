@@ -34,10 +34,12 @@ export const postsAPI = {
    */
   async getUserPosts(walletAddress: string, params?: {
     limit?: number;
+    cursor?: string;
   }): Promise<APIPostsResponse> {
     const searchParams = new URLSearchParams();
     searchParams.set('authorWallet', walletAddress);
     if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.cursor) searchParams.set('cursor', params.cursor);
 
     return api.get<APIPostsResponse>(`/api/posts?${searchParams.toString()}`);
   },

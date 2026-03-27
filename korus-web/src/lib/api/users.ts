@@ -19,6 +19,8 @@ export interface UserProfile {
   themeColor?: string;
   tier?: string;
   reputationScore?: number;
+  followerCount?: number;
+  followingCount?: number;
   createdAt?: string;
 }
 
@@ -56,6 +58,13 @@ export const usersAPI = {
    */
   async getUserByUsername(username: string): Promise<{ user: UserProfile }> {
     return api.get<{ user: UserProfile }>(`/api/user/by-username/${username}`);
+  },
+
+  /**
+   * Get public user profile by wallet address
+   */
+  async getUserByWallet(wallet: string): Promise<{ user: UserProfile }> {
+    return api.get<{ user: UserProfile }>(`/api/user/by-wallet/${wallet}`);
   },
 
   /**
