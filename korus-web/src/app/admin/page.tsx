@@ -57,7 +57,7 @@ interface TipEntry {
   tipCount: number;
 }
 
-type Tab = 'overview' | 'reputation' | 'users' | 'tips';
+type Tab = 'overview' | 'reputation' | 'users' | 'tips' | 'manage';
 
 export default function AdminDashboard() {
   const { publicKey } = useWallet();
@@ -73,6 +73,18 @@ export default function AdminDashboard() {
   const [topReceivers, setTopReceivers] = useState<TipEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Manage tab state
+  const [premiumWallet, setPremiumWallet] = useState('');
+  const [premiumDays, setPremiumDays] = useState('30');
+  const [premiumLoading, setPremiumLoading] = useState(false);
+  const [premiumResult, setPremiumResult] = useState('');
+  const [revokeWallet, setRevokeWallet] = useState('');
+  const [revokeLoading, setRevokeLoading] = useState(false);
+  const [revokeResult, setRevokeResult] = useState('');
+  const [adminWallet, setAdminWallet] = useState('');
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [adminResult, setAdminResult] = useState('');
 
   const wallet = publicKey?.toBase58() || '';
   const isAdmin = ADMIN_WALLETS.includes(wallet);
@@ -193,6 +205,7 @@ export default function AdminDashboard() {
             ['reputation', 'Reputation'],
             ['users', 'Users'],
             ['tips', 'Tips'],
+            ['manage', 'Manage'],
           ] as [Tab, string][]).map(([key, label]) => (
             <button
               key={key}
@@ -463,6 +476,193 @@ export default function AdminDashboard() {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+        {/* Manage Tab */}
+        {activeTab === 'manage' && (
+          <div className="space-y-6">
+            {/* Grant Premium */}
+            <div className="bg-[#111] border border-[#222] rounded-xl p-5">
+              <h3 className="text-sm font-semibold mb-4">Grant Premium</h3>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="text"
+                  value={premiumWallet}
+                  onChange={(e) => setPremiumWallet(e.target.value)}
+                  placeholder="Wallet address"
+                  className="flex-1 bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] placeholder-[#555] outline-none focus:border-[var(--korus-primary)]/50 font-mono"
+                />
+                <select
+                  value={premiumDays}
+                  onChange={(e) => setPremiumDays(e.target.value)}
+                  className="bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] outline-none"
+                >
+                  <option value="7">7 days</option>
+                  <option value="30">30 days</option>
+                  <option value="90">90 days</option>
+                  <option value="180">180 days</option>
+                  <option value="365">1 year</option>
+                  <option value="3650">Lifetime</option>
+                </select>
+                <button
+                  onClick={async () => {
+                    if (!premiumWallet.trim() || !token) return;
+                    setPremiumLoading(true);
+                    setPremiumResult('');
+                    try {
+                      const data = await api.post<{ success: boolean; expiresAt?: string; error?: string }>(
+                        '/api/admin/grant-premium',
+                        { walletAddress: premiumWallet.trim(), days: parseInt(premiumDays) },
+                        token
+                      );
+                      if (data.success) {
+                        setPremiumResult(`Premium granted until ${new Date(data.expiresAt!).toLocaleDateString()}`);
+                        setPremiumWallet('');
+                      } else {
+                        setPremiumResult(`Error: ${data.error}`);
+                      }
+                    } catch (e: any) {
+                      setPremiumResult(`Error: ${e.message}`);
+                    } finally {
+                      setPremiumLoading(false);
+                    }
+                  }}
+                  disabled={premiumLoading || !premiumWallet.trim()}
+                  className="px-6 py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-bold rounded-lg text-sm hover:brightness-110 transition-all disabled:opacity-40"
+                >
+                  {premiumLoading ? '...' : 'Grant'}
+                </button>
+              </div>
+              {premiumResult && (
+                <p className={`text-xs mt-3 ${premiumResult.startsWith('Error') ? 'text-red-400' : 'text-green-400'}`}>
+                  {premiumResult}
+                </p>
+              )}
+            </div>
+
+            {/* Revoke Premium */}
+            <div className="bg-[#111] border border-[#222] rounded-xl p-5">
+              <h3 className="text-sm font-semibold mb-4">Revoke Premium</h3>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="text"
+                  value={revokeWallet}
+                  onChange={(e) => setRevokeWallet(e.target.value)}
+                  placeholder="Wallet address"
+                  className="flex-1 bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] placeholder-[#555] outline-none focus:border-[var(--korus-primary)]/50 font-mono"
+                />
+                <button
+                  onClick={async () => {
+                    if (!revokeWallet.trim() || !token) return;
+                    setRevokeLoading(true);
+                    setRevokeResult('');
+                    try {
+                      const data = await api.post<{ success: boolean; error?: string }>(
+                        '/api/admin/revoke-premium',
+                        { walletAddress: revokeWallet.trim() },
+                        token
+                      );
+                      if (data.success) {
+                        setRevokeResult('Premium revoked successfully');
+                        setRevokeWallet('');
+                      } else {
+                        setRevokeResult(`Error: ${data.error}`);
+                      }
+                    } catch (e: any) {
+                      setRevokeResult(`Error: ${e.message}`);
+                    } finally {
+                      setRevokeLoading(false);
+                    }
+                  }}
+                  disabled={revokeLoading || !revokeWallet.trim()}
+                  className="px-6 py-2 bg-red-500/80 text-white font-bold rounded-lg text-sm hover:bg-red-500 transition-all disabled:opacity-40"
+                >
+                  {revokeLoading ? '...' : 'Revoke'}
+                </button>
+              </div>
+              {revokeResult && (
+                <p className={`text-xs mt-3 ${revokeResult.startsWith('Error') ? 'text-red-400' : 'text-green-400'}`}>
+                  {revokeResult}
+                </p>
+              )}
+            </div>
+
+            {/* Add Admin */}
+            <div className="bg-[#111] border border-[#222] rounded-xl p-5">
+              <h3 className="text-sm font-semibold mb-2">Admin Wallets</h3>
+              <p className="text-[var(--color-text-tertiary)] text-xs mb-4">
+                These wallets have access to the admin dashboard. Changes require a code deploy.
+              </p>
+              <div className="space-y-2 mb-4">
+                {ADMIN_WALLETS.map((w) => (
+                  <div key={w} className="flex items-center gap-2 bg-[#0a0a0a] border border-[#222] rounded-lg px-4 py-2">
+                    <svg className="w-4 h-4 text-[var(--korus-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    <span className="font-mono text-sm text-[var(--color-text)]">{w}</span>
+                    {w === wallet && <span className="text-[var(--korus-primary)] text-xs">(you)</span>}
+                  </div>
+                ))}
+              </div>
+
+              {/* Set any user's tier */}
+              <h3 className="text-sm font-semibold mb-2 mt-6">Set User Tier</h3>
+              <p className="text-[var(--color-text-tertiary)] text-xs mb-3">
+                Change any user&apos;s tier (standard, premium, vip).
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="text"
+                  value={adminWallet}
+                  onChange={(e) => setAdminWallet(e.target.value)}
+                  placeholder="Wallet address"
+                  className="flex-1 bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] placeholder-[#555] outline-none focus:border-[var(--korus-primary)]/50 font-mono"
+                />
+                <select
+                  id="tierSelect"
+                  defaultValue="premium"
+                  className="bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] outline-none"
+                >
+                  <option value="standard">Standard</option>
+                  <option value="premium">Premium</option>
+                  <option value="vip">VIP</option>
+                </select>
+                <button
+                  onClick={async () => {
+                    if (!adminWallet.trim() || !token) return;
+                    setAdminLoading(true);
+                    setAdminResult('');
+                    try {
+                      const tier = (document.getElementById('tierSelect') as HTMLSelectElement).value;
+                      const data = await api.post<{ success: boolean; user?: { tier: string }; error?: string }>(
+                        '/api/admin/set-tier',
+                        { walletAddress: adminWallet.trim(), tier },
+                        token
+                      );
+                      if (data.success) {
+                        setAdminResult(`Tier set to ${data.user?.tier}`);
+                        setAdminWallet('');
+                      } else {
+                        setAdminResult(`Error: ${data.error}`);
+                      }
+                    } catch (e: any) {
+                      setAdminResult(`Error: ${e.message}`);
+                    } finally {
+                      setAdminLoading(false);
+                    }
+                  }}
+                  disabled={adminLoading || !adminWallet.trim()}
+                  className="px-6 py-2 bg-[var(--korus-primary)] text-black font-bold rounded-lg text-sm hover:brightness-110 transition-all disabled:opacity-40"
+                >
+                  {adminLoading ? '...' : 'Set Tier'}
+                </button>
+              </div>
+              {adminResult && (
+                <p className={`text-xs mt-3 ${adminResult.startsWith('Error') ? 'text-red-400' : 'text-green-400'}`}>
+                  {adminResult}
+                </p>
+              )}
             </div>
           </div>
         )}

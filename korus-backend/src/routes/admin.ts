@@ -124,6 +124,90 @@ router.post('/set-tier', authenticateJWT, async (req: AuthRequest, res) => {
   }
 });
 
+/**
+ * Grant premium to a user with duration
+ * POST /api/admin/grant-premium
+ */
+router.post('/grant-premium', authenticateJWT, async (req: AuthRequest, res) => {
+  try {
+    const callerWallet = req.userWallet;
+    if (!callerWallet || !ADMIN_WALLETS.includes(callerWallet)) {
+      return res.status(403).json({ success: false, error: 'Not authorized' });
+    }
+
+    const { walletAddress, days } = req.body;
+    if (!walletAddress || !days) {
+      return res.status(400).json({ success: false, error: 'walletAddress and days required' });
+    }
+
+    const numDays = parseInt(days);
+    if (isNaN(numDays) || numDays < 1 || numDays > 3650) {
+      return res.status(400).json({ success: false, error: 'days must be between 1 and 3650' });
+    }
+
+    const now = new Date();
+    const endDate = new Date(now.getTime() + numDays * 24 * 60 * 60 * 1000);
+
+    const user = await prisma.user.update({
+      where: { walletAddress },
+      data: {
+        tier: 'premium',
+        subscriptionType: 'admin_grant',
+        subscriptionStatus: 'active',
+        subscriptionStartDate: now,
+        subscriptionEndDate: endDate,
+      },
+      select: { walletAddress: true, username: true, tier: true, subscriptionEndDate: true },
+    });
+
+    logger.log(`Admin ${callerWallet} granted premium to ${walletAddress} for ${numDays} days (until ${endDate.toISOString()})`);
+    res.json({ success: true, user, expiresAt: endDate.toISOString() });
+  } catch (error: any) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    logger.error('Failed to grant premium:', error);
+    res.status(500).json({ success: false, error: 'Failed to grant premium' });
+  }
+});
+
+/**
+ * Revoke premium from a user
+ * POST /api/admin/revoke-premium
+ */
+router.post('/revoke-premium', authenticateJWT, async (req: AuthRequest, res) => {
+  try {
+    const callerWallet = req.userWallet;
+    if (!callerWallet || !ADMIN_WALLETS.includes(callerWallet)) {
+      return res.status(403).json({ success: false, error: 'Not authorized' });
+    }
+
+    const { walletAddress } = req.body;
+    if (!walletAddress) {
+      return res.status(400).json({ success: false, error: 'walletAddress required' });
+    }
+
+    const user = await prisma.user.update({
+      where: { walletAddress },
+      data: {
+        tier: 'standard',
+        subscriptionStatus: 'inactive',
+        subscriptionEndDate: null,
+      },
+      select: { walletAddress: true, username: true, tier: true },
+    });
+
+    logger.log(`Admin ${callerWallet} revoked premium from ${walletAddress}`);
+    res.json({ success: true, user });
+  } catch (error: any) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    logger.error('Failed to revoke premium:', error);
+    res.status(500).json({ success: false, error: 'Failed to revoke premium' });
+  }
+});
+
 // --- Admin auth helper ---
 const requireAdminWallet = (req: AuthRequest, res: any): boolean => {
   const callerWallet = req.userWallet;
