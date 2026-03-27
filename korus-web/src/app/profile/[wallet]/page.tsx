@@ -18,7 +18,24 @@ const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { 
 export default function UserProfilePage() {
   const router = useRouter();
   const params = useParams();
-  const profileWallet = params.wallet as string;
+  const rawParam = params.wallet as string;
+  const [profileWallet, setProfileWallet] = useState(rawParam);
+  const [resolving, setResolving] = useState(false);
+
+  // If param looks like a username (not a wallet address), resolve it
+  useEffect(() => {
+    const isWallet = rawParam.length >= 32 && rawParam.length <= 44;
+    if (!isWallet && rawParam.length <= 20) {
+      setResolving(true);
+      import('@/lib/api').then(({ usersAPI }) => {
+        usersAPI.getUserByUsername(rawParam).then((res) => {
+          if (res.user?.walletAddress) {
+            setProfileWallet(res.user.walletAddress);
+          }
+        }).catch(() => {}).finally(() => setResolving(false));
+      });
+    }
+  }, [rawParam]);
 
   const [userPosts] = useState<Post[]>([]);
   const [showTipModal, setShowTipModal] = useState(false);

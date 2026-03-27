@@ -16,6 +16,16 @@ export interface SanitizeOptions {
  * @param options - Options to control what HTML elements are allowed
  * @returns Sanitized HTML string safe for rendering
  */
+/**
+ * Convert @username mentions to clickable links
+ */
+function linkifyMentions(content: string): string {
+  return content.replace(
+    /@([a-zA-Z0-9_]{1,20})\b/g,
+    '<a href="/profile/$1" class="mention-link" style="color:var(--korus-primary);font-weight:600;text-decoration:none;">@$1</a>'
+  );
+}
+
 export function sanitizeContent(
   content: string,
   options: SanitizeOptions = {}
@@ -27,6 +37,9 @@ export function sanitizeContent(
     allowFormatting = true,
   } = options;
 
+  // Pre-process: convert @mentions to links before sanitization
+  const processed = allowLinks ? linkifyMentions(content) : content;
+
   const config = {
     ALLOWED_TAGS: [
       ...(allowFormatting ? ['p', 'br', 'strong', 'em', 'u', 's', 'code', 'pre', 'blockquote'] : []),
@@ -35,7 +48,7 @@ export function sanitizeContent(
       ...(allowVideos ? ['video', 'source'] : []),
     ],
     ALLOWED_ATTR: [
-      ...(allowLinks ? ['href', 'target', 'rel'] : []),
+      ...(allowLinks ? ['href', 'target', 'rel', 'class', 'style'] : []),
       ...(allowImages ? ['src', 'alt', 'width', 'height'] : []),
       ...(allowVideos ? ['src', 'controls', 'type'] : []),
     ],
@@ -43,7 +56,7 @@ export function sanitizeContent(
     ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|ipfs):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
   };
 
-  return DOMPurify.sanitize(content, config);
+  return DOMPurify.sanitize(processed, config);
 }
 
 /**

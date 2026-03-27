@@ -251,6 +251,36 @@ export const searchPosts = asyncHandler(async (req: Request, res: Response) => {
 })
 
 // Search users specifically
+export const searchMentions = asyncHandler(async (req: Request, res: Response) => {
+    const { query, limit = 8 } = req.query
+
+    if (!query || typeof query !== 'string' || query.length < 1) {
+      return res.json({ success: true, users: [] })
+    }
+
+    const searchQuery = query.toLowerCase().trim()
+
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          { username: { startsWith: searchQuery, mode: 'insensitive' } },
+          { snsUsername: { startsWith: searchQuery, mode: 'insensitive' } },
+          { walletAddress: { startsWith: searchQuery } },
+        ]
+      },
+      select: {
+        walletAddress: true,
+        username: true,
+        snsUsername: true,
+        nftAvatar: true,
+        tier: true,
+      },
+      take: Number(limit)
+    })
+
+    res.json({ success: true, users })
+})
+
 export const searchUsers = asyncHandler(async (req: Request, res: Response) => {
     const { query, limit = 10 } = req.query
     

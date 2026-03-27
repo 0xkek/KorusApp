@@ -35,6 +35,7 @@ const DrawingCanvasInline = dynamic(() => import('@/components/DrawingCanvasInli
 const ShoutoutCountdown = dynamic(() => import('@/components/ShoutoutCountdown'), { ssr: false });
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
 const GifPicker = dynamic(() => import('@/components/GifPicker'), { ssr: false });
+const MentionTextarea = dynamic(() => import('@/components/MentionTextarea'), { ssr: false });
 
 export default function Home() {
   const { connected, publicKey } = useWallet();
@@ -1550,9 +1551,9 @@ export default function Home() {
                   </div>
                 )}
                 <div className="flex-1">
-                  <textarea
+                  <MentionTextarea
                     value={composeText}
-                    onChange={(e) => setComposeText(e.target.value)}
+                    onChange={setComposeText}
                     placeholder="What's happening on Solana?"
                     className="bg-transparent text-[var(--color-text)] text-[16px] placeholder-[#525252] w-full resize-none min-h-[48px] border-none outline-none leading-relaxed"
                     rows={1}

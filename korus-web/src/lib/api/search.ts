@@ -48,4 +48,14 @@ export const searchAPI = {
 
     return api.get<UserSearchResults>(`/api/search/users?${searchParams.toString()}`);
   },
+
+  /**
+   * Search users for @mention autocomplete (lightweight)
+   */
+  async searchMentions(query: string, limit = 8): Promise<UserSearchResults> {
+    const searchParams = new URLSearchParams();
+    searchParams.set('query', query);
+    searchParams.set('limit', limit.toString());
+    return api.get<UserSearchResults>(`/api/search/mentions?${searchParams.toString()}`);
+  },
 };

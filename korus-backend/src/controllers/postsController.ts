@@ -10,6 +10,7 @@ import SolPaymentService from '../services/solPaymentService'
 import { TREASURY_WALLET } from '../config/solana'
 import { getNFTByMint } from '../services/nftService'
 import { emitNewPost } from '../config/socket'
+import { processMentions } from '../utils/mentions'
 
 // Helper function to resolve NFT avatar mints to image URLs
 async function resolveNFTAvatar(nftMint: string | null): Promise<string | null> {
@@ -202,6 +203,11 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
     // Award extra reputation for shoutout purchase
     if (shoutoutData.isShoutout && shoutoutData.shoutoutPrice) {
       await reputationService.onShoutoutPurchased(walletAddress, shoutoutData.shoutoutPrice, shoutoutData.shoutoutDuration)
+    }
+
+    // Process @mentions and send notifications (fire-and-forget)
+    if (content) {
+      processMentions(content, walletAddress, post.id)
     }
 
     // Transform NFT avatar mint address to image URL

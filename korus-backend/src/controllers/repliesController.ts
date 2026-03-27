@@ -8,6 +8,7 @@ import { createNotification } from '../utils/notifications'
 import { CursorPagination } from '../utils/pagination'
 import { getNFTByMint } from '../services/nftService'
 import { emitNewReply, emitPostUpdate } from '../config/socket'
+import { processMentions } from '../utils/mentions'
 
 // Helper function to resolve NFT avatar mints to image URLs
 async function resolveNFTAvatar(nftMint: string | null): Promise<string | null> {
@@ -134,6 +135,11 @@ export const createReply = async (req: AuthRequest, res: Response) => {
       postId: postId
     })
     
+    // Process @mentions in reply content (fire-and-forget)
+    if (content) {
+      processMentions(content, walletAddress, postId)
+    }
+
     // If replying to another reply, notify that user too
     if (parentReplyId) {
       const parentReply = await prisma.reply.findUnique({ 
