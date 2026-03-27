@@ -535,25 +535,8 @@ export default function RightSidebar({ showNotifications = false, onNotification
 
       {/* Footer */}
       <div style={{ marginTop: '16px', paddingLeft: '4px', paddingRight: '4px' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
-          {['Terms', 'Privacy', 'About', 'Docs'].map((link) => (
-            <a
-              key={link}
-              href="#"
-              style={{
-                fontSize: '12px',
-                color: 'var(--color-text-tertiary)',
-                textDecoration: 'none',
-              }}
-              onMouseEnter={(e) => { (e.target as HTMLAnchorElement).style.textDecoration = 'underline'; }}
-              onMouseLeave={(e) => { (e.target as HTMLAnchorElement).style.textDecoration = 'none'; }}
-            >
-              {link}
-            </a>
-          ))}
-        </div>
         <div style={{ fontSize: '11px', color: '#404040' }}>
-          &copy; 2025 Korus. All rights reserved.
+          &copy; 2026 Korus. All rights reserved.
         </div>
       </div>
 
