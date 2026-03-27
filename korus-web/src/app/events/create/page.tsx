@@ -159,6 +159,7 @@ export default function CreateEventPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    logger.log('handleSubmit called', { connected, isAuthenticated, hasToken: !!token, hasPublicKey: !!publicKey, balance, eventCreationFee, formData });
 
     if (!connected) {
       showError('Please connect your wallet first');
@@ -372,7 +373,7 @@ export default function CreateEventPage() {
                   </button>
                 </div>
               )}
-              {isPremium && <form onSubmit={handleSubmit} className="space-y-6">
+              {isPremium && <form onSubmit={handleSubmit} noValidate className="space-y-6">
 
                 {/* Event Type */}
                 <div>
