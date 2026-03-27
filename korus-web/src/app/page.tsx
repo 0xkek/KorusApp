@@ -666,6 +666,18 @@ export default function Home() {
               comments: update.updates.replyCount !== undefined ? update.updates.replyCount : post.comments,
             };
           }
+          // Also update nested repostedPost inside repost cards
+          if (post.repostedPost && post.repostedPost.id === update.postId) {
+            return {
+              ...post,
+              repostedPost: {
+                ...post.repostedPost,
+                likes: update.updates.likeCount !== undefined ? update.updates.likeCount : post.repostedPost.likes,
+                tips: update.updates.tipAmount !== undefined ? Number(update.updates.tipAmount) : post.repostedPost.tips,
+                comments: update.updates.replyCount !== undefined ? update.updates.replyCount : post.repostedPost.comments,
+              }
+            };
+          }
           return post;
         });
       });
@@ -1035,12 +1047,21 @@ export default function Home() {
         }
       }));
 
-      // Update post like count optimistically
+      // Update post like count optimistically (and nested repostedPost)
       setPosts(prev => prev.map(p => {
         if (String(p.id) === id) {
           return {
             ...p,
             likes: currentlyLiked ? Math.max(0, p.likes - 1) : p.likes + 1
+          };
+        }
+        if (p.repostedPost && String(p.repostedPost.id) === id) {
+          return {
+            ...p,
+            repostedPost: {
+              ...p.repostedPost,
+              likes: currentlyLiked ? Math.max(0, (p.repostedPost.likes ?? 0) - 1) : (p.repostedPost.likes ?? 0) + 1
+            }
           };
         }
         return p;
@@ -1070,6 +1091,15 @@ export default function Home() {
           return {
             ...p,
             likes: currentlyLiked ? p.likes + 1 : Math.max(0, p.likes - 1)
+          };
+        }
+        if (p.repostedPost && String(p.repostedPost.id) === id) {
+          return {
+            ...p,
+            repostedPost: {
+              ...p.repostedPost,
+              likes: currentlyLiked ? (p.repostedPost.likes ?? 0) + 1 : Math.max(0, (p.repostedPost.likes ?? 0) - 1)
+            }
           };
         }
         return p;
@@ -1297,12 +1327,22 @@ export default function Home() {
           }
         }));
 
-        // Update repost count on the original post
+        // Update repost count on the original post AND any repost cards referencing it
         setPosts(prev => prev.map(p => {
           if (String(p.id) === String(postId)) {
             return {
               ...p,
               reposts: !isCurrentlyReposted ? (p.reposts ?? 0) + 1 : Math.max(0, (p.reposts ?? 0) - 1)
+            };
+          }
+          // Also update nested repostedPost inside repost cards
+          if (p.repostedPost && String(p.repostedPost.id) === String(postId)) {
+            return {
+              ...p,
+              repostedPost: {
+                ...p.repostedPost,
+                reposts: !isCurrentlyReposted ? (p.repostedPost.reposts ?? 0) + 1 : Math.max(0, (p.repostedPost.reposts ?? 0) - 1)
+              }
             };
           }
           return p;
@@ -2116,12 +2156,16 @@ export default function Home() {
         onTipSuccess={(amount: number) => {
           if (postToTip?.id) {
             markTipped(postToTip.id);
-            // Update the post's tip count
-            setPosts(prev => prev.map(p =>
-              p.id === postToTip.id
-                ? { ...p, tips: (p.tips || 0) + amount, tipCount: (p.tipCount || 0) + 1 }
-                : p
-            ));
+            // Update the post's tip count (and nested repostedPost)
+            setPosts(prev => prev.map(p => {
+              if (p.id === postToTip.id) {
+                return { ...p, tips: (p.tips || 0) + amount, tipCount: (p.tipCount || 0) + 1 };
+              }
+              if (p.repostedPost && String(p.repostedPost.id) === String(postToTip.id)) {
+                return { ...p, repostedPost: { ...p.repostedPost, tips: (p.repostedPost.tips || 0) + amount } };
+              }
+              return p;
+            }));
           }
         }}
       />
