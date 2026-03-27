@@ -1402,7 +1402,7 @@ export default function Home() {
         <div className="flex-1 min-w-0 border-r border-[var(--color-border-light)]">
         {/* Main app - only accessible when connected */}
             {/* Header Navigation */}
-            <div className="sticky top-0 z-10 bg-[var(--color-background)]/85 backdrop-blur-[12px] border-b border-[var(--color-border-light)]">
+            <div className="sticky top-0 z-10 bg-[var(--color-surface)]/80 backdrop-blur-xl border-b border-[var(--color-border-light)]">
               {/* Mobile controls row */}
               <div className="flex md:hidden items-center justify-between px-2">
                 <button
