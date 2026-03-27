@@ -8,6 +8,7 @@ import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from '@solana
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import { useToast } from '@/hooks/useToast';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import * as eventsAPI from '@/lib/api/events';
 import { uploadAPI } from '@/lib/api';
@@ -28,6 +29,7 @@ export default function CreateEventPage() {
   const { connection } = useConnection();
   const { token, isAuthenticated } = useWalletAuth();
   const { showSuccess, showError } = useToast();
+  const { isPremium } = useSubscription();
 
   // UI State
   const [showNotifications, setShowNotifications] = useState(false);
@@ -331,7 +333,23 @@ export default function CreateEventPage() {
             </div>
 
             <div className="max-w-3xl mx-auto px-6 py-8">
-              <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Premium Gate */}
+              {!isPremium && (
+                <div className="text-center py-20">
+                  <div className="text-6xl mb-4">⭐</div>
+                  <h2 className="text-2xl font-semibold text-[var(--color-text)] mb-3">Premium Feature</h2>
+                  <p className="text-[var(--color-text-secondary)] mb-6 max-w-md mx-auto">
+                    Event creation is available exclusively for Premium members. Upgrade to create events and reach the Korus community.
+                  </p>
+                  <button
+                    onClick={() => router.push('/profile')}
+                    className="px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-semibold rounded-lg hover:shadow-lg duration-150"
+                  >
+                    Upgrade to Premium
+                  </button>
+                </div>
+              )}
+              {isPremium && <form onSubmit={handleSubmit} className="space-y-6">
 
                 {/* Event Type */}
                 <div>
@@ -346,6 +364,7 @@ export default function CreateEventPage() {
                     <option value="nft_mint">NFT Mint</option>
                     <option value="airdrop">Airdrop</option>
                     <option value="ido">IDO</option>
+                    <option value="raffle">Raffle</option>
                   </select>
                 </div>
 
@@ -649,7 +668,7 @@ export default function CreateEventPage() {
                     Please connect your wallet to create an event
                   </p>
                 )}
-              </form>
+              </form>}
             </div>
           </div>
 

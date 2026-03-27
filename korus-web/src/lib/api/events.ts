@@ -2,7 +2,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 export interface Event {
   id: string;
-  type: 'whitelist' | 'token_launch' | 'nft_mint' | 'airdrop' | 'ido';
+  type: 'whitelist' | 'token_launch' | 'nft_mint' | 'airdrop' | 'ido' | 'raffle';
   projectName: string;
   title: string;
   description: string;
@@ -45,7 +45,7 @@ export interface WhitelistRegistration {
 }
 
 export interface CreateEventData {
-  type: 'whitelist' | 'token_launch' | 'nft_mint' | 'airdrop' | 'ido';
+  type: 'whitelist' | 'token_launch' | 'nft_mint' | 'airdrop' | 'ido' | 'raffle';
   projectName: string;
   title: string;
   description: string;

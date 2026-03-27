@@ -21,7 +21,7 @@ const MobileMenuModal = dynamic(() => import('@/components/MobileMenuModal'), { 
 
 interface Event {
   id: string;
-  type: 'whitelist' | 'token_launch' | 'nft_mint' | 'airdrop' | 'ido';
+  type: 'whitelist' | 'token_launch' | 'nft_mint' | 'airdrop' | 'ido' | 'raffle';
   title: string;
   projectName: string;
   description: string;
@@ -98,6 +98,8 @@ export default function EventsPage() {
         return '🎁';
       case 'ido':
         return '📈';
+      case 'raffle':
+        return '🎟️';
       default:
         return '📅';
     }
@@ -301,6 +303,22 @@ export default function EventsPage() {
                     </div>
                   )}
                 </div>
+                {isPremium && connected && (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => router.push('/events/manage')}
+                      className="px-5 py-2.5 bg-white/[0.08] border border-[var(--color-border-light)] text-[var(--color-text)] font-semibold rounded-lg hover:bg-white/[0.12] duration-150 text-sm"
+                    >
+                      My Events
+                    </button>
+                    <button
+                      onClick={() => router.push('/events/create')}
+                      className="px-5 py-2.5 bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-semibold rounded-lg hover:shadow-lg duration-150 text-sm"
+                    >
+                      + Create Event
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Premium Banner for Non-Premium Users */}

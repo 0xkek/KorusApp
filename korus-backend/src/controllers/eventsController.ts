@@ -85,6 +85,23 @@ export const getEvent = async (req: Request, res: Response) => {
 export const createEvent = async (req: AuthRequest, res: Response) => {
   try {
     const walletAddress = req.userWallet!;
+
+    // Only premium users can create events
+    const user = await prisma.user.findUnique({
+      where: { walletAddress }
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    if (user.tier !== 'premium' && user.tier !== 'og') {
+      return res.status(403).json({
+        success: false,
+        error: 'Only Premium members can create events. Upgrade to Premium to unlock this feature.'
+      });
+    }
+
     const {
       type,
       projectName,

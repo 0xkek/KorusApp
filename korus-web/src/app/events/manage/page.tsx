@@ -127,6 +127,7 @@ export default function ManageEventsPage() {
       case 'nft_mint': return '🖼️';
       case 'airdrop': return '🎁';
       case 'ido': return '📈';
+      case 'raffle': return '🎟️';
       default: return '📅';
     }
   };
