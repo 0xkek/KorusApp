@@ -28,7 +28,7 @@ export default function CreateEventPage() {
   const { token, isAuthenticated } = useWalletAuth();
 
   // Use RPC proxy for all Solana operations
-  const rpcUrl = typeof window !== 'undefined' ? `${window.location.origin}/api/rpc` : '/api/rpc';
+  const rpcUrl = typeof window !== 'undefined' ? `${window.location.origin}/api/rpc` : 'http://localhost:3000/api/rpc';
   const connection = new Connection(rpcUrl, 'confirmed');
   const { showSuccess, showError } = useToast();
   const { isPremium } = useSubscription();
