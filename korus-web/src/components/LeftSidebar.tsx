@@ -137,7 +137,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
     },
     {
       name: 'Profile',
-      path: '/profile',
+      path: publicKey ? `/profile/${publicKey.toBase58()}` : '/profile',
       icon: (
         <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -198,7 +198,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
       {/* Navigation Items */}
       <div className="flex flex-col flex-1">
         {tabs.map((tab) => {
-          const isActive = pathname === tab.path && !tab.disabled;
+          const isActive = (pathname === tab.path || (tab.name === 'Profile' && pathname.startsWith('/profile'))) && !tab.disabled;
           const isDisabled = tab.disabled;
 
           const itemStyle: React.CSSProperties = {
@@ -471,7 +471,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
             e.currentTarget.style.background = 'transparent';
           }}
         >
-          <Link href="/profile" className="flex items-center gap-[10px]" style={{ textDecoration: 'none', cursor: 'pointer', transition: 'all 150ms' }}>
+          <Link href={publicKey ? `/profile/${publicKey.toBase58()}` : '/profile'} className="flex items-center gap-[10px]" style={{ textDecoration: 'none', cursor: 'pointer', transition: 'all 150ms' }}>
             {userAvatar ? (
               <div style={{ width: 38, height: 38, borderRadius: '50%', flexShrink: 0, overflow: 'hidden' }}>
                 <Image
