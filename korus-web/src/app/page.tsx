@@ -1800,21 +1800,25 @@ export default function Home() {
                     </div>
                   )}
 
-                  {/* Post Actions */}
+                  {/* Post Actions — for reposts, use original post's stats and target original post ID */}
+                  {(() => {
+                    const actionPostId = post.repostedPost?.id || post.id;
+                    const actionPost = post.repostedPost || post;
+                    return (
                   <div className="flex items-center gap-0.5 mt-3 -ml-2">
                     <button
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] text-[13px] transition-all duration-150 ${
-                        postInteractions[post.id]?.replied
+                        postInteractions[actionPostId]?.replied
                           ? 'text-[var(--korus-primary)] hover:bg-[color-mix(in_srgb,var(--korus-primary)_8%,transparent)]'
                           : 'text-[var(--color-text-tertiary)] hover:text-[var(--korus-primary)] hover:bg-[color-mix(in_srgb,var(--korus-primary)_8%,transparent)]'
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (inlineReplyPostId === post.id) {
+                        if (inlineReplyPostId === actionPostId) {
                           setInlineReplyPostId(null);
                           setInlineReplyText('');
                         } else {
-                          setInlineReplyPostId(post.id);
+                          setInlineReplyPostId(actionPostId);
                           setInlineReplyText('');
                           setTimeout(() => inlineReplyRef.current?.focus(), 50);
                         }
@@ -1823,15 +1827,15 @@ export default function Home() {
                       <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                       </svg>
-                      <span>{post.comments}</span>
+                      <span>{actionPost.comments ?? actionPost.replies ?? 0}</span>
                     </button>
 
                     <button
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] text-[13px] transition-all duration-150 hover:bg-red-500/10"
-                      style={{ color: postInteractions[post.id]?.liked ? '#ef4444' : '#737373' }}
+                      style={{ color: postInteractions[actionPostId]?.liked ? '#ef4444' : '#737373' }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleLike(post.id);
+                        toggleLike(actionPostId);
                         if (typeof window !== 'undefined' && 'createParticleExplosion' in window) {
                           const rect = e.currentTarget.getBoundingClientRect();
                           const x = rect.left + rect.width / 2;
@@ -1840,59 +1844,60 @@ export default function Home() {
                         }
                       }}
                     >
-                      <svg className="w-[18px] h-[18px]" fill={postInteractions[post.id]?.liked ? '#ef4444' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-[18px] h-[18px]" fill={postInteractions[actionPostId]?.liked ? '#ef4444' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
-                      <span>{post.likes}</span>
+                      <span>{actionPost.likes ?? 0}</span>
                     </button>
 
                     <button
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] text-[13px] transition-all duration-150 ${
-                        postInteractions[post.id]?.reposted
+                        postInteractions[actionPostId]?.reposted
                           ? 'text-[var(--korus-primary)] hover:bg-[color-mix(in_srgb,var(--korus-primary)_8%,transparent)]'
                           : 'text-[var(--color-text-tertiary)] hover:text-[var(--korus-primary)] hover:bg-[color-mix(in_srgb,var(--korus-primary)_8%,transparent)]'
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleRepost(post.id);
+                        toggleRepost(actionPostId);
                       }}
                     >
                       <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      <span>{post.reposts ?? 0}</span>
+                      <span>{actionPost.reposts ?? 0}</span>
                     </button>
 
                     <button
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] text-[13px] transition-all duration-150 ${
-                        postInteractions[post.id]?.tipped
+                        postInteractions[actionPostId]?.tipped
                           ? 'text-[#f59e0b] hover:bg-[rgba(245,158,11,0.08)]'
                           : 'text-[var(--color-text-tertiary)] hover:text-[#f59e0b] hover:bg-[rgba(245,158,11,0.08)]'
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
 
-                        // Prevent self-tipping
-                        if (publicKey && (post.wallet === publicKey.toBase58() || post.author?.walletAddress === publicKey.toBase58())) {
+                        // Prevent self-tipping — check original post author for reposts
+                        const tipTarget = post.repostedPost || post;
+                        if (publicKey && (tipTarget.wallet === publicKey.toBase58() || tipTarget.author?.walletAddress === publicKey.toBase58())) {
                           showError("You cannot tip your own posts");
                           return;
                         }
 
-                        setPostToTip(post);
+                        setPostToTip(tipTarget);
                         setShowTipModal(true);
                       }}
                     >
-                      <svg className={`w-[18px] h-[18px] ${postInteractions[post.id]?.tipped ? 'text-[#f59e0b]' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className={`w-[18px] h-[18px] ${postInteractions[actionPostId]?.tipped ? 'text-[#f59e0b]' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      {post.tips ? <span className={`text-[11px] font-semibold px-1.5 rounded-[6px] ${postInteractions[post.id]?.tipped ? 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]' : 'bg-[color-mix(in_srgb,var(--korus-primary)_10%,transparent)] text-[var(--korus-primary)]'}`}>{post.tips} SOL</span> : <span>Tip</span>}
+                      {actionPost.tips ? <span className={`text-[11px] font-semibold px-1.5 rounded-[6px] ${postInteractions[actionPostId]?.tipped ? 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]' : 'bg-[color-mix(in_srgb,var(--korus-primary)_10%,transparent)] text-[var(--korus-primary)]'}`}>{actionPost.tips} SOL</span> : <span>Tip</span>}
                     </button>
 
                     <button
                       className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] text-[13px] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.08] transition-all duration-150"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setPostToShare(post);
+                        setPostToShare(post.repostedPost || post);
                         setShowShareModal(true);
                       }}
                     >
@@ -1901,9 +1906,10 @@ export default function Home() {
                       </svg>
                     </button>
                   </div>
+                    ); })()}
 
                   {/* Inline Reply */}
-                  {inlineReplyPostId === post.id && (
+                  {inlineReplyPostId === (post.repostedPost?.id || post.id) && (
                     <div className="mt-3 flex gap-3" onClick={(e) => e.stopPropagation()}>
                       {userAvatar ? (
                         <div className="w-[32px] h-[32px] rounded-full flex-shrink-0 overflow-hidden">
@@ -1922,7 +1928,7 @@ export default function Home() {
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                               e.preventDefault();
-                              submitInlineReply(post);
+                              submitInlineReply(post.repostedPost || post);
                             }
                             if (e.key === 'Escape') {
                               setInlineReplyPostId(null);
@@ -1934,7 +1940,7 @@ export default function Home() {
                           rows={1}
                         />
                         <button
-                          onClick={() => submitInlineReply(post)}
+                          onClick={() => submitInlineReply(post.repostedPost || post)}
                           disabled={!inlineReplyText.trim() || isPostingInlineReply}
                           className="self-end px-4 py-1.5 rounded-[16px] bg-[var(--korus-primary)] text-[13px] font-bold hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                           style={{ color: '#000' }}

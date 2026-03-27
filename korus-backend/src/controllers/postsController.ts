@@ -41,6 +41,13 @@ async function transformPostAvatars(post: any): Promise<any> {
       post.author.nftAvatar = await resolveNFTAvatar(post.author.nftAvatar)
     }
   }
+  // Transform originalPost author avatar (for reposts)
+  if (post.originalPost?.author) {
+    sanitizeAuthorDisplay(post.originalPost.author)
+    if (post.originalPost.author.nftAvatar) {
+      post.originalPost.author.nftAvatar = await resolveNFTAvatar(post.originalPost.author.nftAvatar)
+    }
+  }
   // Transform reply authors' avatars
   if (post.replies && Array.isArray(post.replies)) {
     for (const reply of post.replies) {
