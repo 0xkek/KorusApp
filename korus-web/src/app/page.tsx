@@ -1839,7 +1839,7 @@ export default function Home() {
                         setShowTipModal(true);
                       }}
                     >
-                      <svg className="w-[18px] h-[18px]" fill={postInteractions[post.id]?.tipped ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className={`w-[18px] h-[18px] ${postInteractions[post.id]?.tipped ? 'text-[#f59e0b]' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       {post.tips ? <span className={`text-[11px] font-semibold px-1.5 rounded-[6px] ${postInteractions[post.id]?.tipped ? 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]' : 'bg-[color-mix(in_srgb,var(--korus-primary)_10%,transparent)] text-[var(--korus-primary)]'}`}>{post.tips} SOL</span> : <span>Tip</span>}
