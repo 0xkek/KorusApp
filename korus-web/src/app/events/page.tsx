@@ -32,7 +32,10 @@ interface Event {
   maxSpots?: number;
   registrationCount: number;
   status: 'active' | 'closed' | 'cancelled';
+  createdAt: string;
 }
+
+const EARLY_ACCESS_HOURS = 12;
 
 export default function EventsPage() {
   const { connected, publicKey } = useWallet();
@@ -125,6 +128,28 @@ export default function EventsPage() {
     const start = new Date(startDate);
     const end = new Date(endDate);
     return now >= start && now <= end;
+  };
+
+  const isInEarlyAccess = (event: Event) => {
+    const now = new Date();
+    const created = new Date(event.createdAt);
+    const earlyAccessEnd = new Date(created.getTime() + EARLY_ACCESS_HOURS * 60 * 60 * 1000);
+    return now < earlyAccessEnd;
+  };
+
+  const getEarlyAccessEnd = (event: Event) => {
+    const created = new Date(event.createdAt);
+    return new Date(created.getTime() + EARLY_ACCESS_HOURS * 60 * 60 * 1000);
+  };
+
+  const formatEarlyAccessRemaining = (event: Event) => {
+    const now = new Date();
+    const end = getEarlyAccessEnd(event);
+    const diff = end.getTime() - now.getTime();
+    if (diff <= 0) return null;
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${minutes}m`;
   };
 
   const handleEventPress = async (event: Event) => {
@@ -424,6 +449,17 @@ export default function EventsPage() {
                               {eventIsLive ? '🔴' : '⏰'}
                               {formatTimeRemaining(event.startDate)}
                             </div>
+
+                            {!isPremium && isInEarlyAccess(event) && (
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold" style={{
+                                background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%)',
+                                color: '#fbbf24',
+                                border: '1px solid rgba(251, 191, 36, 0.3)'
+                              }}>
+                                <span>⭐</span>
+                                Premium for {formatEarlyAccessRemaining(event)}
+                              </div>
+                            )}
                           </div>
 
                           <h3 className="text-xl font-semibold text-[var(--color-text)] mb-1">{event.title}</h3>
@@ -628,6 +664,22 @@ export default function EventsPage() {
                       Whitelist Joined
                     </div>
                   </button>
+                ) : !isPremium && isInEarlyAccess(selectedEvent) ? (
+                  <div>
+                    <button
+                      onClick={() => { setShowEventModal(false); setShowPremiumModal(true); }}
+                      className="w-full font-semibold py-4 rounded-lg hover:shadow-lg duration-150"
+                      style={{
+                        background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                        color: '#000000'
+                      }}
+                    >
+                      Upgrade to Premium to Join Early
+                    </button>
+                    <p className="text-center text-[var(--color-text-tertiary)] text-xs mt-3">
+                      Opens to everyone in {formatEarlyAccessRemaining(selectedEvent)}
+                    </p>
+                  </div>
                 ) : (
                   <button
                     onClick={handleParticipate}
