@@ -266,7 +266,7 @@ router.get('/stats', authenticateJWT, async (req: AuthRequest, res) => {
       // Daily signups for the last 30 days
       prisma.$queryRaw<Array<{ date: Date; count: bigint }>>`
         SELECT DATE("createdAt") as date, COUNT(*)::int as count
-        FROM "User"
+        FROM "users"
         WHERE "createdAt" >= ${thirtyDaysAgo}
         GROUP BY DATE("createdAt")
         ORDER BY date ASC
@@ -460,7 +460,7 @@ router.get('/tips-leaderboard', authenticateJWT, async (req: AuthRequest, res) =
     // Top receivers (posts with most tips)
     const topReceivers = await prisma.$queryRaw<Array<{ authorWallet: string; total_tips: number; tip_count: number }>>`
       SELECT "authorWallet", SUM("tipAmount")::float as total_tips, SUM("tipCount")::int as tip_count
-      FROM "Post"
+      FROM "posts"
       WHERE "tipCount" > 0
       GROUP BY "authorWallet"
       ORDER BY total_tips DESC
