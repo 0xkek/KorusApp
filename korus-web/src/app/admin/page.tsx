@@ -594,15 +594,12 @@ export default function AdminDashboard() {
                           <span>
                             Reported by: <span className="font-mono text-[var(--color-text-secondary)]">{report.reporterWallet.slice(0, 4)}...{report.reporterWallet.slice(-4)}</span>
                           </span>
-                          {report.targetPostId && (
-                            <Link
-                              href={`/post/${report.targetPostId}`}
-                              className="text-korus-primary hover:underline font-medium"
-                              target="_blank"
-                            >
-                              View {report.targetType}
-                            </Link>
-                          )}
+                          <Link
+                            href={`/post/${report.targetPostId || report.targetId}`}
+                            className="text-korus-primary hover:underline font-medium"
+                          >
+                            View {report.targetType}
+                          </Link>
                         </div>
                         {report.description && (
                           <p className="text-sm text-[var(--color-text-secondary)] mt-2">{report.description}</p>
