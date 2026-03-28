@@ -57,7 +57,18 @@ interface TipEntry {
   tipCount: number;
 }
 
-type Tab = 'overview' | 'reputation' | 'users' | 'tips' | 'manage';
+interface Report {
+  id: string;
+  reporterWallet: string;
+  targetType: string;
+  targetId: string;
+  reason: string;
+  description: string | null;
+  status: string;
+  createdAt: string;
+}
+
+type Tab = 'overview' | 'reputation' | 'users' | 'tips' | 'reports' | 'manage';
 
 export default function AdminDashboard() {
   const { publicKey } = useWallet();
@@ -71,6 +82,8 @@ export default function AdminDashboard() {
   const [userSearch, setUserSearch] = useState('');
   const [topTippers, setTopTippers] = useState<TipEntry[]>([]);
   const [topReceivers, setTopReceivers] = useState<TipEntry[]>([]);
+  const [reports, setReports] = useState<Report[]>([]);
+  const [reportsLoading, setReportsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -151,15 +164,25 @@ export default function AdminDashboard() {
     } catch { /* silent */ }
   }, [token]);
 
+  const loadReports = useCallback(async () => {
+    if (!token) return;
+    setReportsLoading(true);
+    try {
+      const data = await api.get<{ success: boolean; reports: Report[] }>('/api/reports', token);
+      if (data.success) setReports(data.reports);
+    } catch { /* silent */ }
+    finally { setReportsLoading(false); }
+  }, [token]);
+
   useEffect(() => {
     if (!isAdmin || !token) {
       setLoading(false);
       return;
     }
     setLoading(true);
-    Promise.all([loadStats(), loadLeaderboard(), loadUsers(), loadTips(), loadEventFee()])
+    Promise.all([loadStats(), loadLeaderboard(), loadUsers(), loadTips(), loadEventFee(), loadReports()])
       .finally(() => setLoading(false));
-  }, [isAdmin, token, loadStats, loadLeaderboard, loadUsers, loadTips, loadEventFee]);
+  }, [isAdmin, token, loadStats, loadLeaderboard, loadUsers, loadTips, loadEventFee, loadReports]);
 
   // Search debounce
   useEffect(() => {
@@ -217,6 +240,7 @@ export default function AdminDashboard() {
             ['reputation', 'Reputation'],
             ['users', 'Users'],
             ['tips', 'Tips'],
+            ['reports', `Reports${reports.filter(r => r.status === 'pending').length > 0 ? ` (${reports.filter(r => r.status === 'pending').length})` : ''}`],
             ['manage', 'Manage'],
           ] as [Tab, string][]).map(([key, label]) => (
             <button
@@ -491,6 +515,89 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
+        {/* Reports Tab */}
+        {activeTab === 'reports' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-lg font-semibold text-[var(--color-text)]">
+                User Reports ({reports.length})
+              </h2>
+              <button
+                onClick={loadReports}
+                disabled={reportsLoading}
+                className="px-4 py-2 text-xs bg-white/[0.06] border border-[#333] rounded-lg text-[var(--color-text-secondary)] hover:bg-white/[0.1] transition-colors disabled:opacity-40"
+              >
+                {reportsLoading ? 'Loading...' : 'Refresh'}
+              </button>
+            </div>
+
+            {reports.length === 0 ? (
+              <div className="text-center py-12 text-[var(--color-text-tertiary)]">No reports yet</div>
+            ) : (
+              <div className="space-y-3">
+                {reports.map((report) => (
+                  <div
+                    key={report.id}
+                    className={`bg-[#111] border rounded-xl p-4 ${
+                      report.status === 'pending'
+                        ? 'border-red-500/30'
+                        : 'border-[#222]'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className={`inline-flex px-2 py-0.5 rounded text-xs font-bold uppercase ${
+                            report.status === 'pending'
+                              ? 'bg-red-500/20 text-red-400'
+                              : 'bg-green-500/20 text-green-400'
+                          }`}>
+                            {report.status}
+                          </span>
+                          <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-white/[0.06] text-[var(--color-text-secondary)] uppercase">
+                            {report.targetType}
+                          </span>
+                          <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-yellow-500/15 text-yellow-400 capitalize">
+                            {report.reason}
+                          </span>
+                        </div>
+                        <p className="text-xs text-[var(--color-text-tertiary)] mb-1">
+                          Reported by: <span className="font-mono text-[var(--color-text-secondary)]">{report.reporterWallet.slice(0, 4)}...{report.reporterWallet.slice(-4)}</span>
+                        </p>
+                        <p className="text-xs text-[var(--color-text-tertiary)]">
+                          Target ID: <span className="font-mono text-[var(--color-text-secondary)]">{report.targetId.slice(0, 12)}...</span>
+                        </p>
+                        {report.description && (
+                          <p className="text-sm text-[var(--color-text-secondary)] mt-2">{report.description}</p>
+                        )}
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-xs text-[var(--color-text-tertiary)]">
+                          {new Date(report.createdAt).toLocaleDateString()} {new Date(report.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                        {report.status === 'pending' && (
+                          <button
+                            onClick={async () => {
+                              if (!token) return;
+                              try {
+                                await api.put(`/api/reports/${report.id}/status`, { status: 'resolved', moderatorNotes: 'Reviewed by admin' }, token);
+                                loadReports();
+                              } catch { /* silent */ }
+                            }}
+                            className="mt-2 px-3 py-1 text-xs bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors"
+                          >
+                            Resolve
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Manage Tab */}
         {activeTab === 'manage' && (
           <div className="space-y-6">

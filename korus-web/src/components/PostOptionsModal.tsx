@@ -5,7 +5,17 @@ import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { postsAPI } from '@/lib/api/posts';
+import { api } from '@/lib/api/client';
+
+const REPORT_REASONS = [
+  { value: 'spam', label: 'Spam' },
+  { value: 'harassment', label: 'Harassment' },
+  { value: 'inappropriate', label: 'Inappropriate Content' },
+  { value: 'misinformation', label: 'Misinformation' },
+  { value: 'other', label: 'Other' },
+] as const;
 
 interface PostOptionsModalProps {
   isOpen: boolean;
@@ -18,27 +28,39 @@ interface PostOptionsModalProps {
 
 export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, onDelete }: PostOptionsModalProps) {
   const { connected } = useWallet();
+  const { token } = useWalletAuth();
   const { showSuccess, showError } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedReason, setSelectedReason] = useState('');
   const modalRef = useFocusTrap(isOpen);
 
   if (!isOpen) return null;
 
   const handleReport = async () => {
-    if (!connected) {
+    if (!connected || !token) {
       showError('Please connect your wallet to report posts');
+      return;
+    }
+
+    if (!selectedReason) {
+      showError('Please select a reason for reporting');
       return;
     }
 
     setIsProcessing(true);
     try {
-      // TODO: Implement actual API call to report post
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await api.post('/api/reports', {
+        targetType: 'post',
+        targetId: String(postId),
+        reason: selectedReason,
+      }, token);
 
-      showSuccess('Post reported successfully. Our moderation team will review it.');
+      showSuccess('Post reported. Our moderation team will review it.');
       onClose();
-    } catch {
-      showError('Failed to report post. Please try again.');
+    } catch (error) {
+      logger.error('Failed to report post:', error);
+      const msg = (error as Error).message || 'Failed to report post';
+      showError(msg.includes('already') ? 'You have already reported this post.' : msg);
     } finally {
       setIsProcessing(false);
     }
@@ -96,9 +118,26 @@ export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, o
             <h2 className="heading-1 text-[var(--color-text)] mb-4">Report Post?</h2>
 
             {/* Message */}
-            <p className="text-[var(--color-text-secondary)] text-base leading-relaxed mb-8">
-              Are you sure you want to report this post? Our moderation team will review it for violations of community guidelines.
+            <p className="text-[var(--color-text-secondary)] text-base leading-relaxed mb-6">
+              Select a reason for reporting this post. Our moderation team will review it.
             </p>
+
+            {/* Reason Selection */}
+            <div className="space-y-2 mb-6 text-left">
+              {REPORT_REASONS.map((reason) => (
+                <button
+                  key={reason.value}
+                  onClick={() => setSelectedReason(reason.value)}
+                  className={`w-full px-4 py-3 rounded-lg text-sm font-medium text-left transition-all duration-150 ${
+                    selectedReason === reason.value
+                      ? 'bg-red-500/20 border-red-500/50 text-red-400 border'
+                      : 'bg-white/[0.04] border border-[var(--color-border-light)] text-[var(--color-text-secondary)] hover:bg-white/[0.08]'
+                  }`}
+                >
+                  {reason.label}
+                </button>
+              ))}
+            </div>
 
             {/* Action Buttons */}
             <div className="flex gap-4">
@@ -111,7 +150,7 @@ export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, o
               </button>
               <button
                 onClick={handleReport}
-                disabled={isProcessing}
+                disabled={isProcessing || !selectedReason}
                 className="flex-1 py-4 px-6 bg-red-500 text-white rounded-lg hover:bg-red-600 duration-150 disabled:opacity-50 disabled:hover:scale-100 font-semibold"
               >
                 {isProcessing ? (
