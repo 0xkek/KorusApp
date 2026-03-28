@@ -24,7 +24,7 @@ const PLATFORM_WALLET = new PublicKey('ByqqYGErKfyLHHd3NjgMnbbxQdPs1kFrPVWPUHUsD
 
 export default function CreateEventPage() {
   const router = useRouter();
-  const { connected, publicKey, signTransaction } = useWallet();
+  const { connected, publicKey, sendTransaction } = useWallet();
   const { token, isAuthenticated } = useWalletAuth();
 
   // Use RPC proxy for all Solana operations
@@ -210,42 +210,40 @@ export default function CreateEventPage() {
         transaction.recentBlockhash = blockhash;
         transaction.feePayer = publicKey;
 
-        logger.log('Requesting wallet signature...');
+        logger.log('Sending transaction via wallet...');
 
-        // Sign transaction (wallet popup opens here)
-        let signedTransaction;
-        try {
-          if (!signTransaction) {
-            throw new Error('Wallet does not support transaction signing');
-          }
-          signedTransaction = await signTransaction(transaction);
-          logger.log('Transaction signed successfully');
-        } catch (signError: unknown) {
-          logger.error('Signature error:', signError);
-          if ((signError as Error).message?.includes('User rejected') ||
-              (signError as Error).message?.includes('Plugin Closed') ||
-              (signError as Error).message?.includes('User closed')) {
-            throw new Error('Transaction cancelled. Please try again and approve the transaction in your wallet.');
-          }
-          throw signError;
-        }
+        // sendTransaction handles signing + sending in one step (more reliable)
+        const signature = await sendTransaction(transaction, connection);
 
-        // Send the signed transaction
-        logger.log('Sending signed transaction...');
-        const rawTransaction = signedTransaction.serialize();
-        const signature = await connection.sendRawTransaction(rawTransaction, {
-          skipPreflight: false,
-          preflightCommitment: 'confirmed',
-        });
+        logger.log('Transaction sent, confirming...', signature);
 
-        logger.log('Transaction sent, waiting for confirmation...', signature);
-
-        // Wait for confirmation with timeout
-        await connection.confirmTransaction({
+        // Confirm with a 60 second timeout
+        const confirmPromise = connection.confirmTransaction({
           signature,
           blockhash,
           lastValidBlockHeight,
         }, 'confirmed');
+
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), 60000)
+        );
+
+        try {
+          await Promise.race([confirmPromise, timeoutPromise]);
+        } catch (confirmError) {
+          // If timeout, the tx likely went through — check the signature
+          if (confirmError instanceof Error && confirmError.message === 'timeout') {
+            logger.log('Confirmation timed out, checking tx status...');
+            const status = await connection.getSignatureStatus(signature);
+            if (status?.value?.confirmationStatus === 'confirmed' || status?.value?.confirmationStatus === 'finalized') {
+              logger.log('Transaction confirmed via status check');
+            } else {
+              throw new Error('Transaction confirmation timed out. Please check your wallet and try again.');
+            }
+          } else {
+            throw confirmError;
+          }
+        }
 
         logger.log('Payment successful!', signature);
         showSuccess(`Payment of ${eventCreationFee} SOL confirmed!`);
@@ -254,8 +252,10 @@ export default function CreateEventPage() {
         let errorMsg = 'Payment failed';
 
         if (paymentError instanceof Error) {
-          if (paymentError.message.includes('User rejected') || paymentError.message.includes('Plugin Closed')) {
-            errorMsg = 'Transaction cancelled. Please try again and approve the transaction in your wallet.';
+          if (paymentError.message.includes('User rejected') ||
+              paymentError.message.includes('Plugin Closed') ||
+              paymentError.message.includes('User closed')) {
+            errorMsg = 'Transaction was not approved. Please try again and approve in your wallet.';
           } else {
             errorMsg = paymentError.message;
           }
