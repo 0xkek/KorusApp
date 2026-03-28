@@ -50,6 +50,10 @@ export default function EventsPage() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [registrationStatus, setRegistrationStatus] = useState<Record<string, boolean>>({});
+  const [showJoinedModal, setShowJoinedModal] = useState(false);
+  const [joinedEventTitle, setJoinedEventTitle] = useState('');
+  const [joinedPosition, setJoinedPosition] = useState<number | null>(null);
 
   // Fetch events on mount
   useEffect(() => {
@@ -123,9 +127,21 @@ export default function EventsPage() {
     return now >= start && now <= end;
   };
 
-  const handleEventPress = (event: Event) => {
+  const handleEventPress = async (event: Event) => {
     setSelectedEvent(event);
     setShowEventModal(true);
+
+    // Check registration status if authenticated
+    if (connected && token && !registrationStatus[event.id]) {
+      try {
+        const status = await eventsAPI.getRegistrationStatus(event.id, token);
+        if (status.registered) {
+          setRegistrationStatus(prev => ({ ...prev, [event.id]: true }));
+        }
+      } catch {
+        // Non-critical — just won't show "already joined" state
+      }
+    }
   };
 
   const handleParticipate = async () => {
@@ -171,8 +187,12 @@ export default function EventsPage() {
         token
       );
 
+      // Track registration and show success
+      setRegistrationStatus(prev => ({ ...prev, [selectedEvent.id]: true }));
+      setJoinedEventTitle(selectedEvent.title);
+      setJoinedPosition(response.registration?.position ?? null);
       setShowEventModal(false);
-      showSuccess(response.message || `Successfully joined the ${selectedEvent.title}!`);
+      setShowJoinedModal(true);
 
       // Refresh events to update registration count
       const result = await eventsAPI.getEvents({ status: 'active' });
@@ -596,6 +616,18 @@ export default function EventsPage() {
                   <button className="w-full bg-white/[0.08] border border-[var(--color-border-light)] text-[var(--color-text)] font-semibold py-4 rounded-lg hover:bg-white/[0.12] duration-150">
                     Connect Wallet to Participate
                   </button>
+                ) : registrationStatus[selectedEvent.id] ? (
+                  <button
+                    disabled
+                    className="w-full bg-white/[0.06] border border-korus-primary/30 text-korus-primary font-semibold py-4 rounded-lg cursor-default"
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Whitelist Joined
+                    </div>
+                  </button>
                 ) : (
                   <button
                     onClick={handleParticipate}
@@ -613,6 +645,38 @@ export default function EventsPage() {
                   </button>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Whitelist Joined Success Modal */}
+      {showJoinedModal && (
+        <div className="fixed inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#1e1e1e] border border-korus-primary/30 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-korus-primary/20 flex items-center justify-center">
+              <svg className="w-8 h-8 text-korus-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-[var(--color-text)] mb-2">Whitelist Joined!</h2>
+            <p className="text-[var(--color-text-secondary)] mb-2">
+              You&apos;ve successfully joined the whitelist for
+            </p>
+            <p className="text-korus-primary font-semibold text-lg mb-4">{joinedEventTitle}</p>
+            {joinedPosition && (
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-korus-primary/10 border border-korus-primary/20 rounded-full mb-6">
+                <span className="text-korus-primary font-bold text-lg">#{joinedPosition}</span>
+                <span className="text-[var(--color-text-secondary)] text-sm">in line</span>
+              </div>
+            )}
+            <div className="mt-4">
+              <button
+                onClick={() => setShowJoinedModal(false)}
+                className="w-full bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-semibold py-3 rounded-lg hover:shadow-lg duration-150"
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>
