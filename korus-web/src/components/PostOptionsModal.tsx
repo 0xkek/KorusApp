@@ -23,10 +23,11 @@ interface PostOptionsModalProps {
   postId: number | string;
   postUser: string;
   isOwnPost: boolean;
+  targetType?: 'post' | 'reply';
   onDelete?: () => void;
 }
 
-export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, onDelete }: PostOptionsModalProps) {
+export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, targetType = 'post', onDelete }: PostOptionsModalProps) {
   const { connected } = useWallet();
   const { token } = useWalletAuth();
   const { showSuccess, showError } = useToast();
@@ -50,7 +51,7 @@ export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, o
     setIsProcessing(true);
     try {
       await api.post('/api/reports', {
-        targetType: 'post',
+        targetType,
         targetId: String(postId),
         reason: selectedReason,
       }, token);
@@ -115,7 +116,7 @@ export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, o
             </div>
 
             {/* Title */}
-            <h2 className="heading-1 text-[var(--color-text)] mb-4">Report Post?</h2>
+            <h2 className="heading-1 text-[var(--color-text)] mb-4">Report {targetType === 'reply' ? 'Reply' : 'Post'}?</h2>
 
             {/* Message */}
             <p className="text-[var(--color-text-secondary)] text-base leading-relaxed mb-6">
