@@ -213,41 +213,11 @@ export default function CreateEventPage() {
 
         logger.log('Sending transaction via wallet...');
 
-        // sendTransaction handles signing + sending in one step (more reliable)
+        // sendTransaction handles signing + sending in one step
         const signature = await sendTransaction(transaction, connection);
-
-        logger.log('Transaction sent, confirming...', signature);
-
-        // Confirm with a 60 second timeout
-        const confirmPromise = connection.confirmTransaction({
-          signature,
-          blockhash,
-          lastValidBlockHeight,
-        }, 'confirmed');
-
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('timeout')), 60000)
-        );
-
-        try {
-          await Promise.race([confirmPromise, timeoutPromise]);
-        } catch (confirmError) {
-          // If timeout, the tx likely went through — check the signature
-          if (confirmError instanceof Error && confirmError.message === 'timeout') {
-            logger.log('Confirmation timed out, checking tx status...');
-            const status = await connection.getSignatureStatus(signature);
-            if (status?.value?.confirmationStatus === 'confirmed' || status?.value?.confirmationStatus === 'finalized') {
-              logger.log('Transaction confirmed via status check');
-            } else {
-              throw new Error('Transaction confirmation timed out. Please check your wallet and try again.');
-            }
-          } else {
-            throw confirmError;
-          }
-        }
-
-        logger.log('Payment successful!', signature);
-        showSuccess(`Payment of ${eventCreationFee} SOL confirmed!`);
+        logger.log('Payment sent!', signature);
+        // Skip confirmTransaction — wallet already confirmed it, and the RPC
+        // proxy can cause timeouts/errors during confirmation polling.
       } catch (paymentError) {
         logger.error('Payment failed:', paymentError);
         let errorMsg = 'Payment failed';
