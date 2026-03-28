@@ -1,9 +1,2 @@
-android/
-ios/
-dist/
 korus-backend/
 korus-contracts/
-*.apk
-*.ipa
-*.so
-*.rlib
