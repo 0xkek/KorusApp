@@ -169,9 +169,14 @@ export default function AdminDashboard() {
     setReportsLoading(true);
     try {
       const data = await api.get<{ success: boolean; reports: Report[] }>('/api/reports', token);
-      if (data.success) setReports(data.reports);
-    } catch { /* silent */ }
-    finally { setReportsLoading(false); }
+      if (data.success && data.reports) {
+        setReports(data.reports);
+      }
+    } catch (e) {
+      console.error('Failed to load reports:', e);
+    } finally {
+      setReportsLoading(false);
+    }
   }, [token]);
 
   useEffect(() => {
