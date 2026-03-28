@@ -85,6 +85,7 @@ export default function CreateEventPage() {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [createdEventTitle, setCreatedEventTitle] = useState('');
+  const [criticalError, setCriticalError] = useState('');
 
   // Fetch wallet balance via RPC proxy
   useEffect(() => {
@@ -302,7 +303,10 @@ export default function CreateEventPage() {
       setShowSuccessModal(true);
     } catch (error: unknown) {
       logger.error('Failed to create event:', error);
-      showError((error as Error).message || 'Failed to create event');
+      const errorMsg = (error as Error).message || 'Failed to create event';
+      showError(errorMsg);
+      // Show persistent error since payment already went through
+      setCriticalError(`Event creation failed after payment: ${errorMsg}. Please contact support.`);
     } finally {
       setIsSubmitting(false);
       setIsProcessingPayment(false);
@@ -644,6 +648,19 @@ export default function CreateEventPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Critical Error Banner */}
+                {criticalError && (
+                  <div className="p-4 bg-red-500/20 border border-red-500/50 rounded-xl">
+                    <div className="flex items-start gap-3">
+                      <span className="text-red-400 text-lg flex-shrink-0">!!!</span>
+                      <div>
+                        <p className="text-sm font-semibold text-red-400 mb-1">Error</p>
+                        <p className="text-sm text-red-300">{criticalError}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Submit Buttons */}
                 <div className="flex gap-4 pt-4">
