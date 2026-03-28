@@ -154,11 +154,35 @@ export const getReports = async (req: Request, res: Response) => {
       skip: Number(offset)
     })
 
+    // Enrich reports with target content preview
+    const enrichedReports = await Promise.all(
+      reports.map(async (report) => {
+        try {
+          if (report.targetType === 'post') {
+            const post = await prisma.post.findUnique({
+              where: { id: report.targetId },
+              select: { id: true, content: true, authorWallet: true }
+            })
+            return { ...report, targetContent: post?.content?.slice(0, 200) || '[deleted]', targetPostId: post?.id || null, targetAuthor: post?.authorWallet || null }
+          } else if (report.targetType === 'reply') {
+            const reply = await prisma.reply.findUnique({
+              where: { id: report.targetId },
+              select: { id: true, content: true, postId: true, authorWallet: true }
+            })
+            return { ...report, targetContent: reply?.content?.slice(0, 200) || '[deleted]', targetPostId: reply?.postId || null, targetAuthor: reply?.authorWallet || null }
+          }
+          return { ...report, targetContent: null, targetPostId: null, targetAuthor: null }
+        } catch {
+          return { ...report, targetContent: null, targetPostId: null, targetAuthor: null }
+        }
+      })
+    )
+
     const totalReports = await prisma.report.count({ where })
 
     res.json({
       success: true,
-      reports,
+      reports: enrichedReports,
       pagination: {
         total: totalReports,
         limit: Number(limit),

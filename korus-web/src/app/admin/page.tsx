@@ -66,6 +66,9 @@ interface Report {
   description: string | null;
   status: string;
   createdAt: string;
+  targetContent: string | null;
+  targetPostId: string | null;
+  targetAuthor: string | null;
 }
 
 type Tab = 'overview' | 'reputation' | 'users' | 'tips' | 'reports' | 'manage';
@@ -555,7 +558,9 @@ export default function AdminDashboard() {
                           <span className={`inline-flex px-2 py-0.5 rounded text-xs font-bold uppercase ${
                             report.status === 'pending'
                               ? 'bg-red-500/20 text-red-400'
-                              : 'bg-green-500/20 text-green-400'
+                              : report.status === 'dismissed'
+                                ? 'bg-gray-500/20 text-gray-400'
+                                : 'bg-green-500/20 text-green-400'
                           }`}>
                             {report.status}
                           </span>
@@ -565,34 +570,91 @@ export default function AdminDashboard() {
                           <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-yellow-500/15 text-yellow-400 capitalize">
                             {report.reason}
                           </span>
+                          <span className="text-xs text-[var(--color-text-tertiary)]">
+                            {new Date(report.createdAt).toLocaleDateString()} {new Date(report.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
                         </div>
-                        <p className="text-xs text-[var(--color-text-tertiary)] mb-1">
-                          Reported by: <span className="font-mono text-[var(--color-text-secondary)]">{report.reporterWallet.slice(0, 4)}...{report.reporterWallet.slice(-4)}</span>
-                        </p>
-                        <p className="text-xs text-[var(--color-text-tertiary)]">
-                          Target ID: <span className="font-mono text-[var(--color-text-secondary)]">{report.targetId.slice(0, 12)}...</span>
-                        </p>
+
+                        {/* Reported content preview */}
+                        {report.targetContent && report.targetContent !== '[deleted]' && (
+                          <div className="bg-white/[0.04] border border-[var(--color-border-light)] rounded-lg p-3 mb-2">
+                            <p className="text-sm text-[var(--color-text-secondary)] italic">&quot;{report.targetContent}&quot;</p>
+                            {report.targetAuthor && (
+                              <p className="text-xs text-[var(--color-text-tertiary)] mt-1">
+                                by <span className="font-mono">{report.targetAuthor.slice(0, 4)}...{report.targetAuthor.slice(-4)}</span>
+                              </p>
+                            )}
+                          </div>
+                        )}
+                        {report.targetContent === '[deleted]' && (
+                          <p className="text-xs text-red-400/60 italic mb-2">Content has been deleted</p>
+                        )}
+
+                        <div className="flex items-center gap-3 text-xs text-[var(--color-text-tertiary)]">
+                          <span>
+                            Reported by: <span className="font-mono text-[var(--color-text-secondary)]">{report.reporterWallet.slice(0, 4)}...{report.reporterWallet.slice(-4)}</span>
+                          </span>
+                          {report.targetPostId && (
+                            <Link
+                              href={`/post/${report.targetPostId}`}
+                              className="text-korus-primary hover:underline font-medium"
+                              target="_blank"
+                            >
+                              View {report.targetType}
+                            </Link>
+                          )}
+                        </div>
                         {report.description && (
                           <p className="text-sm text-[var(--color-text-secondary)] mt-2">{report.description}</p>
                         )}
                       </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="text-xs text-[var(--color-text-tertiary)]">
-                          {new Date(report.createdAt).toLocaleDateString()} {new Date(report.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
+                      <div className="flex flex-col gap-2 flex-shrink-0">
                         {report.status === 'pending' && (
-                          <button
-                            onClick={async () => {
-                              if (!token) return;
-                              try {
-                                await api.put(`/api/reports/${report.id}/status`, { status: 'resolved', moderatorNotes: 'Reviewed by admin' }, token);
-                                loadReports();
-                              } catch { /* silent */ }
-                            }}
-                            className="mt-2 px-3 py-1 text-xs bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors"
-                          >
-                            Resolve
-                          </button>
+                          <>
+                            <button
+                              onClick={async () => {
+                                if (!token) return;
+                                try {
+                                  await api.put(`/api/reports/${report.id}/status`, { status: 'resolved', moderatorNotes: 'Reviewed by admin' }, token);
+                                  loadReports();
+                                } catch { /* silent */ }
+                              }}
+                              className="px-3 py-1.5 text-xs bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors"
+                            >
+                              Resolve
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (!token) return;
+                                try {
+                                  await api.put(`/api/reports/${report.id}/status`, { status: 'dismissed', moderatorNotes: 'Dismissed by admin' }, token);
+                                  loadReports();
+                                } catch { /* silent */ }
+                              }}
+                              className="px-3 py-1.5 text-xs bg-white/[0.06] text-[var(--color-text-secondary)] rounded-lg hover:bg-white/[0.1] transition-colors"
+                            >
+                              Dismiss
+                            </button>
+                            {report.targetContent && report.targetContent !== '[deleted]' && (
+                              <button
+                                onClick={async () => {
+                                  if (!token) return;
+                                  if (!confirm(`Delete this ${report.targetType}? This cannot be undone.`)) return;
+                                  try {
+                                    const endpoint = report.targetType === 'reply'
+                                      ? `/api/admin/replies/${report.targetId}`
+                                      : `/api/admin/posts/${report.targetId}`;
+                                    await api.delete(endpoint, token);
+                                    await api.put(`/api/reports/${report.id}/status`, { status: 'resolved', moderatorNotes: 'Content deleted by admin' }, token);
+                                    loadReports();
+                                  } catch { /* silent */ }
+                                }}
+                                className="px-3 py-1.5 text-xs bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
+                              >
+                                Delete {report.targetType}
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>

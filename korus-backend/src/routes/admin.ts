@@ -544,4 +544,50 @@ router.put('/config/:key', authenticateJWT, async (req, res) => {
   }
 });
 
+// Admin delete post (any post, not just own)
+router.delete('/posts/:id', authenticateJWT, async (req, res) => {
+  try {
+    const walletAddress = (req as AuthRequest).userWallet;
+    if (!walletAddress || !ADMIN_WALLETS.includes(walletAddress)) {
+      return res.status(403).json({ success: false, error: 'Admin access required' });
+    }
+
+    const post = await prisma.post.findUnique({ where: { id: req.params.id } });
+    if (!post) {
+      return res.status(404).json({ success: false, error: 'Post not found' });
+    }
+
+    await prisma.post.delete({ where: { id: req.params.id } });
+    logger.debug(`Admin deleted post ${req.params.id} by ${walletAddress}`);
+
+    res.json({ success: true, message: 'Post deleted by admin' });
+  } catch (error) {
+    logger.error('Admin delete post error:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete post' });
+  }
+});
+
+// Admin delete reply (any reply, not just own)
+router.delete('/replies/:id', authenticateJWT, async (req, res) => {
+  try {
+    const walletAddress = (req as AuthRequest).userWallet;
+    if (!walletAddress || !ADMIN_WALLETS.includes(walletAddress)) {
+      return res.status(403).json({ success: false, error: 'Admin access required' });
+    }
+
+    const reply = await prisma.reply.findUnique({ where: { id: req.params.id } });
+    if (!reply) {
+      return res.status(404).json({ success: false, error: 'Reply not found' });
+    }
+
+    await prisma.reply.delete({ where: { id: req.params.id } });
+    logger.debug(`Admin deleted reply ${req.params.id} by ${walletAddress}`);
+
+    res.json({ success: true, message: 'Reply deleted by admin' });
+  } catch (error) {
+    logger.error('Admin delete reply error:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete reply' });
+  }
+});
+
 export default router;
