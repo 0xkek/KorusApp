@@ -24,6 +24,7 @@ const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: fal
 const MobileMenuModal = dynamic(() => import('@/components/MobileMenuModal'), { ssr: false });
 const TipModal = dynamic(() => import('@/components/TipModal'), { ssr: false });
 const ShareModal = dynamic(() => import('@/components/ShareModal'), { ssr: false });
+const GifPicker = dynamic(() => import('@/components/GifPicker'), { ssr: false });
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -51,6 +52,7 @@ export default function PostDetailPage() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
+  const [selectedGif, setSelectedGif] = useState<string | null>(null);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
@@ -386,7 +388,9 @@ export default function PostDetailPage() {
     try {
       // Upload image if present
       let imageUrl: string | undefined;
-      if (selectedFiles.length > 0) {
+      if (selectedGif) {
+        imageUrl = selectedGif;
+      } else if (selectedFiles.length > 0) {
         const imageFile = selectedFiles[0];
         if (imageFile.type.startsWith('image/')) {
           logger.log('Uploading reply image...');
@@ -409,6 +413,7 @@ export default function PostDetailPage() {
       showSuccess('Reply posted successfully!');
       setInlineReplyContent('');
       setSelectedFiles([]);
+      setSelectedGif(null);
 
       // Reload post to get latest data from backend
       await loadPost();
@@ -979,6 +984,26 @@ export default function PostDetailPage() {
                     </div>
                   )}
 
+                  {/* GIF Preview */}
+                  {selectedGif && (
+                    <div className="relative group mt-3 inline-block">
+                      <img
+                        src={selectedGif}
+                        alt="Selected GIF"
+                        className="max-w-[200px] h-auto rounded-xl border border-[var(--color-border-light)]"
+                      />
+                      <button
+                        onClick={() => setSelectedGif(null)}
+                        aria-label="Remove GIF"
+                        className="absolute top-2 right-2 w-6 h-6 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-[var(--color-text)] opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+
                   {/* Tools row */}
                   <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--color-border-light)]">
                     <div className="flex items-center gap-1">
@@ -1167,31 +1192,13 @@ export default function PostDetailPage() {
 
       {/* GIF Picker Modal */}
       {showGifPicker && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowGifPicker(false)}>
-          <div className="bg-[var(--color-surface)] backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[80vh] border border-[var(--color-border-light)] shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-[var(--color-border-light)]">
-              <h3 className="text-lg font-bold text-[var(--color-text)]">Choose GIF</h3>
-              <button
-                onClick={() => setShowGifPicker(false)}
-                aria-label="Close GIF picker"
-                className="w-8 h-8 rounded-full flex items-center justify-center bg-white/[0.06] border border-[var(--color-border-light)] text-[var(--color-text-secondary)] hover:bg-white/[0.12] hover:text-[var(--color-text)] transition-all duration-150"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-4 overflow-y-auto max-h-[60vh]">
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">🎬</div>
-                <p className="text-[var(--color-text)] text-lg font-medium">GIF Integration Coming Soon</p>
-                <p className="text-[var(--color-text-secondary)] text-sm mt-2">
-                  We&apos;ll integrate with Tenor or Giphy API to bring you the best GIFs
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <GifPicker
+          onSelect={(gifUrl) => {
+            setSelectedGif(gifUrl);
+            setSelectedFiles([]);
+          }}
+          onClose={() => setShowGifPicker(false)}
+        />
       )}
     </main>
   );
