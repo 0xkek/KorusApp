@@ -163,7 +163,8 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     logger.error('Create event error:', error);
-    res.status(500).json({ success: false, error: 'Failed to create event' });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to create event';
+    res.status(500).json({ success: false, error: errorMessage });
   }
 };
 
