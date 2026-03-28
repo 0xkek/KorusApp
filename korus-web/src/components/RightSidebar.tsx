@@ -22,38 +22,15 @@ interface LiveGame {
   wager: string;
 }
 
-interface TrendingItem {
-  id: number;
-  label: string;
-  topic: string;
-  posts: string;
+interface SidebarEvent {
+  id: string;
+  title: string;
+  projectName: string;
+  type: string;
+  registrationCount: number;
+  maxSpots?: number;
+  endDate: string;
 }
-
-interface TopTipper {
-  id: number;
-  rank: number;
-  name: string;
-  avatar: string;
-  total: string;
-}
-
-// Placeholder trending data
-const placeholderTrending: TrendingItem[] = [
-  { id: 1, label: '1 \u00b7 Trending in Crypto', topic: 'Solana Breakpoint', posts: '2,431 posts' },
-  { id: 2, label: '2 \u00b7 Trending in Gaming', topic: 'On-Chain Chess', posts: '1,892 posts' },
-  { id: 3, label: '3 \u00b7 Trending in NFTs', topic: 'Mad Lads Floor', posts: '1,204 posts' },
-  { id: 4, label: '4 \u00b7 Trending in DeFi', topic: 'Jupiter Airdrop', posts: '987 posts' },
-  { id: 5, label: '5 \u00b7 Trending', topic: 'Korus Launch', posts: '756 posts' },
-];
-
-// Placeholder top tippers data
-const placeholderTippers: TopTipper[] = [
-  { id: 1, rank: 1, name: 'SolWhale.sol', avatar: 'SW', total: '42.5 SOL' },
-  { id: 2, rank: 2, name: 'DegenKing', avatar: 'DK', total: '31.2 SOL' },
-  { id: 3, rank: 3, name: 'CryptoNinja', avatar: 'CN', total: '24.8 SOL' },
-  { id: 4, rank: 4, name: 'NFTCollector', avatar: 'NC', total: '18.3 SOL' },
-  { id: 5, rank: 5, name: 'AlphaTrader', avatar: 'AT', total: '12.1 SOL' },
-];
 
 // Placeholder live games if API returns nothing
 const placeholderGames: LiveGame[] = [
@@ -70,10 +47,13 @@ export default function RightSidebar({ showNotifications = false, onNotification
   const [isLoading, setIsLoading] = useState(false);
   const [liveGames, setLiveGames] = useState<LiveGame[]>([]);
   const [isLoadingGames, setIsLoadingGames] = useState(true);
+  const [sidebarEvents, setSidebarEvents] = useState<SidebarEvent[]>([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
 
-  // Fetch live games on mount
+  // Fetch live games and events on mount
   useEffect(() => {
     fetchLiveGames();
+    fetchEvents();
   }, []);
 
   // Fetch notifications when connected and authenticated, poll every 30s when visible
@@ -121,6 +101,29 @@ export default function RightSidebar({ showNotifications = false, onNotification
       setLiveGames(placeholderGames);
     } finally {
       setIsLoadingGames(false);
+    }
+  };
+
+  const fetchEvents = async () => {
+    setIsLoadingEvents(true);
+    try {
+      const response = await eventsAPI.getEvents({ status: 'active' });
+      const events = response.events || [];
+      const mapped: SidebarEvent[] = events.map(event => ({
+        id: event.id,
+        title: event.title,
+        projectName: event.projectName,
+        type: event.type,
+        registrationCount: event.registrationCount,
+        maxSpots: event.maxSpots || undefined,
+        endDate: event.endDate,
+      }));
+      setSidebarEvents(mapped.slice(0, 5));
+    } catch (error) {
+      logger.error('Failed to fetch events:', error);
+      setSidebarEvents([]);
+    } finally {
+      setIsLoadingEvents(false);
     }
   };
 
@@ -196,10 +199,28 @@ export default function RightSidebar({ showNotifications = false, onNotification
     return `${address.slice(0, 8)}...${address.slice(-6)}`;
   };
 
-  const getRankColor = (rank: number) => {
-    if (rank === 1) return '#f59e0b';
-    if (rank === 2) return '#a1a1a1';
-    return '#525252';
+  const formatTimeRemaining = (endDate: string) => {
+    const end = new Date(endDate).getTime();
+    const now = Date.now();
+    const diff = end - now;
+    if (diff <= 0) return 'Ended';
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    if (days > 0) return `${days}d ${hours}h left`;
+    const mins = Math.floor((diff % 3600000) / 60000);
+    return `${hours}h ${mins}m left`;
+  };
+
+  const getEventTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      whitelist: 'Whitelist',
+      token_launch: 'Token Launch',
+      nft_mint: 'NFT Mint',
+      airdrop: 'Airdrop',
+      ido: 'IDO',
+      raffle: 'Raffle',
+    };
+    return labels[type] || type;
   };
 
   // Widget container styles
@@ -439,93 +460,102 @@ export default function RightSidebar({ showNotifications = false, onNotification
             )}
           </div>
 
-          {/* Widget 2: Trending on Korus */}
+          {/* Widget 2: Upcoming Events */}
           <div style={widgetStyle}>
-            <h2 style={widgetTitleStyle}>Trending on Korus</h2>
-            {placeholderTrending.map((item, index) => (
-              <div
-                key={item.id}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-text)', margin: 0 }}>
+                Upcoming Events
+              </h2>
+              <button
+                onClick={() => router.push('/events')}
                 style={{
-                  padding: '10px 0',
-                  borderTop: index > 0 ? '1px solid var(--color-border-light)' : 'none',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-primary)',
+                  fontSize: '12px',
                   cursor: 'pointer',
+                  fontWeight: 500,
                 }}
-                className="hover:opacity-80 transition-opacity"
+                className="hover:opacity-80"
               >
-                <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)' }}>
-                  {item.label}
-                </div>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text)', marginTop: '2px' }}>
-                  {item.topic}
-                </div>
-                <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', marginTop: '2px' }}>
-                  {item.posts}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Widget 3: Top Tippers This Week */}
-          <div style={widgetStyle}>
-            <h2 style={widgetTitleStyle}>Top Tippers This Week</h2>
-            {placeholderTippers.map((tipper) => (
-              <div
-                key={tipper.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  padding: '8px 0',
-                }}
-              >
-                {/* Rank number */}
+                View all
+              </button>
+            </div>
+            {isLoadingEvents ? (
+              <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--color-text-tertiary)' }}>
                 <div
                   style={{
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    color: getRankColor(tipper.rank),
-                    width: '18px',
-                    textAlign: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  {tipper.rank}
-                </div>
-                {/* Avatar circle */}
-                <div
-                  style={{
-                    width: '32px',
-                    height: '32px',
+                    width: '24px',
+                    height: '24px',
+                    border: '2px solid #2a2a2a',
+                    borderTopColor: 'rgba(255,255,255,0.4)',
                     borderRadius: '50%',
-                    background: '#262626',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    color: 'rgba(255,255,255,0.6)',
-                    flexShrink: 0,
+                    margin: '0 auto 8px',
+                    animation: 'spin 1s linear infinite',
                   }}
-                >
-                  {tipper.avatar}
-                </div>
-                {/* Name */}
-                <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: 'var(--color-text)', minWidth: 0 }}>
-                  {tipper.name}
-                </div>
-                {/* SOL total */}
-                <div
-                  style={{
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    color: 'var(--color-primary)',
-                    flexShrink: 0,
-                  }}
-                >
-                  {tipper.total}
-                </div>
+                />
+                <p style={{ fontSize: '12px' }}>Loading events...</p>
               </div>
-            ))}
+            ) : sidebarEvents.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--color-text-tertiary)' }}>
+                <p style={{ fontSize: '13px' }}>No active events</p>
+                <button
+                  onClick={() => router.push('/events')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--color-primary)',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    marginTop: '8px',
+                  }}
+                  className="hover:opacity-80"
+                >
+                  Browse events
+                </button>
+              </div>
+            ) : (
+              sidebarEvents.map((event, index) => (
+                <div
+                  key={event.id}
+                  onClick={() => router.push('/events')}
+                  style={{
+                    padding: '10px 0',
+                    borderTop: index > 0 ? '1px solid var(--color-border-light)' : 'none',
+                    cursor: 'pointer',
+                  }}
+                  className="hover:opacity-80 transition-opacity"
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text)' }}>
+                      {event.projectName}
+                    </div>
+                    <span style={{
+                      fontSize: '10px',
+                      fontWeight: 600,
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      background: 'var(--color-primary)',
+                      color: 'black',
+                      textTransform: 'uppercase',
+                    }}>
+                      {getEventTypeLabel(event.type)}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
+                    {event.title}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--color-text-tertiary)' }}>
+                      {event.registrationCount}{event.maxSpots ? `/${event.maxSpots}` : ''} registered
+                    </span>
+                    <span style={{ fontSize: '11px', color: 'var(--color-text-tertiary)' }}>
+                      {formatTimeRemaining(event.endDate)}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </>
       )}
