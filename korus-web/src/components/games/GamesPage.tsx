@@ -462,20 +462,18 @@ export function GamesPage() {
     }
 
     try {
-      logger.log('handleMove called:', { gameId, move });
+      console.log('handleMove called:', { gameId, move });
       const token = localStorage.getItem('authToken');
       if (!token) {
         showError('Not authenticated. Please sign in with your wallet.');
         return;
       }
-      logger.log('Sending move to API...');
+      console.log('Sending move to API...');
       const response = await gamesAPI.makeMove(gameId, { move }, token);
-      logger.log('Move API response:', response);
-      logger.log('Reloading games...');
-      await loadGames(); // Reload to get updated state
-      logger.log('Games reloaded');
+      console.log('Move API response:', response);
+      await loadGames();
     } catch (error) {
-      logger.error('Failed to make move:', error);
+      console.error('Failed to make move:', error);
       showError('Failed to make move');
     }
   };
