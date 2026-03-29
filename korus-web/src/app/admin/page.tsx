@@ -5,6 +5,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { api } from '@/lib/api/client';
 import Link from 'next/link';
+import { AdminOverviewSkeleton } from '@/components/Skeleton';
 
 const ADMIN_WALLETS = [
   'G4WAtEdLYWpDoxNWKVbd2Pv9LoX2feFSxN7mWUXt3kGG',
@@ -231,8 +232,10 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[var(--korus-primary)] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-[#0a0a0a] text-[var(--color-text)]">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <AdminOverviewSkeleton />
+        </div>
       </div>
     );
   }

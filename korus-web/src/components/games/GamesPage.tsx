@@ -13,6 +13,7 @@ import { TicTacToeBoard, type TicTacToeCell } from './TicTacToeBoard';
 import { ConnectFourBoard, type ConnectFourCell } from './ConnectFourBoard';
 import { RockPaperScissorsGame, type RPSMove } from './RockPaperScissorsGame';
 import { GameCountdown } from './GameCountdown';
+import { GamesFeedSkeleton } from '@/components/Skeleton';
 
 export function GamesPage() {
   const { connected, publicKey } = useWallet();
@@ -691,10 +692,7 @@ export function GamesPage() {
       {activeTab === 'lobby' && (
         <>
           {loading ? (
-            <div className="text-center py-20">
-              <div className="w-8 h-8 border-4 border-korus-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-[var(--color-text-secondary)]">Loading games...</p>
-            </div>
+            <GamesFeedSkeleton />
           ) : games.length === 0 ? (
             <div className="text-center py-20">
               <div className="text-6xl mb-4 opacity-60">🎮</div>
@@ -823,10 +821,7 @@ export function GamesPage() {
       {activeTab === 'completed' && (
         <>
           {completedLoading ? (
-            <div className="text-center py-20">
-              <div className="w-8 h-8 border-4 border-korus-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-[var(--color-text-secondary)]">Loading completed games...</p>
-            </div>
+            <GamesFeedSkeleton />
           ) : completedGames.length === 0 ? (
             <div className="text-center py-20">
               <div className="text-6xl mb-4 opacity-60">🏆</div>

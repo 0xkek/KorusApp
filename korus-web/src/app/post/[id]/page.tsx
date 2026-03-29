@@ -7,24 +7,16 @@ import { useParams, useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
-import ReplyModal from '@/components/ReplyModal';
-import PostOptionsModal from '@/components/PostOptionsModal';
 import { SafeContent } from '@/components/SafeContent';
-import EmojiPicker from '@/components/EmojiPicker';
-import { formatRelativeTime, formatFullTimestamp } from '@/utils/formatTime';
+import { formatFullTimestamp } from '@/utils/formatTime';
 import { useToast } from '@/hooks/useToast';
 import { postsAPI, repliesAPI, uploadAPI, interactionsAPI, usersAPI } from '@/lib/api';
 import type { Post, Reply } from '@/types';
-
-// Dynamically import modals
-const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
-const MobileMenuModal = dynamic(() => import('@/components/MobileMenuModal'), { ssr: false });
-const TipModal = dynamic(() => import('@/components/TipModal'), { ssr: false });
-const ShareModal = dynamic(() => import('@/components/ShareModal'), { ssr: false });
-const GifPicker = dynamic(() => import('@/components/GifPicker'), { ssr: false });
+import PostDetailModals from '@/components/PostDetailModals';
+import PostDetailReplyItem from '@/components/PostDetailReplyItem';
+import PostDetailInlineComposer from '@/components/PostDetailInlineComposer';
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -423,155 +415,21 @@ export default function PostDetailPage() {
     setShowEmojiPicker(false);
   };
 
-  const renderReply = (reply: Reply, level: number = 0) => {
-    const hasReplies = reply.replies && reply.replies.length > 0;
+  // Wrapper callbacks for reply tip/share - convert Reply to Post for modals
+  const handleTipReply = useCallback((reply: Reply) => {
+    setPostToTip(convertReplyToPost(reply));
+    setShowTipModal(true);
+  }, []);
 
-    return (
-      <div key={reply.id}>
-        {/* Reply Content */}
-        <div className="px-4 py-3 border-b border-[var(--color-border-light)] flex gap-3 hover:bg-white/[0.04] transition-colors duration-150">
-          {/* Avatar */}
-          {reply.avatar ? (
-            <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden">
-              <Image
-                src={reply.avatar}
-                alt={`${reply.user} avatar`}
-                width={36}
-                height={36}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ) : (
-            <div className="w-9 h-9 bg-gradient-to-br from-korus-primary to-korus-secondary rounded-full flex items-center justify-center text-xs font-bold text-black flex-shrink-0">
-              {reply.user.slice(0, 2).toUpperCase()}
-            </div>
-          )}
+  const handleShareReply = useCallback((reply: Reply) => {
+    setPostToShare(convertReplyToPost(reply));
+    setShowShareModal(true);
+  }, []);
 
-          {/* Reply Body */}
-          <div className="flex-1 min-w-0">
-            {/* Header */}
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <Link
-                href={`/profile/${reply.wallet || reply.user}`}
-                className="font-semibold text-sm text-[var(--color-text)] hover:underline"
-              >
-                {truncateAddress(reply.user)}
-              </Link>
-              {reply.isPremium && (
-                <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
-                  <svg className="w-2.5 h-2.5" fill="black" viewBox="0 0 24 24">
-                    <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
-                  </svg>
-                </div>
-              )}
-              <span className="text-[13px] text-[var(--color-text-secondary)]">@{truncateAddress(reply.user)}</span>
-              <span className="text-[var(--color-text-tertiary)]">·</span>
-              <span className="text-[13px] text-[var(--color-text-tertiary)]">{reply.createdAt ? formatRelativeTime(reply.createdAt) : reply.time}</span>
-            </div>
-
-            {/* Content */}
-            <SafeContent
-              content={reply.content}
-              className="text-[var(--color-text)] text-sm leading-[1.5] mb-2 whitespace-pre-wrap break-words"
-              allowLinks={true}
-              allowFormatting={true}
-            />
-
-            {/* Actions */}
-            <div className="flex items-center gap-0.5 mt-2 -ml-2">
-              <button
-                onClick={() => handleReply(reply)}
-                aria-label="Reply to comment"
-                className="flex items-center gap-1 px-2 py-1 rounded-full text-[var(--color-text-secondary)] hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-150"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                </svg>
-                {hasReplies && <span className="text-xs font-medium">{reply.replies.length}</span>}
-              </button>
-
-              <button
-                onClick={() => handleLikeReply(reply.id)}
-                aria-label={likedReplies.has(reply.id) ? "Unlike reply" : "Like reply"}
-                className="flex items-center gap-1 px-2 py-1 rounded-full transition-all duration-150 hover:bg-red-500/10"
-                style={{ color: likedReplies.has(reply.id) ? '#ef4444' : '#a1a1a1' }}
-              >
-                <svg className="w-4 h-4" fill={likedReplies.has(reply.id) ? '#ef4444' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                </svg>
-                <span className="text-xs font-medium">{reply.likes}</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setPostToTip(convertReplyToPost(reply));
-                  setShowTipModal(true);
-                }}
-                aria-label="Send tip (0 SOL)"
-                className={`flex items-center gap-1 px-2 py-1 rounded-full transition-all duration-150 ${
-                  tippedReplies.has(String(reply.id))
-                    ? 'text-amber-400 hover:bg-amber-500/10'
-                    : 'text-[var(--color-text-secondary)] hover:text-amber-400 hover:bg-amber-500/10'
-                }`}
-              >
-                <span className="text-xs font-medium">$</span>
-                <span className="text-xs font-medium">0 SOL</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setPostToShare(convertReplyToPost(reply));
-                  setShowShareModal(true);
-                }}
-                aria-label="Share reply"
-                className="flex items-center gap-1 px-2 py-1 rounded-full text-[var(--color-text-secondary)] hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-150"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-                </svg>
-              </button>
-
-              {/* Report/Options button */}
-              <button
-                onClick={() => {
-                  setSelectedReplyForReport(reply);
-                  setShowReplyOptionsModal(true);
-                }}
-                aria-label="More options"
-                className="flex items-center gap-1 px-2 py-1 rounded-full text-[var(--color-text-secondary)] hover:text-[var(--color-text)] hover:bg-white/[0.08] transition-all duration-150 ml-auto"
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <circle cx="5" cy="12" r="2"/>
-                  <circle cx="12" cy="12" r="2"/>
-                  <circle cx="19" cy="12" r="2"/>
-                </svg>
-              </button>
-            </div>
-
-            {/* Show replies toggle */}
-            {hasReplies && (
-              <button
-                onClick={() => toggleReplyExpansion(reply.id)}
-                className="mt-2 text-korus-primary hover:underline text-[13px]"
-              >
-                {reply.isExpanded
-                  ? `Hide ${reply.replies.length} ${reply.replies.length === 1 ? 'reply' : 'replies'}`
-                  : `Show ${reply.replies.length} ${reply.replies.length === 1 ? 'reply' : 'replies'}`
-                }
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Nested Replies */}
-        {hasReplies && reply.isExpanded && (
-          <div className="ml-8">
-            {reply.replies.map(nestedReply => renderReply(nestedReply, level + 1))}
-          </div>
-        )}
-      </div>
-    );
-  };
+  const handleReportReply = useCallback((reply: Reply) => {
+    setSelectedReplyForReport(reply);
+    setShowReplyOptionsModal(true);
+  }, []);
 
   if (!connected) {
     return null;
@@ -644,18 +502,47 @@ export default function PostDetailPage() {
 
   if (!post) {
     return (
-      <main className="min-h-screen relative overflow-hidden">
-        <div className="fixed inset-0 bg-[var(--color-background)]" />
-        <div className="relative z-10 flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4 text-[var(--color-text)]">Post Not Found</h2>
-            <p className="text-[var(--color-text-tertiary)] mb-8">The post you&apos;re looking for doesn&apos;t exist.</p>
-            <Link
-              href="/"
-              className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150 hover:scale-[1.02]"
-            >
-              Back to Home
-            </Link>
+      <main className="min-h-screen bg-[var(--color-background)] relative overflow-hidden">
+        <div className="fixed inset-0 bg-gradient-to-br from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)]">
+          <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[var(--color-surface)]/25 to-[var(--color-surface)]/35" />
+        </div>
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-32 -right-32 w-[600px] h-[600px] bg-gradient-to-br from-korus-primary/6 to-korus-secondary/4 rounded-full blur-[80px]" />
+          <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-gradient-to-tr from-korus-secondary/4 to-korus-primary/6 rounded-full blur-[70px]" />
+        </div>
+        <div className="relative z-10">
+          <div className="flex min-h-screen max-w-[1280px] mx-auto">
+            <LeftSidebar onSearchClick={() => setShowSearchModal(true)} />
+            <div className="flex-1 min-w-0 border-r border-[var(--color-border-light)]">
+              <div className="sticky top-0 z-10 bg-[var(--color-surface)]/80 backdrop-blur-xl border-b border-[var(--color-border-light)]">
+                <div className="flex items-center gap-4 px-5 py-3">
+                  <button onClick={() => router.back()} className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-[var(--color-text)] hover:bg-white/[0.06] transition-colors duration-150">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                  </button>
+                  <span className="text-[18px] font-[800] tracking-[-0.3px] text-[var(--color-text)]">Post</span>
+                </div>
+              </div>
+              <div className="flex flex-col items-center justify-center py-20 px-4">
+                <div className="w-16 h-16 rounded-full bg-white/[0.06] flex items-center justify-center mb-4">
+                  <svg className="w-8 h-8 text-[var(--color-text-tertiary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-[var(--color-text)] mb-2">Post not found</h2>
+                <p className="text-[var(--color-text-tertiary)] text-center mb-6 max-w-sm">
+                  This post doesn&apos;t exist or has been removed.
+                </p>
+                <Link
+                  href="/"
+                  className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-2.5 rounded-full hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150"
+                >
+                  Back to Home
+                </Link>
+              </div>
+            </div>
+            <RightSidebar />
           </div>
         </div>
       </main>
@@ -891,179 +778,24 @@ export default function PostDetailPage() {
             </div>
 
             {/* Inline Reply Composer */}
-            <div className="px-4 py-3 border-b border-[var(--color-border-light)]">
-              <div className="flex gap-3">
-                {/* Avatar */}
-                {currentUserAvatar ? (
-                  <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={currentUserAvatar}
-                      alt="Your avatar"
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        logger.error('Failed to load avatar image:', currentUserAvatar);
-                        e.currentTarget.style.display = 'none';
-                      }}
-                      onLoad={() => {
-                        logger.log('✅ Avatar image loaded successfully:', currentUserAvatar);
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center flex-shrink-0">
-                    <span className="text-black font-bold text-sm">
-                      {publicKey?.toBase58().slice(0, 2).toUpperCase() || 'U'}
-                    </span>
-                  </div>
-                )}
-
-                {/* Reply Input Area */}
-                <div className="flex-1 min-w-0">
-                  <textarea
-                    value={inlineReplyContent}
-                    onChange={(e) => setInlineReplyContent(e.target.value)}
-                    placeholder="Post your reply"
-                    className="bg-white/[0.06] border border-[var(--color-border-light)] rounded-lg text-[var(--color-text)] text-[15px] placeholder-[#737373] resize-none min-h-[28px] max-h-[300px] outline-none w-full px-3 py-2 focus:border-white/25 transition-colors duration-150"
-                    rows={1}
-                  />
-
-                  {/* File Previews */}
-                  {selectedFiles.length > 0 && (
-                    <div className="grid grid-cols-2 gap-3 mt-3">
-                      {selectedFiles.map((file, index) => (
-                        <div key={index} className="relative group">
-                          {file.type.startsWith('image/') ? (
-                            <Image
-                              src={URL.createObjectURL(file)}
-                              alt="Upload preview"
-                              width={200}
-                              height={128}
-                              className="max-w-full h-auto rounded-xl border border-[var(--color-border-light)]"
-                            />
-                          ) : (
-                            <div className="w-full h-32 bg-white/[0.06] border border-[var(--color-border-light)] rounded-lg flex items-center justify-center">
-                              <div className="text-center">
-                                <svg className="w-8 h-8 mx-auto mb-2 text-[var(--color-text-tertiary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                <p className="text-xs text-[var(--color-text-tertiary)] truncate px-2">{file.name}</p>
-                              </div>
-                            </div>
-                          )}
-
-                          <button
-                            onClick={() => removeFile(index)}
-                            aria-label="Remove file"
-                            className="absolute top-2 right-2 w-6 h-6 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-[var(--color-text)] opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* GIF Preview */}
-                  {selectedGif && (
-                    <div className="relative group mt-3 inline-block">
-                      <img
-                        src={selectedGif}
-                        alt="Selected GIF"
-                        className="max-w-[200px] h-auto rounded-xl border border-[var(--color-border-light)]"
-                      />
-                      <button
-                        onClick={() => setSelectedGif(null)}
-                        aria-label="Remove GIF"
-                        className="absolute top-2 right-2 w-6 h-6 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-[var(--color-text)] opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Tools row */}
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--color-border-light)]">
-                    <div className="flex items-center gap-1">
-                      {/* Media Upload */}
-                      <label className="w-9 h-9 rounded-lg flex items-center justify-center text-korus-primary/60 hover:text-korus-primary hover:bg-korus-primary/10 transition-all duration-150 cursor-pointer">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept="image/*,video/*"
-                          multiple
-                          onChange={handleFileSelect}
-                        />
-                      </label>
-
-                      {/* GIF Button */}
-                      <button
-                        onClick={() => setShowGifPicker(!showGifPicker)}
-                        aria-label="Add GIF"
-                        className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 ${
-                          showGifPicker
-                            ? 'text-korus-primary bg-korus-primary/10'
-                            : 'text-korus-primary/60 hover:text-korus-primary hover:bg-korus-primary/10'
-                        }`}
-                      >
-                        <span className="text-xs font-bold">GIF</span>
-                      </button>
-
-                      {/* Emoji Button */}
-                      <button
-                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                        aria-label="Add emoji"
-                        className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 ${
-                          showEmojiPicker
-                            ? 'text-korus-primary bg-korus-primary/10'
-                            : 'text-korus-primary/60 hover:text-korus-primary hover:bg-korus-primary/10'
-                        }`}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M16 10h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </button>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {/* Character Counter - only show when typing */}
-                      {inlineReplyContent.length > 0 && (
-                        <div className={`text-xs font-medium ${
-                          inlineReplyContent.length > 280
-                            ? 'text-red-400'
-                            : inlineReplyContent.length > 224
-                            ? 'text-yellow-400'
-                            : 'text-[var(--color-text-tertiary)]'
-                        }`}>
-                          {inlineReplyContent.length > 280 && `-${inlineReplyContent.length - 280}`}
-                          {inlineReplyContent.length <= 280 && `${280 - inlineReplyContent.length}`}
-                        </div>
-                      )}
-
-                      {/* Reply Button */}
-                      <button
-                        onClick={handleInlineReply}
-                        disabled={!inlineReplyContent.trim() || inlineReplyContent.length > 280 || isPostingReply || !connected}
-                        className={`px-5 py-2 rounded-[20px] text-sm font-semibold transition-all duration-150 ${
-                          !inlineReplyContent.trim() || inlineReplyContent.length > 280 || isPostingReply || !connected
-                            ? 'bg-korus-primary/20 text-korus-primary/40 cursor-not-allowed'
-                            : 'bg-korus-primary text-black hover:opacity-90'
-                        }`}
-                      >
-                        {isPostingReply ? 'Posting...' : !connected ? 'Connect' : 'Reply'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <PostDetailInlineComposer
+              currentUserAvatar={currentUserAvatar}
+              walletPrefix={publicKey?.toBase58().slice(0, 2).toUpperCase()}
+              replyContent={inlineReplyContent}
+              onReplyContentChange={setInlineReplyContent}
+              selectedFiles={selectedFiles}
+              selectedGif={selectedGif}
+              isPostingReply={isPostingReply}
+              connected={connected}
+              onFileSelect={handleFileSelect}
+              onRemoveFile={removeFile}
+              onClearGif={() => setSelectedGif(null)}
+              onToggleGifPicker={() => setShowGifPicker(!showGifPicker)}
+              onToggleEmojiPicker={() => setShowEmojiPicker(!showEmojiPicker)}
+              showGifPicker={showGifPicker}
+              showEmojiPicker={showEmojiPicker}
+              onSubmitReply={handleInlineReply}
+            />
 
             {/* Replies Section */}
             <div>
@@ -1072,7 +804,20 @@ export default function PostDetailPage() {
                   <p className="text-[var(--color-text-tertiary)]">No replies yet. Be the first to reply!</p>
                 </div>
               ) : (
-                replies.map(reply => renderReply(reply))
+                replies.map(reply => (
+                  <PostDetailReplyItem
+                    key={reply.id}
+                    reply={reply}
+                    likedReplies={likedReplies}
+                    tippedReplies={tippedReplies}
+                    onReply={handleReply}
+                    onLikeReply={handleLikeReply}
+                    onTipReply={handleTipReply}
+                    onShareReply={handleShareReply}
+                    onReportReply={handleReportReply}
+                    onToggleExpansion={toggleReplyExpansion}
+                  />
+                ))
               )}
             </div>
           </div>
@@ -1080,67 +825,40 @@ export default function PostDetailPage() {
         </div>
       </div>
 
-      {/* Reply Modal */}
-      <ReplyModal
-        isOpen={showReplyModal}
-        onClose={() => {
+      <PostDetailModals
+        showReplyModal={showReplyModal}
+        onCloseReply={() => {
           setShowReplyModal(false);
           setReplyToPost(null);
         }}
-        post={replyToPost}
+        replyToPost={replyToPost}
         onReplySuccess={() => {
-          // Reload all data from backend to get the latest
           loadPost();
         }}
-      />
-
-      {/* Post Options Modal */}
-      <PostOptionsModal
-        isOpen={showPostOptionsModal}
-        onClose={() => {
+        showPostOptionsModal={showPostOptionsModal}
+        onClosePostOptions={() => {
           setShowPostOptionsModal(false);
           setSelectedPost(null);
         }}
-        postId={selectedPost?.id || 0}
-        postUser={selectedPost?.user || ''}
+        selectedPost={selectedPost}
         isOwnPost={selectedPost?.user === publicKey?.toBase58()}
-      />
-
-      {/* Reply Options Modal */}
-      <PostOptionsModal
-        isOpen={showReplyOptionsModal}
-        onClose={() => {
+        showReplyOptionsModal={showReplyOptionsModal}
+        onCloseReplyOptions={() => {
           setShowReplyOptionsModal(false);
           setSelectedReplyForReport(null);
         }}
-        postId={selectedReplyForReport?.id || 0}
-        postUser={selectedReplyForReport?.user || ''}
-        isOwnPost={selectedReplyForReport?.user === publicKey?.toBase58()}
-        targetType="reply"
-      />
-
-      {/* Search Modal */}
-      <SearchModal
-        isOpen={showSearchModal}
-        onClose={() => setShowSearchModal(false)}
-        allPosts={[]}
-      />
-
-      {/* Mobile Menu Modal */}
-      <MobileMenuModal
-        isOpen={showMobileMenu}
-        onClose={() => setShowMobileMenu(false)}
-      />
-
-      {/* Tip Modal */}
-      <TipModal
-        isOpen={showTipModal}
-        onClose={() => {
+        selectedReplyForReport={selectedReplyForReport}
+        isOwnReply={selectedReplyForReport?.user === publicKey?.toBase58()}
+        showSearchModal={showSearchModal}
+        onCloseSearch={() => setShowSearchModal(false)}
+        showMobileMenu={showMobileMenu}
+        onCloseMobileMenu={() => setShowMobileMenu(false)}
+        showTipModal={showTipModal}
+        onCloseTip={() => {
           setShowTipModal(false);
           setPostToTip(null);
         }}
-        recipientUser={postToTip?.user || ''}
-        postId={postToTip?.id}
+        postToTip={postToTip}
         onTipSuccess={() => {
           // Check if this is the main post or a reply
           if (postToTip?.id === post?.id) {
@@ -1150,38 +868,22 @@ export default function PostDetailPage() {
             setTippedReplies(prev => new Set([...prev, String(postToTip.id)]));
           }
         }}
-      />
-
-      {/* Share Modal */}
-      <ShareModal
-        isOpen={showShareModal}
-        onClose={() => {
+        showShareModal={showShareModal}
+        onCloseShare={() => {
           setShowShareModal(false);
           setPostToShare(null);
         }}
-        postId={postToShare?.id || 0}
-        postContent={postToShare?.content || ''}
-        postUser={postToShare?.user || ''}
+        postToShare={postToShare}
+        showEmojiPicker={showEmojiPicker}
+        onEmojiSelect={handleEmojiSelect}
+        onCloseEmojiPicker={() => setShowEmojiPicker(false)}
+        showGifPicker={showGifPicker}
+        onGifSelect={(gifUrl) => {
+          setSelectedGif(gifUrl);
+          setSelectedFiles([]);
+        }}
+        onCloseGifPicker={() => setShowGifPicker(false)}
       />
-
-      {/* Emoji Picker Modal */}
-      {showEmojiPicker && (
-        <EmojiPicker
-          onSelect={handleEmojiSelect}
-          onClose={() => setShowEmojiPicker(false)}
-        />
-      )}
-
-      {/* GIF Picker Modal */}
-      {showGifPicker && (
-        <GifPicker
-          onSelect={(gifUrl) => {
-            setSelectedGif(gifUrl);
-            setSelectedFiles([]);
-          }}
-          onClose={() => setShowGifPicker(false)}
-        />
-      )}
     </main>
   );
 }

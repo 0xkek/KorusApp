@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/useToast';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import * as eventsAPI from '@/lib/api/events';
+import { EventsFeedSkeleton } from '@/components/Skeleton';
 
 // Dynamically import modals
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
@@ -386,10 +387,7 @@ export default function EventsPage() {
               {/* Events Grid */}
               <div className="space-y-6">
                 {isLoading ? (
-                  <div className="text-center py-20">
-                    <div className="w-16 h-16 mx-auto border-4 border-korus-primary/20 border-t-korus-primary rounded-full animate-spin mb-4"></div>
-                    <p className="text-[var(--color-text-secondary)]">Loading events...</p>
-                  </div>
+                  <EventsFeedSkeleton />
                 ) : visibleEvents.length === 0 ? (
                   <div className="text-center py-20">
                     <div className="text-6xl mb-4 opacity-60">📅</div>

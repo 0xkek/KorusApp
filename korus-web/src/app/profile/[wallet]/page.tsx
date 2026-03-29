@@ -6,7 +6,6 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import Image from 'next/image';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import LinkPreview from '@/components/LinkPreview';
@@ -17,14 +16,12 @@ import { useToastContext } from '@/components/ToastProvider';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { postsAPI, usersAPI, interactionsAPI, nftsAPI, repliesAPI, followsAPI } from '@/lib/api';
 import { formatRelativeTime } from '@/utils/formatTime';
+import { transformPostAsync } from '@/utils/transformPost';
+import ProfileHeader from '@/components/ProfileHeader';
+import ProfileRepliesTab from '@/components/ProfileRepliesTab';
+import ProfileModals from '@/components/ProfileModals';
 import type { Post } from '@/types';
 import type { UserProfile } from '@/lib/api/users';
-
-const TipModal = dynamic(() => import('@/components/TipModal'), { ssr: false });
-const ShareModal = dynamic(() => import('@/components/ShareModal'), { ssr: false });
-const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
-const CreatePostModal = dynamic(() => import('@/components/CreatePostModal'), { ssr: false });
-const PostOptionsModal = dynamic(() => import('@/components/PostOptionsModal'), { ssr: false });
 
 export default function UserProfilePage() {
   const router = useRouter();
@@ -37,6 +34,8 @@ export default function UserProfilePage() {
   // --- Profile state ---
   const [profileWallet, setProfileWallet] = useState(rawParam);
   const [profileUser, setProfileUser] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileNotFound, setProfileNotFound] = useState(false);
   const [resolvedAvatar, setResolvedAvatar] = useState<string | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
@@ -105,73 +104,6 @@ export default function UserProfilePage() {
     }
   }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const transformPost = useCallback((post: any): Post => {
-    return {
-      ...post,
-      user: post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15) || 'Unknown',
-      wallet: post.authorWallet,
-      userTheme: post.author?.themeColor,
-      time: new Date(post.createdAt).toLocaleString(),
-      createdAt: post.createdAt,
-      likes: post.likeCount || 0,
-      comments: post.replyCount || 0,
-      reposts: post.repostCount || 0,
-      tips: Number(post.tipAmount) || 0,
-      image: post.imageUrl,
-      avatar: post.author?.nftAvatar || null,
-      isPremium: post.author?.tier === 'premium' || post.author?.tier === 'vip',
-      repostedBy: post.isRepost ? (post.author?.username || post.author?.snsUsername || post.authorWallet?.slice(0, 15)) : undefined,
-      repostedPost: post.isRepost ? (
-        post.originalPost ? {
-          id: post.originalPost.id,
-          user: post.originalPost.author?.username || post.originalPost.author?.snsUsername || post.originalPost.authorWallet?.slice(0, 15) || 'Unknown',
-          wallet: post.originalPost.authorWallet,
-          userTheme: post.originalPost.author?.themeColor,
-          content: post.originalPost.content || '',
-          likes: post.originalPost.likeCount || 0,
-          replies: post.originalPost.replyCount || 0,
-          tips: Number(post.originalPost.tipAmount) || 0,
-          comments: post.originalPost.replyCount || 0,
-          reposts: post.originalPost.repostCount || 0,
-          time: new Date(post.originalPost.createdAt).toLocaleString(),
-          createdAt: post.originalPost.createdAt,
-          isPremium: post.originalPost.author?.tier === 'premium' || post.originalPost.author?.tier === 'vip',
-          image: post.originalPost.imageUrl,
-          avatar: post.originalPost.author?.nftAvatar || null,
-        } : post.originalReply ? {
-          id: post.originalReply.id,
-          user: post.originalReply.author?.username || post.originalReply.author?.snsUsername || post.originalReply.authorWallet?.slice(0, 15) || 'Unknown',
-          wallet: post.originalReply.authorWallet,
-          userTheme: post.originalReply.author?.themeColor,
-          content: post.originalReply.content || '',
-          likes: post.originalReply.likeCount || 0,
-          replies: 0,
-          tips: Number(post.originalReply.tipCount) || 0,
-          comments: 0,
-          reposts: post.originalReply.repostCount || 0,
-          time: new Date(post.originalReply.createdAt).toLocaleString(),
-          createdAt: post.originalReply.createdAt,
-          isPremium: post.originalReply.author?.tier === 'premium' || post.originalReply.author?.tier === 'vip',
-          image: post.originalReply.imageUrl,
-          avatar: post.originalReply.author?.nftAvatar || null,
-        } : undefined
-      ) : undefined,
-    } as Post;
-  }, []);
-
-  const resolvePostAvatars = useCallback(async (posts: Post[]): Promise<Post[]> => {
-    return Promise.all(posts.map(async (post) => {
-      const avatar = await resolveAvatar(post.avatar);
-      let repostedPost = post.repostedPost;
-      if (repostedPost) {
-        const rpAvatar = await resolveAvatar(repostedPost.avatar);
-        repostedPost = { ...repostedPost, avatar: rpAvatar } as Post;
-      }
-      return { ...post, avatar, repostedPost } as Post;
-    }));
-  }, [resolveAvatar]);
-
   // --- Username resolution ---
   useEffect(() => {
     const isWallet = rawParam.length >= 32 && rawParam.length <= 44;
@@ -179,8 +111,14 @@ export default function UserProfilePage() {
       usersAPI.getUserByUsername(rawParam).then((res) => {
         if (res.user?.walletAddress) {
           setProfileWallet(res.user.walletAddress);
+        } else {
+          setProfileNotFound(true);
+          setProfileLoading(false);
         }
-      }).catch(() => {});
+      }).catch(() => {
+        setProfileNotFound(true);
+        setProfileLoading(false);
+      });
     }
   }, [rawParam]);
 
@@ -188,6 +126,8 @@ export default function UserProfilePage() {
   useEffect(() => {
     if (!profileWallet) return;
 
+    setProfileLoading(true);
+    setProfileNotFound(false);
     usersAPI.getUserByWallet(profileWallet).then(async (res) => {
       setProfileUser(res.user);
       setFollowerCount(res.user.followerCount || 0);
@@ -197,7 +137,9 @@ export default function UserProfilePage() {
       const avatar = await resolveAvatar(res.user.nftAvatar);
       setResolvedAvatar(avatar || null);
     }).catch(() => {
-      // User may not exist in DB yet (wallet connected but never interacted)
+      setProfileNotFound(true);
+    }).finally(() => {
+      setProfileLoading(false);
     });
   }, [profileWallet, resolveAvatar]);
 
@@ -217,8 +159,10 @@ export default function UserProfilePage() {
     try {
       const response = await postsAPI.getUserPosts(profileWallet, { limit: POSTS_PER_PAGE });
       if (response.posts && response.posts.length > 0) {
-        const transformed = response.posts.map(transformPost);
-        const withAvatars = await resolvePostAvatars(transformed);
+        const withAvatars = await Promise.all(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          response.posts.map((raw: any) => transformPostAsync(raw, resolveAvatar))
+        );
         setUserPosts(withAvatars);
         setHasMore(response.meta?.hasMore || response.pagination?.hasMore || false);
         setNextCursor(response.meta?.nextCursor || response.pagination?.cursor || null);
@@ -231,7 +175,7 @@ export default function UserProfilePage() {
     } finally {
       setIsLoadingPosts(false);
     }
-  }, [profileWallet, transformPost, resolvePostAvatars]);
+  }, [profileWallet, resolveAvatar]);
 
   useEffect(() => {
     fetchUserPosts();
@@ -276,8 +220,10 @@ export default function UserProfilePage() {
     try {
       const response = await postsAPI.getUserPosts(profileWallet, { limit: POSTS_PER_PAGE, cursor: nextCursor });
       if (response.posts && response.posts.length > 0) {
-        const transformed = response.posts.map(transformPost);
-        const withAvatars = await resolvePostAvatars(transformed);
+        const withAvatars = await Promise.all(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          response.posts.map((raw: any) => transformPostAsync(raw, resolveAvatar))
+        );
         setUserPosts(prev => [...prev, ...withAvatars]);
         setHasMore(response.meta?.hasMore || response.pagination?.hasMore || false);
         setNextCursor(response.meta?.nextCursor || response.pagination?.cursor || null);
@@ -289,7 +235,7 @@ export default function UserProfilePage() {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [isLoadingMore, hasMore, nextCursor, profileWallet, transformPost, resolvePostAvatars]);
+  }, [isLoadingMore, hasMore, nextCursor, profileWallet, resolveAvatar]);
 
   const sentinelRef = useInfiniteScroll({
     onLoadMore: loadMorePosts,
@@ -431,6 +377,108 @@ export default function UserProfilePage() {
     }
   }, [isAuthenticated, token, resolveAvatar]);
 
+  if (profileLoading) {
+    return (
+      <main className="min-h-screen bg-[var(--color-background)] relative overflow-hidden">
+        <div className="fixed inset-0 bg-gradient-to-br from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)]">
+          <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[var(--color-surface)]/25 to-[var(--color-surface)]/35" />
+        </div>
+        <div className="fixed inset-0 overflow-hidden">
+          <div className="absolute -top-32 -right-32 w-[600px] h-[600px] bg-gradient-to-br from-korus-primary/8 to-korus-secondary/6 rounded-full blur-[80px]" />
+          <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-gradient-to-tr from-korus-secondary/6 to-korus-primary/8 rounded-full blur-[70px]" />
+        </div>
+        <div className="relative z-10">
+          <div className="flex min-h-screen max-w-[1280px] mx-auto">
+            <LeftSidebar />
+            <div className="flex-1 min-w-0 border-x border-[var(--color-border-light)]">
+              {/* Header skeleton */}
+              <div className="sticky top-0 bg-[var(--color-surface)]/80 backdrop-blur-xl border-b border-[var(--color-border-light)] z-10">
+                <div className="flex items-center gap-3 px-4 py-2.5">
+                  <button onClick={() => router.back()} className="p-2 hover:bg-white/[0.04] rounded-full transition-colors">
+                    <svg className="w-5 h-5 text-[var(--color-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <div className="animate-pulse">
+                    <div className="h-5 w-32 bg-white/[0.06] rounded mb-1" />
+                    <div className="h-3 w-16 bg-white/[0.06] rounded" />
+                  </div>
+                </div>
+              </div>
+              {/* Profile skeleton */}
+              <div className="px-5 pt-5 pb-4 border-b border-[var(--color-border-light)] animate-pulse">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="w-20 h-20 rounded-full bg-white/[0.06]" />
+                  <div className="h-9 w-24 bg-white/[0.06] rounded-full" />
+                </div>
+                <div className="h-6 w-40 bg-white/[0.06] rounded mb-2" />
+                <div className="h-4 w-28 bg-white/[0.06] rounded mb-3" />
+                <div className="h-4 w-full bg-white/[0.06] rounded mb-2" />
+                <div className="h-4 w-2/3 bg-white/[0.06] rounded mb-4" />
+                <div className="flex gap-4">
+                  <div className="h-4 w-20 bg-white/[0.06] rounded" />
+                  <div className="h-4 w-20 bg-white/[0.06] rounded" />
+                </div>
+              </div>
+              {/* Post skeletons */}
+              <FeedSkeleton />
+            </div>
+            <RightSidebar />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (profileNotFound) {
+    return (
+      <main className="min-h-screen bg-[var(--color-background)] relative overflow-hidden">
+        <div className="fixed inset-0 bg-gradient-to-br from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)]">
+          <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[var(--color-surface)]/25 to-[var(--color-surface)]/35" />
+        </div>
+        <div className="fixed inset-0 overflow-hidden">
+          <div className="absolute -top-32 -right-32 w-[600px] h-[600px] bg-gradient-to-br from-korus-primary/8 to-korus-secondary/6 rounded-full blur-[80px]" />
+          <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-gradient-to-tr from-korus-secondary/6 to-korus-primary/8 rounded-full blur-[70px]" />
+        </div>
+        <div className="relative z-10">
+          <div className="flex min-h-screen max-w-[1280px] mx-auto">
+            <LeftSidebar />
+            <div className="flex-1 min-w-0 border-x border-[var(--color-border-light)]">
+              <div className="sticky top-0 bg-[var(--color-surface)]/80 backdrop-blur-xl border-b border-[var(--color-border-light)] z-10">
+                <div className="flex items-center gap-3 px-4 py-2.5">
+                  <button onClick={() => router.back()} className="p-2 hover:bg-white/[0.04] rounded-full transition-colors">
+                    <svg className="w-5 h-5 text-[var(--color-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <span className="text-lg font-bold text-[var(--color-text)]">Profile</span>
+                </div>
+              </div>
+              <div className="flex flex-col items-center justify-center py-20 px-4">
+                <div className="w-20 h-20 rounded-full bg-white/[0.06] flex items-center justify-center mb-4">
+                  <svg className="w-10 h-10 text-[var(--color-text-tertiary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-[var(--color-text)] mb-2">User not found</h2>
+                <p className="text-[var(--color-text-tertiary)] text-center mb-6 max-w-sm">
+                  This account doesn&apos;t exist or hasn&apos;t joined Korus yet.
+                </p>
+                <button
+                  onClick={() => router.push('/')}
+                  className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-2.5 rounded-full hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150"
+                >
+                  Back to Home
+                </button>
+              </div>
+            </div>
+            <RightSidebar />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[var(--color-background)] relative overflow-hidden">
       {/* Background */}
@@ -469,130 +517,27 @@ export default function UserProfilePage() {
               </div>
             </div>
 
-            {/* Profile Header */}
-            <div className="px-5 pt-5 pb-4 border-b border-[var(--color-border-light)]">
-              {/* Avatar row + action buttons */}
-              <div className="flex items-start justify-between mb-3">
-                {/* Avatar */}
-                <div className="w-20 h-20 rounded-full flex-shrink-0 overflow-hidden">
-                  {resolvedAvatar ? (
-                    <Image src={resolvedAvatar} alt={displayName} width={80} height={80} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center">
-                      <span className="text-2xl font-bold text-black">{displayName.slice(0, 2).toUpperCase()}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex items-center gap-2">
-                  {!isOwnProfile && connected && (
-                    <button
-                      onClick={handleToggleFollow}
-                      disabled={isFollowLoading}
-                      className={`px-5 py-2 rounded-full font-bold text-sm transition-all duration-150 ${
-                        isFollowing
-                          ? 'bg-transparent text-[var(--color-text)] border border-[var(--color-border-light)] hover:border-red-500/50 hover:text-red-400'
-                          : 'bg-[var(--color-text)] text-[var(--color-background)] hover:opacity-90'
-                      }`}
-                    >
-                      {isFollowLoading ? '...' : isFollowing ? 'Following' : 'Follow'}
-                    </button>
-                  )}
-                  {!isOwnProfile && (
-                    <button
-                      onClick={() => { setPostToTip(null); setShowTipModal(true); }}
-                      className="p-2 rounded-full border border-[var(--color-border-light)] hover:bg-white/[0.04] transition-colors"
-                      title="Tip this user"
-                    >
-                      <svg className="w-5 h-5 text-[var(--color-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Name + badge */}
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <h2 className="text-xl font-bold text-[var(--color-text)]">{displayName}</h2>
-                {isPremium && (
-                  <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FFD700' }}>
-                    <svg className="w-3 h-3" fill="black" viewBox="0 0 24 24">
-                      <path d="M12 1.275l2.943 8.861h9.314l-7.5 5.464 2.943 8.86L12 19.014l-7.7 5.446 2.943-8.86-7.5-5.464h9.314z"/>
-                    </svg>
-                  </div>
-                )}
-              </div>
-
-              {/* @username / wallet */}
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[14px] text-[var(--color-text-secondary)]">
-                  @{profileUser?.username || profileUser?.snsUsername || `${profileWallet.slice(0, 6)}...${profileWallet.slice(-4)}`}
-                </span>
-                <button
-                  onClick={handleCopyWallet}
-                  className="text-[12px] text-[var(--color-text-tertiary)] font-mono flex items-center gap-1 hover:text-[var(--color-text-secondary)] transition-colors"
-                >
-                  {profileWallet.slice(0, 4)}...{profileWallet.slice(-4)}
-                  {copied ? (
-                    <svg className="w-3.5 h-3.5 text-korus-primary" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-                  ) : (
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                  )}
-                </button>
-              </div>
-
-              {/* Bio */}
-              {profileUser?.bio && (
-                <p className="text-[15px] text-[var(--color-text)] mb-3 whitespace-pre-wrap">{profileUser.bio}</p>
-              )}
-
-              {/* Follower / Following + Rep */}
-              <div className="flex items-center gap-4 text-[14px]">
-                <span>
-                  <strong className="text-[var(--color-text)]">{followingCount}</strong>
-                  <span className="text-[var(--color-text-tertiary)] ml-1">Following</span>
-                </span>
-                <span>
-                  <strong className="text-[var(--color-text)]">{followerCount}</strong>
-                  <span className="text-[var(--color-text-tertiary)] ml-1">Followers</span>
-                </span>
-                {reputationScore > 0 && (
-                  <span className="flex items-center gap-1">
-                    <svg className="w-4 h-4 text-korus-primary" fill="currentColor" viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 12L2 9l4-6z"/></svg>
-                    <strong className="text-[var(--color-text)]">{reputationScore}</strong>
-                    <span className="text-[var(--color-text-tertiary)]">Rep</span>
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Tab Bar */}
-            <div className="flex border-b border-[var(--color-border-light)]">
-              <button
-                onClick={() => setActiveTab('posts')}
-                className={`flex-1 py-3.5 text-[14px] font-semibold text-center relative transition-colors ${
-                  activeTab === 'posts' ? 'text-[var(--color-text)]' : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.03]'
-                }`}
-              >
-                Posts
-                {activeTab === 'posts' && (
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-14 h-[3px] bg-korus-primary rounded-full" />
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab('replies')}
-                className={`flex-1 py-3.5 text-[14px] font-semibold text-center relative transition-colors ${
-                  activeTab === 'replies' ? 'text-[var(--color-text)]' : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.03]'
-                }`}
-              >
-                Replies
-                {activeTab === 'replies' && (
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-14 h-[3px] bg-korus-primary rounded-full" />
-                )}
-              </button>
-            </div>
+            <ProfileHeader
+              displayName={displayName}
+              profileUser={profileUser}
+              profileWallet={profileWallet}
+              resolvedAvatar={resolvedAvatar}
+              isPremium={isPremium}
+              isOwnProfile={isOwnProfile}
+              connected={connected}
+              isFollowing={isFollowing}
+              isFollowLoading={isFollowLoading}
+              followerCount={followerCount}
+              followingCount={followingCount}
+              reputationScore={reputationScore}
+              copied={copied}
+              activeTab={activeTab}
+              postCount={userPosts.length}
+              onToggleFollow={handleToggleFollow}
+              onTipUser={() => { setPostToTip(null); setShowTipModal(true); }}
+              onCopyWallet={handleCopyWallet}
+              onTabChange={setActiveTab}
+            />
 
             {/* Posts Feed */}
             {activeTab === 'posts' && (
@@ -844,47 +789,7 @@ export default function UserProfilePage() {
 
             {/* Replies Tab */}
             {activeTab === 'replies' && (
-              isLoadingReplies ? (
-                <div className="text-center py-16">
-                  <div className="w-6 h-6 border-2 border-[var(--korus-primary)] border-t-transparent rounded-full animate-spin mx-auto" />
-                </div>
-              ) : userReplies.length === 0 ? (
-                <div className="text-center py-16">
-                  <p className="text-[var(--color-text-tertiary)] text-[15px]">No replies yet</p>
-                </div>
-              ) : (
-                <div className="divide-y divide-[#262626]/50">
-                  {userReplies.map((reply) => (
-                    <Link
-                      key={reply.id}
-                      href={`/post/${reply.postId}`}
-                      className="block p-4 hover:bg-white/[0.02] transition-all"
-                    >
-                      {reply.postContent && (
-                        <div className="text-[var(--color-text-tertiary)] text-[12px] mb-2 flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
-                          </svg>
-                          Replying to {reply.postAuthor ? `@${reply.postAuthor}` : 'a post'}
-                        </div>
-                      )}
-                      <SafeContent
-                        content={reply.content}
-                        as="p"
-                        className="text-[var(--color-text)] text-[15px] mb-2"
-                        allowLinks={true}
-                        allowFormatting={true}
-                      />
-                      <div className="flex items-center justify-between">
-                        <span className="text-[var(--color-text-tertiary)] text-[13px]">{reply.likeCount} likes</span>
-                        <span className="text-[var(--color-text-tertiary)] text-[12px]">
-                          {formatRelativeTime(reply.createdAt)}
-                        </span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )
+              <ProfileRepliesTab isLoading={isLoadingReplies} replies={userReplies} />
             )}
 
           </div>
@@ -896,41 +801,26 @@ export default function UserProfilePage() {
       </div>
 
       {/* Modals */}
-      <TipModal
-        isOpen={showTipModal}
-        onClose={() => { setShowTipModal(false); setPostToTip(null); }}
-        recipientUser={postToTip?.wallet || postToTip?.author?.walletAddress || profileWallet}
-      />
-      {postToShare && (
-        <ShareModal
-          isOpen={showShareModal}
-          onClose={() => { setShowShareModal(false); setPostToShare(null); }}
-          postId={postToShare.id}
-          postContent={postToShare.content || ''}
-          postUser={postToShare.user || ''}
-        />
-      )}
-      {showPostOptionsModal && selectedPost && (
-        <PostOptionsModal
-          isOpen={showPostOptionsModal}
-          onClose={() => setShowPostOptionsModal(false)}
-          postId={selectedPost.id}
-          postUser={selectedPost.user || ''}
-          isOwnPost={publicKey?.toBase58() === selectedPost.wallet}
-          onDelete={() => {
-            setUserPosts(prev => prev.filter(p => p.id !== selectedPost.id));
-            setShowPostOptionsModal(false);
-          }}
-        />
-      )}
-      <SearchModal
-        isOpen={showSearchModal}
-        onClose={() => setShowSearchModal(false)}
+      <ProfileModals
+        showTipModal={showTipModal}
+        onCloseTip={() => { setShowTipModal(false); setPostToTip(null); }}
+        tipRecipient={postToTip?.wallet || postToTip?.author?.walletAddress || profileWallet}
+        showShareModal={showShareModal}
+        onCloseShare={() => { setShowShareModal(false); setPostToShare(null); }}
+        postToShare={postToShare}
+        showPostOptionsModal={showPostOptionsModal}
+        onClosePostOptions={() => setShowPostOptionsModal(false)}
+        selectedPost={selectedPost}
+        isOwnPost={publicKey?.toBase58() === selectedPost?.wallet}
+        onDeletePost={() => {
+          setUserPosts(prev => prev.filter(p => p.id !== selectedPost?.id));
+          setShowPostOptionsModal(false);
+        }}
+        showSearchModal={showSearchModal}
+        onCloseSearch={() => setShowSearchModal(false)}
         allPosts={userPosts}
-      />
-      <CreatePostModal
-        isOpen={showCreatePostModal}
-        onClose={() => setShowCreatePostModal(false)}
+        showCreatePostModal={showCreatePostModal}
+        onCloseCreatePost={() => setShowCreatePostModal(false)}
         onPostCreate={() => { setShowCreatePostModal(false); fetchUserPosts(); }}
       />
 
