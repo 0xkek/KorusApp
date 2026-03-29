@@ -1,5 +1,6 @@
 'use client';
 import { logger } from '@/utils/logger';
+import { useState, useEffect } from 'react';
 
 export type TicTacToeCell = 'X' | 'O' | null;
 export type TicTacToeBoard = TicTacToeCell[];
@@ -33,9 +34,35 @@ export function TicTacToeBoard({
   player1DisplayName,
   player2DisplayName,
   wager,
+  gameCreatedAt,
   currentPlayerAddress,
   payoutTxSignature,
 }: TicTacToeBoardProps) {
+  const [timeLeft, setTimeLeft] = useState<string>('');
+
+  // Calculate time remaining (10 min move timeout)
+  useEffect(() => {
+    if (!gameCreatedAt || isGameOver) return;
+
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const gameStart = new Date(gameCreatedAt).getTime();
+      const deadline = gameStart + (10 * 60 * 1000);
+      const remaining = deadline - now;
+
+      if (remaining <= 0) {
+        setTimeLeft('Expired');
+      } else {
+        const minutes = Math.floor(remaining / (1000 * 60));
+        const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+        setTimeLeft(`${minutes}m ${seconds}s`);
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [gameCreatedAt, isGameOver]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getCellClassName = (cell: TicTacToeCell, _index: number) => {
     const baseClasses = 'w-24 h-24 flex items-center justify-center text-4xl font-bold rounded-lg duration-150';
@@ -91,6 +118,14 @@ export function TicTacToeBoard({
               {getDisplayName(player2Address, player2DisplayName)} (O)
             </span>
           </div>
+          {!isGameOver && timeLeft && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[var(--color-text-secondary)]">⏱</span>
+              <span className={`font-semibold ${timeLeft === 'Expired' ? 'text-red-400' : 'text-[var(--color-text)]'}`}>
+                {timeLeft}
+              </span>
+            </div>
+          )}
         </div>
       )}
 

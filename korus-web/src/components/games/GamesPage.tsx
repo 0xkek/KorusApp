@@ -558,7 +558,7 @@ export function GamesPage() {
         player1DisplayName={game.player1DisplayName}
         player2DisplayName={game.player2DisplayName}
         wager={game.wager?.toString()}
-        gameCreatedAt={game.createdAt}
+        gameCreatedAt={game.lastMoveAt || game.createdAt}
         currentPlayerAddress={publicKey?.toBase58()}
         payoutTxSignature={game.escrow?.payoutTxSig || undefined}
       />
