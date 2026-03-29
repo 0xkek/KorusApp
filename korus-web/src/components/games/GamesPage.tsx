@@ -236,6 +236,7 @@ export function GamesPage() {
   }, [connected, loadGames]);
 
   const handleCreateGame = async () => {
+    console.log('🎮 handleCreateGame called', { connected, publicKey: publicKey?.toBase58(), newGame });
     logger.log('🎮 handleCreateGame called');
     logger.log('  connected:', connected);
     logger.log('  publicKey:', publicKey?.toBase58());
@@ -267,11 +268,11 @@ export function GamesPage() {
 
       // Only create blockchain game if there's a wager
       if (wagerSol > 0) {
-        logger.log('💰 Creating game with wager on blockchain...');
+        console.log('💰 Creating game with wager on blockchain...', { wagerSol });
         const wagerLamports = Math.floor(wagerSol * LAMPORTS_PER_SOL);
         const result = await createGame(newGame.type, wagerLamports);
         onChainGameId = result.gameId;
-        logger.log('✅ Blockchain game created, ID:', onChainGameId);
+        console.log('✅ Blockchain game created, ID:', onChainGameId);
       } else {
         logger.log('ℹ️ No wager - skipping blockchain creation');
       }
@@ -313,7 +314,7 @@ export function GamesPage() {
         showError('Failed to create game in backend');
       }
     } catch (err) {
-      logger.error('❌ Failed to create game:', err);
+      console.error('❌ Failed to create game:', err);
       showError(err instanceof Error ? err.message : 'Failed to create game');
     }
   };
