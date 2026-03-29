@@ -39,6 +39,7 @@ export function GamesPage() {
     wager: 0,
     timeLimit: '2h'
   });
+  const [wagerInput, setWagerInput] = useState('');
 
   const loadCompletedGames = useCallback(async () => {
     setCompletedLoading(true);
@@ -308,6 +309,7 @@ export function GamesPage() {
           wager: 0,
           timeLimit: '2h'
         });
+        setWagerInput('');
         loadGames(); // Reload games list
       } else {
         logger.log('❌ Backend returned success:false');
@@ -1025,12 +1027,16 @@ export function GamesPage() {
                 Wager (SOL)
               </label>
               <input
-                type="number"
-                step="0.01"
-                min="0"
-                max="1.0"
-                value={newGame.wager}
-                onChange={(e) => setNewGame(prev => ({ ...prev, wager: parseFloat(e.target.value) || 0 }))}
+                type="text"
+                inputMode="decimal"
+                value={wagerInput}
+                onChange={(e) => {
+                  const val = e.target.value.replace(',', '.');
+                  if (val === '' || val === '.' || /^\d*\.?\d*$/.test(val)) {
+                    setWagerInput(val);
+                    setNewGame(prev => ({ ...prev, wager: parseFloat(val) || 0 }));
+                  }
+                }}
                 disabled={isProcessing}
                 className="w-full px-4 py-2 bg-white/[0.06] border border-[var(--color-border-light)] rounded-lg text-[var(--color-text)] focus:border-korus-primary focus:outline-none disabled:opacity-50 duration-150"
                 placeholder="0.1"
