@@ -642,10 +642,10 @@ pub struct CreateGameWithDeposit<'info> {
     )]
     pub game: Account<'info, Game>,
     #[account(
-        init,
+        init_if_needed,
         payer = player1,
         space = 8 + PlayerState::LEN,
-        seeds = [b"player_game_state", player1.key().as_ref(), state.total_games.to_le_bytes().as_ref()],
+        seeds = [b"player", player1.key().as_ref()],
         bump
     )]
     pub player_state: Account<'info, PlayerState>,
@@ -668,10 +668,10 @@ pub struct JoinGame<'info> {
     #[account(mut)]
     pub game: Account<'info, Game>,
     #[account(
-        init,
+        init_if_needed,
         payer = player2,
         space = 8 + PlayerState::LEN,
-        seeds = [b"player_game_state", player2.key().as_ref(), game.game_id.to_le_bytes().as_ref()],
+        seeds = [b"player", player2.key().as_ref()],
         bump
     )]
     pub player2_state: Account<'info, PlayerState>,
@@ -695,7 +695,7 @@ pub struct CancelGame<'info> {
     pub game: Account<'info, Game>,
     #[account(
         mut,
-        seeds = [b"player_game_state", player1.key().as_ref(), game.game_id.to_le_bytes().as_ref()],
+        seeds = [b"player", player1.key().as_ref()],
         bump
     )]
     pub player_state: Account<'info, PlayerState>,
@@ -719,7 +719,7 @@ pub struct AuthorityCancelExpiredGame<'info> {
     pub game: Account<'info, Game>,
     #[account(
         mut,
-        seeds = [b"player_game_state", game.player1.as_ref(), game.game_id.to_le_bytes().as_ref()],
+        seeds = [b"player", game.player1.as_ref()],
         bump
     )]
     pub player_state: Account<'info, PlayerState>,
@@ -745,13 +745,13 @@ pub struct CompleteGame<'info> {
     pub game: Account<'info, Game>,
     #[account(
         mut,
-        seeds = [b"player_game_state", game.player1.as_ref(), game.game_id.to_le_bytes().as_ref()],
+        seeds = [b"player", game.player1.as_ref()],
         bump
     )]
     pub player1_state: Account<'info, PlayerState>,
     #[account(
         mut,
-        seeds = [b"player_game_state", game.player2.as_ref(), game.game_id.to_le_bytes().as_ref()],
+        seeds = [b"player", game.player2.as_ref()],
         bump
     )]
     pub player2_state: Account<'info, PlayerState>,
@@ -783,13 +783,13 @@ pub struct ClaimTimeoutWin<'info> {
     pub game: Account<'info, Game>,
     #[account(
         mut,
-        seeds = [b"player_game_state", game.player1.as_ref(), game.game_id.to_le_bytes().as_ref()],
+        seeds = [b"player", game.player1.as_ref()],
         bump
     )]
     pub player1_state: Account<'info, PlayerState>,
     #[account(
         mut,
-        seeds = [b"player_game_state", game.player2.as_ref(), game.game_id.to_le_bytes().as_ref()],
+        seeds = [b"player", game.player2.as_ref()],
         bump
     )]
     pub player2_state: Account<'info, PlayerState>,
