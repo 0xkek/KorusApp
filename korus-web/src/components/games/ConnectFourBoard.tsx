@@ -35,12 +35,19 @@ export function ConnectFourBoard({
   const korusFee = wagerAmount * KORUS_FEE_PERCENTAGE;
   const winnerPayout = (wagerAmount * 2) - korusFee;
 
+  const getCellStyle = (cell: ConnectFourCell): React.CSSProperties => {
+    if (cell === 'red') {
+      return { backgroundColor: '#ef4444', boxShadow: '0 0 12px rgba(239, 68, 68, 0.5)' };
+    } else if (cell === 'yellow') {
+      return { backgroundColor: '#facc15', boxShadow: '0 0 12px rgba(250, 204, 21, 0.5)' };
+    }
+    return {};
+  };
+
   const getCellClassName = (cell: ConnectFourCell) => {
     const baseClasses = 'w-12 h-12 rounded-full duration-150';
-    if (cell === 'red') {
-      return `${baseClasses} bg-red-500 shadow-lg shadow-red-500/50`;
-    } else if (cell === 'yellow') {
-      return `${baseClasses} bg-yellow-400 shadow-lg shadow-yellow-400/50`;
+    if (cell) {
+      return baseClasses;
     }
     return `${baseClasses} bg-white/[0.12] border border-[var(--color-border-light)]`;
   };
@@ -149,7 +156,7 @@ export function ConnectFourBoard({
               onClick={() => handleColumnClick(col)}
             >
               {Array.from({ length: ROWS }).map((_, row) => (
-                <div key={row} className={getCellClassName(board[row][col])} />
+                <div key={row} className={getCellClassName(board[row][col])} style={getCellStyle(board[row][col])} />
               ))}
             </div>
           ))}
