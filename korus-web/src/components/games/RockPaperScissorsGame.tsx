@@ -72,11 +72,6 @@ export function RockPaperScissorsGame({
           player2: lastResult.player2Choice!
         });
         setShowDrawNotification(true);
-
-        // Hide notification after 3 seconds
-        setTimeout(() => {
-          setShowDrawNotification(false);
-        }, 3000);
       }
 
       setPreviousRound(currentRound);
@@ -176,15 +171,16 @@ export function RockPaperScissorsGame({
               {CHOICES.find(c => c.id === lastDrawResult.player2)?.icon}
             </span>
           </div>
-          <div
-            className="text-xs font-medium"
-            style={{
-              color: 'white',
-              WebkitTextFillColor: 'white'
+          <button
+            onClick={() => {
+              setShowDrawNotification(false);
+              setSelectedChoice(null);
             }}
+            className="mt-2 px-6 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-bold text-sm transition-colors duration-150"
+            style={{ color: 'white', WebkitTextFillColor: 'white' }}
           >
-            Starting Round {currentRound}...
-          </div>
+            Next Round →
+          </button>
         </div>
       )}
 
@@ -366,8 +362,8 @@ export function RockPaperScissorsGame({
         </div>
       )}
 
-      {/* Choice Buttons - All in one row */}
-      <div className="flex justify-center gap-3 mb-3">
+      {/* Choice Buttons - Hidden during draw notification */}
+      {!showDrawNotification && <div className="flex justify-center gap-3 mb-3">
         {CHOICES.map((choice) => (
           <button
             key={choice.id}
@@ -406,7 +402,7 @@ export function RockPaperScissorsGame({
             )}
           </button>
         ))}
-      </div>
+      </div>}
 
       {/* Wager Info Bar */}
       {wagerAmount > 0 && (
