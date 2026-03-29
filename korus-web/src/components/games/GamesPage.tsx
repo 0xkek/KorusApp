@@ -566,6 +566,7 @@ export function GamesPage() {
         gameCreatedAt={game.lastMoveAt || game.createdAt}
         currentPlayerAddress={publicKey?.toBase58()}
         payoutTxSignature={game.escrow?.payoutTxSig || undefined}
+        onDismiss={() => setExpandedGameId(null)}
       />
     );
   };
@@ -594,6 +595,7 @@ export function GamesPage() {
         currentPlayerAddress={publicKey?.toBase58()}
         wager={game.wager}
         payoutTxSignature={game.escrow?.payoutTxSig}
+        onDismiss={() => setExpandedGameId(null)}
       />
     );
   };

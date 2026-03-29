@@ -13,6 +13,7 @@ interface ConnectFourBoardProps {
   currentPlayerAddress?: string;
   wager?: string;
   payoutTxSignature?: string | null;
+  onDismiss?: () => void;
 }
 
 export function ConnectFourBoard({
@@ -25,6 +26,7 @@ export function ConnectFourBoard({
   currentPlayerAddress,
   wager,
   payoutTxSignature,
+  onDismiss,
 }: ConnectFourBoardProps) {
   const ROWS = 6;
   const COLS = 7;
@@ -188,6 +190,16 @@ export function ConnectFourBoard({
             <span className="font-bold text-green-400">{winnerPayout.toFixed(4)} SOL</span>
           </div>
         </div>
+      )}
+
+      {/* Close Game Button */}
+      {isGameOver && onDismiss && (
+        <button
+          onClick={onDismiss}
+          className="w-full mt-3 py-2.5 bg-white/[0.06] hover:bg-white/[0.1] border border-[var(--color-border-light)] rounded-lg text-sm font-semibold text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors duration-150"
+        >
+          Close Game
+        </button>
       )}
     </div>
   );

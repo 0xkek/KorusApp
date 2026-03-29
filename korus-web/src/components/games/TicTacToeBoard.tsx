@@ -19,6 +19,7 @@ interface TicTacToeBoardProps {
   gameCreatedAt?: string;
   currentPlayerAddress?: string; // Current user's wallet address
   payoutTxSignature?: string | null; // Payout transaction signature
+  onDismiss?: () => void;
 }
 
 export function TicTacToeBoard({
@@ -36,6 +37,7 @@ export function TicTacToeBoard({
   gameCreatedAt,
   currentPlayerAddress,
   payoutTxSignature,
+  onDismiss,
 }: TicTacToeBoardProps) {
   const [timeLeft, setTimeLeft] = useState<string>('');
 
@@ -224,6 +226,16 @@ export function TicTacToeBoard({
             <span className="font-bold text-green-400">{winnerPayout.toFixed(4)} SOL</span>
           </div>
         </div>
+      )}
+
+      {/* Close Game Button */}
+      {isGameOver && onDismiss && (
+        <button
+          onClick={onDismiss}
+          className="w-full mt-3 py-2.5 bg-white/[0.06] hover:bg-white/[0.1] border border-[var(--color-border-light)] rounded-lg text-sm font-semibold text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors duration-150"
+        >
+          Close Game
+        </button>
       )}
     </div>
   );
