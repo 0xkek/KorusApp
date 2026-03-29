@@ -135,8 +135,9 @@ export function useGameEscrow() {
         GAME_ESCROW_PROGRAM_ID
       );
 
+      // Deployed contract uses [b"player", player_key] seed (not per-game)
       const [playerStatePda] = PublicKey.findProgramAddressSync(
-        [Buffer.from('player_game_state'), publicKey.toBuffer(), gameIdBuffer],
+        [Buffer.from('player'), publicKey.toBuffer()],
         GAME_ESCROW_PROGRAM_ID
       );
 
@@ -286,8 +287,9 @@ export function useGameEscrow() {
         GAME_ESCROW_PROGRAM_ID
       );
 
+      // Deployed contract uses [b"player", player_key] seed (not per-game)
       const [playerStatePda] = PublicKey.findProgramAddressSync(
-        [Buffer.from('player_game_state'), publicKey.toBuffer(), gameIdBuffer],
+        [Buffer.from('player'), publicKey.toBuffer()],
         GAME_ESCROW_PROGRAM_ID
       );
 
@@ -447,8 +449,9 @@ export function useGameEscrow() {
         GAME_ESCROW_PROGRAM_ID
       );
 
+      // Deployed contract uses [b"player", player_key] seed (not per-game)
       const [playerStatePda] = PublicKey.findProgramAddressSync(
-        [Buffer.from('player_game_state'), publicKey.toBuffer(), gameIdBuffer],
+        [Buffer.from('player'), publicKey.toBuffer()],
         GAME_ESCROW_PROGRAM_ID
       );
 
