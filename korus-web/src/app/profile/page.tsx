@@ -30,6 +30,7 @@ interface ReputationBreakdown {
   communityScore: number;
   loyaltyScore: number;
   shoutoutScore: number;
+  gamesScore: number;
   loginStreak: number;
   recentEvents: Array<{
     id: string;
@@ -74,6 +75,7 @@ export default function ProfilePage() {
     communityScore: 0,
     loyaltyScore: 0,
     shoutoutScore: 0,
+    gamesScore: 0,
     loginStreak: 0,
     recentEvents: [],
   });
@@ -142,6 +144,7 @@ export default function ProfilePage() {
             communityScore: repData.communityScore,
             loyaltyScore: repData.loyaltyScore,
             shoutoutScore: repData.shoutoutScore || 0,
+            gamesScore: repData.gamesScore || 0,
             loginStreak: repData.loginStreak,
             recentEvents: repData.recentEvents || [],
           });
@@ -873,7 +876,7 @@ export default function ProfilePage() {
                       </div>
                       <h3 className="text-lg font-bold text-[var(--color-text)]">Reputation Score</h3>
                     </div>
-                    <div className="text-4xl font-bold text-korus-primary mb-4">{isPremium ? reputation.reputationScore + Math.round((reputation.contentScore + reputation.engagementScore + reputation.communityScore + reputation.shoutoutScore + reputation.loyaltyScore) * 0.2) : reputation.reputationScore}</div>
+                    <div className="text-4xl font-bold text-korus-primary mb-4">{isPremium ? reputation.reputationScore + Math.round((reputation.contentScore + reputation.engagementScore + reputation.communityScore + reputation.shoutoutScore + reputation.loyaltyScore + reputation.gamesScore) * 0.2) : reputation.reputationScore}</div>
                   </div>
 
                   <div className="space-y-3">
@@ -893,10 +896,17 @@ export default function ProfilePage() {
                         border: true,
                       },
                       {
+                        label: 'Games',
+                        score: reputation.gamesScore,
+                        icon: 'M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z',
+                        tooltip: 'Game wins (+20), game losses (+5 participation), plus bonus points for higher wagers. Play games to earn!',
+                        border: true,
+                      },
+                      {
                         label: 'Community',
                         score: reputation.communityScore,
                         icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
-                        tooltip: 'Follows, game wins (+20). Build your network and give back to grow.',
+                        tooltip: 'Follows and community contributions. Build your network to grow.',
                         border: true,
                       },
                       {
@@ -937,7 +947,7 @@ export default function ProfilePage() {
                   </div>
 
                   {isPremium && (() => {
-                    const baseScore = reputation.contentScore + reputation.engagementScore + reputation.communityScore + reputation.shoutoutScore + reputation.loyaltyScore;
+                    const baseScore = reputation.contentScore + reputation.engagementScore + reputation.communityScore + reputation.shoutoutScore + reputation.loyaltyScore + reputation.gamesScore;
                     const premiumBonus = Math.round(baseScore * 0.2);
                     return (
                       <div className="group relative flex items-center justify-between py-3 mt-1 pt-4 border-t border-[var(--color-border-light)]/30 cursor-default">

@@ -36,6 +36,17 @@ export const getUserReputation = async (req: Request, res: Response) => {
       take: 10,
     })
 
+    // Calculate games score from rep events (game_won + game_lost)
+    const gameEvents = await prisma.repEvent.aggregate({
+      where: {
+        userWallet: walletAddress,
+        eventType: { in: ['game_won', 'game_lost'] }
+      },
+      _sum: { points: true },
+      _count: true,
+    })
+    const gamesScore = gameEvents._sum.points || 0
+
     // Calculate tier based on score
     const tier = getReputationTier(user.reputationScore)
 
@@ -43,6 +54,7 @@ export const getUserReputation = async (req: Request, res: Response) => {
       success: true,
       reputation: {
         ...user,
+        gamesScore,
         tier,
         recentEvents,
       }

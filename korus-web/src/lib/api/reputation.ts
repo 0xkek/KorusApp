@@ -30,6 +30,7 @@ export interface ReputationData {
   communityScore: number;
   loyaltyScore: number;
   shoutoutScore: number;
+  gamesScore: number;
   tier: ReputationTier;
   genesisVerified: boolean;
   loginStreak: number;
