@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { logger } from '@/utils/logger';
 import { postsAPI, uploadAPI } from '@/lib/api';
+import { transformPost } from '@/utils/transformPost';
 import type { Post } from '@/types';
 
 interface UseComposePostParams {
@@ -117,12 +118,15 @@ export function useComposePost({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const post: any = (newPost as { post?: unknown }).post || newPost;
 
+      // Transform the raw backend response into frontend Post format before adding to feed
+      const transformedPost = transformPost(post);
+
       // Add post to feed immediately as fallback (WebSocket may not be connected)
       // The WebSocket dedup logic (addedPostIds) will prevent duplicates if the event also arrives
       setPosts(prev => {
         const shoutouts = prev.filter(p => p.isShoutout);
         const regularPosts = prev.filter(p => !p.isShoutout);
-        return [...shoutouts, post, ...regularPosts];
+        return [...shoutouts, transformedPost, ...regularPosts];
       });
       logger.log('✅ Post created and added to feed. Post ID:', post.id);
 

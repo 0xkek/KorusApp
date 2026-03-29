@@ -128,7 +128,7 @@ const FeedPostCardComponent = ({
         <div className="flex items-center gap-3">
           {(() => {
             const displayAvatar = post.repostedPost?.avatar || post.avatar;
-            const displayUser = post.repostedPost?.user || post.user;
+            const displayUser = post.repostedPost?.user || post.user || 'Unknown';
             return displayAvatar ? (
               <div className="w-[42px] h-[42px] rounded-full flex-shrink-0 overflow-hidden">
                 <Image
@@ -138,13 +138,13 @@ const FeedPostCardComponent = ({
                   height={42}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.currentTarget.parentElement!.innerHTML = `<div class="w-full h-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-[14px] font-bold text-black">${displayUser.slice(0, 2).toUpperCase()}</div>`;
+                    e.currentTarget.parentElement!.innerHTML = `<div class="w-full h-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-[14px] font-bold text-black">${(displayUser || 'U').slice(0, 2).toUpperCase()}</div>`;
                   }}
                 />
               </div>
             ) : (
               <div className="w-[42px] h-[42px] rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-[14px] font-bold text-black flex-shrink-0">
-                {displayUser.slice(0, 2).toUpperCase()}
+                {(displayUser || 'U').slice(0, 2).toUpperCase()}
               </div>
             );
           })()}
