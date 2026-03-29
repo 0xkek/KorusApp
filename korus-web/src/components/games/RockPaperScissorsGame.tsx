@@ -391,7 +391,7 @@ export function RockPaperScissorsGame({
                   const iWon = isPlayer1Prop ? p1Won : !p1Won;
                   return (
                     <div key={i} className="flex items-center justify-between text-xs px-2 py-1 rounded bg-white/[0.04]">
-                      <span className="text-[var(--color-text-secondary)] w-14">Round {(round.round || i) + 1}</span>
+                      <span className="text-[var(--color-text-secondary)] w-14">Round {round.round || i + 1}</span>
                       <div className="flex items-center gap-2">
                         <span className={`text-base ${iWon ? 'scale-110' : ''}`}>{myIcon}</span>
                         <span className="text-[var(--color-text-tertiary)]">vs</span>
@@ -439,8 +439,8 @@ export function RockPaperScissorsGame({
         </div>
       )}
 
-      {/* Choice Buttons - Hidden during round notifications */}
-      {!showDrawNotification && !showRoundResult && <div className="flex justify-center gap-3 mb-3">
+      {/* Choice Buttons - Hidden during round notifications and after game over */}
+      {!isGameOver && !showDrawNotification && !showRoundResult && <div className="flex justify-center gap-3 mb-3">
         {CHOICES.map((choice) => (
           <button
             key={choice.id}
@@ -481,8 +481,8 @@ export function RockPaperScissorsGame({
         ))}
       </div>}
 
-      {/* Wager Info Bar */}
-      {wagerAmount > 0 && (
+      {/* Wager Info Bar - only during active game */}
+      {wagerAmount > 0 && !isGameOver && (
         <div className="flex items-center justify-between px-2 text-xs bg-white/[0.06] rounded-lg py-1.5">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
