@@ -284,6 +284,9 @@ export default function GamePlayPage() {
     const opponentAddress = isPlayer1 ? game.player2 : game.player1;
     const opponentMove = (game.gameState as { playerMoves?: Record<string, RPSMove> })?.playerMoves?.[opponentAddress || ''] || null;
 
+    // RPS is simultaneous — both players can move if they haven't already this round
+    const isRPSMyTurn = game.status === 'active' && !playerMove;
+
     const handleMoveSelected = (move: RPSMove) => {
       handleMove({ choice: move });
     };
@@ -301,7 +304,7 @@ export default function GamePlayPage() {
         onMoveSelected={handleMoveSelected}
         playerMove={playerMove}
         opponentMove={opponentMove}
-        isMyTurn={isMyTurn}
+        isMyTurn={isRPSMyTurn}
         isGameOver={isGameOver}
         winner={getWinnerDisplayValue()}
         player1Address={game.player1}
@@ -309,9 +312,9 @@ export default function GamePlayPage() {
         player1DisplayName={game.player1DisplayName}
         player2DisplayName={game.player2DisplayName}
         currentTurnAddress={game.currentTurn || undefined}
-        gameCreatedAt={game.createdAt}
+        gameCreatedAt={game.lastMoveAt || game.createdAt}
         wager={game.wager}
-        gameState={game.gameState as { player1Score?: number; player2Score?: number; rounds?: unknown[]; round?: number; roundResults?: unknown[] }}
+        gameState={game.gameState as { player1Score?: number; player2Score?: number; rounds?: unknown[]; round?: number; roundResults?: unknown[]; score?: { player1: number; player2: number } }}
         payoutTxSignature={game.escrow?.payoutTxSig || undefined}
       />
     );
@@ -404,13 +407,13 @@ export default function GamePlayPage() {
           </div>
         )}
 
-        {game.status === 'active' && isMyTurn && (
+        {game.status === 'active' && game.gameType !== 'rps' && isMyTurn && (
           <div className="mb-6 p-4 bg-korus-primary/20 border border-korus-primary rounded-lg text-center">
             <p className="text-korus-primary font-bold">Your turn!</p>
           </div>
         )}
 
-        {game.status === 'active' && !isMyTurn && isParticipant && (
+        {game.status === 'active' && game.gameType !== 'rps' && !isMyTurn && isParticipant && (
           <div className="mb-6 p-4 bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-lg text-center">
             <p className="text-[var(--color-text-secondary)]">Waiting for opponent&apos;s move...</p>
           </div>
