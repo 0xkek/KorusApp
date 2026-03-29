@@ -444,11 +444,13 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
         break
     }
 
-    // Normalize 'draw' to null for DB (winner FK references users table)
-    const isDraw = winner === 'draw'
-    if (isDraw) winner = null
+    // Normalize 'draw' to null for DB (winner column has FK to users table)
+    const isDraw = (winner === 'draw')
+    if (isDraw) {
+      winner = null
+    }
 
-    if (winner || isDraw) {
+    if (winner !== null || isDraw) {
       newStatus = 'completed'
 
       // Award game rewards (only for non-draw games with a winner)
@@ -515,12 +517,13 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
     // NOTE: Using eventual consistency pattern - database is updated first, then blockchain.
     // If blockchain fails, GameEscrow status will be 'failed' or 'error' for manual reconciliation.
     // This prevents losing game state if blockchain call times out or fails temporarily.
+    logger.info(`DB UPDATE: winner=${winner}, isDraw=${isDraw}, newStatus=${newStatus}, typeof winner=${typeof winner}`)
     const updatedGame = await prisma.game.update({
       where: { id },
       data: {
         gameState: gameState as any,
-        currentTurn: winner ? null : (game.currentTurn === game.player1 ? game.player2 : game.player1),
-        winner,
+        currentTurn: (newStatus === 'completed') ? null : (game.currentTurn === game.player1 ? game.player2 : game.player1),
+        winner: winner,
         status: newStatus,
         lastMoveAt: new Date() // Reset move timeout clock
       },
