@@ -7,6 +7,32 @@ import { createNotification } from '../utils/notifications'
 import SolPaymentService from '../services/solPaymentService'
 import { emitPostUpdate, emitNewPost } from '../config/socket'
 
+// Replay protection: track recently used tip transaction signatures
+// Entries expire after 15 minutes to prevent memory leaks
+const usedTipSignatures = new Map<string, number>()
+const TIP_SIG_TTL_MS = 15 * 60 * 1000
+
+function isTipSignatureUsed(signature: string): boolean {
+  const timestamp = usedTipSignatures.get(signature)
+  if (!timestamp) return false
+  if (Date.now() - timestamp > TIP_SIG_TTL_MS) {
+    usedTipSignatures.delete(signature)
+    return false
+  }
+  return true
+}
+
+function markTipSignatureUsed(signature: string): void {
+  usedTipSignatures.set(signature, Date.now())
+  // Cleanup old entries periodically (every 100 insertions)
+  if (usedTipSignatures.size % 100 === 0) {
+    const now = Date.now()
+    for (const [sig, ts] of usedTipSignatures) {
+      if (now - ts > TIP_SIG_TTL_MS) usedTipSignatures.delete(sig)
+    }
+  }
+}
+
 export const likePost = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params
@@ -115,6 +141,12 @@ export const tipPost = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Transaction signature required for SOL tips' })
     }
 
+    // Replay protection: reject duplicate transaction signatures
+    if (isTipSignatureUsed(transactionSignature)) {
+      logger.warn(`Duplicate tip transaction signature rejected: ${transactionSignature}`)
+      return res.status(409).json({ error: 'Transaction signature already used' })
+    }
+
     // Check if post exists
     const post = await prisma.post.findUnique({ where: { id } })
     if (!post) {
@@ -126,11 +158,10 @@ export const tipPost = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Cannot tip your own post' })
     }
 
-    // Try to verify SOL transaction on-chain (best-effort)
-    // Public RPCs may not have transaction history, so we proceed on "not found" errors
+    // Verify SOL transaction on-chain — REQUIRED for tip recording
     logger.debug(`Verifying tip transaction - From: ${walletAddress}, To: ${post.authorWallet}, Amount: ${amount} SOL, Tx: ${transactionSignature}`)
 
-    let verifiedAmount = amount;
+    let verifiedAmount: number;
     try {
       const verification = await SolPaymentService.verifyTransaction(
         walletAddress, // From wallet (tipper)
@@ -141,21 +172,22 @@ export const tipPost = async (req: AuthRequest, res: Response) => {
       )
 
       if (verification.valid) {
+        // Use the on-chain verified amount, not what the frontend claimed
         verifiedAmount = verification.actualAmount || amount;
         logger.info(`Tip transaction verified on-chain - From: ${walletAddress}, To: ${post.authorWallet}, Amount: ${verifiedAmount} SOL, Tx: ${transactionSignature}`)
-      } else if (verification.error?.includes('not found')) {
-        // RPC doesn't have tx history — trust the frontend-signed transaction
-        logger.warn(`Tip tx not found on RPC (likely RPC limitation), recording tip with frontend amount - Tx: ${transactionSignature}`)
       } else {
-        // Genuinely invalid transaction (failed, wrong wallets, wrong amount)
+        // Transaction not found, failed, wrong wallets, or wrong amount — reject
         logger.warn(`Tip transaction verification failed for ${walletAddress}: ${verification.error}`)
         return res.status(400).json({
           error: `Payment verification failed: ${verification.error}`
         })
       }
     } catch (verifyErr) {
-      // RPC error — don't block the tip
-      logger.warn(`Tip verification RPC error, recording tip anyway - Tx: ${transactionSignature}`, verifyErr)
+      // RPC error — reject the tip rather than trusting frontend amount
+      logger.error(`Tip verification RPC error - Tx: ${transactionSignature}`, verifyErr)
+      return res.status(503).json({
+        error: 'Unable to verify transaction on-chain. Please try again.'
+      })
     }
 
     // Create or update tip interaction
@@ -175,7 +207,7 @@ export const tipPost = async (req: AuthRequest, res: Response) => {
       const existingAmount = typeof existingTip.amount === 'string'
         ? parseFloat(existingTip.amount)
         : Number(existingTip.amount || 0);
-      const newAmount = existingAmount + amount;
+      const newAmount = existingAmount + verifiedAmount;
 
       await prisma.interaction.update({
         where: { id: existingTip.id },
@@ -191,7 +223,7 @@ export const tipPost = async (req: AuthRequest, res: Response) => {
           targetType: 'post',
           targetId: id,
           interactionType: 'tip',
-          amount: amount
+          amount: verifiedAmount
         }
       });
     }
@@ -201,7 +233,7 @@ export const tipPost = async (req: AuthRequest, res: Response) => {
       where: { id },
       data: {
         tipCount: { increment: 1 },
-        tipAmount: { increment: amount }
+        tipAmount: { increment: verifiedAmount }
       }
     })
 
@@ -211,14 +243,17 @@ export const tipPost = async (req: AuthRequest, res: Response) => {
       tipAmount: updatedPost.tipAmount,
       action: 'tip',
       userWallet: walletAddress,
-      amount: Number(amount)
+      amount: verifiedAmount
     })
 
-    logger.info(`${walletAddress} tipped ${amount} SOL to post ${id} (tx: ${transactionSignature})`)
+    // Mark signature as used to prevent replay
+    markTipSignatureUsed(transactionSignature)
+
+    logger.info(`${walletAddress} tipped ${verifiedAmount} SOL to post ${id} (tx: ${transactionSignature})`)
 
     // Award reputation points
-    await reputationService.onTipSent(walletAddress, Number(amount))
-    await reputationService.onTipReceived(post.authorWallet, Number(amount))
+    await reputationService.onTipSent(walletAddress, verifiedAmount)
+    await reputationService.onTipReceived(post.authorWallet, verifiedAmount)
 
     // Create notification
     await createNotification({
@@ -226,13 +261,13 @@ export const tipPost = async (req: AuthRequest, res: Response) => {
       type: 'tip',
       fromUserId: walletAddress,
       postId: id,
-      amount: Number(amount)
+      amount: verifiedAmount
     })
 
     res.json({
       success: true,
-      message: `Tipped ${amount} SOL`,
-      amount,
+      message: `Tipped ${verifiedAmount} SOL`,
+      amount: verifiedAmount,
       transactionSignature
     })
   } catch (error) {
