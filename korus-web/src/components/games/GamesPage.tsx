@@ -197,19 +197,32 @@ export function GamesPage() {
       loadGames();
     });
 
-    socketRef.current.on('game_joined', () => {
+    socketRef.current.on('game_joined', (updatedGame: Game) => {
       logger.log('🎮 WebSocket: game_joined received');
-      loadGames();
+      if (updatedGame?.id) {
+        setGames(prev => prev.map(g => g.id === updatedGame.id ? updatedGame : g));
+      } else {
+        loadGames();
+      }
     });
 
-    socketRef.current.on('game_move', () => {
+    socketRef.current.on('game_move', (updatedGame: Game) => {
       logger.log('🎮 WebSocket: game_move received');
-      loadGames();
+      if (updatedGame?.id) {
+        // Instantly update the game in state for real-time feel
+        setGames(prev => prev.map(g => g.id === updatedGame.id ? updatedGame : g));
+      } else {
+        loadGames();
+      }
     });
 
-    socketRef.current.on('game_completed', () => {
+    socketRef.current.on('game_completed', (updatedGame: Game) => {
       logger.log('🎮 WebSocket: game_completed received');
-      loadGames();
+      if (updatedGame?.id) {
+        setGames(prev => prev.map(g => g.id === updatedGame.id ? updatedGame : g));
+      } else {
+        loadGames();
+      }
       // Also refresh completed games if that tab was loaded
       if (completedLoaded) {
         loadCompletedGames();
