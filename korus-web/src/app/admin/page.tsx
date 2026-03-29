@@ -71,7 +71,17 @@ interface Report {
   targetAuthor: string | null;
 }
 
-type Tab = 'overview' | 'reputation' | 'users' | 'tips' | 'reports' | 'manage';
+interface InfrastructureData {
+  render: { score: number; memoryMB: { rss: number; heapUsed: number; heapTotal: number; limit: number }; uptimeSeconds: number; activeConnections: number; status: string };
+  redis: { score: number; connected: boolean; cacheEntries: number; status: string };
+  vercel: { score: number; estimatedDAU: number; status: string };
+  cache: { userCache: { size: number; maxSize: number }; postCache: { size: number; maxSize: number }; feedCache: { size: number; maxSize: number } };
+  database: { responseTimeMs: number; totalUsers: number; totalPosts: number };
+  overallScore: number;
+  overallStatus: string;
+}
+
+type Tab = 'overview' | 'infra' | 'reputation' | 'users' | 'tips' | 'reports' | 'manage';
 
 export default function AdminDashboard() {
   const { publicKey } = useWallet();
@@ -87,6 +97,7 @@ export default function AdminDashboard() {
   const [topReceivers, setTopReceivers] = useState<TipEntry[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   const [reportsLoading, setReportsLoading] = useState(false);
+  const [infra, setInfra] = useState<InfrastructureData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -182,15 +193,23 @@ export default function AdminDashboard() {
     }
   }, [token]);
 
+  const loadInfra = useCallback(async () => {
+    if (!token) return;
+    try {
+      const data = await api.get<{ success: boolean; infrastructure: InfrastructureData }>('/api/admin/infrastructure', token);
+      if (data.success) setInfra(data.infrastructure);
+    } catch { /* silent */ }
+  }, [token]);
+
   useEffect(() => {
     if (!isAdmin || !token) {
       setLoading(false);
       return;
     }
     setLoading(true);
-    Promise.all([loadStats(), loadLeaderboard(), loadUsers(), loadTips(), loadEventFee(), loadReports()])
+    Promise.all([loadStats(), loadLeaderboard(), loadUsers(), loadTips(), loadEventFee(), loadReports(), loadInfra()])
       .finally(() => setLoading(false));
-  }, [isAdmin, token, loadStats, loadLeaderboard, loadUsers, loadTips, loadEventFee, loadReports]);
+  }, [isAdmin, token, loadStats, loadLeaderboard, loadUsers, loadTips, loadEventFee, loadReports, loadInfra]);
 
   // Search debounce
   useEffect(() => {
@@ -245,6 +264,7 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto flex">
           {([
             ['overview', 'Overview'],
+            ['infra', 'Infrastructure'],
             ['reputation', 'Reputation'],
             ['users', 'Users'],
             ['tips', 'Tips'],
@@ -336,6 +356,185 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Infrastructure Tab */}
+        {activeTab === 'infra' && infra && (
+          <div className="space-y-6">
+            {/* Overall Status Banner */}
+            <div className={`rounded-xl p-5 border ${
+              infra.overallStatus === 'healthy' ? 'bg-emerald-500/5 border-emerald-500/20' :
+              infra.overallStatus === 'warning' ? 'bg-yellow-500/5 border-yellow-500/20' :
+              'bg-red-500/5 border-red-500/20'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold">Overall Infrastructure Health</h3>
+                  <p className="text-[var(--color-text-tertiary)] text-xs mt-1">
+                    {infra.overallStatus === 'healthy' ? 'All systems running well on free tier' :
+                     infra.overallStatus === 'warning' ? 'Consider upgrading some services soon' :
+                     'Upgrades recommended — performance may be degraded'}
+                  </p>
+                </div>
+                <div className={`text-3xl font-bold ${
+                  infra.overallStatus === 'healthy' ? 'text-emerald-400' :
+                  infra.overallStatus === 'warning' ? 'text-yellow-400' :
+                  'text-red-400'
+                }`}>{infra.overallScore}</div>
+              </div>
+            </div>
+
+            {/* Three Gauge Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {([
+                {
+                  name: 'Render (Backend)',
+                  score: infra.render.score,
+                  status: infra.render.status,
+                  cost: '$7-25/mo',
+                  details: [
+                    { label: 'Memory', value: `${infra.render.memoryMB.rss}/${infra.render.memoryMB.limit} MB` },
+                    { label: 'Uptime', value: infra.render.uptimeSeconds < 60 ? `${infra.render.uptimeSeconds}s` : infra.render.uptimeSeconds < 3600 ? `${Math.round(infra.render.uptimeSeconds / 60)}m` : `${Math.round(infra.render.uptimeSeconds / 3600)}h` },
+                    { label: 'Connections', value: String(infra.render.activeConnections) },
+                  ],
+                  tip: infra.render.status === 'healthy' ? 'Free tier is working fine' :
+                       infra.render.uptimeSeconds < 300 ? 'Cold starts detected — paid tier eliminates these' :
+                       infra.render.memoryMB.rss > 400 ? 'Memory usage high — upgrade for more RAM' :
+                       'Consider upgrading for better performance',
+                },
+                {
+                  name: 'Redis (Cache)',
+                  score: infra.redis.score,
+                  status: infra.redis.status,
+                  cost: 'Free-$10/mo',
+                  details: [
+                    { label: 'Status', value: infra.redis.connected ? 'Connected' : 'In-memory only' },
+                    { label: 'Cache entries', value: String(infra.redis.cacheEntries) },
+                    { label: 'Users', value: String(infra.database.totalUsers) },
+                  ],
+                  tip: infra.redis.connected ? 'Redis connected and working' :
+                       infra.database.totalUsers > 500 ? 'High user count — Redis recommended' :
+                       infra.redis.cacheEntries > 200 ? 'Cache growing — Redis would persist across deploys' :
+                       'In-memory cache is fine for current scale',
+                },
+                {
+                  name: 'Vercel (Frontend)',
+                  score: infra.vercel.score,
+                  status: infra.vercel.status,
+                  cost: '$20/mo',
+                  details: [
+                    { label: 'Total users', value: String(infra.vercel.estimatedDAU) },
+                    { label: 'DB response', value: `${infra.database.responseTimeMs}ms` },
+                    { label: 'Total posts', value: String(infra.database.totalPosts) },
+                  ],
+                  tip: infra.vercel.status === 'healthy' ? 'Free tier handles current traffic' :
+                       'Growing user base — Pro tier adds analytics, edge functions, and faster builds',
+                },
+              ]).map((gauge) => (
+                <div key={gauge.name} className="bg-[#111] border border-[#222] rounded-xl p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-sm font-semibold">{gauge.name}</h4>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      gauge.status === 'healthy' ? 'bg-emerald-400/15 text-emerald-400' :
+                      gauge.status === 'warning' ? 'bg-yellow-400/15 text-yellow-400' :
+                      'bg-red-400/15 text-red-400'
+                    }`}>{gauge.status}</span>
+                  </div>
+
+                  {/* Gauge Ring */}
+                  <div className="flex justify-center mb-4">
+                    <div className="relative w-28 h-28">
+                      <svg className="w-28 h-28 -rotate-90" viewBox="0 0 120 120">
+                        {/* Background ring */}
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="#222" strokeWidth="10" />
+                        {/* Score ring */}
+                        <circle
+                          cx="60" cy="60" r="50" fill="none"
+                          stroke={gauge.status === 'healthy' ? '#34d399' : gauge.status === 'warning' ? '#fbbf24' : '#f87171'}
+                          strokeWidth="10"
+                          strokeLinecap="round"
+                          strokeDasharray={`${(gauge.score / 100) * 314} 314`}
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className={`text-2xl font-bold ${
+                          gauge.status === 'healthy' ? 'text-emerald-400' :
+                          gauge.status === 'warning' ? 'text-yellow-400' :
+                          'text-red-400'
+                        }`}>{gauge.score}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Details */}
+                  <div className="space-y-2 mb-3">
+                    {gauge.details.map((d) => (
+                      <div key={d.label} className="flex justify-between text-xs">
+                        <span className="text-[var(--color-text-tertiary)]">{d.label}</span>
+                        <span className="font-mono">{d.value}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Tip */}
+                  <div className={`text-xs px-3 py-2 rounded-lg ${
+                    gauge.status === 'healthy' ? 'bg-emerald-500/5 text-emerald-400/80' :
+                    gauge.status === 'warning' ? 'bg-yellow-500/5 text-yellow-400/80' :
+                    'bg-red-500/5 text-red-400/80'
+                  }`}>
+                    {gauge.tip}
+                  </div>
+
+                  {/* Upgrade cost */}
+                  {gauge.status !== 'healthy' && (
+                    <p className="text-[var(--color-text-tertiary)] text-xs mt-2 text-center">
+                      Upgrade: {gauge.cost}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Cache Breakdown */}
+            <div className="bg-[#111] border border-[#222] rounded-xl p-5">
+              <h3 className="text-sm font-semibold mb-3">Cache Breakdown</h3>
+              <div className="grid grid-cols-3 gap-4">
+                {([
+                  { name: 'User Cache', ...infra.cache.userCache },
+                  { name: 'Post Cache', ...infra.cache.postCache },
+                  { name: 'Feed Cache', ...infra.cache.feedCache },
+                ] as { name: string; size: number; maxSize: number }[]).map((c) => {
+                  const pct = c.maxSize > 0 ? (c.size / c.maxSize) * 100 : 0;
+                  return (
+                    <div key={c.name}>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-[var(--color-text-tertiary)]">{c.name}</span>
+                        <span className="font-mono">{c.size}/{c.maxSize}</span>
+                      </div>
+                      <div className="h-2 bg-[#222] rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            pct > 80 ? 'bg-red-400' : pct > 50 ? 'bg-yellow-400' : 'bg-emerald-400'
+                          }`}
+                          style={{ width: `${Math.max(pct, 1)}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Refresh button */}
+            <div className="flex justify-end">
+              <button
+                onClick={loadInfra}
+                className="px-4 py-2 bg-white/[0.06] border border-[#333] rounded-lg text-xs hover:bg-white/[0.1] transition-colors"
+              >
+                Refresh Metrics
+              </button>
+            </div>
           </div>
         )}
 

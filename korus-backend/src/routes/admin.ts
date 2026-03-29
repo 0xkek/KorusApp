@@ -4,6 +4,8 @@ import { isAuthorityConfigured } from '../config/gameAuthority';
 import { gameCompletionService } from '../services/gameCompletionService';
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
+import { getIO } from '../config/socket';
+import { userCache, postCache, feedCache } from '../utils/cache';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -217,6 +219,113 @@ const requireAdminWallet = (req: AuthRequest, res: any): boolean => {
   }
   return true;
 };
+
+/**
+ * Infrastructure health metrics for gauge charts
+ * GET /api/admin/infrastructure
+ */
+router.get('/infrastructure', authenticateJWT, async (req: AuthRequest, res) => {
+  try {
+    if (!requireAdminWallet(req, res)) return;
+
+    // --- Render (backend) health ---
+    const mem = process.memoryUsage();
+    const memoryMB = {
+      rss: Math.round(mem.rss / 1024 / 1024),
+      heapUsed: Math.round(mem.heapUsed / 1024 / 1024),
+      heapTotal: Math.round(mem.heapTotal / 1024 / 1024),
+      limit: 512,
+    };
+    const uptimeSeconds = Math.round(process.uptime());
+
+    let activeConnections = 0;
+    try {
+      const io = getIO();
+      activeConnections = io.engine.clientsCount;
+    } catch {
+      // Socket.IO may not be initialized yet
+    }
+
+    // --- Cache stats ---
+    const userCacheStats = userCache.getStats();
+    const postCacheStats = postCache.getStats();
+    const feedCacheStats = feedCache.getStats();
+    const redisConnected = userCacheStats.redisConnected;
+    const totalCacheEntries = userCacheStats.size + postCacheStats.size + feedCacheStats.size;
+
+    // --- Database health ---
+    const dbStart = Date.now();
+    await prisma.$queryRaw`SELECT 1`;
+    const dbResponseTime = Date.now() - dbStart;
+
+    const [totalUsers, totalPosts] = await Promise.all([
+      prisma.user.count(),
+      prisma.post.count(),
+    ]);
+
+    // --- Compute scores (0-100) ---
+    const memPct = (memoryMB.rss / memoryMB.limit) * 100;
+    const renderScore = Math.round(
+      Math.max(0, 100 - (memPct * 0.8) - (uptimeSeconds < 300 ? 30 : 0) - (activeConnections > 500 ? 20 : 0))
+    );
+
+    const redisScore = Math.round(
+      redisConnected ? 90 : Math.max(0, 100 - (totalCacheEntries / 5) - (totalUsers > 500 ? 30 : 0))
+    );
+
+    const vercelScore = Math.round(
+      Math.max(0, 100 - Math.max(0, (totalUsers - 100) * 0.3))
+    );
+
+    const overallScore = Math.round((renderScore + redisScore + vercelScore) / 3);
+
+    // --- Status thresholds ---
+    const getStatus = (score: number): 'healthy' | 'warning' | 'critical' => {
+      if (score >= 70) return 'healthy';
+      if (score >= 40) return 'warning';
+      return 'critical';
+    };
+
+    res.json({
+      success: true,
+      infrastructure: {
+        render: {
+          score: renderScore,
+          memoryMB,
+          uptimeSeconds,
+          activeConnections,
+          status: getStatus(renderScore),
+        },
+        redis: {
+          score: redisScore,
+          connected: redisConnected,
+          cacheEntries: totalCacheEntries,
+          status: getStatus(redisScore),
+        },
+        vercel: {
+          score: vercelScore,
+          estimatedDAU: totalUsers,
+          status: getStatus(vercelScore),
+        },
+        cache: {
+          userCache: { size: userCacheStats.size, maxSize: userCacheStats.maxSize },
+          postCache: { size: postCacheStats.size, maxSize: postCacheStats.maxSize },
+          feedCache: { size: feedCacheStats.size, maxSize: feedCacheStats.maxSize },
+        },
+        database: {
+          responseTimeMs: dbResponseTime,
+          totalUsers,
+          totalPosts,
+        },
+        overallScore,
+        overallStatus: getStatus(overallScore),
+      },
+    });
+  } catch (error) {
+    logger.error('Admin infrastructure error:', error);
+    res.status(500).json({ success: false, error: 'Failed to load infrastructure metrics' });
+  }
+});
 
 /**
  * Platform overview stats
