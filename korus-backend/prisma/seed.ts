@@ -47,7 +47,7 @@ async function main() {
       subtopic: 'defi'
     },
     {
-      content: "The coin flip game is my favorite! So simple yet thrilling 🪙",
+      content: "The Connect Four game is my favorite! So simple yet thrilling 🔴🟡",
       topic: 'gaming',
       subtopic: 'strategy'
     },

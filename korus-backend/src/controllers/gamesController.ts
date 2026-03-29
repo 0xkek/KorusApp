@@ -43,7 +43,7 @@ interface ApiResponse {
 }
 
 // Game type definitions
-type GameType = 'tictactoe' | 'rps' | 'coinflip' | 'connectfour'
+type GameType = 'tictactoe' | 'rps' | 'connectfour'
 type BoardCell = string | null
 type GameBoard = BoardCell[] | BoardCell[][] // 1D for tic-tac-toe, 2D for connect four
 
@@ -57,7 +57,7 @@ interface Move {
 interface GameState {
   board?: GameBoard // For tictactoe and connectfour
   moves?: Move[] // For tracking move history
-  player1Choice?: string // For RPS and coinflip
+  player1Choice?: string // For RPS
   player2Choice?: string
   round?: number // For RPS (best of 3)
   score?: { player1: number; player2: number }

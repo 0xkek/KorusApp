@@ -36,7 +36,7 @@ interface SidebarEvent {
 const placeholderGames: LiveGame[] = [
   { id: 'placeholder-1', title: 'Tic Tac Toe', detail: '1/2 players \u00b7 30m left', wager: '0.5 SOL' },
   { id: 'placeholder-2', title: 'Rock Paper Scissors', detail: '1/2 players \u00b7 25m left', wager: '1.0 SOL' },
-  { id: 'placeholder-3', title: 'Coin Flip', detail: '1/2 players \u00b7 15m left', wager: '2.0 SOL' },
+  { id: 'placeholder-3', title: 'Connect Four', detail: '1/2 players \u00b7 15m left', wager: '2.0 SOL' },
 ];
 
 export default function RightSidebar({ showNotifications = false, onNotificationCountChange }: RightSidebarProps) {
@@ -81,7 +81,6 @@ export default function RightSidebar({ showNotifications = false, onNotification
         if (gameType === 'tic-tac-toe' || gameType === 'tictactoe') gameTitle = 'Tic Tac Toe';
         else if (gameType === 'rps' || gameType === 'rock-paper-scissors') gameTitle = 'Rock Paper Scissors';
         else if (gameType === 'connect-four' || gameType === 'connectfour') gameTitle = 'Connect Four';
-        else if (gameType === 'coin-flip' || gameType === 'coinflip') gameTitle = 'Coin Flip';
         else if (game.gameType) {
           gameTitle = game.gameType.split('-').map(word =>
             word.charAt(0).toUpperCase() + word.slice(1)

@@ -560,7 +560,7 @@ export default function SettingsPage() {
               <div className="bg-white/[0.04] rounded-xl p-4">
                 <h4 className="text-[var(--color-text)] font-semibold mb-2">What are the games?</h4>
                 <p className="text-[var(--color-text-secondary)] text-sm">
-                  Korus has built-in P2P games (Tic-Tac-Toe, Connect 4, Rock Paper Scissors, Coin Flip) where you can wager SOL against other users. Funds are held in an on-chain escrow smart contract and released to the winner automatically.
+                  Korus has built-in P2P games (Tic-Tac-Toe, Connect 4, Rock Paper Scissors) where you can wager SOL against other users. Funds are held in an on-chain escrow smart contract and released to the winner automatically.
                 </p>
               </div>
 
