@@ -198,14 +198,14 @@ export class GameEscrowService {
 
       logger.info(`Players: ${player1.toString()} vs ${player2.toString()}`);
 
-      // Derive player state PDAs (per-game state accounts) - reuse gameIdBuffer from above
+      // Derive player state PDAs — deployed contract uses [b"player", player_key] seed
       const [player1StatePda] = await PublicKey.findProgramAddress(
-        [Buffer.from('player_game_state'), player1.toBuffer(), gameIdBuffer],
+        [Buffer.from('player'), player1.toBuffer()],
         GAME_ESCROW_PROGRAM_ID
       );
 
       const [player2StatePda] = await PublicKey.findProgramAddress(
-        [Buffer.from('player_game_state'), player2.toBuffer(), gameIdBuffer],
+        [Buffer.from('player'), player2.toBuffer()],
         GAME_ESCROW_PROGRAM_ID
       );
 
@@ -304,7 +304,7 @@ export class GameEscrowService {
 
       // Derive player1 state PDA
       const [player1StatePda] = await PublicKey.findProgramAddress(
-        [Buffer.from('player_game_state'), player1.toBuffer(), gameIdBuffer],
+        [Buffer.from('player'), player1.toBuffer()],
         GAME_ESCROW_PROGRAM_ID
       );
 
@@ -400,7 +400,7 @@ export class GameEscrowService {
 
       // Derive player1 state PDA
       const [player1StatePda] = await PublicKey.findProgramAddress(
-        [Buffer.from('player_game_state'), player1.toBuffer(), gameIdBuffer],
+        [Buffer.from('player'), player1.toBuffer()],
         GAME_ESCROW_PROGRAM_ID
       );
 
