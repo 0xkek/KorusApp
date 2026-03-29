@@ -3,21 +3,47 @@ import Image from 'next/image';
 
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletReadyState, type WalletName } from '@solana/wallet-adapter-base';
-import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { useEffect, useRef } from 'react';
 
 export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
   const { wallets, select } = useWallet();
-  const modalRef = useFocusTrap(open);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [open, onClose]);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+    // Delay to avoid closing immediately from the button click that opened it
+    const timer = setTimeout(() => {
+      window.addEventListener('mousedown', handleClick);
+    }, 10);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('mousedown', handleClick);
+    };
+  }, [open, onClose]);
 
   if (!open) return null;
 
-  // Filter for Solana wallets we want to show
-  const allowedWalletNames = ['Phantom', 'Solflare', 'Backpack', 'Jupiter'];
+  const allowedWalletNames = ['Phantom', 'Solflare', 'Backpack'];
   const solanaWallets = wallets.filter(wallet =>
     allowedWalletNames.includes(wallet.adapter.name)
   );
 
-  // Separate installed and not installed wallets
   const installedWallets = solanaWallets.filter(
     wallet => wallet.readyState === WalletReadyState.Installed
   );
@@ -31,154 +57,98 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
   };
 
   return (
-    <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 sm:pt-32">
       {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+
+      {/* Modal — compact, clean */}
       <div
-        className="absolute inset-0 bg-[var(--color-overlay-background)] backdrop-blur-sm"
-        onClick={onClose}
-      />
+        ref={modalRef}
+        className="relative z-10 bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-xl shadow-2xl shadow-black/50 w-full max-w-sm mx-4 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-3">
+          <h2 className="text-[var(--color-text)] text-base font-semibold">Connect Wallet</h2>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-full hover:bg-white/[0.08] text-neutral-500 hover:text-[var(--color-text)] transition-colors flex items-center justify-center"
+            aria-label="Close"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
-      {/* Modal */}
-      <div ref={modalRef} className="modal-content relative z-10 bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 w-9 h-9 rounded-full hover:bg-white/[0.08] text-neutral-400 hover:text-[var(--color-text)] transition-colors duration-150 flex items-center justify-center"
-          aria-label="Close modal"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+        {/* Wallet list */}
+        <div className="px-3 pb-3">
+          {installedWallets.map((wallet) => (
+            <button
+              key={wallet.adapter.name}
+              onClick={() => handleWalletClick(wallet.adapter.name)}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/[0.06] transition-colors group"
+            >
+              {wallet.adapter.icon && (
+                <Image
+                  src={wallet.adapter.icon}
+                  alt={wallet.adapter.name}
+                  width={32}
+                  height={32}
+                  className="rounded-md"
+                />
+              )}
+              <span className="text-[var(--color-text)] text-sm font-medium flex-1 text-left">
+                {wallet.adapter.name}
+              </span>
+              <span className="text-xs text-emerald-400 font-medium opacity-70 group-hover:opacity-100 transition-opacity">
+                Detected
+              </span>
+            </button>
+          ))}
 
-        {/* Title */}
-        <h2 className="heading-1 text-[var(--color-text)] mb-2">
-          Connect a wallet on Solana to continue
-        </h2>
+          {notInstalledWallets.length > 0 && installedWallets.length > 0 && (
+            <div className="border-t border-[var(--color-border-light)] my-2" />
+          )}
 
-        {/* Installed Wallets Section */}
-        {installedWallets.length > 0 && (
-          <div className="mt-6">
-            <h3 className="label text-[var(--color-text-secondary)] mb-3">Installed</h3>
-            <div className="space-y-3">
-              {installedWallets.map((wallet) => (
-                <button
-                  key={wallet.adapter.name}
-                  onClick={() => handleWalletClick(wallet.adapter.name)}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl bg-black border-2 border-transparent hover:shadow-[0_0_30px_color-mix(in_srgb,var(--korus-primary)_40%,transparent)] hover:-translate-y-1 transition-all"
-                  style={{
-                    backgroundImage: `
-                      linear-gradient(#0a0a0a, #0a0a0a),
-                      linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)
-                    `,
-                    backgroundOrigin: 'border-box',
-                    backgroundClip: 'padding-box, border-box',
-                  }}
-                >
-                  {/* Wallet icon */}
-                  {wallet.adapter.icon && (
-                    <Image
-                      src={wallet.adapter.icon}
-                      alt={wallet.adapter.name}
-                      width={40}
-                      height={40}
-                      className="rounded-lg"
-                    />
-                  )}
-
-                  {/* Wallet name with gradient */}
-                  <span
-                    className="text-lg font-semibold flex-1 text-left"
-                    style={{
-                      background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                    }}
-                  >
-                    {wallet.adapter.name}
-                  </span>
-
-                  {/* Detected badge */}
-                  <span
-                    className="text-sm font-medium"
-                    style={{
-                      background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                    }}
-                  >
-                    Detected
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Not Installed Wallets Section */}
-        {notInstalledWallets.length > 0 && (
-          <div className="mt-6">
-            {installedWallets.length > 0 && (
-              <h3 className="label text-[var(--color-text-secondary)] mb-3">Available Wallets</h3>
-            )}
-            <div className="space-y-3">
-              {notInstalledWallets.map((wallet) => (
-                <button
-                  key={wallet.adapter.name}
-                  onClick={() => handleWalletClick(wallet.adapter.name)}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl bg-black border-2 border-transparent hover:shadow-[0_0_30px_color-mix(in_srgb,var(--korus-primary)_40%,transparent)] hover:-translate-y-1 transition-all"
-                  style={{
-                    backgroundImage: `
-                      linear-gradient(#0a0a0a, #0a0a0a),
-                      linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)
-                    `,
-                    backgroundOrigin: 'border-box',
-                    backgroundClip: 'padding-box, border-box',
-                  }}
-                >
-                  {/* Wallet icon */}
-                  {wallet.adapter.icon && (
-                    <Image
-                      src={wallet.adapter.icon}
-                      alt={wallet.adapter.name}
-                      width={40}
-                      height={40}
-                      className="rounded-lg"
-                    />
-                  )}
-
-                  {/* Wallet name with gradient */}
-                  <span
-                    className="text-lg font-semibold flex-1 text-left"
-                    style={{
-                      background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                    }}
-                  >
-                    {wallet.adapter.name}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+          {notInstalledWallets.map((wallet) => (
+            <button
+              key={wallet.adapter.name}
+              onClick={() => handleWalletClick(wallet.adapter.name)}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/[0.06] transition-colors group opacity-60 hover:opacity-100"
+            >
+              {wallet.adapter.icon && (
+                <Image
+                  src={wallet.adapter.icon}
+                  alt={wallet.adapter.name}
+                  width={32}
+                  height={32}
+                  className="rounded-md"
+                />
+              )}
+              <span className="text-[var(--color-text)] text-sm font-medium flex-1 text-left">
+                {wallet.adapter.name}
+              </span>
+              <span className="text-xs text-[var(--color-text-secondary)] font-medium">
+                Install
+              </span>
+            </button>
+          ))}
+        </div>
 
         {/* Footer */}
-        <div className="mt-6 pt-6 border-t border-[var(--color-border-light)] text-center">
-          <p className="text-[var(--color-text-secondary)] text-sm mb-3">New to Solana?</p>
-          <a
-            href="https://phantom.app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-korus-primary hover:text-korus-secondary transition-colors text-sm"
-          >
-            Download Phantom Wallet →
-          </a>
-        </div>
+        {installedWallets.length === 0 && (
+          <div className="px-5 pb-4 pt-1 border-t border-[var(--color-border-light)]">
+            <p className="text-[var(--color-text-secondary)] text-xs mb-2">No wallets detected</p>
+            <a
+              href="https://phantom.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-korus-primary hover:text-korus-secondary transition-colors text-xs font-medium"
+            >
+              Get Phantom Wallet &rarr;
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );

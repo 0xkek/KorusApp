@@ -1,7 +1,7 @@
 'use client';
 
 import { useWallet } from '@solana/wallet-adapter-react';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { CustomWalletButton } from './CustomWalletButton';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -126,7 +126,7 @@ export default function Header({
               </button>
             )}
             {mounted && (
-              <WalletMultiButton />
+              <CustomWalletButton />
             )}
           </div>
         </div>

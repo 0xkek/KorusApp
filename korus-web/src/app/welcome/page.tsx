@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import WalletButton from '@/components/WalletButton';
+import { CustomWalletButton } from '@/components/CustomWalletButton';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 
 export default function WelcomePage() {
@@ -164,7 +164,7 @@ export default function WelcomePage() {
                 Connect your wallet to get started
               </p>
               <div className="mb-8">
-                <WalletButton />
+                <CustomWalletButton />
               </div>
 
               <div className="pt-8 border-t border-[var(--color-border-light)]">
