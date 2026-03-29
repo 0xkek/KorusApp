@@ -296,50 +296,82 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ success: false, error: 'You are not in this game' })
     }
 
-    // Check move timeout: if the current player took longer than 10 minutes, the OTHER player wins
+    // Check move timeout: if 10 minutes passed since last move
     if (game.lastMoveAt) {
       const elapsed = Date.now() - new Date(game.lastMoveAt).getTime()
       if (elapsed > MOVE_TIMEOUT_MS) {
-        // The player whose turn it was timed out — the other player wins
-        // For RPS (no currentTurn), the player NOT making this move timed out
-        const timedOutPlayer = game.currentTurn || (playerWallet === game.player1 ? game.player2 : game.player1)
-        const timeoutWinner = timedOutPlayer === game.player1 ? game.player2! : game.player1
+        let timeoutWinner: string | null = null
 
-        logger.info(`Move timeout! Player ${timedOutPlayer} timed out. Winner: ${timeoutWinner}. Game: ${game.id}`)
+        if (game.gameType === 'rps') {
+          // RPS: check who already submitted this round
+          const gameState = game.gameState as GameState
+          const playerMoves = (gameState?.playerMoves || {}) as Record<string, string>
+          const p1Moved = !!playerMoves[game.player1]
+          const p2Moved = !!(game.player2 && playerMoves[game.player2])
 
-        const updatedGame = await prisma.game.update({
-          where: { id },
-          data: {
-            winner: timeoutWinner,
-            status: 'completed',
-            currentTurn: null
-          },
-          include: {
-            player1User: true,
-            player2User: true,
-            winnerUser: true
+          if (p1Moved && !p2Moved) {
+            timeoutWinner = game.player1 // player2 didn't submit in time
+          } else if (!p1Moved && p2Moved) {
+            timeoutWinner = game.player2! // player1 didn't submit in time
           }
-        })
-
-        // Trigger on-chain payout if applicable
-        if (updatedGame.onChainGameId) {
-          try {
-            const result = await gameEscrowService.completeGame(
-              Number(updatedGame.onChainGameId),
-              timeoutWinner
-            )
-            if (result.success) {
-              logger.info(`✅ Timeout payout successful for game ${game.id}`)
-            } else {
-              logger.error(`❌ Timeout payout failed for game ${game.id}: ${result.error}`)
-            }
-          } catch (error) {
-            logger.error(`Error processing timeout payout for game ${game.id}:`, error)
+          // If neither moved (e.g. after a draw reset), the player making this move now
+          // is actually trying to play — let them through, reset the timeout clock
+          if (!timeoutWinner) {
+            // Neither player moved in time, but one is trying now — just reset timeout and continue
+            await prisma.game.update({ where: { id }, data: { lastMoveAt: new Date() } })
+            // Fall through to normal move processing below
           }
+        } else {
+          // Turn-based games: the currentTurn player timed out
+          timeoutWinner = game.currentTurn === game.player1 ? game.player2! : game.player1
         }
 
-        // Emit game completed event
-        if (updatedGame.player2) {
+        if (timeoutWinner) {
+          logger.info(`Move timeout! Winner: ${timeoutWinner}. Game: ${game.id}`)
+
+          const updatedGame = await prisma.game.update({
+            where: { id },
+            data: {
+              winner: timeoutWinner,
+              status: 'completed',
+              currentTurn: null
+            },
+            include: {
+              player1User: true,
+              player2User: true,
+              winnerUser: true
+            }
+          })
+
+          // Trigger on-chain payout if applicable
+          if (updatedGame.onChainGameId) {
+            try {
+              const result = await gameEscrowService.completeGame(
+                Number(updatedGame.onChainGameId),
+                timeoutWinner
+              )
+              if (result.success) {
+                logger.info(`✅ Timeout payout successful for game ${game.id}`)
+              } else {
+                logger.error(`❌ Timeout payout failed for game ${game.id}: ${result.error}`)
+              }
+            } catch (error) {
+              logger.error(`Error processing timeout payout for game ${game.id}:`, error)
+            }
+          }
+
+          // Emit game completed event
+          if (updatedGame.player2) {
+            const serializedGame = {
+              ...updatedGame,
+              onChainGameId: updatedGame.onChainGameId ? updatedGame.onChainGameId.toString() : null,
+              wager: updatedGame.wager.toString(),
+              player1DisplayName: getDisplayName(updatedGame.player1User),
+              player2DisplayName: getDisplayName(updatedGame.player2User)
+            }
+            emitGameCompleted(updatedGame.player1, updatedGame.player2, serializedGame)
+          }
+
           const serializedGame = {
             ...updatedGame,
             onChainGameId: updatedGame.onChainGameId ? updatedGame.onChainGameId.toString() : null,
@@ -347,23 +379,14 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
             player1DisplayName: getDisplayName(updatedGame.player1User),
             player2DisplayName: getDisplayName(updatedGame.player2User)
           }
-          emitGameCompleted(updatedGame.player1, updatedGame.player2, serializedGame)
-        }
 
-        const serializedGame = {
-          ...updatedGame,
-          onChainGameId: updatedGame.onChainGameId ? updatedGame.onChainGameId.toString() : null,
-          wager: updatedGame.wager.toString(),
-          player1DisplayName: getDisplayName(updatedGame.player1User),
-          player2DisplayName: getDisplayName(updatedGame.player2User)
+          return res.json({
+            success: true,
+            game: serializedGame,
+            timeout: true,
+            message: `Game ended by timeout. ${timeoutWinner === playerWallet ? 'You win!' : 'You lost due to timeout.'}`
+          })
         }
-
-        return res.json({
-          success: true,
-          game: serializedGame,
-          timeout: true,
-          message: `Game ended by timeout. ${timeoutWinner === playerWallet ? 'You win!' : 'You lost due to timeout.'}`
-        })
       }
     }
 
