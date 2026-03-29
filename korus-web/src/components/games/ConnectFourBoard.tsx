@@ -10,6 +10,7 @@ interface ConnectFourBoardProps {
   isGameOver: boolean;
   winner: string | null;
   playerColor: 'red' | 'yellow';
+  currentPlayerAddress?: string;
   wager?: string;
   payoutTxSignature?: string | null;
 }
@@ -21,6 +22,7 @@ export function ConnectFourBoard({
   isGameOver,
   winner,
   playerColor,
+  currentPlayerAddress,
   wager,
   payoutTxSignature,
 }: ConnectFourBoardProps) {
@@ -62,19 +64,65 @@ export function ConnectFourBoard({
 
   return (
     <div className="flex flex-col items-center gap-4">
-      {/* Status */}
-      <div className="text-center">
-        {isGameOver ? (
-          <div className="text-xl font-bold">
-            {winner === 'draw' ? (
-              <span className="text-[var(--color-text-secondary)]">Game ended in a draw!</span>
-            ) : winner === playerColor ? (
-              <span className="text-korus-primary">You won! 🎉</span>
-            ) : (
-              <span className="text-red-500">You lost</span>
-            )}
+      {/* Status / Game Over Banner */}
+      {isGameOver ? (() => {
+        const isDraw = winner === 'draw' || (!winner && isGameOver);
+        const iWon = !isDraw && winner === currentPlayerAddress;
+        const iLost = !isDraw && !iWon;
+        return (
+          <div className="w-full">
+            <div className={`rounded-xl p-4 text-center ${
+              iWon
+                ? 'bg-gradient-to-r from-green-500 to-emerald-500'
+                : iLost
+                ? 'bg-gradient-to-r from-red-500 to-orange-500'
+                : 'bg-gradient-to-r from-gray-500 to-gray-600'
+            }`}>
+              <div
+                className="text-3xl font-bold mb-1"
+                style={{ color: 'white', WebkitTextFillColor: 'white' }}
+              >
+                {iWon ? '🎉 YOU WIN!' : iLost ? '💔 YOU LOSE' : '🤝 DRAW'}
+              </div>
+
+              {wagerAmount > 0 && iWon && (
+                <div
+                  className="text-lg font-semibold mb-1"
+                  style={{ color: 'white', WebkitTextFillColor: 'white' }}
+                >
+                  +{winnerPayout.toFixed(4)} SOL
+                </div>
+              )}
+
+              {wagerAmount > 0 && (
+                <div
+                  className="text-xs opacity-90"
+                  style={{ color: 'white', WebkitTextFillColor: 'white' }}
+                >
+                  {iWon
+                    ? `Won ${(wagerAmount * 2).toFixed(4)} SOL (${korusFee.toFixed(4)} SOL fee)`
+                    : iLost
+                    ? `Lost ${wagerAmount} SOL wager`
+                    : 'Wagers returned'}
+                </div>
+              )}
+
+              {payoutTxSignature && wagerAmount > 0 && (
+                <a
+                  href={`https://explorer.solana.com/tx/${payoutTxSignature}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-block text-xs underline hover:opacity-80 duration-150"
+                  style={{ color: 'white', WebkitTextFillColor: 'white' }}
+                >
+                  View payout on Solana Explorer →
+                </a>
+              )}
+            </div>
           </div>
-        ) : (
+        );
+      })() : (
+        <div className="text-center">
           <div className="text-lg">
             {isMyTurn ? (
               <span className="text-korus-primary font-bold">
@@ -88,8 +136,8 @@ export function ConnectFourBoard({
               <span className="text-[var(--color-text-secondary)]">Opponent&apos;s turn...</span>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Board */}
       <div className="bg-white/[0.06] p-4 rounded-xl border-2 border-[var(--color-border-light)]">
@@ -115,8 +163,8 @@ export function ConnectFourBoard({
         </div>
       )}
 
-      {/* Wager Info Bar */}
-      {wagerAmount > 0 && (
+      {/* Wager Info Bar - only show during active game */}
+      {wagerAmount > 0 && !isGameOver && (
         <div className="flex items-center justify-between px-2 text-xs bg-white/[0.06] rounded-lg py-1.5 w-full">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
@@ -132,20 +180,6 @@ export function ConnectFourBoard({
             <span className="text-[var(--color-text-secondary)]">Winner gets:</span>
             <span className="font-bold text-green-400">{winnerPayout.toFixed(4)} SOL</span>
           </div>
-        </div>
-      )}
-
-      {/* Payout Transaction Link */}
-      {isGameOver && payoutTxSignature && (
-        <div className="px-2 text-xs text-center">
-          <a
-            href={`https://explorer.solana.com/tx/${payoutTxSignature}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-korus-primary hover:text-korus-secondary underline"
-          >
-            View Payout Transaction →
-          </a>
         </div>
       )}
     </div>

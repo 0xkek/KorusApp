@@ -578,6 +578,7 @@ export function GamesPage() {
         isGameOver={isGameOver}
         winner={game.winner}
         playerColor={playerColor}
+        currentPlayerAddress={publicKey?.toBase58()}
         wager={game.wager}
         payoutTxSignature={game.escrow?.payoutTxSig}
       />
