@@ -630,9 +630,9 @@ export function GamesPage() {
         player1DisplayName={getPlayerDisplayName(game.player1, game)}
         player2DisplayName={game.player2 ? getPlayerDisplayName(game.player2, game) : undefined}
         currentTurnAddress={game.currentTurn || undefined}
-        gameCreatedAt={game.createdAt}
+        gameCreatedAt={game.lastMoveAt || game.createdAt}
         wager={game.wager}
-        gameState={game.gameState as { player1Score?: number; player2Score?: number; rounds?: unknown[]; round?: number; roundResults?: unknown[] }}
+        gameState={game.gameState as { player1Score?: number; player2Score?: number; rounds?: unknown[]; round?: number; roundResults?: unknown[]; score?: { player1: number; player2: number } }}
         payoutTxSignature={game.escrow?.payoutTxSig || undefined}
       />
     );

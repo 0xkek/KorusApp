@@ -19,7 +19,7 @@ interface RPSGameProps {
   currentTurnAddress?: string;
   gameCreatedAt?: string;
   wager?: string; // SOL amount
-  gameState?: { player1Score?: number; player2Score?: number; rounds?: unknown[]; round?: number; roundResults?: unknown[] }; // Full game state with score and round info
+  gameState?: { player1Score?: number; player2Score?: number; rounds?: unknown[]; round?: number; roundResults?: unknown[]; score?: { player1: number; player2: number } }; // Full game state with score and round info
   payoutTxSignature?: string; // Transaction signature for blockchain payout
 }
 
@@ -105,27 +105,27 @@ export function RockPaperScissorsGame({
   const korusFee = wagerAmount * KORUS_FEE_PERCENTAGE;
   const winnerPayout = (wagerAmount * 2) - korusFee;
 
-  // Calculate time remaining (24h from last move or game start)
+  // Calculate time remaining (10 min move timeout)
   useEffect(() => {
     if (!gameCreatedAt || isGameOver) return;
 
     const updateTimer = () => {
       const now = new Date().getTime();
       const gameStart = new Date(gameCreatedAt).getTime();
-      const deadline = gameStart + (24 * 60 * 60 * 1000); // 24 hours
+      const deadline = gameStart + (10 * 60 * 1000); // 10 minutes
       const remaining = deadline - now;
 
       if (remaining <= 0) {
         setTimeLeft('Expired');
       } else {
-        const hours = Math.floor(remaining / (1000 * 60 * 60));
-        const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-        setTimeLeft(`${hours}h ${minutes}m`);
+        const minutes = Math.floor(remaining / (1000 * 60));
+        const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+        setTimeLeft(`${minutes}m ${seconds}s`);
       }
     };
 
     updateTimer();
-    const interval = setInterval(updateTimer, 60000); // Update every minute
+    const interval = setInterval(updateTimer, 1000); // Update every second
 
     return () => clearInterval(interval);
   }, [gameCreatedAt, isGameOver]);
@@ -215,20 +215,30 @@ export function RockPaperScissorsGame({
             </button>
             {showTimerInfo && (
               <div className="absolute top-6 right-0 bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-lg p-2 w-48 text-xs shadow-lg z-10">
-                <p className="text-[var(--color-text)]">Each player has 24 hours to make their move. If time expires, they lose!</p>
+                <p className="text-[var(--color-text)]">Each player has 10 minutes to make their move. If time expires, they lose!</p>
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* Round Info */}
-      {!isGameOver && currentRound > 1 && (
+      {/* Round & Score Info (Best of 3) */}
+      {!isGameOver && (
         <div className="flex items-center justify-center mb-3 px-2 text-xs">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <span className="text-[var(--color-text-secondary)]">Best of 3</span>
+            <span className="text-[var(--color-text-secondary)]">|</span>
             <span className="text-[var(--color-text-secondary)]">Round:</span>
             <span className="font-bold text-[var(--color-text)]">{currentRound}</span>
-            <span className="text-[var(--color-text-secondary)] text-[10px]">(Draw - play again!)</span>
+            {gameState?.score && (
+              <>
+                <span className="text-[var(--color-text-secondary)]">|</span>
+                <span className="text-[var(--color-text-secondary)]">Score:</span>
+                <span className="font-bold text-korus-primary">{gameState.score.player1}</span>
+                <span className="text-[var(--color-text-secondary)]">-</span>
+                <span className="font-bold text-korus-secondary">{gameState.score.player2}</span>
+              </>
+            )}
           </div>
         </div>
       )}

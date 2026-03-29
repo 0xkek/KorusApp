@@ -6,6 +6,12 @@ import { reputationService } from '../services/reputationService'
 import { PublicKey } from '@solana/web3.js'
 import { emitGameCreated, emitGameJoined, emitGameMove, emitGameCompleted } from '../config/socket'
 
+// Move timeout: 10 minutes (matches on-chain MOVE_TIMEOUT_SECONDS = 600)
+const MOVE_TIMEOUT_MS = 10 * 60 * 1000
+
+// RPS best-of-3: first to 2 wins
+const RPS_WINS_NEEDED = 2
+
 // Helper to extract display name from a user relation
 function getDisplayName(user: any): string | null {
   if (!user) return null
@@ -30,6 +36,7 @@ interface GameRecord {
   winner: string | null
   status: string
   onChainGameId: bigint | null
+  lastMoveAt: Date | null
   createdAt: Date
   updatedAt: Date
 }
@@ -229,7 +236,8 @@ export const joinGame = async (req: AuthRequest, res: Response) => {
       data: {
         player2,
         status: 'active',
-        currentTurn: game.gameType === 'rps' ? undefined : game.player1
+        currentTurn: game.gameType === 'rps' ? undefined : game.player1,
+        lastMoveAt: new Date() // Start the 10-min move timeout clock
       },
       include: {
         player1User: true,
@@ -286,6 +294,77 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
     // Check if player is in the game
     if (game.player1 !== playerWallet && game.player2 !== playerWallet) {
       return res.status(403).json({ success: false, error: 'You are not in this game' })
+    }
+
+    // Check move timeout: if the current player took longer than 10 minutes, the OTHER player wins
+    if (game.lastMoveAt) {
+      const elapsed = Date.now() - new Date(game.lastMoveAt).getTime()
+      if (elapsed > MOVE_TIMEOUT_MS) {
+        // The player whose turn it was timed out — the other player wins
+        // For RPS (no currentTurn), the player NOT making this move timed out
+        const timedOutPlayer = game.currentTurn || (playerWallet === game.player1 ? game.player2 : game.player1)
+        const timeoutWinner = timedOutPlayer === game.player1 ? game.player2! : game.player1
+
+        logger.info(`Move timeout! Player ${timedOutPlayer} timed out. Winner: ${timeoutWinner}. Game: ${game.id}`)
+
+        const updatedGame = await prisma.game.update({
+          where: { id },
+          data: {
+            winner: timeoutWinner,
+            status: 'completed',
+            currentTurn: null
+          },
+          include: {
+            player1User: true,
+            player2User: true,
+            winnerUser: true
+          }
+        })
+
+        // Trigger on-chain payout if applicable
+        if (updatedGame.onChainGameId) {
+          try {
+            const result = await gameEscrowService.completeGame(
+              Number(updatedGame.onChainGameId),
+              timeoutWinner
+            )
+            if (result.success) {
+              logger.info(`✅ Timeout payout successful for game ${game.id}`)
+            } else {
+              logger.error(`❌ Timeout payout failed for game ${game.id}: ${result.error}`)
+            }
+          } catch (error) {
+            logger.error(`Error processing timeout payout for game ${game.id}:`, error)
+          }
+        }
+
+        // Emit game completed event
+        if (updatedGame.player2) {
+          const serializedGame = {
+            ...updatedGame,
+            onChainGameId: updatedGame.onChainGameId ? updatedGame.onChainGameId.toString() : null,
+            wager: updatedGame.wager.toString(),
+            player1DisplayName: getDisplayName(updatedGame.player1User),
+            player2DisplayName: getDisplayName(updatedGame.player2User)
+          }
+          emitGameCompleted(updatedGame.player1, updatedGame.player2, serializedGame)
+        }
+
+        const serializedGame = {
+          ...updatedGame,
+          onChainGameId: updatedGame.onChainGameId ? updatedGame.onChainGameId.toString() : null,
+          wager: updatedGame.wager.toString(),
+          player1DisplayName: getDisplayName(updatedGame.player1User),
+          player2DisplayName: getDisplayName(updatedGame.player2User)
+        }
+
+        return res.json({
+          success: true,
+          game: serializedGame,
+          timeout: true,
+          message: `Game ended by timeout. ${timeoutWinner === playerWallet ? 'You win!' : 'You lost due to timeout.'}`
+        })
+      }
     }
 
     let gameState = game.gameState as GameState
@@ -388,7 +467,8 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
         gameState: gameState as any,
         currentTurn: winner ? null : (game.currentTurn === game.player1 ? game.player2 : game.player1),
         winner,
-        status: newStatus
+        status: newStatus,
+        lastMoveAt: new Date() // Reset move timeout clock
       },
       include: {
         player1User: true,
@@ -690,6 +770,11 @@ function processRPSMove(game: GameRecord, gameState: GameState, move: { choice: 
     gameState.playerMoves = {}
   }
 
+  // Initialize score if it doesn't exist (best-of-3)
+  if (!gameState.score) {
+    gameState.score = { player1: 0, player2: 0 }
+  }
+
   // Store the player's move for this round
   const playerMoves = gameState.playerMoves as Record<string, string>
   playerMoves[playerWallet] = choice
@@ -713,19 +798,32 @@ function processRPSMove(game: GameRecord, gameState: GameState, move: { choice: 
       winner
     })
 
-    // If it's a draw, reset for next round
+    // Reset moves for next round
+    gameState.playerMoves = {}
+    gameState.round!++
+
+    // If it's a draw, no score change — continue
     if (winner === 'draw') {
-      gameState.playerMoves = {}
-      gameState.round!++
       return null
     }
 
-    // Someone won! End the game
+    // Update score
+    const score = gameState.score as { player1: number; player2: number }
     if (winner === 'player1') {
-      return game.player1
+      score.player1++
     } else if (winner === 'player2') {
+      score.player2++
+    }
+
+    // Check if someone reached the wins needed (best-of-3: first to 2)
+    if (score.player1 >= RPS_WINS_NEEDED) {
+      return game.player1
+    } else if (score.player2 >= RPS_WINS_NEEDED) {
       return game.player2!
     }
+
+    // No winner yet — game continues to next round
+    return null
   }
 
   return null

@@ -77,6 +77,8 @@ model User {
   @@index([weeklyRepEarned(sort: Desc), weekStartDate])
   @@index([createdAt(sort: Desc)])
   @@index([isSuspended, suspendedUntil])
+  @@index([username])
+  @@index([snsUsername])
   @@map("users")
 }
 
@@ -163,6 +165,7 @@ model Reply {
   post             Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@index([postId, createdAt])
+  @@index([postId, isHidden, createdAt(sort: Desc)])
   @@index([authorWallet, createdAt(sort: Desc)])
   @@index([parentReplyId])
   @@index([isHidden, createdAt(sort: Desc)])
@@ -200,6 +203,7 @@ model Game {
   status      String   @db.VarChar(20)
   onChainGameId BigInt? // Blockchain game ID (u64)
   expiresAt   DateTime? // When the waiting game expires (2 hours)
+  lastMoveAt  DateTime? // Last move timestamp (for 10-min move timeout)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   player1User User     @relation("Player1Games", fields: [player1], references: [walletAddress])
@@ -213,6 +217,7 @@ model Game {
   @@index([player2, status])
   @@index([gameType, status])
   @@index([status, expiresAt])
+  @@index([status, lastMoveAt])
   @@map("games")
 }
 

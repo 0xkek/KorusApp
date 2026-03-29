@@ -35,6 +35,7 @@ export interface Game {
   updatedAt: string;
   onChainGameId: string | null;
   expiresAt: string | null; // ISO date string
+  lastMoveAt: string | null; // Last move timestamp for 10-min timeout
   escrow?: GameEscrow;
 }
 
