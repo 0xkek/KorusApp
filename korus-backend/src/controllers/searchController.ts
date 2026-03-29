@@ -25,8 +25,10 @@ function getWalletDomain(wallet: string): string {
 }
 
 export const searchPosts = asyncHandler(async (req: Request, res: Response) => {
-    const { query, limit = 20, offset = 0 } = req.query
-    
+    const { query } = req.query
+    const limit = Math.min(Math.max(1, Number(req.query.limit) || 20), 50)
+    const offset = Math.min(Math.max(0, Number(req.query.offset) || 0), 10000)
+
     logger.debug('[SEARCH] Received search request:', { query, limit, offset })
     
     // If no query, return all posts
@@ -66,8 +68,8 @@ export const searchPosts = asyncHandler(async (req: Request, res: Response) => {
         orderBy: {
           createdAt: 'desc'
         },
-        take: Number(limit),
-        skip: Number(offset)
+        take: limit,
+        skip: offset
       })
       
       const transformedPosts = allPosts.map(post => ({
@@ -275,14 +277,15 @@ export const searchMentions = asyncHandler(async (req: Request, res: Response) =
         nftAvatar: true,
         tier: true,
       },
-      take: Number(limit)
+      take: Math.min(Math.max(1, Number(limit) || 8), 20)
     })
 
     res.json({ success: true, users })
 })
 
 export const searchUsers = asyncHandler(async (req: Request, res: Response) => {
-    const { query, limit = 10 } = req.query
+    const { query } = req.query
+    const limit = Math.min(Math.max(1, Number(req.query.limit) || 10), 50)
     
     if (!query || typeof query !== 'string') {
       throw new AppError('Search query is required', 400, 'MISSING_QUERY')
@@ -344,14 +347,14 @@ export const searchUsers = asyncHandler(async (req: Request, res: Response) => {
           }
         }
       },
-      take: Number(limit)
+      take: limit
     })
 
     const transformedUsers = users.map(user => ({
       ...user,
       snsDomain: getWalletDomain(user.walletAddress),
-      postCount: user._count.posts,
-      replyCount: user._count.replies
+      postCount: (user as any)._count?.posts ?? 0,
+      replyCount: (user as any)._count?.replies ?? 0
     }))
 
     res.json({

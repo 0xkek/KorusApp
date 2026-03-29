@@ -60,11 +60,13 @@ router.get('/health', async (req, res) => {
  * Manual game completion endpoint (admin only)
  * For testing or dispute resolution
  */
-router.post('/complete-game', authenticateJWT, async (req, res) => {
+router.post('/complete-game', authenticateJWT, async (req: AuthRequest, res) => {
   try {
-    // Check if user is admin (you'd implement this check)
-    // For now, we'll skip admin check for testing
-    
+    const callerWallet = req.userWallet;
+    if (!callerWallet || !ADMIN_WALLETS.includes(callerWallet)) {
+      return res.status(403).json({ success: false, error: 'Admin access required' });
+    }
+
     const { gameId, winner, loser, wagerAmount } = req.body;
     
     if (!gameId || !winner || !loser || !wagerAmount) {

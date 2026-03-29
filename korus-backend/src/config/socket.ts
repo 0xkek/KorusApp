@@ -33,15 +33,11 @@ export const initializeSocket = (httpServer: HTTPServer) => {
   io.on('connection', (socket) => {
     logger.debug(`WebSocket client connected: ${socket.id}`)
 
-    // Allow clients to join their user-specific room for targeted notifications (with auth)
+    // Allow clients to join their user-specific room for targeted notifications (requires auth)
     socket.on('join_user', (data: string | { walletAddress: string; token: string }) => {
-      // Support both old format (string) and new format (object with token)
+      // Legacy string format: require token in new object format
       if (typeof data === 'string') {
-        // Legacy: allow without token for backwards compat during rollout
-        if (data && typeof data === 'string') {
-          socket.join(`user:${data}`)
-          logger.debug(`Socket ${socket.id} joined room user:${data} (legacy, no token)`)
-        }
+        logger.debug(`Socket ${socket.id} rejected join_user: legacy string format no longer supported`)
         return
       }
 

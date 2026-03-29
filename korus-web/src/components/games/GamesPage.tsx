@@ -183,7 +183,10 @@ export function GamesPage() {
 
     // Join user room to receive game_move events targeted at this player
     if (publicKey) {
-      socketRef.current.emit('join_user', publicKey.toBase58());
+      const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+      if (token) {
+        socketRef.current.emit('join_user', { walletAddress: publicKey.toBase58(), token });
+      }
     }
 
     // Listen for game events and refresh the list

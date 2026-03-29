@@ -138,7 +138,14 @@ const FeedPostCardComponent = ({
                   height={42}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.currentTarget.parentElement!.innerHTML = `<div class="w-full h-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-[14px] font-bold text-black">${(displayUser || 'U').slice(0, 2).toUpperCase()}</div>`;
+                    const parent = e.currentTarget.parentElement;
+                    if (parent) {
+                      const div = document.createElement('div');
+                      div.className = 'w-full h-full flex items-center justify-center text-[14px] font-bold';
+                      div.style.cssText = 'background: linear-gradient(to bottom right, var(--korus-primary), var(--korus-secondary)); color: #000;';
+                      div.textContent = (displayUser || 'U').slice(0, 2).toUpperCase();
+                      parent.replaceChildren(div);
+                    }
                   }}
                 />
               </div>
