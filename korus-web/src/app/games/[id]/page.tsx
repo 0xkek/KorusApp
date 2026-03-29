@@ -26,18 +26,17 @@ export default function GamePlayPage() {
   const [makingMove, setMakingMove] = useState(false);
 
   // Fetch game data
+  const initialLoadDone = useRef(false);
   const loadGame = useCallback(async () => {
     try {
-      setLoading(true);
+      // Only show loading spinner on initial load, not on polls
+      if (!initialLoadDone.current) {
+        setLoading(true);
+      }
       setError(null);
       const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
 
-      logger.log('📥 Loading game:', gameId);
-      logger.log('Auth token present:', !!token);
-
       const response = await gamesAPI.getGame(gameId, token || undefined);
-
-      logger.log('📦 Game response:', response);
 
       if (response.success && response.game) {
         setGame(response.game);
@@ -45,10 +44,11 @@ export default function GamePlayPage() {
         setError('Game not found');
       }
     } catch (err) {
-      logger.error('❌ Failed to load game:', err);
+      logger.error('Failed to load game:', err);
       setError(err instanceof Error ? err.message : 'Failed to load game');
     } finally {
       setLoading(false);
+      initialLoadDone.current = true;
     }
   }, [gameId]);
 
