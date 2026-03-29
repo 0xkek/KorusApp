@@ -241,6 +241,128 @@ export const tipPost = async (req: AuthRequest, res: Response) => {
   }
 }
 
+/**
+ * Get tip history for a specific wallet (sent and received)
+ */
+export const getTipHistory = async (req: Request, res: Response) => {
+  try {
+    const { walletAddress } = req.params
+
+    if (!walletAddress || walletAddress.length < 32 || walletAddress.length > 44) {
+      return res.status(400).json({ success: false, error: 'Invalid wallet address' })
+    }
+
+    // Tips sent by this wallet
+    const tipsSent = await prisma.interaction.findMany({
+      where: {
+        userWallet: walletAddress,
+        interactionType: 'tip'
+      },
+      include: {
+        user: { select: { walletAddress: true, username: true, snsUsername: true } }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50
+    })
+
+    // Get post info for sent tips (who received them)
+    const sentPostIds = tipsSent.map(t => t.targetId)
+    const sentPosts = sentPostIds.length > 0 ? await prisma.post.findMany({
+      where: { id: { in: sentPostIds } },
+      select: {
+        id: true,
+        content: true,
+        authorWallet: true,
+        author: { select: { walletAddress: true, username: true, snsUsername: true } }
+      }
+    }) : []
+    const postMap = new Map(sentPosts.map(p => [p.id, p]))
+
+    // Tips received: find interactions on this user's posts
+    const tipsReceived = await prisma.interaction.findMany({
+      where: {
+        interactionType: 'tip',
+        targetId: {
+          in: (await prisma.post.findMany({
+            where: { authorWallet: walletAddress },
+            select: { id: true },
+            take: 200
+          })).map(p => p.id)
+        },
+        NOT: { userWallet: walletAddress } // exclude self
+      },
+      include: {
+        user: { select: { walletAddress: true, username: true, snsUsername: true } }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50
+    })
+
+    // Get post info for received tips
+    const receivedPostIds = tipsReceived.map(t => t.targetId)
+    const receivedPosts = receivedPostIds.length > 0 ? await prisma.post.findMany({
+      where: { id: { in: receivedPostIds } },
+      select: { id: true, content: true }
+    }) : []
+    const receivedPostMap = new Map(receivedPosts.map(p => [p.id, p]))
+
+    const getDisplayName = (user: { walletAddress: string; username: string | null; snsUsername: string | null } | null) => {
+      if (!user) return null
+      return user.username || user.snsUsername || null
+    }
+
+    const sent = tipsSent.map(t => {
+      const post = postMap.get(t.targetId)
+      return {
+        id: t.id,
+        direction: 'sent' as const,
+        amount: t.amount?.toString() || '0',
+        recipientWallet: post?.authorWallet || null,
+        recipientDisplayName: getDisplayName(post?.author || null),
+        postId: t.targetId,
+        postPreview: post?.content?.slice(0, 80) || null,
+        createdAt: t.createdAt.toISOString()
+      }
+    })
+
+    const received = tipsReceived.map(t => {
+      const post = receivedPostMap.get(t.targetId)
+      return {
+        id: t.id,
+        direction: 'received' as const,
+        amount: t.amount?.toString() || '0',
+        senderWallet: t.userWallet,
+        senderDisplayName: getDisplayName(t.user),
+        postId: t.targetId,
+        postPreview: post?.content?.slice(0, 80) || null,
+        createdAt: t.createdAt.toISOString()
+      }
+    })
+
+    // Merge and sort by date
+    const all = [...sent, ...received].sort((a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+
+    const totalSent = sent.reduce((sum, t) => sum + parseFloat(t.amount), 0)
+    const totalReceived = received.reduce((sum, t) => sum + parseFloat(t.amount), 0)
+
+    res.json({
+      success: true,
+      tips: all,
+      stats: {
+        totalSent: totalSent.toFixed(4),
+        totalReceived: totalReceived.toFixed(4),
+        tipsSentCount: sent.length,
+        tipsReceivedCount: received.length
+      }
+    })
+  } catch (error) {
+    logger.error('Get tip history error:', error)
+    res.status(500).json({ success: false, error: 'Failed to fetch tip history' })
+  }
+}
+
 export const getPostInteractions = async (req: Request, res: Response) => {
   try {
     const { id } = req.params

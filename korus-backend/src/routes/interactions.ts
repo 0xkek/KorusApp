@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { getPostInteractions, likePost, tipPost, getUserInteractions, repostPost } from '../controllers/interactionsController'
+import { getPostInteractions, likePost, tipPost, getUserInteractions, repostPost, getTipHistory } from '../controllers/interactionsController'
 import { authenticate } from '../middleware/auth'
 import { requireTokenFeatures } from '../middleware/tokenFeatures'
 import { validateLike, validateTip, validateBatchInteractions } from '../middleware/validation'
@@ -41,6 +41,9 @@ const router = Router()
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
+// GET /api/interactions/tips/:walletAddress - Get tip history for a user
+router.get('/tips/:walletAddress', getTipHistory)
+
 router.post('/posts/:id/like', authenticate, validateLike, likePost)
 
 /**

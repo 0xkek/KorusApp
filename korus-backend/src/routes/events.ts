@@ -11,7 +11,8 @@ import {
   exportRegistrations,
   closeEvent,
   cancelEvent,
-  getMyEvents
+  getMyEvents,
+  getUserEventHistory
 } from '../controllers/eventsController';
 
 const router = express.Router();
@@ -35,6 +36,7 @@ router.get('/config/creation-fee', async (_req, res) => {
 // Protected routes (require authentication)
 // IMPORTANT: Specific routes like /my-events must come before /:id to prevent route collision
 router.get('/my-events', authenticate, getMyEvents);
+router.get('/user/:walletAddress', getUserEventHistory);
 router.post('/', authenticate, createEvent);
 
 // Public dynamic route - must come after specific routes

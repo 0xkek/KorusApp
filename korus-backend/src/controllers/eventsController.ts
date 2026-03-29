@@ -565,6 +565,110 @@ export const cancelEvent = async (req: AuthRequest, res: Response) => {
 };
 
 // Get user's created events
+/**
+ * Get event participation history for a wallet (registrations + created events)
+ */
+export const getUserEventHistory = async (req: Request, res: Response) => {
+  try {
+    const { walletAddress } = req.params;
+
+    if (!walletAddress || walletAddress.length < 32 || walletAddress.length > 44) {
+      return res.status(400).json({ success: false, error: 'Invalid wallet address' });
+    }
+
+    // Events the user registered for
+    const registrations = await prisma.whitelistRegistration.findMany({
+      where: { walletAddress },
+      include: {
+        event: {
+          select: {
+            id: true,
+            projectName: true,
+            title: true,
+            type: true,
+            status: true,
+            startDate: true,
+            endDate: true,
+            maxSpots: true,
+            registrationCount: true
+          }
+        }
+      },
+      orderBy: { registeredAt: 'desc' },
+      take: 50
+    });
+
+    // Events the user created
+    const createdEvents = await prisma.event.findMany({
+      where: { creatorWallet: walletAddress },
+      select: {
+        id: true,
+        projectName: true,
+        title: true,
+        type: true,
+        status: true,
+        startDate: true,
+        endDate: true,
+        maxSpots: true,
+        registrationCount: true,
+        createdAt: true
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 20
+    });
+
+    const registered = registrations.map(r => ({
+      id: r.id,
+      role: 'participant' as const,
+      eventId: r.event.id,
+      eventName: r.event.projectName,
+      eventTitle: r.event.title,
+      eventType: r.event.type,
+      eventStatus: r.event.status,
+      registrationStatus: r.status,
+      position: r.position,
+      startDate: r.event.startDate.toISOString(),
+      endDate: r.event.endDate.toISOString(),
+      registeredAt: r.registeredAt.toISOString(),
+      spots: r.event.maxSpots ? `${r.event.registrationCount}/${r.event.maxSpots}` : `${r.event.registrationCount}`
+    }));
+
+    const created = createdEvents.map(e => ({
+      id: e.id,
+      role: 'creator' as const,
+      eventId: e.id,
+      eventName: e.projectName,
+      eventTitle: e.title,
+      eventType: e.type,
+      eventStatus: e.status,
+      registrationStatus: null,
+      position: null,
+      startDate: e.startDate.toISOString(),
+      endDate: e.endDate.toISOString(),
+      registeredAt: e.createdAt.toISOString(),
+      spots: e.maxSpots ? `${e.registrationCount}/${e.maxSpots}` : `${e.registrationCount}`
+    }));
+
+    // Merge and sort by date
+    const all = [...registered, ...created].sort((a, b) =>
+      new Date(b.registeredAt).getTime() - new Date(a.registeredAt).getTime()
+    );
+
+    res.json({
+      success: true,
+      events: all,
+      stats: {
+        registered: registered.length,
+        created: created.length,
+        selected: registered.filter(r => r.registrationStatus === 'selected').length
+      }
+    });
+  } catch (error) {
+    logger.error('Get user event history error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch event history' });
+  }
+};
+
 export const getMyEvents = async (req: AuthRequest, res: Response) => {
   try {
     const walletAddress = req.userWallet!;

@@ -9,6 +9,49 @@ import { useEffect, useState, useCallback } from 'react';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useToastContext } from '@/components/ToastProvider';
 import { gamesAPI, UserGameHistory, UserGameStats } from '@/lib/api/games';
+import { api } from '@/lib/api/client';
+
+interface TipEntry {
+  id: string;
+  direction: 'sent' | 'received';
+  amount: string;
+  recipientWallet?: string | null;
+  recipientDisplayName?: string | null;
+  senderWallet?: string;
+  senderDisplayName?: string | null;
+  postId: string;
+  postPreview: string | null;
+  createdAt: string;
+}
+
+interface TipStats {
+  totalSent: string;
+  totalReceived: string;
+  tipsSentCount: number;
+  tipsReceivedCount: number;
+}
+
+interface EventEntry {
+  id: string;
+  role: 'participant' | 'creator';
+  eventId: string;
+  eventName: string;
+  eventTitle: string;
+  eventType: string;
+  eventStatus: string;
+  registrationStatus: string | null;
+  position: number | null;
+  startDate: string;
+  endDate: string;
+  registeredAt: string;
+  spots: string;
+}
+
+interface EventStats {
+  registered: number;
+  created: number;
+  selected: number;
+}
 
 // Dynamically import modals
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
@@ -44,6 +87,12 @@ export default function WalletPage() {
   const [gameHistory, setGameHistory] = useState<UserGameHistory[]>([]);
   const [gameStats, setGameStats] = useState<UserGameStats | null>(null);
   const [gamesLoading, setGamesLoading] = useState(false);
+  const [tips, setTips] = useState<TipEntry[]>([]);
+  const [tipStats, setTipStats] = useState<TipStats | null>(null);
+  const [tipsLoading, setTipsLoading] = useState(false);
+  const [events, setEvents] = useState<EventEntry[]>([]);
+  const [eventStats, setEventStats] = useState<EventStats | null>(null);
+  const [eventsLoading, setEventsLoading] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -120,13 +169,47 @@ export default function WalletPage() {
     }
   }, [publicKey, mounted]);
 
+  const fetchTips = useCallback(async () => {
+    if (!publicKey || !mounted) return;
+    setTipsLoading(true);
+    try {
+      const data = await api.get<{ success: boolean; tips: TipEntry[]; stats: TipStats }>(`/api/interactions/tips/${publicKey.toBase58()}`);
+      if (data.success) {
+        setTips(data.tips);
+        setTipStats(data.stats);
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setTipsLoading(false);
+    }
+  }, [publicKey, mounted]);
+
+  const fetchEvents = useCallback(async () => {
+    if (!publicKey || !mounted) return;
+    setEventsLoading(true);
+    try {
+      const data = await api.get<{ success: boolean; events: EventEntry[]; stats: EventStats }>(`/api/events/user/${publicKey.toBase58()}`);
+      if (data.success) {
+        setEvents(data.events);
+        setEventStats(data.stats);
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setEventsLoading(false);
+    }
+  }, [publicKey, mounted]);
+
   useEffect(() => {
     if (mounted && connected && publicKey) {
       fetchBalance();
       fetchShoutouts();
       fetchGames();
+      fetchTips();
+      fetchEvents();
     }
-  }, [mounted, connected, publicKey, fetchBalance, fetchShoutouts, fetchGames]);
+  }, [mounted, connected, publicKey, fetchBalance, fetchShoutouts, fetchGames, fetchTips, fetchEvents]);
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -248,30 +331,111 @@ export default function WalletPage() {
 
           {/* Tab Content */}
           <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-[var(--color-border-light)]">
-            {activeTab === 'All' && (
-              <div className="text-center py-20">
-                <div className="text-6xl mb-4 opacity-60">💳</div>
-                <p className="text-[var(--color-text)] text-lg font-medium">No transactions yet</p>
-                <p className="text-[var(--color-text-secondary)] text-sm mt-2 mb-6">
-                  All your SOL transactions will appear here.<br/>
-                  Start by exploring posts, games, and events to build activity.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <button
-                    onClick={() => window.location.href = '/'}
-                    className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150"
-                  >
-                    Explore Posts
-                  </button>
-                  <button
-                    onClick={() => window.location.href = '/games'}
-                    className="bg-white/[0.06] border border-[var(--color-border-light)] text-[var(--color-text)] font-semibold px-6 py-3 rounded-xl hover:bg-white/[0.12] transition-all duration-150"
-                  >
-                    Play Games
-                  </button>
+            {activeTab === 'All' && (() => {
+              const isAllLoading = shoutoutsLoading || gamesLoading || tipsLoading || eventsLoading;
+
+              // Build unified activity list
+              const allActivity: { type: string; emoji: string; label: string; detail: string; amount?: string; amountColor?: string; date: string }[] = [];
+
+              shoutouts.forEach(s => allActivity.push({
+                type: 'shoutout', emoji: '📣', label: 'Shoutout', detail: s.content.slice(0, 60),
+                amount: `-${s.price} SOL`, amountColor: 'text-red-400', date: s.createdAt
+              }));
+
+              tips.forEach(t => {
+                const isSent = t.direction === 'sent';
+                const other = isSent ? (t.recipientDisplayName || t.recipientWallet?.slice(0, 8)) : (t.senderDisplayName || t.senderWallet?.slice(0, 8));
+                allActivity.push({
+                  type: 'tip', emoji: isSent ? '↗' : '↙',
+                  label: isSent ? `Tipped ${other}` : `Tip from ${other}`,
+                  detail: t.postPreview?.slice(0, 50) || '',
+                  amount: `${isSent ? '-' : '+'}${parseFloat(t.amount).toFixed(4)} SOL`,
+                  amountColor: isSent ? 'text-red-400' : 'text-green-400',
+                  date: t.createdAt
+                });
+              });
+
+              gameHistory.forEach(g => {
+                const typeLabel = g.gameType === 'tictactoe' ? 'Tic-Tac-Toe' : g.gameType === 'rps' ? 'RPS' : g.gameType === 'connectfour' ? 'Connect Four' : g.gameType;
+                const resultLabel = g.result === 'win' ? 'Won' : g.result === 'loss' ? 'Lost' : g.result === 'draw' ? 'Draw' : 'Cancelled';
+                allActivity.push({
+                  type: 'game', emoji: '🎮', label: `${typeLabel} — ${resultLabel}`,
+                  detail: `vs ${g.opponentDisplayName || g.opponentWallet?.slice(0, 8) || 'N/A'}`,
+                  amount: `${parseFloat(g.earnings) >= 0 ? '+' : ''}${g.earnings} SOL`,
+                  amountColor: parseFloat(g.earnings) >= 0 ? 'text-green-400' : 'text-red-400',
+                  date: g.createdAt
+                });
+              });
+
+              events.forEach(e => allActivity.push({
+                type: 'event', emoji: '🎪', label: e.eventName,
+                detail: `${e.eventType} — ${e.role === 'creator' ? 'Creator' : e.registrationStatus || 'registered'}`,
+                date: e.registeredAt
+              }));
+
+              allActivity.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+              if (isAllLoading) {
+                return (
+                  <div className="text-center py-20">
+                    <div className="text-korus-primary animate-pulse text-lg">Loading activity...</div>
+                  </div>
+                );
+              }
+
+              if (allActivity.length === 0) {
+                return (
+                  <div className="text-center py-20">
+                    <div className="text-6xl mb-4 opacity-60">💳</div>
+                    <p className="text-[var(--color-text)] text-lg font-medium">No activity yet</p>
+                    <p className="text-[var(--color-text-secondary)] text-sm mt-2 mb-6">
+                      All your activity will appear here.<br/>
+                      Start by exploring posts, games, and events!
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <button
+                        onClick={() => window.location.href = '/'}
+                        className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150"
+                      >
+                        Explore Posts
+                      </button>
+                      <button
+                        onClick={() => window.location.href = '/games'}
+                        className="bg-white/[0.06] border border-[var(--color-border-light)] text-[var(--color-text)] font-semibold px-6 py-3 rounded-xl hover:bg-white/[0.12] transition-all duration-150"
+                      >
+                        Play Games
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="divide-y divide-[var(--color-border-light)]">
+                  {allActivity.slice(0, 50).map((item, i) => (
+                    <div key={`${item.type}-${i}`} className="p-4 hover:bg-white/[0.02] transition-colors">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-lg">{item.emoji}</span>
+                            <span className="text-[var(--color-text)] font-medium truncate">{item.label}</span>
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-[var(--color-text-secondary)]">
+                            {item.detail && <span className="truncate max-w-[200px]">{item.detail}</span>}
+                            <span>{formatDate(item.date)}</span>
+                          </div>
+                        </div>
+                        {item.amount && (
+                          <div className="text-right shrink-0">
+                            <p className={`font-semibold text-sm ${item.amountColor || 'text-[var(--color-text)]'}`}>{item.amount}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {activeTab === 'Shoutouts' && (
               <div>
@@ -355,19 +519,89 @@ export default function WalletPage() {
             )}
 
             {activeTab === 'Tips' && (
-              <div className="text-center py-20">
-                <div className="text-6xl mb-4 opacity-60">💰</div>
-                <p className="text-[var(--color-text)] text-lg font-medium">No tips yet</p>
-                <p className="text-[var(--color-text-secondary)] text-sm mt-2 mb-6">
-                  Tips you send and receive will appear here.<br/>
-                  Start engaging with quality content to earn tips!
-                </p>
-                <button
-                  onClick={() => window.location.href = '/'}
-                  className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150"
-                >
-                  Find Great Content
-                </button>
+              <div>
+                {tipsLoading ? (
+                  <div className="text-center py-20">
+                    <div className="text-korus-primary animate-pulse text-lg">Loading tips...</div>
+                  </div>
+                ) : tips.length === 0 ? (
+                  <div className="text-center py-20">
+                    <div className="text-6xl mb-4 opacity-60">💰</div>
+                    <p className="text-[var(--color-text)] text-lg font-medium">No tips yet</p>
+                    <p className="text-[var(--color-text-secondary)] text-sm mt-2 mb-6">
+                      Tips you send and receive will appear here.<br/>
+                      Start engaging with quality content to earn tips!
+                    </p>
+                    <button
+                      onClick={() => window.location.href = '/'}
+                      className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150"
+                    >
+                      Find Great Content
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    {/* Stats Summary */}
+                    {tipStats && (
+                      <div className="p-4 border-b border-[var(--color-border-light)]">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                          <div>
+                            <span className="text-[var(--color-text-secondary)] text-xs">Tips Sent</span>
+                            <p className="text-[var(--color-text)] text-xl font-bold">{tipStats.tipsSentCount}</p>
+                          </div>
+                          <div>
+                            <span className="text-[var(--color-text-secondary)] text-xs">Total Sent</span>
+                            <p className="text-red-400 text-xl font-bold">-{parseFloat(tipStats.totalSent).toFixed(4)} SOL</p>
+                          </div>
+                          <div>
+                            <span className="text-[var(--color-text-secondary)] text-xs">Tips Received</span>
+                            <p className="text-[var(--color-text)] text-xl font-bold">{tipStats.tipsReceivedCount}</p>
+                          </div>
+                          <div>
+                            <span className="text-[var(--color-text-secondary)] text-xs">Total Received</span>
+                            <p className="text-green-400 text-xl font-bold">+{parseFloat(tipStats.totalReceived).toFixed(4)} SOL</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Tip List */}
+                    <div className="divide-y divide-[var(--color-border-light)]">
+                      {tips.map((tip) => {
+                        const isSent = tip.direction === 'sent';
+                        const otherWallet = isSent ? tip.recipientWallet : tip.senderWallet;
+                        const otherName = isSent ? tip.recipientDisplayName : tip.senderDisplayName;
+                        const displayName = otherName || (otherWallet ? `${otherWallet.slice(0, 4)}...${otherWallet.slice(-4)}` : 'Unknown');
+
+                        return (
+                          <div key={tip.id} className="p-4 hover:bg-white/[0.02] transition-colors">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-lg">{isSent ? '↗' : '↙'}</span>
+                                  <span className="text-[var(--color-text)] font-medium">
+                                    {isSent ? 'Tipped' : 'Received from'} {displayName}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-3 text-xs text-[var(--color-text-secondary)]">
+                                  {tip.postPreview && (
+                                    <span className="truncate max-w-[200px]">&ldquo;{tip.postPreview}&rdquo;</span>
+                                  )}
+                                  <span>{formatDate(tip.createdAt)}</span>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className={`font-semibold ${isSent ? 'text-red-400' : 'text-green-400'}`}>
+                                  {isSent ? '-' : '+'}{parseFloat(tip.amount).toFixed(4)} SOL
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -493,19 +727,96 @@ export default function WalletPage() {
             )}
 
             {activeTab === 'Events' && (
-              <div className="text-center py-20">
-                <div className="text-6xl mb-4 opacity-60">🎪</div>
-                <p className="text-[var(--color-text)] text-lg font-medium">No event activity</p>
-                <p className="text-[var(--color-text-secondary)] text-sm mt-2 mb-6">
-                  Event rewards, airdrops, and participation fees will appear here.<br/>
-                  Join exclusive events to earn unique rewards!
-                </p>
-                <button
-                  onClick={() => window.location.href = '/events'}
-                  className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150"
-                >
-                  View Events
-                </button>
+              <div>
+                {eventsLoading ? (
+                  <div className="text-center py-20">
+                    <div className="text-korus-primary animate-pulse text-lg">Loading events...</div>
+                  </div>
+                ) : events.length === 0 ? (
+                  <div className="text-center py-20">
+                    <div className="text-6xl mb-4 opacity-60">🎪</div>
+                    <p className="text-[var(--color-text)] text-lg font-medium">No event activity</p>
+                    <p className="text-[var(--color-text-secondary)] text-sm mt-2 mb-6">
+                      Event registrations and created events will appear here.<br/>
+                      Join exclusive events to earn unique rewards!
+                    </p>
+                    <button
+                      onClick={() => window.location.href = '/events'}
+                      className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150"
+                    >
+                      View Events
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    {/* Stats Summary */}
+                    {eventStats && (
+                      <div className="p-4 border-b border-[var(--color-border-light)]">
+                        <div className="grid grid-cols-3 gap-4">
+                          <div>
+                            <span className="text-[var(--color-text-secondary)] text-xs">Registered</span>
+                            <p className="text-[var(--color-text)] text-xl font-bold">{eventStats.registered}</p>
+                          </div>
+                          <div>
+                            <span className="text-[var(--color-text-secondary)] text-xs">Selected</span>
+                            <p className="text-green-400 text-xl font-bold">{eventStats.selected}</p>
+                          </div>
+                          <div>
+                            <span className="text-[var(--color-text-secondary)] text-xs">Created</span>
+                            <p className="text-korus-primary text-xl font-bold">{eventStats.created}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Event List */}
+                    <div className="divide-y divide-[var(--color-border-light)]">
+                      {events.map((event) => {
+                        const typeEmoji = event.eventType === 'whitelist' ? '📋'
+                          : event.eventType === 'airdrop' ? '🪂'
+                          : event.eventType === 'mint' ? '🎨'
+                          : '🎪';
+                        const statusColor = event.registrationStatus === 'selected' ? 'bg-green-500/20 text-green-400'
+                          : event.registrationStatus === 'registered' ? 'bg-blue-500/20 text-blue-400'
+                          : event.registrationStatus === 'waitlist' ? 'bg-yellow-500/20 text-yellow-400'
+                          : event.registrationStatus === 'rejected' ? 'bg-red-500/20 text-red-400'
+                          : 'bg-korus-primary/20 text-korus-primary';
+                        const statusLabel = event.role === 'creator' ? 'Creator' : (event.registrationStatus || 'registered');
+
+                        return (
+                          <div key={event.id} className="p-4 hover:bg-white/[0.02] transition-colors cursor-pointer"
+                            onClick={() => window.location.href = `/events`}>
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-lg">{typeEmoji}</span>
+                                  <span className="text-[var(--color-text)] font-medium truncate">{event.eventName}</span>
+                                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold capitalize ${statusColor}`}>
+                                    {statusLabel}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-3 text-xs text-[var(--color-text-secondary)]">
+                                  <span className="uppercase">{event.eventType}</span>
+                                  <span>{formatDate(event.startDate)}</span>
+                                  <span>{event.spots} spots</span>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                  event.eventStatus === 'active' ? 'bg-green-500/20 text-green-400' :
+                                  event.eventStatus === 'closed' ? 'bg-white/[0.08] text-[var(--color-text-secondary)]' :
+                                  'bg-red-500/20 text-red-400'
+                                }`}>
+                                  {event.eventStatus}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
