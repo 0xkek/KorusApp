@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/useToast';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import * as eventsAPI from '@/lib/api/events';
 import dynamic from 'next/dynamic';
+import EventCountdown from '@/components/EventCountdown';
 
 // Dynamically import modals
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
@@ -345,12 +346,7 @@ export default function EventDetailsPage() {
 
                   {/* Event Info Grid */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-[var(--color-surface-light)] rounded-xl p-4 border border-[var(--color-border-light)]">
-                      <div className="text-[var(--color-text-tertiary)] text-xs mb-1">Start Date</div>
-                      <div className="text-[var(--color-text)] font-semibold text-sm">
-                        {new Date(event.startDate).toLocaleDateString()}
-                      </div>
-                    </div>
+                    <EventCountdown startDate={event.startDate} endDate={event.endDate} variant="full" />
                     <div className="bg-[var(--color-surface-light)] rounded-xl p-4 border border-[var(--color-border-light)]">
                       <div className="text-[var(--color-text-tertiary)] text-xs mb-1">End Date</div>
                       <div className="text-[var(--color-text)] font-semibold text-sm">

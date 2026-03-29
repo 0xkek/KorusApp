@@ -14,6 +14,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import * as eventsAPI from '@/lib/api/events';
 import { EventsFeedSkeleton } from '@/components/Skeleton';
+import EventCountdown, { EarlyAccessCountdown } from '@/components/EventCountdown';
 
 // Dynamically import modals
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
@@ -106,23 +107,6 @@ export default function EventsPage() {
     return 'var(--korus-primary)';
   };
 
-  const formatTimeRemaining = (startDate: string) => {
-    const now = new Date();
-    const start = new Date(startDate);
-    const diff = start.getTime() - now.getTime();
-
-    if (diff < 0) return 'Live Now';
-
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-    if (hours > 24) {
-      const days = Math.floor(hours / 24);
-      return `${days}d ${hours % 24}h`;
-    }
-
-    return `${hours}h ${minutes}m`;
-  };
 
   const isEventLive = (startDate: string, endDate: string) => {
     const now = new Date();
@@ -138,20 +122,7 @@ export default function EventsPage() {
     return now < earlyAccessEnd;
   };
 
-  const getEarlyAccessEnd = (event: Event) => {
-    const created = new Date(event.createdAt);
-    return new Date(created.getTime() + EARLY_ACCESS_HOURS * 60 * 60 * 1000);
-  };
 
-  const formatEarlyAccessRemaining = (event: Event) => {
-    const now = new Date();
-    const end = getEarlyAccessEnd(event);
-    const diff = end.getTime() - now.getTime();
-    if (diff <= 0) return null;
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}h ${minutes}m`;
-  };
 
   const handleEventPress = async (event: Event) => {
     setSelectedEvent(event);
@@ -445,7 +416,7 @@ export default function EventsPage() {
                               }`}
                             >
                               {eventIsLive ? '🔴' : '⏰'}
-                              {formatTimeRemaining(event.startDate)}
+                              <EventCountdown startDate={event.startDate} endDate={event.endDate} variant="compact" />
                             </div>
 
                             {!isPremium && isInEarlyAccess(event) && (
@@ -455,7 +426,7 @@ export default function EventsPage() {
                                 border: '1px solid rgba(251, 191, 36, 0.3)'
                               }}>
                                 <span>⭐</span>
-                                Premium for {formatEarlyAccessRemaining(event)}
+                                Premium for <EarlyAccessCountdown createdAt={event.createdAt} earlyAccessHours={EARLY_ACCESS_HOURS} />
                               </div>
                             )}
                           </div>
@@ -586,8 +557,12 @@ export default function EventsPage() {
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-[#262626] p-4 rounded-xl text-center border border-[var(--color-border-light)]">
                   <div className="text-korus-primary text-xl mb-1">⏰</div>
-                  <div className="text-xs text-[var(--color-text-tertiary)]">Starts In</div>
-                  <div className="font-semibold text-[var(--color-text)]">{formatTimeRemaining(selectedEvent.startDate)}</div>
+                  <div className="text-xs text-[var(--color-text-tertiary)]">
+                    <EventCountdown startDate={selectedEvent.startDate} endDate={selectedEvent.endDate} variant="compact" />
+                  </div>
+                  <div className="font-semibold text-[var(--color-text)] text-sm mt-1">
+                    {new Date(selectedEvent.endDate).toLocaleDateString()}
+                  </div>
                 </div>
 
                 {selectedEvent.maxSpots && (
@@ -675,7 +650,7 @@ export default function EventsPage() {
                       Upgrade to Premium to Join Early
                     </button>
                     <p className="text-center text-[var(--color-text-tertiary)] text-xs mt-3">
-                      Opens to everyone in {formatEarlyAccessRemaining(selectedEvent)}
+                      Opens to everyone in <EarlyAccessCountdown createdAt={selectedEvent.createdAt} earlyAccessHours={EARLY_ACCESS_HOURS} />
                     </p>
                   </div>
                 ) : (
