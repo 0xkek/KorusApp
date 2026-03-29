@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/database';
 import { logger } from '../utils/logger';
 import { getWeekDates, isFriday } from '../utils/dateHelpers';
 import { blockchainScanner } from './blockchainScanner';
@@ -15,8 +15,6 @@ import {
   getAssociatedTokenAddress,
   TOKEN_PROGRAM_ID
 } from '@solana/spl-token';
-
-const prisma = new PrismaClient();
 
 // Check if token features are enabled
 const TOKEN_FEATURES_ENABLED = process.env.ENABLE_TOKEN_FEATURES !== 'false';

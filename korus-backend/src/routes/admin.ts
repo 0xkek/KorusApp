@@ -2,13 +2,12 @@ import { Router } from 'express';
 import { authenticate as authenticateJWT, AuthRequest } from '../middleware/auth';
 import { isAuthorityConfigured } from '../config/gameAuthority';
 import { gameCompletionService } from '../services/gameCompletionService';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/database';
 import { logger } from '../utils/logger';
 import { getIO } from '../config/socket';
 import { userCache, postCache, feedCache } from '../utils/cache';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Authority wallet that can perform admin actions
 const ADMIN_WALLETS = [

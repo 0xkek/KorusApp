@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticate } from '../middleware/auth';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/database';
 import {
   getEvents,
   getEvent,
@@ -16,7 +16,6 @@ import {
 } from '../controllers/eventsController';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Public routes
 router.get('/', getEvents);

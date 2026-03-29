@@ -1,12 +1,11 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/database';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { validateUsername, normalizeUsername } from '../utils/usernameValidation';
 import { logger } from '../utils/logger';
 import { usernameLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 /**
  * GET /api/user/profile
