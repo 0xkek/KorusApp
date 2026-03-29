@@ -12,6 +12,7 @@ export default function WelcomePage() {
   const router = useRouter();
   const { isAuthenticated } = useWalletAuth();
   const [showDeveloperTools, setShowDeveloperTools] = useState(false);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   // Add hardcoded mint colors for wallet button on welcome page
   useEffect(() => {
@@ -53,12 +54,23 @@ export default function WelcomePage() {
     };
   }, []);
 
-  // Redirect to home only after successful authentication
+  // Show disclaimer on first connect, then redirect
   useEffect(() => {
     if (connected && isAuthenticated) {
-      router.push('/');
+      const accepted = localStorage.getItem('korus_disclaimer_accepted');
+      if (accepted) {
+        router.push('/');
+      } else {
+        setShowDisclaimer(true);
+      }
     }
   }, [connected, isAuthenticated, router]);
+
+  const handleAcceptDisclaimer = () => {
+    localStorage.setItem('korus_disclaimer_accepted', 'true');
+    setShowDisclaimer(false);
+    router.push('/');
+  };
 
   const handleDisconnect = () => {
     disconnect();
@@ -215,22 +227,6 @@ export default function WelcomePage() {
               </div>
             </div>
 
-            {/* Disclaimer */}
-            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-6 mb-12 text-left">
-              <div className="flex items-start gap-3">
-                <span className="text-yellow-400 text-lg mt-0.5">&#9888;</span>
-                <div>
-                  <h4 className="text-yellow-400 font-bold text-sm mb-2">Beta Disclaimer</h4>
-                  <p className="text-[var(--color-text-secondary)] text-xs leading-relaxed">
-                    Korus is currently in active development. Features may change, break, or be unavailable without notice.
-                    All SOL transactions (tips, wagers, shoutouts) use <strong className="text-[var(--color-text)]">real SOL on Solana mainnet</strong>.
-                    By using this platform, you acknowledge that you may lose funds due to bugs, smart contract vulnerabilities, or other issues.
-                    Only use amounts you are willing to lose. This is not financial advice. Use at your own risk.
-                  </p>
-                </div>
-              </div>
-            </div>
-
             {/* Footer Links */}
             <div className="text-center">
               <p className="text-[var(--color-text-secondary)] text-sm mb-4">
@@ -249,6 +245,50 @@ export default function WelcomePage() {
           </div>
         </div>
       </div>
+
+      {/* Disclaimer Modal */}
+      {showDisclaimer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div className="relative bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-2xl p-8 max-w-md w-full shadow-2xl">
+            <div className="text-center mb-6">
+              <div className="text-4xl mb-3">&#9888;&#65039;</div>
+              <h2 className="text-xl font-bold text-[var(--color-text)] mb-1">Before you continue</h2>
+              <p className="text-[var(--color-text-tertiary)] text-sm">Please read and accept</p>
+            </div>
+
+            <div className="space-y-4 mb-8 text-sm text-[var(--color-text-secondary)] leading-relaxed">
+              <div className="flex items-start gap-3">
+                <span className="text-yellow-400 mt-0.5">&#x2022;</span>
+                <p>Korus is currently in <strong className="text-[var(--color-text)]">active development (beta)</strong>. Features may change, break, or be unavailable without notice.</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-yellow-400 mt-0.5">&#x2022;</span>
+                <p>All SOL transactions (tips, wagers, shoutouts) use <strong className="text-[var(--color-text)]">real SOL on Solana mainnet</strong>.</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-yellow-400 mt-0.5">&#x2022;</span>
+                <p>You may <strong className="text-[var(--color-text)]">lose funds</strong> due to bugs, smart contract vulnerabilities, or other issues.</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-yellow-400 mt-0.5">&#x2022;</span>
+                <p>Only use amounts you are willing to lose. This is <strong className="text-[var(--color-text)]">not financial advice</strong>.</p>
+              </div>
+            </div>
+
+            <button
+              onClick={handleAcceptDisclaimer}
+              className="w-full py-3 rounded-xl text-base font-bold transition-all duration-150 hover:scale-[1.02]"
+              style={{
+                background: 'linear-gradient(135deg, var(--korus-primary), var(--korus-secondary))',
+                color: '#000',
+              }}
+            >
+              I understand, let me in
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
