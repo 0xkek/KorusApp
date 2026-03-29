@@ -1,52 +1,30 @@
 /**
  * Game Escrow Hook
  * Handles blockchain interactions for the game escrow smart contract
+ * Uses /api/rpc proxy to avoid 403 errors from direct RPC calls
  */
 
 import { logger } from '@/utils/logger';
-import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, SystemProgram, Transaction, TransactionInstruction, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useCallback, useState } from 'react';
 
 // Contract configuration
-// Load from environment variables for flexibility across deployments
 const GAME_ESCROW_PROGRAM_ID = new PublicKey(
   process.env.NEXT_PUBLIC_GAME_ESCROW_PROGRAM_ID || '4iUdAkPRmZLzUFXTLpt5QPGmUUtP6yfgpPpF3sLD9xtd'
 );
-// Minimal IDL for client-side interactions (kept for reference)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _IDL = {
-  version: "0.1.0",
-  name: "korus_game_escrow",
-  instructions: [
-    {
-      name: "createGame",
-      accounts: [
-        { name: "state", isMut: true, isSigner: false },
-        { name: "game", isMut: true, isSigner: false },
-        { name: "playerState", isMut: true, isSigner: false },
-        { name: "escrow", isMut: true, isSigner: false },
-        { name: "player", isMut: true, isSigner: true },
-        { name: "systemProgram", isMut: false, isSigner: false }
-      ],
-      args: [
-        { name: "gameType", type: "u8" },
-        { name: "wagerAmount", type: "u64" }
-      ]
-    },
-    {
-      name: "joinGame",
-      accounts: [
-        { name: "game", isMut: true, isSigner: false },
-        { name: "playerState", isMut: true, isSigner: false },
-        { name: "escrow", isMut: true, isSigner: false },
-        { name: "player", isMut: true, isSigner: true },
-        { name: "systemProgram", isMut: false, isSigner: false }
-      ],
-      args: []
-    }
-  ]
-};
+
+// Helper to call RPC via server-side proxy (uses correct mainnet endpoint)
+async function rpcCall(method: string, params: unknown[]) {
+  const response = await fetch('/api/rpc', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+  });
+  const data = await response.json();
+  if (data.error) throw new Error(data.error.message || 'RPC error');
+  return data.result;
+}
 
 export type GameType = 'tictactoe' | 'rps' | 'connectfour';
 
@@ -60,10 +38,21 @@ interface JoinGameResult {
 }
 
 export function useGameEscrow() {
-  const { connection } = useConnection();
-  const { publicKey, sendTransaction } = useWallet();
+  const { publicKey, signTransaction } = useWallet();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Simulate a transaction via the RPC proxy
+  const simulateTransaction = useCallback(async (tx: Transaction) => {
+    const serialized = tx.serialize({ verifySignatures: false });
+    const base64Tx = Buffer.from(serialized).toString('base64');
+    const result = await rpcCall('simulateTransaction', [base64Tx, {
+      sigVerify: false,
+      encoding: 'base64',
+      commitment: 'confirmed',
+    }]);
+    return result;
+  }, []);
 
   /**
    * Get the next available game ID from the blockchain
@@ -75,19 +64,26 @@ export function useGameEscrow() {
         GAME_ESCROW_PROGRAM_ID
       );
 
-      const stateAccount = await connection.getAccountInfo(statePda);
-      if (!stateAccount) {
+      const result = await rpcCall('getAccountInfo', [
+        statePda.toBase58(),
+        { encoding: 'base64', commitment: 'confirmed' }
+      ]);
+
+      if (!result || !result.value) {
         throw new Error('Contract state not found');
       }
 
+      // Decode base64 account data
+      const data = Buffer.from(result.value.data[0], 'base64');
+
       // State layout: discriminator(8) + authority(32) + treasury(32) + total_games(8) + ...
-      const totalGames = stateAccount.data.readBigUInt64LE(72);
+      const totalGames = data.readBigUInt64LE(72);
       return Number(totalGames);
     } catch (error) {
       logger.error('Failed to get next game ID:', error);
       throw error;
     }
-  }, [connection]);
+  }, []);
 
   /**
    * Create a new game on the blockchain with escrow deposit
@@ -98,6 +94,9 @@ export function useGameEscrow() {
   ): Promise<CreateGameResult> => {
     if (!publicKey) {
       throw new Error('Wallet not connected');
+    }
+    if (!signTransaction) {
+      throw new Error('Wallet does not support signing transactions');
     }
 
     setIsProcessing(true);
@@ -155,18 +154,6 @@ export function useGameEscrow() {
         gameId,
       });
 
-      // Check if player state already exists (no longer checking has_active_game - multiple games allowed)
-      const existingPlayerState = await connection.getAccountInfo(playerStatePda);
-      if (existingPlayerState) {
-        logger.log('✅ Player state exists - multiple games allowed');
-      } else {
-        logger.log('✅ No existing player state - will be created');
-      }
-
-      // Build transaction manually without Anchor Program helper
-      // NOTE: The smart contract handles the SOL transfer via CPI after initializing accounts
-      // This ensures the player has enough SOL for rent before transferring the wager
-
       // Create the create_game_with_deposit instruction
       // Instruction discriminator: SHA256("global:create_game_with_deposit")[:8]
       const discriminator = Buffer.from([128, 144, 19, 1, 81, 102, 47, 103]);
@@ -194,28 +181,29 @@ export function useGameEscrow() {
         data: instructionData,
       });
 
-      // Get recent blockhash
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+      // Get recent blockhash via proxy
+      const blockhashResult = await rpcCall('getLatestBlockhash', [{ commitment: 'confirmed' }]);
+      const blockhash = blockhashResult.value.blockhash;
+      const lastValidBlockHeight = blockhashResult.value.lastValidBlockHeight;
 
       const tx = new Transaction({
         feePayer: publicKey,
         blockhash,
         lastValidBlockHeight,
-      }).add(createGameIx); // Contract handles SOL transfer via CPI
+      }).add(createGameIx);
 
-      // Simulate transaction first to get better error messages
+      // Simulate transaction first via proxy
       try {
-        const simulation = await connection.simulateTransaction(tx);
+        const simulation = { value: await simulateTransaction(tx) };
         logger.log('Simulation logs:', simulation.value.logs);
         if (simulation.value.err) {
           logger.error('Simulation failed:', simulation.value);
-          logger.error('Full simulation:', JSON.stringify(simulation.value, null, 2));
 
-          // Check for insufficient funds error (Custom error 1)
           const errStr = JSON.stringify(simulation.value.err);
           if (errStr.includes('"Custom":1')) {
-            const balance = await connection.getBalance(publicKey);
-            const requiredSOL = (wagerLamports + 5000 + 5000) / LAMPORTS_PER_SOL; // wager + tx fee + rent
+            const balanceResult = await rpcCall('getBalance', [publicKey.toBase58(), { commitment: 'confirmed' }]);
+            const balance = balanceResult.value;
+            const requiredSOL = (wagerLamports + 5000 + 5000) / LAMPORTS_PER_SOL;
             const currentSOL = balance / LAMPORTS_PER_SOL;
             throw new Error(`Insufficient funds. You need at least ${requiredSOL.toFixed(4)} SOL but only have ${currentSOL.toFixed(4)} SOL. Please add more SOL to your wallet.`);
           }
@@ -228,30 +216,33 @@ export function useGameEscrow() {
         throw simError;
       }
 
-      // Send transaction
-      let signature: string;
-      try {
-        signature = await sendTransaction(tx, connection);
-      } catch (txError: unknown) {
-        logger.error('Transaction failed:', txError);
+      // Sign transaction via wallet
+      const signedTransaction = await signTransaction(tx);
 
-        // Check if user rejected the transaction
-        const errorMessage = txError instanceof Error ? txError.message : 'Transaction failed';
-        const isUserRejection = errorMessage.includes('closed') ||
-                                errorMessage.includes('rejected') ||
-                                errorMessage.includes('cancelled') ||
-                                errorMessage.includes('User rejected');
+      // Send signed transaction via proxy
+      const rawTransaction = signedTransaction.serialize();
+      const base64Tx = Buffer.from(rawTransaction).toString('base64');
+      const signature: string = await rpcCall('sendTransaction', [base64Tx, {
+        skipPreflight: false,
+        preflightCommitment: 'confirmed',
+        maxRetries: 5,
+        encoding: 'base64',
+      }]);
 
-        if (isUserRejection) {
-          throw new Error('Transaction cancelled by user');
+      // Wait for confirmation via proxy
+      const startTime = Date.now();
+      const timeout = 60000; // 60 seconds
+      while (Date.now() - startTime < timeout) {
+        const status = await rpcCall('getSignatureStatuses', [[signature]]);
+        if (status?.value?.[0]?.confirmationStatus === 'confirmed' ||
+            status?.value?.[0]?.confirmationStatus === 'finalized') {
+          break;
         }
-
-        logger.error('Error details:', txError);
-        throw new Error(errorMessage);
+        if (status?.value?.[0]?.err) {
+          throw new Error(`Transaction failed: ${JSON.stringify(status.value[0].err)}`);
+        }
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
-
-      // Wait for confirmation
-      await connection.confirmTransaction(signature, 'confirmed');
 
       logger.log('✅ Game created on blockchain:', { gameId, signature });
 
@@ -264,7 +255,7 @@ export function useGameEscrow() {
       setIsProcessing(false);
       throw error;
     }
-  }, [publicKey, connection, sendTransaction, getNextGameId]);
+  }, [publicKey, signTransaction, getNextGameId, simulateTransaction]);
 
   /**
    * Join an existing game with escrow deposit
@@ -272,6 +263,9 @@ export function useGameEscrow() {
   const joinGame = useCallback(async (gameId: number): Promise<JoinGameResult> => {
     if (!publicKey) {
       throw new Error('Wallet not connected');
+    }
+    if (!signTransaction) {
+      throw new Error('Wallet does not support signing transactions');
     }
 
     setIsProcessing(true);
@@ -284,7 +278,7 @@ export function useGameEscrow() {
       logger.log('Game ID:', gameId);
       logger.log('='.repeat(50));
 
-      // First, get the game from blockchain to know the wager amount
+      // Derive PDAs
       const gameIdBuffer = Buffer.alloc(8);
       gameIdBuffer.writeBigUInt64LE(BigInt(gameId));
       const [gamePda] = PublicKey.findProgramAddressSync(
@@ -314,27 +308,22 @@ export function useGameEscrow() {
         statePda: statePda.toString(),
       });
 
-      // Check if player state exists (for informational purposes only - blockchain allows multiple games)
-      const playerStateAccount = await connection.getAccountInfo(playerStatePda);
-      if (playerStateAccount) {
-        logger.log('✅ Player state exists - user can join multiple games');
-      } else {
-        logger.log('Player state does not exist yet (will be created with init_if_needed)');
-      }
-
       // Get game account to read wager
-      const gameAccount = await connection.getAccountInfo(gamePda);
-      if (!gameAccount) {
+      const gameAccountResult = await rpcCall('getAccountInfo', [
+        gamePda.toBase58(),
+        { encoding: 'base64', commitment: 'confirmed' }
+      ]);
+      if (!gameAccountResult?.value) {
         throw new Error('Game not found on blockchain');
       }
+      const gameData = Buffer.from(gameAccountResult.value.data[0], 'base64');
 
       // Read wager from game account (discriminator(8) + game_id(8) + game_type(1) + player1(32) + player2_option(1+32) + wager(8))
       const wagerOffset = 8 + 8 + 1 + 32 + 1 + 32;
-      const wagerLamports = Number(gameAccount.data.readBigUInt64LE(wagerOffset));
+      const wagerLamports = Number(gameData.readBigUInt64LE(wagerOffset));
       logger.log('Game wager:', wagerLamports, 'lamports');
 
       // Build join_game instruction
-      // NOTE: The smart contract itself does the transfer via CPI, so we don't need a separate transfer instruction
       // Instruction discriminator: SHA256("global:join_game")[:8]
       const discriminator = Buffer.from([107, 112, 18, 38, 56, 173, 60, 128]);
 
@@ -351,42 +340,32 @@ export function useGameEscrow() {
         data: discriminator,
       });
 
-      // Get recent blockhash
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+      // Get recent blockhash via proxy
+      const blockhashResult = await rpcCall('getLatestBlockhash', [{ commitment: 'confirmed' }]);
+      const blockhash = blockhashResult.value.blockhash;
+      const lastValidBlockHeight = blockhashResult.value.lastValidBlockHeight;
 
       const tx = new Transaction({
         feePayer: publicKey,
         blockhash,
         lastValidBlockHeight,
-      }).add(joinGameIx);  // Join game (smart contract handles the transfer)
+      }).add(joinGameIx);
 
-      // Simulate first
+      // Simulate first via proxy
       try {
-        const simulation = await connection.simulateTransaction(tx);
-        logger.log('='.repeat(50));
-        logger.log('SIMULATION RESULT:');
-        logger.log('Logs:', simulation.value.logs);
-        logger.log('Error:', simulation.value.err);
-        logger.log('Units consumed:', simulation.value.unitsConsumed);
-        logger.log('='.repeat(50));
+        const simulation = { value: await simulateTransaction(tx) };
+        logger.log('Simulation logs:', simulation.value.logs);
 
         if (simulation.value.err) {
           logger.error('Simulation failed:', simulation.value);
 
-          // Parse the error to provide better context
           const errStr = JSON.stringify(simulation.value.err);
-
-          // Check for insufficient funds error (Custom error 1)
           if (errStr.includes('"Custom":1')) {
-            const balance = await connection.getBalance(publicKey);
-            const requiredSOL = (wagerLamports + 5000 + 5000) / LAMPORTS_PER_SOL; // wager + tx fee + rent
+            const balanceResult = await rpcCall('getBalance', [publicKey.toBase58(), { commitment: 'confirmed' }]);
+            const balance = balanceResult.value;
+            const requiredSOL = (wagerLamports + 5000 + 5000) / LAMPORTS_PER_SOL;
             const currentSOL = balance / LAMPORTS_PER_SOL;
             throw new Error(`Insufficient funds. You need at least ${requiredSOL.toFixed(4)} SOL but only have ${currentSOL.toFixed(4)} SOL. Please add more SOL to your wallet.`);
-          }
-
-          if (errStr.includes('101')) {
-            logger.error('Error 101: This might be PlayerAlreadyInGame error');
-            logger.error('Check if the player_state account has current_game_id set');
           }
 
           throw new Error(`Simulation failed: ${errStr}`);
@@ -397,30 +376,33 @@ export function useGameEscrow() {
         throw simError;
       }
 
-      // Send transaction
-      let signature: string;
-      try {
-        signature = await sendTransaction(tx, connection);
-      } catch (txError: unknown) {
-        logger.error('Transaction failed:', txError);
+      // Sign transaction via wallet
+      const signedTransaction = await signTransaction(tx);
 
-        // Check if user rejected the transaction
-        const errorMessage = txError instanceof Error ? txError.message : 'Transaction failed';
-        const isUserRejection = errorMessage.includes('closed') ||
-                                errorMessage.includes('rejected') ||
-                                errorMessage.includes('cancelled') ||
-                                errorMessage.includes('User rejected');
+      // Send signed transaction via proxy
+      const rawTransaction = signedTransaction.serialize();
+      const base64Tx = Buffer.from(rawTransaction).toString('base64');
+      const signature: string = await rpcCall('sendTransaction', [base64Tx, {
+        skipPreflight: false,
+        preflightCommitment: 'confirmed',
+        maxRetries: 5,
+        encoding: 'base64',
+      }]);
 
-        if (isUserRejection) {
-          throw new Error('Transaction cancelled by user');
+      // Wait for confirmation via proxy
+      const startTime = Date.now();
+      const timeout = 60000;
+      while (Date.now() - startTime < timeout) {
+        const status = await rpcCall('getSignatureStatuses', [[signature]]);
+        if (status?.value?.[0]?.confirmationStatus === 'confirmed' ||
+            status?.value?.[0]?.confirmationStatus === 'finalized') {
+          break;
         }
-
-        logger.error('Error details:', txError);
-        throw new Error(errorMessage);
+        if (status?.value?.[0]?.err) {
+          throw new Error(`Transaction failed: ${JSON.stringify(status.value[0].err)}`);
+        }
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
-
-      // Wait for confirmation
-      await connection.confirmTransaction(signature, 'confirmed');
 
       logger.log('✅ Joined game on blockchain:', { gameId, signature });
 
@@ -433,7 +415,7 @@ export function useGameEscrow() {
       setIsProcessing(false);
       throw error;
     }
-  }, [publicKey, connection, sendTransaction]);
+  }, [publicKey, signTransaction, simulateTransaction]);
 
   /**
    * Cancel an existing game
@@ -441,6 +423,9 @@ export function useGameEscrow() {
   const cancelGame = useCallback(async (gameId: number): Promise<string> => {
     if (!publicKey) {
       throw new Error('Wallet not connected');
+    }
+    if (!signTransaction) {
+      throw new Error('Wallet does not support signing transactions');
     }
 
     setIsProcessing(true);
@@ -489,8 +474,10 @@ export function useGameEscrow() {
         data: discriminator,
       });
 
-      // Get recent blockhash
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+      // Get recent blockhash via proxy
+      const blockhashResult = await rpcCall('getLatestBlockhash', [{ commitment: 'confirmed' }]);
+      const blockhash = blockhashResult.value.blockhash;
+      const lastValidBlockHeight = blockhashResult.value.lastValidBlockHeight;
 
       const tx = new Transaction({
         feePayer: publicKey,
@@ -498,47 +485,12 @@ export function useGameEscrow() {
         lastValidBlockHeight,
       }).add(cancelGameIx);
 
-      // Simulate first to get better error messages
+      // Simulate first via proxy
       try {
-        const simulation = await connection.simulateTransaction(tx);
-        logger.log('='.repeat(50));
-        logger.log('CANCEL GAME SIMULATION:');
-        logger.log('Logs:', simulation.value.logs);
-        logger.log('Error:', simulation.value.err);
-        logger.log('Units consumed:', simulation.value.unitsConsumed);
-        logger.log('Accounts:', JSON.stringify({
-          statePda: statePda.toString(),
-          gamePda: gamePda.toString(),
-          playerStatePda: playerStatePda.toString(),
-          escrowPda: escrowPda.toString(),
-          player1: publicKey.toString(),
-        }, null, 2));
-        logger.log('='.repeat(50));
+        const simulation = { value: await simulateTransaction(tx) };
+        logger.log('Cancel simulation logs:', simulation.value.logs);
         if (simulation.value.err) {
           logger.error('Cancel simulation failed:', simulation.value);
-          logger.error('Error details:', JSON.stringify(simulation.value.err, null, 2));
-
-          // Check account existence
-          const [gameAccountInfo, playerStateInfo, escrowInfo] = await Promise.all([
-            connection.getAccountInfo(gamePda),
-            connection.getAccountInfo(playerStatePda),
-            connection.getAccountInfo(escrowPda)
-          ]);
-
-          logger.log('Account existence check:');
-          logger.log('- Game account exists:', !!gameAccountInfo);
-          logger.log('- Player state exists:', !!playerStateInfo);
-          logger.log('- Escrow exists:', !!escrowInfo);
-
-          if (gameAccountInfo) {
-            logger.log('- Game account owner:', gameAccountInfo.owner.toString());
-            logger.log('- Game account data length:', gameAccountInfo.data.length);
-          }
-          if (playerStateInfo) {
-            logger.log('- Player state owner:', playerStateInfo.owner.toString());
-            logger.log('- Player state data length:', playerStateInfo.data.length);
-          }
-
           throw new Error(`Cancel simulation failed: ${JSON.stringify(simulation.value.err)}`);
         }
       } catch (simError: unknown) {
@@ -546,11 +498,33 @@ export function useGameEscrow() {
         throw simError;
       }
 
-      // Send transaction
-      const signature = await sendTransaction(tx, connection);
+      // Sign transaction via wallet
+      const signedTransaction = await signTransaction(tx);
 
-      // Wait for confirmation
-      await connection.confirmTransaction(signature, 'confirmed');
+      // Send signed transaction via proxy
+      const rawTransaction = signedTransaction.serialize();
+      const base64Tx = Buffer.from(rawTransaction).toString('base64');
+      const signature: string = await rpcCall('sendTransaction', [base64Tx, {
+        skipPreflight: false,
+        preflightCommitment: 'confirmed',
+        maxRetries: 5,
+        encoding: 'base64',
+      }]);
+
+      // Wait for confirmation via proxy
+      const startTime = Date.now();
+      const timeout = 60000;
+      while (Date.now() - startTime < timeout) {
+        const status = await rpcCall('getSignatureStatuses', [[signature]]);
+        if (status?.value?.[0]?.confirmationStatus === 'confirmed' ||
+            status?.value?.[0]?.confirmationStatus === 'finalized') {
+          break;
+        }
+        if (status?.value?.[0]?.err) {
+          throw new Error(`Transaction failed: ${JSON.stringify(status.value[0].err)}`);
+        }
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
 
       logger.log('✅ Game cancelled on blockchain:', { gameId, signature });
 
@@ -563,7 +537,7 @@ export function useGameEscrow() {
       setIsProcessing(false);
       throw error;
     }
-  }, [publicKey, connection, sendTransaction]);
+  }, [publicKey, signTransaction, simulateTransaction]);
 
   return {
     createGame,
