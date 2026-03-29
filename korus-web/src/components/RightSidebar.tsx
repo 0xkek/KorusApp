@@ -32,12 +32,7 @@ interface SidebarEvent {
   endDate: string;
 }
 
-// Placeholder live games if API returns nothing
-const placeholderGames: LiveGame[] = [
-  { id: 'placeholder-1', title: 'Tic Tac Toe', detail: '1/2 players \u00b7 30m left', wager: '0.5 SOL' },
-  { id: 'placeholder-2', title: 'Rock Paper Scissors', detail: '1/2 players \u00b7 25m left', wager: '1.0 SOL' },
-  { id: 'placeholder-3', title: 'Connect Four', detail: '1/2 players \u00b7 15m left', wager: '2.0 SOL' },
-];
+// No placeholder games — only show real live games
 
 export default function RightSidebar({ showNotifications = false, onNotificationCountChange }: RightSidebarProps) {
   const router = useRouter();
@@ -94,10 +89,10 @@ export default function RightSidebar({ showNotifications = false, onNotification
         };
       });
 
-      setLiveGames(mapped.length > 0 ? mapped.slice(0, 5) : placeholderGames);
+      setLiveGames(mapped.slice(0, 5));
     } catch (error) {
       logger.error('Failed to fetch live games:', error);
-      setLiveGames(placeholderGames);
+      setLiveGames([]);
     } finally {
       setIsLoadingGames(false);
     }
@@ -403,24 +398,24 @@ export default function RightSidebar({ showNotifications = false, onNotification
                 />
                 <p style={{ fontSize: '12px' }}>Loading games...</p>
               </div>
+            ) : liveGames.length === 0 ? (
+              <p style={{ fontSize: '13px', color: 'var(--color-text-tertiary)', textAlign: 'center', padding: '16px 0' }}>
+                No live games right now
+              </p>
             ) : (
               liveGames.map((game, index) => (
                 <div
                   key={game.id}
-                  onClick={() => {
-                    if (!game.id.startsWith('placeholder-')) {
-                      router.push(`/games`);
-                    }
-                  }}
+                  onClick={() => router.push(`/games`)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '10px',
                     padding: '10px 0',
                     borderTop: index > 0 ? '1px solid var(--color-border-light)' : 'none',
-                    cursor: game.id.startsWith('placeholder-') ? 'default' : 'pointer',
+                    cursor: 'pointer',
                   }}
-                  className={game.id.startsWith('placeholder-') ? '' : 'hover:opacity-80 transition-opacity'}
+                  className="hover:opacity-80 transition-opacity"
                 >
                   {/* Pulsing red dot */}
                   <div

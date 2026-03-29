@@ -63,9 +63,8 @@ export function GamesPage() {
     }
   }, [completedLoaded, loadCompletedGames]);
 
-  const loadGames = useCallback(async () => {
-    // Don't show loading spinner when polling for updates
-    if (!expandedGameId) {
+  const loadGames = useCallback(async (showSpinner = false) => {
+    if (showSpinner) {
       setLoading(true);
     }
     try {
@@ -98,7 +97,7 @@ export function GamesPage() {
       logger.error('Failed to load games:', error);
       showError('Failed to load games');
     } finally {
-      if (!expandedGameId) {
+      if (showSpinner) {
         setLoading(false);
       }
     }
@@ -106,7 +105,7 @@ export function GamesPage() {
 
   // Fetch games based on active tab
   useEffect(() => {
-    loadGames();
+    loadGames(true);
   }, [loadGames]);
 
   // Detect when games transition from waiting to active and notify player 1
