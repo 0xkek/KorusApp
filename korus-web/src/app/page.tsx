@@ -1206,10 +1206,19 @@ export default function Home() {
                 <p className="text-[13px]">{isAuthenticated ? 'Follow users to see their posts here' : 'Connect your wallet to use the following feed'}</p>
               </div>
             ) : (
+              /* eslint-disable @typescript-eslint/no-explicit-any */
               followingPosts.map((post) => (
                 <div key={post.id} className="px-5 py-4 border-b border-[var(--color-border-light)] cursor-pointer hover:bg-white/[0.02] transition-colors"
-                  onClick={() => router.push(`/post/${post.repostedPost?.id || post.id}`)}
+                  onClick={() => router.push(`/post/${(post as any).parentPostId || post.repostedPost?.id || post.id}`)}
                 >
+                  {(post as any).isReply && (post as any).replyingToUser && (
+                    <div className="flex items-center gap-2 ml-[52px] mb-1.5 text-[13px] text-[var(--color-text-tertiary)]">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                      </svg>
+                      <span>Replying to <Link href={`/profile/${(post as any).parentPostId || ''}`} onClick={(e) => e.stopPropagation()} className="hover:underline" style={{ color: 'var(--korus-primary)' }}>@{(post as any).replyingToUser}</Link></span>
+                    </div>
+                  )}
                   {post.repostedBy && (
                     <div className="flex items-center gap-2 ml-[52px] mb-1.5 text-[13px] text-[var(--color-text-tertiary)]">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1252,6 +1261,7 @@ export default function Home() {
                   </div>
                 </div>
               ))
+              /* eslint-enable @typescript-eslint/no-explicit-any */
             )
           ) : isLoading ? (
             <FeedSkeleton count={5} />

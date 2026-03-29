@@ -174,49 +174,98 @@ export const getFollowingFeed = async (req: AuthRequest, res: Response) => {
 
     const take = limit ? parseInt(limit as string) : 20
 
-    const posts = await prisma.post.findMany({
-      where: {
-        authorWallet: { in: followedWallets },
-        isHidden: false,
-        isShoutout: false,
-        game: null,
-      },
-      include: {
-        author: {
-          select: {
-            walletAddress: true,
-            tier: true,
-            genesisVerified: true,
-            snsUsername: true,
-            username: true,
-            nftAvatar: true,
-            themeColor: true,
+    const authorInclude = {
+      select: {
+        walletAddress: true,
+        tier: true,
+        genesisVerified: true,
+        snsUsername: true,
+        username: true,
+        nftAvatar: true,
+        themeColor: true,
+      }
+    }
+
+    // Date-based cursor filter for pagination (works across merged posts + replies)
+    const cursorDate = cursor ? new Date(cursor as string) : undefined
+    const dateFilter = cursorDate ? { createdAt: { lt: cursorDate } } : {}
+
+    // Fetch posts and replies from followed users in parallel
+    const [posts, replies] = await Promise.all([
+      prisma.post.findMany({
+        where: {
+          authorWallet: { in: followedWallets },
+          isHidden: false,
+          isShoutout: false,
+          game: null,
+          ...dateFilter,
+        },
+        include: {
+          author: authorInclude,
+          originalPost: {
+            include: { author: authorInclude }
           }
         },
-        originalPost: {
-          include: {
-            author: {
-              select: {
-                walletAddress: true,
-                tier: true,
-                genesisVerified: true,
-                snsUsername: true,
-                username: true,
-                nftAvatar: true,
-                themeColor: true,
-              }
+        orderBy: { createdAt: 'desc' },
+        take: take + 1,
+      }),
+      prisma.reply.findMany({
+        where: {
+          authorWallet: { in: followedWallets },
+          isHidden: false,
+          parentReplyId: null, // Only top-level replies
+          ...dateFilter,
+        },
+        include: {
+          author: authorInclude,
+          post: {
+            select: {
+              id: true,
+              authorWallet: true,
+              content: true,
+              author: authorInclude,
             }
           }
-        }
-      },
-      orderBy: { createdAt: 'desc' },
-      take: take + 1,
-      ...(cursor ? { cursor: { id: cursor as string }, skip: 1 } : {})
-    })
+        },
+        orderBy: { createdAt: 'desc' },
+        take: take + 1,
+      })
+    ])
 
-    const hasMore = posts.length > take
-    const resultPosts = hasMore ? posts.slice(0, take) : posts
-    const nextCursor = hasMore ? resultPosts[resultPosts.length - 1].id : null
+    // Transform replies into post-like objects for the feed
+    const replyPosts = replies.map(reply => ({
+      id: `reply-${reply.id}`,
+      replyId: reply.id,
+      content: reply.content,
+      authorWallet: reply.authorWallet,
+      author: reply.author,
+      createdAt: reply.createdAt,
+      updatedAt: reply.updatedAt,
+      imageUrl: reply.imageUrl,
+      videoUrl: reply.videoUrl,
+      likeCount: reply.likeCount,
+      replyCount: 0,
+      repostCount: 0,
+      tipCount: reply.tipCount,
+      tipAmount: 0,
+      isRepost: false,
+      isShoutout: false,
+      isHidden: false,
+      isReply: true,
+      parentPostId: reply.postId,
+      replyingToUser: reply.post.author?.snsUsername || reply.post.author?.username || reply.post.authorWallet?.slice(0, 15) || 'Unknown',
+    }))
+
+    // Merge and sort by createdAt descending
+    const merged = [...posts, ...replyPosts]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, take + 1)
+
+    const hasMore = merged.length > take
+    const resultPosts = hasMore ? merged.slice(0, take) : merged
+    const nextCursor = hasMore && resultPosts.length > 0
+      ? resultPosts[resultPosts.length - 1].createdAt.toISOString()
+      : null
 
     res.json({
       success: true,
