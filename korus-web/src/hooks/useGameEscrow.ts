@@ -155,9 +155,9 @@ export function useGameEscrow() {
         gameId,
       });
 
-      // Create the create_game_with_deposit instruction
-      // Instruction discriminator: SHA256("global:create_game_with_deposit")[:8]
-      const discriminator = Buffer.from([128, 144, 19, 1, 81, 102, 47, 103]);
+      // Use create_game instruction (supports init_if_needed for player_state)
+      // Instruction discriminator: SHA256("global:create_game")[:8]
+      const discriminator = Buffer.from([124, 69, 75, 66, 184, 220, 72, 206]);
 
       // Encode game_type (u8) and wager_amount (u64, little-endian)
       const gameTypeBuffer = Buffer.alloc(1);
@@ -168,7 +168,7 @@ export function useGameEscrow() {
 
       const instructionData = Buffer.concat([discriminator, gameTypeBuffer, wagerBuffer]);
 
-      // Build the instruction
+      // Build the create_game instruction
       const createGameIx = new TransactionInstruction({
         programId: GAME_ESCROW_PROGRAM_ID,
         keys: [
@@ -182,6 +182,13 @@ export function useGameEscrow() {
         data: instructionData,
       });
 
+      // Transfer wager to escrow PDA (create_game expects SOL already in escrow)
+      const transferIx = SystemProgram.transfer({
+        fromPubkey: publicKey,
+        toPubkey: escrowPda,
+        lamports: wagerLamports,
+      });
+
       // Get recent blockhash via proxy
       const blockhashResult = await rpcCall('getLatestBlockhash', [{ commitment: 'confirmed' }]);
       const blockhash = blockhashResult.value.blockhash;
@@ -191,7 +198,7 @@ export function useGameEscrow() {
         feePayer: publicKey,
         blockhash,
         lastValidBlockHeight,
-      }).add(createGameIx);
+      }).add(transferIx).add(createGameIx);
 
       // Simulate transaction first via proxy
       try {
