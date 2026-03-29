@@ -74,6 +74,8 @@ export function RockPaperScissorsGame({
         setShowDrawNotification(true);
       }
 
+      // Reset choice state for new round
+      setSelectedChoice(null);
       setPreviousRound(currentRound);
     }
   }, [currentRound, previousRound, isGameOver, gameState]);

@@ -181,9 +181,15 @@ export function GamesPage() {
       socketRef.current.connect();
     }
 
+    // Join user room to receive game_move events targeted at this player
+    if (publicKey) {
+      socketRef.current.emit('join_user', publicKey.toBase58());
+    }
+
     // Listen for game events and refresh the list
     socketRef.current.off('game_created');
     socketRef.current.off('game_joined');
+    socketRef.current.off('game_move');
     socketRef.current.off('game_completed');
 
     socketRef.current.on('game_created', () => {
@@ -193,6 +199,11 @@ export function GamesPage() {
 
     socketRef.current.on('game_joined', () => {
       logger.log('🎮 WebSocket: game_joined received');
+      loadGames();
+    });
+
+    socketRef.current.on('game_move', () => {
+      logger.log('🎮 WebSocket: game_move received');
       loadGames();
     });
 
@@ -208,6 +219,7 @@ export function GamesPage() {
     return () => {
       socketRef.current?.off('game_created');
       socketRef.current?.off('game_joined');
+      socketRef.current?.off('game_move');
       socketRef.current?.off('game_completed');
     };
   }, [connected, loadGames, completedLoaded, loadCompletedGames]);
