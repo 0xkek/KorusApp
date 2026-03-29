@@ -21,6 +21,7 @@ interface RPSGameProps {
   wager?: string; // SOL amount
   gameState?: { player1Score?: number; player2Score?: number; rounds?: unknown[]; round?: number; roundResults?: unknown[]; score?: { player1: number; player2: number } }; // Full game state with score and round info
   payoutTxSignature?: string; // Transaction signature for blockchain payout
+  onDismiss?: () => void; // Collapse/exit the game view
 }
 
 const CHOICES = [
@@ -45,6 +46,7 @@ export function RockPaperScissorsGame({
   wager,
   gameState,
   payoutTxSignature,
+  onDismiss,
 }: RPSGameProps) {
   const [selectedChoice, setSelectedChoice] = useState<RPSMove | null>(playerMove);
   const [timeLeft, setTimeLeft] = useState<string>('');
@@ -270,11 +272,21 @@ export function RockPaperScissorsGame({
               : 'bg-gradient-to-r from-gray-500 to-gray-600'
           }`}>
             <div
-              className="text-3xl font-bold mb-2"
+              className="text-3xl font-bold mb-1"
               style={{ color: 'white', WebkitTextFillColor: 'white' }}
             >
               {winner === 'you' ? '🎉 YOU WIN!' : winner === 'opponent' ? '💔 YOU LOSE' : '🤝 DRAW'}
             </div>
+
+            {/* Final Score */}
+            {gameState?.score && (
+              <div
+                className="text-sm font-semibold mb-2"
+                style={{ color: 'white', WebkitTextFillColor: 'white' }}
+              >
+                Final Score: {gameState.score.player1} - {gameState.score.player2}
+              </div>
+            )}
 
             {wagerAmount > 0 && winner === 'you' && (
               <div
@@ -312,54 +324,62 @@ export function RockPaperScissorsGame({
             )}
           </div>
 
-          {/* Show both players' choices */}
-          {opponentMove && (
-            <div className="bg-white/[0.12] rounded-lg p-3">
-              <div className="flex items-center justify-center gap-6">
-                <div className="flex flex-col items-center">
-                  <div
-                    className="text-xs mb-1 font-medium"
-                    style={{ color: 'white', WebkitTextFillColor: 'white' }}
-                  >
-                    You
-                  </div>
-                  <span className="text-4xl mb-1">
-                    {CHOICES.find(c => c.id === playerMove)?.icon}
-                  </span>
-                  <div
-                    className="text-xs font-semibold"
-                    style={{ color: 'white', WebkitTextFillColor: 'white' }}
-                  >
-                    {CHOICES.find(c => c.id === playerMove)?.name}
-                  </div>
-                </div>
-
-                <div
-                  className="text-2xl font-bold"
-                  style={{ color: 'white', WebkitTextFillColor: 'white' }}
-                >
-                  VS
-                </div>
-
-                <div className="flex flex-col items-center">
-                  <div
-                    className="text-xs mb-1 font-medium"
-                    style={{ color: 'white', WebkitTextFillColor: 'white' }}
-                  >
-                    Opponent
-                  </div>
-                  <span className="text-4xl mb-1">
-                    {CHOICES.find(c => c.id === opponentMove)?.icon}
-                  </span>
-                  <div
-                    className="text-xs font-semibold"
-                    style={{ color: 'white', WebkitTextFillColor: 'white' }}
-                  >
-                    {CHOICES.find(c => c.id === opponentMove)?.name}
-                  </div>
-                </div>
+          {/* Rounds Recap */}
+          {gameState?.roundResults && (gameState.roundResults as unknown[]).length > 0 && (
+            <div className="bg-white/[0.06] rounded-lg p-3 mb-3">
+              <div className="text-xs font-semibold text-[var(--color-text-secondary)] mb-2 text-center">Round History</div>
+              <div className="flex flex-col gap-1.5">
+                {(gameState.roundResults as { round?: number; player1Choice?: RPSMove; player2Choice?: RPSMove; winner?: string }[]).map((round, i) => {
+                  const p1Icon = CHOICES.find(c => c.id === round.player1Choice)?.icon || '?';
+                  const p2Icon = CHOICES.find(c => c.id === round.player2Choice)?.icon || '?';
+                  const isDraw = round.winner === 'draw';
+                  const p1Won = round.winner === 'player1';
+                  return (
+                    <div key={i} className="flex items-center justify-between text-xs px-2 py-1 rounded bg-white/[0.04]">
+                      <span className="text-[var(--color-text-secondary)] w-14">Round {(round.round || i) + 1}</span>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-base ${p1Won ? 'scale-110' : ''}`}>{p1Icon}</span>
+                        <span className="text-[var(--color-text-tertiary)]">vs</span>
+                        <span className={`text-base ${!isDraw && !p1Won ? 'scale-110' : ''}`}>{p2Icon}</span>
+                      </div>
+                      <span className={`font-semibold w-14 text-right ${
+                        isDraw ? 'text-yellow-400' : p1Won ? 'text-korus-primary' : 'text-korus-secondary'
+                      }`}>
+                        {isDraw ? 'Draw' : p1Won ? getDisplayName(player1Address, player1DisplayName).split(' ')[0] : getDisplayName(player2Address, player2DisplayName).split(' ')[0]}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
+          )}
+
+          {/* Wager Summary */}
+          {wagerAmount > 0 && (
+            <div className="flex items-center justify-between px-3 py-2 text-xs bg-white/[0.06] rounded-lg">
+              <div className="flex items-center gap-2">
+                <span className="text-[var(--color-text-secondary)]">Wager:</span>
+                <span className="font-bold text-korus-primary">{wagerAmount} SOL each</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[var(--color-text-secondary)]">Pot:</span>
+                <span className="font-bold text-[var(--color-text)]">{(wagerAmount * 2).toFixed(4)} SOL</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[var(--color-text-secondary)]">Fee:</span>
+                <span className="font-semibold text-yellow-400">{korusFee.toFixed(4)} SOL</span>
+              </div>
+            </div>
+          )}
+
+          {/* Dismiss Button */}
+          {onDismiss && (
+            <button
+              onClick={onDismiss}
+              className="w-full mt-3 py-2.5 bg-white/[0.06] hover:bg-white/[0.1] border border-[var(--color-border-light)] rounded-lg text-sm font-semibold text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors duration-150"
+            >
+              Close Game
+            </button>
           )}
         </div>
       )}

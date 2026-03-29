@@ -646,6 +646,7 @@ export function GamesPage() {
         wager={game.wager}
         gameState={game.gameState as { player1Score?: number; player2Score?: number; rounds?: unknown[]; round?: number; roundResults?: unknown[]; score?: { player1: number; player2: number } }}
         payoutTxSignature={game.escrow?.payoutTxSig || undefined}
+        onDismiss={() => setExpandedGameId(null)}
       />
     );
   };
