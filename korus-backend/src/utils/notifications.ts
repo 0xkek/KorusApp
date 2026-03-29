@@ -12,7 +12,7 @@ export async function createNotification({
   amount,
 }: {
   userId: string;
-  type: 'like' | 'reply' | 'tip' | 'mention' | 'follow';
+  type: 'like' | 'reply' | 'tip' | 'mention' | 'follow' | 'game_joined' | 'game_move' | 'game_round' | 'game_completed';
   fromUserId: string;
   postId?: string;
   amount?: number;
@@ -29,6 +29,10 @@ export async function createNotification({
     tip: 'You received a tip!',
     mention: 'You were mentioned',
     follow: 'New follower',
+    game_joined: 'Someone joined your game!',
+    game_move: 'Your turn to play!',
+    game_round: 'New round started!',
+    game_completed: 'Game finished!',
   };
 
   const messages: Record<string, string> = {
@@ -37,6 +41,10 @@ export async function createNotification({
     tip: `tipped you ${amount || 0} SOL`,
     mention: 'mentioned you in a post',
     follow: 'started following you',
+    game_joined: 'joined your game',
+    game_move: 'made a move — your turn!',
+    game_round: 'New round — make your choice!',
+    game_completed: `Game over! ${amount ? `Wager: ${amount} SOL` : ''}`,
   };
 
   try {

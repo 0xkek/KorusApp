@@ -2,6 +2,7 @@ import { logger } from '../utils/logger';
 import prisma from '../config/database';
 import { gameEscrowService } from './gameEscrowService';
 import { emitGameCompleted } from '../config/socket';
+import { createNotification } from '../utils/notifications';
 
 // Move timeout: 10 minutes (matches on-chain MOVE_TIMEOUT_SECONDS = 600)
 const MOVE_TIMEOUT_MS = 10 * 60 * 1000;
@@ -173,6 +174,21 @@ export class GameExpirationService {
             player1DisplayName: game.player1User?.username || game.player1User?.snsUsername || null,
             player2DisplayName: game.player2User?.username || game.player2User?.snsUsername || null
           });
+
+          // Notify both players about timeout completion
+          const wagerAmount = Number(updatedGame.wager);
+          createNotification({
+            userId: game.player1,
+            type: 'game_completed',
+            fromUserId: game.player2,
+            amount: wagerAmount > 0 ? wagerAmount : undefined,
+          }).catch(() => {});
+          createNotification({
+            userId: game.player2,
+            type: 'game_completed',
+            fromUserId: game.player1,
+            amount: wagerAmount > 0 ? wagerAmount : undefined,
+          }).catch(() => {});
 
           logger.info(`Game ${game.id} completed by move timeout. Winner: ${timeoutWinner}`);
         } catch (error) {

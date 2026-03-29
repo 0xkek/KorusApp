@@ -5,6 +5,7 @@ import { gameEscrowService } from '../services/gameEscrowService'
 import { reputationService } from '../services/reputationService'
 import { PublicKey } from '@solana/web3.js'
 import { emitGameCreated, emitGameJoined, emitGameMove, emitGameCompleted } from '../config/socket'
+import { createNotification } from '../utils/notifications'
 
 // Move timeout: 10 minutes (matches on-chain MOVE_TIMEOUT_SECONDS = 600)
 const MOVE_TIMEOUT_MS = 10 * 60 * 1000
@@ -257,6 +258,13 @@ export const joinGame = async (req: AuthRequest, res: Response) => {
     // Emit real-time event for game joined
     emitGameJoined(serializedGame)
 
+    // Notify player1 that someone joined their game
+    createNotification({
+      userId: game.player1,
+      type: 'game_joined',
+      fromUserId: player2,
+    }).catch(() => {})
+
     res.json({
       success: true,
       game: serializedGame
@@ -370,6 +378,21 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
               player2DisplayName: getDisplayName(updatedGame.player2User)
             }
             emitGameCompleted(updatedGame.player1, updatedGame.player2, serializedGame)
+
+            // Notify both players about timeout completion
+            const wagerAmount = Number(updatedGame.wager)
+            createNotification({
+              userId: updatedGame.player1,
+              type: 'game_completed',
+              fromUserId: updatedGame.player2,
+              amount: wagerAmount > 0 ? wagerAmount : undefined,
+            }).catch(() => {})
+            createNotification({
+              userId: updatedGame.player2,
+              type: 'game_completed',
+              fromUserId: updatedGame.player1,
+              amount: wagerAmount > 0 ? wagerAmount : undefined,
+            }).catch(() => {})
           }
 
           const serializedGame = {
@@ -404,6 +427,9 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
 
     let winner: string | null = null
     let newStatus = 'active'
+
+    // Track RPS rounds before move to detect when a round resolves
+    const rpsRoundsBefore = game.gameType === 'rps' ? ((gameState.roundResults as any[]) || []).length : 0
 
     // Process move based on game type
     switch (game.gameType) {
@@ -608,8 +634,50 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
     // Emit real-time events for game move and/or completion
     if (newStatus === 'completed' && updatedGame.player2) {
       emitGameCompleted(updatedGame.player1, updatedGame.player2, serializedGame)
+
+      // Notify both players game is completed
+      const wagerAmount = Number(updatedGame.wager)
+      createNotification({
+        userId: updatedGame.player1,
+        type: 'game_completed',
+        fromUserId: updatedGame.player2,
+        amount: wagerAmount > 0 ? wagerAmount : undefined,
+      }).catch(() => {})
+      createNotification({
+        userId: updatedGame.player2,
+        type: 'game_completed',
+        fromUserId: updatedGame.player1,
+        amount: wagerAmount > 0 ? wagerAmount : undefined,
+      }).catch(() => {})
     } else if (updatedGame.player2) {
       emitGameMove(updatedGame.player1, updatedGame.player2, serializedGame)
+
+      const opponent = playerWallet === updatedGame.player1 ? updatedGame.player2 : updatedGame.player1
+
+      if (game.gameType === 'rps') {
+        // For RPS: notify both players when a new round starts (round resolved but game continues)
+        const rpsRoundsAfter = ((gameState.roundResults as any[]) || []).length
+        if (rpsRoundsAfter > rpsRoundsBefore) {
+          // A round just resolved — notify both players about the new round
+          createNotification({
+            userId: updatedGame.player1,
+            type: 'game_round',
+            fromUserId: updatedGame.player2,
+          }).catch(() => {})
+          createNotification({
+            userId: updatedGame.player2,
+            type: 'game_round',
+            fromUserId: updatedGame.player1,
+          }).catch(() => {})
+        }
+      } else {
+        // Turn-based games: notify opponent it's their turn
+        createNotification({
+          userId: opponent,
+          type: 'game_move',
+          fromUserId: playerWallet,
+        }).catch(() => {})
+      }
     }
 
     res.json({
