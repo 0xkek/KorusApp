@@ -79,13 +79,15 @@ export function TicTacToeBoard({
     return `${baseClasses} ${borderClasses} ${bgClasses} ${textClasses}`;
   };
 
+  console.log('TicTacToe render:', { isMyTurn, isGameOver, board, currentPlayerAddress });
+
   const handleCellClick = (index: number) => {
-    logger.log('Cell clicked:', { index, cell: board[index], isMyTurn, isGameOver });
+    console.log('Cell clicked:', { index, cell: board[index], isMyTurn, isGameOver });
     if (board[index] !== null || !isMyTurn || isGameOver) {
-      logger.log('Click blocked:', { cellOccupied: board[index] !== null, notMyTurn: !isMyTurn, gameOver: isGameOver });
+      console.log('Click blocked:', { cellOccupied: board[index] !== null, notMyTurn: !isMyTurn, gameOver: isGameOver });
       return;
     }
-    logger.log('Making move:', index);
+    console.log('Making move:', index);
     onCellClick(index);
   };
 
@@ -153,7 +155,7 @@ export function TicTacToeBoard({
       </div>
 
       {/* Board */}
-      <div className="grid grid-cols-3 gap-3 justify-center mb-3">
+      <div className="grid grid-cols-3 gap-3 max-w-[312px] mx-auto mb-3">
         {board.map((cell, index) => (
           <button
             key={index}
