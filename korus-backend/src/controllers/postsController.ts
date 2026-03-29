@@ -16,7 +16,7 @@ import { userCache } from '../utils/cache'
 const NFT_AVATAR_TTL = 60 * 60 * 1000 // 1 hour
 
 // Helper function to resolve NFT avatar mints to image URLs (cached)
-async function resolveNFTAvatar(nftMint: string | null): Promise<string | null> {
+export async function resolveNFTAvatar(nftMint: string | null): Promise<string | null> {
   if (!nftMint) return null
   // If it's already a URL, return as-is
   if (nftMint.startsWith('http://') || nftMint.startsWith('https://')) return nftMint

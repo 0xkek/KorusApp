@@ -3,6 +3,7 @@ import prisma from '../config/database'
 import { AuthRequest } from '../middleware/auth'
 import { logger } from '../utils/logger'
 import { createNotification } from '../utils/notifications'
+import { resolveNFTAvatar } from './postsController'
 
 const authorSelect = {
   walletAddress: true,
@@ -266,6 +267,16 @@ export const getFollowingFeed = async (req: AuthRequest, res: Response) => {
     const nextCursor = hasMore && resultPosts.length > 0
       ? resultPosts[resultPosts.length - 1].createdAt.toISOString()
       : null
+
+    // Resolve NFT avatar mints to image URLs (parallel)
+    await Promise.all(resultPosts.map(async (item: any) => {
+      if (item.author?.nftAvatar) {
+        item.author.nftAvatar = await resolveNFTAvatar(item.author.nftAvatar)
+      }
+      if (item.originalPost?.author?.nftAvatar) {
+        item.originalPost.author.nftAvatar = await resolveNFTAvatar(item.originalPost.author.nftAvatar)
+      }
+    }))
 
     res.json({
       success: true,
