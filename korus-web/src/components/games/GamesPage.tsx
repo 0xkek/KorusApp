@@ -1,7 +1,8 @@
 'use client';
 import { logger } from '@/utils/logger';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { io, Socket } from 'socket.io-client';
 import { createPortal } from 'react-dom';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { gamesAPI, type Game, type GameType } from '@/lib/api/games';
@@ -160,14 +161,63 @@ export function GamesPage() {
     }
   }, [games, expandedGameId, publicKey]);
 
-  // Poll for game updates every 5 seconds (always poll when connected)
+  // WebSocket connection for real-time game updates
+  const socketRef = useRef<Socket | null>(null);
+
   useEffect(() => {
-    // Always poll if user is connected (to detect new games and updates)
+    if (!connected) return;
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+
+    if (!socketRef.current) {
+      socketRef.current = io(API_URL, {
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 5
+      });
+    } else if (!socketRef.current.connected) {
+      socketRef.current.connect();
+    }
+
+    // Listen for game events and refresh the list
+    socketRef.current.off('game_created');
+    socketRef.current.off('game_joined');
+    socketRef.current.off('game_completed');
+
+    socketRef.current.on('game_created', () => {
+      logger.log('🎮 WebSocket: game_created received');
+      loadGames();
+    });
+
+    socketRef.current.on('game_joined', () => {
+      logger.log('🎮 WebSocket: game_joined received');
+      loadGames();
+    });
+
+    socketRef.current.on('game_completed', () => {
+      logger.log('🎮 WebSocket: game_completed received');
+      loadGames();
+      // Also refresh completed games if that tab was loaded
+      if (completedLoaded) {
+        loadCompletedGames();
+      }
+    });
+
+    return () => {
+      socketRef.current?.off('game_created');
+      socketRef.current?.off('game_joined');
+      socketRef.current?.off('game_completed');
+    };
+  }, [connected, loadGames, completedLoaded, loadCompletedGames]);
+
+  // Fallback polling every 15 seconds (reduced from 5s since we have WebSocket)
+  useEffect(() => {
     if (!connected) return;
 
     const interval = setInterval(() => {
       loadGames();
-    }, 5000);
+    }, 15000);
 
     return () => clearInterval(interval);
   }, [connected, loadGames]);
@@ -521,6 +571,8 @@ export function GamesPage() {
         isGameOver={isGameOver}
         winner={game.winner}
         playerColor={playerColor}
+        wager={game.wager}
+        payoutTxSignature={game.escrow?.payoutTxSig}
       />
     );
   };

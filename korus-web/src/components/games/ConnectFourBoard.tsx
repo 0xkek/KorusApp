@@ -10,6 +10,8 @@ interface ConnectFourBoardProps {
   isGameOver: boolean;
   winner: string | null;
   playerColor: 'red' | 'yellow';
+  wager?: string;
+  payoutTxSignature?: string | null;
 }
 
 export function ConnectFourBoard({
@@ -19,9 +21,17 @@ export function ConnectFourBoard({
   isGameOver,
   winner,
   playerColor,
+  wager,
+  payoutTxSignature,
 }: ConnectFourBoardProps) {
   const ROWS = 6;
   const COLS = 7;
+
+  // Calculate Korus fee (2% of wager)
+  const KORUS_FEE_PERCENTAGE = 0.02;
+  const wagerAmount = parseFloat(wager || '0');
+  const korusFee = wagerAmount * KORUS_FEE_PERCENTAGE;
+  const winnerPayout = (wagerAmount * 2) - korusFee;
 
   const getCellClassName = (cell: ConnectFourCell) => {
     const baseClasses = 'w-12 h-12 rounded-full duration-150';
@@ -102,6 +112,40 @@ export function ConnectFourBoard({
       {!isGameOver && isMyTurn && (
         <div className="text-sm text-[var(--color-text-secondary)]">
           Click on a column to drop your piece
+        </div>
+      )}
+
+      {/* Wager Info Bar */}
+      {wagerAmount > 0 && (
+        <div className="flex items-center justify-between px-2 text-xs bg-white/[0.06] rounded-lg py-1.5 w-full">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[var(--color-text-secondary)]">Wager:</span>
+              <span className="font-bold text-korus-primary">{wagerAmount} SOL</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[var(--color-text-secondary)]">Korus Fee (2%):</span>
+              <span className="font-semibold text-yellow-400">{korusFee.toFixed(4)} SOL</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[var(--color-text-secondary)]">Winner gets:</span>
+            <span className="font-bold text-green-400">{winnerPayout.toFixed(4)} SOL</span>
+          </div>
+        </div>
+      )}
+
+      {/* Payout Transaction Link */}
+      {isGameOver && payoutTxSignature && (
+        <div className="px-2 text-xs text-center">
+          <a
+            href={`https://explorer.solana.com/tx/${payoutTxSignature}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-korus-primary hover:text-korus-secondary underline"
+          >
+            View Payout Transaction →
+          </a>
         </div>
       )}
     </div>

@@ -98,3 +98,45 @@ export const emitNotification = (userId: string, notification: any) => {
     logger.debug(`Emitted notification to user:${userId}`)
   }
 }
+
+/**
+ * Emit a game_created event to all connected clients
+ */
+export const emitGameCreated = (game: any) => {
+  if (io) {
+    io.emit('game_created', game)
+    logger.debug(`Emitted game_created: ${game.id}`)
+  }
+}
+
+/**
+ * Emit a game_joined event to all connected clients
+ */
+export const emitGameJoined = (game: any) => {
+  if (io) {
+    io.emit('game_joined', game)
+    logger.debug(`Emitted game_joined: ${game.id}`)
+  }
+}
+
+/**
+ * Emit a game_move event to both players in a game
+ */
+export const emitGameMove = (player1: string, player2: string, game: any) => {
+  if (io) {
+    io.to(`user:${player1}`).to(`user:${player2}`).emit('game_move', game)
+    logger.debug(`Emitted game_move: ${game.id}`)
+  }
+}
+
+/**
+ * Emit a game_completed event to both players in a game
+ */
+export const emitGameCompleted = (player1: string, player2: string, game: any) => {
+  if (io) {
+    io.to(`user:${player1}`).to(`user:${player2}`).emit('game_completed', game)
+    // Also broadcast to all so the lobby updates
+    io.emit('game_completed', game)
+    logger.debug(`Emitted game_completed: ${game.id}`)
+  }
+}

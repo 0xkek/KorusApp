@@ -2,7 +2,8 @@
 import { logger } from '@/utils/logger';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { io, Socket } from 'socket.io-client';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Button } from '@/components/Button';
 import { TicTacToeBoard, TicTacToeCell } from '@/components/games/TicTacToeBoard';
@@ -53,9 +54,69 @@ export default function GamePlayPage() {
 
   useEffect(() => {
     loadGame();
+  }, [loadGame]);
 
-    // Poll for game updates every 3 seconds
-    const interval = setInterval(loadGame, 3000);
+  // WebSocket connection for real-time game updates
+  const socketRef = useRef<Socket | null>(null);
+
+  useEffect(() => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+
+    if (!socketRef.current) {
+      socketRef.current = io(API_URL, {
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 5
+      });
+    } else if (!socketRef.current.connected) {
+      socketRef.current.connect();
+    }
+
+    // Join user room so targeted events reach this client
+    if (publicKey) {
+      socketRef.current.emit('join_user', publicKey.toBase58());
+    }
+
+    // Listen for moves and completion on this game
+    socketRef.current.off('game_move');
+    socketRef.current.off('game_completed');
+    socketRef.current.off('game_joined');
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    socketRef.current.on('game_move', (updatedGame: any) => {
+      if (updatedGame.id === gameId) {
+        logger.log('🎮 WebSocket: game_move received for this game');
+        setGame(updatedGame);
+      }
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    socketRef.current.on('game_completed', (updatedGame: any) => {
+      if (updatedGame.id === gameId) {
+        logger.log('🎮 WebSocket: game_completed received for this game');
+        setGame(updatedGame);
+      }
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    socketRef.current.on('game_joined', (updatedGame: any) => {
+      if (updatedGame.id === gameId) {
+        logger.log('🎮 WebSocket: game_joined received for this game');
+        setGame(updatedGame);
+      }
+    });
+
+    return () => {
+      socketRef.current?.off('game_move');
+      socketRef.current?.off('game_completed');
+      socketRef.current?.off('game_joined');
+    };
+  }, [gameId, publicKey]);
+
+  // Fallback polling every 10 seconds (reduced from 3s since we have WebSocket)
+  useEffect(() => {
+    const interval = setInterval(loadGame, 10000);
     return () => clearInterval(interval);
   }, [loadGame]);
 
@@ -211,6 +272,8 @@ export default function GamePlayPage() {
         isGameOver={isGameOver}
         winner={game.winner}
         playerColor={playerColor}
+        wager={game.wager}
+        payoutTxSignature={game.escrow?.payoutTxSig}
       />
     );
   };

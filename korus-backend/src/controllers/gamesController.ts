@@ -2,7 +2,15 @@ import { logger } from '../utils/logger'
 import { Request, Response } from 'express'
 import prisma from '../config/database'
 import { gameEscrowService } from '../services/gameEscrowService'
+import { reputationService } from '../services/reputationService'
 import { PublicKey } from '@solana/web3.js'
+import { emitGameCreated, emitGameJoined, emitGameMove, emitGameCompleted } from '../config/socket'
+
+// Helper to extract display name from a user relation
+function getDisplayName(user: any): string | null {
+  if (!user) return null
+  return user.username || user.snsUsername || null
+}
 
 // AuthRequest type
 interface AuthRequest extends Request {
@@ -175,8 +183,13 @@ export const createGame = async (req: AuthRequest, res: Response) => {
       ...game,
       onChainGameId: game.onChainGameId ? game.onChainGameId.toString() : null,
       wager: game.wager.toString(),
-      expiresAt: game.expiresAt ? game.expiresAt.toISOString() : null
+      expiresAt: game.expiresAt ? game.expiresAt.toISOString() : null,
+      player1DisplayName: getDisplayName(game.player1User),
+      player2DisplayName: null
     }
+
+    // Emit real-time event for new game
+    emitGameCreated(serializedGame)
 
     res.json({
       success: true,
@@ -228,8 +241,13 @@ export const joinGame = async (req: AuthRequest, res: Response) => {
     const serializedGame = {
       ...updatedGame,
       onChainGameId: updatedGame.onChainGameId ? updatedGame.onChainGameId.toString() : null,
-      wager: updatedGame.wager.toString()
+      wager: updatedGame.wager.toString(),
+      player1DisplayName: getDisplayName(updatedGame.player1User),
+      player2DisplayName: getDisplayName(updatedGame.player2User)
     }
+
+    // Emit real-time event for game joined
+    emitGameJoined(serializedGame)
 
     res.json({
       success: true,
@@ -338,6 +356,23 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
       } catch (error) {
         logger.error('Failed to award game rewards:', error)
         // Don't fail the game update if rewards fail
+      }
+
+      // Award reputation points for game completion
+      if (winner !== 'draw' && game.player2) {
+        try {
+          const loser = winner === game.player1 ? game.player2 : game.player1
+          await reputationService.onGameCompleted(
+            winner,
+            loser,
+            game.gameType,
+            Number(game.wager)
+          )
+          logger.debug(`Reputation awarded for game ${id} - Winner: ${winner}, Loser: ${loser}`)
+        } catch (error) {
+          logger.error('Failed to award game reputation:', error)
+          // Don't fail the game update if reputation fails
+        }
       }
 
       // Note: Blockchain completion happens after database update (see lines 376-422)
@@ -462,7 +497,16 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
     const serializedGame = {
       ...updatedGame,
       onChainGameId: updatedGame.onChainGameId ? updatedGame.onChainGameId.toString() : null,
-      wager: updatedGame.wager.toString()
+      wager: updatedGame.wager.toString(),
+      player1DisplayName: getDisplayName(updatedGame.player1User),
+      player2DisplayName: getDisplayName(updatedGame.player2User)
+    }
+
+    // Emit real-time events for game move and/or completion
+    if (newStatus === 'completed' && updatedGame.player2) {
+      emitGameCompleted(updatedGame.player1, updatedGame.player2, serializedGame)
+    } else if (updatedGame.player2) {
+      emitGameMove(updatedGame.player1, updatedGame.player2, serializedGame)
     }
 
     res.json({
@@ -504,7 +548,9 @@ export const getGame = async (req: Request, res: Response) => {
       ...game,
       onChainGameId: game.onChainGameId ? game.onChainGameId.toString() : null,
       wager: game.wager.toString(),
-      expiresAt: game.expiresAt ? game.expiresAt.toISOString() : null
+      expiresAt: game.expiresAt ? game.expiresAt.toISOString() : null,
+      player1DisplayName: getDisplayName(game.player1User),
+      player2DisplayName: getDisplayName(game.player2User)
     }
 
     res.json({
@@ -540,7 +586,9 @@ export const getGameByPostId = async (req: Request, res: Response) => {
       ...game,
       onChainGameId: game.onChainGameId ? game.onChainGameId.toString() : null,
       wager: game.wager.toString(),
-      expiresAt: game.expiresAt ? game.expiresAt.toISOString() : null
+      expiresAt: game.expiresAt ? game.expiresAt.toISOString() : null,
+      player1DisplayName: getDisplayName(game.player1User),
+      player2DisplayName: getDisplayName(game.player2User)
     }
 
     res.json({
@@ -794,7 +842,9 @@ export const getAllGames = async (req: Request, res: Response) => {
       ...game,
       onChainGameId: game.onChainGameId ? game.onChainGameId.toString() : null,
       wager: game.wager.toString(),
-      expiresAt: game.expiresAt ? game.expiresAt.toISOString() : null
+      expiresAt: game.expiresAt ? game.expiresAt.toISOString() : null,
+      player1DisplayName: getDisplayName(game.player1User),
+      player2DisplayName: getDisplayName(game.player2User)
     }))
 
     res.json({
@@ -845,6 +895,21 @@ export const deleteGame = async (req: AuthRequest, res: Response) => {
         success: false,
         error: 'Can only cancel waiting games'
       })
+    }
+
+    // If game has an on-chain wager, refund it before deleting
+    if (game.onChainGameId && Number(game.wager) > 0) {
+      try {
+        logger.info(`Refunding on-chain wager for game ${gameId}, onChainGameId: ${game.onChainGameId}`)
+        const result = await gameEscrowService.authorityCancelExpiredGame(Number(game.onChainGameId))
+        if (result.success) {
+          logger.info(`✅ On-chain refund successful for game ${gameId}, signature: ${result.signature}`)
+        } else {
+          logger.error(`❌ On-chain refund failed for game ${gameId}: ${result.error} - proceeding with DB deletion`)
+        }
+      } catch (refundError) {
+        logger.error(`❌ On-chain refund error for game ${gameId} - proceeding with DB deletion:`, refundError)
+      }
     }
 
     // Delete the game
