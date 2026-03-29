@@ -16,7 +16,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import type { Post } from '@/types';
-import { postsAPI, uploadAPI, interactionsAPI, usersAPI, nftsAPI, repliesAPI, notificationsAPI, followsAPI } from '@/lib/api';
+import { postsAPI, uploadAPI, interactionsAPI, usersAPI, nftsAPI, repliesAPI, followsAPI } from '@/lib/api';
 import { formatRelativeTime } from '@/utils/formatTime';
 import { transformPost, transformPostAsync } from '@/utils/transformPost';
 import { FeedPostCard } from '@/components/FeedPostCard';
@@ -32,7 +32,6 @@ export default function Home() {
   const { token, isAuthenticated } = useWalletAuth();
 
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(0);
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
   const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
@@ -529,41 +528,13 @@ export default function Home() {
     };
   }, []);
 
-  // Join user room for targeted notifications + listen for new_notification events
+  // Join user room for targeted notifications (LeftSidebar handles badge count)
   useEffect(() => {
     if (!socketRef.current || !connected || !isAuthenticated || !publicKey) return;
 
     const walletAddress = publicKey.toBase58();
-
-    // Join user-specific room (with auth token)
     socketRef.current.emit('join_user', { walletAddress, token });
-
-    // Listen for real-time notifications
-    socketRef.current.off('new_notification');
-    socketRef.current.on('new_notification', () => {
-      setNotificationCount(prev => prev + 1);
-    });
-
-    return () => {
-      socketRef.current?.off('new_notification');
-    };
   }, [connected, isAuthenticated, publicKey]);
-
-  // Fetch initial unread notification count on mount (WebSocket handles real-time updates)
-  useEffect(() => {
-    if (!connected || !isAuthenticated || !token) return;
-
-    const fetchUnreadCount = async () => {
-      try {
-        const response = await notificationsAPI.getNotifications(token, true);
-        setNotificationCount(response.notifications.length);
-      } catch {
-        // silent
-      }
-    };
-
-    fetchUnreadCount();
-  }, [connected, isAuthenticated, token]);
 
   // Fetch user interactions for loaded posts (only for new post IDs, debounced)
   const fetchedInteractionIds = useRef<Set<string>>(new Set());
@@ -1116,7 +1087,6 @@ export default function Home() {
           onNotificationsToggle={() => setShowNotifications(!showNotifications)}
           onPostButtonClick={() => setShowCreatePostModal(true)}
           onSearchClick={() => setShowSearchModal(true)}
-          notificationCount={notificationCount}
         />
         {/* Main Feed */}
         <div className="flex-1 min-w-0 border-r border-[var(--color-border-light)]">
@@ -1313,7 +1283,6 @@ export default function Home() {
         <RightSidebar
           showNotifications={showNotifications}
           onNotificationsClose={() => setShowNotifications(false)}
-          onNotificationCountChange={setNotificationCount}
         />
       </div>
       </div>

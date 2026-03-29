@@ -12,7 +12,6 @@ import * as gamesAPI from '@/lib/api/games';
 interface RightSidebarProps {
   showNotifications?: boolean;
   onNotificationsClose?: () => void;
-  onNotificationCountChange?: (count: number) => void;
 }
 
 interface LiveGame {
@@ -34,7 +33,7 @@ interface SidebarEvent {
 
 // No placeholder games — only show real live games
 
-export default function RightSidebar({ showNotifications = false, onNotificationCountChange }: RightSidebarProps) {
+export default function RightSidebar({ showNotifications = false }: RightSidebarProps) {
   const router = useRouter();
   const { connected } = useWallet();
   const { token, isAuthenticated } = useWalletAuth();
@@ -129,10 +128,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
       const response = await notificationsAPI.getNotifications(token);
       setNotifications(response.notifications);
 
-      const unreadCount = response.notifications.filter(n => !n.read).length;
-      if (onNotificationCountChange) {
-        onNotificationCountChange(unreadCount);
-      }
+      // Badge count managed by LeftSidebar (polls every 60s)
     } catch (error) {
       logger.error('Failed to fetch notifications:', error);
     } finally {
@@ -149,11 +145,6 @@ export default function RightSidebar({ showNotifications = false, onNotification
         prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
       );
 
-      const unreadCount = notifications.filter(n => !n.read && n.id !== notification.id).length;
-      if (onNotificationCountChange) {
-        onNotificationCountChange(unreadCount);
-      }
-
       if (notification.postId) {
         router.push(`/post/${notification.postId}`);
       }
@@ -168,10 +159,6 @@ export default function RightSidebar({ showNotifications = false, onNotification
     try {
       await notificationsAPI.markAllAsRead(token);
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-
-      if (onNotificationCountChange) {
-        onNotificationCountChange(0);
-      }
     } catch (error) {
       logger.error('Failed to mark all as read:', error);
     }

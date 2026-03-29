@@ -71,8 +71,12 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
       setInternalCount(prev => prev + 1);
     });
 
+    // Periodic refetch to catch reads from RightSidebar overlay
+    const interval = setInterval(fetchUnreadCount, 60000);
+
     return () => {
       socketRef.current?.off('new_notification');
+      clearInterval(interval);
     };
   }, [connected, isAuthenticated, token, publicKey, fetchUnreadCount]);
 
