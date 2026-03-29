@@ -1,62 +1,45 @@
-# Korus - The Bot-Free Social Platform on Solana
+# Korus — Social Platform on Solana
 
-A revolutionary social media platform that uses Solana wallet authentication to eliminate bots and create genuine human connections.
+A social media platform where every account is a verified Solana wallet. No bots, no fake accounts — just real people.
 
-## 🚀 Quick Start for Hackathon Judges
+**Live at [korus.fun](https://korus.fun)**
 
-### Try it Online
-Deploy and share with judges using:
-```bash
-./deploy.sh
+## Features
+
+- **Wallet-Only Auth** — Sign in with Phantom, Solflare, or any Solana wallet
+- **Tips** — Send SOL directly to creators you like
+- **Games** — Wager SOL in Tic-Tac-Toe, Rock Paper Scissors, Connect Four with on-chain escrow
+- **Shoutouts** — Paid promoted posts with timed visibility and queue system
+- **Events** — Community events with registration and countdowns
+- **Reputation** — Earn rep from engagement, tips, and game wins
+- **Premium Tiers** — NFT-gated features and early access
+
+## Tech Stack
+
+- **Frontend**: Next.js 15 + TypeScript + Tailwind CSS
+- **Backend**: Express + Prisma + PostgreSQL
+- **Blockchain**: Solana (Anchor smart contracts for escrow + tipping)
+- **Deploy**: Vercel (web) + Render (backend)
+
+## Project Structure
+
+```
+korus-web/        — Next.js frontend
+korus-backend/    — Express API server
+korus-contracts/  — Solana Anchor programs
 ```
 
-Or see [HACKATHON-GUIDE.md](./HACKATHON-GUIDE.md) for detailed instructions.
-
-## 🌟 Features
-
-- **Wallet Authentication**: Connect with Phantom, Solflare, or Seed Vault
-- **ALLY Token Economy**: Tip creators, play games, earn rewards
-- **On-Chain Games**: Wager tokens in Tic-tac-toe, RPS, Connect 4
-- **Bot-Free**: Every account is a verified wallet
-- **Categories**: Tech, Art, Gaming, Music, Events
-- **Premium Tiers**: NFT holders get special features
-
-## 🛠 Tech Stack
-
-- **Frontend**: React Native (Expo) + TypeScript
-- **Backend**: Express + Prisma + PostgreSQL  
-- **Blockchain**: Solana Web3.js
-- **Deployment**: Vercel + Render
-
-## 📱 Development
+## Development
 
 ```bash
-# Install dependencies
-npm install
+# Frontend
+cd korus-web && npm install && npm run dev
 
-# Start frontend
-npm start
-
-# Start backend
-cd korus-backend
-npm run dev
+# Backend
+cd korus-backend && npm install && npm run dev
 ```
 
-## 🌐 Deployment
+## Deployment
 
-Frontend: Deploy to Vercel
-Backend: Already live at https://korus-backend.onrender.com
-
-See [README-DEPLOYMENT.md](./README-DEPLOYMENT.md) for details.
-
-## 🏆 Hackathon Submission
-
-Built for Solana hackathons. Demonstrates:
-- Solana wallet integration
-- Token economics
-- Gaming on blockchain
-- Scalable architecture
-
----
-
-**Building the future of social media, one wallet at a time.**
+- Web auto-deploys to Vercel on push to `main`
+- Backend auto-deploys to Render on push to `main`
