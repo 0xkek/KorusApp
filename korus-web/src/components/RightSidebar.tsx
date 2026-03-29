@@ -409,8 +409,7 @@ export default function RightSidebar({ showNotifications = false, onNotification
                   key={game.id}
                   onClick={() => {
                     if (!game.id.startsWith('placeholder-')) {
-                      const gameId = game.id.replace('game-', '');
-                      router.push(`/games/${gameId}`);
+                      router.push(`/games`);
                     }
                   }}
                   style={{
