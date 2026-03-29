@@ -4,10 +4,11 @@ import { logger } from '@/utils/logger';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import Image from 'next/image';
-import { nftsAPI } from '@/lib/api';
+import { nftsAPI, notificationsAPI } from '@/lib/api';
+import { io, Socket } from 'socket.io-client';
 
 interface TabItem {
   name: string;
@@ -25,12 +26,64 @@ interface LeftSidebarProps {
   notificationCount?: number; // Add prop for dynamic notification count
 }
 
-export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, onSearchClick, notificationCount = 0 }: LeftSidebarProps) {
+export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, onSearchClick, notificationCount: externalCount }: LeftSidebarProps) {
   const pathname = usePathname();
   const { connected, publicKey } = useWallet();
   const { token, isAuthenticated } = useWalletAuth();
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [userDisplayName, setUserDisplayName] = useState<string | null>(null);
+  const [internalCount, setInternalCount] = useState(0);
+  const socketRef = useRef<Socket | null>(null);
+
+  // Use external count from page.tsx if provided, otherwise use self-fetched count
+  const notificationCount = externalCount ?? internalCount;
+
+  // Fetch unread notification count
+  const fetchUnreadCount = useCallback(async () => {
+    if (!token) return;
+    try {
+      const response = await notificationsAPI.getNotifications(token, true);
+      setInternalCount(response.notifications.length);
+    } catch {
+      // silent
+    }
+  }, [token]);
+
+  // Fetch on mount and listen for real-time updates
+  useEffect(() => {
+    if (!connected || !isAuthenticated || !token || !publicKey) return;
+
+    fetchUnreadCount();
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+
+    if (!socketRef.current) {
+      socketRef.current = io(API_URL, {
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+      });
+    }
+
+    socketRef.current.emit('join_user', { walletAddress: publicKey.toBase58(), token });
+
+    socketRef.current.off('new_notification');
+    socketRef.current.on('new_notification', () => {
+      setInternalCount(prev => prev + 1);
+    });
+
+    return () => {
+      socketRef.current?.off('new_notification');
+    };
+  }, [connected, isAuthenticated, token, publicKey, fetchUnreadCount]);
+
+  // Refetch when navigating to notifications page (user likely read them)
+  useEffect(() => {
+    if (pathname === '/notifications') {
+      // Small delay to let the page mark notifications as read
+      const timer = setTimeout(fetchUnreadCount, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [pathname, fetchUnreadCount]);
 
   // Fetch user avatar and display name
   useEffect(() => {
