@@ -472,9 +472,10 @@ export function GamesPage() {
       const response = await gamesAPI.makeMove(gameId, { move }, token);
       console.log('Move API response:', response);
       await loadGames();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to make move:', error);
-      showError('Failed to make move');
+      const msg = error instanceof Error ? error.message : 'Failed to make move';
+      showError(msg);
     }
   };
 

@@ -686,7 +686,8 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
     })
   } catch (error) {
     logger.error('Make move error:', error)
-    res.status(500).json({ success: false, error: 'Failed to make move' })
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    res.status(500).json({ success: false, error: `Failed to make move: ${errorMessage}` })
   }
 }
 
