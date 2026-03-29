@@ -1,5 +1,4 @@
 'use client';
-import { logger } from '@/utils/logger';
 import { useState, useEffect } from 'react';
 
 export type TicTacToeCell = 'X' | 'O' | null;
@@ -79,15 +78,8 @@ export function TicTacToeBoard({
     return `${baseClasses} ${borderClasses} ${bgClasses} ${textClasses}`;
   };
 
-  console.log('TicTacToe render:', { isMyTurn, isGameOver, board, currentPlayerAddress });
-
   const handleCellClick = (index: number) => {
-    console.log('Cell clicked:', { index, cell: board[index], isMyTurn, isGameOver });
-    if (board[index] !== null || !isMyTurn || isGameOver) {
-      console.log('Click blocked:', { cellOccupied: board[index] !== null, notMyTurn: !isMyTurn, gameOver: isGameOver });
-      return;
-    }
-    console.log('Making move:', index);
+    if (board[index] !== null || !isMyTurn || isGameOver) return;
     onCellClick(index);
   };
 

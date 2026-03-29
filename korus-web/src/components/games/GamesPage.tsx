@@ -236,7 +236,6 @@ export function GamesPage() {
   }, [connected, loadGames]);
 
   const handleCreateGame = async () => {
-    console.log('🎮 handleCreateGame called', { connected, publicKey: publicKey?.toBase58(), newGame });
     logger.log('🎮 handleCreateGame called');
     logger.log('  connected:', connected);
     logger.log('  publicKey:', publicKey?.toBase58());
@@ -268,11 +267,9 @@ export function GamesPage() {
 
       // Only create blockchain game if there's a wager
       if (wagerSol > 0) {
-        console.log('💰 Creating game with wager on blockchain...', { wagerSol });
         const wagerLamports = Math.floor(wagerSol * LAMPORTS_PER_SOL);
         const result = await createGame(newGame.type, wagerLamports);
         onChainGameId = result.gameId;
-        console.log('✅ Blockchain game created, ID:', onChainGameId);
       } else {
         logger.log('ℹ️ No wager - skipping blockchain creation');
       }
@@ -462,20 +459,16 @@ export function GamesPage() {
     }
 
     try {
-      console.log('handleMove called:', { gameId, move });
       const token = localStorage.getItem('authToken');
       if (!token) {
         showError('Not authenticated. Please sign in with your wallet.');
         return;
       }
-      console.log('Sending move to API...');
-      const response = await gamesAPI.makeMove(gameId, { move }, token);
-      console.log('Move API response:', response);
+      await gamesAPI.makeMove(gameId, { move }, token);
       await loadGames();
     } catch (error: unknown) {
-      console.error('Failed to make move:', error);
-      const msg = error instanceof Error ? error.message : 'Failed to make move';
-      showError(msg);
+      logger.error('Failed to make move:', error);
+      showError('Failed to make move');
     }
   };
 
