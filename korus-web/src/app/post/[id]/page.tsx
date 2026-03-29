@@ -586,7 +586,7 @@ export default function PostDetailPage() {
             <LeftSidebar />
             <div className="flex-1 min-w-0 border-r border-[var(--color-border-light)]">
               {/* Header skeleton */}
-              <div className="sticky top-0 z-10 bg-[var(--color-background)]/85 backdrop-blur-[16px] border-b border-[var(--color-border-light)]">
+              <div className="sticky top-0 z-10 bg-[var(--color-surface)]/80 backdrop-blur-xl border-b border-[var(--color-border-light)]">
                 <div className="flex items-center gap-4 px-5 py-3">
                   <button onClick={() => router.back()} className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-[var(--color-text)] hover:bg-white/[0.06] transition-colors duration-150">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -663,9 +663,17 @@ export default function PostDetailPage() {
   }
 
   return (
-    <main className="min-h-screen relative overflow-hidden">
-      {/* Background */}
-      <div className="fixed inset-0 bg-[var(--color-background)]" />
+    <main className="min-h-screen bg-[var(--color-background)] relative overflow-hidden">
+      {/* Standardized static background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)]">
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[var(--color-surface)]/25 to-[var(--color-surface)]/35" />
+      </div>
+      {/* Static gradient orbs for visual depth */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-32 -right-32 w-[600px] h-[600px] bg-gradient-to-br from-korus-primary/6 to-korus-secondary/4 rounded-full blur-[80px]" />
+        <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-gradient-to-tr from-korus-secondary/4 to-korus-primary/6 rounded-full blur-[70px]" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-to-r from-korus-primary/3 to-korus-secondary/3 rounded-full blur-[60px]" />
+      </div>
 
       {/* Content wrapper */}
       <div className="relative z-10">
@@ -677,7 +685,7 @@ export default function PostDetailPage() {
           <div className="flex-1 min-w-0 border-r border-[var(--color-border-light)]">
 
             {/* Header Navigation */}
-            <div className="sticky top-0 z-10 bg-[var(--color-background)]/85 backdrop-blur-[16px] border-b border-[var(--color-border-light)]">
+            <div className="sticky top-0 z-10 bg-[var(--color-surface)]/80 backdrop-blur-xl border-b border-[var(--color-border-light)]">
               <div className="flex items-center gap-4 px-5 py-3">
                 {/* Back button */}
                 <button
