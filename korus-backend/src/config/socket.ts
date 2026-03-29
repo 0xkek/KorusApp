@@ -1,5 +1,6 @@
 import { Server as SocketServer } from 'socket.io'
 import { Server as HTTPServer } from 'http'
+import jwt from 'jsonwebtoken'
 import { logger } from '../utils/logger'
 
 let io: SocketServer | null = null
@@ -32,11 +33,28 @@ export const initializeSocket = (httpServer: HTTPServer) => {
   io.on('connection', (socket) => {
     logger.debug(`WebSocket client connected: ${socket.id}`)
 
-    // Allow clients to join their user-specific room for targeted notifications
-    socket.on('join_user', (walletAddress: string) => {
-      if (walletAddress && typeof walletAddress === 'string') {
-        socket.join(`user:${walletAddress}`)
-        logger.debug(`Socket ${socket.id} joined room user:${walletAddress}`)
+    // Allow clients to join their user-specific room for targeted notifications (with auth)
+    socket.on('join_user', (data: string | { walletAddress: string; token: string }) => {
+      // Support both old format (string) and new format (object with token)
+      if (typeof data === 'string') {
+        // Legacy: allow without token for backwards compat during rollout
+        if (data && typeof data === 'string') {
+          socket.join(`user:${data}`)
+          logger.debug(`Socket ${socket.id} joined room user:${data} (legacy, no token)`)
+        }
+        return
+      }
+
+      if (!data?.walletAddress || !data?.token) return
+
+      try {
+        const decoded = jwt.verify(data.token, process.env.JWT_SECRET!) as { walletAddress: string }
+        if (decoded.walletAddress === data.walletAddress) {
+          socket.join(`user:${data.walletAddress}`)
+          logger.debug(`Socket ${socket.id} joined room user:${data.walletAddress} (authenticated)`)
+        }
+      } catch {
+        logger.debug(`Socket ${socket.id} failed auth for user:${data.walletAddress}`)
       }
     })
 

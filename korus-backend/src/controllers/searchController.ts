@@ -108,24 +108,23 @@ export const searchPosts = asyncHandler(async (req: Request, res: Response) => {
       }
     }
     
-    // Also check if searching for default domain
-    if (DEFAULT_DOMAIN.toLowerCase().includes(searchQuery)) {
-      logger.debug('[SEARCH] Query matches default domain:', DEFAULT_DOMAIN)
-      // Get all wallets not in SNS_DOMAINS
-      const allUsers = await prisma.user.findMany({
-        select: { walletAddress: true }
-      })
-      
-      logger.debug('[SEARCH] Found ' + allUsers.length + ' total users')
-      
-      allUsers.forEach(user => {
-        if (!SNS_DOMAINS[user.walletAddress]) {
-          matchingWallets.push(user.walletAddress)
-        }
-      })
-      
-      logger.debug('[SEARCH] Added ' + matchingWallets.length + ' wallets with default domain')
-    }
+    // Also search users by username, snsUsername, displayName directly in DB
+    const matchingUsers = await prisma.user.findMany({
+      where: {
+        OR: [
+          { username: { contains: searchQuery, mode: 'insensitive' } },
+          { snsUsername: { contains: searchQuery, mode: 'insensitive' } },
+          { displayName: { contains: searchQuery, mode: 'insensitive' } },
+        ]
+      },
+      select: { walletAddress: true },
+      take: 50
+    })
+    matchingUsers.forEach(u => {
+      if (!matchingWallets.includes(u.walletAddress)) {
+        matchingWallets.push(u.walletAddress)
+      }
+    })
 
     // Search posts by content, wallet address, or matching SNS wallets
     const posts = await prisma.post.findMany({
@@ -188,14 +187,15 @@ export const searchPosts = asyncHandler(async (req: Request, res: Response) => {
           },
           orderBy: {
             createdAt: 'asc'
-          }
+          },
+          take: 5
         }
       },
       orderBy: {
         createdAt: 'desc'
       },
-      take: Number(limit),
-      skip: Number(offset)
+      take: Math.min(Number(limit), 50),
+      skip: Math.min(Number(offset), 10000)
     })
     
     logger.debug('[SEARCH] Found ' + posts.length + ' posts matching query')
@@ -299,18 +299,23 @@ export const searchUsers = asyncHandler(async (req: Request, res: Response) => {
       }
     }
     
-    // Search for default domain
-    if (DEFAULT_DOMAIN.includes(searchQuery)) {
-      const allUsers = await prisma.user.findMany({
-        select: { walletAddress: true }
-      })
-      
-      allUsers.forEach(user => {
-        if (!SNS_DOMAINS[user.walletAddress]) {
-          matchingWallets.push(user.walletAddress)
-        }
-      })
-    }
+    // Also search users by username, snsUsername, displayName directly in DB
+    const dbUsers = await prisma.user.findMany({
+      where: {
+        OR: [
+          { username: { contains: searchQuery, mode: 'insensitive' } },
+          { snsUsername: { contains: searchQuery, mode: 'insensitive' } },
+          { displayName: { contains: searchQuery, mode: 'insensitive' } },
+        ]
+      },
+      select: { walletAddress: true },
+      take: 50
+    })
+    dbUsers.forEach(u => {
+      if (!matchingWallets.includes(u.walletAddress)) {
+        matchingWallets.push(u.walletAddress)
+      }
+    })
 
     const users = await prisma.user.findMany({
       where: {
@@ -321,11 +326,14 @@ export const searchUsers = asyncHandler(async (req: Request, res: Response) => {
               mode: 'insensitive'
             }
           },
-          {
+          ...(matchingWallets.length > 0 ? [{
             walletAddress: {
               in: matchingWallets
             }
-          }
+          }] : []),
+          { username: { contains: searchQuery, mode: 'insensitive' } },
+          { snsUsername: { contains: searchQuery, mode: 'insensitive' } },
+          { displayName: { contains: searchQuery, mode: 'insensitive' } },
         ]
       },
       include: {
