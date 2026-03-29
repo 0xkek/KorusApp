@@ -8,7 +8,10 @@ import { asyncHandler } from '../middleware/errorHandler'
 import { TOKEN_CONFIG } from '../config/constants'
 import { logger } from '../utils/logger'
 import { getNFTByMint } from '../services/nftService'
+import { userCache } from '../utils/cache'
 // Mock mode removed for production
+
+const USER_PROFILE_TTL = 5 * 60 * 1000 // 5 minutes
 
 
 const isDebug = () => process.env.DEBUG_MODE === 'true' || (process.env.NODE_ENV === 'development' && process.env.DEBUG_MODE !== 'false')
@@ -268,10 +271,21 @@ export const connectWallet = asyncHandler(async (req: Request, res: Response) =>
 
 export const getProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
   // Mock mode removed - production only
-  
+
   const walletAddress = req.userWallet!
-  
+
   logger.debug('Getting profile for:', walletAddress)
+
+  // Check cache first
+  const profileCacheKey = `user-profile:${walletAddress}`
+  const cachedProfile = await userCache.get<any>(profileCacheKey)
+  if (cachedProfile) {
+    logger.debug('Profile cache hit for:', walletAddress)
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+    res.setHeader('Pragma', 'no-cache')
+    res.setHeader('Expires', '0')
+    return res.json({ user: cachedProfile })
+  }
 
   const user = await prisma.user.findUnique({
     where: { walletAddress }
@@ -303,6 +317,15 @@ export const getProfile = asyncHandler(async (req: AuthRequest, res: Response) =
     }
   }
 
+  const profileData = {
+    ...user,
+    solBalance: user.solBalance.toString(),
+    nftAvatar: nftAvatarUrl
+  }
+
+  // Cache the profile
+  await userCache.set(profileCacheKey, profileData, USER_PROFILE_TTL)
+
   // Prevent browser caching to ensure fresh avatar data
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
   res.setHeader('Pragma', 'no-cache')
@@ -310,13 +333,7 @@ export const getProfile = asyncHandler(async (req: AuthRequest, res: Response) =
 
   logger.debug('Sending profile response with nftAvatar:', nftAvatarUrl)
 
-  res.json({
-    user: {
-      ...user,
-      solBalance: user.solBalance.toString(),
-      nftAvatar: nftAvatarUrl
-    }
-  })
+  res.json({ user: profileData })
 })
 
 export const updateProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -340,6 +357,9 @@ export const updateProfile = asyncHandler(async (req: AuthRequest, res: Response
       ...(themeColor !== undefined && { themeColor })
     }
   })
+
+  // Invalidate cached profile
+  await userCache.delete(`user-profile:${walletAddress}`)
 
   if (isDebug()) {
     logger.debug('Profile updated:', {

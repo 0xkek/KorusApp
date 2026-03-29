@@ -40,6 +40,17 @@ export const initializeSocket = (httpServer: HTTPServer) => {
       }
     })
 
+    // Allow clients to join/leave feed room for targeted feed events
+    socket.on('join_feed', () => {
+      socket.join('feed')
+      logger.debug(`Socket ${socket.id} joined feed room`)
+    })
+
+    socket.on('leave_feed', () => {
+      socket.leave('feed')
+      logger.debug(`Socket ${socket.id} left feed room`)
+    })
+
     socket.on('disconnect', () => {
       logger.debug(`WebSocket client disconnected: ${socket.id}`)
     })
@@ -60,32 +71,32 @@ export const getIO = (): SocketServer => {
 }
 
 /**
- * Emit a new post event to all connected clients
+ * Emit a new post event to clients in the feed room
  */
 export const emitNewPost = (post: any) => {
   if (io) {
-    io.emit('new_post', post)
-    logger.debug(`Emitted new post: ${post.id}`)
+    io.to('feed').emit('new_post', post)
+    logger.debug(`Emitted new post to feed room: ${post.id}`)
   }
 }
 
 /**
- * Emit a new reply event to all connected clients
+ * Emit a new reply event to clients in the feed room
  */
 export const emitNewReply = (reply: any) => {
   if (io) {
-    io.emit('new_reply', reply)
-    logger.debug(`Emitted new reply: ${reply.id}`)
+    io.to('feed').emit('new_reply', reply)
+    logger.debug(`Emitted new reply to feed room: ${reply.id}`)
   }
 }
 
 /**
- * Emit a post update event (for likes, tips, etc.)
+ * Emit a post update event (for likes, tips, etc.) to clients in the feed room
  */
 export const emitPostUpdate = (postId: string, updates: any) => {
   if (io) {
-    io.emit('post_update', { postId, updates })
-    logger.debug(`Emitted post update: ${postId}`)
+    io.to('feed').emit('post_update', { postId, updates })
+    logger.debug(`Emitted post update to feed room: ${postId}`)
   }
 }
 

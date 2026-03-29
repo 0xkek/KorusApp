@@ -11,15 +11,25 @@ import { TREASURY_WALLET } from '../config/solana'
 import { getNFTByMint } from '../services/nftService'
 import { emitNewPost } from '../config/socket'
 import { processMentions } from '../utils/mentions'
+import { userCache } from '../utils/cache'
 
-// Helper function to resolve NFT avatar mints to image URLs
+const NFT_AVATAR_TTL = 60 * 60 * 1000 // 1 hour
+
+// Helper function to resolve NFT avatar mints to image URLs (cached)
 async function resolveNFTAvatar(nftMint: string | null): Promise<string | null> {
   if (!nftMint) return null
   // If it's already a URL, return as-is
   if (nftMint.startsWith('http://') || nftMint.startsWith('https://')) return nftMint
+
+  const cacheKey = `nft-avatar:${nftMint}`
+  const cached = await userCache.get<string>(cacheKey)
+  if (cached) return cached
+
   try {
     const nft = await getNFTByMint(nftMint)
-    return nft?.image || nftMint // Fall back to original value if resolution fails
+    const result = nft?.image || nftMint
+    await userCache.set(cacheKey, result, NFT_AVATAR_TTL)
+    return result
   } catch (error) {
     logger.error(`Failed to resolve NFT avatar ${nftMint}:`, error)
     return nftMint // Preserve original value on error
@@ -33,6 +43,24 @@ function sanitizeAuthorDisplay(author: any) {
     author.username = null
   }
 }
+
+// Apply Cloudinary transforms to image URLs for optimized delivery
+// Inserts transform params after /upload/ in Cloudinary URLs
+function cloudinaryTransform(url: string | null | undefined, transforms: string): string | null | undefined {
+  if (!url || typeof url !== 'string') return url
+  // Only transform Cloudinary URLs (match /image/upload/ pattern)
+  const uploadMarker = '/image/upload/'
+  const idx = url.indexOf(uploadMarker)
+  if (idx === -1) return url
+  // Don't double-transform if already has params after /upload/
+  const afterUpload = url.substring(idx + uploadMarker.length)
+  if (afterUpload.startsWith('w_') || afterUpload.startsWith('f_') || afterUpload.startsWith('q_') || afterUpload.startsWith('c_')) return url
+  return url.substring(0, idx + uploadMarker.length) + transforms + '/' + afterUpload
+}
+
+// Optimized Cloudinary transforms for different contexts
+const FEED_IMAGE_TRANSFORM = 'w_600,f_auto,q_auto'
+const AVATAR_TRANSFORM = 'w_80,h_80,c_fill,f_auto,q_auto'
 
 // Transform post author avatars from mint addresses to image URLs
 async function transformPostAvatars(post: any): Promise<any> {
@@ -60,6 +88,21 @@ async function transformPostAvatars(post: any): Promise<any> {
       }
     }
   }
+
+  // Apply Cloudinary image optimizations
+  post.imageUrl = cloudinaryTransform(post.imageUrl, FEED_IMAGE_TRANSFORM)
+  if (post.originalPost) {
+    post.originalPost.imageUrl = cloudinaryTransform(post.originalPost.imageUrl, FEED_IMAGE_TRANSFORM)
+  }
+  if (post.originalReply) {
+    post.originalReply.imageUrl = cloudinaryTransform(post.originalReply.imageUrl, FEED_IMAGE_TRANSFORM)
+  }
+  if (post.replies && Array.isArray(post.replies)) {
+    for (const reply of post.replies) {
+      reply.imageUrl = cloudinaryTransform(reply.imageUrl, FEED_IMAGE_TRANSFORM)
+    }
+  }
+
   return post
 }
 

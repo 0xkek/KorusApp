@@ -191,7 +191,6 @@ export const api = {
     apiRequest<T>(endpoint, {
       method: 'GET',
       token,
-      cache: 'no-store' // Prevent browser caching of GET requests
     }),
 
   post: <T>(endpoint: string, data?: unknown, token?: string) =>

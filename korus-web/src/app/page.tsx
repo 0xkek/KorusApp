@@ -119,6 +119,19 @@ export default function Home() {
     };
   }, [posts, shoutoutQueue, shoutoutQueueInfo]);
 
+  // Memoize deduplication + shoutout filtering so it only recomputes when posts/hideShoutouts change
+  const visiblePosts = useMemo(() => {
+    let shoutoutShown = false;
+    return Array.from(new Map(posts.map(p => [p.id, p])).values()).filter(post => {
+      if (post.isShoutout) {
+        if (hideShoutouts || shoutoutShown) return false;
+        shoutoutShown = true;
+        return true;
+      }
+      return true;
+    });
+  }, [posts, hideShoutouts]);
+
   // Load hide shoutout preference from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -143,17 +156,6 @@ export default function Home() {
       return undefined;
     }
   }, []);
-
-  // Resolve avatars for an array of transformed posts
-  const resolvePostAvatars = useCallback(async (transformedPosts: Post[]): Promise<Post[]> => {
-    const updated = await Promise.all(
-      transformedPosts.map(async (post) => {
-        const avatar = await resolveAvatar(post.avatar);
-        return { ...post, avatar } as Post;
-      })
-    );
-    return updated;
-  }, [resolveAvatar]);
 
   // Infinite scroll state
   const [currentPage, setCurrentPage] = useState(1);
@@ -238,15 +240,12 @@ export default function Home() {
         };
         });
 
-        // Resolve avatars (mint address → image URL)
-        const postsWithAvatars = await resolvePostAvatars(transformedPosts as Post[]);
-
-        // Track new post IDs
+        // Track new post IDs (backend already resolves NFT avatars)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        postsWithAvatars.forEach((post: any) => addedPostIds.current.add(post.id));
+        transformedPosts.forEach((post: any) => addedPostIds.current.add(post.id));
 
         // Append new posts to existing ones
-        setPosts(prev => [...prev, ...postsWithAvatars]);
+        setPosts(prev => [...prev, ...transformedPosts as Post[]]);
         setCurrentPage(nextPage);
         setHasMore(response.posts.length === POSTS_PER_PAGE);
       } else {
@@ -403,13 +402,11 @@ export default function Home() {
           return p;
         });
 
-        // Resolve avatars (mint address → image URL)
-        const postsWithAvatars = await resolvePostAvatars(postsWithTimers as Post[]);
+        // Track all post IDs (backend already resolves NFT avatars)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        postsWithTimers.forEach((post: any) => addedPostIds.current.add(post.id));
 
-        // Track all post IDs
-        postsWithAvatars.forEach(post => addedPostIds.current.add(post.id));
-
-        setPosts(postsWithAvatars);
+        setPosts(postsWithTimers as Post[]);
         setCurrentPage(1);
         setHasMore(response.posts.length === POSTS_PER_PAGE);
 
@@ -475,11 +472,11 @@ export default function Home() {
             avatar: post.originalPost.author?.nftAvatar || null,
           } : undefined,
         }));
-        const postsWithAvatars = await resolvePostAvatars(transformed as Post[]);
+        // Backend already resolves NFT avatars
         if (loadMore) {
-          setFollowingPosts(prev => [...prev, ...postsWithAvatars]);
+          setFollowingPosts(prev => [...prev, ...transformed as Post[]]);
         } else {
-          setFollowingPosts(postsWithAvatars);
+          setFollowingPosts(transformed as Post[]);
         }
         setFollowingHasMore(res.pagination.hasMore);
         setFollowingCursor(res.pagination.cursor);
@@ -579,6 +576,8 @@ export default function Home() {
 
       socketRef.current.on('connect', () => {
         logger.log('✅ WebSocket connected');
+        // Join feed room to receive targeted feed events
+        socketRef.current?.emit('join_feed');
       });
 
       socketRef.current.on('disconnect', () => {
@@ -587,6 +586,11 @@ export default function Home() {
     } else {
       logger.log('🔌 Reconnecting existing WebSocket');
       socketRef.current.connect();
+    }
+
+    // Join feed room (also handles reconnection case)
+    if (socketRef.current.connected) {
+      socketRef.current.emit('join_feed');
     }
 
     // Remove any existing 'new_post' listeners to prevent duplicates
@@ -764,6 +768,8 @@ export default function Home() {
     return () => {
       if (socketRef.current) {
         logger.log('🔌 Cleaning up WebSocket listeners');
+        // Leave feed room before disconnecting
+        socketRef.current.emit('leave_feed');
         // Remove the listener to prevent duplicates when effect runs again
         socketRef.current.off('new_post');
         socketRef.current.off('post_update');
@@ -795,7 +801,7 @@ export default function Home() {
     };
   }, [connected, isAuthenticated, publicKey]);
 
-  // Poll notifications count every 30s as fallback
+  // Fetch initial unread notification count on mount (WebSocket handles real-time updates)
   useEffect(() => {
     if (!connected || !isAuthenticated || !token) return;
 
@@ -809,31 +815,38 @@ export default function Home() {
     };
 
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000);
-    return () => clearInterval(interval);
   }, [connected, isAuthenticated, token]);
 
-  // Fetch user interactions for loaded posts
+  // Fetch user interactions for loaded posts (only for new post IDs, debounced)
+  const fetchedInteractionIds = useRef<Set<string>>(new Set());
   useEffect(() => {
-    const fetchUserInteractions = async () => {
-      if (!connected || !isAuthenticated || !token || posts.length === 0) {
-        return;
-      }
+    if (!connected || !isAuthenticated || !token || posts.length === 0) return;
 
+    // Only fetch for post IDs we haven't fetched yet
+    const newPostIds = posts
+      .map(post => String(post.id))
+      .filter(id => !fetchedInteractionIds.current.has(id));
+
+    if (newPostIds.length === 0) return;
+
+    const timer = setTimeout(async () => {
       try {
-        const postIds = posts.map(post => String(post.id));
-        const response = await interactionsAPI.getUserInteractions(postIds, token);
-
+        const response = await interactionsAPI.getUserInteractions(newPostIds, token);
         if (response.success) {
-          setPostInteractions(response.interactions as {[key: number]: {liked: boolean, reposted: boolean, replied: boolean, tipped: boolean}});
-          logger.log('User interactions loaded:', response.interactions);
+          // Mark these IDs as fetched
+          newPostIds.forEach(id => fetchedInteractionIds.current.add(id));
+          // Merge new interactions with existing ones
+          setPostInteractions(prev => ({
+            ...prev,
+            ...(response.interactions as {[key: string]: {liked: boolean, reposted: boolean, replied: boolean, tipped: boolean}})
+          }));
         }
       } catch (error) {
         logger.error('Failed to fetch user interactions:', error);
       }
-    };
+    }, 300);
 
-    fetchUserInteractions();
+    return () => clearTimeout(timer);
   }, [posts, connected, isAuthenticated, token]);
 
   // Keyboard shortcuts
@@ -1789,18 +1802,7 @@ export default function Home() {
           ) : isLoading ? (
             <FeedSkeleton count={5} />
           ) : (
-            // Deduplicate posts, only show the first (active) shoutout, hide rest
-            (() => {
-              let shoutoutShown = false;
-              return Array.from(new Map(posts.map(post => [post.id, post])).values()).filter(post => {
-                if (post.isShoutout) {
-                  if (hideShoutouts || shoutoutShown) return false;
-                  shoutoutShown = true;
-                  return true;
-                }
-                return true;
-              });
-            })().map((post) => (
+            visiblePosts.map((post) => (
             <div
               key={post.id}
               className={`transition-colors cursor-pointer group ${
