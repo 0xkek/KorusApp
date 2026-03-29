@@ -215,6 +215,22 @@ export default function WelcomePage() {
               </div>
             </div>
 
+            {/* Disclaimer */}
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-6 mb-12 text-left">
+              <div className="flex items-start gap-3">
+                <span className="text-yellow-400 text-lg mt-0.5">&#9888;</span>
+                <div>
+                  <h4 className="text-yellow-400 font-bold text-sm mb-2">Beta Disclaimer</h4>
+                  <p className="text-[var(--color-text-secondary)] text-xs leading-relaxed">
+                    Korus is currently in active development. Features may change, break, or be unavailable without notice.
+                    All SOL transactions (tips, wagers, shoutouts) use <strong className="text-[var(--color-text)]">real SOL on Solana mainnet</strong>.
+                    By using this platform, you acknowledge that you may lose funds due to bugs, smart contract vulnerabilities, or other issues.
+                    Only use amounts you are willing to lose. This is not financial advice. Use at your own risk.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Footer Links */}
             <div className="text-center">
               <p className="text-[var(--color-text-secondary)] text-sm mb-4">
