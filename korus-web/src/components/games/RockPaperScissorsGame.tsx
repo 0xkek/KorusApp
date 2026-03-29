@@ -22,6 +22,7 @@ interface RPSGameProps {
   gameState?: { player1Score?: number; player2Score?: number; rounds?: unknown[]; round?: number; roundResults?: unknown[]; score?: { player1: number; player2: number } }; // Full game state with score and round info
   payoutTxSignature?: string; // Transaction signature for blockchain payout
   onDismiss?: () => void; // Collapse/exit the game view
+  isPlayer1?: boolean; // Whether the viewing user is player1
 }
 
 const CHOICES = [
@@ -47,11 +48,14 @@ export function RockPaperScissorsGame({
   gameState,
   payoutTxSignature,
   onDismiss,
+  isPlayer1: isPlayer1Prop = true,
 }: RPSGameProps) {
   const [selectedChoice, setSelectedChoice] = useState<RPSMove | null>(playerMove);
   const [timeLeft, setTimeLeft] = useState<string>('');
   const [showTimerInfo, setShowTimerInfo] = useState(false);
   const [showDrawNotification, setShowDrawNotification] = useState(false);
+  const [showRoundResult, setShowRoundResult] = useState(false);
+  const [lastRoundResult, setLastRoundResult] = useState<{ round: number; won: boolean; playerChoice: RPSMove; opponentChoice: RPSMove } | null>(null);
   const [previousRound, setPreviousRound] = useState<number>(1);
   const [lastDrawResult, setLastDrawResult] = useState<{ player1: RPSMove; player2: RPSMove } | null>(null);
 
@@ -61,12 +65,11 @@ export function RockPaperScissorsGame({
   // Extract round info from gameState
   const currentRound = gameState?.round || 1;
 
-  // Detect when a draw occurred (round increased)
+  // Detect when a round resolved (draw, win, or loss)
   useEffect(() => {
     if (currentRound > previousRound && !isGameOver) {
-      // A draw just occurred - get the last round result
       const roundResults = gameState?.roundResults as unknown[] | undefined;
-      const lastResult = roundResults?.[roundResults.length - 1] as { winner?: string; player1Choice?: RPSMove; player2Choice?: RPSMove } | undefined;
+      const lastResult = roundResults?.[roundResults.length - 1] as { round?: number; winner?: string; player1Choice?: RPSMove; player2Choice?: RPSMove } | undefined;
 
       if (lastResult && lastResult.winner === 'draw') {
         setLastDrawResult({
@@ -74,13 +77,24 @@ export function RockPaperScissorsGame({
           player2: lastResult.player2Choice!
         });
         setShowDrawNotification(true);
+        setShowRoundResult(false);
+      } else if (lastResult) {
+        const p1Won = lastResult.winner === 'player1';
+        const viewerWon = isPlayer1Prop ? p1Won : !p1Won;
+        setLastRoundResult({
+          round: (lastResult.round ?? previousRound - 1) + 1,
+          won: viewerWon,
+          playerChoice: isPlayer1Prop ? lastResult.player1Choice! : lastResult.player2Choice!,
+          opponentChoice: isPlayer1Prop ? lastResult.player2Choice! : lastResult.player1Choice!,
+        });
+        setShowRoundResult(true);
+        setShowDrawNotification(false);
       }
 
-      // Reset choice state for new round
       setSelectedChoice(null);
       setPreviousRound(currentRound);
     }
-  }, [currentRound, previousRound, isGameOver, gameState]);
+  }, [currentRound, previousRound, isGameOver, gameState, isPlayer1Prop]);
 
   // Sync selectedChoice with playerMove when it updates from backend
   useEffect(() => {
@@ -178,6 +192,46 @@ export function RockPaperScissorsGame({
           <button
             onClick={() => {
               setShowDrawNotification(false);
+              setSelectedChoice(null);
+            }}
+            className="mt-2 px-6 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-bold text-sm transition-colors duration-150"
+            style={{ color: 'white', WebkitTextFillColor: 'white' }}
+          >
+            Next Round →
+          </button>
+        </div>
+      )}
+
+      {/* Round Win/Loss Notification - Inline */}
+      {showRoundResult && lastRoundResult && (
+        <div className={`mb-3 rounded-lg p-3 text-center ${
+          lastRoundResult.won
+            ? 'bg-gradient-to-r from-green-500 to-emerald-500'
+            : 'bg-gradient-to-r from-red-500 to-orange-500'
+        }`}>
+          <div
+            className="text-xl font-bold mb-2"
+            style={{ color: 'white', WebkitTextFillColor: 'white' }}
+          >
+            {lastRoundResult.won ? `You won Round ${lastRoundResult.round}!` : `You lost Round ${lastRoundResult.round}`}
+          </div>
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <span className="text-3xl">
+              {CHOICES.find(c => c.id === lastRoundResult.playerChoice)?.icon}
+            </span>
+            <span
+              className="text-xl font-bold"
+              style={{ color: 'white', WebkitTextFillColor: 'white' }}
+            >
+              {lastRoundResult.won ? '>' : '<'}
+            </span>
+            <span className="text-3xl">
+              {CHOICES.find(c => c.id === lastRoundResult.opponentChoice)?.icon}
+            </span>
+          </div>
+          <button
+            onClick={() => {
+              setShowRoundResult(false);
               setSelectedChoice(null);
             }}
             className="mt-2 px-6 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-bold text-sm transition-colors duration-150"
@@ -330,22 +384,23 @@ export function RockPaperScissorsGame({
               <div className="text-xs font-semibold text-[var(--color-text-secondary)] mb-2 text-center">Round History</div>
               <div className="flex flex-col gap-1.5">
                 {(gameState.roundResults as { round?: number; player1Choice?: RPSMove; player2Choice?: RPSMove; winner?: string }[]).map((round, i) => {
-                  const p1Icon = CHOICES.find(c => c.id === round.player1Choice)?.icon || '?';
-                  const p2Icon = CHOICES.find(c => c.id === round.player2Choice)?.icon || '?';
+                  const myIcon = CHOICES.find(c => c.id === (isPlayer1Prop ? round.player1Choice : round.player2Choice))?.icon || '?';
+                  const oppIcon = CHOICES.find(c => c.id === (isPlayer1Prop ? round.player2Choice : round.player1Choice))?.icon || '?';
                   const isDraw = round.winner === 'draw';
                   const p1Won = round.winner === 'player1';
+                  const iWon = isPlayer1Prop ? p1Won : !p1Won;
                   return (
                     <div key={i} className="flex items-center justify-between text-xs px-2 py-1 rounded bg-white/[0.04]">
                       <span className="text-[var(--color-text-secondary)] w-14">Round {(round.round || i) + 1}</span>
                       <div className="flex items-center gap-2">
-                        <span className={`text-base ${p1Won ? 'scale-110' : ''}`}>{p1Icon}</span>
+                        <span className={`text-base ${iWon ? 'scale-110' : ''}`}>{myIcon}</span>
                         <span className="text-[var(--color-text-tertiary)]">vs</span>
-                        <span className={`text-base ${!isDraw && !p1Won ? 'scale-110' : ''}`}>{p2Icon}</span>
+                        <span className={`text-base ${!isDraw && !iWon ? 'scale-110' : ''}`}>{oppIcon}</span>
                       </div>
-                      <span className={`font-semibold w-14 text-right ${
-                        isDraw ? 'text-yellow-400' : p1Won ? 'text-korus-primary' : 'text-korus-secondary'
+                      <span className={`font-semibold w-20 text-right ${
+                        isDraw ? 'text-yellow-400' : iWon ? 'text-green-400' : 'text-red-400'
                       }`}>
-                        {isDraw ? 'Draw' : p1Won ? getDisplayName(player1Address, player1DisplayName).split(' ')[0] : getDisplayName(player2Address, player2DisplayName).split(' ')[0]}
+                        {isDraw ? 'Draw' : iWon ? 'You won' : 'You lost'}
                       </span>
                     </div>
                   );
@@ -384,8 +439,8 @@ export function RockPaperScissorsGame({
         </div>
       )}
 
-      {/* Choice Buttons - Hidden during draw notification */}
-      {!showDrawNotification && <div className="flex justify-center gap-3 mb-3">
+      {/* Choice Buttons - Hidden during round notifications */}
+      {!showDrawNotification && !showRoundResult && <div className="flex justify-center gap-3 mb-3">
         {CHOICES.map((choice) => (
           <button
             key={choice.id}
