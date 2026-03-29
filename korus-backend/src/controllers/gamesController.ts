@@ -444,21 +444,26 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
         break
     }
 
-    if (winner) {
+    // Normalize 'draw' to null for DB (winner FK references users table)
+    const isDraw = winner === 'draw'
+    if (isDraw) winner = null
+
+    if (winner || isDraw) {
       newStatus = 'completed'
-      
-      // Award game rewards
+
+      // Award game rewards (only for non-draw games with a winner)
       try {
-        // Award points to winner (could be reputation points or tokens in the future)
-        await prisma.interaction.create({
-          data: {
-            userWallet: winner,
-            targetType: 'game',
-            targetId: id,
-            interactionType: 'game_win'
-          }
-        })
-        
+        if (winner) {
+          await prisma.interaction.create({
+            data: {
+              userWallet: winner,
+              targetType: 'game',
+              targetId: id,
+              interactionType: 'game_win'
+            }
+          })
+        }
+
         // Award participation points to both players
         await prisma.interaction.create({
           data: {
@@ -468,7 +473,7 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
             interactionType: 'game_played'
           }
         })
-        
+
         if (game.player2) {
           await prisma.interaction.create({
             data: {
@@ -479,15 +484,15 @@ export const makeMove = async (req: AuthRequest, res: Response) => {
             }
           })
         }
-        
-        logger.debug(`Game rewards awarded - Winner: ${winner}, Game: ${id}`)
+
+        logger.debug(`Game rewards awarded - Winner: ${winner || 'draw'}, Game: ${id}`)
       } catch (error) {
         logger.error('Failed to award game rewards:', error)
         // Don't fail the game update if rewards fail
       }
 
       // Award reputation points for game completion
-      if (winner !== 'draw' && game.player2) {
+      if (winner && game.player2) {
         try {
           const loser = winner === game.player1 ? game.player2 : game.player1
           await reputationService.onGameCompleted(

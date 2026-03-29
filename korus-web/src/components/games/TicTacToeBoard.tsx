@@ -135,7 +135,7 @@ export function TicTacToeBoard({
       <div className="mb-3 text-center">
         {isGameOver ? (
           <div className="text-xl font-bold">
-            {winner === 'draw' ? (
+            {winner === 'draw' || (!winner && isGameOver) ? (
               <span className="text-[var(--color-text-secondary)]">Game ended in a draw!</span>
             ) : winner === currentPlayerAddress ? (
               <span className="text-korus-primary">You won! 🎉</span>
