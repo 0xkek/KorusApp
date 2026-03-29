@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { useToast } from '@/hooks/useToast';
+import { SafeContent } from '@/components/SafeContent';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import EmojiPicker from '@/components/EmojiPicker';
 import { Button } from '@/components/ui';
@@ -182,7 +183,7 @@ export default function ReplyModal({ isOpen, onClose, post, onReplySuccess }: Re
                 <span className="text-[var(--color-text-secondary)]">{post.time}</span>
               </div>
               <div className="text-[var(--color-text)] text-base leading-normal mb-3 whitespace-pre-wrap break-words">
-                {post.content}
+                <SafeContent content={post.content} />
               </div>
               {post.image && (
                 <div className="mb-3 rounded-2xl overflow-hidden border border-[var(--color-border-light)] w-2/3">

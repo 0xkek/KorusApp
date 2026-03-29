@@ -1,6 +1,7 @@
 import { PublicKey } from '@solana/web3.js';
 import nacl from 'tweetnacl';
 import bs58 from 'bs58';
+import crypto from 'crypto';
 import { logger } from '../utils/logger';
 
 /**
@@ -66,7 +67,7 @@ export async function verifySignature(
  */
 export function generateSignatureMessage(eventId: string, projectName: string): string {
   const timestamp = Date.now();
-  const nonce = Math.random().toString(36).substring(7);
+  const nonce = crypto.randomBytes(16).toString('hex');
 
   return `I want to join the ${projectName} whitelist.\nEvent ID: ${eventId}\nTimestamp: ${timestamp}\nNonce: ${nonce}`;
 }

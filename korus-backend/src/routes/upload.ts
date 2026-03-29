@@ -13,11 +13,12 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024 // 10MB
   },
   fileFilter: (req, file, cb) => {
-    // Accept only image files
-    if (file.mimetype.startsWith('image/')) {
+    // Accept only safe raster image types (block SVG — can contain JS)
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    if (allowedMimes.includes(file.mimetype)) {
       cb(null, true)
     } else {
-      cb(new Error('Only image files are allowed'))
+      cb(new Error('Only JPEG, PNG, GIF, and WebP images are allowed'))
     }
   }
 })

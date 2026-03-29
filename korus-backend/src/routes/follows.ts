@@ -1,11 +1,13 @@
 import { Router } from 'express'
 import { authenticate } from '../middleware/auth'
 import { toggleFollow, getFollowers, getFollowing, checkFollowing, getFollowingFeed } from '../controllers/followController'
+import { checkSuspension } from '../middleware/moderationCheck'
+import { interactionLimiter } from '../middleware/rateLimiter'
 
 const router = Router()
 
 // Toggle follow/unfollow
-router.post('/:wallet/toggle', authenticate, toggleFollow)
+router.post('/:wallet/toggle', authenticate, checkSuspension, interactionLimiter, toggleFollow)
 
 // Get followers of a user
 router.get('/:wallet/followers', getFollowers)

@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { SafeContent } from '@/components/SafeContent';
 import type { Post as BasePost, Reply } from '@/types';
 
 // SearchModal needs to handle both formats during migration
@@ -388,7 +389,7 @@ export default function SearchModal({ isOpen, onClose, allPosts }: SearchModalPr
                               </span>
                             )}
                           </div>
-                          <p className="text-[var(--color-text)] text-sm mb-3 line-clamp-3">{post.content}</p>
+                          <div className="text-[var(--color-text)] text-sm mb-3 line-clamp-3"><SafeContent content={post.content} /></div>
                           {post.imageUrl && (
                             <Image src={post.imageUrl} alt="Post" width={300} height={160} className="rounded-xl mb-3 h-auto" />
                           )}

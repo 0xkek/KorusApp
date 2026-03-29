@@ -79,9 +79,9 @@ export const connectWallet = asyncHandler(async (req: Request, res: Response) =>
         age: Math.floor((now - messageTimestamp) / 1000) + ' seconds'
       });
     } else {
-      // For backward compatibility, warn but don't reject messages without timestamps yet
-      logger.warn('Message does not contain timestamp - signature replay possible');
-      // TODO: Make timestamp required after all clients updated
+      // Reject messages without timestamps to prevent signature replay
+      logger.warn('Message rejected: no timestamp present');
+      throw new AuthenticationError('Message must contain a timestamp');
     }
 
     // Verify the signature
@@ -337,23 +337,44 @@ export const getProfile = asyncHandler(async (req: AuthRequest, res: Response) =
 })
 
 export const updateProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
-  // Mock mode removed - production only
-  
   const walletAddress = req.userWallet!
   const { snsUsername, nftAvatar, displayName, bio, location, website, twitter, themeColor } = req.body
-  
-  logger.debug('Updating profile for: ' + walletAddress, req.body)
+
+  // Validate field lengths to prevent abuse
+  if (displayName && typeof displayName === 'string' && displayName.length > 50) {
+    return res.status(400).json({ error: 'Display name must be 50 characters or less' })
+  }
+  if (bio && typeof bio === 'string' && bio.length > 300) {
+    return res.status(400).json({ error: 'Bio must be 300 characters or less' })
+  }
+  if (location && typeof location === 'string' && location.length > 100) {
+    return res.status(400).json({ error: 'Location must be 100 characters or less' })
+  }
+  if (website && typeof website === 'string' && website.length > 200) {
+    return res.status(400).json({ error: 'Website URL must be 200 characters or less' })
+  }
+  if (twitter && typeof twitter === 'string' && twitter.length > 50) {
+    return res.status(400).json({ error: 'Twitter handle must be 50 characters or less' })
+  }
+  if (snsUsername && typeof snsUsername === 'string' && snsUsername.length > 50) {
+    return res.status(400).json({ error: 'SNS username must be 50 characters or less' })
+  }
+  if (themeColor && typeof themeColor === 'string' && !/^#[0-9a-fA-F]{6}$/.test(themeColor)) {
+    return res.status(400).json({ error: 'Theme color must be a valid hex color (e.g. #FF5500)' })
+  }
+
+  logger.debug('Updating profile for: ' + walletAddress)
 
   const updatedUser = await prisma.user.update({
     where: { walletAddress },
     data: {
-      ...(snsUsername !== undefined && { snsUsername }),
+      ...(snsUsername !== undefined && { snsUsername: typeof snsUsername === 'string' ? snsUsername.slice(0, 50) : snsUsername }),
       ...(nftAvatar !== undefined && { nftAvatar }),
-      ...(displayName !== undefined && { displayName }),
-      ...(bio !== undefined && { bio }),
-      ...(location !== undefined && { location }),
-      ...(website !== undefined && { website }),
-      ...(twitter !== undefined && { twitter }),
+      ...(displayName !== undefined && { displayName: typeof displayName === 'string' ? displayName.slice(0, 50) : displayName }),
+      ...(bio !== undefined && { bio: typeof bio === 'string' ? bio.slice(0, 300) : bio }),
+      ...(location !== undefined && { location: typeof location === 'string' ? location.slice(0, 100) : location }),
+      ...(website !== undefined && { website: typeof website === 'string' ? website.slice(0, 200) : website }),
+      ...(twitter !== undefined && { twitter: typeof twitter === 'string' ? twitter.slice(0, 50) : twitter }),
       ...(themeColor !== undefined && { themeColor })
     }
   })

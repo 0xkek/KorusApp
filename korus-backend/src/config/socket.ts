@@ -33,8 +33,27 @@ export const initializeSocket = (httpServer: HTTPServer) => {
   io.on('connection', (socket) => {
     logger.debug(`WebSocket client connected: ${socket.id}`)
 
+    // Simple per-socket rate limiting: max 20 events per 10 seconds
+    const eventTimestamps: number[] = []
+    const WS_RATE_LIMIT = 20
+    const WS_RATE_WINDOW_MS = 10000
+
+    const isRateLimited = (): boolean => {
+      const now = Date.now()
+      // Remove expired timestamps
+      while (eventTimestamps.length > 0 && eventTimestamps[0] < now - WS_RATE_WINDOW_MS) {
+        eventTimestamps.shift()
+      }
+      if (eventTimestamps.length >= WS_RATE_LIMIT) {
+        return true
+      }
+      eventTimestamps.push(now)
+      return false
+    }
+
     // Allow clients to join their user-specific room for targeted notifications (requires auth)
     socket.on('join_user', (data: string | { walletAddress: string; token: string }) => {
+      if (isRateLimited()) return
       // Legacy string format: require token in new object format
       if (typeof data === 'string') {
         logger.debug(`Socket ${socket.id} rejected join_user: legacy string format no longer supported`)
@@ -56,11 +75,13 @@ export const initializeSocket = (httpServer: HTTPServer) => {
 
     // Allow clients to join/leave feed room for targeted feed events
     socket.on('join_feed', () => {
+      if (isRateLimited()) return
       socket.join('feed')
       logger.debug(`Socket ${socket.id} joined feed room`)
     })
 
     socket.on('leave_feed', () => {
+      if (isRateLimited()) return
       socket.leave('feed')
       logger.debug(`Socket ${socket.id} left feed room`)
     })

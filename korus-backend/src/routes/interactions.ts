@@ -4,6 +4,7 @@ import { authenticate } from '../middleware/auth'
 import { requireTokenFeatures } from '../middleware/tokenFeatures'
 import { validateLike, validateTip, validateBatchInteractions } from '../middleware/validation'
 import { interactionLimiter } from '../middleware/rateLimiter'
+import { checkSuspension } from '../middleware/moderationCheck'
 
 const router = Router()
 
@@ -44,7 +45,7 @@ const router = Router()
 // GET /api/interactions/tips/:walletAddress - Get tip history for a user
 router.get('/tips/:walletAddress', getTipHistory)
 
-router.post('/posts/:id/like', authenticate, validateLike, likePost)
+router.post('/posts/:id/like', authenticate, checkSuspension, interactionLimiter, validateLike, likePost)
 
 /**
  * @swagger
@@ -106,8 +107,8 @@ router.post('/posts/:id/like', authenticate, validateLike, likePost)
  *       503:
  *         description: Token features are disabled
  */
-router.post('/posts/:id/tip', authenticate, requireTokenFeatures, validateTip, tipPost)
-router.post('/posts/:id/repost', authenticate, repostPost)
+router.post('/posts/:id/tip', authenticate, checkSuspension, interactionLimiter, requireTokenFeatures, validateTip, tipPost)
+router.post('/posts/:id/repost', authenticate, checkSuspension, interactionLimiter, repostPost)
 
 /**
  * @swagger

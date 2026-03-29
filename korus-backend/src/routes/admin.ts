@@ -19,7 +19,10 @@ const ADMIN_WALLETS = [
  * Admin health check endpoint
  * Shows status of critical services
  */
-router.get('/health', async (req, res) => {
+router.get('/health', authenticateJWT, async (req: AuthRequest, res) => {
+  if (!req.userWallet || !ADMIN_WALLETS.includes(req.userWallet)) {
+    return res.status(403).json({ success: false, error: 'Admin access required' });
+  }
   try {
     const authorityConfigured = isAuthorityConfigured();
     const authorityBalance = await gameCompletionService.checkAuthorityBalance();

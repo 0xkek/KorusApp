@@ -2,13 +2,24 @@
 import { logger } from '@/utils/logger';
 
 import { useState } from 'react';
-import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { useToast } from '@/hooks/useToast';
 import { useSubscription } from '@/hooks/useSubscription';
 import { subscriptionAPI } from '@/lib/api';
+
+async function rpcCall(method: string, params: unknown[]) {
+  const response = await fetch('/api/rpc', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+  });
+  const data = await response.json();
+  if (data.error) throw new Error(data.error.message || 'RPC error');
+  return data.result;
+}
 
 interface PremiumUpgradeModalProps {
   isOpen: boolean;
@@ -36,8 +47,7 @@ const PLATFORM_WALLET = process.env.NEXT_PUBLIC_TREASURY_WALLET || 'ByqqYGErKfyL
 
 export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSuccess, onSubscriptionUpdated }: PremiumUpgradeModalProps) {
   const modalRef = useFocusTrap(isOpen);
-  const { connected, publicKey, sendTransaction, signTransaction } = useWallet();
-  const { connection } = useConnection();
+  const { connected, publicKey, signTransaction } = useWallet();
   const { token, isAuthenticated } = useWalletAuth();
   const { showSuccess, showError } = useToast();
   const { isPremium, subscriptionStatus } = useSubscription();
@@ -54,7 +64,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
     }
 
     // Otherwise, implement the full payment flow
-    if (!connected || !publicKey || !sendTransaction) {
+    if (!connected || !publicKey || !signTransaction) {
       showError('Please connect your wallet to upgrade to premium');
       return;
     }
@@ -81,33 +91,27 @@ export default function PremiumUpgradeModal({ isOpen, onClose, onUpgrade, onSucc
         })
       );
 
-      // Get latest blockhash with commitment
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+      // Get latest blockhash via RPC proxy
+      const blockhashResult = await rpcCall('getLatestBlockhash', [{ commitment: 'finalized' }]);
+      const blockhash = blockhashResult.value.blockhash;
+      const lastValidBlockHeight = blockhashResult.value.lastValidBlockHeight;
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = publicKey;
 
-      // Try to use signTransaction if available, otherwise fall back to sendTransaction
-      let signature: string;
+      // Sign the transaction
+      const signedTransaction = await signTransaction(transaction);
 
-      if (signTransaction) {
-        // Sign the transaction
-        const signedTransaction = await signTransaction(transaction);
+      // Send via RPC proxy
+      const rawTransaction = signedTransaction.serialize();
+      const base64Tx = Buffer.from(rawTransaction).toString('base64');
+      const signature: string = await rpcCall('sendTransaction', [base64Tx, {
+        skipPreflight: false,
+        preflightCommitment: 'confirmed',
+        maxRetries: 3,
+        encoding: 'base64',
+      }]);
 
-        // Serialize and send the signed transaction
-        const rawTransaction = signedTransaction.serialize();
-        signature = await connection.sendRawTransaction(rawTransaction, {
-          skipPreflight: false,
-          maxRetries: 3
-        });
-      } else {
-        // Fall back to sendTransaction (auto-signs and sends)
-        signature = await sendTransaction(transaction, connection);
-      }
-
-      // Wait for confirmation with timeout protection
-      logger.log('⏳ Waiting for transaction confirmation...');
-      await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
-      logger.log('✅ Transaction confirmed!');
+      logger.log('Transaction sent, confirming...');
 
       // Process subscription on backend
       logger.log('📡 Calling backend API to activate subscription...');

@@ -3,6 +3,7 @@ import Image from 'next/image';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { SafeContent } from '@/components/SafeContent';
 
 interface Post {
   id: number;
@@ -215,7 +216,7 @@ export default function PostDetailModal({
 
                 {/* Post Text */}
                 <div className="text-[var(--color-text)] text-lg leading-relaxed mb-4 whitespace-pre-wrap break-words">
-                  {post.content}
+                  <SafeContent content={post.content} />
                 </div>
 
                 {/* Post Image */}
@@ -355,7 +356,7 @@ export default function PostDetailModal({
                         <span className="text-[var(--color-text-secondary)] text-sm">·</span>
                         <span className="text-[var(--color-text-secondary)] text-sm">{reply.time}</span>
                       </div>
-                      <p className="text-[var(--color-text)] text-sm leading-relaxed mb-2">{reply.content}</p>
+                      <div className="text-[var(--color-text)] text-sm leading-relaxed mb-2"><SafeContent content={reply.content} /></div>
                       <div className="flex items-center gap-4 text-[var(--color-text-secondary)] text-xs">
                         <span className="flex items-center gap-1">
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
