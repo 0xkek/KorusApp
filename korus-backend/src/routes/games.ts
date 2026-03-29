@@ -6,6 +6,7 @@ import {
   getGame,
   getGameByPostId,
   getAllGames,
+  getGamesByUser,
   deleteGame
 } from '../controllers/gamesController'
 import { authenticate } from '../middleware/auth'
@@ -20,6 +21,9 @@ router.use(gameLimiter)
 
 // GET /api/games - Get all games (must be before /:id route)
 router.get('/', getAllGames)
+
+// GET /api/games/user/:walletAddress - Get game history for a user
+router.get('/user/:walletAddress', getGamesByUser)
 
 // POST /api/games - Create a new game
 router.post('/', authenticate, createGame)

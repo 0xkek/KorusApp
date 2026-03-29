@@ -1009,6 +1009,86 @@ function determineRPSWinner(choice1: string, choice2: string): 'player1' | 'play
 }
 
 /**
+ * Get game history for a specific wallet address
+ */
+export const getGamesByUser = async (req: Request, res: Response) => {
+  try {
+    const { walletAddress } = req.params
+
+    if (!walletAddress || walletAddress.length < 32 || walletAddress.length > 44) {
+      return res.status(400).json({ success: false, error: 'Invalid wallet address' })
+    }
+
+    const games = await prisma.game.findMany({
+      where: {
+        OR: [
+          { player1: walletAddress },
+          { player2: walletAddress }
+        ],
+        status: { in: ['completed', 'cancelled'] }
+      },
+      include: {
+        player1User: { select: { walletAddress: true, username: true, snsUsername: true } },
+        player2User: { select: { walletAddress: true, username: true, snsUsername: true } },
+        winnerUser: { select: { walletAddress: true, username: true, snsUsername: true } },
+        escrow: { select: { payoutTxSig: true, status: true } }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50
+    })
+
+    const serializedGames = games.map(game => {
+      const isPlayer1 = game.player1 === walletAddress
+      const opponent = isPlayer1 ? game.player2User : game.player1User
+      const opponentWallet = isPlayer1 ? game.player2 : game.player1
+      const isWinner = game.winner === walletAddress
+      const isDraw = game.winner === 'draw' || (game.status === 'completed' && !game.winner)
+      const isCancelled = game.status === 'cancelled'
+
+      let result: 'win' | 'loss' | 'draw' | 'cancelled'
+      if (isCancelled) result = 'cancelled'
+      else if (isDraw) result = 'draw'
+      else if (isWinner) result = 'win'
+      else result = 'loss'
+
+      const wagerNum = parseFloat(game.wager.toString())
+      let earnings = 0
+      if (result === 'win') earnings = wagerNum * 2 * 0.975 // 2.5% platform fee
+      else if (result === 'draw') earnings = wagerNum
+      else if (result === 'loss') earnings = -wagerNum
+
+      return {
+        id: game.id,
+        gameType: game.gameType,
+        result,
+        wager: game.wager.toString(),
+        earnings: earnings.toFixed(4),
+        opponentWallet,
+        opponentDisplayName: getDisplayName(opponent),
+        createdAt: game.createdAt.toISOString(),
+        payoutTxSig: game.escrow?.payoutTxSig || null
+      }
+    })
+
+    // Calculate summary stats
+    const completed = serializedGames.filter(g => g.result !== 'cancelled')
+    const wins = completed.filter(g => g.result === 'win').length
+    const losses = completed.filter(g => g.result === 'loss').length
+    const draws = completed.filter(g => g.result === 'draw').length
+    const totalEarnings = completed.reduce((sum, g) => sum + parseFloat(g.earnings), 0)
+
+    res.json({
+      success: true,
+      games: serializedGames,
+      stats: { wins, losses, draws, totalGames: completed.length, totalEarnings: totalEarnings.toFixed(4) }
+    })
+  } catch (error) {
+    logger.error('Error fetching user games:', error)
+    res.status(500).json({ success: false, error: 'Failed to fetch game history' })
+  }
+}
+
+/**
  * Get all games (optionally filtered by status)
  */
 export const getAllGames = async (req: Request, res: Response) => {

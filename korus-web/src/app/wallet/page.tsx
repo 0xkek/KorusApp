@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useToastContext } from '@/components/ToastProvider';
+import { gamesAPI, UserGameHistory, UserGameStats } from '@/lib/api/games';
 
 // Dynamically import modals
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
@@ -40,6 +41,9 @@ export default function WalletPage() {
   const [hasError, setHasError] = useState(false);
   const [shoutouts, setShoutouts] = useState<ShoutoutTx[]>([]);
   const [shoutoutsLoading, setShoutoutsLoading] = useState(false);
+  const [gameHistory, setGameHistory] = useState<UserGameHistory[]>([]);
+  const [gameStats, setGameStats] = useState<UserGameStats | null>(null);
+  const [gamesLoading, setGamesLoading] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -100,12 +104,29 @@ export default function WalletPage() {
     }
   }, [publicKey, mounted]);
 
+  const fetchGames = useCallback(async () => {
+    if (!publicKey || !mounted) return;
+    setGamesLoading(true);
+    try {
+      const data = await gamesAPI.getGamesByUser(publicKey.toBase58());
+      if (data.success) {
+        setGameHistory(data.games);
+        setGameStats(data.stats);
+      }
+    } catch {
+      // Silently fail — games are supplementary
+    } finally {
+      setGamesLoading(false);
+    }
+  }, [publicKey, mounted]);
+
   useEffect(() => {
     if (mounted && connected && publicKey) {
       fetchBalance();
       fetchShoutouts();
+      fetchGames();
     }
-  }, [mounted, connected, publicKey, fetchBalance, fetchShoutouts]);
+  }, [mounted, connected, publicKey, fetchBalance, fetchShoutouts, fetchGames]);
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -351,19 +372,123 @@ export default function WalletPage() {
             )}
 
             {activeTab === 'Games' && (
-              <div className="text-center py-20">
-                <div className="text-6xl mb-4 opacity-60">🎮</div>
-                <p className="text-[var(--color-text)] text-lg font-medium">No game activity</p>
-                <p className="text-[var(--color-text-secondary)] text-sm mt-2 mb-6">
-                  Your game winnings, losses, and rewards will appear here.<br/>
-                  Join games to start earning SOL!
-                </p>
-                <button
-                  onClick={() => window.location.href = '/games'}
-                  className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150"
-                >
-                  Browse Games
-                </button>
+              <div>
+                {gamesLoading ? (
+                  <div className="text-center py-20">
+                    <div className="text-korus-primary animate-pulse text-lg">Loading games...</div>
+                  </div>
+                ) : gameHistory.length === 0 ? (
+                  <div className="text-center py-20">
+                    <div className="text-6xl mb-4 opacity-60">🎮</div>
+                    <p className="text-[var(--color-text)] text-lg font-medium">No game activity</p>
+                    <p className="text-[var(--color-text-secondary)] text-sm mt-2 mb-6">
+                      Your game winnings, losses, and rewards will appear here.<br/>
+                      Join games to start earning SOL!
+                    </p>
+                    <button
+                      onClick={() => window.location.href = '/games'}
+                      className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-korus-primary/30 transition-all duration-150"
+                    >
+                      Browse Games
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    {/* Stats Summary */}
+                    {gameStats && (
+                      <div className="p-4 border-b border-[var(--color-border-light)]">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                          <div>
+                            <span className="text-[var(--color-text-secondary)] text-xs">Games</span>
+                            <p className="text-[var(--color-text)] text-xl font-bold">{gameStats.totalGames}</p>
+                          </div>
+                          <div>
+                            <span className="text-[var(--color-text-secondary)] text-xs">W / L / D</span>
+                            <p className="text-[var(--color-text)] text-xl font-bold">
+                              <span className="text-green-400">{gameStats.wins}</span>
+                              {' / '}
+                              <span className="text-red-400">{gameStats.losses}</span>
+                              {' / '}
+                              <span className="text-[var(--color-text-secondary)]">{gameStats.draws}</span>
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-[var(--color-text-secondary)] text-xs">Win Rate</span>
+                            <p className="text-[var(--color-text)] text-xl font-bold">
+                              {gameStats.totalGames > 0 ? Math.round((gameStats.wins / gameStats.totalGames) * 100) : 0}%
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-[var(--color-text-secondary)] text-xs">Net Earnings</span>
+                            <p className={`text-xl font-bold ${parseFloat(gameStats.totalEarnings) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              {parseFloat(gameStats.totalEarnings) >= 0 ? '+' : ''}{parseFloat(gameStats.totalEarnings).toFixed(4)} SOL
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Game List */}
+                    <div className="divide-y divide-[var(--color-border-light)]">
+                      {gameHistory.map((game) => {
+                        const gameTypeLabel = game.gameType === 'tictactoe' ? 'Tic-Tac-Toe'
+                          : game.gameType === 'rps' ? 'Rock Paper Scissors'
+                          : game.gameType === 'connectfour' ? 'Connect Four'
+                          : game.gameType;
+                        const gameEmoji = game.gameType === 'tictactoe' ? '❌'
+                          : game.gameType === 'rps' ? '✊'
+                          : game.gameType === 'connectfour' ? '🔴'
+                          : '🎮';
+                        const resultColor = game.result === 'win' ? 'text-green-400'
+                          : game.result === 'loss' ? 'text-red-400'
+                          : game.result === 'draw' ? 'text-yellow-400'
+                          : 'text-[var(--color-text-secondary)]';
+                        const resultBg = game.result === 'win' ? 'bg-green-500/20'
+                          : game.result === 'loss' ? 'bg-red-500/20'
+                          : game.result === 'draw' ? 'bg-yellow-500/20'
+                          : 'bg-white/[0.08]';
+                        const opponentLabel = game.opponentDisplayName
+                          || (game.opponentWallet ? `${game.opponentWallet.slice(0, 4)}...${game.opponentWallet.slice(-4)}` : 'N/A');
+
+                        return (
+                          <div key={game.id} className="p-4 hover:bg-white/[0.02] transition-colors">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-lg">{gameEmoji}</span>
+                                  <span className="text-[var(--color-text)] font-medium">{gameTypeLabel}</span>
+                                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold uppercase ${resultBg} ${resultColor}`}>
+                                    {game.result}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-3 text-xs text-[var(--color-text-secondary)]">
+                                  <span>vs {opponentLabel}</span>
+                                  <span>{formatDate(game.createdAt)}</span>
+                                  {game.payoutTxSig && (
+                                    <a
+                                      href={`https://solscan.io/tx/${game.payoutTxSig}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-korus-primary hover:underline"
+                                    >
+                                      View Tx
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className="text-[var(--color-text)] font-semibold">{game.wager} SOL</p>
+                                <p className={`text-xs font-medium ${parseFloat(game.earnings) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                  {parseFloat(game.earnings) >= 0 ? '+' : ''}{game.earnings} SOL
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

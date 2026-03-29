@@ -64,6 +64,32 @@ export interface GamesListResponse {
   games: Game[];
 }
 
+export interface UserGameHistory {
+  id: string;
+  gameType: GameType;
+  result: 'win' | 'loss' | 'draw' | 'cancelled';
+  wager: string;
+  earnings: string;
+  opponentWallet: string | null;
+  opponentDisplayName: string | null;
+  createdAt: string;
+  payoutTxSig: string | null;
+}
+
+export interface UserGameStats {
+  wins: number;
+  losses: number;
+  draws: number;
+  totalGames: number;
+  totalEarnings: string;
+}
+
+export interface UserGamesResponse {
+  success: boolean;
+  games: UserGameHistory[];
+  stats: UserGameStats;
+}
+
 export const gamesAPI = {
   /**
    * Create a new game
@@ -107,6 +133,13 @@ export const gamesAPI = {
   async getAllGames(status?: GameStatus, token?: string): Promise<GamesListResponse> {
     const params = status ? `?status=${status}` : '';
     return api.get<GamesListResponse>(`/api/games${params}`, token);
+  },
+
+  /**
+   * Get game history for a specific user
+   */
+  async getGamesByUser(walletAddress: string): Promise<UserGamesResponse> {
+    return api.get<UserGamesResponse>(`/api/games/user/${walletAddress}`);
   },
 
   /**
