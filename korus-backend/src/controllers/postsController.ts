@@ -77,16 +77,16 @@ async function transformPostAvatars(post: any): Promise<any> {
       post.originalPost.author.nftAvatar = await resolveNFTAvatar(post.originalPost.author.nftAvatar)
     }
   }
-  // Transform reply authors' avatars
+  // Transform reply authors' avatars (parallel)
   if (post.replies && Array.isArray(post.replies)) {
-    for (const reply of post.replies) {
+    await Promise.all(post.replies.map(async (reply: any) => {
       if (reply.author) {
         sanitizeAuthorDisplay(reply.author)
         if (reply.author.nftAvatar) {
           reply.author.nftAvatar = await resolveNFTAvatar(reply.author.nftAvatar)
         }
       }
-    }
+    }))
   }
 
   // Apply Cloudinary image optimizations
@@ -250,7 +250,7 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
 
     // Process @mentions and send notifications (fire-and-forget)
     if (content) {
-      processMentions(content, walletAddress, post.id)
+      processMentions(content, walletAddress, post.id).catch(err => logger.error('Mention processing failed:', err))
     }
 
     // Transform NFT avatar mint address to image URL
@@ -329,48 +329,31 @@ export const getPosts = async (req: Request, res: Response) => {
       })
     }
 
-    // First, check for an already-activated shoutout (has expiresAt in the future)
+    // Fetch all non-hidden shoutouts in a single query (active + queued)
     const now = new Date()
-    let activeShoutout = await prisma.post.findFirst({
-      where: {
-        isHidden: false,
-        isShoutout: true,
-        shoutoutExpiresAt: {
-          gt: now // Already activated and not expired
-        }
-      },
-      include: {
-        author: {
-          select: {
-            walletAddress: true,
-            tier: true,
-            genesisVerified: true,
-            snsUsername: true,
-            username: true,
-            nftAvatar: true,
-            themeColor: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'asc' // Oldest first (FIFO queue)
-      }
+    const authorSelect = {
+      walletAddress: true,
+      tier: true,
+      genesisVerified: true,
+      snsUsername: true,
+      username: true,
+      nftAvatar: true,
+      themeColor: true
+    }
+
+    const allShoutouts = await prisma.post.findMany({
+      where: { isHidden: false, isShoutout: true },
+      include: { author: { select: authorSelect } },
+      orderBy: { createdAt: 'asc' },
+      take: 20
     })
 
-    // If no active shoutout, check for a queued one (expiresAt is null = never activated)
-    // and activate it by setting its expiresAt NOW
-    if (!activeShoutout) {
-      const nextQueued = await prisma.post.findFirst({
-        where: {
-          isHidden: false,
-          isShoutout: true,
-          shoutoutExpiresAt: null // Not yet activated
-        },
-        orderBy: {
-          createdAt: 'asc' // FIFO — oldest first
-        }
-      })
+    // Find active shoutout (has expiresAt in the future)
+    let activeShoutout = allShoutouts.find(s => s.shoutoutExpiresAt && s.shoutoutExpiresAt > now) || null
 
+    // If no active shoutout, activate the first queued one
+    if (!activeShoutout) {
+      const nextQueued = allShoutouts.find(s => !s.shoutoutExpiresAt)
       if (nextQueued) {
         const expiresAt = new Date()
         expiresAt.setMinutes(expiresAt.getMinutes() + (nextQueued.shoutoutDuration || 10))
@@ -378,47 +361,24 @@ export const getPosts = async (req: Request, res: Response) => {
         activeShoutout = await prisma.post.update({
           where: { id: nextQueued.id },
           data: { shoutoutExpiresAt: expiresAt },
-          include: {
-            author: {
-              select: {
-                walletAddress: true,
-                tier: true,
-                genesisVerified: true,
-                snsUsername: true,
-                username: true,
-                nftAvatar: true,
-                themeColor: true
-              }
-            }
-          }
+          include: { author: { select: authorSelect } }
         })
         logger.info(`Activated queued shoutout ${nextQueued.id} — expires at ${expiresAt.toISOString()}`)
       }
     }
 
-    // Convert to array for consistency with existing code
     const activeShoutouts = activeShoutout ? [activeShoutout] : []
 
-    // Get queued shoutouts (expiresAt is null = waiting to be activated)
-    const queuedShoutouts = await prisma.post.findMany({
-      where: {
-        isHidden: false,
-        isShoutout: true,
-        shoutoutExpiresAt: null, // Only those not yet activated
-        // Exclude the active shoutout (shouldn't match since it now has expiresAt, but just in case)
-        ...(activeShoutout ? { id: { not: activeShoutout.id } } : {})
-      },
-      select: {
-        id: true,
-        content: true,
-        shoutoutDuration: true,
-        createdAt: true,
-        shoutoutExpiresAt: true
-      },
-      orderBy: {
-        createdAt: 'asc' // FIFO order
-      }
-    })
+    // Queued shoutouts: those with no expiresAt, excluding the active one
+    const queuedShoutouts = allShoutouts
+      .filter(s => !s.shoutoutExpiresAt && s.id !== activeShoutout?.id)
+      .map(s => ({
+        id: s.id,
+        content: s.content,
+        shoutoutDuration: s.shoutoutDuration,
+        createdAt: s.createdAt,
+        shoutoutExpiresAt: s.shoutoutExpiresAt
+      }))
 
     // Then get regular posts using cursor pagination (excluding ALL shoutout posts and game dummy posts)
     const result = await CursorPagination.paginateQuery<any>(

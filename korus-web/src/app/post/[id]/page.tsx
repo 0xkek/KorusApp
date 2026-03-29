@@ -129,108 +129,82 @@ export default function PostDetailPage() {
 
           setPost(transformedPost as Post);
 
-          // Fetch user's like status if authenticated
+          // Use replies already included in the getSinglePost response (no extra round-trip)
+          const inlineReplies = backendPost.replies || [];
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const transformedReplies = inlineReplies.map((reply: any) => ({
+            id: reply.id as unknown,
+            postId: postId,
+            user: reply.author?.snsUsername || reply.author?.username || reply.authorWallet?.slice(0, 15) || 'Unknown',
+            wallet: reply.authorWallet,
+            content: reply.content,
+            likes: reply.likeCount || 0,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            replies: (reply.childReplies || []).map((child: any) => ({
+              id: child.id as unknown,
+              postId: postId,
+              user: child.author?.snsUsername || child.author?.username || child.authorWallet?.slice(0, 15) || 'Unknown',
+              wallet: child.authorWallet,
+              content: child.content,
+              likes: child.likeCount || 0,
+              replies: [],
+              time: new Date(child.createdAt).toLocaleString(),
+              createdAt: child.createdAt,
+              isPremium: child.author?.tier === 'premium' || child.author?.tier === 'vip' || child.author?.subscriptionStatus === 'active',
+              image: child.imageUrl,
+              videoUrl: child.videoUrl,
+              avatar: child.author?.nftAvatar || null,
+            })),
+            time: new Date(reply.createdAt).toLocaleString(),
+            createdAt: reply.createdAt,
+            isPremium: reply.author?.tier === 'premium' || reply.author?.tier === 'vip' || reply.author?.subscriptionStatus === 'active',
+            image: reply.imageUrl,
+            videoUrl: reply.videoUrl,
+            avatar: reply.author?.nftAvatar || null,
+          }));
+          setReplies(transformedReplies as Reply[]);
+
+          // Fetch interactions + profile in parallel (non-blocking for post display)
           if (isAuthenticated && token) {
-            try {
-              const interactionsResponse = await interactionsAPI.getUserInteractions([postId], token);
-              if (interactionsResponse.success && interactionsResponse.interactions[postId]) {
-                setLiked(interactionsResponse.interactions[postId].liked);
-                setTipped(interactionsResponse.interactions[postId].tipped);
+            // Collect all IDs for a single batch interaction request
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const allIds = [postId, ...transformedReplies.map((r: any) => String(r.id))];
+
+            const [interactionsResult, profileResult] = await Promise.allSettled([
+              interactionsAPI.getUserInteractions(allIds, token),
+              usersAPI.getProfile(token),
+            ]);
+
+            // Process interactions (post + replies in one batch)
+            if (interactionsResult.status === 'fulfilled' && interactionsResult.value.success) {
+              const interactions = interactionsResult.value.interactions;
+              if (interactions[postId]) {
+                setLiked(interactions[postId].liked);
+                setTipped(interactions[postId].tipped);
               }
-            } catch (error) {
-              logger.error('Failed to fetch user interactions:', error);
+              const newLikedReplies = new Set<string>();
+              const newTippedReplies = new Set<string>();
+              for (const r of transformedReplies) {
+                const rid = String(r.id);
+                if (interactions[rid]?.liked) newLikedReplies.add(rid);
+                if (interactions[rid]?.tipped) newTippedReplies.add(rid);
+              }
+              setLikedReplies(newLikedReplies);
+              setTippedReplies(newTippedReplies);
             }
 
-            // Fetch current user's profile
-            try {
-              const profileResponse = await usersAPI.getProfile(token);
-              logger.log('Profile API response:', profileResponse);
-              logger.log('NFT Avatar from API:', profileResponse.user?.nftAvatar);
+            // Process profile
+            if (profileResult.status === 'fulfilled') {
+              const profileResponse = profileResult.value;
               if (profileResponse.user) {
                 if (profileResponse.user.nftAvatar) {
                   setCurrentUserAvatar(profileResponse.user.nftAvatar);
-                  logger.log('Set currentUserAvatar to:', profileResponse.user.nftAvatar);
                 }
                 setCurrentUserProfile({
                   username: profileResponse.user.username,
                   snsUsername: profileResponse.user.snsUsername,
                   tier: profileResponse.user.tier
                 });
-                logger.log('Set currentUserProfile to:', {
-                  username: profileResponse.user.username,
-                  snsUsername: profileResponse.user.snsUsername,
-                  tier: profileResponse.user.tier
-                });
-              }
-            } catch (error) {
-              logger.error('Failed to fetch user profile:', error);
-            }
-          }
-
-          // Fetch replies
-          const repliesResponse = await repliesAPI.getReplies(postId);
-          if (repliesResponse.success) {
-            logger.log('Raw replies from backend:', repliesResponse.replies);
-            // Transform replies to frontend format
-            const transformedReplies = repliesResponse.replies.map(reply => {
-              const transformed = {
-                id: reply.id as unknown,
-                postId: postId,
-                user: reply.author?.snsUsername || reply.author?.username || reply.authorWallet?.slice(0, 15) || 'Unknown',
-                wallet: reply.authorWallet,
-                content: reply.content,
-                likes: reply.likeCount || 0,
-                replies: reply.childReplies?.map(child => ({
-                  id: child.id as unknown,
-                  postId: postId,
-                  user: child.author?.snsUsername || child.author?.username || child.authorWallet?.slice(0, 15) || 'Unknown',
-                  wallet: child.authorWallet,
-                  content: child.content,
-                  likes: child.likeCount || 0,
-                  replies: [],
-                  time: new Date(child.createdAt).toLocaleString(),
-                  createdAt: child.createdAt,
-                  isPremium: child.author?.tier === 'premium' || child.author?.tier === 'vip' || child.author?.subscriptionStatus === 'active',
-                  image: child.imageUrl,
-                  videoUrl: child.videoUrl,
-                  avatar: child.author?.nftAvatar || null,
-                })) || [],
-                time: new Date(reply.createdAt).toLocaleString(),
-                createdAt: reply.createdAt,
-                isPremium: reply.author?.tier === 'premium' || reply.author?.tier === 'vip' || reply.author?.subscriptionStatus === 'active',
-                image: reply.imageUrl,
-                videoUrl: reply.videoUrl,
-                avatar: reply.author?.nftAvatar || null,
-              };
-              logger.log('Transformed reply:', transformed);
-              return transformed;
-            });
-            logger.log('Setting transformed replies:', transformedReplies);
-            setReplies(transformedReplies as Reply[]);
-
-            // Fetch liked and tipped status for all replies if authenticated
-            if (isAuthenticated && token && transformedReplies.length > 0) {
-              try {
-                const replyIds = transformedReplies.map(r => String(r.id));
-                const likedRepliesResponse = await interactionsAPI.getUserInteractions(replyIds, token);
-                if (likedRepliesResponse.success) {
-                  const newLikedReplies = new Set<string>();
-                  const newTippedReplies = new Set<string>();
-                  Object.entries(likedRepliesResponse.interactions).forEach(([replyId, interaction]) => {
-                    if (interaction.liked) {
-                      newLikedReplies.add(replyId);
-                    }
-                    if (interaction.tipped) {
-                      newTippedReplies.add(replyId);
-                    }
-                  });
-                  setLikedReplies(newLikedReplies);
-                  setTippedReplies(newTippedReplies);
-                  logger.log('Loaded liked replies:', Array.from(newLikedReplies));
-                  logger.log('Loaded tipped replies:', Array.from(newTippedReplies));
-                }
-              } catch (error) {
-                logger.error('Failed to fetch reply interactions:', error);
               }
             }
           }

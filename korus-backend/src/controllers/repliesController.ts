@@ -60,34 +60,34 @@ export const createReply = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    // Create reply
-    const reply = await prisma.reply.create({
-      data: {
-        postId,
-        authorWallet: walletAddress,
-        content: content.trim(),
-        parentReplyId: parentReplyId || null,
-        imageUrl: imageUrl || undefined,
-        videoUrl: videoUrl || undefined
-      },
-      include: {
-        author: {
-          select: {
-            walletAddress: true,
-            tier: true,
-            genesisVerified: true,
-            snsUsername: true,
-            nftAvatar: true
+    // Create reply and update count atomically
+    const [reply, updatedPost] = await prisma.$transaction([
+      prisma.reply.create({
+        data: {
+          postId,
+          authorWallet: walletAddress,
+          content: content.trim(),
+          parentReplyId: parentReplyId || null,
+          imageUrl: imageUrl || undefined,
+          videoUrl: videoUrl || undefined
+        },
+        include: {
+          author: {
+            select: {
+              walletAddress: true,
+              tier: true,
+              genesisVerified: true,
+              snsUsername: true,
+              nftAvatar: true
+            }
           }
         }
-      }
-    })
-
-    // Update post reply count
-    const updatedPost = await prisma.post.update({
-      where: { id: postId },
-      data: { replyCount: { increment: 1 } }
-    })
+      }),
+      prisma.post.update({
+        where: { id: postId },
+        data: { replyCount: { increment: 1 } }
+      })
+    ])
 
     // Emit real-time updates
     emitNewReply(reply)
@@ -137,7 +137,7 @@ export const createReply = async (req: AuthRequest, res: Response) => {
     
     // Process @mentions in reply content (fire-and-forget)
     if (content) {
-      processMentions(content, walletAddress, postId)
+      processMentions(content, walletAddress, postId).catch(err => logger.error('Mention processing failed:', err))
     }
 
     // If replying to another reply, notify that user too
@@ -240,16 +240,16 @@ export const getReplies = async (req: Request, res: Response) => {
             reply.author.nftAvatar = await resolveNFTAvatar(reply.author.nftAvatar)
           }
         }
-        // Transform child replies' author avatars
+        // Transform child replies' author avatars (parallel)
         if (reply.childReplies && Array.isArray(reply.childReplies)) {
-          for (const childReply of reply.childReplies) {
+          await Promise.all(reply.childReplies.map(async (childReply: any) => {
             if (childReply.author) {
               sanitizeAuthorDisplay(childReply.author)
               if (childReply.author.nftAvatar) {
                 childReply.author.nftAvatar = await resolveNFTAvatar(childReply.author.nftAvatar)
               }
             }
-          }
+          }))
         }
         return reply
       })
