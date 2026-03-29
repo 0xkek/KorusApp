@@ -213,17 +213,17 @@ export default function Home() {
           // Load NFT avatar if user has one
           if (response.user && response.user.nftAvatar) {
             try {
-              // Check if nftAvatar is a URL (old data) or a mint address (new data)
-              const isUrl = response.user.nftAvatar.startsWith('http://') || response.user.nftAvatar.startsWith('https://');
+              // Check if nftAvatar is a URL (already resolved by backend) or a mint address
+              const avatar = response.user.nftAvatar;
+              const isUrl = avatar.startsWith('http://') || avatar.startsWith('https://');
 
               if (isUrl) {
-                // Old data: nftAvatar is already an image URL
-                setUserAvatar(response.user.nftAvatar);
+                setUserAvatar(avatar);
               } else {
-                // New data: nftAvatar is a mint address, need to resolve to image
-                const nft = await nftsAPI.getNFTByMint(response.user.nftAvatar);
-                if (nft?.image) {
-                  setUserAvatar(nft.image);
+                // Mint address — need to resolve to image URL
+                const resolved = await resolveAvatar(avatar);
+                if (resolved) {
+                  setUserAvatar(resolved);
                 }
               }
             } catch (error) {
