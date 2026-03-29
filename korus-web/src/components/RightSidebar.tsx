@@ -164,6 +164,17 @@ export default function RightSidebar({ showNotifications = false }: RightSidebar
     }
   };
 
+  const handleClearAll = async () => {
+    if (!token) return;
+
+    try {
+      await notificationsAPI.clearAll(token);
+      setNotifications([]);
+    } catch (error) {
+      logger.error('Failed to clear notifications:', error);
+    }
+  };
+
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = Date.now();
@@ -239,7 +250,28 @@ export default function RightSidebar({ showNotifications = false }: RightSidebar
       {/* Notifications overlay when active */}
       {showNotifications ? (
         <div style={widgetStyle}>
-          <h2 style={widgetTitleStyle}>Notifications</h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <h2 style={{ ...widgetTitleStyle, marginBottom: 0 }}>Notifications</h2>
+            {notifications.length > 0 && (
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={handleMarkAllAsRead}
+                  className="text-xs text-korus-primary hover:opacity-80"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                >
+                  Mark read
+                </button>
+                <span className="text-[var(--color-text-tertiary)]">|</span>
+                <button
+                  onClick={handleClearAll}
+                  className="text-xs text-red-400 hover:opacity-80"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
+          </div>
           <div role="list" aria-label="Notifications">
             {isLoading ? (
               <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--color-text-tertiary)' }}>
@@ -344,24 +376,6 @@ export default function RightSidebar({ showNotifications = false }: RightSidebar
               ))
             )}
           </div>
-          {notifications.length > 0 && (
-            <div style={{ paddingTop: '12px' }}>
-              <button
-                onClick={handleMarkAllAsRead}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#8b5cf6',
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  padding: 0,
-                }}
-                className="hover:opacity-80"
-              >
-                Mark all as read
-              </button>
-            </div>
-          )}
         </div>
       ) : (
         <>

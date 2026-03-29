@@ -49,5 +49,12 @@ export const notificationsAPI = {
    */
   async markAllAsRead(token: string): Promise<MarkReadResponse> {
     return api.post('/api/notifications/read-all', {}, token);
+  },
+
+  /**
+   * Delete all notifications
+   */
+  async clearAll(token: string): Promise<MarkReadResponse> {
+    return api.delete('/api/notifications/clear-all', token);
   }
 };

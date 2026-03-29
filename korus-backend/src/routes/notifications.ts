@@ -88,4 +88,20 @@ router.post('/read-all', authenticate, async (req: AuthRequest, res) => {
   }
 });
 
+// Delete all notifications for the authenticated user
+router.delete('/clear-all', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userWallet!;
+
+    await prisma.notification.deleteMany({
+      where: { userId },
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('Error clearing notifications:', error);
+    res.status(500).json({ error: 'Failed to clear notifications' });
+  }
+});
+
 export default router;
