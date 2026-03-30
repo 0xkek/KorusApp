@@ -39,7 +39,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
 
   if (!open) return null;
 
-  const allowedWalletNames = ['Phantom', 'Solflare', 'Backpack'];
+  const allowedWalletNames = ['Phantom', 'Solflare', 'Backpack', 'Jupiter'];
   const solanaWallets = wallets.filter(wallet =>
     allowedWalletNames.includes(wallet.adapter.name)
   );
