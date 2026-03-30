@@ -22,7 +22,7 @@ export interface SanitizeOptions {
 function linkifyMentions(content: string): string {
   return content.replace(
     /@([a-zA-Z0-9_]{1,20})\b/g,
-    '<a href="/profile/$1" class="mention-link" style="color:var(--korus-primary);font-weight:600;text-decoration:none;">@$1</a>'
+    '<a href="/profile/$1" class="mention-link">@$1</a>'
   );
 }
 
@@ -48,7 +48,7 @@ export function sanitizeContent(
       ...(allowVideos ? ['video', 'source'] : []),
     ],
     ALLOWED_ATTR: [
-      ...(allowLinks ? ['href', 'target', 'rel', 'class', 'style'] : []),
+      ...(allowLinks ? ['href', 'target', 'rel', 'class'] : []),
       ...(allowImages ? ['src', 'alt', 'width', 'height'] : []),
       ...(allowVideos ? ['src', 'controls', 'type'] : []),
     ],

@@ -467,10 +467,9 @@ export const getPosts = async (req: Request, res: Response) => {
   } catch (error: any) {
     logger.error('Get posts error:', error)
     logger.error('Error stack:', error?.stack)
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to get posts',
-      details: error?.message || 'Unknown error'
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get posts'
     } as any)
   }
 }

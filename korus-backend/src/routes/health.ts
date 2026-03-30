@@ -29,10 +29,9 @@ router.get('/health/db', async (req, res) => {
     });
   } catch (error: any) {
     res.json({
-      status: 'OK', 
+      status: 'OK',
       database: 'Not Connected',
       mode: 'Mock Mode',
-      error: error.message,
       note: 'Backend is running in mock mode - data will not persist',
       timestamp: new Date().toISOString()
     });

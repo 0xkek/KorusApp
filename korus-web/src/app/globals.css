@@ -638,3 +638,13 @@ a.bg-gradient-to-br:not(.white-text) * {
 .toggle-switch-thumb-disabled {
   opacity: 0.5;
 }
+
+/* Mention links in sanitized content */
+.mention-link {
+  color: var(--korus-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+.mention-link:hover {
+  text-decoration: underline;
+}
