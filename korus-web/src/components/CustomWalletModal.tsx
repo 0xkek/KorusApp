@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { USER_SELECTED_KEY } from './WalletProvider';
 
 export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
-  const { wallets, select, disconnect, wallet: walletState, connected, connecting } = useWallet();
+  const { wallets, select, wallet: walletState, connecting } = useWallet();
   const modalRef = useRef<HTMLDivElement>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
 
@@ -87,22 +87,16 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
     wallet => wallet.readyState !== WalletReadyState.Installed
   );
 
-  // Mirrors the official WalletModal: select() and close. WalletProvider's
-  // autoConnect predicate does the connecting, which is the library's intended
-  // flow — the hand-rolled connect()/timeout/ref machinery this replaces was
-  // only needed because autoConnect had been disabled outright.
-  const handleWalletClick = async (walletName: WalletName) => {
+  // Mirrors the official WalletModal: select() and close — WalletProvider's
+  // autoConnect predicate does the connecting.
+  //
+  // MUST stay synchronous. Browsers only allow an extension to open its popup
+  // from within a real user gesture, and any `await` before select() ends that
+  // gesture, after which Phantom silently refuses to open. Wallets already
+  // holding an approved session reconnect without needing a popup, which is
+  // why only Phantom appeared broken.
+  const handleWalletClick = (walletName: WalletName) => {
     setConnectError(null);
-
-    // Disconnect first so picking a wallet always re-prompts rather than
-    // silently reusing the extension's existing session.
-    if (connected) {
-      try {
-        await disconnect();
-      } catch {
-        // Already gone — carry on.
-      }
-    }
 
     // Marks this as a deliberate choice, so autoConnect permits the connect.
     sessionStorage.setItem(USER_SELECTED_KEY, '1');
