@@ -390,6 +390,17 @@ export default function TipModal({ isOpen, onClose, recipientUser, postId, onTip
                 <span className="text-base font-bold text-korus-primary">Total</span>
                 <span className="text-2xl font-black text-korus-primary" style={{ filter: 'drop-shadow(0 0 8px color-mix(in srgb, var(--korus-primary) 50%, transparent))' }}>{(finalAmount + 0.0005).toFixed(4)} SOL</span>
               </div>
+              {/* Resulting balance: the summary showed what leaves the wallet but
+                  not what remains, which is the number people actually check
+                  before approving a transfer. */}
+              {!isInsufficientFunds && (
+                <div className="flex items-center justify-between pt-2 mt-2 border-t" style={{ borderColor: 'color-mix(in srgb, var(--korus-primary) 15%, transparent)' }}>
+                  <span className="text-xs text-[var(--color-text-secondary)]">Balance after</span>
+                  <span className="text-xs font-semibold text-[var(--color-text-secondary)]">
+                    {balance.toFixed(4)} → {Math.max(0, balance - finalAmount - 0.0005).toFixed(4)} SOL
+                  </span>
+                </div>
+              )}
             </div>
           )}
 

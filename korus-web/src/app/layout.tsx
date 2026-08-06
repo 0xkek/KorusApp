@@ -9,6 +9,7 @@ import { WalletAuthProvider } from "@/contexts/WalletAuthContext";
 import { ParticleSystem } from "@/components/ParticleSystem";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastProvider } from "@/components/ToastProvider";
+import NetworkBanner from "@/components/NetworkBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { reportWebVitals, analytics } from "@/utils/analytics";
 
@@ -70,6 +71,7 @@ export default function RootLayout({
             <WalletContextProvider>
               <WalletAuthProvider>
                 <ToastProvider>
+                  <NetworkBanner />
                   {children}
                   <ParticleSystem />
                 </ToastProvider>

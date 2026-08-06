@@ -723,12 +723,27 @@ export function GamesPage() {
           {loading ? (
             <GamesFeedSkeleton />
           ) : games.length === 0 ? (
-            <div className="text-center py-20">
+            // An empty lobby is the first thing most visitors see here, so it
+            // carries the pitch and the action rather than just reporting a
+            // count of zero.
+            <div className="text-center py-16 px-4">
               <div className="text-6xl mb-4 opacity-60">🎮</div>
-              <p className="text-[var(--color-text)] text-lg font-medium">No games available</p>
-              <p className="text-[var(--color-text-secondary)] text-sm mt-2">
-                Create a game to get started!
+              <p className="text-[var(--color-text)] text-lg font-medium">Be the first to open a table</p>
+              <p className="text-[var(--color-text-secondary)] text-sm mt-2 max-w-sm mx-auto">
+                Pick a game, set a SOL wager, and it stays in escrow on-chain until
+                someone joins. Winner takes the pot.
               </p>
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-5 text-[13px] text-[var(--color-text-secondary)]">
+                <span className="px-3 py-1.5 rounded-full bg-white/[0.06] border border-[var(--color-border-light)]">Tic-Tac-Toe</span>
+                <span className="px-3 py-1.5 rounded-full bg-white/[0.06] border border-[var(--color-border-light)]">Rock Paper Scissors</span>
+                <span className="px-3 py-1.5 rounded-full bg-white/[0.06] border border-[var(--color-border-light)]">Connect Four</span>
+              </div>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="mt-6 bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-full hover:shadow-lg hover:shadow-korus-primary/20 duration-150"
+              >
+                Create the first game
+              </button>
             </div>
       ) : (
         <div className="space-y-0">

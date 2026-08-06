@@ -1256,7 +1256,13 @@ export default function Home() {
                 </div>
               </>
             ) : (
-              trendingPosts.map((post) => (
+              <>
+              {/* Say what the ranking is. An unexplained "Trending" tab reads as
+                  arbitrary, and users discount feeds they can't reason about. */}
+              <p className="px-5 py-2.5 text-[13px] text-[var(--color-text-tertiary)] border-b border-[var(--color-border-light)]">
+                Posts people are liking, replying to and tipping — most recent activity first.
+              </p>
+              {trendingPosts.map((post) => (
                 <FeedPostCard
                   key={post.id}
                   post={post}
@@ -1278,7 +1284,8 @@ export default function Home() {
                   onShoutoutExpire={handleShoutoutExpire}
                   onNavigate={handleNavigate}
                 />
-              ))
+              ))}
+            </>
             )
           ) : feedTab === 'following' ? (
             // Following feed
