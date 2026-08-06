@@ -14,6 +14,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
   const pendingConnectRef = useRef<WalletName | null>(null);
   // Mirrors the pending ref in state so the row can render a "Connecting…" label.
   const [selectedName, setSelectedName] = useState<WalletName | null>(null);
+  const [connectError, setConnectError] = useState<string | null>(null);
 
   // Close on Escape
   useEffect(() => {
@@ -58,10 +59,21 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
 
     pendingConnectRef.current = null;
     logger.log('[Wallet] connecting to', pending);
+    setConnectError(null);
+
     connect().catch((err) => {
       // Log it: a silent catch here made a failed connect indistinguishable
       // from nothing happening at all.
       logger.error('[Wallet] connect failed:', err);
+      setSelectedName(null);
+      // WalletNotSelectedError etc. are transient; surface anything else so a
+      // wallet that never opens its prompt doesn't just look frozen.
+      const name = (err as { name?: string })?.name;
+      if (name !== 'WalletNotSelectedError') {
+        setConnectError(
+          `Couldn't open ${pending}. Make sure the extension is unlocked, then try again.`
+        );
+      }
     });
   }, [wallet, connect, connected, connecting]);
 
@@ -69,6 +81,16 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
   useEffect(() => {
     if (open && connected) onClose();
   }, [open, connected, onClose]);
+
+  // Reset transient state each time the modal opens, so a previous failure
+  // doesn't greet the user on their next attempt.
+  useEffect(() => {
+    if (open) {
+      setConnectError(null);
+      setSelectedName(null);
+      pendingConnectRef.current = null;
+    }
+  }, [open]);
 
   if (!open) return null;
 
@@ -134,6 +156,12 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
             </svg>
           </button>
         </div>
+
+        {connectError && (
+          <div className="mx-3 mb-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30">
+            <p className="text-[13px] text-red-300">{connectError}</p>
+          </div>
+        )}
 
         {/* Wallet list */}
         <div className="px-3 pb-3">
