@@ -31,6 +31,9 @@ model User {
   nftAvatar                String?
   pushNotificationsEnabled Boolean             @default(true)
   pushToken                String?             @db.VarChar(255)
+  // Browser Push API subscription (endpoint + p256dh/auth keys) as JSON.
+  // Kept separate from pushToken, which holds Expo tokens for the mobile app.
+  webPushSubscription      Json?
   reputationScore          Int                 @default(0)
   snsUsername              String?             @db.VarChar(100)
   username                 String?             @unique @db.VarChar(20)

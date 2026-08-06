@@ -7,6 +7,7 @@ import { useTheme } from 'next-themes';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import PremiumUpgradeModal from '@/components/PremiumUpgradeModal';
+import PushNotificationToggle from '@/components/PushNotificationToggle';
 import { useSubscription } from '@/hooks/useSubscription';
 import { authAPI } from '@/lib/api';
 
@@ -298,6 +299,9 @@ export default function SettingsPage() {
                       </div>
                     </label>
                   </div>
+
+                  {/* Browser Notifications — hides itself when unsupported or unconfigured */}
+                  <PushNotificationToggle />
 
                   {/* Color Theme */}
                   <div className="p-4 bg-white/[0.04] rounded-xl border border-[var(--color-border-light)]">

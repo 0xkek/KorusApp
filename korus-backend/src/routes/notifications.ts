@@ -2,6 +2,13 @@ import { Router } from 'express';
 import prisma from '../config/database';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { logger } from '../utils/logger';
+import {
+  getVapidPublicKey,
+  isWebPushConfigured,
+  isValidSubscription,
+  saveSubscription,
+  removeSubscription,
+} from '../services/webPushService';
 
 const router = Router();
 
@@ -100,6 +107,46 @@ router.delete('/clear-all', authenticate, async (req: AuthRequest, res) => {
   } catch (error) {
     logger.error('Error clearing notifications:', error);
     res.status(500).json({ error: 'Failed to clear notifications' });
+  }
+});
+
+// --- Web push subscription management ---
+
+// Public key for the browser to subscribe with. Unauthenticated: the client
+// needs it before it can prompt for permission.
+router.get('/push/public-key', (_req, res) => {
+  res.json({
+    success: true,
+    publicKey: getVapidPublicKey(),
+    enabled: isWebPushConfigured(),
+  });
+});
+
+// Register or replace this user's browser push subscription
+router.post('/push/subscribe', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const { subscription } = req.body;
+
+    if (!isValidSubscription(subscription)) {
+      return res.status(400).json({ success: false, error: 'Invalid subscription' });
+    }
+
+    await saveSubscription(req.userWallet!, subscription);
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('Save push subscription error:', error);
+    res.status(500).json({ success: false, error: 'Failed to save subscription' });
+  }
+});
+
+// Unsubscribe this user from browser push
+router.post('/push/unsubscribe', authenticate, async (req: AuthRequest, res) => {
+  try {
+    await removeSubscription(req.userWallet!);
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('Remove push subscription error:', error);
+    res.status(500).json({ success: false, error: 'Failed to remove subscription' });
   }
 });
 

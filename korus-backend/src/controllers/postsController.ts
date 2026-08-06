@@ -15,6 +15,13 @@ import { userCache } from '../utils/cache'
 
 const NFT_AVATAR_TTL = 60 * 60 * 1000 // 1 hour
 
+// In-flight NFT lookups, keyed by mint. A feed page is transformed with
+// Promise.all, so every post by the same author hits resolveNFTAvatar
+// concurrently and all of them miss the cache before any one populates it —
+// producing N identical getNFTByMint calls for a single mint. Sharing the
+// pending promise collapses those into one request.
+const inFlightAvatarLookups = new Map<string, Promise<string | null>>()
+
 // Helper function to resolve NFT avatar mints to image URLs (cached)
 export async function resolveNFTAvatar(nftMint: string | null): Promise<string | null> {
   if (!nftMint) return null
@@ -25,15 +32,25 @@ export async function resolveNFTAvatar(nftMint: string | null): Promise<string |
   const cached = await userCache.get<string>(cacheKey)
   if (cached) return cached
 
-  try {
-    const nft = await getNFTByMint(nftMint)
-    const result = nft?.image || nftMint
-    await userCache.set(cacheKey, result, NFT_AVATAR_TTL)
-    return result
-  } catch (error) {
-    logger.error(`Failed to resolve NFT avatar ${nftMint}:`, error)
-    return nftMint // Preserve original value on error
-  }
+  const pending = inFlightAvatarLookups.get(nftMint)
+  if (pending) return pending
+
+  const lookup = (async () => {
+    try {
+      const nft = await getNFTByMint(nftMint)
+      const result = nft?.image || nftMint
+      await userCache.set(cacheKey, result, NFT_AVATAR_TTL)
+      return result
+    } catch (error) {
+      logger.error(`Failed to resolve NFT avatar ${nftMint}:`, error)
+      return nftMint // Preserve original value on error
+    } finally {
+      inFlightAvatarLookups.delete(nftMint)
+    }
+  })()
+
+  inFlightAvatarLookups.set(nftMint, lookup)
+  return lookup
 }
 
 // Sanitize author display fields — __wallet__ is a sentinel meaning "show wallet address"

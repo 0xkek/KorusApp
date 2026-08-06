@@ -1,6 +1,7 @@
 import prisma from '../config/database';
 import { logger } from './logger';
 import { emitNotification } from '../config/socket';
+import { sendWebPush } from '../services/webPushService';
 
 export async function createNotification({
   userId,
@@ -69,6 +70,21 @@ export async function createNotification({
 
     // Push real-time notification via Socket.IO
     emitNotification(userId, notification);
+
+    // Browser push reaches users who don't have the tab open — the socket
+    // above only lands if they're already looking at the site. Fire and
+    // forget: notification delivery must never block or fail the action.
+    const displayName = notification.fromUser?.walletAddress
+      ? `${notification.fromUser.walletAddress.slice(0, 4)}...${notification.fromUser.walletAddress.slice(-4)}`
+      : 'Someone';
+
+    sendWebPush(userId, {
+      title: titles[type] || 'New notification',
+      body: `${displayName} ${messages[type] || 'had some activity'}`,
+      url: postId ? `/post/${postId}` : '/',
+      // Collapse repeat notifications of the same kind rather than stacking.
+      tag: `korus-${type}`,
+    }).catch(err => logger.error('Web push dispatch failed:', err));
   } catch (error) {
     logger.error('Error creating notification:', error);
   }
