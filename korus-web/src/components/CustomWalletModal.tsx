@@ -61,20 +61,34 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
     logger.log('[Wallet] connecting to', pending);
     setConnectError(null);
 
-    connect().catch((err) => {
-      // Log it: a silent catch here made a failed connect indistinguishable
-      // from nothing happening at all.
-      logger.error('[Wallet] connect failed:', err);
-      setSelectedName(null);
-      // WalletNotSelectedError etc. are transient; surface anything else so a
-      // wallet that never opens its prompt doesn't just look frozen.
-      const name = (err as { name?: string })?.name;
-      if (name !== 'WalletNotSelectedError') {
-        setConnectError(
-          `Couldn't open ${pending}. Make sure the extension is unlocked, then try again.`
-        );
-      }
-    });
+    // connect() has no timeout of its own: an adapter that never resolves
+    // leaves the UI on "Connecting…" forever with nothing to act on.
+    const timeout = setTimeout(() => {
+      setSelectedName((current) => (current === pending ? null : current));
+      setConnectError(
+        `${pending} didn't respond. Open the extension and unlock it, then try again.`
+      );
+    }, 8000);
+
+    connect()
+      .then(() => clearTimeout(timeout))
+      .catch((err) => {
+        clearTimeout(timeout);
+        // Log it: a silent catch here made a failed connect indistinguishable
+        // from nothing happening at all.
+        logger.error('[Wallet] connect failed:', err);
+        setSelectedName(null);
+        // WalletNotSelectedError etc. are transient; surface anything else so a
+        // wallet that never opens its prompt doesn't just look frozen.
+        const name = (err as { name?: string })?.name;
+        if (name !== 'WalletNotSelectedError') {
+          setConnectError(
+            `Couldn't open ${pending}. Make sure the extension is unlocked, then try again.`
+          );
+        }
+      });
+
+    return () => clearTimeout(timeout);
   }, [wallet, connect, connected, connecting]);
 
   // Close once the wallet is actually connected.
@@ -95,16 +109,28 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
   if (!open) return null;
 
   const allowedWalletNames = ['Phantom', 'Solflare', 'Backpack', 'Jupiter'];
-  // Deduplicate by adapter name. If the same wallet is ever registered twice
-  // (e.g. a legacy adapter alongside its Wallet Standard registration), two
-  // identical rows appear and selecting one can hand off to the other
-  // extension. Prefer the entry reporting Installed.
+  // Deduplicate by adapter name, keeping the FIRST Installed entry.
+  //
+  // The previous version overwrote on every Installed match, so with a wallet
+  // registered more than once it kept the last one seen — which is arbitrary
+  // and could retain a stale adapter whose connect() never resolves while the
+  // working registration was discarded. Wallets registered once (Solflare)
+  // were unaffected, which is why only some wallets failed to open.
   const solanaWallets = Array.from(
     wallets
       .filter(wallet => allowedWalletNames.includes(wallet.adapter.name))
       .reduce((acc, wallet) => {
         const existing = acc.get(wallet.adapter.name);
-        if (!existing || wallet.readyState === WalletReadyState.Installed) {
+        if (!existing) {
+          acc.set(wallet.adapter.name, wallet);
+          return acc;
+        }
+        // Upgrade a non-Installed placeholder to an Installed registration,
+        // but never replace one Installed entry with another.
+        if (
+          existing.readyState !== WalletReadyState.Installed &&
+          wallet.readyState === WalletReadyState.Installed
+        ) {
           acc.set(wallet.adapter.name, wallet);
         }
         return acc;
