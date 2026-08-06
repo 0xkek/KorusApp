@@ -185,14 +185,16 @@ export default function ManageEventsPage() {
             {/* Header */}
             <div className="sticky top-0 bg-[var(--color-surface)]/80 backdrop-blur-xl border-b border-[var(--color-border-light)] z-10">
               <div className="px-6 py-4">
-                <div className="flex justify-between items-center">
-                  <div>
+                <div className="flex justify-between items-center gap-4">
+                  <div className="min-w-0">
                     <h1 className="text-2xl font-semibold text-[var(--color-text)]">My Events</h1>
                     <p className="text-[var(--color-text-secondary)] text-sm">Manage your community events and whitelists</p>
                   </div>
+                  {/* shrink-0 + nowrap so the button keeps its shape instead of
+                      compressing and wrapping its label at narrow widths. */}
                   <button
                     onClick={() => router.push('/events/create')}
-                    className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-semibold px-6 py-2.5 rounded-lg hover:shadow-lg duration-150"
+                    className="shrink-0 whitespace-nowrap bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-semibold px-6 py-2.5 rounded-lg hover:shadow-lg duration-150"
                   >
                     + Create Event
                   </button>
