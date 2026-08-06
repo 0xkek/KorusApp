@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { authenticate } from '../middleware/auth'
-import { toggleFollow, getFollowers, getFollowing, checkFollowing, getFollowingFeed } from '../controllers/followController'
+import { authenticate, optionalAuthenticate } from '../middleware/auth'
+import { toggleFollow, getFollowers, getFollowing, checkFollowing, getFollowingFeed, getSuggestedFollows } from '../controllers/followController'
 import { checkSuspension } from '../middleware/moderationCheck'
 import { interactionLimiter } from '../middleware/rateLimiter'
 
@@ -20,5 +20,8 @@ router.post('/check', authenticate, checkFollowing)
 
 // Get feed of posts from followed users
 router.get('/feed', authenticate, getFollowingFeed)
+
+// Suggested accounts to follow — personalized when authenticated, open otherwise
+router.get('/suggested', optionalAuthenticate, getSuggestedFollows)
 
 export default router

@@ -2,57 +2,126 @@ import { logger } from '../utils/logger'
 import prisma from '../config/database'
 
 /**
- * Cleanup expired shoutout posts
- * This job runs periodically to remove shoutout posts that have been expired for more than 24 hours
+ * Retire expired shoutouts.
+ *
+ * A shoutout stops being promoted as soon as its window closes: it drops out of
+ * the shoutout slot and the queue, and reappears in the normal feed at its
+ * original position. The post itself is kept.
+ *
+ * This previously ran `deleteMany`, which permanently destroyed posts users had
+ * paid up to 2 SOL for (along with their replies via cascade, and the
+ * shoutoutTxSignature needed to audit the payment). Clearing `isShoutout`
+ * achieves the same "promotion is over" outcome without losing paid content.
  */
-export async function cleanupExpiredShoutouts() {
+export async function retireExpiredShoutouts() {
   try {
     const now = new Date()
-    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-    
-    // Find expired shoutout posts that have been expired for more than 24 hours
-    const expiredShoutouts = await prisma.post.deleteMany({
+
+    const retired = await prisma.post.updateMany({
       where: {
         isShoutout: true,
-        shoutoutExpiresAt: {
-          lt: twentyFourHoursAgo // Less than 24 hours ago (expired for more than 24 hours)
-        }
+        shoutoutExpiresAt: { lt: now }
+      },
+      data: {
+        isShoutout: false
       }
     })
-    
-    if (expiredShoutouts.count > 0) {
-      logger.info(`Cleaned up ${expiredShoutouts.count} expired shoutout posts`)
+
+    if (retired.count > 0) {
+      logger.info(`Retired ${retired.count} expired shoutout(s) to normal posts`)
     }
-    
-    return expiredShoutouts.count
+
+    return retired.count
   } catch (error) {
-    logger.error('Failed to cleanup expired shoutouts:', error)
+    logger.error('Failed to retire expired shoutouts:', error)
     throw error
   }
 }
 
 /**
- * Start the cleanup job scheduler
- * Runs every hour to check for expired shoutouts
+ * Promote the next queued shoutout when the slot is free.
+ *
+ * Activation also happens opportunistically in getPosts, but that only fires
+ * when someone loads the feed — so during quiet periods a paid shoutout could
+ * sit unstarted indefinitely. Running it on a timer means the queue advances
+ * on schedule regardless of traffic.
+ */
+export async function activateNextShoutout() {
+  try {
+    const now = new Date()
+
+    // Slot is taken if any shoutout is still within its window.
+    const active = await prisma.post.findFirst({
+      where: {
+        isShoutout: true,
+        isHidden: false,
+        shoutoutExpiresAt: { gt: now }
+      },
+      select: { id: true }
+    })
+    if (active) return null
+
+    // Oldest purchase first — queue order is by creation time.
+    const nextQueued = await prisma.post.findFirst({
+      where: {
+        isShoutout: true,
+        isHidden: false,
+        shoutoutExpiresAt: null
+      },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true, shoutoutDuration: true }
+    })
+    if (!nextQueued) return null
+
+    const expiresAt = new Date()
+    expiresAt.setMinutes(expiresAt.getMinutes() + (nextQueued.shoutoutDuration || 10))
+
+    // Guarded update: only claim the slot if this row is still unstarted, so a
+    // concurrent getPosts activation can't double-start the same shoutout.
+    const claimed = await prisma.post.updateMany({
+      where: { id: nextQueued.id, shoutoutExpiresAt: null },
+      data: { shoutoutExpiresAt: expiresAt }
+    })
+
+    if (claimed.count > 0) {
+      logger.info(`Activated queued shoutout ${nextQueued.id} — expires at ${expiresAt.toISOString()}`)
+      return nextQueued.id
+    }
+
+    return null
+  } catch (error) {
+    logger.error('Failed to activate next shoutout:', error)
+    throw error
+  }
+}
+
+async function runShoutoutMaintenance() {
+  // Retire first so the slot is free for the next queued shoutout.
+  await retireExpiredShoutouts()
+  await activateNextShoutout()
+}
+
+/**
+ * Start the shoutout maintenance scheduler.
+ *
+ * Runs every minute: shoutout durations start at 10 minutes, so an hourly tick
+ * (the previous cadence) would let a paid slot sit idle for most of its window.
  */
 export function startShoutoutCleanupJob() {
-  // Run cleanup immediately on startup
-  cleanupExpiredShoutouts().catch(error => {
-    logger.error('Initial shoutout cleanup failed:', error)
+  runShoutoutMaintenance().catch(error => {
+    logger.error('Initial shoutout maintenance failed:', error)
   })
-  
-  // Schedule to run every hour
+
   const intervalId = setInterval(() => {
-    cleanupExpiredShoutouts().catch(error => {
-      logger.error('Scheduled shoutout cleanup failed:', error)
+    runShoutoutMaintenance().catch(error => {
+      logger.error('Scheduled shoutout maintenance failed:', error)
     })
-  }, 60 * 60 * 1000) // 1 hour in milliseconds
-  
-  logger.info('Shoutout cleanup job started (runs every hour)')
-  
-  // Return cleanup function for graceful shutdown
+  }, 60 * 1000)
+
+  logger.info('Shoutout maintenance job started (runs every minute)')
+
   return () => {
     clearInterval(intervalId)
-    logger.info('Shoutout cleanup job stopped')
+    logger.info('Shoutout maintenance job stopped')
   }
 }

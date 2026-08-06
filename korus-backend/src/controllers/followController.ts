@@ -288,3 +288,56 @@ export const getFollowingFeed = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Failed to get following feed' })
   }
 }
+
+/**
+ * Suggested accounts to follow.
+ *
+ * New users land on an empty Following feed with no way to fill it. This ranks
+ * active accounts by reputation so there is always a starting point.
+ * Excludes the caller and anyone they already follow. Works unauthenticated
+ * too, so the suggestions can render before a wallet connects.
+ */
+export const getSuggestedFollows = async (req: AuthRequest, res: Response) => {
+  try {
+    const walletAddress = req.userWallet
+    const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 10, 1), 25)
+
+    const exclude: string[] = []
+    if (walletAddress) {
+      exclude.push(walletAddress)
+      const following = await prisma.follow.findMany({
+        where: { followerWallet: walletAddress },
+        select: { followingWallet: true },
+      })
+      exclude.push(...following.map(f => f.followingWallet))
+    }
+
+    const users = await prisma.user.findMany({
+      where: {
+        ...(exclude.length ? { walletAddress: { notIn: exclude } } : {}),
+        isSuspended: false,
+        // Only suggest accounts that have actually posted — following an empty
+        // account does nothing to fill the feed.
+        posts: { some: { isHidden: false } },
+      },
+      select: { ...authorSelect, reputationScore: true },
+      orderBy: [
+        { reputationScore: 'desc' },
+        { followerCount: 'desc' },
+      ],
+      take: limit,
+    })
+
+    const withAvatars = await Promise.all(
+      users.map(async (u: any) => ({
+        ...u,
+        nftAvatar: await resolveNFTAvatar(u.nftAvatar),
+      }))
+    )
+
+    res.json({ success: true, users: withAvatars })
+  } catch (error) {
+    logger.error('Get suggested follows error:', error)
+    res.status(500).json({ error: 'Failed to get suggestions' })
+  }
+}

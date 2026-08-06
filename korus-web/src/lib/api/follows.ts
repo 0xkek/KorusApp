@@ -33,6 +33,14 @@ export const followsAPI = {
     return api.post('/api/follows/check', { wallets }, token);
   },
 
+  /**
+   * Accounts to follow, ranked by reputation. Excludes accounts the caller
+   * already follows when a token is supplied.
+   */
+  async getSuggested(token?: string, limit = 10): Promise<{ success: boolean; users: FollowUser[] }> {
+    return api.get(`/api/follows/suggested?limit=${limit}`, token);
+  },
+
   async getFollowingFeed(token: string, params?: { limit?: number; cursor?: string }): Promise<{
     success: boolean;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

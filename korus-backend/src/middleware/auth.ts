@@ -43,3 +43,23 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
     res.status(401).json({ error: 'Invalid token' })
   }
 }
+
+/**
+ * Populates req.userWallet when a valid token is present, but never rejects.
+ * For endpoints that personalize their response for signed-in users while
+ * staying available to anonymous visitors.
+ */
+export const optionalAuthenticate = (req: AuthRequest, _res: Response, next: NextFunction) => {
+  const token = req.header('Authorization')?.replace('Bearer ', '')
+
+  if (token && jwtSecret) {
+    try {
+      const decoded = jwt.verify(token, jwtSecret) as { walletAddress: string }
+      req.userWallet = decoded.walletAddress
+    } catch {
+      // Ignore invalid tokens — treat the caller as anonymous.
+    }
+  }
+
+  next()
+}

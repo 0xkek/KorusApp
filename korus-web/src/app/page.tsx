@@ -21,6 +21,7 @@ import { formatRelativeTime } from '@/utils/formatTime';
 import { transformPost, transformPostAsync } from '@/utils/transformPost';
 import { FeedPostCard } from '@/components/FeedPostCard';
 import FeedHeader from '@/components/FeedHeader';
+import SuggestedFollows from '@/components/SuggestedFollows';
 import InlineComposer from '@/components/InlineComposer';
 import FeedModals from '@/components/FeedModals';
 import { useComposePost } from '@/hooks/useComposePost';
@@ -1208,13 +1209,18 @@ export default function Home() {
             isLoadingTrending ? (
               <FeedSkeleton count={5} />
             ) : trendingPosts.length === 0 ? (
-              <div className="py-16 text-center text-[var(--color-text-tertiary)]">
-                <svg className="w-12 h-12 mx-auto mb-4 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
-                <p className="text-[15px] font-medium mb-1">Nothing trending yet</p>
-                <p className="text-[13px]">Posts with engagement from the last 48 hours will appear here</p>
-              </div>
+              <>
+                <div className="py-16 text-center text-[var(--color-text-tertiary)]">
+                  <svg className="w-12 h-12 mx-auto mb-4 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                  <p className="text-[15px] font-medium mb-1">Nothing trending yet</p>
+                  <p className="text-[13px]">Posts that get likes, replies, or tips will show up here</p>
+                </div>
+                <div className="border-t border-[var(--color-border-light)]">
+                  <SuggestedFollows />
+                </div>
+              </>
             ) : (
               trendingPosts.map((post) => (
                 <FeedPostCard
@@ -1245,13 +1251,18 @@ export default function Home() {
             isLoadingFollowing ? (
               <FeedSkeleton count={5} />
             ) : followingPosts.length === 0 ? (
-              <div className="py-16 text-center text-[var(--color-text-tertiary)]">
-                <svg className="w-12 h-12 mx-auto mb-4 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <p className="text-[15px] font-medium mb-1">No posts yet</p>
-                <p className="text-[13px]">{isAuthenticated ? 'Follow users to see their posts here' : 'Connect your wallet to use the following feed'}</p>
-              </div>
+              <>
+                <div className="py-16 text-center text-[var(--color-text-tertiary)]">
+                  <svg className="w-12 h-12 mx-auto mb-4 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <p className="text-[15px] font-medium mb-1">No posts yet</p>
+                  <p className="text-[13px]">{isAuthenticated ? 'Follow users to see their posts here' : 'Connect your wallet to use the following feed'}</p>
+                </div>
+                <div className="border-t border-[var(--color-border-light)]">
+                  <SuggestedFollows />
+                </div>
+              </>
             ) : (
               /* eslint-disable @typescript-eslint/no-explicit-any */
               followingPosts.map((post) => (

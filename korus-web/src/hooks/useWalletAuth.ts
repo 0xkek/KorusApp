@@ -149,6 +149,36 @@ export function useWalletAuth() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected, publicKey]);
 
+  // Record the daily login once per wallet per day.
+  // The backend awards DAILY_LOGIN points and maintains loginStreak, but nothing
+  // was calling the endpoint, so streaks never accrued. Covers both fresh auth
+  // and restored-token sessions since it keys off the token becoming available.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !token || !publicKey) return;
+
+    const wallet = publicKey.toBase58();
+    const today = new Date().toISOString().slice(0, 10);
+    const key = `korus_daily_login:${wallet}`;
+
+    if (localStorage.getItem(key) === today) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const { reputationAPI } = await import('@/lib/api/reputation');
+        await reputationAPI.recordDailyLogin(token);
+        if (!cancelled) localStorage.setItem(key, today);
+      } catch (err) {
+        // Non-critical — a missed streak day must never disrupt the session.
+        if (isDev) console.warn('[Auth] Daily login record failed:', err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, publicKey]);
+
   // Clear auth when wallet disconnects
   useEffect(() => {
     if (!connected) {
