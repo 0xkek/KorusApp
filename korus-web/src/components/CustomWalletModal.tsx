@@ -3,23 +3,13 @@ import Image from 'next/image';
 
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletReadyState, type WalletName } from '@solana/wallet-adapter-base';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { logger } from '@/utils/logger';
+import { useEffect, useRef, useState } from 'react';
+import { USER_SELECTED_KEY } from './WalletProvider';
 
 export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
-  const { wallets, select, connect, disconnect, wallet, connected, connecting } = useWallet();
+  const { wallets, select, disconnect, wallet: walletState, connected, connecting } = useWallet();
   const modalRef = useRef<HTMLDivElement>(null);
-  // Set when the user picks a wallet, so the effect below knows to connect once
-  // the adapter has actually switched to it.
-  const pendingConnectRef = useRef<WalletName | null>(null);
-  // Mirrors the pending ref in state so the row can render a "Connecting…" label.
-  const [selectedName, setSelectedName] = useState<WalletName | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
-  const justConnectedRef = useRef(false);
-  // Keeps runConnect free of an onClose dependency, so it isn't recreated (and
-  // the connect effect isn't re-triggered) every time the parent re-renders.
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
 
   // Close on Escape
   useEffect(() => {
@@ -31,7 +21,10 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
     return () => window.removeEventListener('keydown', handleKey);
   }, [open, onClose]);
 
-  // Close on outside click
+  // Close on outside click.
+  // Ignored while a connect is in flight: opening a wallet extension can move
+  // focus and fire stray mousedowns, which closed the modal mid-connect and
+  // unmounted the component before the attempt could finish.
   useEffect(() => {
     if (!open) return;
     const handleClick = (e: MouseEvent) => {
@@ -49,66 +42,10 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
     };
   }, [open, onClose]);
 
-  // Runs after select() has propagated and `wallet` reflects the user's choice.
-  // Declared before the early return below so it still fires once the modal has
-  // closed itself on click.
-  const runConnect = useCallback(
-    async (pending: WalletName) => {
-      logger.log('[Wallet] connecting to', pending);
-      setConnectError(null);
 
-      // connect() has no timeout of its own: a locked extension can swallow the
-      // request without prompting or rejecting, leaving the UI stuck forever.
-      const timeout = setTimeout(() => {
-        setSelectedName((current) => (current === pending ? null : current));
-        setConnectError(`Is ${pending} unlocked? Open the extension, then try again.`);
-      }, 5000);
-
-      try {
-        await connect();
-        // Close on THIS attempt succeeding. Previously an effect closed the
-        // modal whenever `connected` was true, but a wallet extension keeps
-        // reporting connected from its earlier session — so after dismissing a
-        // wallet popup, reopening the modal closed it again instantly.
-        justConnectedRef.current = true;
-        onCloseRef.current();
-      } catch (err) {
-        // A silent catch made a failed connect indistinguishable from nothing
-        // happening at all.
-        logger.error('[Wallet] connect failed:', err);
-        setSelectedName(null);
-        const name = (err as { name?: string })?.name;
-        if (name !== 'WalletNotSelectedError') {
-          setConnectError(`Couldn't open ${pending}. Is the extension unlocked?`);
-        }
-      } finally {
-        clearTimeout(timeout);
-      }
-    },
-    [connect]
-  );
-
-  // Fires once select() has propagated and `wallet` reflects the user's choice.
+  // Clear a previous failure each time the modal opens.
   useEffect(() => {
-    const pending = pendingConnectRef.current;
-    if (!pending) return;
-    if (wallet?.adapter.name !== pending) return;
-    // Don't fire a second connect() while one is already in flight.
-    if (connecting) return;
-
-    pendingConnectRef.current = null;
-    void runConnect(pending);
-  }, [wallet, connecting, runConnect]);
-
-  // Reset transient state each time the modal opens, so a previous failure
-  // doesn't greet the user on their next attempt.
-  useEffect(() => {
-    if (open) {
-      setConnectError(null);
-      setSelectedName(null);
-      pendingConnectRef.current = null;
-      justConnectedRef.current = false;
-    }
+    if (open) setConnectError(null);
   }, [open]);
 
   if (!open) return null;
@@ -150,38 +87,27 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
     wallet => wallet.readyState !== WalletReadyState.Installed
   );
 
-  // select() only tells the adapter which wallet to use — it does not open the
-  // extension. autoConnect used to perform the actual connect(); with it off
-  // (so nothing connects without user approval) the click must call connect()
-  // itself, once the adapter has switched to the chosen wallet.
+  // Mirrors the official WalletModal: select() and close. WalletProvider's
+  // autoConnect predicate does the connecting, which is the library's intended
+  // flow — the hand-rolled connect()/timeout/ref machinery this replaces was
+  // only needed because autoConnect had been disabled outright.
   const handleWalletClick = async (walletName: WalletName) => {
-    setSelectedName(walletName);
     setConnectError(null);
 
-    // Always start from a disconnected state so the wallet prompts every time.
-    // Without this, clicking while already connected did nothing visible.
+    // Disconnect first so picking a wallet always re-prompts rather than
+    // silently reusing the extension's existing session.
     if (connected) {
       try {
         await disconnect();
       } catch {
-        // Already gone — carry on and connect.
+        // Already gone — carry on.
       }
     }
 
-    if (wallet?.adapter.name === walletName) {
-      // Same wallet already selected: select() is a no-op, so `wallet` never
-      // changes and the effect would not re-run. Connect directly, and leave
-      // pendingConnectRef unset so the effect doesn't fire a second connect().
-      pendingConnectRef.current = null;
-      void runConnect(walletName);
-    } else {
-      pendingConnectRef.current = walletName;
-      select(walletName);
-    }
-    // Deliberately NOT closing here. The connect effect needs this component
-    // mounted to observe `wallet` switching to the selection; closing on click
-    // unmounted it first and the connect never fired. runConnect closes the
-    // modal itself once the connection actually succeeds.
+    // Marks this as a deliberate choice, so autoConnect permits the connect.
+    sessionStorage.setItem(USER_SELECTED_KEY, '1');
+    select(walletName);
+    onClose();
   };
 
   return (
@@ -237,7 +163,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
               {/* Extensions can take a few seconds to raise their prompt —
                   without this the modal just looks frozen after a click. */}
               <span className="text-xs text-emerald-400 font-medium opacity-70 group-hover:opacity-100 transition-opacity">
-                {connecting && wallet.adapter.name === selectedName ? 'Connecting…' : 'Detected'}
+                {connecting && wallet.adapter.name === walletState?.adapter.name ? 'Connecting…' : 'Detected'}
               </span>
             </button>
           ))}
