@@ -30,7 +30,7 @@ export default function Home() {
   const { connected, publicKey } = useWallet();
   const router = useRouter();
   const { showSuccess, showError } = useToastContext();
-  const { token, isAuthenticated } = useWalletAuth();
+  const { token, isAuthenticated, isAuthenticating } = useWalletAuth();
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [showCreatePostModal, setShowCreatePostModal] = useState(false);
@@ -200,11 +200,16 @@ export default function Home() {
   // Gate the feed on a connected wallet. Checking `connected` alone was not
   // enough on its own — a stale stored token made the app look signed in — but
   // that is now cleared when no wallet is attached, so this is the real gate.
+  // Require an authenticated session, not just a connected adapter. A wallet
+  // extension that still has this site approved reports `connected` on load
+  // without the user doing anything, so `connected` alone let people straight in.
   useEffect(() => {
-    if (!connected) {
+    // Don't bounce a sign-in that is still in flight.
+    if (isAuthenticating) return;
+    if (!connected || !isAuthenticated) {
       router.replace('/welcome');
     }
-  }, [connected, router]);
+  }, [connected, isAuthenticated, isAuthenticating, router]);
 
   // Fetch current user's profile to get theme color
   useEffect(() => {
@@ -1111,7 +1116,7 @@ export default function Home() {
 
   // Render nothing while the redirect above is in flight, so the feed never
   // flashes to someone without a connected wallet.
-  if (!connected) {
+  if (!connected || (!isAuthenticated && !isAuthenticating)) {
     return null;
   }
 

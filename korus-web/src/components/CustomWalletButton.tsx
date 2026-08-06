@@ -1,12 +1,14 @@
 'use client';
 
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { useState } from 'react';
 import Image from 'next/image';
 import { CustomWalletModal } from './CustomWalletModal';
 
 export const CustomWalletButton = ({ className }: { className?: string }) => {
   const { connected, disconnect, publicKey, wallet } = useWallet();
+  const { isAuthenticated } = useWalletAuth();
   const [modalOpen, setModalOpen] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
 
@@ -15,10 +17,15 @@ export const CustomWalletButton = ({ className }: { className?: string }) => {
     await disconnect();
     if (typeof window !== 'undefined') {
       localStorage.removeItem('walletName');
+      localStorage.removeItem('authToken');
     }
   };
 
-  if (connected && publicKey) {
+  // Show the address only once the user is actually signed in to Korus.
+  // `connected` alone reflects the extension's own session — an extension that
+  // still has this site approved reports connected on load, so the button
+  // showed a remembered address before the user had done anything.
+  if (connected && publicKey && isAuthenticated) {
     const addr = publicKey.toBase58();
     return (
       <div className="relative">
