@@ -37,15 +37,11 @@ export const WalletContextProvider: FC<Props> = ({ children }) => {
   // extension that actually registered it.
   const wallets = useMemo(() => [], []);
 
-  // One-time cleanup of the wallet name persisted before the adapter fix.
-  // The adapter stores the last selected wallet under `walletName` and
-  // autoConnect replays it on load — so a selection made while the buggy
-  // legacy Phantom adapter was registered kept reconnecting to the wrong
-  // extension (picking Phantom, opening Backpack) even after the fix shipped.
-  // Clearing it once forces a fresh, correct choice.
+  // Clear any wallet name persisted by the previous autoConnect behaviour, so
+  // sessions that were silently reconnected start from a clean state.
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const MIGRATION_KEY = 'korus_wallet_adapter_reset_v1';
+    const MIGRATION_KEY = 'korus_wallet_autoconnect_off_v1';
     if (localStorage.getItem(MIGRATION_KEY)) return;
     try {
       localStorage.removeItem('walletName');
@@ -58,11 +54,13 @@ export const WalletContextProvider: FC<Props> = ({ children }) => {
   return (
     <ConnectionProvider endpoint={endpoint}>
       {/*
-        autoConnect reconnects the previously selected wallet silently. That is
-        the desired behaviour once a user has deliberately chosen one, and the
-        migration above ensures the stored choice is not a stale bad value.
+        autoConnect is OFF deliberately. With it on, the adapter reconnected any
+        wallet that had previously been granted site permission on every page
+        load — so a visitor arrived at /welcome already connected, with their
+        address shown, without approving anything in that session. Connecting a
+        wallet is an explicit user action and must stay one.
       */}
-      <WalletProvider wallets={wallets} autoConnect={true}>
+      <WalletProvider wallets={wallets} autoConnect={false}>
         {children}
       </WalletProvider>
     </ConnectionProvider>
