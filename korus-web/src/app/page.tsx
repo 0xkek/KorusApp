@@ -57,7 +57,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [shoutoutQueue, setShoutoutQueue] = useState<Post[]>([]); // Queue for pending shoutouts
   const activeShoutoutIdRef = useRef<string | number | null>(null); // Track which shoutout is currently active
-  const [shoutoutQueueInfo, setShoutoutQueueInfo] = useState<{ activeShoutout: { id: string; duration: number; expiresAt: Date | string; content: string } | null; queuedShoutouts: Array<{ id: string; duration: number; expiresAt: Date | string; content: string }>}>({ activeShoutout: null, queuedShoutouts: [] });
+  const [shoutoutQueueInfo, setShoutoutQueueInfo] = useState<{ activeShoutout: { id: string; duration: number; expiresAt: Date | string; content: string } | null; queuedShoutouts: Array<{ id: string; authorWallet?: string; duration: number; expiresAt: Date | string; position?: number; startsAt?: Date | string; waitMinutes?: number; content: string }>}>({ activeShoutout: null, queuedShoutouts: [] });
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [inlineReplyPostId, setInlineReplyPostId] = useState<string | number | null>(null);
   const [inlineReplyText, setInlineReplyText] = useState('');
@@ -80,19 +80,19 @@ export default function Home() {
     const queuedFromPosts = posts.filter(p => p.isShoutout).slice(1);
     // Merge local queue + backend queue, deduplicating by id
     const seenIds = new Set<string>();
-    const allQueued: Array<{ id: string; duration: number; expiresAt: string | Date; content: string }> = [];
+    const allQueued: Array<{ id: string; authorWallet?: string; duration: number; expiresAt: string | Date; position?: number; startsAt?: Date | string; waitMinutes?: number; content: string }> = [];
     for (const p of [...queuedFromPosts, ...shoutoutQueue]) {
       const sid = String(p.id);
       if (!seenIds.has(sid)) {
         seenIds.add(sid);
-        allQueued.push({ id: sid, duration: p.shoutoutDuration || 10, expiresAt: p.shoutoutExpiresAt || new Date(), content: p.content || '' });
+        allQueued.push({ id: sid, authorWallet: p.wallet, duration: p.shoutoutDuration || 10, expiresAt: p.shoutoutExpiresAt || new Date(), content: p.content || '' });
       }
     }
     for (const q of shoutoutQueueInfo.queuedShoutouts) {
       const sid = String(q.id);
       if (!seenIds.has(sid)) {
         seenIds.add(sid);
-        allQueued.push({ id: sid, duration: q.duration || 10, expiresAt: q.expiresAt || new Date(), content: q.content || '' });
+        allQueued.push({ id: sid, authorWallet: q.authorWallet, duration: q.duration || 10, expiresAt: q.expiresAt || new Date(), position: q.position, startsAt: q.startsAt, waitMinutes: q.waitMinutes, content: q.content || '' });
       }
     }
     return {
@@ -1188,6 +1188,27 @@ export default function Home() {
                     {effectiveQueueInfo.queuedShoutouts.length} shoutout{effectiveQueueInfo.queuedShoutouts.length > 1 ? 's' : ''} waiting
                   </span>
                 </div>
+                {(() => {
+                  // Show the connected wallet where their own shoutout stands,
+                  // so a queued buyer isn't left guessing when their slot starts.
+                  const mine = publicKey
+                    ? effectiveQueueInfo.queuedShoutouts.find(q => q.authorWallet === publicKey.toBase58())
+                    : undefined;
+                  if (!mine?.position) return null;
+
+                  const wait = mine.waitMinutes ?? 0;
+                  const waitLabel = wait <= 0
+                    ? 'starting soon'
+                    : wait < 60
+                      ? `~${wait} min`
+                      : `~${Math.floor(wait / 60)}h ${wait % 60}m`;
+
+                  return (
+                    <p className="mt-2 text-[13px] text-[var(--color-text-secondary)]">
+                      Yours is <span className="font-semibold" style={{ color: 'var(--korus-primary)' }}>#{mine.position}</span> in line — starts in {waitLabel}
+                    </p>
+                  );
+                })()}
               </div>
             )}
 

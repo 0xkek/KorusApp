@@ -81,8 +81,15 @@ export interface APIShoutoutQueue {
   } | null;
   queued: Array<{
     id: string;
+    authorWallet?: string;
     duration: number;
     expiresAt: Date | string;
+    /** 1-based place in line */
+    position?: number;
+    /** Estimated time this shoutout starts running */
+    startsAt?: Date | string;
+    /** Estimated minutes until it starts */
+    waitMinutes?: number;
     content: string;
   }>;
   queueLength: number;

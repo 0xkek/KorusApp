@@ -341,44 +341,76 @@ export const getPosts = async (req: Request, res: Response) => {
       themeColor: true
     }
 
-    const allShoutouts = await prisma.post.findMany({
-      where: { isHidden: false, isShoutout: true },
+    // Exactly one shoutout is promoted at a time; the rest wait in a queue
+    // ordered by purchase time. Fetch the active one directly rather than
+    // scanning the whole shoutout set — the old `take: 20` scan ran on every
+    // feed load and could miss the active shoutout entirely once 20+ older
+    // queued entries existed.
+    let activeShoutout = await prisma.post.findFirst({
+      where: {
+        isHidden: false,
+        isShoutout: true,
+        shoutoutExpiresAt: { gt: now }
+      },
       include: { author: { select: authorSelect } },
-      orderBy: { createdAt: 'asc' },
-      take: 20
+      orderBy: { shoutoutExpiresAt: 'asc' }
     })
 
-    // Find active shoutout (has expiresAt in the future)
-    let activeShoutout = allShoutouts.find(s => s.shoutoutExpiresAt && s.shoutoutExpiresAt > now) || null
-
-    // If no active shoutout, activate the first queued one
+    // Promotion normally happens in the shoutout maintenance job, but activate
+    // opportunistically here too so the slot fills immediately after one frees.
     if (!activeShoutout) {
-      const nextQueued = allShoutouts.find(s => !s.shoutoutExpiresAt)
+      const nextQueued = await prisma.post.findFirst({
+        where: { isHidden: false, isShoutout: true, shoutoutExpiresAt: null },
+        orderBy: { createdAt: 'asc' },
+        select: { id: true, shoutoutDuration: true }
+      })
+
       if (nextQueued) {
         const expiresAt = new Date()
         expiresAt.setMinutes(expiresAt.getMinutes() + (nextQueued.shoutoutDuration || 10))
 
-        activeShoutout = await prisma.post.update({
-          where: { id: nextQueued.id },
-          data: { shoutoutExpiresAt: expiresAt },
-          include: { author: { select: authorSelect } }
+        // Guarded so a concurrent request or the maintenance job can't
+        // double-start the same shoutout and shorten someone's paid window.
+        const claimed = await prisma.post.updateMany({
+          where: { id: nextQueued.id, shoutoutExpiresAt: null },
+          data: { shoutoutExpiresAt: expiresAt }
         })
-        logger.info(`Activated queued shoutout ${nextQueued.id} — expires at ${expiresAt.toISOString()}`)
+
+        if (claimed.count > 0) {
+          logger.info(`Activated queued shoutout ${nextQueued.id} — expires at ${expiresAt.toISOString()}`)
+        }
+
+        // Re-read whoever holds the slot now (this request or a concurrent one).
+        activeShoutout = await prisma.post.findFirst({
+          where: { isHidden: false, isShoutout: true, shoutoutExpiresAt: { gt: new Date() } },
+          include: { author: { select: authorSelect } },
+          orderBy: { shoutoutExpiresAt: 'asc' }
+        })
       }
     }
 
     const activeShoutouts = activeShoutout ? [activeShoutout] : []
 
-    // Queued shoutouts: those with no expiresAt, excluding the active one
-    const queuedShoutouts = allShoutouts
-      .filter(s => !s.shoutoutExpiresAt && s.id !== activeShoutout?.id)
-      .map(s => ({
-        id: s.id,
-        content: s.content,
-        shoutoutDuration: s.shoutoutDuration,
-        createdAt: s.createdAt,
-        shoutoutExpiresAt: s.shoutoutExpiresAt
-      }))
+    // Queue preview, oldest purchase first. Capped for payload size, but
+    // queueLength below reports the true total.
+    const [queuedShoutouts, queuedTotal] = await Promise.all([
+      prisma.post.findMany({
+        where: { isHidden: false, isShoutout: true, shoutoutExpiresAt: null },
+        orderBy: { createdAt: 'asc' },
+        take: 20,
+        select: {
+          id: true,
+          content: true,
+          authorWallet: true,
+          shoutoutDuration: true,
+          createdAt: true,
+          shoutoutExpiresAt: true
+        }
+      }),
+      prisma.post.count({
+        where: { isHidden: false, isShoutout: true, shoutoutExpiresAt: null }
+      })
+    ])
 
     // Then get regular posts using cursor pagination (excluding ALL shoutout posts and game dummy posts)
     const result = await CursorPagination.paginateQuery<any>(
@@ -455,13 +487,31 @@ export const getPosts = async (req: Request, res: Response) => {
           expiresAt: activeShoutout.shoutoutExpiresAt,
           content: activeShoutout.content
         } : null,
-        queued: queuedShoutouts.map(s => ({
-          id: s.id,
-          duration: s.shoutoutDuration,
-          expiresAt: s.shoutoutExpiresAt,
-          content: s.content?.substring(0, 50) || '' // First 50 chars for preview
-        })),
-        queueLength: queuedShoutouts.length
+        // position is 1-based; startsAt is an estimate built from the active
+        // shoutout's remaining time plus the durations of everyone ahead, so a
+        // buyer can see when their slot actually begins instead of waiting blind.
+        queued: (() => {
+          const activeRemainingMs = activeShoutout?.shoutoutExpiresAt
+            ? Math.max(0, new Date(activeShoutout.shoutoutExpiresAt).getTime() - now.getTime())
+            : 0
+          let cumulativeMs = activeRemainingMs
+
+          return queuedShoutouts.map((s, i) => {
+            const startsAt = new Date(now.getTime() + cumulativeMs)
+            cumulativeMs += (s.shoutoutDuration || 10) * 60 * 1000
+            return {
+              id: s.id,
+              authorWallet: s.authorWallet,
+              duration: s.shoutoutDuration,
+              expiresAt: s.shoutoutExpiresAt,
+              position: i + 1,
+              startsAt,
+              waitMinutes: Math.round((startsAt.getTime() - now.getTime()) / 60000),
+              content: s.content?.substring(0, 50) || '' // First 50 chars for preview
+            }
+          })
+        })(),
+        queueLength: queuedTotal
       }
     })
   } catch (error: any) {
