@@ -233,6 +233,10 @@ export default function RightSidebar({ showNotifications = false }: RightSidebar
 
   return (
     <div
+      // No `display` here: an inline style beats Tailwind's `hidden`, which
+      // made this sidebar render at every width — on mobile it overlapped the
+      // feed instead of hiding. Visibility and flex direction now come from
+      // the classes so `hidden lg:flex` actually applies.
       style={{
         position: 'sticky',
         top: 0,
@@ -242,10 +246,8 @@ export default function RightSidebar({ showNotifications = false }: RightSidebar
         zIndex: 30,
         padding: '20px 16px',
         overflowY: 'auto',
-        display: 'flex',
-        flexDirection: 'column',
       }}
-      className="hidden lg:flex"
+      className="hidden lg:flex lg:flex-col"
     >
       {/* Notifications overlay when active */}
       {showNotifications ? (

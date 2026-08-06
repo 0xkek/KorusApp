@@ -3,10 +3,6 @@
 import { FC, ReactNode, useMemo } from 'react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import {
-  PhantomWalletAdapter,
-  SolflareWalletAdapter,
-} from '@solana/wallet-adapter-wallets';
 import { clusterApiUrl } from '@solana/web3.js';
 
 
@@ -29,14 +25,17 @@ export const WalletContextProvider: FC<Props> = ({ children }) => {
     [network]
   );
 
-  const wallets = useMemo(
-    () => [
-      new PhantomWalletAdapter(),
-      new SolflareWalletAdapter(),
-    ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [network]
-  );
+  // Deliberately empty: every wallet we support (Phantom, Solflare, Backpack,
+  // Jupiter) registers itself through Wallet Standard, which
+  // @solana/wallet-adapter-react auto-detects.
+  //
+  // Registering PhantomWalletAdapter explicitly caused a real bug: the legacy
+  // adapter resolves through `window.phantom`, which other extensions —
+  // Backpack among them — also inject. With both a legacy "Phantom" entry and
+  // the Standard one present, selecting Phantom could open Backpack instead.
+  // Letting Standard detection own the list means each entry maps to the
+  // extension that actually registered it.
+  const wallets = useMemo(() => [], []);
 
   return (
     <ConnectionProvider endpoint={endpoint}>

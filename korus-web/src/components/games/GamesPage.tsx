@@ -668,17 +668,19 @@ export function GamesPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 pb-24">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-4xl font-bold mb-2 text-[var(--color-text)]">
+      <div className="flex justify-between items-center gap-4 mb-8">
+        <div className="min-w-0">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-[var(--color-text)]">
             🎮 Games Hub
           </h1>
           <p className="text-[var(--color-text-secondary)]">Join or create games with SOL wagers</p>
         </div>
         {activeTab === 'lobby' && (
+          // shrink-0 + whitespace-nowrap: without them the pill compresses at
+          // narrow widths, wraps its label, and renders as a circle over the title.
           <button
             onClick={() => setShowCreateModal(true)}
-            className="bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-full hover:shadow-lg hover:shadow-korus-primary/20 duration-150"
+            className="shrink-0 whitespace-nowrap bg-gradient-to-r from-korus-primary to-korus-secondary text-black font-bold px-6 py-3 rounded-full hover:shadow-lg hover:shadow-korus-primary/20 duration-150"
           >
             + Create Game
           </button>

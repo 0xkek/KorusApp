@@ -241,8 +241,11 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
   }
 
   return (
+    // lg (not md) to match RightSidebar. At md the left rail took 240px while
+    // the right sidebar was still hidden, squeezing the content column enough
+    // to wrap headings and buttons into each other on tablet widths.
     <nav
-      className="sticky top-0 h-screen w-[240px] shrink-0 z-30 hidden md:flex flex-col bg-transparent"
+      className="sticky top-0 h-screen w-[240px] shrink-0 z-30 hidden lg:flex flex-col bg-transparent"
       style={{ padding: '24px 16px', borderRight: '1px solid var(--color-border-light)' }}
       role="navigation"
       aria-label="Main navigation"

@@ -40,8 +40,21 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
   if (!open) return null;
 
   const allowedWalletNames = ['Phantom', 'Solflare', 'Backpack', 'Jupiter'];
-  const solanaWallets = wallets.filter(wallet =>
-    allowedWalletNames.includes(wallet.adapter.name)
+  // Deduplicate by adapter name. If the same wallet is ever registered twice
+  // (e.g. a legacy adapter alongside its Wallet Standard registration), two
+  // identical rows appear and selecting one can hand off to the other
+  // extension. Prefer the entry reporting Installed.
+  const solanaWallets = Array.from(
+    wallets
+      .filter(wallet => allowedWalletNames.includes(wallet.adapter.name))
+      .reduce((acc, wallet) => {
+        const existing = acc.get(wallet.adapter.name);
+        if (!existing || wallet.readyState === WalletReadyState.Installed) {
+          acc.set(wallet.adapter.name, wallet);
+        }
+        return acc;
+      }, new Map<string, (typeof wallets)[number]>())
+      .values()
   );
 
   const installedWallets = solanaWallets.filter(
