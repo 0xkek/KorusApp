@@ -12,6 +12,36 @@ import { useAuthStore } from '@/stores/authStore';
 
 const isDev = process.env.NODE_ENV === 'development';
 
+/**
+ * Is this stored JWT still usable for the given wallet?
+ *
+ * Decodes the payload only — the signature is verified server-side. This is a
+ * client-side sanity check so the UI doesn't present an authenticated session
+ * built on a token the backend will reject, which previously happened whenever
+ * a 7-day-old token (or one issued to a different wallet) sat in localStorage.
+ */
+function isTokenValidFor(token: string, walletAddress: string): boolean {
+  try {
+    const [, payloadPart] = token.split('.');
+    if (!payloadPart) return false;
+
+    const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')));
+
+    // Treat tokens expiring within a minute as already expired.
+    if (typeof payload.exp === 'number' && payload.exp * 1000 <= Date.now() + 60_000) {
+      return false;
+    }
+    if (payload.walletAddress && payload.walletAddress !== walletAddress) {
+      return false;
+    }
+    return true;
+  } catch {
+    // Malformed token — treat as unusable.
+    return false;
+  }
+}
+
 export function useWalletAuth() {
   const { publicKey, signMessage, connected } = useWallet();
 
@@ -133,13 +163,26 @@ export function useWalletAuth() {
     const state = useAuthStore.getState();
     const storedToken = localStorage.getItem('authToken');
 
-    if (storedToken && !state.token) {
+    // A stored token is only valid for the wallet it was issued to, and only
+    // until it expires. Without these checks a 7-day-old or foreign token was
+    // restored verbatim, so the app showed an authenticated session that the
+    // backend would reject on the next call.
+    const validStoredToken =
+      storedToken && isTokenValidFor(storedToken, walletAddress) ? storedToken : null;
+
+    if (storedToken && !validStoredToken) {
+      if (isDev) console.log('[Auth] Stored token expired or for another wallet — clearing');
+      localStorage.removeItem('authToken');
+      useAuthStore.getState().clearAuth();
+    }
+
+    if (validStoredToken && !state.token) {
       // Token in localStorage but not in store — restore it
       if (isDev) console.log('[Auth] Restoring stored token');
-      state.setToken(storedToken);
+      state.setToken(validStoredToken);
       state.setHasAttemptedAuth(true);
       authAttemptedRef.current = true;
-    } else if (!storedToken && !state.isAuthenticating && !state.token && !authAttemptedRef.current) {
+    } else if (!validStoredToken && !state.isAuthenticating && !state.token && !authAttemptedRef.current) {
       // No token anywhere, not in progress — trigger auth
       if (isDev) console.log('[Auth] No token, triggering authentication');
       authAttemptedRef.current = true;

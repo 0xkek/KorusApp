@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletReadyState, type WalletName } from '@solana/wallet-adapter-base';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { logger } from '@/utils/logger';
 
 export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
@@ -12,6 +12,8 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
   // Set when the user picks a wallet, so the effect below knows to connect once
   // the adapter has actually switched to it.
   const pendingConnectRef = useRef<WalletName | null>(null);
+  // Mirrors the pending ref in state so the row can render a "Connecting…" label.
+  const [selectedName, setSelectedName] = useState<WalletName | null>(null);
 
   // Close on Escape
   useEffect(() => {
@@ -101,6 +103,7 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
   // itself, once the adapter has switched to the chosen wallet.
   const handleWalletClick = (walletName: WalletName) => {
     pendingConnectRef.current = walletName;
+    setSelectedName(walletName);
     select(walletName);
     // Deliberately NOT closing here. The connect effect below needs this
     // component mounted to observe `wallet` switching to the selection; closing
@@ -152,8 +155,10 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
               <span className="text-[var(--color-text)] text-sm font-medium flex-1 text-left">
                 {wallet.adapter.name}
               </span>
+              {/* Extensions can take a few seconds to raise their prompt —
+                  without this the modal just looks frozen after a click. */}
               <span className="text-xs text-emerald-400 font-medium opacity-70 group-hover:opacity-100 transition-opacity">
-                Detected
+                {connecting && wallet.adapter.name === selectedName ? 'Connecting…' : 'Detected'}
               </span>
             </button>
           ))}
