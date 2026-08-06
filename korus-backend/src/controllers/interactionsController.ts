@@ -95,16 +95,22 @@ export const likePost = async (req: AuthRequest, res: Response) => {
         userWallet: walletAddress
       })
 
-      // Award reputation points
-      await reputationService.onLikeGiven(walletAddress, 'post')
-      await reputationService.onLikeReceived(post.authorWallet, 'post')
-
-      // Create notification
-      await createNotification({
-        userId: post.authorWallet,
-        type: 'like',
-        fromUserId: walletAddress,
-        postId: id
+      // Reputation and notification are side effects — the like itself is already
+      // committed above. Run them in parallel so the response isn't serialized
+      // behind three round-trips, and don't fail the like if one of them errors.
+      await Promise.allSettled([
+        reputationService.onLikeGiven(walletAddress, 'post'),
+        reputationService.onLikeReceived(post.authorWallet, 'post'),
+        createNotification({
+          userId: post.authorWallet,
+          type: 'like',
+          fromUserId: walletAddress,
+          postId: id
+        })
+      ]).then(results => {
+        results.forEach(r => {
+          if (r.status === 'rejected') logger.error('Like side effect failed:', r.reason)
+        })
       })
 
       res.json({ success: true, liked: true, message: 'Post liked' })
