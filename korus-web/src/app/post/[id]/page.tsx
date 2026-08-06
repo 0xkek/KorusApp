@@ -431,10 +431,6 @@ export default function PostDetailPage() {
     setShowReplyOptionsModal(true);
   }, []);
 
-  if (!connected) {
-    return null;
-  }
-
   if (loading) {
     return (
       <main className="min-h-screen relative overflow-hidden">
