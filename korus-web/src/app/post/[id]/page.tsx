@@ -211,13 +211,13 @@ export default function PostDetailPage() {
     }
   }, [postId, isAuthenticated, token]);
 
+  // Load the post regardless of wallet state. GET /api/posts/:id is public, and
+  // bouncing logged-out visitors to /welcome meant every shared link — the ones
+  // the per-post OG previews exist to drive — landed on a signup wall instead of
+  // the content it advertised. Interactions still prompt to connect.
   useEffect(() => {
-    if (!connected) {
-      router.push('/welcome');
-      return;
-    }
     loadPost();
-  }, [postId, connected, router, loadPost]);
+  }, [postId, loadPost]);
 
   const handleLike = async () => {
     if (!post || !isAuthenticated || !token) {

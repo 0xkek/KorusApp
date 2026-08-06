@@ -80,7 +80,22 @@ export default function EventsPage() {
 
   // All active events are visible to everyone.
   // Premium 12hr early access applies to registration, not visibility.
-  const visibleEvents = events;
+  // Live first, then upcoming, then ended. Without this an event that finished
+  // months ago can sit above one happening right now.
+  const visibleEvents = [...events].sort((a, b) => {
+    const now = Date.now();
+    const rank = (e: typeof a) => {
+      const start = new Date(e.startDate).getTime();
+      const end = new Date(e.endDate).getTime();
+      if (now > end) return 2; // ended
+      if (now >= start) return 0; // live
+      return 1; // upcoming
+    };
+    const diff = rank(a) - rank(b);
+    if (diff !== 0) return diff;
+    // Within a group, soonest start first.
+    return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+  });
 
   const getEventTypeIcon = (type: Event['type']) => {
     switch (type) {
@@ -114,6 +129,8 @@ export default function EventsPage() {
     const end = new Date(endDate);
     return now >= start && now <= end;
   };
+
+  const isEventEnded = (endDate: string) => new Date() > new Date(endDate);
 
   const isInEarlyAccess = (event: Event) => {
     const now = new Date();
@@ -370,11 +387,17 @@ export default function EventsPage() {
                 ) : (
                   visibleEvents.map((event) => {
                     const eventIsLive = isEventLive(event.startDate, event.endDate);
+                    const eventEnded = isEventEnded(event.endDate);
                     return (
+                    // Ended events are dimmed so live and upcoming ones win the
+                    // eye — previously a finished event looked identical to an
+                    // active one and could sit at the top of the list.
                     <div
                       key={event.id}
                       onClick={() => handleEventPress(event)}
-                      className="border border-[var(--color-border-light)] bg-[var(--color-surface)] hover:bg-white/[0.04] hover:border-[var(--color-border-light)] transition-all duration-150 cursor-pointer rounded-xl overflow-hidden group"
+                      className={`border border-[var(--color-border-light)] bg-[var(--color-surface)] hover:bg-white/[0.04] hover:border-[var(--color-border-light)] transition-all duration-150 cursor-pointer rounded-xl overflow-hidden group ${
+                        eventEnded ? 'opacity-55 hover:opacity-80' : ''
+                      }`}
                       style={{
                         borderColor: eventIsLive ? getEventTypeColor(event.type) : undefined
                       }}

@@ -147,8 +147,11 @@ export const createPost = async (req: AuthRequest, res: Response<ApiResponse<Pos
       }
     }
 
-    // Validate input - require either content or media
-    if (!content && !imageUrl && !videoUrl) {
+    // Validate input - require either content or media.
+    // Check the trimmed value: whitespace-only content is truthy and used to
+    // slip through here, then got trimmed to '' on save, producing posts that
+    // render as blank cards in the feed.
+    if (!content?.trim() && !imageUrl && !videoUrl) {
       return res.status(400).json({
         success: false,
         error: 'Post must have either content or media (image/video)'
@@ -442,7 +445,15 @@ export const getPosts = async (req: Request, res: Response) => {
         where: {
           isHidden: false,
           isShoutout: false, // Only show non-shoutout posts in regular feed
-          game: null // Exclude posts that are linked to games
+          game: null, // Exclude posts that are linked to games
+          // Skip posts with neither text nor media — they render as an empty
+          // card. The author-filtered branch above already does this; the main
+          // feed did not, so legacy blank rows still showed up.
+          OR: [
+            { content: { not: '' } },
+            { imageUrl: { not: null } },
+            { videoUrl: { not: null } },
+          ]
         },
         include: {
           author: {
