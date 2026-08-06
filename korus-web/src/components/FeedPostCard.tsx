@@ -6,6 +6,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import type { Post } from '@/types';
 import { SafeContent } from '@/components/SafeContent';
+import { useAutoGrowTextarea } from '@/hooks/useAutoGrowTextarea';
 import LinkPreview from '@/components/LinkPreview';
 import VideoPlayer from '@/components/VideoPlayer';
 import { formatRelativeTime } from '@/utils/formatTime';
@@ -66,6 +67,7 @@ const FeedPostCardComponent = ({
   onNavigate,
 }: FeedPostCardProps) => {
   const inlineReplyRef = React.useRef<HTMLTextAreaElement>(null);
+  useAutoGrowTextarea(inlineReplyRef, inlineReplyText, 200);
   const actionPostId = post.repostedPost?.id || post.id;
   const actionPost = post.repostedPost || post;
 

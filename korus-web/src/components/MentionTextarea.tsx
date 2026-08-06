@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import Image from 'next/image';
 import { searchAPI } from '@/lib/api';
+import { useAutoGrowTextarea } from '@/hooks/useAutoGrowTextarea';
 
 interface MentionUser {
   walletAddress: string;
@@ -158,6 +159,8 @@ const MentionTextarea = forwardRef<MentionTextareaRef, MentionTextareaProps>(({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useAutoGrowTextarea(textareaRef, value);
 
   return (
     <div className="relative">

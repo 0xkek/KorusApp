@@ -2,6 +2,8 @@
 
 import { logger } from '@/utils/logger';
 import Image from 'next/image';
+import { useRef } from 'react';
+import { useAutoGrowTextarea } from '@/hooks/useAutoGrowTextarea';
 
 interface PostDetailInlineComposerProps {
   currentUserAvatar: string | null;
@@ -40,6 +42,9 @@ export default function PostDetailInlineComposer({
   showEmojiPicker,
   onSubmitReply,
 }: PostDetailInlineComposerProps) {
+  const replyTextareaRef = useRef<HTMLTextAreaElement>(null);
+  useAutoGrowTextarea(replyTextareaRef, replyContent, 300);
+
   return (
     <div className="px-4 py-3 border-b border-[var(--color-border-light)]">
       <div className="flex gap-3">
@@ -71,6 +76,7 @@ export default function PostDetailInlineComposer({
         {/* Reply Input Area */}
         <div className="flex-1 min-w-0">
           <textarea
+            ref={replyTextareaRef}
             value={replyContent}
             onChange={(e) => onReplyContentChange(e.target.value)}
             placeholder="Post your reply"
