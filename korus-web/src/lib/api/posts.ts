@@ -66,6 +66,21 @@ export const postsAPI = {
   },
 
   /**
+   * Get trending posts
+   */
+  async getTrendingPosts(params?: {
+    limit?: number;
+    offset?: number;
+  }): Promise<APIPostsResponse> {
+    const searchParams = new URLSearchParams();
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.offset) searchParams.set('offset', params.offset.toString());
+
+    const query = searchParams.toString();
+    return api.get<APIPostsResponse>(`/api/posts/trending${query ? `?${query}` : ''}`);
+  },
+
+  /**
    * Like a post
    */
   async likePost(id: number, token: string): Promise<{ message: string }> {

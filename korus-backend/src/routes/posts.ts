@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { createPost, getPosts, getSinglePost, deletePost, getShoutoutsByWallet } from '../controllers/postsController'
+import { createPost, getPosts, getSinglePost, deletePost, getShoutoutsByWallet, getTrendingPosts } from '../controllers/postsController'
 import { authenticate } from '../middleware/auth'
 import { validateCreatePost, validateGetPosts } from '../middleware/validation'
 import { checkSuspension, checkWarnings } from '../middleware/moderationCheck'
@@ -57,6 +57,7 @@ const router = Router()
  *         $ref: '#/components/responses/RateLimitError'
  */
 router.get('/', burstProtection, readPostsRateLimiter, validateGetPosts, getPosts)
+router.get('/trending', readPostsRateLimiter, getTrendingPosts)
 
 /**
  * @swagger

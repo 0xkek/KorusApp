@@ -577,6 +577,86 @@ export const deletePost = async (req: AuthRequest, res: Response) => {
   }
 }
 
+export const getTrendingPosts = async (req: Request, res: Response) => {
+  try {
+    const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 20, 1), 50)
+    const offset = Math.max(parseInt(req.query.offset as string) || 0, 0)
+
+    // Trending = posts from the last 48 hours, sorted by engagement
+    const since = new Date()
+    since.setHours(since.getHours() - 48)
+
+    const authorSelect = {
+      walletAddress: true,
+      tier: true,
+      genesisVerified: true,
+      snsUsername: true,
+      username: true,
+      nftAvatar: true,
+      themeColor: true
+    }
+
+    const where = {
+      isHidden: false,
+      isShoutout: false,
+      game: null,
+      createdAt: { gte: since },
+      OR: [
+        { likeCount: { gt: 0 } },
+        { replyCount: { gt: 0 } },
+        { repostCount: { gt: 0 } },
+        { tipCount: { gt: 0 } },
+      ],
+    }
+
+    const posts = await prisma.post.findMany({
+      where,
+      include: {
+        author: { select: authorSelect },
+        originalPost: {
+          include: {
+            author: { select: authorSelect }
+          }
+        }
+      },
+      orderBy: [
+        { likeCount: 'desc' },
+        { replyCount: 'desc' },
+        { tipCount: 'desc' },
+        { createdAt: 'desc' },
+      ],
+      skip: offset,
+      take: limit + 1, // Fetch one extra to determine hasMore
+    })
+
+    const hasMore = posts.length > limit
+    const resultPosts = hasMore ? posts.slice(0, limit) : posts
+
+    const postsWithAvatars = await Promise.all(
+      resultPosts.map(async (post: any) => await transformPostAvatars({
+        ...post,
+        replies: []
+      }))
+    )
+
+    res.json({
+      success: true,
+      posts: postsWithAvatars,
+      pagination: {
+        limit,
+        offset,
+        hasMore
+      }
+    })
+  } catch (error: any) {
+    logger.error('Get trending posts error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get trending posts'
+    } as any)
+  }
+}
+
 export const getShoutoutsByWallet = async (req: Request, res: Response) => {
   try {
     const { walletAddress } = req.params

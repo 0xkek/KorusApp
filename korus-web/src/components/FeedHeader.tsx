@@ -1,8 +1,8 @@
 'use client';
 
 interface FeedHeaderProps {
-  feedTab: 'home' | 'following';
-  onFeedTabChange: (tab: 'home' | 'following') => void;
+  feedTab: 'home' | 'following' | 'trending';
+  onFeedTabChange: (tab: 'home' | 'following' | 'trending') => void;
   onMobileMenuOpen: () => void;
   onSearchOpen: () => void;
 }
@@ -54,9 +54,11 @@ export default function FeedHeader({ feedTab, onFeedTabChange, onMobileMenuOpen,
           {feedTab === 'following' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[40px] h-[3px] rounded-[3px] bg-[var(--korus-primary)]" />}
         </button>
         <button
-          className="flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors duration-150 relative text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.02]"
+          onClick={() => onFeedTabChange('trending')}
+          className={`flex-1 text-center py-4 text-[14px] font-semibold cursor-pointer transition-colors duration-150 relative ${feedTab === 'trending' ? 'text-[var(--color-text)]' : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.02]'}`}
         >
           Trending
+          {feedTab === 'trending' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[40px] h-[3px] rounded-[3px] bg-[var(--korus-primary)]" />}
         </button>
       </div>
     </div>

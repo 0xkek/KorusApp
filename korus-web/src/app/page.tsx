@@ -64,11 +64,14 @@ export default function Home() {
   const pendingPosts = useRef<Post[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
   const [hideShoutouts, setHideShoutouts] = useState(false);
-  const [feedTab, setFeedTab] = useState<'home' | 'following'>('home');
+  const [feedTab, setFeedTab] = useState<'home' | 'following' | 'trending'>('home');
   const [followingPosts, setFollowingPosts] = useState<Post[]>([]);
   const [isLoadingFollowing, setIsLoadingFollowing] = useState(false);
   const [followingHasMore, setFollowingHasMore] = useState(false);
   const [followingCursor, setFollowingCursor] = useState<string | null>(null);
+  const [trendingPosts, setTrendingPosts] = useState<Post[]>([]);
+  const [isLoadingTrending, setIsLoadingTrending] = useState(false);
+  const [trendingHasMore, setTrendingHasMore] = useState(false);
 
   // Compute effective queue info from actual feed state
   const effectiveQueueInfo = useMemo(() => {
@@ -332,6 +335,35 @@ export default function Home() {
     }
   };
 
+  // Fetch trending feed
+  const fetchTrendingPosts = async (loadMore = false) => {
+    setIsLoadingTrending(true);
+    try {
+      const res = await postsAPI.getTrendingPosts({
+        limit: POSTS_PER_PAGE,
+        ...(loadMore ? { offset: trendingPosts.length } : {})
+      });
+      if (res.posts && res.posts.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const transformed = res.posts.map((post: any) => transformPost(post));
+        if (loadMore) {
+          setTrendingPosts(prev => [...prev, ...transformed as Post[]]);
+        } else {
+          setTrendingPosts(transformed as Post[]);
+        }
+        setTrendingHasMore(res.pagination?.hasMore ?? false);
+      } else {
+        if (!loadMore) setTrendingPosts([]);
+        setTrendingHasMore(false);
+      }
+    } catch (error) {
+      logger.error('Failed to fetch trending feed:', error);
+      if (!loadMore) setTrendingPosts([]);
+    } finally {
+      setIsLoadingTrending(false);
+    }
+  };
+
   // Initialize posts when component mounts (run once)
   useEffect(() => {
     fetchPosts();
@@ -345,6 +377,14 @@ export default function Home() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [feedTab, isAuthenticated, token]);
+
+  // Fetch trending feed when tab changes
+  useEffect(() => {
+    if (feedTab === 'trending' && trendingPosts.length === 0) {
+      fetchTrendingPosts();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feedTab]);
 
   // Refetch posts when page becomes visible (throttled to max once per 30 seconds)
   useEffect(() => {
@@ -1163,7 +1203,44 @@ export default function Home() {
 
             {/* Feed Posts */}
             <div>
-          {feedTab === 'following' ? (
+          {feedTab === 'trending' ? (
+            // Trending feed
+            isLoadingTrending ? (
+              <FeedSkeleton count={5} />
+            ) : trendingPosts.length === 0 ? (
+              <div className="py-16 text-center text-[var(--color-text-tertiary)]">
+                <svg className="w-12 h-12 mx-auto mb-4 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+                <p className="text-[15px] font-medium mb-1">Nothing trending yet</p>
+                <p className="text-[13px]">Posts with engagement from the last 48 hours will appear here</p>
+              </div>
+            ) : (
+              trendingPosts.map((post) => (
+                <FeedPostCard
+                  key={post.id}
+                  post={post}
+                  interactions={postInteractions[post.repostedPost?.id || post.id] || postInteractions[post.id]}
+                  currentWallet={publicKey?.toBase58() || null}
+                  userAvatar={userAvatar}
+                  inlineReplyPostId={inlineReplyPostId}
+                  inlineReplyText={inlineReplyText}
+                  isPostingInlineReply={isPostingInlineReply}
+                  onLike={toggleLike}
+                  onRepost={toggleRepost}
+                  onTip={handleTipClick}
+                  onShare={handleShareClick}
+                  onOptions={handleOptionsClick}
+                  onReply={handleReplyToggle}
+                  onInlineReplyChange={setInlineReplyText}
+                  onInlineReplySubmit={submitInlineReply}
+                  onInlineReplyClose={handleInlineReplyClose}
+                  onShoutoutExpire={handleShoutoutExpire}
+                  onNavigate={handleNavigate}
+                />
+              ))
+            )
+          ) : feedTab === 'following' ? (
             // Following feed
             isLoadingFollowing ? (
               <FeedSkeleton count={5} />
