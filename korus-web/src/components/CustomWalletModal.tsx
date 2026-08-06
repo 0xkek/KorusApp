@@ -4,9 +4,10 @@ import Image from 'next/image';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletReadyState, type WalletName } from '@solana/wallet-adapter-base';
 import { useEffect, useRef } from 'react';
+import { logger } from '@/utils/logger';
 
 export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
-  const { wallets, select, connect, wallet } = useWallet();
+  const { wallets, select, connect, wallet, connected, connecting } = useWallet();
   const modalRef = useRef<HTMLDivElement>(null);
   // Set when the user picks a wallet, so the effect below knows to connect once
   // the adapter has actually switched to it.
@@ -45,14 +46,27 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
   // closed itself on click.
   useEffect(() => {
     const pending = pendingConnectRef.current;
-    if (!pending || wallet?.adapter.name !== pending) return;
+    if (!pending) return;
+    if (wallet?.adapter.name !== pending) return;
+    // Already connected or mid-connect — nothing to do.
+    if (connected || connecting) {
+      pendingConnectRef.current = null;
+      return;
+    }
 
     pendingConnectRef.current = null;
-    connect().catch(() => {
-      // User dismissed the extension prompt, or it is locked — the adapter
-      // surfaces this through its own error state; nothing to do here.
+    logger.log('[Wallet] connecting to', pending);
+    connect().catch((err) => {
+      // Log it: a silent catch here made a failed connect indistinguishable
+      // from nothing happening at all.
+      logger.error('[Wallet] connect failed:', err);
     });
-  }, [wallet, connect]);
+  }, [wallet, connect, connected, connecting]);
+
+  // Close once the wallet is actually connected.
+  useEffect(() => {
+    if (open && connected) onClose();
+  }, [open, connected, onClose]);
 
   if (!open) return null;
 
@@ -88,7 +102,10 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
   const handleWalletClick = (walletName: WalletName) => {
     pendingConnectRef.current = walletName;
     select(walletName);
-    onClose();
+    // Deliberately NOT closing here. The connect effect below needs this
+    // component mounted to observe `wallet` switching to the selection; closing
+    // on click unmounted it first and the connect never fired. The modal closes
+    // once `connected` flips.
   };
 
   return (
