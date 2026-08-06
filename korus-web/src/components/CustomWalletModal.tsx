@@ -6,8 +6,11 @@ import { WalletReadyState, type WalletName } from '@solana/wallet-adapter-base';
 import { useEffect, useRef } from 'react';
 
 export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
-  const { wallets, select } = useWallet();
+  const { wallets, select, connect, wallet } = useWallet();
   const modalRef = useRef<HTMLDivElement>(null);
+  // Set when the user picks a wallet, so the effect below knows to connect once
+  // the adapter has actually switched to it.
+  const pendingConnectRef = useRef<WalletName | null>(null);
 
   // Close on Escape
   useEffect(() => {
@@ -37,6 +40,20 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
     };
   }, [open, onClose]);
 
+  // Runs after select() has propagated and `wallet` reflects the user's choice.
+  // Declared before the early return below so it still fires once the modal has
+  // closed itself on click.
+  useEffect(() => {
+    const pending = pendingConnectRef.current;
+    if (!pending || wallet?.adapter.name !== pending) return;
+
+    pendingConnectRef.current = null;
+    connect().catch(() => {
+      // User dismissed the extension prompt, or it is locked — the adapter
+      // surfaces this through its own error state; nothing to do here.
+    });
+  }, [wallet, connect]);
+
   if (!open) return null;
 
   const allowedWalletNames = ['Phantom', 'Solflare', 'Backpack', 'Jupiter'];
@@ -64,7 +81,12 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
     wallet => wallet.readyState !== WalletReadyState.Installed
   );
 
-  const handleWalletClick = async (walletName: WalletName) => {
+  // select() only tells the adapter which wallet to use — it does not open the
+  // extension. autoConnect used to perform the actual connect(); with it off
+  // (so nothing connects without user approval) the click must call connect()
+  // itself, once the adapter has switched to the chosen wallet.
+  const handleWalletClick = (walletName: WalletName) => {
+    pendingConnectRef.current = walletName;
     select(walletName);
     onClose();
   };
