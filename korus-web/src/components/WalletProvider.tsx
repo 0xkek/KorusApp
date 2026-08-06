@@ -1,7 +1,8 @@
 'use client';
 
-import { FC, ReactNode, useEffect, useMemo } from 'react';
+import { FC, ReactNode, useCallback, useEffect, useMemo } from 'react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
+import type { WalletError } from '@solana/wallet-adapter-base';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { clusterApiUrl } from '@solana/web3.js';
 
@@ -66,9 +67,27 @@ export const WalletContextProvider: FC<Props> = ({ children }) => {
   // it before the adapter read it. That is why Phantom stopped opening after a
   // hard refresh but worked on warm navigations.
 
+  // Adapter errors are otherwise swallowed entirely: WalletProvider logs
+  // nothing by default, so a wallet that refuses to connect looks identical to
+  // a click that never registered. Always log, and record the last error so the
+  // connect UI can show the user why nothing happened.
+  const handleError = useCallback((error: WalletError) => {
+    // console.error deliberately, not logger: logger is stripped in production,
+    // which is why wallet failures have been completely invisible on the live
+    // site. A connection failure is exactly the thing that needs to be visible.
+    console.error('[Korus wallet]', error?.name, '—', error?.message, error);
+    if (typeof window !== 'undefined') {
+      (window as unknown as { __korusWalletError?: unknown }).__korusWalletError = {
+        name: error?.name,
+        message: error?.message,
+        at: new Date().toISOString(),
+      };
+    }
+  }, []);
+
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
+      <WalletProvider wallets={wallets} autoConnect onError={handleError}>
         {children}
       </WalletProvider>
     </ConnectionProvider>
