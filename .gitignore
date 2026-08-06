@@ -40,3 +40,9 @@ target/
 
 # Vercel
 .vercel
+
+# Expo / React Native scaffolding.
+# This monorepo is web + backend + Anchor contracts; the Expo tooling that
+# produced these belongs to the separate mobile app and has repeatedly
+# generated stray files inside the wrong subprojects.
+.expo/
