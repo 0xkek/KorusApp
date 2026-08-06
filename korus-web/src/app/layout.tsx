@@ -47,17 +47,20 @@ export default function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
+      {/*
+        No <title> here. This layout is a client component so it cannot export
+        `metadata`, and a hardcoded title emitted a SECOND <title> on routes
+        that define their own (e.g. /post/[id], whose title carries the post
+        text for link previews). Routes with generateMetadata supply their own
+        title; app/page.tsx covers the site default. The og/twitter defaults
+        below stay as a fallback and are overridden per route.
+      */}
       <head>
-        <title>Korus.fun — Solana Social Platform</title>
         <meta name="description" content="The social platform built on Solana. Connect your wallet, share posts, play games with SOL wagers, earn reputation, and join exclusive events." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta property="og:title" content="Korus.fun — Solana Social Platform" />
-        <meta property="og:description" content="Connect, play, and earn on Solana. Games with SOL wagers, reputation system, premium features, and community events." />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Korus.fun" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Korus.fun — Solana Social Platform" />
-        <meta name="twitter:description" content="Connect, play, and earn on Solana." />
         <link rel="icon" type="image/png" href="/korus-icon.png" />
         <link rel="icon" type="image/svg+xml" href="/icon.svg" />
       </head>
