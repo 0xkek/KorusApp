@@ -4,7 +4,6 @@ import Image from 'next/image';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletReadyState, type WalletName } from '@solana/wallet-adapter-base';
 import { useEffect, useRef, useState } from 'react';
-import { USER_SELECTED_KEY } from './WalletProvider';
 
 export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
   const { wallets, select, wallet: walletState, connecting } = useWallet();
@@ -87,8 +86,8 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
     wallet => wallet.readyState !== WalletReadyState.Installed
   );
 
-  // Mirrors the official WalletModal: select() and close — WalletProvider's
-  // autoConnect predicate does the connecting.
+  // Mirrors the official WalletModal: select() and close — WalletProvider does
+  // the connecting.
   //
   // MUST stay synchronous. Browsers only allow an extension to open its popup
   // from within a real user gesture, and any `await` before select() ends that
@@ -98,8 +97,8 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
   const handleWalletClick = (walletName: WalletName) => {
     setConnectError(null);
 
-    // Marks this as a deliberate choice, so autoConnect permits the connect.
-    sessionStorage.setItem(USER_SELECTED_KEY, '1');
+    // select() alone is enough: WalletProvider flags this as a user selection
+    // internally and connects with a prompt.
     select(walletName);
     onClose();
   };

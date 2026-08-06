@@ -1,13 +1,6 @@
 'use client';
 
-import { FC, ReactNode, useCallback, useEffect, useMemo } from 'react';
-
-/**
- * Set immediately before select() when the user picks a wallet, and cleared on
- * page load. The autoConnect predicate reads it to tell a deliberate choice
- * apart from an eager reconnect.
- */
-export const USER_SELECTED_KEY = 'korus_user_selected_wallet';
+import { FC, ReactNode, useEffect, useMemo } from 'react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { clusterApiUrl } from '@solana/web3.js';
@@ -58,34 +51,24 @@ export const WalletContextProvider: FC<Props> = ({ children }) => {
     localStorage.setItem(MIGRATION_KEY, '1');
   }, []);
 
-  // autoConnect accepts a predicate, which is how you get "prompt on click, but
-  // never reconnect on page load" without hand-rolling anything.
+  // autoConnect is plain `true`, which already means "prompt on click, never
+  // silently reconnect on load".
   //
-  // WalletProvider distinguishes the two internally: when the user has just
-  // picked a wallet it calls adapter.connect() (which prompts), and otherwise
-  // adapter.autoConnect() (the silent eager path). Returning true here only
-  // after a deliberate selection therefore blocks the silent path while leaving
-  // the normal select() -> connect flow intact.
+  // WalletProvider tracks this itself: it keeps a hasUserSelectedAWallet ref
+  // that starts false on every page load and is set by select(). When true it
+  // calls adapter.connect() (which prompts); when false it calls
+  // adapter.autoConnect() (the silent eager path a wallet may decline). So a
+  // reload never connects on its own, and a click always prompts.
   //
-  // Setting autoConnect={false} instead disabled BOTH, which meant select()
-  // no longer connected at all and the click had to be reimplemented by hand.
-  const autoConnect = useCallback(async () => {
-    if (typeof window === 'undefined') return false;
-    return sessionStorage.getItem(USER_SELECTED_KEY) === '1';
-  }, []);
-
-  // Drop the flag on unload so a fresh page load never counts as a selection.
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const clear = () => sessionStorage.removeItem(USER_SELECTED_KEY);
-    clear();
-    window.addEventListener('beforeunload', clear);
-    return () => window.removeEventListener('beforeunload', clear);
-  }, []);
+  // The sessionStorage predicate that used to live here reimplemented that ref
+  // and raced it — the flag was cleared in an effect that runs after the first
+  // render, so on a hard refresh a click could set it and the effect could wipe
+  // it before the adapter read it. That is why Phantom stopped opening after a
+  // hard refresh but worked on warm navigations.
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect={autoConnect}>
+      <WalletProvider wallets={wallets} autoConnect>
         {children}
       </WalletProvider>
     </ConnectionProvider>
