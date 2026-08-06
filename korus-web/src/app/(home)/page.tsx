@@ -197,9 +197,12 @@ export default function Home() {
     threshold: 300,
   });
 
+  // Gate the feed on a connected wallet. Checking `connected` alone was not
+  // enough on its own — a stale stored token made the app look signed in — but
+  // that is now cleared when no wallet is attached, so this is the real gate.
   useEffect(() => {
     if (!connected) {
-      router.push('/welcome');
+      router.replace('/welcome');
     }
   }, [connected, router]);
 
@@ -1106,6 +1109,11 @@ export default function Home() {
     router.push(`/post/${postId}`);
   }, [router]);
 
+  // Render nothing while the redirect above is in flight, so the feed never
+  // flashes to someone without a connected wallet.
+  if (!connected) {
+    return null;
+  }
 
   return (
     <main className="min-h-screen bg-[var(--color-background)] relative overflow-hidden">

@@ -227,20 +227,28 @@ export default function WelcomePage() {
               </div>
             </div>
 
-            {/* Footer Links */}
+            {/* Footer Links — the entry link only appears once a wallet is
+                actually connected. It used to be an unconditional <Link href="/">,
+                which let anyone walk into the app without connecting at all. */}
             <div className="text-center">
               <p className="text-[var(--color-text-secondary)] text-sm mb-4">
                 Already have an account? Your wallet is your login.
               </p>
-              <Link
-                href="/"
-                className="transition-colors text-sm font-medium hover:underline"
-                style={{ color: 'var(--korus-primary)' }}
-                onMouseOver={(e) => (e.target as HTMLAnchorElement).style.color = 'var(--korus-secondary)'}
-                onMouseOut={(e) => (e.target as HTMLAnchorElement).style.color = 'var(--korus-primary)'}
-              >
-                Continue to app →
-              </Link>
+              {connected ? (
+                <Link
+                  href="/"
+                  className="transition-colors text-sm font-medium hover:underline"
+                  style={{ color: 'var(--korus-primary)' }}
+                  onMouseOver={(e) => (e.target as HTMLAnchorElement).style.color = 'var(--korus-secondary)'}
+                  onMouseOut={(e) => (e.target as HTMLAnchorElement).style.color = 'var(--korus-primary)'}
+                >
+                  Continue to app →
+                </Link>
+              ) : (
+                <p className="text-[var(--color-text-tertiary)] text-sm">
+                  Connect a wallet above to continue
+                </p>
+              )}
             </div>
           </div>
         </div>

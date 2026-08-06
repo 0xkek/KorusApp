@@ -144,6 +144,15 @@ export function useWalletAuth() {
     if (typeof window === 'undefined' || !connected || !publicKey) {
       if (!connected) {
         authAttemptedRef.current = false;
+        // No wallet attached means no session. Previously the stored token was
+        // left in place here, so the app kept a signed-in session for a wallet
+        // that was not connected — the site "remembered" an old login and let
+        // the user straight in.
+        if (typeof window !== 'undefined' && localStorage.getItem('authToken')) {
+          if (isDev) console.log('[Auth] No wallet connected — clearing stored session');
+          localStorage.removeItem('authToken');
+          useAuthStore.getState().clearAuth();
+        }
       }
       return;
     }
