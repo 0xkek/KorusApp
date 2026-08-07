@@ -22,10 +22,26 @@ export const CustomWalletButton = ({ className }: { className?: string }) => {
   const { setVisible } = useWalletModal();
   const [showMenu, setShowMenu] = useState(false);
 
-  const openModal = () => {
+  const openModal = async () => {
     // The modal's own selection triggers the connect; this flag tells
     // useWalletAuth that any resulting signature request was user-initiated.
     sessionStorage.setItem(USER_INITIATED_CONNECT, '1');
+
+    // If an extension has silently reattached (connected but not signed in),
+    // selecting a wallet in the modal is a no-op — the adapter is already on a
+    // wallet — so the click produced no popup and no error. Detach first so the
+    // selection actually takes effect.
+    //
+    // Awaiting here is safe: the extension popup is opened by the modal's own
+    // click, not by this one, so no user gesture is being consumed.
+    if (connected) {
+      try {
+        await disconnect();
+      } catch {
+        // Already detached — continue.
+      }
+    }
+
     setVisible(true);
   };
 
