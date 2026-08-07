@@ -4,6 +4,7 @@ import Image from 'next/image';
 
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
@@ -44,6 +45,9 @@ interface ReputationBreakdown {
 
 export default function ProfilePage() {
   const { connected, publicKey } = useWallet();
+  // Session is in-memory only; localStorage('authToken') is never written and
+  // always returns null, which silently broke profile load and every save below.
+  const { token } = useWalletAuth();
   const { connection } = useConnection();
   const { showWarning, showSuccess, showError } = useToastContext();
   const router = useRouter();
@@ -111,7 +115,6 @@ export default function ProfilePage() {
   const loadUserProfile = useCallback(async () => {
     try {
       // Get auth token
-      const token = localStorage.getItem('authToken');
       if (!token) return;
 
       // Load profile from API
@@ -380,7 +383,6 @@ export default function ProfilePage() {
     setSavingUsername(true);
     try {
       // Get auth token
-      const token = localStorage.getItem('authToken');
       if (!token) {
         showError('Please reconnect your wallet to set username');
         return;
@@ -433,7 +435,6 @@ export default function ProfilePage() {
 
     try {
       // Get auth token
-      const token = localStorage.getItem('authToken');
       if (!token) {
         showError('Please reconnect your wallet to update avatar');
         return;
@@ -640,8 +641,7 @@ export default function ProfilePage() {
                         <button
                           onClick={async () => {
                             try {
-                              const token = localStorage.getItem('authToken');
-                              if (!token) return;
+                                                      if (!token) return;
                               const { usersAPI } = await import('@/lib/api');
                               await usersAPI.updateProfile({ snsUsername: '__wallet__' }, token);
                               setDbSnsUsername('__wallet__');
@@ -681,8 +681,7 @@ export default function ProfilePage() {
                             <button
                               onClick={async () => {
                                 try {
-                                  const token = localStorage.getItem('authToken');
-                                  if (!token) return;
+                                                              if (!token) return;
                                   const { usersAPI } = await import('@/lib/api');
                                   await usersAPI.updateProfile({ snsUsername: '' }, token);
                                   setDbSnsUsername(null);
@@ -751,8 +750,7 @@ export default function ProfilePage() {
                               }
                               try {
                                 await setFavoriteSNSDomain(walletAddress, domain.domain);
-                                const token = localStorage.getItem('authToken');
-                                if (!token) {
+                                                          if (!token) {
                                   showError('Please reconnect your wallet');
                                   return;
                                 }

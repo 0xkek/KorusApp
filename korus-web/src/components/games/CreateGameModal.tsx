@@ -6,6 +6,7 @@ import { Button } from '@/components/Button';
 import { useGameEscrow, GameType } from '@/hooks/useGameEscrow';
 import { gamesAPI } from '@/lib/api/games';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 interface CreateGameModalProps {
@@ -16,6 +17,7 @@ interface CreateGameModalProps {
 
 export function CreateGameModal({ postId, onClose, onGameCreated }: CreateGameModalProps) {
   const { connected } = useWallet();
+  const { token } = useWalletAuth();
   const { createGame, isProcessing } = useGameEscrow();
   const [gameType, setGameType] = useState<GameType>('tictactoe');
   const [wager, setWager] = useState<string>('0.1');
@@ -45,8 +47,8 @@ export function CreateGameModal({ postId, onClose, onGameCreated }: CreateGameMo
         onChainGameId = result.gameId;
       }
 
-      // Get auth token
-      const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+      // The session lives in memory only — read it from the auth context, not
+      // localStorage, which is never written to.
       if (!token) {
         setError('Not authenticated. Please sign in with your wallet.');
         return;

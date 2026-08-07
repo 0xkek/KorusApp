@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { createPortal } from 'react-dom';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { gamesAPI, type Game, type GameType } from '@/lib/api/games';
 import { useGameEscrow } from '@/hooks/useGameEscrow';
 import { useToast } from '@/hooks/useToast';
@@ -17,6 +18,9 @@ import { GamesFeedSkeleton } from '@/components/Skeleton';
 
 export function GamesPage() {
   const { connected, publicKey } = useWallet();
+  // Session is in-memory only; localStorage('authToken') is never written and
+  // always returns null, which silently broke every call below.
+  const { token } = useWalletAuth();
   const { createGame, joinGame, cancelGame, isProcessing } = useGameEscrow();
   const { showSuccess, showError } = useToast();
   const [games, setGames] = useState<Game[]>([]);
@@ -80,7 +84,6 @@ export function GamesPage() {
       // fetch it separately and add it to the list so it stays visible
       if (expandedGameId && !gamesList.find(g => g.id === expandedGameId)) {
         try {
-          const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
           if (token) {
             const expandedGameResponse = await gamesAPI.getGame(expandedGameId, token);
             if (expandedGameResponse?.game) {
@@ -183,7 +186,6 @@ export function GamesPage() {
 
     // Join user room to receive game_move events targeted at this player
     if (publicKey) {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
       if (token) {
         socketRef.current.emit('join_user', { walletAddress: publicKey.toBase58(), token });
       }
@@ -291,7 +293,6 @@ export function GamesPage() {
       }
 
       // Get auth token
-      const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
       logger.log('  authToken exists:', !!token);
       if (!token) {
         logger.log('❌ No auth token found');
@@ -341,7 +342,6 @@ export function GamesPage() {
 
     setJoiningGame(game.id);
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
       if (!token) {
         showError('Not authenticated. Please sign in with your wallet.');
         setJoiningGame(null);
@@ -432,7 +432,6 @@ export function GamesPage() {
 
       // Then delete from backend database
       setCancelStatus('Updating database...');
-      const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
       if (token) {
         await gamesAPI.deleteGame(game.id, token);
       }
@@ -475,7 +474,6 @@ export function GamesPage() {
     }
 
     try {
-      const token = localStorage.getItem('authToken');
       if (!token) {
         showError('Not authenticated. Please sign in with your wallet.');
         return;

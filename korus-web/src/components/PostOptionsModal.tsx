@@ -75,7 +75,6 @@ export default function PostOptionsModal({ isOpen, onClose, isOwnPost, postId, t
 
     setIsProcessing(true);
     try {
-      const token = localStorage.getItem('authToken');
       if (!token) {
         showError('Please sign in to delete posts');
         return;

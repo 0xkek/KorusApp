@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { useTheme } from 'next-themes';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
@@ -38,6 +39,8 @@ function useDebounce<T>(value: T, delay: number): T {
 
 export default function SettingsPage() {
   const { connected, disconnect } = useWallet();
+  // Session is in-memory only; localStorage('authToken') is never written.
+  const { token } = useWalletAuth();
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
   const { isPremium, refreshStatus } = useSubscription();
@@ -136,7 +139,6 @@ export default function SettingsPage() {
         if (themeId) {
           const newProfileColor = themeToProfileColor[themeId];
           if (newProfileColor) {
-            const token = localStorage.getItem('authToken');
             if (token) {
               try {
                 await authAPI.updateProfile({ themeColor: newProfileColor }, token);

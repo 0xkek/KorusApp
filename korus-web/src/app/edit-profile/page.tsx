@@ -4,6 +4,7 @@ import { logger } from '@/utils/logger';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
@@ -19,6 +20,8 @@ const NFTAvatarModal = dynamic(() => import('@/components/NFTAvatarModal'), { ss
 
 export default function EditProfilePage() {
   const { connected, publicKey } = useWallet();
+  // Session is in-memory only; localStorage('authToken') is never written.
+  const { token } = useWalletAuth();
   const { showSuccess, showError } = useToastContext();
   const router = useRouter();
 
@@ -71,7 +74,6 @@ export default function EditProfilePage() {
     const loadProfile = async () => {
       try {
         // Get auth token
-        const token = localStorage.getItem('authToken');
         if (!token) {
           setIsLoading(false);
           return;
@@ -139,7 +141,6 @@ export default function EditProfilePage() {
     setIsSaving(true);
     try {
       // Get auth token
-      const token = localStorage.getItem('authToken');
       if (!token) {
         showError('Please reconnect your wallet to save profile');
         return;
