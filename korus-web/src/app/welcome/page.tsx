@@ -4,7 +4,17 @@ import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import dynamic from 'next/dynamic';
+
+// ssr: false is required. This button renders "Select Wallet" on the server but
+// the connected address on the client, which is a guaranteed hydration
+// mismatch — React error #418. That error aborts hydration, so the whole tree
+// stays non-interactive and every click silently does nothing, which is exactly
+// how the wallet failure presented.
+const WalletMultiButton = dynamic(
+  () => import('@solana/wallet-adapter-react-ui').then((m) => m.WalletMultiButton),
+  { ssr: false }
+);
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 
 export default function WelcomePage() {
