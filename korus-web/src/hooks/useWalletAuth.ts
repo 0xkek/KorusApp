@@ -90,32 +90,15 @@ export function useWalletAuth() {
     };
   }, [disconnect]);
 
-  // Some wallets emit nothing when they lock — Phantom keeps reporting
-  // isConnected: true — so an event listener alone is not enough. Re-check when
-  // the tab regains focus, which is when the user comes back and would
-  // otherwise see a wallet that no longer works.
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const verify = () => {
-      if (document.hidden) return;
-      const w = window as unknown as { phantom?: { solana?: { isConnected?: boolean } } };
-      const injected = w.phantom?.solana;
-      // Only act on a definite false: `undefined` means we cannot tell, and
-      // guessing would drop a healthy session.
-      if (connected && injected && injected.isConnected === false) {
-        useAuthStore.getState().clearAuth();
-        disconnect().catch(() => {});
-      }
-    };
-
-    document.addEventListener('visibilitychange', verify);
-    window.addEventListener('focus', verify);
-    return () => {
-      document.removeEventListener('visibilitychange', verify);
-      window.removeEventListener('focus', verify);
-    };
-  }, [connected, disconnect]);
+  // A locked wallet is NOT detectable from a website. Verified against a locked
+  // Phantom: it reports isConnected: true, still returns publicKey, and even
+  // resolves connect({ onlyIfTrusted: true }) — it exposes no lock state, by
+  // design. So there is no focus-time check to make here; the listeners above
+  // cover real disconnects and account switches, which wallets do announce.
+  //
+  // The UI consequence is handled where it matters instead: signing surfaces
+  // the wallet's own unlock prompt, which is the correct place for the user to
+  // deal with it.
 
   const authenticate = useCallback(async () => {
     const store = useAuthStore.getState();
