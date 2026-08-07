@@ -1,301 +1,122 @@
 /**
- * Wallet Authentication Hook
- * Handles wallet-based authentication with the backend
- * Uses Zustand for state management
+ * Wallet authentication.
+ *
+ * Deliberately minimal. Sign-in happens when the user asks for it and at no
+ * other time: nothing here reacts to a wallet becoming connected, because a
+ * wallet extension that still has this site approved reattaches on page load,
+ * and signing off the back of that put a signature prompt in front of people
+ * who had clicked nothing.
+ *
+ * The only entry point is authenticate(), called from the connect button.
  */
 
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useEffect, useCallback, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
 import { authAPI } from '@/lib/api';
 import bs58 from 'bs58';
 import { useAuthStore } from '@/stores/authStore';
 
-const isDev = process.env.NODE_ENV === 'development';
+const TOKEN_KEY = 'authToken';
 
-/**
- * Set synchronously when the user picks a wallet in the connect modal, and
- * never set on a page load. Gates the signature request so a wallet that
- * reconnects on its own cannot trigger one unprompted.
- */
-export const USER_INITIATED_CONNECT = 'korus_user_initiated_connect';
-
-/**
- * Is this stored JWT still usable for the given wallet?
- *
- * Decodes the payload only — the signature is verified server-side. This is a
- * client-side sanity check so the UI doesn't present an authenticated session
- * built on a token the backend will reject, which previously happened whenever
- * a 7-day-old token (or one issued to a different wallet) sat in localStorage.
- */
+/** Is a stored JWT still usable for this wallet? Signature is verified server-side. */
 function isTokenValidFor(token: string, walletAddress: string): boolean {
   try {
-    const [, payloadPart] = token.split('.');
-    if (!payloadPart) return false;
-
-    const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
-    const payload = JSON.parse(atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')));
-
-    // Treat tokens expiring within a minute as already expired.
-    if (typeof payload.exp === 'number' && payload.exp * 1000 <= Date.now() + 60_000) {
-      return false;
-    }
-    if (payload.walletAddress && payload.walletAddress !== walletAddress) {
-      return false;
-    }
+    const [, payload] = token.split('.');
+    if (!payload) return false;
+    const b64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const claims = JSON.parse(atob(b64.padEnd(Math.ceil(b64.length / 4) * 4, '=')));
+    // Treat a token expiring within a minute as already expired.
+    if (typeof claims.exp === 'number' && claims.exp * 1000 <= Date.now() + 60_000) return false;
+    if (claims.walletAddress && claims.walletAddress !== walletAddress) return false;
     return true;
   } catch {
-    // Malformed token — treat as unusable.
     return false;
   }
 }
 
 export function useWalletAuth() {
-  const { publicKey, signMessage, connected } = useWallet();
+  const { publicKey, signMessage, connected, disconnect } = useWallet();
 
-  // Ref guard to prevent duplicate authenticate() calls
-  const authAttemptedRef = useRef(false);
-  // Track publicKey string to detect wallet switches without re-renders
-  const lastWalletRef = useRef<string | null>(null);
-
-  // Only subscribe to the fields consumers actually need for rendering.
-  // All other fields are read synchronously via getState() inside callbacks/effects.
   const token = useAuthStore((s) => s.token);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isAuthenticating = useAuthStore((s) => s.isAuthenticating);
   const error = useAuthStore((s) => s.error);
 
-  // Authenticate with backend when wallet connects
+  // Restore a stored session, or drop it if it is expired or for another wallet.
+  // This never signs anything — it only reuses a signature already given.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const store = useAuthStore.getState();
+
+    if (!connected || !publicKey) {
+      if (localStorage.getItem(TOKEN_KEY)) {
+        localStorage.removeItem(TOKEN_KEY);
+        store.clearAuth();
+      }
+      return;
+    }
+
+    const wallet = publicKey.toBase58();
+    const stored = localStorage.getItem(TOKEN_KEY);
+    if (!stored) return;
+
+    if (!isTokenValidFor(stored, wallet)) {
+      localStorage.removeItem(TOKEN_KEY);
+      store.clearAuth();
+      return;
+    }
+
+    if (!store.token) store.setToken(stored);
+  }, [connected, publicKey]);
+
   const authenticate = useCallback(async () => {
+    const store = useAuthStore.getState();
+
     if (!publicKey || !signMessage || !connected) {
-      useAuthStore.getState().clearAuth();
+      store.setError('Connect a wallet first.');
       return;
     }
+    if (store.isAuthenticating) return;
 
-    const state = useAuthStore.getState();
-
-    // Prevent multiple simultaneous authentication attempts
-    if (state.isAuthenticating) {
-      if (isDev) console.log('[Auth] Already in progress, skipping');
-      return;
-    }
-
-    state.setAuthenticating(true);
-    state.setError(null);
-
-    // Timeout to force reset if wallet signature takes too long
-    const timeoutId = setTimeout(() => {
-      if (isDev) console.log('[Auth] Timeout — resetting');
-      const s = useAuthStore.getState();
-      s.setError('Authentication timed out. Please try again.');
-      s.setAuthenticating(false);
-      authAttemptedRef.current = false;
-    }, 30000);
+    store.setAuthenticating(true);
+    store.setError(null);
 
     try {
-      if (isDev) console.log('[Auth] Starting...');
-
-      const message = `Sign this message to authenticate with Korus.\n\nWallet: ${publicKey.toBase58()}\nTimestamp: ${Date.now()}`;
-      const messageBytes = new TextEncoder().encode(message);
-
-      const signature = await signMessage(messageBytes);
-      const signatureBase58 = bs58.encode(signature);
-
-      if (isDev) console.log('[Auth] Signature received, verifying...');
+      const wallet = publicKey.toBase58();
+      const message = `Sign this message to authenticate with Korus.\n\nWallet: ${wallet}\nTimestamp: ${Date.now()}`;
+      const signature = await signMessage(new TextEncoder().encode(message));
 
       const response = await authAPI.loginWithWallet({
-        walletAddress: publicKey.toBase58(),
-        signature: signatureBase58,
+        walletAddress: wallet,
+        signature: bs58.encode(signature),
         message,
       });
 
-      clearTimeout(timeoutId);
-
-      if (isDev) console.log('[Auth] Success');
-
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('authToken', response.token);
-      }
-
-      // Single batch: setToken sets token + isAuthenticated + clears error
-      const s = useAuthStore.getState();
-      s.setToken(response.token);
-      s.setLastAuthTime(Date.now());
+      localStorage.setItem(TOKEN_KEY, response.token);
+      useAuthStore.getState().setToken(response.token);
     } catch (err) {
-      clearTimeout(timeoutId);
-
-      const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
-      const isUserRejection =
-        errorMessage.includes('closed') ||
-        errorMessage.includes('rejected') ||
-        errorMessage.includes('cancelled') ||
-        errorMessage.includes('Plugin Closed') ||
-        errorMessage.includes('User rejected');
-
-      if (!isUserRejection && isDev) {
-        console.error('[Auth] Failed:', err);
-      }
-
-      const s = useAuthStore.getState();
-      s.setError(isUserRejection ? null : errorMessage);
-      s.setAuthenticating(false);
-
-      // Only allow retry for non-user-rejection errors
-      if (!isUserRejection) {
-        authAttemptedRef.current = false;
-      }
+      const message = err instanceof Error ? err.message : 'Authentication failed';
+      // Dismissing the wallet prompt is a normal action, not an error to shout about.
+      const userDeclined = /reject|denied|cancel|closed|plugin closed/i.test(message);
+      console.error('[Korus auth]', message);
+      useAuthStore.getState().setError(userDeclined ? null : message);
+    } finally {
+      useAuthStore.getState().setAuthenticating(false);
     }
   }, [publicKey, signMessage, connected]);
 
-  // Main auth effect — runs ONLY when connected/publicKey change
-  useEffect(() => {
-    if (typeof window === 'undefined' || !connected || !publicKey) {
-      if (!connected) {
-        authAttemptedRef.current = false;
-        // No wallet attached means no session. Previously the stored token was
-        // left in place here, so the app kept a signed-in session for a wallet
-        // that was not connected — the site "remembered" an old login and let
-        // the user straight in.
-        if (typeof window !== 'undefined') {
-          // A later silent reconnect must not inherit this.
-          sessionStorage.removeItem(USER_INITIATED_CONNECT);
-          if (localStorage.getItem('authToken')) {
-            if (isDev) console.log('[Auth] No wallet connected — clearing stored session');
-            localStorage.removeItem('authToken');
-            useAuthStore.getState().clearAuth();
-          }
-        }
-      }
-      return;
-    }
-
-    const walletAddress = publicKey.toBase58();
-
-    // Detect wallet switch
-    if (lastWalletRef.current && lastWalletRef.current !== walletAddress) {
-      if (isDev) console.log('[Auth] Wallet changed, clearing old auth');
-      localStorage.removeItem('authToken');
-      useAuthStore.getState().clearAuth();
-      authAttemptedRef.current = false;
-    }
-    lastWalletRef.current = walletAddress;
-
-    // Read store synchronously — no re-render from this
-    const state = useAuthStore.getState();
-    const storedToken = localStorage.getItem('authToken');
-
-    // A stored token is only valid for the wallet it was issued to, and only
-    // until it expires. Without these checks a 7-day-old or foreign token was
-    // restored verbatim, so the app showed an authenticated session that the
-    // backend would reject on the next call.
-    const validStoredToken =
-      storedToken && isTokenValidFor(storedToken, walletAddress) ? storedToken : null;
-
-    if (storedToken && !validStoredToken) {
-      if (isDev) console.log('[Auth] Stored token expired or for another wallet — clearing');
-      localStorage.removeItem('authToken');
-      useAuthStore.getState().clearAuth();
-    }
-
-    if (validStoredToken && !state.token) {
-      // Token in localStorage but not in store — restore it
-      if (isDev) console.log('[Auth] Restoring stored token');
-      state.setToken(validStoredToken);
-      state.setHasAttemptedAuth(true);
-      authAttemptedRef.current = true;
-    } else if (
-      !validStoredToken &&
-      !state.isAuthenticating &&
-      !state.token &&
-      !authAttemptedRef.current &&
-      // Only sign for a wallet the user just picked. An extension that still
-      // has this site approved reconnects on load, and requesting a signature
-      // off the back of that put a "sign this message" popup in front of people
-      // who had not clicked anything — the WalletSignMessageError seen on a
-      // plain page load.
-      sessionStorage.getItem(USER_INITIATED_CONNECT) === '1'
-    ) {
-      // No token anywhere, not in progress — trigger auth
-      if (isDev) console.log('[Auth] No token, triggering authentication');
-      authAttemptedRef.current = true;
-      state.setHasAttemptedAuth(true);
-      authenticate();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connected, publicKey]);
-
-  // Authenticate when the user picks a wallet that is already connected. In
-  // that case select() is a no-op and `connected` never changes, so the effect
-  // above never re-runs and the click would silently do nothing.
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const onUserConnect = () => {
-      const s = useAuthStore.getState();
-      if (connected && publicKey && !s.token && !s.isAuthenticating) {
-        authAttemptedRef.current = true;
-        s.setHasAttemptedAuth(true);
-        authenticate();
-      }
-    };
-    window.addEventListener(USER_INITIATED_CONNECT, onUserConnect);
-    return () => window.removeEventListener(USER_INITIATED_CONNECT, onUserConnect);
-  }, [connected, publicKey, authenticate]);
-
-  // Record the daily login once per wallet per day.
-  // The backend awards DAILY_LOGIN points and maintains loginStreak, but nothing
-  // was calling the endpoint, so streaks never accrued. Covers both fresh auth
-  // and restored-token sessions since it keys off the token becoming available.
-  useEffect(() => {
-    if (typeof window === 'undefined' || !token || !publicKey) return;
-
-    const wallet = publicKey.toBase58();
-    const today = new Date().toISOString().slice(0, 10);
-    const key = `korus_daily_login:${wallet}`;
-
-    if (localStorage.getItem(key) === today) return;
-
-    let cancelled = false;
-    (async () => {
-      try {
-        const { reputationAPI } = await import('@/lib/api/reputation');
-        await reputationAPI.recordDailyLogin(token);
-        if (!cancelled) localStorage.setItem(key, today);
-      } catch (err) {
-        // Non-critical — a missed streak day must never disrupt the session.
-        if (isDev) console.warn('[Auth] Daily login record failed:', err);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [token, publicKey]);
-
-  // Clear auth when wallet disconnects
-  useEffect(() => {
-    if (!connected) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('authToken');
-      }
-      useAuthStore.getState().clearAuth();
-      lastWalletRef.current = null;
-    }
-  }, [connected]);
-
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('authToken');
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem('walletName');
     }
     useAuthStore.getState().clearAuth();
-    authAttemptedRef.current = false;
-    lastWalletRef.current = null;
-  }, []);
+    try {
+      await disconnect();
+    } catch {
+      // Already disconnected.
+    }
+  }, [disconnect]);
 
-  return {
-    token,
-    isAuthenticated,
-    isAuthenticating,
-    error,
-    authenticate,
-    logout,
-  };
+  return { token, isAuthenticated, isAuthenticating, error, authenticate, logout };
 }

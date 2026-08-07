@@ -4,17 +4,7 @@ import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
-
-// ssr: false is required. This button renders "Select Wallet" on the server but
-// the connected address on the client, which is a guaranteed hydration
-// mismatch — React error #418. That error aborts hydration, so the whole tree
-// stays non-interactive and every click silently does nothing, which is exactly
-// how the wallet failure presented.
-const WalletMultiButton = dynamic(
-  () => import('@solana/wallet-adapter-react-ui').then((m) => m.WalletMultiButton),
-  { ssr: false }
-);
+import { CustomWalletButton } from '@/components/CustomWalletButton';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 
 export default function WelcomePage() {
@@ -185,12 +175,8 @@ export default function WelcomePage() {
               <p className="text-[var(--color-text)] text-2xl mb-8 font-semibold">
                 Connect your wallet to get started
               </p>
-              {/* The stock WalletMultiButton from @solana/wallet-adapter-react-ui,
-                  deliberately unwrapped. Every custom layer between the click
-                  and the adapter has now been removed from this path, so if a
-                  wallet still fails to open it is not Korus code doing it. */}
               <div className="mb-8 flex justify-center">
-                <WalletMultiButton />
+                <CustomWalletButton />
               </div>
 
               <div className="pt-8 border-t border-[var(--color-border-light)]">
