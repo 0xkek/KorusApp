@@ -45,6 +45,78 @@ export function useWalletAuth() {
     if (store.token) store.clearAuth();
   }, [connected, publicKey]);
 
+  // Locking the extension does not flip the adapter's `connected` flag — a
+  // locked Phantom still reports isConnected: true — so the site kept showing a
+  // wallet the user could no longer use. Listen to the injected providers
+  // directly and tear the session down when they disconnect or switch account.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const w = window as unknown as {
+      phantom?: { solana?: unknown };
+      solflare?: unknown;
+      backpack?: unknown;
+      solana?: unknown;
+    };
+
+    type Provider = {
+      on?: (event: string, handler: () => void) => void;
+      off?: (event: string, handler: () => void) => void;
+      removeListener?: (event: string, handler: () => void) => void;
+    };
+
+    const providers = [w.phantom?.solana, w.solflare, w.backpack, w.solana]
+      .filter((p): p is Provider => typeof (p as Provider)?.on === 'function');
+
+    const handleGone = () => {
+      const store = useAuthStore.getState();
+      if (store.token) store.clearAuth();
+      disconnect().catch(() => {
+        // Adapter may already consider itself detached.
+      });
+    };
+
+    providers.forEach((p) => {
+      p.on?.('disconnect', handleGone);
+      p.on?.('accountChanged', handleGone);
+    });
+
+    return () => {
+      providers.forEach((p) => {
+        const remove = p.off ?? p.removeListener;
+        remove?.call(p, 'disconnect', handleGone);
+        remove?.call(p, 'accountChanged', handleGone);
+      });
+    };
+  }, [disconnect]);
+
+  // Some wallets emit nothing when they lock — Phantom keeps reporting
+  // isConnected: true — so an event listener alone is not enough. Re-check when
+  // the tab regains focus, which is when the user comes back and would
+  // otherwise see a wallet that no longer works.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const verify = () => {
+      if (document.hidden) return;
+      const w = window as unknown as { phantom?: { solana?: { isConnected?: boolean } } };
+      const injected = w.phantom?.solana;
+      // Only act on a definite false: `undefined` means we cannot tell, and
+      // guessing would drop a healthy session.
+      if (connected && injected && injected.isConnected === false) {
+        useAuthStore.getState().clearAuth();
+        disconnect().catch(() => {});
+      }
+    };
+
+    document.addEventListener('visibilitychange', verify);
+    window.addEventListener('focus', verify);
+    return () => {
+      document.removeEventListener('visibilitychange', verify);
+      window.removeEventListener('focus', verify);
+    };
+  }, [connected, disconnect]);
+
   const authenticate = useCallback(async () => {
     const store = useAuthStore.getState();
 
