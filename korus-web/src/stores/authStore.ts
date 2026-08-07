@@ -5,7 +5,6 @@
  */
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
 interface AuthState {
   token: string | null;
@@ -30,9 +29,11 @@ type AuthStore = AuthState & AuthActions;
 
 const AUTH_COOLDOWN_MS = 5000;
 
+// No persist middleware: the session must never survive a page load. Every
+// visit starts as a new user — connect a wallet, sign a message. Persisting the
+// token let a returning visitor skip signing entirely.
 export const useAuthStore = create<AuthStore>()(
-  persist(
-    (set, get) => ({
+    ((set, get) => ({
       // State
       token: null,
       isAuthenticated: false,
@@ -107,20 +108,5 @@ export const useAuthStore = create<AuthStore>()(
         // First attempt - allow it
         return !hasAttemptedAuth;
       },
-    }),
-    {
-      name: 'korus-auth-storage',
-      // Persist only the token; isAuthenticated is derived from it on
-      // rehydration. Persisting the boolean separately let a stale `true`
-      // rehydrate independent of any wallet or token check, and sync-storage
-      // rehydration lands before hydration completes — a React #418 hazard for
-      // anything that branches on it during first render.
-      partialize: (state) => ({
-        token: state.token,
-      }),
-      onRehydrateStorage: () => (state) => {
-        if (state) state.isAuthenticated = !!state.token;
-      },
-    }
-  )
+    }))
 );

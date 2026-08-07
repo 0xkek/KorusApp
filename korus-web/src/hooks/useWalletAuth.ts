@@ -42,40 +42,23 @@ export function useWalletAuth() {
   const isAuthenticating = useAuthStore((s) => s.isAuthenticating);
   const error = useAuthStore((s) => s.error);
 
-  // Restore a stored session, or drop it if it is expired or for another wallet.
-  // This never signs anything — it only reuses a signature already given.
+  // Drop any session on page load. Every visit starts as a new user: connect a
+  // wallet, then sign a message. Nothing is carried over from last time.
   //
-  // The disconnected branch only clears on a real connected -> disconnected
-  // TRANSITION. `connected` is always false at mount (autoConnect has not
-  // finished yet), and clearing there destroyed the stored session on every
-  // page load — the wallet reattached a moment later but the JWT was already
-  // gone, forcing a re-sign after every refresh.
-  const wasConnectedRef = useRef(false);
+  // The session lives in memory for the tab's lifetime only — the token is
+  // never written to storage, so a refresh, a new tab or a returning visit all
+  // begin from a clean slate.
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem('korus-auth-storage');
+  }, []);
+
+  // Clear the in-memory session as soon as the wallet detaches.
+  useEffect(() => {
+    if (connected && publicKey) return;
     const store = useAuthStore.getState();
-
-    if (!connected || !publicKey) {
-      if (wasConnectedRef.current) {
-        wasConnectedRef.current = false;
-        localStorage.removeItem(TOKEN_KEY);
-        store.clearAuth();
-      }
-      return;
-    }
-    wasConnectedRef.current = true;
-
-    const wallet = publicKey.toBase58();
-    const stored = localStorage.getItem(TOKEN_KEY);
-    if (!stored) return;
-
-    if (!isTokenValidFor(stored, wallet)) {
-      localStorage.removeItem(TOKEN_KEY);
-      store.clearAuth();
-      return;
-    }
-
-    if (!store.token) store.setToken(stored);
+    if (store.token) store.clearAuth();
   }, [connected, publicKey]);
 
   const authenticate = useCallback(async () => {
@@ -101,7 +84,8 @@ export function useWalletAuth() {
         message,
       });
 
-      localStorage.setItem(TOKEN_KEY, response.token);
+      // Held in memory only — deliberately not persisted, so the next visit
+      // requires connecting and signing again.
       useAuthStore.getState().setToken(response.token);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Authentication failed';

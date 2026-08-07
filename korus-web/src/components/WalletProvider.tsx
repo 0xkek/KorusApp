@@ -29,6 +29,38 @@ if (typeof window !== 'undefined') {
   } catch {
     // Storage unavailable (private mode) — nothing persisted anyway.
   }
+
+  // Also detach at the extension level. Wallets keep their own list of approved
+  // sites and reconnect silently when the page reloads — clearing `walletName`
+  // alone stops OUR adapter reattaching, but the extension can still hand back
+  // an already-approved session with no prompt. Disconnecting here makes the
+  // next connect a real approval request, so the wallet's popup appears every
+  // visit.
+  const detachAll = () => {
+    const detach = (provider: unknown) => {
+      const p = provider as { disconnect?: () => Promise<void> } | undefined;
+      if (typeof p?.disconnect === 'function') p.disconnect().catch(() => {});
+    };
+    const w = window as unknown as {
+      phantom?: { solana?: unknown };
+      solflare?: unknown;
+      backpack?: unknown;
+      solana?: unknown;
+    };
+    detach(w.phantom?.solana);
+    detach(w.solflare);
+    detach(w.backpack);
+    detach(w.solana);
+  };
+
+  // Extensions inject their providers after this module evaluates, so sweep a
+  // few times over the first second rather than once immediately.
+  detachAll();
+  let ticks = 0;
+  const timer = setInterval(() => {
+    detachAll();
+    if (++ticks >= 5) clearInterval(timer);
+  }, 200);
 }
 
 /**
