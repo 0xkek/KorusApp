@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
@@ -71,6 +72,7 @@ interface ShoutoutTx {
 
 export default function WalletPage() {
   const { connected, publicKey } = useWallet();
+  const { isAuthenticated, isAuthenticating } = useWalletAuth();
   const { showError, showSuccess } = useToastContext();
   const router = useRouter();
   const [balance, setBalance] = useState<number | null>(null);
@@ -99,7 +101,11 @@ export default function WalletPage() {
   }, []);
 
   useEffect(() => {
-    if (mounted && !connected) {
+    // Require a signed-in session, not just a connected adapter: a wallet
+    // extension that still trusts this site reattaches on load without the
+    // user doing anything. isAuthenticating guards an in-flight sign-in.
+    if (isAuthenticating) return;
+    if (mounted && (!connected || !isAuthenticated)) {
       router.push('/welcome');
     }
   }, [mounted, connected, router]);

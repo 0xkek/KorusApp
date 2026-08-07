@@ -47,7 +47,7 @@ export default function ProfilePage() {
   const { connected, publicKey } = useWallet();
   // Session is in-memory only; localStorage('authToken') is never written and
   // always returns null, which silently broke profile load and every save below.
-  const { token } = useWalletAuth();
+  const { token, isAuthenticated, isAuthenticating } = useWalletAuth();
   const { connection } = useConnection();
   const { showWarning, showSuccess, showError } = useToastContext();
   const router = useRouter();
@@ -293,7 +293,11 @@ export default function ProfilePage() {
   }, [publicKey]);
 
   useEffect(() => {
-    if (!connected) {
+    // Require a signed-in session, not just a connected adapter: a wallet
+    // extension that still trusts this site reattaches on load without the
+    // user doing anything. isAuthenticating guards an in-flight sign-in.
+    if (isAuthenticating) return;
+    if (!connected || !isAuthenticated) {
       router.push('/welcome');
       return;
     }

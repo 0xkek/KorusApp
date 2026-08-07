@@ -6,10 +6,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CustomWalletButton } from '@/components/CustomWalletButton';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function WelcomePage() {
   const { connected, disconnect } = useWallet();
-  const { isAuthenticated, isAuthenticating, authenticate, error: authError, logout } = useWalletAuth();
+  const { isAuthenticated, isAuthenticating, authenticate, error: authError } = useWalletAuth();
 
   // Wallet/auth state differs between server and first client render; branching
   // on it before mount is the React #418 hydration hazard. Guarded here so the
@@ -32,14 +33,19 @@ export default function WelcomePage() {
     return () => document.removeEventListener('pointerdown', mark, true);
   }, []);
 
-  // A client-side navigation back to /welcome does not remount the root wallet
-  // provider. Treat it exactly like a fresh visit: forget the active adapter
-  // and the in-memory auth token before exposing the connection controls.
+  // Clear the in-memory session when arriving here via client-side navigation,
+  // which does not remount the root wallet provider.
+  //
+  // Deliberately NOT logout(): that also calls disconnect(), which raced
+  // WalletStartupReset's select(null) in the provider. Two independent async
+  // teardown paths on every visit meant one could resolve *after* the user
+  // picked a wallet and tear down the connection they had just made. The
+  // provider owns adapter teardown; this only drops the auth session.
   useEffect(() => {
     if (hasResetWelcomeSession.current) return;
     hasResetWelcomeSession.current = true;
-    void logout();
-  }, [logout]);
+    useAuthStore.getState().clearAuth();
+  }, []);
 
   // Add hardcoded mint colors for wallet button on welcome page
   useEffect(() => {

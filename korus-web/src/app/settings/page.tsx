@@ -40,7 +40,7 @@ function useDebounce<T>(value: T, delay: number): T {
 export default function SettingsPage() {
   const { connected, disconnect } = useWallet();
   // Session is in-memory only; localStorage('authToken') is never written.
-  const { token } = useWalletAuth();
+  const { token, isAuthenticated, isAuthenticating } = useWalletAuth();
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
   const { isPremium, refreshStatus } = useSubscription();
@@ -96,7 +96,11 @@ export default function SettingsPage() {
   }, [debouncedHideShoutout, mounted]);
 
   useEffect(() => {
-    if (!connected) {
+    // Require a signed-in session, not just a connected adapter: a wallet
+    // extension that still trusts this site reattaches on load without the
+    // user doing anything. isAuthenticating guards an in-flight sign-in.
+    if (isAuthenticating) return;
+    if (!connected || !isAuthenticated) {
       router.push('/welcome');
     }
   }, [connected, router]);
@@ -173,7 +177,7 @@ export default function SettingsPage() {
     { id: 'cyber', name: 'Cyber Neon', colors: ['#00FFF0', '#FF10F0'], free: false },
   ], []);
 
-  if (!connected) {
+  if (!connected || (!isAuthenticated && !isAuthenticating)) {
     return null;
   }
 

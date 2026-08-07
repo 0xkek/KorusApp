@@ -85,6 +85,10 @@ export function useWalletAuth() {
   const logout = useCallback(async () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(TOKEN_KEY);
+      // The provider stores its selection under its own key; 'walletName' is
+      // the library default it moved away from. Clear both so an old install
+      // does not leave a stale selection behind.
+      localStorage.removeItem('korus-wallet-selection');
       localStorage.removeItem('walletName');
     }
     useAuthStore.getState().clearAuth();

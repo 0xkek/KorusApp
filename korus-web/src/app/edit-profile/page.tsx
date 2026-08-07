@@ -21,7 +21,7 @@ const NFTAvatarModal = dynamic(() => import('@/components/NFTAvatarModal'), { ss
 export default function EditProfilePage() {
   const { connected, publicKey } = useWallet();
   // Session is in-memory only; localStorage('authToken') is never written.
-  const { token } = useWalletAuth();
+  const { token, isAuthenticated, isAuthenticating } = useWalletAuth();
   const { showSuccess, showError } = useToastContext();
   const router = useRouter();
 
@@ -66,8 +66,12 @@ export default function EditProfilePage() {
   ];
 
   useEffect(() => {
-    if (!connected) {
-      router.push('/');
+    // Require a signed-in session, not just a connected adapter: a wallet
+    // extension that still trusts this site reattaches on load without the
+    // user doing anything. isAuthenticating guards an in-flight sign-in.
+    if (isAuthenticating) return;
+    if (!connected || !isAuthenticated) {
+      router.push('/welcome');
       return;
     }
 
