@@ -38,9 +38,21 @@ export const CustomWalletButton = ({ className }: { className?: string }) => {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  // Signed in: the stock button, which owns the address display, the dropdown,
-  // copy address, change wallet and disconnect.
-  if (mounted && isAuthenticated) {
+  // True once the visitor has interacted with the page. An extension that still
+  // trusts this site reattaches before any interaction, so `connected` alone
+  // does not mean "this person chose to connect".
+  const [userActed, setUserActed] = useState(false);
+  useEffect(() => {
+    const mark = () => setUserActed(true);
+    document.addEventListener('pointerdown', mark, true);
+    return () => document.removeEventListener('pointerdown', mark, true);
+  }, []);
+
+  // Show the stock button — address, dropdown, change wallet, disconnect — once
+  // the user is signed in, OR once they have deliberately connected a wallet in
+  // this session. Without the second case a connected-but-unsigned user was
+  // left staring at "Select Wallet" beside their own sign-in prompt.
+  if (mounted && (isAuthenticated || (connected && userActed))) {
     return (
       <div className={className}>
         <WalletMultiButton />
