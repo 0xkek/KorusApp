@@ -1,7 +1,7 @@
 'use client';
 
-import { FC, ReactNode, useCallback, useMemo } from 'react';
-import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
+import { FC, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ConnectionProvider, WalletProvider, useWallet } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { WalletAdapterNetwork, type WalletError } from '@solana/wallet-adapter-base';
 import { clusterApiUrl } from '@solana/web3.js';
@@ -29,6 +29,37 @@ if (typeof window !== 'undefined') {
 }
 
 /**
+ * A wallet extension can still expose an already-approved adapter during the
+ * first React render, even when Korus has removed its saved wallet name. Reset
+ * that adapter before rendering the application so a returning visitor never
+ * sees an address or sign-in state before choosing a wallet themselves.
+ */
+function WalletStartupReset({ onComplete }: { onComplete: () => void }) {
+  const { select } = useWallet();
+  const hasReset = useRef(false);
+
+  useEffect(() => {
+    if (hasReset.current) return;
+    hasReset.current = true;
+
+    try {
+      localStorage.removeItem(WALLET_SELECTION_KEY);
+      localStorage.removeItem('walletName');
+    } catch {
+      // Storage unavailable — select(null) still removes the live adapter.
+    }
+
+    // WalletProvider disconnects the previously selected adapter as part of
+    // changing the selection. This is intentionally synchronous so no
+    // extension can remain connected while the welcome screen is visible.
+    select(null);
+    onComplete();
+  }, [onComplete, select]);
+
+  return null;
+}
+
+/**
  * Standard wallet-adapter setup, matching the library's documented example.
  *
  * ConnectionProvider > WalletProvider > WalletModalProvider, with an empty
@@ -40,6 +71,7 @@ if (typeof window !== 'undefined') {
  * state the server cannot know.
  */
 export const WalletContextProvider: FC<Props> = ({ children }) => {
+  const [isSessionReset, setIsSessionReset] = useState(false);
   const network = useMemo(
     () =>
       process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'mainnet-beta'
@@ -61,6 +93,10 @@ export const WalletContextProvider: FC<Props> = ({ children }) => {
     console.error('[Korus wallet]', error?.name, '—', error?.message);
   }, []);
 
+  const completeSessionReset = useCallback(() => {
+    setIsSessionReset(true);
+  }, []);
+
   return (
     <ConnectionProvider endpoint={endpoint}>
       {/*
@@ -76,11 +112,17 @@ export const WalletContextProvider: FC<Props> = ({ children }) => {
       */}
       <WalletProvider
         wallets={wallets}
-        autoConnect
+        // Keep connection disabled until WalletStartupReset has removed any
+        // adapter inherited from an older page or a previous deployment.
+        autoConnect={isSessionReset}
         localStorageKey={WALLET_SELECTION_KEY}
         onError={onError}
       >
-        <WalletModalProvider>{children}</WalletModalProvider>
+        <WalletStartupReset onComplete={completeSessionReset} />
+        <WalletModalProvider>
+          {/* Do not let a stale adapter flash an address or sign-in state. */}
+          {isSessionReset ? children : null}
+        </WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
   );

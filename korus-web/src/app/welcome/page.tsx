@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -9,17 +9,27 @@ import { useWalletAuth } from '@/contexts/WalletAuthContext';
 
 export default function WelcomePage() {
   const { connected, disconnect } = useWallet();
-  const { isAuthenticated, isAuthenticating, authenticate, error: authError } = useWalletAuth();
+  const { isAuthenticated, isAuthenticating, authenticate, error: authError, logout } = useWalletAuth();
 
   // Wallet/auth state differs between server and first client render; branching
   // on it before mount is the React #418 hydration hazard. Guarded here so the
   // Sign in step only appears client-side.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  const hasResetWelcomeSession = useRef(false);
   const router = useRouter();
 
   const [showDeveloperTools, setShowDeveloperTools] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
+
+  // A client-side navigation back to /welcome does not remount the root wallet
+  // provider. Treat it exactly like a fresh visit: forget the active adapter
+  // and the in-memory auth token before exposing the connection controls.
+  useEffect(() => {
+    if (hasResetWelcomeSession.current) return;
+    hasResetWelcomeSession.current = true;
+    void logout();
+  }, [logout]);
 
   // Add hardcoded mint colors for wallet button on welcome page
   useEffect(() => {

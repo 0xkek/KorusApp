@@ -9,7 +9,7 @@ interface WalletAuthContextType {
   isAuthenticating: boolean;
   error: string | null;
   authenticate: () => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const WalletAuthContext = createContext<WalletAuthContextType | undefined>(undefined);
