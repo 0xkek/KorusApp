@@ -11,7 +11,7 @@
  */
 
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { authAPI } from '@/lib/api';
 import bs58 from 'bs58';
 import { useAuthStore } from '@/stores/authStore';
@@ -44,17 +44,26 @@ export function useWalletAuth() {
 
   // Restore a stored session, or drop it if it is expired or for another wallet.
   // This never signs anything — it only reuses a signature already given.
+  //
+  // The disconnected branch only clears on a real connected -> disconnected
+  // TRANSITION. `connected` is always false at mount (autoConnect has not
+  // finished yet), and clearing there destroyed the stored session on every
+  // page load — the wallet reattached a moment later but the JWT was already
+  // gone, forcing a re-sign after every refresh.
+  const wasConnectedRef = useRef(false);
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const store = useAuthStore.getState();
 
     if (!connected || !publicKey) {
-      if (localStorage.getItem(TOKEN_KEY)) {
+      if (wasConnectedRef.current) {
+        wasConnectedRef.current = false;
         localStorage.removeItem(TOKEN_KEY);
         store.clearAuth();
       }
       return;
     }
+    wasConnectedRef.current = true;
 
     const wallet = publicKey.toBase58();
     const stored = localStorage.getItem(TOKEN_KEY);

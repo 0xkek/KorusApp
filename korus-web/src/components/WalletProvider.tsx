@@ -5,6 +5,8 @@ import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { WalletAdapterNetwork, type WalletError } from '@solana/wallet-adapter-base';
 import { clusterApiUrl } from '@solana/web3.js';
+
+// Default styles that can be overridden by your app
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 interface Props {
@@ -12,26 +14,25 @@ interface Props {
 }
 
 /**
- * Standard wallet-adapter setup, per the library's own docs.
+ * Standard wallet-adapter setup, matching the library's documented example.
  *
- * - `wallets` is empty: Phantom, Solflare, Backpack and Jupiter all register
- *   themselves through Wallet Standard and are detected automatically. Passing
- *   a legacy adapter as well creates a second entry for the same wallet that
- *   resolves through window.phantom — which other extensions also inject — so
- *   picking one wallet could open another.
- * - `autoConnect` is OFF. With it on, a previously approved extension reattached
- *   on every page load, so a refresh landed on "Sign in" instead of "Connect
- *   Wallet" — and because a wallet was already attached, picking a different one
- *   in the modal was a no-op that opened nothing.
- * - `WalletModalProvider` supplies the connect modal, so none of it is
- *   hand-rolled.
+ * ConnectionProvider > WalletProvider > WalletModalProvider, with an empty
+ * `wallets` array because Phantom, Solflare, Backpack and Jupiter all register
+ * themselves via Wallet Standard and are detected automatically.
+ *
+ * This whole tree is loaded with ssr: false by WalletProviderClient, because
+ * the server has no access to the browser's wallet and rendering any of it
+ * server-side produces a hydration mismatch (React #418) that aborts hydration
+ * and leaves the page non-interactive.
  */
 export const WalletContextProvider: FC<Props> = ({ children }) => {
-  const network = useMemo(() => {
-    return process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'mainnet-beta'
-      ? WalletAdapterNetwork.Mainnet
-      : WalletAdapterNetwork.Devnet;
-  }, []);
+  const network = useMemo(
+    () =>
+      process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'mainnet-beta'
+        ? WalletAdapterNetwork.Mainnet
+        : WalletAdapterNetwork.Devnet,
+    []
+  );
 
   const endpoint = useMemo(
     () => process.env.NEXT_PUBLIC_SOLANA_RPC_URL || clusterApiUrl(network),
@@ -40,17 +41,19 @@ export const WalletContextProvider: FC<Props> = ({ children }) => {
 
   const wallets = useMemo(() => [], []);
 
-  // console.error, not the app logger, which is stripped in production — a
-  // failed connection is exactly the thing that must stay visible there.
+  // console.error rather than the app logger, which is stripped in production —
+  // a failed connection has to stay visible there.
   const onError = useCallback((error: WalletError) => {
     console.error('[Korus wallet]', error?.name, '—', error?.message);
   }, []);
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect={false} onError={onError}>
+      <WalletProvider wallets={wallets} autoConnect onError={onError}>
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
   );
 };
+
+export default WalletContextProvider;

@@ -9,8 +9,15 @@ import { useWalletAuth } from '@/contexts/WalletAuthContext';
 
 export default function WelcomePage() {
   const { connected, disconnect } = useWallet();
+  const { isAuthenticated, isAuthenticating, authenticate, error: authError } = useWalletAuth();
+
+  // Wallet/auth state differs between server and first client render; branching
+  // on it before mount is the React #418 hydration hazard. Guarded here so the
+  // Sign in step only appears client-side.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const router = useRouter();
-  const { isAuthenticated } = useWalletAuth();
+
   const [showDeveloperTools, setShowDeveloperTools] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
 
@@ -177,6 +184,28 @@ export default function WelcomePage() {
               </p>
               <div className="mb-8 flex justify-center">
                 <CustomWalletButton />
+
+                {/* Step 2: sign a message to prove ownership. Only ever fires
+                    from this click — a silently reattached wallet can never
+                    trigger a signature prompt on its own. */}
+                {mounted && connected && !isAuthenticated && (
+                  <div className="mt-4 flex flex-col items-center gap-2">
+                    <button
+                      onClick={() => authenticate()}
+                      disabled={isAuthenticating}
+                      className="px-6 py-2.5 rounded-lg font-semibold text-sm transition-all hover:opacity-90 disabled:opacity-60"
+                      style={{
+                        background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)',
+                        color: '#000000',
+                      }}
+                    >
+                      {isAuthenticating ? 'Check your wallet…' : 'Sign in to Korus'}
+                    </button>
+                    {authError && (
+                      <p className="text-[13px] text-red-400">{authError}</p>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="pt-8 border-t border-[var(--color-border-light)]">

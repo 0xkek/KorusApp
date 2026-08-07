@@ -110,10 +110,17 @@ export const useAuthStore = create<AuthStore>()(
     }),
     {
       name: 'korus-auth-storage',
+      // Persist only the token; isAuthenticated is derived from it on
+      // rehydration. Persisting the boolean separately let a stale `true`
+      // rehydrate independent of any wallet or token check, and sync-storage
+      // rehydration lands before hydration completes — a React #418 hazard for
+      // anything that branches on it during first render.
       partialize: (state) => ({
         token: state.token,
-        isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state) state.isAuthenticated = !!state.token;
+      },
     }
   )
 );
