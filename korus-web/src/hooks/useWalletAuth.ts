@@ -11,28 +11,12 @@
  */
 
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
 import { authAPI } from '@/lib/api';
 import bs58 from 'bs58';
 import { useAuthStore } from '@/stores/authStore';
 
 const TOKEN_KEY = 'authToken';
-
-/** Is a stored JWT still usable for this wallet? Signature is verified server-side. */
-function isTokenValidFor(token: string, walletAddress: string): boolean {
-  try {
-    const [, payload] = token.split('.');
-    if (!payload) return false;
-    const b64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-    const claims = JSON.parse(atob(b64.padEnd(Math.ceil(b64.length / 4) * 4, '=')));
-    // Treat a token expiring within a minute as already expired.
-    if (typeof claims.exp === 'number' && claims.exp * 1000 <= Date.now() + 60_000) return false;
-    if (claims.walletAddress && claims.walletAddress !== walletAddress) return false;
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 export function useWalletAuth() {
   const { publicKey, signMessage, connected, disconnect } = useWallet();

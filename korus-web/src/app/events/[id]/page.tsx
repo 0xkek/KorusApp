@@ -22,7 +22,7 @@ export default function EventDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const eventId = params.id as string;
-  const { connected, publicKey } = useWallet();
+  const { connected, publicKey, signMessage } = useWallet();
   const { token } = useWalletAuth();
   const { showSuccess, showError } = useToast();
 
@@ -142,9 +142,9 @@ export default function EventDetailsPage() {
       return;
     }
 
-    // Check if wallet supports message signing
-    const walletAdapter = (window as { solana?: { signMessage?: (message: Uint8Array, encoding: string) => Promise<{ signature: Uint8Array; publicKey: Uint8Array }> } }).solana;
-    if (!walletAdapter || !walletAdapter.signMessage) {
+    // Always use the adapter the user selected in Korus. Calling window.solana
+    // bypasses that selection and can route a Phantom session to Backpack.
+    if (!signMessage) {
       showError('Your wallet does not support message signing');
       return;
     }
@@ -156,18 +156,13 @@ export default function EventDetailsPage() {
       const messageBytes = new TextEncoder().encode(message);
 
       // Request wallet signature
-      const signatureResponse = await walletAdapter.signMessage(messageBytes, 'utf8');
-
-      if (!signatureResponse || !signatureResponse.signature) {
-        throw new Error('Failed to get signature from wallet');
-      }
+      const signature = await signMessage(messageBytes);
 
       // Import bs58 for encoding
       const bs58 = await import('bs58');
 
       // Convert signature to base58 (backend expects base58)
-      const signatureUint8 = new Uint8Array(signatureResponse.signature);
-      const signatureBase58 = bs58.default.encode(signatureUint8);
+      const signatureBase58 = bs58.default.encode(signature);
 
       // Register for whitelist
       const response = await eventsAPI.registerForWhitelist(

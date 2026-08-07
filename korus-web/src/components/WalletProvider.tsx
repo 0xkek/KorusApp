@@ -13,10 +13,15 @@ interface Props {
   children: ReactNode;
 }
 
-// Forget the previously selected wallet on every full page load — at module
-// scope, so it runs before WalletProvider reads the key during first render.
+// WalletProvider normally persists the last wallet name in localStorage. Korus
+// intentionally starts every page load as a fresh sign-in, so use an app-owned
+// key and erase it before the provider reads it. Removing the legacy default
+// key once also prevents earlier releases from restoring a previous adapter.
+const WALLET_SELECTION_KEY = 'korus-wallet-selection';
+
 if (typeof window !== 'undefined') {
   try {
+    localStorage.removeItem(WALLET_SELECTION_KEY);
     localStorage.removeItem('walletName');
   } catch {
     // Storage unavailable (private mode) — nothing persisted anyway.
@@ -58,11 +63,23 @@ export const WalletContextProvider: FC<Props> = ({ children }) => {
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      {/* autoConnect MUST stay false. With it on, the adapter reconnects
-          whatever session the extension still offers, so a reload landed on a
-          wallet the user never picked. The button drives connect() from the
-          click instead. */}
-      <WalletProvider wallets={wallets} autoConnect={false} onError={onError}>
+      {/*
+        This is the library's documented select -> connect flow. A page starts
+        with no selected adapter because WALLET_SELECTION_KEY was just erased.
+        When—and only when—the user selects a wallet in WalletMultiButton, the
+        provider records that user selection and calls adapter.connect().
+
+        Do not replace this with an effect that watches `wallet`: that loses
+        the identity of the wallet the person clicked and is what previously
+        made Phantom open Backpack. With no persisted selection, autoConnect
+        cannot reconnect a wallet on page load.
+      */}
+      <WalletProvider
+        wallets={wallets}
+        autoConnect
+        localStorageKey={WALLET_SELECTION_KEY}
+        onError={onError}
+      >
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
