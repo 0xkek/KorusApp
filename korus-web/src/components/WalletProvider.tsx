@@ -3,6 +3,8 @@
 import { FC, ReactNode, useCallback, useEffect, useMemo } from 'react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import type { WalletError } from '@solana/wallet-adapter-base';
+import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
+import '@solana/wallet-adapter-react-ui/styles.css';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { clusterApiUrl } from '@solana/web3.js';
 
@@ -88,7 +90,11 @@ export const WalletContextProvider: FC<Props> = ({ children }) => {
   return (
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect onError={handleError}>
-        {children}
+        {/* The official modal from @solana/wallet-adapter-react-ui. It handles
+            selection, switching wallets while one is already connected, and the
+            connect lifecycle — all of which the previous hand-rolled modal had
+            to reimplement, and got wrong in ways that took many rounds to find. */}
+        <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
   );

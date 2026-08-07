@@ -648,3 +648,50 @@ a.bg-gradient-to-br:not(.white-text) * {
 .mention-link:hover {
   text-decoration: underline;
 }
+
+/* ---------------------------------------------------------------------------
+   Solana wallet-adapter modal, restyled to match Korus.
+
+   The modal itself is the official component from
+   @solana/wallet-adapter-react-ui. Its default theme is light-on-white and
+   looks foreign against the dark UI, so its surfaces are overridden here
+   rather than by forking the component.
+   --------------------------------------------------------------------------- */
+.wallet-adapter-modal-wrapper {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border-light);
+  border-radius: 16px;
+  font-family: var(--font-poppins), sans-serif;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.6);
+}
+
+.wallet-adapter-modal-title {
+  color: var(--color-text) !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+}
+
+.wallet-adapter-modal-list li,
+.wallet-adapter-modal-list .wallet-adapter-button {
+  background: transparent !important;
+  color: var(--color-text) !important;
+  font-family: inherit !important;
+  font-weight: 500 !important;
+  border-radius: 10px;
+}
+
+.wallet-adapter-modal-list .wallet-adapter-button:hover {
+  background: rgb(255 255 255 / 0.06) !important;
+}
+
+.wallet-adapter-modal-list-more {
+  color: var(--korus-primary) !important;
+}
+
+.wallet-adapter-modal-button-close {
+  background: rgb(255 255 255 / 0.06) !important;
+}
+
+.wallet-adapter-modal-button-close svg {
+  fill: var(--color-text-secondary);
+}

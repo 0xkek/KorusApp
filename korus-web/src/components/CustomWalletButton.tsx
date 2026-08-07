@@ -1,16 +1,33 @@
 'use client';
 
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
+import { USER_INITIATED_CONNECT } from '@/hooks/useWalletAuth';
 import { useState } from 'react';
 import Image from 'next/image';
-import { CustomWalletModal } from './CustomWalletModal';
 
+/**
+ * Korus-styled trigger for the official wallet modal.
+ *
+ * The modal itself comes from @solana/wallet-adapter-react-ui rather than being
+ * hand-rolled. The custom one had to reimplement selection, connect and — the
+ * case that kept breaking — switching wallets while another is already
+ * connected. Clicking a different wallet there never actually switched, so the
+ * signature request went to whichever wallet was already attached.
+ */
 export const CustomWalletButton = ({ className }: { className?: string }) => {
   const { connected, disconnect, publicKey, wallet } = useWallet();
   const { isAuthenticated } = useWalletAuth();
-  const [modalOpen, setModalOpen] = useState(false);
+  const { setVisible } = useWalletModal();
   const [showMenu, setShowMenu] = useState(false);
+
+  const openModal = () => {
+    // The modal's own selection triggers the connect; this flag tells
+    // useWalletAuth that any resulting signature request was user-initiated.
+    sessionStorage.setItem(USER_INITIATED_CONNECT, '1');
+    setVisible(true);
+  };
 
   const handleDisconnect = async () => {
     setShowMenu(false);
@@ -18,13 +35,12 @@ export const CustomWalletButton = ({ className }: { className?: string }) => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('walletName');
       localStorage.removeItem('authToken');
+      sessionStorage.removeItem(USER_INITIATED_CONNECT);
     }
   };
 
-  // Show the address only once the user is actually signed in to Korus.
-  // `connected` alone reflects the extension's own session — an extension that
-  // still has this site approved reports connected on load, so the button
-  // showed a remembered address before the user had done anything.
+  // Show the address only once signed in to Korus. `connected` alone reflects
+  // the extension's own session, which reattaches on load.
   if (connected && publicKey && isAuthenticated) {
     const addr = publicKey.toBase58();
     return (
@@ -61,6 +77,15 @@ export const CustomWalletButton = ({ className }: { className?: string }) => {
                 Copy Address
               </button>
               <button
+                onClick={() => {
+                  setShowMenu(false);
+                  openModal();
+                }}
+                className="w-full px-4 py-2.5 text-left text-sm text-[var(--color-text)] hover:bg-white/[0.06] transition-colors"
+              >
+                Change Wallet
+              </button>
+              <button
                 onClick={handleDisconnect}
                 className="w-full px-4 py-2.5 text-left text-sm text-red-400 hover:bg-white/[0.06] transition-colors"
               >
@@ -74,18 +99,15 @@ export const CustomWalletButton = ({ className }: { className?: string }) => {
   }
 
   return (
-    <>
-      <button
-        onClick={() => setModalOpen(true)}
-        className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all hover:opacity-90 ${className || ''}`}
-        style={{
-          background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)',
-          color: '#000000',
-        }}
-      >
-        Connect Wallet
-      </button>
-      <CustomWalletModal open={modalOpen} onClose={() => setModalOpen(false)} />
-    </>
+    <button
+      onClick={openModal}
+      className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all hover:opacity-90 ${className || ''}`}
+      style={{
+        background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)',
+        color: '#000000',
+      }}
+    >
+      Connect Wallet
+    </button>
   );
 };
