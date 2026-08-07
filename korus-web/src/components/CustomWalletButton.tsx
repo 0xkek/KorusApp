@@ -3,7 +3,7 @@
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 
 /**
@@ -19,10 +19,38 @@ import Image from 'next/image';
  * showed a stale address and fired an unprompted signature request.
  */
 export const CustomWalletButton = ({ className }: { className?: string }) => {
-  const { connected, publicKey, wallet } = useWallet();
+  const { connected, connecting, publicKey, wallet, connect, disconnect } = useWallet();
   const { setVisible } = useWalletModal();
   const { isAuthenticated, isAuthenticating, authenticate, logout } = useWalletAuth();
   const [showMenu, setShowMenu] = useState(false);
+
+  // With autoConnect off, select() no longer connects, so the connect is driven
+  // here — but ONLY after the user opened the picker in this session. The
+  // adapter restores the last walletName from localStorage on load, so without
+  // this guard the effect would fire on a plain refresh and reintroduce exactly
+  // the silent auto-connect we are removing.
+  const awaitingPickRef = useRef(false);
+  useEffect(() => {
+    if (!awaitingPickRef.current) return;
+    if (!wallet) return;
+    if (connected || connecting) return;
+    awaitingPickRef.current = false;
+    connect().catch((err) => console.error('[Korus wallet] connect failed:', err));
+  }, [wallet, connected, connecting, connect]);
+
+  // Opening the picker must start from a detached state, otherwise select() is
+  // a no-op and clicking a wallet does nothing at all.
+  const openPicker = async () => {
+    awaitingPickRef.current = true;
+    if (connected) {
+      try {
+        await disconnect();
+      } catch {
+        // Already detached.
+      }
+    }
+    setVisible(true);
+  };
 
   // Wallet state only exists on the client. Rendering it during SSR produces a
   // hydration mismatch (React #418), which aborts hydration and leaves the whole
@@ -47,7 +75,7 @@ export const CustomWalletButton = ({ className }: { className?: string }) => {
   // 1. No wallet attached.
   if (!connected || !publicKey) {
     return (
-      <button onClick={() => setVisible(true)} className={buttonClass} style={buttonStyle}>
+      <button onClick={openPicker} className={buttonClass} style={buttonStyle}>
         Connect Wallet
       </button>
     );
@@ -66,7 +94,7 @@ export const CustomWalletButton = ({ className }: { className?: string }) => {
           {isAuthenticating ? 'Check your wallet…' : 'Sign in'}
         </button>
         <button
-          onClick={() => setVisible(true)}
+          onClick={openPicker}
           className="px-3 py-2 rounded-lg text-sm text-[var(--color-text-secondary)] border border-[var(--color-border-light)] hover:bg-white/[0.06] transition-colors"
         >
           Change

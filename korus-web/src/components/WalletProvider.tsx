@@ -19,8 +19,10 @@ interface Props {
  *   a legacy adapter as well creates a second entry for the same wallet that
  *   resolves through window.phantom — which other extensions also inject — so
  *   picking one wallet could open another.
- * - `autoConnect` reattaches a previously approved wallet. It does not sign
- *   anything; authentication is a separate, explicit step.
+ * - `autoConnect` is OFF. With it on, a previously approved extension reattached
+ *   on every page load, so a refresh landed on "Sign in" instead of "Connect
+ *   Wallet" — and because a wallet was already attached, picking a different one
+ *   in the modal was a no-op that opened nothing.
  * - `WalletModalProvider` supplies the connect modal, so none of it is
  *   hand-rolled.
  */
@@ -46,7 +48,7 @@ export const WalletContextProvider: FC<Props> = ({ children }) => {
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect onError={onError}>
+      <WalletProvider wallets={wallets} autoConnect={false} onError={onError}>
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
