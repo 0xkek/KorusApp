@@ -13,6 +13,24 @@ interface Props {
   children: ReactNode;
 }
 
+// Forget the previously selected wallet on every full page load — at module
+// scope, so it runs before WalletProvider reads the key during first render.
+//
+// The adapter persists the chosen wallet under `walletName`, and with
+// autoConnect on it silently reattaches an approved extension on refresh: the
+// user landed on the site already "connected" to a wallet they never clicked
+// this session. Clearing the key here means every page load starts genuinely
+// disconnected ("Select Wallet"), while autoConnect stays on for the one thing
+// it is needed for: the stock modal only calls select(), and it is autoConnect
+// that then runs adapter.connect() and opens the wallet's popup.
+if (typeof window !== 'undefined') {
+  try {
+    localStorage.removeItem('walletName');
+  } catch {
+    // Storage unavailable (private mode) — nothing persisted anyway.
+  }
+}
+
 /**
  * Standard wallet-adapter setup, matching the library's documented example.
  *
@@ -20,10 +38,9 @@ interface Props {
  * `wallets` array because Phantom, Solflare, Backpack and Jupiter all register
  * themselves via Wallet Standard and are detected automatically.
  *
- * This whole tree is loaded with ssr: false by WalletProviderClient, because
- * the server has no access to the browser's wallet and rendering any of it
- * server-side produces a hydration mismatch (React #418) that aborts hydration
- * and leaves the page non-interactive.
+ * The providers render with normal SSR (they emit no wallet-dependent DOM);
+ * only WalletMultiButton is loaded with ssr: false, since it renders wallet
+ * state the server cannot know.
  */
 export const WalletContextProvider: FC<Props> = ({ children }) => {
   const network = useMemo(
