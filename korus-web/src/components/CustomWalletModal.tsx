@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletReadyState, type WalletName } from '@solana/wallet-adapter-base';
 import { useEffect, useRef, useState } from 'react';
+import { USER_INITIATED_CONNECT } from '@/hooks/useWalletAuth';
 
 export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
   const { wallets, select, wallet: walletState, connecting } = useWallet();
@@ -96,6 +97,15 @@ export const CustomWalletModal = ({ open, onClose }: { open: boolean; onClose: (
   // why only Phantom appeared broken.
   const handleWalletClick = (walletName: WalletName) => {
     setConnectError(null);
+
+    // Records that this connection was user-initiated, so useWalletAuth knows a
+    // signature request is expected. Set synchronously here — an extension
+    // reconnecting on page load never passes through this path.
+    sessionStorage.setItem(USER_INITIATED_CONNECT, '1');
+    // Notify listeners too: if this wallet is already connected, select() is a
+    // no-op and `connected` never changes, so the auth effect would not re-run
+    // and the click would appear to do nothing.
+    window.dispatchEvent(new Event(USER_INITIATED_CONNECT));
 
     // select() alone is enough: WalletProvider flags this as a user selection
     // internally and connects with a prompt.

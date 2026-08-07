@@ -13,6 +13,13 @@ import { useAuthStore } from '@/stores/authStore';
 const isDev = process.env.NODE_ENV === 'development';
 
 /**
+ * Set synchronously when the user picks a wallet in the connect modal, and
+ * never set on a page load. Gates the signature request so a wallet that
+ * reconnects on its own cannot trigger one unprompted.
+ */
+export const USER_INITIATED_CONNECT = 'korus_user_initiated_connect';
+
+/**
  * Is this stored JWT still usable for the given wallet?
  *
  * Decodes the payload only — the signature is verified server-side. This is a
@@ -148,10 +155,14 @@ export function useWalletAuth() {
         // left in place here, so the app kept a signed-in session for a wallet
         // that was not connected — the site "remembered" an old login and let
         // the user straight in.
-        if (typeof window !== 'undefined' && localStorage.getItem('authToken')) {
-          if (isDev) console.log('[Auth] No wallet connected — clearing stored session');
-          localStorage.removeItem('authToken');
-          useAuthStore.getState().clearAuth();
+        if (typeof window !== 'undefined') {
+          // A later silent reconnect must not inherit this.
+          sessionStorage.removeItem(USER_INITIATED_CONNECT);
+          if (localStorage.getItem('authToken')) {
+            if (isDev) console.log('[Auth] No wallet connected — clearing stored session');
+            localStorage.removeItem('authToken');
+            useAuthStore.getState().clearAuth();
+          }
         }
       }
       return;
@@ -191,7 +202,18 @@ export function useWalletAuth() {
       state.setToken(validStoredToken);
       state.setHasAttemptedAuth(true);
       authAttemptedRef.current = true;
-    } else if (!validStoredToken && !state.isAuthenticating && !state.token && !authAttemptedRef.current) {
+    } else if (
+      !validStoredToken &&
+      !state.isAuthenticating &&
+      !state.token &&
+      !authAttemptedRef.current &&
+      // Only sign for a wallet the user just picked. An extension that still
+      // has this site approved reconnects on load, and requesting a signature
+      // off the back of that put a "sign this message" popup in front of people
+      // who had not clicked anything — the WalletSignMessageError seen on a
+      // plain page load.
+      sessionStorage.getItem(USER_INITIATED_CONNECT) === '1'
+    ) {
       // No token anywhere, not in progress — trigger auth
       if (isDev) console.log('[Auth] No token, triggering authentication');
       authAttemptedRef.current = true;
@@ -200,6 +222,23 @@ export function useWalletAuth() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected, publicKey]);
+
+  // Authenticate when the user picks a wallet that is already connected. In
+  // that case select() is a no-op and `connected` never changes, so the effect
+  // above never re-runs and the click would silently do nothing.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onUserConnect = () => {
+      const s = useAuthStore.getState();
+      if (connected && publicKey && !s.token && !s.isAuthenticating) {
+        authAttemptedRef.current = true;
+        s.setHasAttemptedAuth(true);
+        authenticate();
+      }
+    };
+    window.addEventListener(USER_INITIATED_CONNECT, onUserConnect);
+    return () => window.removeEventListener(USER_INITIATED_CONNECT, onUserConnect);
+  }, [connected, publicKey, authenticate]);
 
   // Record the daily login once per wallet per day.
   // The backend awards DAILY_LOGIN points and maintains loginStreak, but nothing
