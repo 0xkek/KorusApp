@@ -671,13 +671,13 @@ a.bg-gradient-to-br:not(.white-text) * {
   font-weight: 600 !important;
 }
 
-.wallet-adapter-modal-list li,
+/* Colour only — no layout, sizing or pointer properties, so nothing here can
+   interfere with the modal's own click handling. */
 .wallet-adapter-modal-list .wallet-adapter-button {
   background: transparent !important;
   color: var(--color-text) !important;
   font-family: inherit !important;
   font-weight: 500 !important;
-  border-radius: 10px;
 }
 
 .wallet-adapter-modal-list .wallet-adapter-button:hover {
