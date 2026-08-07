@@ -85,6 +85,8 @@ export const CustomWalletButton = ({ className }: { className?: string }) => {
       </button>
     </div>
   );
+  // Note: both branches render inside the same wrapper, so a caller styling
+  // `.wallet-adapter-button` through this className affects either state.
 };
 
 export default CustomWalletButton;

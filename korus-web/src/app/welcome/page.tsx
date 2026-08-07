@@ -208,8 +208,11 @@ export default function WelcomePage() {
               <p className="text-[var(--color-text)] text-2xl mb-8 font-semibold">
                 Connect your wallet to get started
               </p>
-              <div className="mb-8 flex justify-center">
-                <CustomWalletButton />
+              {/* Two vertical steps rather than two buttons side by side: once a
+                  wallet is connected the sign-in step is the next action, not a
+                  peer of it. Stacked and full-width so both read as one flow. */}
+              <div className="mb-8 flex flex-col items-stretch gap-3 max-w-xs mx-auto">
+                <CustomWalletButton className="[&_.wallet-adapter-button]:w-full [&_.wallet-adapter-button]:justify-center" />
 
                 {/* Step 2: sign a message to prove ownership. Only ever fires
                     from this click — a silently reattached wallet can never
@@ -219,11 +222,11 @@ export default function WelcomePage() {
                     sign-in prompt for a wallet the visitor never chose is the
                     same problem as showing their address. */}
                 {mounted && userConnected && connected && !isAuthenticated && (
-                  <div className="mt-4 flex flex-col items-center gap-2">
+                  <>
                     <button
                       onClick={() => authenticate()}
                       disabled={isAuthenticating}
-                      className="px-6 py-2.5 rounded-lg font-semibold text-sm transition-all hover:opacity-90 disabled:opacity-60"
+                      className="w-full px-6 py-3 rounded-lg font-semibold text-sm transition-all hover:opacity-90 disabled:opacity-60"
                       style={{
                         background: 'linear-gradient(135deg, var(--korus-primary) 0%, var(--korus-secondary) 100%)',
                         color: '#000000',
@@ -231,10 +234,13 @@ export default function WelcomePage() {
                     >
                       {isAuthenticating ? 'Check your wallet…' : 'Sign in to Korus'}
                     </button>
+                    <p className="text-[13px] text-[var(--color-text-tertiary)]">
+                      One signature proves the wallet is yours. It costs nothing.
+                    </p>
                     {authError && (
                       <p className="text-[13px] text-red-400">{authError}</p>
                     )}
-                  </div>
+                  </>
                 )}
               </div>
 
