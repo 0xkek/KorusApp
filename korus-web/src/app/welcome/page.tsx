@@ -22,6 +22,16 @@ export default function WelcomePage() {
   const [showDeveloperTools, setShowDeveloperTools] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
 
+  // True only once the visitor has interacted with the page. A wallet that
+  // reattaches on load does so before any interaction, so `connected` alone
+  // cannot be trusted as "this person chose to connect".
+  const [userConnected, setUserConnected] = useState(false);
+  useEffect(() => {
+    const mark = () => setUserConnected(true);
+    document.addEventListener('pointerdown', mark, true);
+    return () => document.removeEventListener('pointerdown', mark, true);
+  }, []);
+
   // A client-side navigation back to /welcome does not remount the root wallet
   // provider. Treat it exactly like a fresh visit: forget the active adapter
   // and the in-memory auth token before exposing the connection controls.
@@ -197,8 +207,12 @@ export default function WelcomePage() {
 
                 {/* Step 2: sign a message to prove ownership. Only ever fires
                     from this click — a silently reattached wallet can never
-                    trigger a signature prompt on its own. */}
-                {mounted && connected && !isAuthenticated && (
+                    trigger a signature prompt on its own.
+                    Gated on userConnected, not `connected`: an extension that
+                    still trusts this site reattaches on load, and showing a
+                    sign-in prompt for a wallet the visitor never chose is the
+                    same problem as showing their address. */}
+                {mounted && userConnected && connected && !isAuthenticated && (
                   <div className="mt-4 flex flex-col items-center gap-2">
                     <button
                       onClick={() => authenticate()}
@@ -273,7 +287,7 @@ export default function WelcomePage() {
               <p className="text-[var(--color-text-secondary)] text-sm mb-4">
                 Already have an account? Your wallet is your login.
               </p>
-              {connected ? (
+              {isAuthenticated ? (
                 <Link
                   href="/"
                   className="transition-colors text-sm font-medium hover:underline"

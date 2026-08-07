@@ -1,6 +1,7 @@
 'use client';
 
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 import { CustomWalletButton } from './CustomWalletButton';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -19,7 +20,11 @@ export default function Header({
   onSettingsClick
 }: HeaderProps) {
   const { connected, publicKey } = useWallet();
+  const { isAuthenticated } = useWalletAuth();
   const router = useRouter();
+  // A trusted extension reattaches on load, so `connected` alone would show a
+  // wallet the visitor never chose. Identity UI requires a signed-in session.
+  const signedIn = connected && isAuthenticated;
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -48,7 +53,7 @@ export default function Header({
         <div className="flex justify-between items-center h-16 max-w-7xl mx-auto gap-6">
           {/* Left: Profile Icon + Logo */}
           <div className="flex items-center gap-4">
-            {connected && (
+            {signedIn && (
               <button
                 onClick={onProfileClick}
                 className="w-10 h-10 rounded-full bg-gradient-to-br from-korus-primary to-korus-secondary flex items-center justify-center text-black font-bold border-2 border-korus-primary/40 hover:scale-110 transition-transform flex-shrink-0"
@@ -104,7 +109,7 @@ export default function Header({
           {/* Right: Connected Wallet Display + Settings + Wallet Button */}
           <div className="flex items-center gap-3 flex-shrink-0">
             {/* Connected Wallet Address Display */}
-            {connected && publicKey && (
+            {signedIn && publicKey && (
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-korus-primary/10 to-korus-secondary/10 border border-korus-primary/30">
                 <span className="text-xs text-[#a1a1a1]">Connected:</span>
                 <code className="text-xs font-mono text-korus-primary font-semibold">
@@ -113,7 +118,7 @@ export default function Header({
               </div>
             )}
 
-            {connected && onSettingsClick && (
+            {signedIn && onSettingsClick && (
               <button
                 onClick={onSettingsClick}
                 className="w-10 h-10 rounded-full bg-gradient-to-br from-korus-primary/20 to-korus-secondary/20 flex items-center justify-center hover:scale-110 transition-transform border border-korus-primary/20"

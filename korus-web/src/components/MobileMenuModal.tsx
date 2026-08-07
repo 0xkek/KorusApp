@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import Image from 'next/image';
 import { nftsAPI } from '@/lib/api';
-import { useAuthStore } from '@/stores/authStore';
+import { useWalletAuth } from '@/contexts/WalletAuthContext';
 
 interface TabItem {
   name: string;
@@ -27,7 +27,7 @@ export default function MobileMenuModal({ isOpen, onClose, onNotificationsToggle
   const pathname = usePathname();
   const router = useRouter();
   const { connected, publicKey } = useWallet();
-  const { token, isAuthenticated } = useAuthStore();
+  const { token, isAuthenticated } = useWalletAuth();
   const modalRef = useFocusTrap(isOpen);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
@@ -237,7 +237,7 @@ export default function MobileMenuModal({ isOpen, onClose, onNotificationsToggle
         </div>
 
         {/* User Profile Section */}
-        {connected && publicKey && (
+        {connected && isAuthenticated && publicKey && (
           <div className="p-4 border-t border-[var(--color-border-light)] mt-auto">
             <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-korus-primary/10 to-korus-secondary/10 border border-korus-primary/30">
               {userAvatar ? (

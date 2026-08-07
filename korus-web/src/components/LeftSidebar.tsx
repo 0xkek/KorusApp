@@ -30,6 +30,9 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
   const pathname = usePathname();
   const { connected, publicKey } = useWallet();
   const { token, isAuthenticated } = useWalletAuth();
+  // A trusted extension reattaches on load, so `connected` alone would render a
+  // wallet the visitor never chose. Identity UI requires a signed-in session.
+  const signedIn = connected && isAuthenticated;
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [userDisplayName, setUserDisplayName] = useState<string | null>(null);
   const [internalCount, setInternalCount] = useState(0);
@@ -228,7 +231,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
     '5S2AgyEURGvr4f4Lk3AJ6ei9U6RTzh2AthQiRwHWsV2L',
   ];
   const walletAddress = publicKey?.toBase58() || '';
-  if (ADMIN_WALLETS.includes(walletAddress)) {
+  if (signedIn && ADMIN_WALLETS.includes(walletAddress)) {
     tabs.push({
       name: 'Admin',
       path: '/admin',
@@ -499,7 +502,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
       </div>
 
       {/* Post Button */}
-      {connected && onPostButtonClick && (
+      {signedIn && onPostButtonClick && (
         <div style={{ paddingTop: 20 }}>
           <button
             onClick={onPostButtonClick}
@@ -534,7 +537,7 @@ export default function LeftSidebar({ onNotificationsToggle, onPostButtonClick, 
       )}
 
       {/* User Profile */}
-      {connected && publicKey && (
+      {signedIn && publicKey && (
         <div
           className="mt-auto"
           style={{
