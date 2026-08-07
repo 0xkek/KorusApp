@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CustomWalletButton } from '@/components/CustomWalletButton';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
 
 export default function WelcomePage() {
@@ -175,8 +175,12 @@ export default function WelcomePage() {
               <p className="text-[var(--color-text)] text-2xl mb-8 font-semibold">
                 Connect your wallet to get started
               </p>
-              <div className="mb-8">
-                <CustomWalletButton />
+              {/* The stock WalletMultiButton from @solana/wallet-adapter-react-ui,
+                  deliberately unwrapped. Every custom layer between the click
+                  and the adapter has now been removed from this path, so if a
+                  wallet still fails to open it is not Korus code doing it. */}
+              <div className="mb-8 flex justify-center">
+                <WalletMultiButton />
               </div>
 
               <div className="pt-8 border-t border-[var(--color-border-light)]">

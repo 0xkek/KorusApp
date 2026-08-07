@@ -649,6 +649,9 @@ a.bg-gradient-to-br:not(.white-text) * {
   text-decoration: underline;
 }
 
+/* TEMPORARILY DISABLED while isolating the wallet connect failure —
+   restoring the stock adapter theme so no Korus CSS touches the modal.
+
 /* ---------------------------------------------------------------------------
    Solana wallet-adapter modal, restyled to match Korus.
 
@@ -656,7 +659,7 @@ a.bg-gradient-to-br:not(.white-text) * {
    @solana/wallet-adapter-react-ui. Its default theme is light-on-white and
    looks foreign against the dark UI, so its surfaces are overridden here
    rather than by forking the component.
-   --------------------------------------------------------------------------- */
+   --------------------------------------------------------------------------- *\/
 .wallet-adapter-modal-wrapper {
   background: var(--color-surface) !important;
   border: 1px solid var(--color-border-light);
@@ -672,7 +675,7 @@ a.bg-gradient-to-br:not(.white-text) * {
 }
 
 /* Colour only — no layout, sizing or pointer properties, so nothing here can
-   interfere with the modal's own click handling. */
+   interfere with the modal's own click handling. *\/
 .wallet-adapter-modal-list .wallet-adapter-button {
   background: transparent !important;
   color: var(--color-text) !important;
@@ -695,3 +698,5 @@ a.bg-gradient-to-br:not(.white-text) * {
 .wallet-adapter-modal-button-close svg {
   fill: var(--color-text-secondary);
 }
+
+*/
