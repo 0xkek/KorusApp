@@ -8,6 +8,10 @@ import { emitGameCreated, emitGameJoined, emitGameMove, emitGameCompleted } from
 import { createNotification } from '../utils/notifications'
 
 // Move timeout: 10 minutes (matches on-chain MOVE_TIMEOUT_SECONDS = 600)
+// Wagered games are off by default. Set ENABLE_GAME_WAGERS=true to restore
+// them — the escrow contract, payout and refund paths are all still in place.
+const GAME_WAGERS_ENABLED = process.env.ENABLE_GAME_WAGERS === 'true'
+
 const MOVE_TIMEOUT_MS = 10 * 60 * 1000
 
 // RPS best-of-3: first to 2 wins
@@ -81,6 +85,17 @@ export const createGame = async (req: AuthRequest, res: Response) => {
     // Validate game type
     if (!['tictactoe', 'rps', 'connectfour'].includes(gameType)) {
       return res.status(400).json({ success: false, error: 'Invalid game type' })
+    }
+
+    // Wagering is disabled unless explicitly enabled. Enforced here rather than
+    // only in the UI: hiding the input still leaves this endpoint accepting a
+    // wager from any client. Everything below (escrow, payouts, refunds) is
+    // left intact and works again the moment the flag is turned back on.
+    if (Number(wager) > 0 && !GAME_WAGERS_ENABLED) {
+      return res.status(403).json({
+        success: false,
+        error: 'Wagered games are currently disabled. You can still play for free.'
+      })
     }
 
     // For games with wagers, require blockchain game ID
@@ -229,6 +244,16 @@ export const joinGame = async (req: AuthRequest, res: Response) => {
 
     if (game.player1 === player2) {
       return res.status(400).json({ success: false, error: 'Cannot play against yourself' })
+    }
+
+    // Don't let anyone stake SOL on a pre-existing wagered game while wagering
+    // is disabled. Blocking only creation would still leave older wagered games
+    // joinable.
+    if (Number(game.wager) > 0 && !GAME_WAGERS_ENABLED) {
+      return res.status(403).json({
+        success: false,
+        error: 'Wagered games are currently disabled.'
+      })
     }
 
     // Update game to active

@@ -6,6 +6,10 @@ import { io, Socket } from 'socket.io-client';
 import { createPortal } from 'react-dom';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletAuth } from '@/contexts/WalletAuthContext';
+
+// Mirrors ENABLE_GAME_WAGERS on the backend, which is the actual enforcement
+// point. This only decides whether the UI offers a wager at all.
+const GAME_WAGERS_ENABLED = process.env.NEXT_PUBLIC_ENABLE_GAME_WAGERS === 'true';
 import { gamesAPI, type Game, type GameType } from '@/lib/api/games';
 import { useGameEscrow } from '@/hooks/useGameEscrow';
 import { useToast } from '@/hooks/useToast';
@@ -1047,6 +1051,7 @@ export function GamesPage() {
             </div>
 
             {/* Wager Input */}
+            {GAME_WAGERS_ENABLED ? (
             <div className="mb-6">
               <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
                 Wager (SOL)
@@ -1075,6 +1080,13 @@ export function GamesPage() {
                 Set to 0 for a friendly game (no blockchain escrow). Wagered games: 0.01 - 1.0 SOL.
               </p>
             </div>
+            ) : (
+              <div className="mb-6 px-4 py-3 rounded-lg bg-white/[0.04] border border-[var(--color-border-light)]">
+                <p className="text-sm text-[var(--color-text-secondary)]">
+                  Games are free to play — no SOL at stake.
+                </p>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex gap-3">
@@ -1102,7 +1114,7 @@ export function GamesPage() {
                 ) : !connected ? (
                   'Wallet Not Connected'
                 ) : (
-                  `Create Game (${newGame.wager} SOL)`
+                  GAME_WAGERS_ENABLED ? `Create Game (${newGame.wager} SOL)` : 'Create Game'
                 )}
               </button>
             </div>
