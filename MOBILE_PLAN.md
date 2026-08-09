@@ -109,7 +109,7 @@ emulator needs a wallet APK sideloaded — a physical device is far less frictio
 
 ---
 
-## Phase 2 — Read-only app  🟡 MOSTLY DONE (`2ff6be3`)
+## Phase 2 — Read-only app  ✅ DONE (`2ff6be3`, `e2c532a`)
 
 All GET endpoints, no writes, no CSRF involvement. Gets something real on a
 device fast and proves the API layer end to end.
@@ -117,16 +117,25 @@ device fast and proves the API layer end to end.
 - ✅ Feed (`/api/posts`) with cursor pagination and pull-to-refresh
 - ✅ Post detail (`/api/posts/:id`) with stats and replies
 - ✅ Trending (`/api/posts/trending`)
-- ⬜ Profiles (`/api/user/by-wallet/:wallet`) — not built yet
+- ✅ Profiles (`/api/user/by-wallet/:wallet`) with that user's posts
 
-Verified on a Solana Seeker against production: feed, tab switch, post detail
-and back navigation all render real data.
+Verified on a Solana Seeker against production: feed, tab switch, post detail,
+profile and back navigation all render real data.
 
 Port `lib/api/` verbatim; rebuild the UI against `~/Desktop/KorusApp` as a
 visual reference.
 
 ### Gotchas found here
 
+- **Verify response shapes against production, not against the web app's
+  types.** Both traps below were found by curling the live API, and neither is
+  visible in `korus-web`'s TypeScript.
+- A user's posts filter on **`authorWallet`**. The obvious-looking `author` is
+  silently ignored and returns the *unfiltered* feed — it looks like it works.
+- **`nftAvatar` is not always a URL.** The posts endpoints resolve it to an
+  image URL; `/api/user/by-wallet` returns the raw NFT **mint address**. Passing
+  a mint to `<Image>` fails silently. Use `resolveAvatarUrl()` in
+  `src/api/types.ts`, which accepts only `http(s)`.
 - `SafeAreaView` from `react-native` is deprecated and applies **no top inset
   on Android** — the status bar overlapped the header. Fixed with
   `StatusBar.currentHeight`; `react-native-safe-area-context` is the better fix
