@@ -2,6 +2,7 @@ import prisma from '../config/database';
 import { logger } from './logger';
 import { emitNotification } from '../config/socket';
 import { sendWebPush } from '../services/webPushService';
+import { sendExpoPush } from '../services/pushNotificationService';
 
 export async function createNotification({
   userId,
@@ -85,6 +86,15 @@ export async function createNotification({
       // Collapse repeat notifications of the same kind rather than stacking.
       tag: `korus-${type}`,
     }).catch(err => logger.error('Web push dispatch failed:', err));
+
+    // Expo push for the mobile app. Distinct from the browser push above:
+    // that targets webPushSubscription, this targets pushToken. Same
+    // fire-and-forget rule — delivery must never block the action.
+    sendExpoPush(userId, {
+      title: titles[type] || 'New notification',
+      body: `${displayName} ${messages[type] || 'had some activity'}`,
+      data: { type, postId: postId ?? null, fromUserId },
+    }).catch(err => logger.error('Expo push dispatch failed:', err));
   } catch (error) {
     logger.error('Error creating notification:', error);
   }

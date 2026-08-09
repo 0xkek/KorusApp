@@ -244,3 +244,36 @@ class PushNotificationService {
 }
 
 export const pushNotificationService = new PushNotificationService();
+
+/**
+ * Send an Expo push to a wallet, if that user has a mobile token and has not
+ * turned notifications off.
+ *
+ * Mirrors sendWebPush: resolve wallet -> token here so callers do not have to
+ * know about tokens, and never throw — notification delivery must not be able
+ * to fail the action that triggered it.
+ */
+export async function sendExpoPush(
+  walletAddress: string,
+  payload: { title: string; body: string; data?: any }
+): Promise<boolean> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { walletAddress },
+      select: { pushToken: true, pushNotificationsEnabled: true },
+    });
+
+    if (!user?.pushNotificationsEnabled || !user.pushToken) return false;
+
+    await pushNotificationService.sendNotification({
+      to: user.pushToken,
+      title: payload.title,
+      body: payload.body,
+      data: payload.data,
+    });
+    return true;
+  } catch (error) {
+    logger.error('Expo push failed:', error);
+    return false;
+  }
+}
