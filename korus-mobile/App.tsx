@@ -134,6 +134,11 @@ function KorusApp() {
               await auth.refreshProfile();
               afterWrite();
             }}
+            // The pickers save on selection; refresh in place rather than
+            // navigating away mid-edit.
+            onChanged={() => {
+              void auth.refreshProfile();
+            }}
           />
         ) : screen.name === 'post' ? (
           <PostDetailScreen

@@ -12,6 +12,8 @@ import {
   View,
 } from 'react-native';
 import { usersAPI, validateUsername } from '../api/users';
+import { IdentityPicker } from '../components/IdentityPicker';
+import { AvatarPicker } from '../components/AvatarPicker';
 import type { UserProfile } from '../api/types';
 import { theme } from '../theme';
 
@@ -22,6 +24,9 @@ interface Props {
   canSetUsername: boolean;
   onBack: () => void;
   onSaved: () => void;
+  /** Refresh the cached profile without leaving this screen — the pickers save
+   *  immediately, and onSaved navigates away. */
+  onChanged?: () => void;
 }
 
 export function EditProfileScreen({
@@ -30,12 +35,19 @@ export function EditProfileScreen({
   canSetUsername,
   onBack,
   onSaved,
+  onChanged,
 }: Props) {
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState(profile?.bio ?? '');
   const [location, setLocation] = useState(profile?.location ?? '');
   const [website, setWebsite] = useState(profile?.website ?? '');
   const [twitter, setTwitter] = useState(profile?.twitter ?? '');
+  // Identity and avatar save immediately on pick rather than waiting for Save —
+  // they are single choices from a sheet, not free text being composed.
+  const [snsUsername, setSnsUsername] = useState(profile?.snsUsername ?? '');
+  const [nftAvatar, setNftAvatar] = useState(profile?.nftAvatar ?? '');
+  const [showIdentity, setShowIdentity] = useState(false);
+  const [showAvatar, setShowAvatar] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -85,6 +97,17 @@ export function EditProfileScreen({
     }
   }
 
+  /** Both pickers write a single field and close, so they save on the spot. */
+  async function saveChoice(fields: Record<string, string>, onDone: () => void) {
+    setError(null);
+    try {
+      await usersAPI.updateProfile(fields, token);
+      onDone();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save that');
+    }
+  }
+
   function confirmSave() {
     // Setting a username is irreversible on a free account, so make that
     // explicit before spending it.
@@ -130,6 +153,26 @@ export function EditProfileScreen({
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {error ? <Text style={styles.error}>{error}</Text> : null}
+
+        <Text style={styles.label}>Avatar</Text>
+        <Pressable onPress={() => setShowAvatar(true)} style={styles.pickerRow}>
+          <Text style={styles.pickerValue}>
+            {nftAvatar ? 'NFT selected' : 'None — tap to choose an NFT'}
+          </Text>
+          <Text style={styles.pickerChevron}>›</Text>
+        </Pressable>
+
+        <Text style={styles.label}>Display identity</Text>
+        <Pressable onPress={() => setShowIdentity(true)} style={styles.pickerRow}>
+          <Text style={styles.pickerValue}>
+            {profile?.username
+              ? `@${profile.username}`
+              : snsUsername && snsUsername !== '__wallet__'
+                ? snsUsername
+                : 'Wallet address'}
+          </Text>
+          <Text style={styles.pickerChevron}>›</Text>
+        </Pressable>
 
         <Text style={styles.label}>Username</Text>
         {profile?.username ? (
@@ -210,6 +253,35 @@ export function EditProfileScreen({
           limitation, not a bug here.
         </Text>
       </ScrollView>
+
+      <IdentityPicker
+        visible={showIdentity}
+        walletAddress={profile?.walletAddress ?? ''}
+        current={snsUsername}
+        username={profile?.username ?? null}
+        onClose={() => setShowIdentity(false)}
+        onSelect={(value) =>
+          saveChoice({ snsUsername: value }, () => {
+            setSnsUsername(value);
+            setShowIdentity(false);
+            onChanged?.();
+          })
+        }
+      />
+
+      <AvatarPicker
+        visible={showAvatar}
+        walletAddress={profile?.walletAddress ?? ''}
+        currentMint={nftAvatar}
+        onClose={() => setShowAvatar(false)}
+        onSelect={(mint) =>
+          saveChoice({ nftAvatar: mint }, () => {
+            setNftAvatar(mint);
+            setShowAvatar(false);
+            onChanged?.();
+          })
+        }
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -248,6 +320,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   inputError: { borderColor: theme.error },
+  pickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: theme.surface,
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+  },
+  pickerValue: { color: theme.text, fontSize: 15, flex: 1 },
+  pickerChevron: { color: theme.textTertiary, fontSize: 20 },
   multiline: { minHeight: 100, textAlignVertical: 'top' },
   hint: { color: theme.textTertiary, fontSize: 12, marginTop: 6 },
   hintError: { color: theme.error, fontSize: 12, marginTop: 6 },
