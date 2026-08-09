@@ -63,6 +63,24 @@ classes, no `next/image`. But the valuable layer moves over nearly unchanged:
 
 ---
 
+## Phase 1 — ✅ DONE (verified on a Seeker, 2026-08-09)
+
+Signed in as `DCsN…vuRf` against the production backend. User count went 7 → 8,
+so a real account was created — not just a token echoed back.
+
+Both MWA details flagged as risky were handled correctly on the first attempt:
+- Addresses arrive **base64**, not base58 → converted via `PublicKey`
+- `signMessages` returns the payload with the signature **appended** → last 64
+  bytes sliced off
+
+Build notes for repeating this:
+- Use `./node_modules/.bin/expo`, never the global `expo-cli` — the global one
+  resolves `package.json` from the monorepo root and fails.
+- First Gradle build takes >10 min; run it in the background.
+- Debug builds need Metro running plus `adb reverse tcp:8081 tcp:8081`.
+
+---
+
 ## Phase 1 — Prove the wallet path (do this alone, first)
 
 **Goal:** one screen that connects a wallet, signs, authenticates against the
