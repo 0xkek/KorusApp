@@ -8,6 +8,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { followsAPI } from '../api/follows';
 import { postsAPI } from '../api/posts';
 import { usersAPI } from '../api/users';
 import type { Post, UserProfile } from '../api/types';
@@ -21,9 +22,20 @@ interface Props {
   onOpenPost: (post: Post) => void;
   /** Signed-in user viewing themselves — gates the profile-setup note. */
   isOwnProfile?: boolean;
+  token?: string | null;
+  onEditProfile?: () => void;
 }
 
-export function ProfileScreen({ walletAddress, onBack, onOpenPost, isOwnProfile }: Props) {
+export function ProfileScreen({
+  walletAddress,
+  onBack,
+  onOpenPost,
+  isOwnProfile,
+  token,
+  onEditProfile,
+}: Props) {
+  const [following, setFollowing] = useState(false);
+  const [followBusy, setFollowBusy] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -62,6 +74,49 @@ export function ProfileScreen({ walletAddress, onBack, onOpenPost, isOwnProfile 
       cancelled = true;
     };
   }, [walletAddress]);
+
+  // Whether the signed-in user already follows this profile.
+  useEffect(() => {
+    if (!token || isOwnProfile) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await followsAPI.checkFollowing([walletAddress], token);
+        if (!cancelled) setFollowing(Boolean(res.following?.[walletAddress]));
+      } catch {
+        // Non-fatal — the button just starts as "Follow".
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [token, walletAddress, isOwnProfile]);
+
+  const toggleFollow = useCallback(async () => {
+    if (!token || followBusy) return;
+    setFollowBusy(true);
+    const previous = following;
+    setFollowing(!previous); // optimistic
+    try {
+      const res = await followsAPI.toggleFollow(walletAddress, token);
+      setFollowing(res.following); // server's resulting state wins
+      setProfile((p) =>
+        p
+          ? {
+              ...p,
+              followerCount: Math.max(
+                0,
+                (p.followerCount ?? 0) + (res.following ? 1 : -1)
+              ),
+            }
+          : p
+      );
+    } catch {
+      setFollowing(previous);
+    } finally {
+      setFollowBusy(false);
+    }
+  }, [token, walletAddress, following, followBusy]);
 
   const loadMore = useCallback(async () => {
     if (!hasMore || loadingMore || !cursor) return;
@@ -145,6 +200,31 @@ export function ProfileScreen({ walletAddress, onBack, onOpenPost, isOwnProfile 
                   <Text style={styles.wallet}>{shortAddress(walletAddress)}</Text>
                 </View>
               </View>
+
+              {isOwnProfile && token ? (
+                <Pressable onPress={onEditProfile} style={styles.secondaryButton}>
+                  <Text style={styles.secondaryButtonText}>Edit profile</Text>
+                </Pressable>
+              ) : token ? (
+                <Pressable
+                  onPress={toggleFollow}
+                  disabled={followBusy}
+                  style={[styles.followButton, following && styles.followingButton]}
+                >
+                  {followBusy ? (
+                    <ActivityIndicator size="small" color={following ? theme.text : '#000'} />
+                  ) : (
+                    <Text
+                      style={[
+                        styles.followButtonText,
+                        following && styles.followingButtonText,
+                      ]}
+                    >
+                      {following ? 'Following' : 'Follow'}
+                    </Text>
+                  )}
+                </Pressable>
+              ) : null}
 
               {profile?.bio ? <Text style={styles.bio}>{profile.bio}</Text> : null}
 
@@ -236,6 +316,29 @@ const styles = StyleSheet.create({
   star: { color: '#fbbf24', fontSize: 15 },
   wallet: { color: theme.textTertiary, fontSize: 13, marginTop: 2 },
   nameUnset: { color: theme.textTertiary, fontWeight: '600' },
+  secondaryButton: {
+    marginTop: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: theme.border,
+    alignItems: 'center',
+  },
+  secondaryButtonText: { color: theme.text, fontWeight: '600', fontSize: 14 },
+  followButton: {
+    marginTop: 16,
+    paddingVertical: 11,
+    borderRadius: 10,
+    backgroundColor: theme.mint,
+    alignItems: 'center',
+  },
+  followingButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: theme.border,
+  },
+  followButtonText: { color: '#000', fontWeight: '700', fontSize: 14 },
+  followingButtonText: { color: theme.text },
   bio: { color: theme.textSecondary, fontSize: 15, lineHeight: 21, marginTop: 14 },
   setupNote: {
     color: theme.textTertiary,

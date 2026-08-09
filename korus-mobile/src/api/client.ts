@@ -46,7 +46,10 @@ interface RequestOptions extends Omit<RequestInit, 'body'> {
 
 export async function apiRequest<T>(
   endpoint: string,
-  options: RequestOptions = {}
+  options: RequestOptions = {},
+  // Internal: set when replaying a request after a rejected CSRF token, to
+  // guarantee we never loop.
+  isCsrfRetry = false
 ): Promise<T> {
   const { token, body, ...rest } = options;
   const method = (rest.method ?? 'GET').toUpperCase();
@@ -80,7 +83,17 @@ export async function apiRequest<T>(
     const message =
       (data && (data.error?.message ?? data.error ?? data.message)) ||
       `Request failed (${response.status})`;
-    throw new Error(typeof message === 'string' ? message : JSON.stringify(message));
+    const messageText = typeof message === 'string' ? message : JSON.stringify(message);
+
+    // The CSRF token is cached for the life of the app run, so a server
+    // restart or expiry would otherwise wedge every write until the app is
+    // relaunched. Drop the cached token and replay once.
+    if (isStateChanging && !isCsrfRetry && response.status === 403 && /csrf/i.test(messageText)) {
+      csrfToken = null;
+      return apiRequest<T>(endpoint, options, true);
+    }
+
+    throw new Error(messageText);
   }
 
   return data as T;
@@ -91,4 +104,8 @@ export const api = {
     apiRequest<T>(endpoint, { method: 'GET', token }),
   post: <T>(endpoint: string, body?: unknown, token?: string | null) =>
     apiRequest<T>(endpoint, { method: 'POST', body, token }),
+  put: <T>(endpoint: string, body?: unknown, token?: string | null) =>
+    apiRequest<T>(endpoint, { method: 'PUT', body, token }),
+  delete: <T>(endpoint: string, token?: string | null) =>
+    apiRequest<T>(endpoint, { method: 'DELETE', token }),
 };

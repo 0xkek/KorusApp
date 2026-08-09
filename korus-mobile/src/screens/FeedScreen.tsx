@@ -18,10 +18,22 @@ type Tab = 'home' | 'trending';
 interface Props {
   onOpenPost: (post: Post) => void;
   onOpenProfile?: (walletAddress: string) => void;
+  onReply?: (post: Post) => void;
   header?: React.ReactElement;
+  /** Null when signed out — likes and replies then render as plain counts. */
+  token?: string | null;
+  /** Bumped by the parent after a write, to force a refetch. */
+  refreshKey?: number;
 }
 
-export function FeedScreen({ onOpenPost, onOpenProfile, header }: Props) {
+export function FeedScreen({
+  onOpenPost,
+  onOpenProfile,
+  onReply,
+  header,
+  token,
+  refreshKey = 0,
+}: Props) {
   const [tab, setTab] = useState<Tab>('home');
   const [posts, setPosts] = useState<Post[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -30,6 +42,83 @@ export function FeedScreen({ onOpenPost, onOpenProfile, header }: Props) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Which posts the signed-in user has liked. Loaded in a batch after each
+  // page, since the posts endpoints do not include per-viewer state.
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+
+  /** Fetch like state for a batch of posts. Silent on failure — worst case the
+   *  hearts render hollow until the next refresh. */
+  const loadInteractions = useCallback(
+    async (batch: Post[]) => {
+      if (!token || batch.length === 0) return;
+      try {
+        const res = await postsAPI.getUserInteractions(
+          batch.map((p) => p.id),
+          token
+        );
+        setLikedIds((prev) => {
+          const next = new Set(prev);
+          Object.entries(res.interactions ?? {}).forEach(([id, state]) => {
+            if (state?.liked) next.add(id);
+            else next.delete(id);
+          });
+          return next;
+        });
+      } catch {
+        // Non-fatal.
+      }
+    },
+    [token]
+  );
+
+  const toggleLike = useCallback(
+    async (post: Post) => {
+      if (!token) return;
+      const wasLiked = likedIds.has(post.id);
+
+      // Optimistic — a like should feel instant.
+      setLikedIds((prev) => {
+        const next = new Set(prev);
+        if (wasLiked) next.delete(post.id);
+        else next.add(post.id);
+        return next;
+      });
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === post.id
+            ? { ...p, likeCount: Math.max(0, (p.likeCount ?? 0) + (wasLiked ? -1 : 1)) }
+            : p
+        )
+      );
+
+      try {
+        const res = await postsAPI.toggleLike(post.id, token);
+        // Trust the server's resulting state over our guess.
+        setLikedIds((prev) => {
+          const next = new Set(prev);
+          if (res.liked) next.add(post.id);
+          else next.delete(post.id);
+          return next;
+        });
+      } catch {
+        // Roll back both the flag and the count.
+        setLikedIds((prev) => {
+          const next = new Set(prev);
+          if (wasLiked) next.add(post.id);
+          else next.delete(post.id);
+          return next;
+        });
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === post.id
+              ? { ...p, likeCount: Math.max(0, (p.likeCount ?? 0) + (wasLiked ? 1 : -1)) }
+              : p
+          )
+        );
+      }
+    },
+    [likedIds, token]
+  );
 
   const load = useCallback(
     async (mode: 'initial' | 'refresh' | 'more', activeTab: Tab) => {
@@ -48,6 +137,7 @@ export function FeedScreen({ onOpenPost, onOpenProfile, header }: Props) {
           });
           setPosts((prev) => (mode === 'more' ? [...prev, ...res.posts] : res.posts));
           setHasMore(res.pagination?.hasMore ?? false);
+          void loadInteractions(res.posts);
         } else {
           const res = await postsAPI.getPosts({
             limit: 20,
@@ -56,6 +146,7 @@ export function FeedScreen({ onOpenPost, onOpenProfile, header }: Props) {
           setPosts((prev) => (mode === 'more' ? [...prev, ...res.posts] : res.posts));
           setCursor(res.meta?.nextCursor ?? null);
           setHasMore(res.meta?.hasMore ?? false);
+          void loadInteractions(res.posts);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load posts');
@@ -65,24 +156,32 @@ export function FeedScreen({ onOpenPost, onOpenProfile, header }: Props) {
         setLoadingMore(false);
       }
     },
-    [cursor, hasMore, loadingMore, posts.length]
+    [cursor, hasMore, loadingMore, posts.length, loadInteractions]
   );
 
-  // Reset and reload whenever the tab changes.
+  // Reset and reload whenever the tab changes, when the parent signals a write
+  // landed, or when sign-in state changes (which gates like state).
   useEffect(() => {
     setPosts([]);
     setCursor(null);
     setHasMore(false);
     load('initial', tab);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab]);
+  }, [tab, refreshKey, token]);
 
   return (
     <FlatList
       data={posts}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => (
-        <PostCard post={item} onPress={onOpenPost} onPressAuthor={onOpenProfile} />
+        <PostCard
+          post={item}
+          onPress={onOpenPost}
+          onPressAuthor={onOpenProfile}
+          onToggleLike={token ? toggleLike : undefined}
+          onReply={token && onReply ? onReply : undefined}
+          liked={likedIds.has(item.id)}
+        />
       )}
       style={styles.list}
       ListHeaderComponent={

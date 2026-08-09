@@ -8,9 +8,13 @@ interface Props {
   post: Post;
   onPress?: (post: Post) => void;
   onPressAuthor?: (walletAddress: string) => void;
+  /** Omitted when signed out — the actions then render as plain counts. */
+  onToggleLike?: (post: Post) => void;
+  onReply?: (post: Post) => void;
+  liked?: boolean;
 }
 
-function PostCardBase({ post, onPress, onPressAuthor }: Props) {
+function PostCardBase({ post, onPress, onPressAuthor, onToggleLike, onReply, liked }: Props) {
   // A repost renders the original's content with a "reposted" line above it.
   const source = post.isRepost && post.originalPost ? post.originalPost : post;
   const author = source.author;
@@ -77,8 +81,24 @@ function PostCardBase({ post, onPress, onPressAuthor }: Props) {
           ) : null}
 
           <View style={styles.stats}>
-            <Text style={styles.stat}>{source.replyCount ?? 0} replies</Text>
-            <Text style={styles.stat}>{source.likeCount ?? 0} likes</Text>
+            <Pressable
+              onPress={onReply ? () => onReply(source) : undefined}
+              hitSlop={8}
+              disabled={!onReply}
+            >
+              <Text style={styles.stat}>{source.replyCount ?? 0} replies</Text>
+            </Pressable>
+
+            <Pressable
+              onPress={onToggleLike ? () => onToggleLike(source) : undefined}
+              hitSlop={8}
+              disabled={!onToggleLike}
+            >
+              <Text style={[styles.stat, liked && styles.statLiked]}>
+                {liked ? '♥' : '♡'} {source.likeCount ?? 0}
+              </Text>
+            </Pressable>
+
             <Text style={styles.stat}>{source.repostCount ?? 0} reposts</Text>
             {Number(source.tipAmount) > 0 && (
               <Text style={styles.tip}>{Number(source.tipAmount).toFixed(2)} SOL</Text>
@@ -126,5 +146,6 @@ const styles = StyleSheet.create({
   },
   stats: { flexDirection: 'row', gap: 14, marginTop: 10, alignItems: 'center' },
   stat: { color: theme.textTertiary, fontSize: 13 },
+  statLiked: { color: '#f87171' },
   tip: { color: theme.mint, fontSize: 13, fontWeight: '600' },
 });

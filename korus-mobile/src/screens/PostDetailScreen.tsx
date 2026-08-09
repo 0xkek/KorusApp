@@ -17,9 +17,11 @@ interface Props {
   postId: string;
   onBack: () => void;
   onOpenProfile?: (walletAddress: string) => void;
+  onReply?: (postId: string) => void;
+  token?: string | null;
 }
 
-export function PostDetailScreen({ postId, onBack, onOpenProfile }: Props) {
+export function PostDetailScreen({ postId, onBack, onOpenProfile, onReply, token }: Props) {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -109,6 +111,12 @@ export function PostDetailScreen({ postId, onBack, onOpenProfile }: Props) {
             <Stat value={Number(post.tipAmount) || 0} label="SOL tipped" />
           </View>
 
+          {token && onReply ? (
+            <Pressable onPress={() => onReply(postId)} style={styles.replyButton}>
+              <Text style={styles.replyButtonText}>Write a reply</Text>
+            </Pressable>
+          ) : null}
+
           <Text style={styles.repliesHeader}>
             {post.replies?.length
               ? `${post.replies.length} ${post.replies.length === 1 ? 'reply' : 'replies'}`
@@ -181,6 +189,15 @@ const styles = StyleSheet.create({
   stat: { alignItems: 'flex-start' },
   statValue: { color: theme.text, fontSize: 17, fontWeight: '700' },
   statLabel: { color: theme.textTertiary, fontSize: 12, marginTop: 2 },
+  replyButton: {
+    marginTop: 18,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: theme.border,
+    alignItems: 'center',
+  },
+  replyButtonText: { color: theme.mint, fontWeight: '600', fontSize: 14 },
   repliesHeader: {
     color: theme.textTertiary,
     fontSize: 14,

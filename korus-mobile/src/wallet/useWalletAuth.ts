@@ -19,6 +19,8 @@ import bs58 from 'bs58';
 // so this file typechecks without pulling in Node types.
 import { Buffer } from 'buffer';
 import { api } from '../api/client';
+import { usersAPI } from '../api/users';
+import type { UserProfile } from '../api/types';
 
 // Shown in the wallet's approval sheet.
 const APP_IDENTITY = {
@@ -44,6 +46,8 @@ export interface WalletAuthState {
   walletAddress: string | null;
   token: string | null;
   user: AuthResponse['user'] | null;
+  /** Full profile, fetched after sign-in and refetched after profile edits. */
+  profile: UserProfile | null;
   isBusy: boolean;
   error: string | null;
 }
@@ -53,6 +57,7 @@ export function useWalletAuth() {
     walletAddress: null,
     token: null,
     user: null,
+    profile: null,
     isBusy: false,
     error: null,
   });
@@ -103,9 +108,17 @@ export function useWalletAuth() {
         walletAddress: result.walletAddress,
         token: response.token,
         user: response.user,
+        profile: null,
         isBusy: false,
         error: null,
       });
+
+      // Non-blocking: the feed is usable before this lands, and it only feeds
+      // the profile/edit screens.
+      usersAPI
+        .getMyProfile(response.token)
+        .then((res) => setState((s) => (s.token ? { ...s, profile: res.user } : s)))
+        .catch(() => {});
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       // Dismissing the wallet sheet is a normal action, not an error worth
@@ -131,7 +144,9 @@ export function useWalletAuth() {
    * let the UI explain rather than silently showing a signed-out header.
    */
   const wasSignedIn = useRef(false);
+  const tokenRef = useRef<string | null>(null);
   useEffect(() => {
+    tokenRef.current = state.token;
     if (state.token) wasSignedIn.current = true;
   }, [state.token]);
 
@@ -155,10 +170,23 @@ export function useWalletAuth() {
       walletAddress: null,
       token: null,
       user: null,
+      profile: null,
       isBusy: false,
       error: null,
     });
   }, []);
 
-  return { ...state, connectAndSignIn, signOut };
+  /** Refetch after a profile edit so the UI reflects what was saved. */
+  const refreshProfile = useCallback(async () => {
+    const token = tokenRef.current;
+    if (!token) return;
+    try {
+      const res = await usersAPI.getMyProfile(token);
+      setState((cur) => (cur.token ? { ...cur, profile: res.user } : cur));
+    } catch {
+      // Non-fatal — the save already succeeded.
+    }
+  }, []);
+
+  return { ...state, connectAndSignIn, signOut, refreshProfile };
 }

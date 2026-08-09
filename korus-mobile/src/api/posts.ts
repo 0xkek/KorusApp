@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { PostsResponse, SinglePostResponse, TrendingResponse } from './types';
+import type { Post, PostsResponse, SinglePostResponse, TrendingResponse } from './types';
 
 export const postsAPI = {
   /** Main feed. Cursor pagination — pass meta.nextCursor to page forward. */
@@ -24,6 +24,43 @@ export const postsAPI = {
     if (params.cursor) q.set('cursor', params.cursor);
     return api.get<PostsResponse>(`/api/posts?${q.toString()}`);
   },
+
+  /** Create a post. Auth required. */
+  createPost: (data: { content: string; imageUrl?: string }, token: string) =>
+    api.post<{ success: boolean; data?: Post; post?: Post }>('/api/posts', data, token),
+
+  /** Reply to a post. Auth required. */
+  createReply: (postId: string, content: string, token: string) =>
+    api.post<{ success: boolean; reply?: unknown; data?: unknown }>(
+      `/api/posts/${postId}/replies`,
+      { content },
+      token
+    ),
+
+  /**
+   * Like is a toggle — the same POST likes and unlikes. The response's `liked`
+   * field is the resulting state, so trust it rather than assuming the flip.
+   */
+  toggleLike: (postId: string, token: string) =>
+    api.post<{ success: boolean; liked: boolean; message: string }>(
+      `/api/interactions/posts/${postId}/like`,
+      {},
+      token
+    ),
+
+  /** Repost. Auth required. */
+  repost: (postId: string, token: string) =>
+    api.post<{ success: boolean }>(`/api/interactions/posts/${postId}/repost`, {}, token),
+
+  /**
+   * Which of these posts the signed-in user has already liked/tipped/reposted.
+   * Without this the feed cannot render like state correctly on load.
+   */
+  getUserInteractions: (postIds: string[], token: string) =>
+    api.post<{
+      success: boolean;
+      interactions: Record<string, { liked: boolean; tipped: boolean; reposted: boolean }>;
+    }>('/api/interactions/user', { postIds }, token),
 
   /** Trending uses offset, not cursor. */
   getTrending: (params: { limit?: number; offset?: number } = {}) => {
