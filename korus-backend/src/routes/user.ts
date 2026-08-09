@@ -4,6 +4,7 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 import { validateUsername, normalizeUsername } from '../utils/usernameValidation';
 import { logger } from '../utils/logger';
 import { usernameLimiter } from '../middleware/rateLimiter';
+import { userCache } from '../utils/cache';
 
 const router = Router();
 
@@ -114,12 +115,16 @@ router.post('/username', usernameLimiter, authenticate, async (req: AuthRequest,
       select: { username: true }
     });
 
+    // Same cached profile as above — without this the new username does not
+    // show up on a re-read.
+    await userCache.delete(`user-profile:${userWallet}`);
+
     logger.log(`Username set for ${userWallet}: ${normalizedUsername}`);
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       username: updatedUser.username,
-      message: 'Username updated successfully' 
+      message: 'Username updated successfully'
     });
   } catch (error) {
     logger.error('Error setting username:', error);
@@ -287,6 +292,11 @@ router.put('/profile', authenticate, async (req: AuthRequest, res) => {
         createdAt: true
       }
     });
+
+    // GET /api/auth/profile caches under this key. Without invalidating here,
+    // saving a profile returned the new values but every subsequent read gave
+    // back the stale cached ones — edits looked like they had been discarded.
+    await userCache.delete(`user-profile:${userWallet}`);
 
     logger.log(`Profile updated for ${userWallet}`);
 

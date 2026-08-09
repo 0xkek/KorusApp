@@ -16,11 +16,19 @@ export interface Author {
 }
 
 /**
- * GET /api/user/by-wallet/:wallet.
+ * A user profile.
  *
- * Deliberately narrower than the web app's UserProfile: production omits
- * themeColor, location, website and twitter here, so they are not declared.
- * `nftAvatar` is a raw mint address on this endpoint — see resolveAvatarUrl.
+ * Two endpoints return this and they do NOT return the same fields —
+ * verified against production:
+ *   - GET /api/user/by-wallet/:wallet (public) omits location, website,
+ *     twitter and themeColor, and returns `nftAvatar` as a raw NFT mint
+ *     address rather than a URL. See resolveAvatarUrl.
+ *   - GET /api/auth/profile (your own) returns the full row.
+ * The extra fields are therefore optional rather than nullable.
+ *
+ * `displayName` exists in the database but the product never renders it —
+ * identity is username, then SNS handle, then wallet. It is declared only
+ * because the API returns it.
  */
 export interface UserProfile {
   walletAddress: string;
@@ -34,6 +42,10 @@ export interface UserProfile {
   followerCount: number | null;
   followingCount: number | null;
   createdAt: string | null;
+  location?: string | null;
+  website?: string | null;
+  twitter?: string | null;
+  themeColor?: string | null;
 }
 
 export interface Post {

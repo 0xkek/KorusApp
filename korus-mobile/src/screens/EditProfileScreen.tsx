@@ -32,8 +32,10 @@ export function EditProfileScreen({
   onSaved,
 }: Props) {
   const [username, setUsername] = useState('');
-  const [displayName, setDisplayName] = useState(profile?.displayName ?? '');
   const [bio, setBio] = useState(profile?.bio ?? '');
+  const [location, setLocation] = useState(profile?.location ?? '');
+  const [website, setWebsite] = useState(profile?.website ?? '');
+  const [twitter, setTwitter] = useState(profile?.twitter ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,6 +46,13 @@ export function EditProfileScreen({
 
     if (username.trim() && usernameError) {
       setError(usernameError);
+      return;
+    }
+
+    // The backend 400s on a website without a scheme; catch it before the
+    // round trip rather than after.
+    if (website.trim() && !/^https?:\/\/.+/.test(website.trim())) {
+      setError('Website must start with http:// or https://');
       return;
     }
 
@@ -58,8 +67,11 @@ export function EditProfileScreen({
       // The backend ignores empty strings (value || undefined), so only send
       // fields that actually have content — clearing is not supported.
       const profileFields: Record<string, string> = {};
-      if (displayName.trim()) profileFields.displayName = displayName.trim();
       if (bio.trim()) profileFields.bio = bio.trim();
+      if (location.trim()) profileFields.location = location.trim();
+      if (website.trim()) profileFields.website = website.trim();
+      // The backend stores the handle without the @.
+      if (twitter.trim()) profileFields.twitter = twitter.trim().replace(/^@/, '');
 
       if (Object.keys(profileFields).length > 0) {
         await usersAPI.updateProfile(profileFields, token);
@@ -92,8 +104,10 @@ export function EditProfileScreen({
 
   const hasChanges =
     Boolean(username.trim()) ||
-    displayName.trim() !== (profile?.displayName ?? '') ||
-    bio.trim() !== (profile?.bio ?? '');
+    bio.trim() !== (profile?.bio ?? '') ||
+    location.trim() !== (profile?.location ?? '') ||
+    website.trim() !== (profile?.website ?? '') ||
+    twitter.trim() !== (profile?.twitter ?? '');
 
   return (
     <KeyboardAvoidingView
@@ -144,16 +158,6 @@ export function EditProfileScreen({
           </>
         )}
 
-        <Text style={styles.label}>Display name</Text>
-        <TextInput
-          value={displayName}
-          onChangeText={setDisplayName}
-          placeholder="How your name appears"
-          placeholderTextColor={theme.textTertiary}
-          maxLength={50}
-          style={styles.input}
-        />
-
         <Text style={styles.label}>Bio</Text>
         <TextInput
           value={bio}
@@ -165,6 +169,41 @@ export function EditProfileScreen({
           style={[styles.input, styles.multiline]}
         />
         <Text style={styles.hint}>{bio.length}/200</Text>
+
+        <Text style={styles.label}>Location</Text>
+        <TextInput
+          value={location}
+          onChangeText={setLocation}
+          placeholder="Where you are"
+          placeholderTextColor={theme.textTertiary}
+          maxLength={100}
+          style={styles.input}
+        />
+
+        <Text style={styles.label}>Website</Text>
+        <TextInput
+          value={website}
+          onChangeText={setWebsite}
+          placeholder="https://yourwebsite.com"
+          placeholderTextColor={theme.textTertiary}
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="url"
+          maxLength={200}
+          style={styles.input}
+        />
+
+        <Text style={styles.label}>X / Twitter</Text>
+        <TextInput
+          value={twitter}
+          onChangeText={setTwitter}
+          placeholder="username"
+          placeholderTextColor={theme.textTertiary}
+          autoCapitalize="none"
+          autoCorrect={false}
+          maxLength={50}
+          style={styles.input}
+        />
 
         <Text style={styles.footnote}>
           Fields can be changed but not cleared once set — that&apos;s a backend

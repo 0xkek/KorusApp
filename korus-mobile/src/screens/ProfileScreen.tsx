@@ -140,14 +140,17 @@ export function ProfileScreen({
   const avatar =
     resolveAvatarUrl(profile?.nftAvatar) ??
     resolveAvatarUrl(posts.find((p) => p.author?.walletAddress === walletAddress)?.author?.nftAvatar);
-  // A fresh account has no username yet. Showing the shortened wallet as the
-  // name as well as in the line beneath it just prints the same string twice
-  // and reads like broken data, so say plainly that no name is set.
+  // Identity is username, then SNS handle, then the wallet — the same
+  // precedence the web uses. The displayName column exists in the database but
+  // the product never renders it, so it is deliberately not consulted here.
+  //
+  // '__wallet__' is a sentinel meaning "show my wallet address", not a name.
+  const sns =
+    profile?.snsUsername && profile.snsUsername !== '__wallet__'
+      ? profile.snsUsername
+      : null;
   const chosenName =
-    profile?.displayName ||
-    (profile?.username ? `@${profile.username}` : null) ||
-    profile?.snsUsername ||
-    null;
+    (profile?.username ? `@${profile.username}` : null) || sns || null;
   const name = chosenName ?? 'Unnamed';
 
   return (
@@ -227,6 +230,22 @@ export function ProfileScreen({
               ) : null}
 
               {profile?.bio ? <Text style={styles.bio}>{profile.bio}</Text> : null}
+
+              {/* Only present on your own profile — the public by-wallet
+                  endpoint does not return these. */}
+              {profile?.location || profile?.website || profile?.twitter ? (
+                <View style={styles.meta}>
+                  {profile.location ? (
+                    <Text style={styles.metaItem}>{profile.location}</Text>
+                  ) : null}
+                  {profile.website ? (
+                    <Text style={styles.metaLink}>{profile.website}</Text>
+                  ) : null}
+                  {profile.twitter ? (
+                    <Text style={styles.metaLink}>@{profile.twitter}</Text>
+                  ) : null}
+                </View>
+              ) : null}
 
               {/* Editing is a write (PUT /api/user/profile) and lands in Phase 3.
                   Until then say so, rather than leaving a new account looking
@@ -340,6 +359,9 @@ const styles = StyleSheet.create({
   followButtonText: { color: '#000', fontWeight: '700', fontSize: 14 },
   followingButtonText: { color: theme.text },
   bio: { color: theme.textSecondary, fontSize: 15, lineHeight: 21, marginTop: 14 },
+  meta: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginTop: 12 },
+  metaItem: { color: theme.textTertiary, fontSize: 13 },
+  metaLink: { color: theme.mint, fontSize: 13 },
   setupNote: {
     color: theme.textTertiary,
     fontSize: 13,
