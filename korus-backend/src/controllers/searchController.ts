@@ -219,6 +219,23 @@ export const searchPosts = asyncHandler(async (req: Request, res: Response) => {
           }
         ]
       },
+      // Public, unauthenticated endpoint — select explicitly rather than
+      // returning the whole row. See the note in searchUsers.
+      select: {
+        walletAddress: true,
+        username: true,
+        snsUsername: true,
+        displayName: true,
+        bio: true,
+        nftAvatar: true,
+        themeColor: true,
+        tier: true,
+        genesisVerified: true,
+        reputationScore: true,
+        followerCount: true,
+        followingCount: true,
+        createdAt: true
+      },
       take: 10 // Limit user results
     })
 
@@ -339,7 +356,25 @@ export const searchUsers = asyncHandler(async (req: Request, res: Response) => {
           { displayName: { contains: searchQuery, mode: 'insensitive' } },
         ]
       },
-      include: {
+      // This endpoint is public and unauthenticated. An `include` without a
+      // `select` returns every column, and the spread below then published all
+      // of it — pushToken, webPushSubscription, solBalance, subscription
+      // details and payment signatures included. Only public profile fields
+      // are selected now, matching /api/user/by-wallet.
+      select: {
+        walletAddress: true,
+        username: true,
+        snsUsername: true,
+        displayName: true,
+        bio: true,
+        nftAvatar: true,
+        themeColor: true,
+        tier: true,
+        genesisVerified: true,
+        reputationScore: true,
+        followerCount: true,
+        followingCount: true,
+        createdAt: true,
         _count: {
           select: {
             posts: true,
@@ -350,12 +385,15 @@ export const searchUsers = asyncHandler(async (req: Request, res: Response) => {
       take: limit
     })
 
-    const transformedUsers = users.map(user => ({
-      ...user,
-      snsDomain: getWalletDomain(user.walletAddress),
-      postCount: (user as any)._count?.posts ?? 0,
-      replyCount: (user as any)._count?.replies ?? 0
-    }))
+    const transformedUsers = users.map(user => {
+      const { _count, ...publicFields } = user as typeof user & { _count?: { posts: number; replies: number } }
+      return {
+        ...publicFields,
+        snsDomain: getWalletDomain(user.walletAddress),
+        postCount: _count?.posts ?? 0,
+        replyCount: _count?.replies ?? 0
+      }
+    })
 
     res.json({
       success: true,
