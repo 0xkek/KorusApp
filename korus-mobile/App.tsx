@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
@@ -74,6 +74,28 @@ function KorusApp() {
       clearInterval(timer);
     };
   }, [auth.token, refreshKey]);
+  // Signing out from a screen that needs auth (profile, notifications,
+  // compose, edit profile) would otherwise leave it stranded and empty, so
+  // drop back to the feed. Covers a background process kill too, since that
+  // clears the token the same way.
+  //
+  // Only on an actual signed-in -> signed-out transition: firing on first
+  // mount, where the token is legitimately null, would bump refreshKey and
+  // make the feed fetch twice on launch.
+  const wasSignedIn = useRef(false);
+  useEffect(() => {
+    if (auth.token) {
+      wasSignedIn.current = true;
+      return;
+    }
+    if (wasSignedIn.current) {
+      wasSignedIn.current = false;
+      setScreen({ name: 'feed' });
+      setTipTarget(null);
+      setRefreshKey((k) => k + 1); // refetch as a signed-out viewer
+    }
+  }, [auth.token]);
+
   const insets = useSafeAreaInsets();
   const goFeed = () => setScreen({ name: 'feed' });
   const afterWrite = () => {

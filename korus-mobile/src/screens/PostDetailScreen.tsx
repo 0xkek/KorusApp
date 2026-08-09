@@ -12,6 +12,7 @@ import { postsAPI } from '../api/posts';
 import type { Post, Reply } from '../api/types';
 import { displayName, relativeTime, resolveAvatarUrl } from '../api/types';
 import { LikeIcon, ReplyIcon, RepostIcon, TipIcon } from '../components/Icons';
+import { notify } from '../notify';
 import { theme } from '../theme';
 
 const LIKE_COLOR = '#ef4444';
@@ -307,8 +308,13 @@ export function PostDetailScreen({
               value={post.repostCount}
               active={reposted}
               activeColor={theme.mint}
-              // Reposting your own post is rejected by the backend.
-              onPress={token && post.authorWallet !== currentWallet ? toggleRepost : undefined}
+              onPress={
+                !token
+                  ? undefined
+                  : post.authorWallet === currentWallet
+                    ? () => notify('You cannot repost your own post')
+                    : toggleRepost
+              }
             />
             <Stat
               icon={
@@ -320,11 +326,12 @@ export function PostDetailScreen({
               value={Number(post.tipAmount) || 0}
               active={Number(post.tipAmount) > 0}
               activeColor={TIP_COLOR}
-              // Tipping your own post is pointless, so it is inert there.
               onPress={
-                token && onTip && post.authorWallet !== currentWallet
-                  ? () => onTip(post)
-                  : undefined
+                !token || !onTip
+                  ? undefined
+                  : post.authorWallet === currentWallet
+                    ? () => notify('You cannot tip your own post')
+                    : () => onTip(post)
               }
             />
           </View>
@@ -377,14 +384,15 @@ export function PostDetailScreen({
                   </Text>
                 </Pressable>
 
-                {/* Reposting your own reply is rejected by the backend. */}
                 <Pressable
                   onPress={
-                    token && reply.authorWallet !== currentWallet
-                      ? () => toggleReplyRepost(reply)
-                      : undefined
+                    !token
+                      ? undefined
+                      : reply.authorWallet === currentWallet
+                        ? () => notify('You cannot repost your own reply')
+                        : () => toggleReplyRepost(reply)
                   }
-                  disabled={!token || reply.authorWallet === currentWallet}
+                  disabled={!token}
                   hitSlop={8}
                   style={styles.replyAction}
                 >

@@ -3,6 +3,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Post } from '../api/types';
 import { displayName, relativeTime, resolveAvatarUrl } from '../api/types';
 import { LikeIcon, ReplyIcon, RepostIcon, TipIcon } from './Icons';
+import { notify } from '../notify';
 import { theme } from '../theme';
 
 // Match the web app's action colours.
@@ -42,8 +43,11 @@ function PostCardBase({
   const avatar = resolveAvatarUrl(author?.nftAvatar);
   // Reposting your own post is a 400 from the backend, so the control is inert
   // there rather than offering an action that always fails.
-  const canRepost = Boolean(onToggleRepost) && source.authorWallet !== currentWallet;
-  const canTip = Boolean(onTip) && source.authorWallet !== currentWallet;
+  // Reposting or tipping your own post is rejected by the backend. Rather than
+  // silently inert controls, they stay tappable when signed in and explain why.
+  const isOwnPost = Boolean(currentWallet) && source.authorWallet === currentWallet;
+  const canRepost = Boolean(onToggleRepost) && !isOwnPost;
+  const canTip = Boolean(onTip) && !isOwnPost;
 
   return (
     <Pressable
@@ -131,11 +135,16 @@ function PostCardBase({
               </Text>
             </Pressable>
 
-            {/* The backend rejects reposting your own post, so don't offer it. */}
             <Pressable
-              onPress={canRepost ? () => onToggleRepost!(source) : undefined}
+              onPress={
+                canRepost
+                  ? () => onToggleRepost!(source)
+                  : isOwnPost && onToggleRepost
+                    ? () => notify('You cannot repost your own post')
+                    : undefined
+              }
               hitSlop={8}
-              disabled={!canRepost}
+              disabled={!canRepost && !(isOwnPost && onToggleRepost)}
               style={styles.action}
             >
               <RepostIcon color={reposted ? theme.mint : theme.textTertiary} />
@@ -144,12 +153,16 @@ function PostCardBase({
               </Text>
             </Pressable>
 
-            {/* Tipping your own post is pointless, so the control is inert
-                there — matching how repost behaves. */}
             <Pressable
-              onPress={canTip ? () => onTip!(source) : undefined}
+              onPress={
+                canTip
+                  ? () => onTip!(source)
+                  : isOwnPost && onTip
+                    ? () => notify('You cannot tip your own post')
+                    : undefined
+              }
               hitSlop={8}
-              disabled={!canTip}
+              disabled={!canTip && !(isOwnPost && onTip)}
               style={styles.action}
             >
               <TipIcon

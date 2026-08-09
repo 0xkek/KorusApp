@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { shortAddress } from '../api/types';
 import { BellIcon } from './Icons';
 import { theme } from '../theme';
@@ -66,7 +66,18 @@ export function FeedHeader({
           // can't drop the session and force another wallet round-trip.
           <Pressable
             onPress={onOpenProfile}
-            onLongPress={onSignOut}
+            // Confirmed because signing out is not cheap to undo — it costs a
+            // full wallet round trip to get back in.
+            onLongPress={() =>
+              Alert.alert(
+                'Disconnect wallet?',
+                'You can keep reading Korus, but you will need to connect and sign again to post.',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Disconnect', style: 'destructive', onPress: onSignOut },
+                ]
+              )
+            }
             delayLongPress={500}
             style={styles.chip}
           >
@@ -89,6 +100,18 @@ export function FeedHeader({
       </View>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
+
+      {/* Signed out, the feed is still readable but every action is hidden.
+          Say why, rather than leaving someone wondering where the buttons
+          went — particularly right after a disconnect. */}
+      {!signedIn && !error ? (
+        <Pressable onPress={onConnect} disabled={isBusy} style={styles.notice}>
+          <Text style={styles.noticeText}>
+            You&apos;re browsing as a guest. Connect your wallet to post, reply,
+            like and tip.
+          </Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -148,4 +171,13 @@ const styles = StyleSheet.create({
   },
   badgeText: { color: '#000', fontSize: 10, fontWeight: '800' },
   error: { color: theme.error, fontSize: 13, marginTop: 8 },
+  notice: {
+    marginTop: 12,
+    padding: 11,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: theme.border,
+    backgroundColor: 'rgba(67, 233, 123, 0.05)',
+  },
+  noticeText: { color: theme.textSecondary, fontSize: 13, lineHeight: 18 },
 });
