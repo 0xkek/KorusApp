@@ -55,6 +55,10 @@ export const TipIcon = (p: IconProps) => (
   />
 );
 
+export const SearchIcon = (p: IconProps) => (
+  <Icon {...p} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+);
+
 export const BellIcon = (p: IconProps) => (
   <Icon
     {...p}

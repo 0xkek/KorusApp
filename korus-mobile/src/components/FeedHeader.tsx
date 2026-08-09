@@ -1,6 +1,6 @@
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { shortAddress } from '../api/types';
-import { BellIcon } from './Icons';
+import { BellIcon, SearchIcon } from './Icons';
 import { theme } from '../theme';
 
 interface Props {
@@ -12,6 +12,7 @@ interface Props {
   onSignOut: () => void;
   onOpenProfile?: () => void;
   onOpenNotifications?: () => void;
+  onOpenSearch?: () => void;
   unreadCount?: number;
 }
 
@@ -30,6 +31,7 @@ export function FeedHeader({
   onSignOut,
   onOpenProfile,
   onOpenNotifications,
+  onOpenSearch,
   unreadCount = 0,
 }: Props) {
   return (
@@ -43,6 +45,18 @@ export function FeedHeader({
         </View>
 
         <View style={styles.actions}>
+        {/* Search works signed out, so it is always available. */}
+        {onOpenSearch ? (
+          <Pressable
+            onPress={onOpenSearch}
+            hitSlop={10}
+            style={styles.bell}
+            accessibilityLabel="Search"
+          >
+            <SearchIcon color={theme.text} />
+          </Pressable>
+        ) : null}
+
         {signedIn && onOpenNotifications ? (
           <Pressable
             onPress={onOpenNotifications}

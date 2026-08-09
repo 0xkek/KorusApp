@@ -80,7 +80,7 @@ const FEED_IMAGE_TRANSFORM = 'w_600,f_auto,q_auto'
 const AVATAR_TRANSFORM = 'w_80,h_80,c_fill,f_auto,q_auto'
 
 // Transform post author avatars from mint addresses to image URLs
-async function transformPostAvatars(post: any): Promise<any> {
+export async function transformPostAvatars(post: any): Promise<any> {
   if (post.author) {
     sanitizeAuthorDisplay(post.author)
     if (post.author.nftAvatar) {
@@ -92,6 +92,13 @@ async function transformPostAvatars(post: any): Promise<any> {
     sanitizeAuthorDisplay(post.originalPost.author)
     if (post.originalPost.author.nftAvatar) {
       post.originalPost.author.nftAvatar = await resolveNFTAvatar(post.originalPost.author.nftAvatar)
+    }
+  }
+  // Same for a reposted reply, which is a separate relation.
+  if (post.originalReply?.author) {
+    sanitizeAuthorDisplay(post.originalReply.author)
+    if (post.originalReply.author.nftAvatar) {
+      post.originalReply.author.nftAvatar = await resolveNFTAvatar(post.originalReply.author.nftAvatar)
     }
   }
   // Transform reply authors' avatars (parallel)

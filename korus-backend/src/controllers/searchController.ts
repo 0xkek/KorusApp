@@ -4,6 +4,7 @@ import { SNS_CONFIG } from '../config/constants'
 import { asyncHandler } from '../middleware/errorHandler'
 import { AppError } from '../utils/AppError'
 import { logger } from '../utils/logger'
+import { transformPostAvatars, resolveNFTAvatar } from './postsController'
 // ApiResponse type
 interface ApiResponse {
   success: boolean
@@ -173,6 +174,38 @@ export const searchPosts = asyncHandler(async (req: Request, res: Response) => {
             themeColor: true
           }
         },
+        // A repost carries no content of its own, so without these a reposted
+        // result renders as an empty card.
+        originalPost: {
+          include: {
+            author: {
+              select: {
+                walletAddress: true,
+                tier: true,
+                genesisVerified: true,
+                snsUsername: true,
+                username: true,
+                nftAvatar: true,
+                themeColor: true
+              }
+            }
+          }
+        },
+        originalReply: {
+          include: {
+            author: {
+              select: {
+                walletAddress: true,
+                tier: true,
+                genesisVerified: true,
+                snsUsername: true,
+                username: true,
+                nftAvatar: true,
+                themeColor: true
+              }
+            }
+          }
+        },
         replies: {
           include: {
             author: {
@@ -240,13 +273,20 @@ export const searchPosts = asyncHandler(async (req: Request, res: Response) => {
     })
 
     // Transform results to include SNS domains
-    const transformedPosts = posts.map(post => ({
+    // nftAvatar is stored as an NFT mint address. The feed resolves it to an
+    // image URL before responding; search did not, so results fell back to
+    // initials while the same author showed an avatar in the feed.
+    const postsWithAvatars = await Promise.all(
+      posts.map(post => transformPostAvatars(post))
+    )
+
+    const transformedPosts = postsWithAvatars.map((post: any) => ({
       ...post,
       author: {
         ...post.author,
         snsDomain: getWalletDomain(post.author.walletAddress)
       },
-      replies: post.replies.map(reply => ({
+      replies: (post.replies ?? []).map((reply: any) => ({
         ...reply,
         author: {
           ...reply.author,
@@ -255,10 +295,11 @@ export const searchPosts = asyncHandler(async (req: Request, res: Response) => {
       }))
     }))
 
-    const transformedUsers = users.map(user => ({
+    const transformedUsers = await Promise.all(users.map(async user => ({
       ...user,
+      nftAvatar: user.nftAvatar ? await resolveNFTAvatar(user.nftAvatar) : null,
       snsDomain: getWalletDomain(user.walletAddress)
-    }))
+    })))
 
     res.json({
       success: true,

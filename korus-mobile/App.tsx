@@ -15,6 +15,7 @@ import { EditProfileScreen } from './src/screens/EditProfileScreen';
 import { FeedHeader } from './src/components/FeedHeader';
 import { TipModal } from './src/components/TipModal';
 import { NotificationsScreen } from './src/screens/NotificationsScreen';
+import { SearchScreen } from './src/screens/SearchScreen';
 import { notificationsAPI } from './src/api/notifications';
 import type { Post } from './src/api/types';
 import { theme } from './src/theme';
@@ -26,7 +27,8 @@ type Screen =
   | { name: 'profile'; walletAddress: string }
   | { name: 'compose'; replyToPostId?: string }
   | { name: 'editProfile' }
-  | { name: 'notifications' };
+  | { name: 'notifications' }
+  | { name: 'search' };
 
 /**
  * Minimal stack. Deliberately not expo-router yet — Phase 2 is three screens,
@@ -109,7 +111,14 @@ function KorusApp() {
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <StatusBar style="light" />
       <View style={styles.inner}>
-        {screen.name === 'notifications' && auth.token ? (
+        {screen.name === 'search' ? (
+          // Public — searching does not require a wallet, same as reading.
+          <SearchScreen
+            onBack={goFeed}
+            onOpenPost={(post) => setScreen({ name: 'post', postId: post.id })}
+            onOpenProfile={(wallet) => setScreen({ name: 'profile', walletAddress: wallet })}
+          />
+        ) : screen.name === 'notifications' && auth.token ? (
           <NotificationsScreen
             token={auth.token}
             onBack={goFeed}
@@ -184,6 +193,7 @@ function KorusApp() {
                     : undefined
                 }
                 onOpenNotifications={() => setScreen({ name: 'notifications' })}
+                onOpenSearch={() => setScreen({ name: 'search' })}
                 unreadCount={unreadCount}
               />
             }
