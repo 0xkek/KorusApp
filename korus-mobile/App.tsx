@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
-  Platform,
-  Pressable,
-  StatusBar as RNStatusBar,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+  SafeAreaProvider,
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { useWalletAuth } from './src/wallet/useWalletAuth';
 import { FeedScreen } from './src/screens/FeedScreen';
 import { PostDetailScreen } from './src/screens/PostDetailScreen';
@@ -36,6 +34,14 @@ type Screen =
  * (deep links, tabs), not before.
  */
 export default function App() {
+  return (
+    <SafeAreaProvider>
+      <KorusApp />
+    </SafeAreaProvider>
+  );
+}
+
+function KorusApp() {
   const auth = useWalletAuth();
   const [screen, setScreen] = useState<Screen>({ name: 'feed' });
   // Bumped after any write so the feed refetches instead of showing stale data.
@@ -68,6 +74,7 @@ export default function App() {
       clearInterval(timer);
     };
   }, [auth.token, refreshKey]);
+  const insets = useSafeAreaInsets();
   const goFeed = () => setScreen({ name: 'feed' });
   const afterWrite = () => {
     setRefreshKey((k) => k + 1);
@@ -75,7 +82,9 @@ export default function App() {
   };
 
   return (
-    <View style={styles.root}>
+    // edges omits 'bottom' so scrollable content runs under the gesture bar;
+    // the FAB is lifted by the bottom inset instead.
+    <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <StatusBar style="light" />
       <View style={styles.inner}>
         {screen.name === 'notifications' && auth.token ? (
@@ -159,7 +168,11 @@ export default function App() {
       {screen.name === 'feed' && auth.token && (
         <Pressable
           onPress={() => setScreen({ name: 'compose' })}
-          style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
+          style={({ pressed }) => [
+            styles.fab,
+            { bottom: 28 + insets.bottom },
+            pressed && styles.fabPressed,
+          ]}
           accessibilityLabel="New post"
         >
           <Text style={styles.fabIcon}>+</Text>
@@ -173,24 +186,16 @@ export default function App() {
         onClose={() => setTipTarget(null)}
         onTipped={() => setRefreshKey((k) => k + 1)}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
-// react-native's SafeAreaView is deprecated and is a no-op for the top inset on
-// Android, which let the status bar overlap the header. Padding by the measured
-// status bar height fixes that without pulling in a native module (which would
-// force a dev-client rebuild). iOS notches will want react-native-safe-area-context
-// when we get there; on Android this is the correct inset.
-const statusBarInset = Platform.OS === 'android' ? RNStatusBar.currentHeight ?? 0 : 0;
-
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: theme.background, paddingTop: statusBarInset },
+  root: { flex: 1, backgroundColor: theme.background },
   inner: { flex: 1 },
   fab: {
     position: 'absolute',
     right: 20,
-    bottom: 28,
     width: 58,
     height: 58,
     borderRadius: 29,
