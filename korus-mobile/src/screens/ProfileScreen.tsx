@@ -19,9 +19,11 @@ interface Props {
   walletAddress: string;
   onBack: () => void;
   onOpenPost: (post: Post) => void;
+  /** Signed-in user viewing themselves — gates the profile-setup note. */
+  isOwnProfile?: boolean;
 }
 
-export function ProfileScreen({ walletAddress, onBack, onOpenPost }: Props) {
+export function ProfileScreen({ walletAddress, onBack, onOpenPost, isOwnProfile }: Props) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -83,11 +85,15 @@ export function ProfileScreen({ walletAddress, onBack, onOpenPost }: Props) {
   const avatar =
     resolveAvatarUrl(profile?.nftAvatar) ??
     resolveAvatarUrl(posts.find((p) => p.author?.walletAddress === walletAddress)?.author?.nftAvatar);
-  const name =
+  // A fresh account has no username yet. Showing the shortened wallet as the
+  // name as well as in the line beneath it just prints the same string twice
+  // and reads like broken data, so say plainly that no name is set.
+  const chosenName =
     profile?.displayName ||
     (profile?.username ? `@${profile.username}` : null) ||
     profile?.snsUsername ||
-    shortAddress(walletAddress);
+    null;
+  const name = chosenName ?? 'Unnamed';
 
   return (
     <View style={styles.root}>
@@ -128,7 +134,10 @@ export function ProfileScreen({ walletAddress, onBack, onOpenPost }: Props) {
                 )}
                 <View style={styles.identityText}>
                   <View style={styles.nameRow}>
-                    <Text style={styles.name} numberOfLines={1}>
+                    <Text
+                      style={[styles.name, !chosenName && styles.nameUnset]}
+                      numberOfLines={1}
+                    >
                       {name}
                     </Text>
                     {profile?.tier === 'premium' && <Text style={styles.star}>★</Text>}
@@ -138,6 +147,17 @@ export function ProfileScreen({ walletAddress, onBack, onOpenPost }: Props) {
               </View>
 
               {profile?.bio ? <Text style={styles.bio}>{profile.bio}</Text> : null}
+
+              {/* Editing is a write (PUT /api/user/profile) and lands in Phase 3.
+                  Until then say so, rather than leaving a new account looking
+                  broken with no name, no avatar and nothing to do. */}
+              {isOwnProfile && !chosenName ? (
+                <Text style={styles.setupNote}>
+                  You haven&apos;t set a username or avatar yet. Editing your profile
+                  isn&apos;t in the mobile app yet — you can set it on korus.fun and it
+                  will show up here.
+                </Text>
+              ) : null}
 
               <View style={styles.stats}>
                 <Stat value={profile?.followerCount ?? 0} label="Followers" />
@@ -215,7 +235,19 @@ const styles = StyleSheet.create({
   name: { color: theme.text, fontSize: 20, fontWeight: '800', flexShrink: 1 },
   star: { color: '#fbbf24', fontSize: 15 },
   wallet: { color: theme.textTertiary, fontSize: 13, marginTop: 2 },
+  nameUnset: { color: theme.textTertiary, fontWeight: '600' },
   bio: { color: theme.textSecondary, fontSize: 15, lineHeight: 21, marginTop: 14 },
+  setupNote: {
+    color: theme.textTertiary,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 14,
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: theme.border,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
   stats: { flexDirection: 'row', gap: 28, marginTop: 18 },
   stat: { alignItems: 'flex-start' },
   statValue: { color: theme.text, fontSize: 17, fontWeight: '700' },

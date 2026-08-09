@@ -39,6 +39,7 @@ export default function App() {
             walletAddress={screen.walletAddress}
             onBack={goFeed}
             onOpenPost={(post) => setScreen({ name: 'post', postId: post.id })}
+            isOwnProfile={Boolean(auth.token) && screen.walletAddress === auth.walletAddress}
           />
         ) : (
           // The feed is public — readable before signing in, same as the web
