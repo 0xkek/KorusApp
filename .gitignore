@@ -46,3 +46,8 @@ target/
 # produced these belongs to the separate mobile app and has repeatedly
 # generated stray files inside the wrong subprojects.
 .expo/
+
+# Expo / React Native native build output
+korus-mobile/android/
+korus-mobile/ios/
+korus-mobile/.expo/

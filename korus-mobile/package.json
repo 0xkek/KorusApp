@@ -1,0 +1,29 @@
+{
+  "name": "korus-mobile",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "@solana-mobile/mobile-wallet-adapter-protocol": "^2.2.9",
+    "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "^2.2.9",
+    "@solana/web3.js": "^1.98.4",
+    "bs58": "^6.0.0",
+    "buffer": "^6.0.3",
+    "expo": "~57.0.11",
+    "expo-crypto": "~57.0.1",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.2",
+    "react-native-get-random-values": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "private": true
+}
