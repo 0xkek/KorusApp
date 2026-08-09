@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,6 +16,8 @@ import { usersAPI, validateUsername } from '../api/users';
 import { IdentityPicker } from '../components/IdentityPicker';
 import { AvatarPicker } from '../components/AvatarPicker';
 import type { UserProfile } from '../api/types';
+import { resolveAvatarUrl } from '../api/types';
+import { notify } from '../notify';
 import { theme } from '../theme';
 
 interface Props {
@@ -52,6 +55,9 @@ export function EditProfileScreen({
   const [error, setError] = useState<string | null>(null);
 
   const usernameError = username.trim() ? validateUsername(username) : null;
+  // nftAvatar is a mint when we just saved one and a URL when it came back
+  // resolved from the API, so only render it when it is actually an image.
+  const avatarPreview = resolveAvatarUrl(nftAvatar);
 
   async function save() {
     setError(null);
@@ -97,12 +103,21 @@ export function EditProfileScreen({
     }
   }
 
-  /** Both pickers write a single field and close, so they save on the spot. */
-  async function saveChoice(fields: Record<string, string>, onDone: () => void) {
+  /**
+   * Both pickers write a single field and close, so they save on the spot —
+   * the Save button only governs the text fields. That is invisible unless we
+   * say so, which made a saved avatar look like an unsaved one.
+   */
+  async function saveChoice(
+    fields: Record<string, string>,
+    confirmation: string,
+    onDone: () => void
+  ) {
     setError(null);
     try {
       await usersAPI.updateProfile(fields, token);
       onDone();
+      notify(confirmation);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save that');
     }
@@ -142,7 +157,15 @@ export function EditProfileScreen({
           <Text style={styles.back}>‹ Back</Text>
         </Pressable>
         <Text style={styles.navTitle}>Edit profile</Text>
-        <Pressable onPress={confirmSave} disabled={saving || !hasChanges} hitSlop={12}>
+        {/* Stays tappable with nothing to save so it can explain itself —
+            a dead button reads as "the app is broken". */}
+        <Pressable
+          onPress={
+            hasChanges ? confirmSave : () => notify('Nothing to save — changes above save as you pick')
+          }
+          disabled={saving}
+          hitSlop={12}
+        >
           {saving ? (
             <ActivityIndicator color={theme.mint} size="small" />
           ) : (
@@ -154,15 +177,18 @@ export function EditProfileScreen({
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <Text style={styles.label}>Avatar</Text>
+        <Text style={styles.label}>Avatar · saves when you pick</Text>
         <Pressable onPress={() => setShowAvatar(true)} style={styles.pickerRow}>
+          {avatarPreview ? (
+            <Image source={{ uri: avatarPreview }} style={styles.avatarPreview} />
+          ) : null}
           <Text style={styles.pickerValue}>
-            {nftAvatar ? 'NFT selected' : 'None — tap to choose an NFT'}
+            {nftAvatar ? 'Tap to change' : 'None — tap to choose an NFT'}
           </Text>
           <Text style={styles.pickerChevron}>›</Text>
         </Pressable>
 
-        <Text style={styles.label}>Display identity</Text>
+        <Text style={styles.label}>Display identity · saves when you pick</Text>
         <Pressable onPress={() => setShowIdentity(true)} style={styles.pickerRow}>
           <Text style={styles.pickerValue}>
             {profile?.username
@@ -261,7 +287,7 @@ export function EditProfileScreen({
         username={profile?.username ?? null}
         onClose={() => setShowIdentity(false)}
         onSelect={(value) =>
-          saveChoice({ snsUsername: value }, () => {
+          saveChoice({ snsUsername: value }, 'Display identity saved', () => {
             setSnsUsername(value);
             setShowIdentity(false);
             onChanged?.();
@@ -275,7 +301,7 @@ export function EditProfileScreen({
         currentMint={nftAvatar}
         onClose={() => setShowAvatar(false)}
         onSelect={(mint) =>
-          saveChoice({ nftAvatar: mint }, () => {
+          saveChoice({ nftAvatar: mint }, 'Avatar saved', () => {
             setNftAvatar(mint);
             setShowAvatar(false);
             onChanged?.();
@@ -332,6 +358,13 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   pickerValue: { color: theme.text, fontSize: 15, flex: 1 },
+  avatarPreview: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 12,
+    backgroundColor: theme.background,
+  },
   pickerChevron: { color: theme.textTertiary, fontSize: 20 },
   multiline: { minHeight: 100, textAlignVertical: 'top' },
   hint: { color: theme.textTertiary, fontSize: 12, marginTop: 6 },
