@@ -109,18 +109,36 @@ emulator needs a wallet APK sideloaded — a physical device is far less frictio
 
 ---
 
-## Phase 2 — Read-only app
+## Phase 2 — Read-only app  🟡 MOSTLY DONE (`2ff6be3`)
 
 All GET endpoints, no writes, no CSRF involvement. Gets something real on a
 device fast and proves the API layer end to end.
 
-- Feed (`/api/posts`) with infinite scroll
-- Post detail (`/api/posts/:id`)
-- Profiles (`/api/user/by-wallet/:wallet`)
-- Trending (`/api/posts/trending`)
+- ✅ Feed (`/api/posts`) with cursor pagination and pull-to-refresh
+- ✅ Post detail (`/api/posts/:id`) with stats and replies
+- ✅ Trending (`/api/posts/trending`)
+- ⬜ Profiles (`/api/user/by-wallet/:wallet`) — not built yet
+
+Verified on a Solana Seeker against production: feed, tab switch, post detail
+and back navigation all render real data.
 
 Port `lib/api/` verbatim; rebuild the UI against `~/Desktop/KorusApp` as a
 visual reference.
+
+### Gotchas found here
+
+- `SafeAreaView` from `react-native` is deprecated and applies **no top inset
+  on Android** — the status bar overlapped the header. Fixed with
+  `StatusBar.currentHeight`; `react-native-safe-area-context` is the better fix
+  but is a native module, so it needs a dev-client rebuild. Worth doing when a
+  rebuild is happening anyway, and required before iOS.
+- A black screenshot usually means the **device screen is off** (60s timeout),
+  not an app crash. Check `dumpsys power | grep mWakefulness` first, and run
+  `adb shell svc power stayon usb` to hold it awake.
+- When USB drops, `adb reverse tcp:8081 tcp:8081` is lost and the dev build
+  dies with `Unable to load script`. Re-run it after every reconnect.
+- If `adb devices` shows `unauthorized`, tap **Allow** on the device and tick
+  *Always allow from this computer*.
 
 ---
 
