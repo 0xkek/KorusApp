@@ -16,6 +16,7 @@ interface Props {
   /** Omitted when signed out — the actions then render as plain counts. */
   onToggleLike?: (post: Post) => void;
   onToggleRepost?: (post: Post) => void;
+  onTip?: (post: Post) => void;
   onReply?: (post: Post) => void;
   liked?: boolean;
   reposted?: boolean;
@@ -29,6 +30,7 @@ function PostCardBase({
   onPressAuthor,
   onToggleLike,
   onToggleRepost,
+  onTip,
   onReply,
   liked,
   reposted,
@@ -41,6 +43,7 @@ function PostCardBase({
   // Reposting your own post is a 400 from the backend, so the control is inert
   // there rather than offering an action that always fails.
   const canRepost = Boolean(onToggleRepost) && source.authorWallet !== currentWallet;
+  const canTip = Boolean(onTip) && source.authorWallet !== currentWallet;
 
   return (
     <Pressable
@@ -141,9 +144,14 @@ function PostCardBase({
               </Text>
             </Pressable>
 
-            {/* Tipping needs an on-chain transfer signed through the wallet,
-                which is Phase 4. Shown as a value for now, not an action. */}
-            <View style={styles.action}>
+            {/* Tipping your own post is pointless, so the control is inert
+                there — matching how repost behaves. */}
+            <Pressable
+              onPress={canTip ? () => onTip!(source) : undefined}
+              hitSlop={8}
+              disabled={!canTip}
+              style={styles.action}
+            >
               <TipIcon
                 color={Number(source.tipAmount) > 0 ? TIP_COLOR : theme.textTertiary}
               />
@@ -152,7 +160,7 @@ function PostCardBase({
                   ? Number(source.tipAmount).toFixed(2)
                   : '0'}
               </Text>
-            </View>
+            </Pressable>
           </View>
         </View>
       </View>

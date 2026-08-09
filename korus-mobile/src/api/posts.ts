@@ -59,6 +59,21 @@ export const postsAPI = {
       token
     ),
 
+  /**
+   * Record a tip after the SOL transfer has landed on-chain.
+   *
+   * The backend re-verifies the signature against mainnet: sender, recipient
+   * and amount must match (0.001 SOL tolerance), the transaction must be under
+   * 5 minutes old, and each signature can only be used once. So this must be
+   * called with a real, already-confirmed transfer.
+   */
+  tipPost: (postId: string, amount: number, transactionSignature: string, token: string) =>
+    api.post<{ success: boolean; message?: string }>(
+      `/api/interactions/posts/${postId}/tip`,
+      { amount, transactionSignature },
+      token
+    ),
+
   /** Replies have their own like endpoint, mounted under /api/replies. */
   toggleReplyLike: (replyId: string, token: string) =>
     api.post<{ success: boolean; liked: boolean; message: string }>(

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -22,6 +21,7 @@ interface Props {
   onBack: () => void;
   onOpenProfile?: (walletAddress: string) => void;
   onReply?: (postId: string) => void;
+  onTip?: (post: Post) => void;
   token?: string | null;
   currentWallet?: string | null;
 }
@@ -31,6 +31,7 @@ export function PostDetailScreen({
   onBack,
   onOpenProfile,
   onReply,
+  onTip,
   token,
   currentWallet,
 }: Props) {
@@ -239,19 +240,13 @@ export function PostDetailScreen({
               // Reposting your own post is rejected by the backend.
               onPress={token && post.authorWallet !== currentWallet ? toggleRepost : undefined}
             />
-            {/* Tips require an on-chain SOL transfer signed through the wallet
-                and verified server-side — Phase 4. Say so rather than offering
-                a button that cannot work yet. */}
             <Stat
               value={Number(post.tipAmount) || 0}
               label="SOL tipped"
+              // Tipping your own post is pointless, so it is inert there.
               onPress={
-                token
-                  ? () =>
-                      Alert.alert(
-                        'Tipping not available yet',
-                        'Sending a tip needs an on-chain SOL transfer signed by your wallet. That lands in the next phase — you can still tip from korus.fun.'
-                      )
+                token && onTip && post.authorWallet !== currentWallet
+                  ? () => onTip(post)
                   : undefined
               }
             />

@@ -19,6 +19,7 @@ interface Props {
   onOpenPost: (post: Post) => void;
   onOpenProfile?: (walletAddress: string) => void;
   onReply?: (post: Post) => void;
+  onTip?: (post: Post) => void;
   header?: React.ReactElement;
   /** Null when signed out — likes and replies then render as plain counts. */
   token?: string | null;
@@ -32,6 +33,7 @@ export function FeedScreen({
   onOpenPost,
   onOpenProfile,
   onReply,
+  onTip,
   header,
   token,
   currentWallet,
@@ -238,6 +240,7 @@ export function FeedScreen({
           onPressAuthor={onOpenProfile}
           onToggleLike={token ? toggleLike : undefined}
           onToggleRepost={token ? toggleRepost : undefined}
+          onTip={token && onTip ? onTip : undefined}
           onReply={token && onReply ? onReply : undefined}
           liked={likedIds.has(item.id)}
           reposted={repostedIds.has(item.id)}

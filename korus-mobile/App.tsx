@@ -15,6 +15,8 @@ import { ProfileScreen } from './src/screens/ProfileScreen';
 import { ComposeScreen } from './src/screens/ComposeScreen';
 import { EditProfileScreen } from './src/screens/EditProfileScreen';
 import { FeedHeader } from './src/components/FeedHeader';
+import { TipModal } from './src/components/TipModal';
+import type { Post } from './src/api/types';
 import { theme } from './src/theme';
 
 /** Screens are a small discriminated union — still simpler than a router. */
@@ -35,6 +37,8 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'feed' });
   // Bumped after any write so the feed refetches instead of showing stale data.
   const [refreshKey, setRefreshKey] = useState(0);
+  // Post being tipped; the modal is open whenever this is set.
+  const [tipTarget, setTipTarget] = useState<Post | null>(null);
   const goFeed = () => setScreen({ name: 'feed' });
   const afterWrite = () => {
     setRefreshKey((k) => k + 1);
@@ -69,6 +73,7 @@ export default function App() {
             onBack={goFeed}
             onOpenProfile={(wallet) => setScreen({ name: 'profile', walletAddress: wallet })}
             onReply={(id) => setScreen({ name: 'compose', replyToPostId: id })}
+            onTip={(post) => setTipTarget(post)}
             token={auth.token}
             currentWallet={auth.walletAddress}
           />
@@ -88,6 +93,7 @@ export default function App() {
             onOpenPost={(post) => setScreen({ name: 'post', postId: post.id })}
             onOpenProfile={(wallet) => setScreen({ name: 'profile', walletAddress: wallet })}
             onReply={(post) => setScreen({ name: 'compose', replyToPostId: post.id })}
+            onTip={(post) => setTipTarget(post)}
             token={auth.token}
             currentWallet={auth.walletAddress}
             refreshKey={refreshKey}
@@ -120,6 +126,14 @@ export default function App() {
           <Text style={styles.fabIcon}>+</Text>
         </Pressable>
       )}
+
+      <TipModal
+        post={tipTarget}
+        senderWallet={auth.walletAddress}
+        token={auth.token}
+        onClose={() => setTipTarget(null)}
+        onTipped={() => setRefreshKey((k) => k + 1)}
+      />
     </View>
   );
 }
