@@ -10,7 +10,8 @@
  * both occur within it.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 import { transact } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
 import { PublicKey } from '@solana/web3.js';
 import bs58 from 'bs58';
@@ -118,7 +119,38 @@ export function useWalletAuth() {
     }
   }, []);
 
+  /**
+   * The token lives in memory only — by design, there is no persistence, so
+   * opening the app fresh always requires connecting and signing again.
+   *
+   * React state does survive backgrounding while Android keeps the process
+   * alive (verified on a Seeker: switching to Phantom and back keeps the same
+   * pid), so an app switch to approve something does not cost a re-sign. What
+   * it does not survive is Android reclaiming the process under memory
+   * pressure. That is indistinguishable from a fresh launch, so note it and
+   * let the UI explain rather than silently showing a signed-out header.
+   */
+  const wasSignedIn = useRef(false);
+  useEffect(() => {
+    if (state.token) wasSignedIn.current = true;
+  }, [state.token]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next !== 'active') return;
+      // Returning to the foreground with the token gone means the process was
+      // restarted while we were away.
+      setState((s) =>
+        wasSignedIn.current && !s.token
+          ? { ...s, error: 'Signed out — Korus was closed in the background. Connect again.' }
+          : s
+      );
+    });
+    return () => sub.remove();
+  }, []);
+
   const signOut = useCallback(() => {
+    wasSignedIn.current = false;
     setState({
       walletAddress: null,
       token: null,
