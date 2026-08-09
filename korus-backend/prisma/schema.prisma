@@ -131,6 +131,7 @@ model Post {
   notifications    Notification[]
   author           User           @relation("AuthoredPosts", fields: [authorWallet], references: [walletAddress])
   originalPost     Post?          @relation("Reposts", fields: [originalPostId], references: [id])
+  originalReply    Reply?         @relation("ReplyReposts", fields: [originalReplyId], references: [id], onDelete: Cascade)
   reposts          Post[]         @relation("Reposts")
   replies          Reply[]
   sponsoredPost    SponsoredPost?
@@ -144,6 +145,7 @@ model Post {
   @@index([flaggedCount(sort: Desc)])
   @@index([isShoutout, shoutoutExpiresAt(sort: Desc)])
   @@index([originalPostId])
+  @@index([originalReplyId])
   @@map("posts")
 }
 
@@ -155,6 +157,7 @@ model Reply {
   parentReplyId    String?
   likeCount        Int      @default(0)
   tipCount         Int      @default(0)
+  repostCount      Int      @default(0)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   flaggedCount     Int      @default(0)
@@ -166,6 +169,7 @@ model Reply {
   parentReply      Reply?   @relation("ReplyToReply", fields: [parentReplyId], references: [id])
   childReplies     Reply[]  @relation("ReplyToReply")
   post             Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  reposts          Post[]   @relation("ReplyReposts")
 
   @@index([postId, createdAt])
   @@index([postId, isHidden, createdAt(sort: Desc)])

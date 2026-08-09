@@ -11,7 +11,7 @@ import {
 import { postsAPI } from '../api/posts';
 import type { Post, Reply } from '../api/types';
 import { displayName, relativeTime, resolveAvatarUrl } from '../api/types';
-import { LikeIcon } from '../components/Icons';
+import { LikeIcon, RepostIcon } from '../components/Icons';
 import { theme } from '../theme';
 
 const LIKE_COLOR = '#ef4444';
@@ -41,6 +41,61 @@ export function PostDetailScreen({
   const [liked, setLiked] = useState(false);
   const [reposted, setReposted] = useState(false);
   const [likedReplies, setLikedReplies] = useState<Set<string>>(new Set());
+  const [repostedReplies, setRepostedReplies] = useState<Set<string>>(new Set());
+
+  const toggleReplyRepost = useCallback(
+    async (reply: Reply) => {
+      if (!token) return;
+      const was = repostedReplies.has(reply.id);
+      setRepostedReplies((prev) => {
+        const next = new Set(prev);
+        if (was) next.delete(reply.id);
+        else next.add(reply.id);
+        return next;
+      });
+      setPost((p) =>
+        p
+          ? {
+              ...p,
+              replies: p.replies?.map((r) =>
+                r.id === reply.id
+                  ? { ...r, repostCount: Math.max(0, (r.repostCount ?? 0) + (was ? -1 : 1)) }
+                  : r
+              ),
+            }
+          : p
+      );
+      try {
+        const res = await postsAPI.toggleReplyRepost(reply.id, token);
+        setRepostedReplies((prev) => {
+          const next = new Set(prev);
+          if (res.reposted) next.add(reply.id);
+          else next.delete(reply.id);
+          return next;
+        });
+      } catch {
+        setRepostedReplies((prev) => {
+          const next = new Set(prev);
+          if (was) next.add(reply.id);
+          else next.delete(reply.id);
+          return next;
+        });
+        setPost((p) =>
+          p
+            ? {
+                ...p,
+                replies: p.replies?.map((r) =>
+                  r.id === reply.id
+                    ? { ...r, repostCount: Math.max(0, (r.repostCount ?? 0) + (was ? 1 : -1)) }
+                    : r
+                ),
+              }
+            : p
+        );
+      }
+    },
+    [token, repostedReplies]
+  );
 
   const toggleLike = useCallback(async () => {
     if (!token || !post) return;
@@ -278,26 +333,55 @@ export function PostDetailScreen({
                 </Text>
               </Pressable>
               <Text style={styles.replyText}>{reply.content}</Text>
-              <Pressable
-                onPress={token ? () => toggleReplyLike(reply) : undefined}
-                disabled={!token}
-                hitSlop={8}
-                style={styles.replyLike}
-              >
-                <LikeIcon
-                  size={16}
-                  color={likedReplies.has(reply.id) ? LIKE_COLOR : theme.textTertiary}
-                  fill={likedReplies.has(reply.id) ? LIKE_COLOR : 'none'}
-                />
-                <Text
-                  style={[
-                    styles.replyLikeText,
-                    likedReplies.has(reply.id) && styles.replyLiked,
-                  ]}
+              <View style={styles.replyActions}>
+                <Pressable
+                  onPress={token ? () => toggleReplyLike(reply) : undefined}
+                  disabled={!token}
+                  hitSlop={8}
+                  style={styles.replyAction}
                 >
-                  {reply.likeCount ?? 0}
-                </Text>
-              </Pressable>
+                  <LikeIcon
+                    size={16}
+                    color={likedReplies.has(reply.id) ? LIKE_COLOR : theme.textTertiary}
+                    fill={likedReplies.has(reply.id) ? LIKE_COLOR : 'none'}
+                  />
+                  <Text
+                    style={[
+                      styles.replyLikeText,
+                      likedReplies.has(reply.id) && styles.replyLiked,
+                    ]}
+                  >
+                    {reply.likeCount ?? 0}
+                  </Text>
+                </Pressable>
+
+                {/* Reposting your own reply is rejected by the backend. */}
+                <Pressable
+                  onPress={
+                    token && reply.authorWallet !== currentWallet
+                      ? () => toggleReplyRepost(reply)
+                      : undefined
+                  }
+                  disabled={!token || reply.authorWallet === currentWallet}
+                  hitSlop={8}
+                  style={styles.replyAction}
+                >
+                  <RepostIcon
+                    size={16}
+                    color={
+                      repostedReplies.has(reply.id) ? theme.mint : theme.textTertiary
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.replyLikeText,
+                      repostedReplies.has(reply.id) && styles.replyReposted,
+                    ]}
+                  >
+                    {reply.repostCount ?? 0}
+                  </Text>
+                </Pressable>
+              </View>
             </View>
           ))}
         </ScrollView>
@@ -390,14 +474,10 @@ const styles = StyleSheet.create({
   },
   replyName: { color: theme.text, fontSize: 14, fontWeight: '600', marginBottom: 4 },
   replyText: { color: theme.textSecondary, fontSize: 15, lineHeight: 21 },
-  replyLike: {
-    marginTop: 8,
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
+  replyActions: { marginTop: 8, flexDirection: 'row', gap: 20 },
+  replyAction: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   replyLikeText: { color: theme.textTertiary, fontSize: 13 },
   replyLiked: { color: LIKE_COLOR },
+  replyReposted: { color: theme.mint },
   statActive: { color: theme.mint },
 });

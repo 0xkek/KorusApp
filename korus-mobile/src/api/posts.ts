@@ -83,6 +83,17 @@ export const postsAPI = {
     ),
 
   /**
+   * Repost a reply. Creates a Post referencing the reply, so it shows in the
+   * feed like a post repost. Toggles, and rejects reposting your own reply.
+   */
+  toggleReplyRepost: (replyId: string, token: string) =>
+    api.post<{ success: boolean; reposted: boolean; message: string }>(
+      `/api/replies/${replyId}/repost`,
+      {},
+      token
+    ),
+
+  /**
    * Which of these posts the signed-in user has already liked/tipped/reposted.
    * Without this the feed cannot render like state correctly on load.
    */

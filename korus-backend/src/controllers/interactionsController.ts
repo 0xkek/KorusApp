@@ -613,3 +613,87 @@ export const repostPost = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Failed to repost' })
   }
 }
+
+/**
+ * Repost a reply.
+ *
+ * Same shape as reposting a post — the repost is a Post row, but carrying
+ * originalReplyId instead of originalPostId — so reply reposts appear in the
+ * feed exactly like post reposts. Toggles, matching repostPost.
+ */
+export const repostReply = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params
+    const walletAddress = req.userWallet!
+    const { comment } = req.body
+
+    const reply = await prisma.reply.findUnique({ where: { id } })
+
+    if (!reply) {
+      return res.status(404).json({ error: 'Reply not found' })
+    }
+
+    if (reply.authorWallet === walletAddress) {
+      return res.status(400).json({ error: 'Cannot repost your own reply' })
+    }
+
+    const existingRepost = await prisma.post.findFirst({
+      where: {
+        authorWallet: walletAddress,
+        isRepost: true,
+        originalReplyId: id
+      }
+    })
+
+    if (existingRepost) {
+      await prisma.post.delete({ where: { id: existingRepost.id } })
+      await prisma.reply.update({
+        where: { id },
+        data: { repostCount: { decrement: 1 } }
+      })
+
+      return res.json({
+        success: true,
+        reposted: false,
+        message: 'Repost removed'
+      })
+    }
+
+    const repost = await prisma.post.create({
+      data: {
+        authorWallet: walletAddress,
+        content: comment || '',
+        isRepost: true,
+        originalReplyId: id,
+        repostComment: comment || null
+      },
+      include: {
+        author: { select: authorSelect },
+        originalReply: {
+          include: {
+            author: { select: authorSelect }
+          }
+        }
+      }
+    })
+
+    await prisma.reply.update({
+      where: { id },
+      data: { repostCount: { increment: 1 } }
+    })
+
+    emitNewPost(repost)
+
+    logger.info(`${walletAddress} reposted reply ${id}`)
+
+    res.json({
+      success: true,
+      reposted: true,
+      repostPost: repost,
+      message: 'Reposted successfully'
+    })
+  } catch (error) {
+    logger.error('Repost reply error:', error)
+    res.status(500).json({ error: 'Failed to repost reply' })
+  }
+}

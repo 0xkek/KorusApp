@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { createReply, getReplies, likeReply, getUserReplies } from '../controllers/repliesController'
+import { repostReply } from '../controllers/interactionsController'
 import { authenticate } from '../middleware/auth'
 import { validateCreateReply, validateLike } from '../middleware/validation'
 import { checkSuspension, checkWarnings } from '../middleware/moderationCheck'
@@ -143,6 +144,9 @@ router.get('/:id/replies', readPostsRateLimiter, getReplies)
  *         $ref: '#/components/responses/RateLimitError'
  */
 router.post('/:id/like', authenticate, interactionsRateLimiter, validateLike, likeReply)
+
+// POST /api/replies/:id/repost — repost a reply (toggles, like post reposts)
+router.post('/:id/repost', authenticate, checkSuspension, interactionsRateLimiter, repostReply)
 
 // GET /api/replies/user/:walletAddress — get replies by a specific user
 router.get('/user/:walletAddress', readPostsRateLimiter, getUserReplies)

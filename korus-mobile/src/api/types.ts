@@ -66,6 +66,8 @@ export interface Reply {
   authorWallet: string;
   content: string;
   likeCount: number;
+  /** Added alongside reply reposts; absent on older backend responses. */
+  repostCount?: number;
   createdAt: string;
   author: Author;
 }
