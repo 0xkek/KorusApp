@@ -35,4 +35,19 @@ export const notificationsAPI = {
 
   markAllRead: (token: string) =>
     api.post<{ success: boolean }>('/api/notifications/read-all', {}, token),
+
+  /**
+   * Save this device's Expo push token. Distinct from /push/subscribe, which
+   * is browser Web Push writing a different field.
+   */
+  registerPushToken: (expoToken: string, token: string) =>
+    api.post<{ success: boolean }>(
+      '/api/notifications/push/register',
+      { token: expoToken },
+      token
+    ),
+
+  /** Clear it on sign-out so a shared device stops receiving these. */
+  unregisterPushToken: (token: string) =>
+    api.post<{ success: boolean }>('/api/notifications/push/unregister', {}, token),
 };

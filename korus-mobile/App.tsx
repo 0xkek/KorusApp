@@ -17,6 +17,10 @@ import { TipModal } from './src/components/TipModal';
 import { NotificationsScreen } from './src/screens/NotificationsScreen';
 import { SearchScreen } from './src/screens/SearchScreen';
 import { notificationsAPI } from './src/api/notifications';
+import {
+  usePushRegistration,
+  useNotificationTap,
+} from './src/notifications/usePushRegistration';
 import type { Post } from './src/api/types';
 import { theme } from './src/theme';
 
@@ -51,6 +55,18 @@ function KorusApp() {
   // Post being tipped; the modal is open whenever this is set.
   const [tipTarget, setTipTarget] = useState<Post | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // Registers this device for push once signed in. No-ops cleanly until the
+  // project is linked with `eas init` — see usePushRegistration.
+  usePushRegistration(auth.token);
+
+  // Tapping a push opens what it refers to.
+  useNotificationTap((data) => {
+    if (data?.postId) setScreen({ name: 'post', postId: String(data.postId) });
+    else if (data?.fromUserId)
+      setScreen({ name: 'profile', walletAddress: String(data.fromUserId) });
+    else setScreen({ name: 'notifications' });
+  });
 
   // Poll for unread notifications. There is no push registration endpoint on
   // the backend yet, so polling is the only way to surface these; 60s is a
@@ -186,7 +202,15 @@ function KorusApp() {
                 isBusy={auth.isBusy}
                 error={auth.error}
                 onConnect={auth.connectAndSignIn}
-                onSignOut={auth.signOut}
+                onSignOut={() => {
+                  // Clear the push token first — after signOut there is no
+                  // token to authenticate the call with, and otherwise this
+                  // device keeps receiving the previous account's pushes.
+                  if (auth.token) {
+                    notificationsAPI.unregisterPushToken(auth.token).catch(() => {});
+                  }
+                  auth.signOut();
+                }}
                 onOpenProfile={
                   auth.walletAddress
                     ? () => setScreen({ name: 'profile', walletAddress: auth.walletAddress! })
