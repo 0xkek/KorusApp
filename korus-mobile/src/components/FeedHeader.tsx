@@ -9,6 +9,7 @@ interface Props {
   error: string | null;
   onConnect: () => void;
   onSignOut: () => void;
+  onOpenProfile?: () => void;
 }
 
 /**
@@ -24,6 +25,7 @@ export function FeedHeader({
   error,
   onConnect,
   onSignOut,
+  onOpenProfile,
 }: Props) {
   return (
     <View style={styles.root}>
@@ -36,7 +38,14 @@ export function FeedHeader({
         </View>
 
         {signedIn ? (
-          <Pressable onPress={onSignOut} style={styles.chip}>
+          // Tap opens your profile; sign-out is a long-press so a stray tap
+          // can't drop the session and force another wallet round-trip.
+          <Pressable
+            onPress={onOpenProfile}
+            onLongPress={onSignOut}
+            delayLongPress={500}
+            style={styles.chip}
+          >
             <Text style={styles.chipText}>{shortAddress(walletAddress ?? '')}</Text>
           </Pressable>
         ) : (

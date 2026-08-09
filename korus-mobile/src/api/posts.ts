@@ -13,6 +13,18 @@ export const postsAPI = {
   /** Public — no auth required, which is what makes shared links work. */
   getPost: (id: string) => api.get<SinglePostResponse>(`/api/posts/${id}`),
 
+  /**
+   * A single user's posts. The param is `authorWallet` — `author` is silently
+   * ignored by the backend and returns the unfiltered feed.
+   */
+  getUserPosts: (walletAddress: string, params: { limit?: number; cursor?: string } = {}) => {
+    const q = new URLSearchParams();
+    q.set('authorWallet', walletAddress);
+    q.set('limit', String(params.limit ?? 20));
+    if (params.cursor) q.set('cursor', params.cursor);
+    return api.get<PostsResponse>(`/api/posts?${q.toString()}`);
+  },
+
   /** Trending uses offset, not cursor. */
   getTrending: (params: { limit?: number; offset?: number } = {}) => {
     const q = new URLSearchParams();

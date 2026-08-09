@@ -4,8 +4,15 @@ import { Platform, StatusBar as RNStatusBar, StyleSheet, View } from 'react-nati
 import { useWalletAuth } from './src/wallet/useWalletAuth';
 import { FeedScreen } from './src/screens/FeedScreen';
 import { PostDetailScreen } from './src/screens/PostDetailScreen';
+import { ProfileScreen } from './src/screens/ProfileScreen';
 import { FeedHeader } from './src/components/FeedHeader';
 import { theme } from './src/theme';
+
+/** Screens are a small discriminated union — enough for Phase 2's three views. */
+type Screen =
+  | { name: 'feed' }
+  | { name: 'post'; postId: string }
+  | { name: 'profile'; walletAddress: string };
 
 /**
  * Minimal stack. Deliberately not expo-router yet — Phase 2 is three screens,
@@ -14,19 +21,31 @@ import { theme } from './src/theme';
  */
 export default function App() {
   const auth = useWalletAuth();
-  const [openPostId, setOpenPostId] = useState<string | null>(null);
+  const [screen, setScreen] = useState<Screen>({ name: 'feed' });
+  const goFeed = () => setScreen({ name: 'feed' });
 
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
       <View style={styles.inner}>
-        {openPostId ? (
-          <PostDetailScreen postId={openPostId} onBack={() => setOpenPostId(null)} />
+        {screen.name === 'post' ? (
+          <PostDetailScreen
+            postId={screen.postId}
+            onBack={goFeed}
+            onOpenProfile={(wallet) => setScreen({ name: 'profile', walletAddress: wallet })}
+          />
+        ) : screen.name === 'profile' ? (
+          <ProfileScreen
+            walletAddress={screen.walletAddress}
+            onBack={goFeed}
+            onOpenPost={(post) => setScreen({ name: 'post', postId: post.id })}
+          />
         ) : (
           // The feed is public — readable before signing in, same as the web
           // app, so a new user sees content rather than a wall.
           <FeedScreen
-            onOpenPost={(post) => setOpenPostId(post.id)}
+            onOpenPost={(post) => setScreen({ name: 'post', postId: post.id })}
+            onOpenProfile={(wallet) => setScreen({ name: 'profile', walletAddress: wallet })}
             header={
               <FeedHeader
                 walletAddress={auth.walletAddress}
@@ -35,6 +54,11 @@ export default function App() {
                 error={auth.error}
                 onConnect={auth.connectAndSignIn}
                 onSignOut={auth.signOut}
+                onOpenProfile={
+                  auth.walletAddress
+                    ? () => setScreen({ name: 'profile', walletAddress: auth.walletAddress! })
+                    : undefined
+                }
               />
             }
           />

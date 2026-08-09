@@ -1,19 +1,20 @@
 import { memo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Post } from '../api/types';
-import { displayName, relativeTime } from '../api/types';
+import { displayName, relativeTime, resolveAvatarUrl } from '../api/types';
 import { theme } from '../theme';
 
 interface Props {
   post: Post;
   onPress?: (post: Post) => void;
+  onPressAuthor?: (walletAddress: string) => void;
 }
 
-function PostCardBase({ post, onPress }: Props) {
+function PostCardBase({ post, onPress, onPressAuthor }: Props) {
   // A repost renders the original's content with a "reposted" line above it.
   const source = post.isRepost && post.originalPost ? post.originalPost : post;
   const author = source.author;
-  const avatar = author?.nftAvatar;
+  const avatar = resolveAvatarUrl(author?.nftAvatar);
 
   return (
     <Pressable
@@ -27,21 +28,32 @@ function PostCardBase({ post, onPress }: Props) {
       )}
 
       <View style={styles.row}>
-        {avatar ? (
-          <Image source={{ uri: avatar }} style={styles.avatar} />
-        ) : (
-          <View
-            style={[
-              styles.avatar,
-              styles.avatarFallback,
-              { backgroundColor: author?.themeColor ?? theme.mint },
-            ]}
-          >
-            <Text style={styles.avatarText}>
-              {(author?.walletAddress ?? '??').slice(0, 2).toUpperCase()}
-            </Text>
-          </View>
-        )}
+        {/* Tapping the avatar opens the author's profile; tapping anywhere
+            else on the card opens the post. */}
+        <Pressable
+          onPress={
+            onPressAuthor && author?.walletAddress
+              ? () => onPressAuthor(author.walletAddress)
+              : undefined
+          }
+          hitSlop={6}
+        >
+          {avatar ? (
+            <Image source={{ uri: avatar }} style={styles.avatar} />
+          ) : (
+            <View
+              style={[
+                styles.avatar,
+                styles.avatarFallback,
+                { backgroundColor: author?.themeColor ?? theme.mint },
+              ]}
+            >
+              <Text style={styles.avatarText}>
+                {(author?.walletAddress ?? '??').slice(0, 2).toUpperCase()}
+              </Text>
+            </View>
+          )}
+        </Pressable>
 
         <View style={styles.body}>
           <View style={styles.header}>

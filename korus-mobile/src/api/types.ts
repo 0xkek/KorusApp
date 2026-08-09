@@ -15,6 +15,27 @@ export interface Author {
   themeColor: string | null;
 }
 
+/**
+ * GET /api/user/by-wallet/:wallet.
+ *
+ * Deliberately narrower than the web app's UserProfile: production omits
+ * themeColor, location, website and twitter here, so they are not declared.
+ * `nftAvatar` is a raw mint address on this endpoint — see resolveAvatarUrl.
+ */
+export interface UserProfile {
+  walletAddress: string;
+  username: string | null;
+  displayName: string | null;
+  bio: string | null;
+  nftAvatar: string | null;
+  snsUsername: string | null;
+  tier: string | null;
+  reputationScore: number | null;
+  followerCount: number | null;
+  followingCount: number | null;
+  createdAt: string | null;
+}
+
 export interface Post {
   id: string;
   authorWallet: string;
@@ -84,6 +105,19 @@ export function displayName(author: Author | null | undefined, fallback?: string
   if (username) return `@${username}`;
   if (sns) return sns;
   return shortAddress(author.walletAddress);
+}
+
+/**
+ * Only render an avatar we know is an image.
+ *
+ * The posts endpoints resolve nftAvatar to a URL, but /api/user/by-wallet
+ * returns the bare NFT mint address. Feeding a mint to <Image> fails silently,
+ * so anything that is not http(s) is treated as "no avatar" and the caller
+ * falls back to initials.
+ */
+export function resolveAvatarUrl(nftAvatar: string | null | undefined): string | null {
+  if (!nftAvatar) return null;
+  return /^https?:\/\//.test(nftAvatar) ? nftAvatar : null;
 }
 
 export function shortAddress(address: string): string {

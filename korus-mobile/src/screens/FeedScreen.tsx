@@ -17,10 +17,11 @@ type Tab = 'home' | 'trending';
 
 interface Props {
   onOpenPost: (post: Post) => void;
+  onOpenProfile?: (walletAddress: string) => void;
   header?: React.ReactElement;
 }
 
-export function FeedScreen({ onOpenPost, header }: Props) {
+export function FeedScreen({ onOpenPost, onOpenProfile, header }: Props) {
   const [tab, setTab] = useState<Tab>('home');
   const [posts, setPosts] = useState<Post[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -80,7 +81,9 @@ export function FeedScreen({ onOpenPost, header }: Props) {
     <FlatList
       data={posts}
       keyExtractor={(item) => item.id}
-      renderItem={({ item }) => <PostCard post={item} onPress={onOpenPost} />}
+      renderItem={({ item }) => (
+        <PostCard post={item} onPress={onOpenPost} onPressAuthor={onOpenProfile} />
+      )}
       style={styles.list}
       ListHeaderComponent={
         <>

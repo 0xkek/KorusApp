@@ -10,15 +10,16 @@ import {
 } from 'react-native';
 import { postsAPI } from '../api/posts';
 import type { Post, Reply } from '../api/types';
-import { displayName, relativeTime } from '../api/types';
+import { displayName, relativeTime, resolveAvatarUrl } from '../api/types';
 import { theme } from '../theme';
 
 interface Props {
   postId: string;
   onBack: () => void;
+  onOpenProfile?: (walletAddress: string) => void;
 }
 
-export function PostDetailScreen({ postId, onBack }: Props) {
+export function PostDetailScreen({ postId, onBack, onOpenProfile }: Props) {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,9 +62,19 @@ export function PostDetailScreen({ postId, onBack }: Props) {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.authorRow}>
-            {post.author?.nftAvatar ? (
-              <Image source={{ uri: post.author.nftAvatar }} style={styles.avatar} />
+          <Pressable
+            style={styles.authorRow}
+            onPress={
+              onOpenProfile && post.authorWallet
+                ? () => onOpenProfile(post.authorWallet)
+                : undefined
+            }
+          >
+            {resolveAvatarUrl(post.author?.nftAvatar) ? (
+              <Image
+                source={{ uri: resolveAvatarUrl(post.author?.nftAvatar)! }}
+                style={styles.avatar}
+              />
             ) : (
               <View
                 style={[
@@ -83,7 +94,7 @@ export function PostDetailScreen({ postId, onBack }: Props) {
               </Text>
               <Text style={styles.time}>{relativeTime(post.createdAt)}</Text>
             </View>
-          </View>
+          </Pressable>
 
           {post.content ? <Text style={styles.postText}>{post.content}</Text> : null}
 
