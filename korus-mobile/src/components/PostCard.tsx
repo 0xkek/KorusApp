@@ -2,7 +2,12 @@ import { memo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Post } from '../api/types';
 import { displayName, relativeTime, resolveAvatarUrl } from '../api/types';
+import { LikeIcon, ReplyIcon, RepostIcon, TipIcon } from './Icons';
 import { theme } from '../theme';
+
+// Match the web app's action colours.
+const LIKE_COLOR = '#ef4444';
+const TIP_COLOR = '#f59e0b';
 
 interface Props {
   post: Post;
@@ -102,17 +107,24 @@ function PostCardBase({
               onPress={onReply ? () => onReply(source) : undefined}
               hitSlop={8}
               disabled={!onReply}
+              style={styles.action}
             >
-              <Text style={styles.stat}>{source.replyCount ?? 0} replies</Text>
+              <ReplyIcon color={theme.textTertiary} />
+              <Text style={styles.stat}>{source.replyCount ?? 0}</Text>
             </Pressable>
 
             <Pressable
               onPress={onToggleLike ? () => onToggleLike(source) : undefined}
               hitSlop={8}
               disabled={!onToggleLike}
+              style={styles.action}
             >
+              <LikeIcon
+                color={liked ? LIKE_COLOR : theme.textTertiary}
+                fill={liked ? LIKE_COLOR : 'none'}
+              />
               <Text style={[styles.stat, liked && styles.statLiked]}>
-                {liked ? '♥' : '♡'} {source.likeCount ?? 0}
+                {source.likeCount ?? 0}
               </Text>
             </Pressable>
 
@@ -121,14 +133,26 @@ function PostCardBase({
               onPress={canRepost ? () => onToggleRepost!(source) : undefined}
               hitSlop={8}
               disabled={!canRepost}
+              style={styles.action}
             >
+              <RepostIcon color={reposted ? theme.mint : theme.textTertiary} />
               <Text style={[styles.stat, reposted && styles.statReposted]}>
-                ⇄ {source.repostCount ?? 0}
+                {source.repostCount ?? 0}
               </Text>
             </Pressable>
-            {Number(source.tipAmount) > 0 && (
-              <Text style={styles.tip}>{Number(source.tipAmount).toFixed(2)} SOL</Text>
-            )}
+
+            {/* Tipping needs an on-chain transfer signed through the wallet,
+                which is Phase 4. Shown as a value for now, not an action. */}
+            <View style={styles.action}>
+              <TipIcon
+                color={Number(source.tipAmount) > 0 ? TIP_COLOR : theme.textTertiary}
+              />
+              <Text style={Number(source.tipAmount) > 0 ? styles.tip : styles.stat}>
+                {Number(source.tipAmount) > 0
+                  ? Number(source.tipAmount).toFixed(2)
+                  : '0'}
+              </Text>
+            </View>
           </View>
         </View>
       </View>
@@ -170,9 +194,10 @@ const styles = StyleSheet.create({
     marginTop: 10,
     backgroundColor: theme.surface,
   },
-  stats: { flexDirection: 'row', gap: 14, marginTop: 10, alignItems: 'center' },
+  stats: { flexDirection: 'row', gap: 22, marginTop: 12, alignItems: 'center' },
+  action: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   stat: { color: theme.textTertiary, fontSize: 13 },
-  statLiked: { color: '#f87171' },
+  statLiked: { color: LIKE_COLOR },
   statReposted: { color: theme.mint },
-  tip: { color: theme.mint, fontSize: 13, fontWeight: '600' },
+  tip: { color: TIP_COLOR, fontSize: 13, fontWeight: '600' },
 });

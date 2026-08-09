@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -11,7 +12,10 @@ import {
 import { postsAPI } from '../api/posts';
 import type { Post, Reply } from '../api/types';
 import { displayName, relativeTime, resolveAvatarUrl } from '../api/types';
+import { LikeIcon } from '../components/Icons';
 import { theme } from '../theme';
+
+const LIKE_COLOR = '#ef4444';
 
 interface Props {
   postId: string;
@@ -235,7 +239,22 @@ export function PostDetailScreen({
               // Reposting your own post is rejected by the backend.
               onPress={token && post.authorWallet !== currentWallet ? toggleRepost : undefined}
             />
-            <Stat value={Number(post.tipAmount) || 0} label="SOL tipped" />
+            {/* Tips require an on-chain SOL transfer signed through the wallet
+                and verified server-side — Phase 4. Say so rather than offering
+                a button that cannot work yet. */}
+            <Stat
+              value={Number(post.tipAmount) || 0}
+              label="SOL tipped"
+              onPress={
+                token
+                  ? () =>
+                      Alert.alert(
+                        'Tipping not available yet',
+                        'Sending a tip needs an on-chain SOL transfer signed by your wallet. That lands in the next phase — you can still tip from korus.fun.'
+                      )
+                  : undefined
+              }
+            />
           </View>
 
           {token && onReply ? (
@@ -270,13 +289,18 @@ export function PostDetailScreen({
                 hitSlop={8}
                 style={styles.replyLike}
               >
+                <LikeIcon
+                  size={16}
+                  color={likedReplies.has(reply.id) ? LIKE_COLOR : theme.textTertiary}
+                  fill={likedReplies.has(reply.id) ? LIKE_COLOR : 'none'}
+                />
                 <Text
                   style={[
                     styles.replyLikeText,
                     likedReplies.has(reply.id) && styles.replyLiked,
                   ]}
                 >
-                  {likedReplies.has(reply.id) ? '♥' : '♡'} {reply.likeCount ?? 0}
+                  {reply.likeCount ?? 0}
                 </Text>
               </Pressable>
             </View>
@@ -371,8 +395,14 @@ const styles = StyleSheet.create({
   },
   replyName: { color: theme.text, fontSize: 14, fontWeight: '600', marginBottom: 4 },
   replyText: { color: theme.textSecondary, fontSize: 15, lineHeight: 21 },
-  replyLike: { marginTop: 8, alignSelf: 'flex-start' },
+  replyLike: {
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   replyLikeText: { color: theme.textTertiary, fontSize: 13 },
-  replyLiked: { color: '#f87171' },
+  replyLiked: { color: LIKE_COLOR },
   statActive: { color: theme.mint },
 });
