@@ -54,9 +54,12 @@ export interface Post {
   isShoutout: boolean;
   isRepost: boolean;
   originalPostId: string | null;
+  originalReplyId?: string | null;
   repostComment: string | null;
   author: Author;
   originalPost?: Post | null;
+  /** Set instead of originalPost when a reply was reposted. */
+  originalReply?: Reply | null;
   replies?: Reply[];
 }
 

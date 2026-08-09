@@ -449,10 +449,16 @@ export const getPosts = async (req: Request, res: Response) => {
           // Skip posts with neither text nor media — they render as an empty
           // card. The author-filtered branch above already does this; the main
           // feed did not, so legacy blank rows still showed up.
+          //
+          // Reposts are exempt: a plain repost carries empty content by design
+          // (only a quote repost sets it) and renders the original's content
+          // instead. Without this they were silently filtered out of the feed,
+          // so reposting incremented a counter and did nothing else.
           OR: [
             { content: { not: '' } },
             { imageUrl: { not: null } },
             { videoUrl: { not: null } },
+            { isRepost: true },
           ]
         },
         include: {
@@ -468,6 +474,23 @@ export const getPosts = async (req: Request, res: Response) => {
             }
           },
           originalPost: {
+            include: {
+              author: {
+                select: {
+                  walletAddress: true,
+                  tier: true,
+                  genesisVerified: true,
+                  snsUsername: true,
+                  username: true,
+                  nftAvatar: true,
+                  themeColor: true
+                }
+              }
+            }
+          },
+          // A repost of a reply renders the reply's content, so it has to be
+          // loaded too or the card comes through blank.
+          originalReply: {
             include: {
               author: {
                 select: {

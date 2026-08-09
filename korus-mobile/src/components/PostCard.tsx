@@ -37,28 +37,42 @@ function PostCardBase({
   reposted,
   currentWallet,
 }: Props) {
-  // A repost renders the original's content with a "reposted" line above it.
-  const source = post.isRepost && post.originalPost ? post.originalPost : post;
-  const author = source.author;
+  // A repost renders what it reposted, with a "reposted" line above it. The
+  // source is either a post or — since reply reposts — a reply, which has no
+  // repost/tip counts of its own, so those render as zero.
+  const repostedReply = post.isRepost && !post.originalPost ? post.originalReply : null;
+  const source: Post = post.isRepost && post.originalPost ? post.originalPost : post;
+  const author = repostedReply ? repostedReply.author : source.author;
   const avatar = resolveAvatarUrl(author?.nftAvatar);
-  // Reposting your own post is a 400 from the backend, so the control is inert
-  // there rather than offering an action that always fails.
+  const bodyText = repostedReply ? repostedReply.content : source.content;
+  const authorWallet = repostedReply ? repostedReply.authorWallet : source.authorWallet;
   // Reposting or tipping your own post is rejected by the backend. Rather than
   // silently inert controls, they stay tappable when signed in and explain why.
-  const isOwnPost = Boolean(currentWallet) && source.authorWallet === currentWallet;
+  const isOwnPost = Boolean(currentWallet) && authorWallet === currentWallet;
   const canRepost = Boolean(onToggleRepost) && !isOwnPost;
   const canTip = Boolean(onTip) && !isOwnPost;
 
   return (
     <Pressable
-      onPress={() => onPress?.(source)}
+      // A reposted reply opens the thread it lives in, not the empty repost.
+      onPress={() =>
+        onPress?.(
+          repostedReply ? ({ ...source, id: repostedReply.postId } as Post) : source
+        )
+      }
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
     >
       {post.isRepost && (
         <Text style={styles.repostLine}>
           {displayName(post.author, post.authorWallet)} reposted
+          {repostedReply ? ' a reply' : ''}
         </Text>
       )}
+
+      {/* A quote repost adds a comment of its own above the quoted content. */}
+      {post.isRepost && post.repostComment ? (
+        <Text style={styles.quoteComment}>{post.repostComment}</Text>
+      ) : null}
 
       <View style={styles.row}>
         {/* Tapping the avatar opens the author's profile; tapping anywhere
@@ -91,15 +105,15 @@ function PostCardBase({
         <View style={styles.body}>
           <View style={styles.header}>
             <Text style={styles.name} numberOfLines={1}>
-              {displayName(author, source.authorWallet)}
+              {displayName(author, authorWallet)}
             </Text>
             {author?.tier === 'premium' && <Text style={styles.badge}>★</Text>}
-            <Text style={styles.time}>· {relativeTime(source.createdAt)}</Text>
+            <Text style={styles.time}>
+              · {relativeTime(repostedReply ? repostedReply.createdAt : source.createdAt)}
+            </Text>
           </View>
 
-          {source.content ? (
-            <Text style={styles.content}>{source.content}</Text>
-          ) : null}
+          {bodyText ? <Text style={styles.content}>{bodyText}</Text> : null}
 
           {source.imageUrl ? (
             <Image
@@ -192,6 +206,12 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.border,
   },
   cardPressed: { backgroundColor: 'rgba(255,255,255,0.03)' },
+  quoteComment: {
+    color: theme.text,
+    fontSize: 15,
+    lineHeight: 21,
+    marginBottom: 10,
+  },
   repostLine: {
     color: theme.textTertiary,
     fontSize: 12,
