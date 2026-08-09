@@ -11,10 +11,11 @@ import {
 import { postsAPI } from '../api/posts';
 import type { Post, Reply } from '../api/types';
 import { displayName, relativeTime, resolveAvatarUrl } from '../api/types';
-import { LikeIcon, RepostIcon } from '../components/Icons';
+import { LikeIcon, ReplyIcon, RepostIcon, TipIcon } from '../components/Icons';
 import { theme } from '../theme';
 
 const LIKE_COLOR = '#ef4444';
+const TIP_COLOR = '#f59e0b';
 
 interface Props {
   postId: string;
@@ -281,23 +282,44 @@ export function PostDetailScreen({
           ) : null}
 
           <View style={styles.statsRow}>
-            <Stat value={post.replyCount} label="Replies" />
             <Stat
+              icon={<ReplyIcon size={20} color={theme.textTertiary} />}
+              value={post.replyCount}
+              onPress={token && onReply ? () => onReply(postId) : undefined}
+            />
+            <Stat
+              icon={
+                <LikeIcon
+                  size={20}
+                  color={liked ? LIKE_COLOR : theme.textTertiary}
+                  fill={liked ? LIKE_COLOR : 'none'}
+                />
+              }
               value={post.likeCount}
-              label="Likes"
               active={liked}
+              activeColor={LIKE_COLOR}
               onPress={token ? toggleLike : undefined}
             />
             <Stat
+              icon={
+                <RepostIcon size={20} color={reposted ? theme.mint : theme.textTertiary} />
+              }
               value={post.repostCount}
-              label="Reposts"
               active={reposted}
+              activeColor={theme.mint}
               // Reposting your own post is rejected by the backend.
               onPress={token && post.authorWallet !== currentWallet ? toggleRepost : undefined}
             />
             <Stat
+              icon={
+                <TipIcon
+                  size={20}
+                  color={Number(post.tipAmount) > 0 ? TIP_COLOR : theme.textTertiary}
+                />
+              }
               value={Number(post.tipAmount) || 0}
-              label="SOL tipped"
+              active={Number(post.tipAmount) > 0}
+              activeColor={TIP_COLOR}
               // Tipping your own post is pointless, so it is inert there.
               onPress={
                 token && onTip && post.authorWallet !== currentWallet
@@ -391,20 +413,24 @@ export function PostDetailScreen({
 }
 
 function Stat({
+  icon,
   value,
-  label,
   active,
+  activeColor,
   onPress,
 }: {
+  icon: React.ReactNode;
   value: number;
-  label: string;
   active?: boolean;
+  activeColor?: string;
   onPress?: () => void;
 }) {
   return (
-    <Pressable style={styles.stat} onPress={onPress} disabled={!onPress} hitSlop={8}>
-      <Text style={[styles.statValue, active && styles.statActive]}>{value}</Text>
-      <Text style={[styles.statLabel, active && styles.statActive]}>{label}</Text>
+    <Pressable style={styles.stat} onPress={onPress} disabled={!onPress} hitSlop={10}>
+      {icon}
+      <Text style={[styles.statValue, active && activeColor ? { color: activeColor } : null]}>
+        {value}
+      </Text>
     </Pressable>
   );
 }
@@ -441,16 +467,15 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: 'row',
-    gap: 24,
+    gap: 30,
     marginTop: 20,
     paddingVertical: 16,
     borderTopWidth: 1,
     borderBottomWidth: 1,
     borderColor: theme.border,
   },
-  stat: { alignItems: 'flex-start' },
-  statValue: { color: theme.text, fontSize: 17, fontWeight: '700' },
-  statLabel: { color: theme.textTertiary, fontSize: 12, marginTop: 2 },
+  stat: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  statValue: { color: theme.text, fontSize: 15, fontWeight: '600' },
   replyButton: {
     marginTop: 18,
     paddingVertical: 12,
@@ -479,5 +504,4 @@ const styles = StyleSheet.create({
   replyLikeText: { color: theme.textTertiary, fontSize: 13 },
   replyLiked: { color: LIKE_COLOR },
   replyReposted: { color: theme.mint },
-  statActive: { color: theme.mint },
 });
