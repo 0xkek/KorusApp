@@ -174,10 +174,19 @@ MWA handles `signTransaction`; the existing `/api/rpc` proxy handles submission.
 
 ## Phase 5 — Polish
 
-- Push notifications: the backend already has `pushToken` (VarChar 255) and a
-  **complete but unused** `pushNotificationService` built on `expo-server-sdk`.
-  It was written for exactly this app. Wiring it up is mostly registration on
-  the client side.
+- ✅ In-app notification list (`d15b9a3`) — bell with unread badge, polling
+  every 60s.
+- ⬜ Push notifications. **The earlier note here was wrong**: it claimed this
+  was "mostly registration on the client side". Checked properly, the backend
+  needs work first:
+  - `pushNotificationService` (expo-server-sdk) is complete but has **no
+    callers anywhere**.
+  - **No route writes `pushToken`.** `/api/notifications/push/subscribe` is
+    browser Web Push (VAPID) writing `webPushSubscription`, a different field
+    for a different client.
+  - So this needs: a register endpoint for Expo tokens, and calls to
+    `pushNotificationService` wherever notifications are currently created
+    (like/reply/follow/tip in the controllers).
 - Deep links (`korus://post/:id`) — pairs with the existing web OG metadata
 - Offline/error states
 
