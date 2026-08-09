@@ -48,9 +48,24 @@ export const postsAPI = {
       token
     ),
 
-  /** Repost. Auth required. */
+  /**
+   * Repost is also a toggle — reposting again removes it. The backend rejects
+   * reposting your own post with a 400, so the UI hides the action there.
+   */
   repost: (postId: string, token: string) =>
-    api.post<{ success: boolean }>(`/api/interactions/posts/${postId}/repost`, {}, token),
+    api.post<{ success: boolean; reposted: boolean; message: string }>(
+      `/api/interactions/posts/${postId}/repost`,
+      {},
+      token
+    ),
+
+  /** Replies have their own like endpoint, mounted under /api/replies. */
+  toggleReplyLike: (replyId: string, token: string) =>
+    api.post<{ success: boolean; liked: boolean; message: string }>(
+      `/api/replies/${replyId}/like`,
+      {},
+      token
+    ),
 
   /**
    * Which of these posts the signed-in user has already liked/tipped/reposted.

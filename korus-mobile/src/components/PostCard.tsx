@@ -10,15 +10,32 @@ interface Props {
   onPressAuthor?: (walletAddress: string) => void;
   /** Omitted when signed out — the actions then render as plain counts. */
   onToggleLike?: (post: Post) => void;
+  onToggleRepost?: (post: Post) => void;
   onReply?: (post: Post) => void;
   liked?: boolean;
+  reposted?: boolean;
+  /** The signed-in wallet, used to hide reposting your own post. */
+  currentWallet?: string | null;
 }
 
-function PostCardBase({ post, onPress, onPressAuthor, onToggleLike, onReply, liked }: Props) {
+function PostCardBase({
+  post,
+  onPress,
+  onPressAuthor,
+  onToggleLike,
+  onToggleRepost,
+  onReply,
+  liked,
+  reposted,
+  currentWallet,
+}: Props) {
   // A repost renders the original's content with a "reposted" line above it.
   const source = post.isRepost && post.originalPost ? post.originalPost : post;
   const author = source.author;
   const avatar = resolveAvatarUrl(author?.nftAvatar);
+  // Reposting your own post is a 400 from the backend, so the control is inert
+  // there rather than offering an action that always fails.
+  const canRepost = Boolean(onToggleRepost) && source.authorWallet !== currentWallet;
 
   return (
     <Pressable
@@ -99,7 +116,16 @@ function PostCardBase({ post, onPress, onPressAuthor, onToggleLike, onReply, lik
               </Text>
             </Pressable>
 
-            <Text style={styles.stat}>{source.repostCount ?? 0} reposts</Text>
+            {/* The backend rejects reposting your own post, so don't offer it. */}
+            <Pressable
+              onPress={canRepost ? () => onToggleRepost!(source) : undefined}
+              hitSlop={8}
+              disabled={!canRepost}
+            >
+              <Text style={[styles.stat, reposted && styles.statReposted]}>
+                ⇄ {source.repostCount ?? 0}
+              </Text>
+            </Pressable>
             {Number(source.tipAmount) > 0 && (
               <Text style={styles.tip}>{Number(source.tipAmount).toFixed(2)} SOL</Text>
             )}
@@ -147,5 +173,6 @@ const styles = StyleSheet.create({
   stats: { flexDirection: 'row', gap: 14, marginTop: 10, alignItems: 'center' },
   stat: { color: theme.textTertiary, fontSize: 13 },
   statLiked: { color: '#f87171' },
+  statReposted: { color: theme.mint },
   tip: { color: theme.mint, fontSize: 13, fontWeight: '600' },
 });

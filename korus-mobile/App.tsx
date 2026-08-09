@@ -70,6 +70,7 @@ export default function App() {
             onOpenProfile={(wallet) => setScreen({ name: 'profile', walletAddress: wallet })}
             onReply={(id) => setScreen({ name: 'compose', replyToPostId: id })}
             token={auth.token}
+            currentWallet={auth.walletAddress}
           />
         ) : screen.name === 'profile' ? (
           <ProfileScreen
@@ -88,6 +89,7 @@ export default function App() {
             onOpenProfile={(wallet) => setScreen({ name: 'profile', walletAddress: wallet })}
             onReply={(post) => setScreen({ name: 'compose', replyToPostId: post.id })}
             token={auth.token}
+            currentWallet={auth.walletAddress}
             refreshKey={refreshKey}
             header={
               <FeedHeader

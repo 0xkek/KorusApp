@@ -22,6 +22,8 @@ interface Props {
   header?: React.ReactElement;
   /** Null when signed out — likes and replies then render as plain counts. */
   token?: string | null;
+  /** Used to hide reposting your own post, which the backend rejects. */
+  currentWallet?: string | null;
   /** Bumped by the parent after a write, to force a refetch. */
   refreshKey?: number;
 }
@@ -32,6 +34,7 @@ export function FeedScreen({
   onReply,
   header,
   token,
+  currentWallet,
   refreshKey = 0,
 }: Props) {
   const [tab, setTab] = useState<Tab>('home');
@@ -45,6 +48,7 @@ export function FeedScreen({
   // Which posts the signed-in user has liked. Loaded in a batch after each
   // page, since the posts endpoints do not include per-viewer state.
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [repostedIds, setRepostedIds] = useState<Set<string>>(new Set());
 
   /** Fetch like state for a batch of posts. Silent on failure — worst case the
    *  hearts render hollow until the next refresh. */
@@ -60,6 +64,14 @@ export function FeedScreen({
           const next = new Set(prev);
           Object.entries(res.interactions ?? {}).forEach(([id, state]) => {
             if (state?.liked) next.add(id);
+            else next.delete(id);
+          });
+          return next;
+        });
+        setRepostedIds((prev) => {
+          const next = new Set(prev);
+          Object.entries(res.interactions ?? {}).forEach(([id, state]) => {
+            if (state?.reposted) next.add(id);
             else next.delete(id);
           });
           return next;
@@ -159,6 +171,52 @@ export function FeedScreen({
     [cursor, hasMore, loadingMore, posts.length, loadInteractions]
   );
 
+  const toggleRepost = useCallback(
+    async (post: Post) => {
+      if (!token) return;
+      const wasReposted = repostedIds.has(post.id);
+
+      setRepostedIds((prev) => {
+        const next = new Set(prev);
+        if (wasReposted) next.delete(post.id);
+        else next.add(post.id);
+        return next;
+      });
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === post.id
+            ? { ...p, repostCount: Math.max(0, (p.repostCount ?? 0) + (wasReposted ? -1 : 1)) }
+            : p
+        )
+      );
+
+      try {
+        const res = await postsAPI.repost(post.id, token);
+        setRepostedIds((prev) => {
+          const next = new Set(prev);
+          if (res.reposted) next.add(post.id);
+          else next.delete(post.id);
+          return next;
+        });
+      } catch {
+        setRepostedIds((prev) => {
+          const next = new Set(prev);
+          if (wasReposted) next.add(post.id);
+          else next.delete(post.id);
+          return next;
+        });
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === post.id
+              ? { ...p, repostCount: Math.max(0, (p.repostCount ?? 0) + (wasReposted ? 1 : -1)) }
+              : p
+          )
+        );
+      }
+    },
+    [repostedIds, token]
+  );
+
   // Reset and reload whenever the tab changes, when the parent signals a write
   // landed, or when sign-in state changes (which gates like state).
   useEffect(() => {
@@ -179,8 +237,11 @@ export function FeedScreen({
           onPress={onOpenPost}
           onPressAuthor={onOpenProfile}
           onToggleLike={token ? toggleLike : undefined}
+          onToggleRepost={token ? toggleRepost : undefined}
           onReply={token && onReply ? onReply : undefined}
           liked={likedIds.has(item.id)}
+          reposted={repostedIds.has(item.id)}
+          currentWallet={currentWallet}
         />
       )}
       style={styles.list}

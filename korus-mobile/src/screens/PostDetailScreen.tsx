@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -19,12 +19,113 @@ interface Props {
   onOpenProfile?: (walletAddress: string) => void;
   onReply?: (postId: string) => void;
   token?: string | null;
+  currentWallet?: string | null;
 }
 
-export function PostDetailScreen({ postId, onBack, onOpenProfile, onReply, token }: Props) {
+export function PostDetailScreen({
+  postId,
+  onBack,
+  onOpenProfile,
+  onReply,
+  token,
+  currentWallet,
+}: Props) {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [liked, setLiked] = useState(false);
+  const [reposted, setReposted] = useState(false);
+  const [likedReplies, setLikedReplies] = useState<Set<string>>(new Set());
+
+  const toggleLike = useCallback(async () => {
+    if (!token || !post) return;
+    const was = liked;
+    setLiked(!was);
+    setPost((p) =>
+      p ? { ...p, likeCount: Math.max(0, (p.likeCount ?? 0) + (was ? -1 : 1)) } : p
+    );
+    try {
+      const res = await postsAPI.toggleLike(post.id, token);
+      setLiked(res.liked);
+    } catch {
+      setLiked(was);
+      setPost((p) =>
+        p ? { ...p, likeCount: Math.max(0, (p.likeCount ?? 0) + (was ? 1 : -1)) } : p
+      );
+    }
+  }, [token, post, liked]);
+
+  const toggleRepost = useCallback(async () => {
+    if (!token || !post) return;
+    const was = reposted;
+    setReposted(!was);
+    setPost((p) =>
+      p ? { ...p, repostCount: Math.max(0, (p.repostCount ?? 0) + (was ? -1 : 1)) } : p
+    );
+    try {
+      const res = await postsAPI.repost(post.id, token);
+      setReposted(res.reposted);
+    } catch {
+      setReposted(was);
+      setPost((p) =>
+        p ? { ...p, repostCount: Math.max(0, (p.repostCount ?? 0) + (was ? 1 : -1)) } : p
+      );
+    }
+  }, [token, post, reposted]);
+
+  const toggleReplyLike = useCallback(
+    async (reply: Reply) => {
+      if (!token) return;
+      const was = likedReplies.has(reply.id);
+      setLikedReplies((prev) => {
+        const next = new Set(prev);
+        if (was) next.delete(reply.id);
+        else next.add(reply.id);
+        return next;
+      });
+      setPost((p) =>
+        p
+          ? {
+              ...p,
+              replies: p.replies?.map((r) =>
+                r.id === reply.id
+                  ? { ...r, likeCount: Math.max(0, (r.likeCount ?? 0) + (was ? -1 : 1)) }
+                  : r
+              ),
+            }
+          : p
+      );
+      try {
+        const res = await postsAPI.toggleReplyLike(reply.id, token);
+        setLikedReplies((prev) => {
+          const next = new Set(prev);
+          if (res.liked) next.add(reply.id);
+          else next.delete(reply.id);
+          return next;
+        });
+      } catch {
+        setLikedReplies((prev) => {
+          const next = new Set(prev);
+          if (was) next.add(reply.id);
+          else next.delete(reply.id);
+          return next;
+        });
+        setPost((p) =>
+          p
+            ? {
+                ...p,
+                replies: p.replies?.map((r) =>
+                  r.id === reply.id
+                    ? { ...r, likeCount: Math.max(0, (r.likeCount ?? 0) + (was ? 1 : -1)) }
+                    : r
+                ),
+              }
+            : p
+        );
+      }
+    },
+    [token, likedReplies]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -33,6 +134,21 @@ export function PostDetailScreen({ postId, onBack, onOpenProfile, onReply, token
         // Public endpoint — no auth needed, same as shared links on web.
         const res = await postsAPI.getPost(postId);
         if (!cancelled) setPost(res.post);
+
+        // Per-viewer state is not part of the post payload, so fetch it
+        // separately or the heart renders hollow on an already-liked post.
+        if (token && !cancelled) {
+          try {
+            const inter = await postsAPI.getUserInteractions([postId], token);
+            const state = inter.interactions?.[postId];
+            if (!cancelled && state) {
+              setLiked(Boolean(state.liked));
+              setReposted(Boolean(state.reposted));
+            }
+          } catch {
+            // Non-fatal.
+          }
+        }
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load');
       } finally {
@@ -42,7 +158,7 @@ export function PostDetailScreen({ postId, onBack, onOpenProfile, onReply, token
     return () => {
       cancelled = true;
     };
-  }, [postId]);
+  }, [postId, token]);
 
   return (
     <View style={styles.root}>
@@ -106,8 +222,19 @@ export function PostDetailScreen({ postId, onBack, onOpenProfile, onReply, token
 
           <View style={styles.statsRow}>
             <Stat value={post.replyCount} label="Replies" />
-            <Stat value={post.likeCount} label="Likes" />
-            <Stat value={post.repostCount} label="Reposts" />
+            <Stat
+              value={post.likeCount}
+              label="Likes"
+              active={liked}
+              onPress={token ? toggleLike : undefined}
+            />
+            <Stat
+              value={post.repostCount}
+              label="Reposts"
+              active={reposted}
+              // Reposting your own post is rejected by the backend.
+              onPress={token && post.authorWallet !== currentWallet ? toggleRepost : undefined}
+            />
             <Stat value={Number(post.tipAmount) || 0} label="SOL tipped" />
           </View>
 
@@ -125,11 +252,33 @@ export function PostDetailScreen({ postId, onBack, onOpenProfile, onReply, token
 
           {post.replies?.map((reply: Reply) => (
             <View key={reply.id} style={styles.reply}>
-              <Text style={styles.replyName}>
-                {displayName(reply.author, reply.authorWallet)}
-                <Text style={styles.time}> · {relativeTime(reply.createdAt)}</Text>
-              </Text>
+              <Pressable
+                onPress={
+                  onOpenProfile ? () => onOpenProfile(reply.authorWallet) : undefined
+                }
+                hitSlop={6}
+              >
+                <Text style={styles.replyName}>
+                  {displayName(reply.author, reply.authorWallet)}
+                  <Text style={styles.time}> · {relativeTime(reply.createdAt)}</Text>
+                </Text>
+              </Pressable>
               <Text style={styles.replyText}>{reply.content}</Text>
+              <Pressable
+                onPress={token ? () => toggleReplyLike(reply) : undefined}
+                disabled={!token}
+                hitSlop={8}
+                style={styles.replyLike}
+              >
+                <Text
+                  style={[
+                    styles.replyLikeText,
+                    likedReplies.has(reply.id) && styles.replyLiked,
+                  ]}
+                >
+                  {likedReplies.has(reply.id) ? '♥' : '♡'} {reply.likeCount ?? 0}
+                </Text>
+              </Pressable>
             </View>
           ))}
         </ScrollView>
@@ -138,12 +287,22 @@ export function PostDetailScreen({ postId, onBack, onOpenProfile, onReply, token
   );
 }
 
-function Stat({ value, label }: { value: number; label: string }) {
+function Stat({
+  value,
+  label,
+  active,
+  onPress,
+}: {
+  value: number;
+  label: string;
+  active?: boolean;
+  onPress?: () => void;
+}) {
   return (
-    <View style={styles.stat}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
+    <Pressable style={styles.stat} onPress={onPress} disabled={!onPress} hitSlop={8}>
+      <Text style={[styles.statValue, active && styles.statActive]}>{value}</Text>
+      <Text style={[styles.statLabel, active && styles.statActive]}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -212,4 +371,8 @@ const styles = StyleSheet.create({
   },
   replyName: { color: theme.text, fontSize: 14, fontWeight: '600', marginBottom: 4 },
   replyText: { color: theme.textSecondary, fontSize: 15, lineHeight: 21 },
+  replyLike: { marginTop: 8, alignSelf: 'flex-start' },
+  replyLikeText: { color: theme.textTertiary, fontSize: 13 },
+  replyLiked: { color: '#f87171' },
+  statActive: { color: theme.mint },
 });
