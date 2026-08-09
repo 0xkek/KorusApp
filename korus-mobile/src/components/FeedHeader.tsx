@@ -1,5 +1,6 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { shortAddress } from '../api/types';
+import { BellIcon } from './Icons';
 import { theme } from '../theme';
 
 interface Props {
@@ -10,6 +11,8 @@ interface Props {
   onConnect: () => void;
   onSignOut: () => void;
   onOpenProfile?: () => void;
+  onOpenNotifications?: () => void;
+  unreadCount?: number;
 }
 
 /**
@@ -26,6 +29,8 @@ export function FeedHeader({
   onConnect,
   onSignOut,
   onOpenProfile,
+  onOpenNotifications,
+  unreadCount = 0,
 }: Props) {
   return (
     <View style={styles.root}>
@@ -36,6 +41,25 @@ export function FeedHeader({
           </View>
           <Text style={styles.title}>Korus</Text>
         </View>
+
+        <View style={styles.actions}>
+        {signedIn && onOpenNotifications ? (
+          <Pressable
+            onPress={onOpenNotifications}
+            hitSlop={10}
+            style={styles.bell}
+            accessibilityLabel="Notifications"
+          >
+            <BellIcon color={theme.text} />
+            {unreadCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Text>
+              </View>
+            )}
+          </Pressable>
+        ) : null}
 
         {signedIn ? (
           // Tap opens your profile; sign-out is a long-press so a stray tap
@@ -61,6 +85,7 @@ export function FeedHeader({
             )}
           </Pressable>
         )}
+        </View>
       </View>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -107,5 +132,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.05)',
   },
   chipText: { color: theme.text, fontWeight: '600', fontSize: 13 },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  bell: { padding: 2 },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -6,
+    minWidth: 17,
+    height: 17,
+    borderRadius: 9,
+    paddingHorizontal: 4,
+    backgroundColor: theme.mint,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: { color: '#000', fontSize: 10, fontWeight: '800' },
   error: { color: theme.error, fontSize: 13, marginTop: 8 },
 });

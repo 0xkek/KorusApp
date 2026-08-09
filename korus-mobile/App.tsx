@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import {
   Platform,
@@ -16,6 +16,8 @@ import { ComposeScreen } from './src/screens/ComposeScreen';
 import { EditProfileScreen } from './src/screens/EditProfileScreen';
 import { FeedHeader } from './src/components/FeedHeader';
 import { TipModal } from './src/components/TipModal';
+import { NotificationsScreen } from './src/screens/NotificationsScreen';
+import { notificationsAPI } from './src/api/notifications';
 import type { Post } from './src/api/types';
 import { theme } from './src/theme';
 
@@ -25,7 +27,8 @@ type Screen =
   | { name: 'post'; postId: string }
   | { name: 'profile'; walletAddress: string }
   | { name: 'compose'; replyToPostId?: string }
-  | { name: 'editProfile' };
+  | { name: 'editProfile' }
+  | { name: 'notifications' };
 
 /**
  * Minimal stack. Deliberately not expo-router yet — Phase 2 is three screens,
@@ -39,6 +42,32 @@ export default function App() {
   const [refreshKey, setRefreshKey] = useState(0);
   // Post being tipped; the modal is open whenever this is set.
   const [tipTarget, setTipTarget] = useState<Post | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Poll for unread notifications. There is no push registration endpoint on
+  // the backend yet, so polling is the only way to surface these; 60s is a
+  // compromise between freshness and battery.
+  useEffect(() => {
+    if (!auth.token) {
+      setUnreadCount(0);
+      return;
+    }
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const res = await notificationsAPI.list(auth.token!, true);
+        if (!cancelled) setUnreadCount(res.notifications?.length ?? 0);
+      } catch {
+        // Non-fatal — the badge just stays as it was.
+      }
+    };
+    check();
+    const timer = setInterval(check, 60_000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [auth.token, refreshKey]);
   const goFeed = () => setScreen({ name: 'feed' });
   const afterWrite = () => {
     setRefreshKey((k) => k + 1);
@@ -49,7 +78,15 @@ export default function App() {
     <View style={styles.root}>
       <StatusBar style="light" />
       <View style={styles.inner}>
-        {screen.name === 'compose' && auth.token ? (
+        {screen.name === 'notifications' && auth.token ? (
+          <NotificationsScreen
+            token={auth.token}
+            onBack={goFeed}
+            onOpenPost={(postId) => setScreen({ name: 'post', postId })}
+            onOpenProfile={(wallet) => setScreen({ name: 'profile', walletAddress: wallet })}
+            onReadAll={() => setUnreadCount(0)}
+          />
+        ) : screen.name === 'compose' && auth.token ? (
           <ComposeScreen
             token={auth.token}
             replyToPostId={screen.replyToPostId}
@@ -110,6 +147,8 @@ export default function App() {
                     ? () => setScreen({ name: 'profile', walletAddress: auth.walletAddress! })
                     : undefined
                 }
+                onOpenNotifications={() => setScreen({ name: 'notifications' })}
+                unreadCount={unreadCount}
               />
             }
           />
