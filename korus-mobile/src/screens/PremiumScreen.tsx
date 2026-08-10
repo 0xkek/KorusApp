@@ -15,18 +15,46 @@ import {
   type SubscriptionTier,
 } from '../api/subscription';
 import { isUserDeclined, sendSol } from '../wallet/solTransfer';
+import { usersAPI } from '../api/users';
+import { notify } from '../notify';
 import { theme } from '../theme';
 
 type Plan = 'monthly' | 'yearly';
 
+/**
+ * Theme colours, matching korus-web's settings page. Mint is free; the rest
+ * are premium. Stored as the profile's themeColor, which is what renders the
+ * avatar fallback and accents.
+ */
+const PREMIUM_THEMES = [
+  { id: 'mint', name: 'Mint Fresh', color: '#43e97b' },
+  { id: 'purple', name: 'Royal Purple', color: '#9945FF' },
+  { id: 'blue', name: 'Blue Sky', color: '#00D4FF' },
+  { id: 'gold', name: 'Premium Gold', color: '#FFD700' },
+  { id: 'cherry', name: 'Cherry Blossom', color: '#FF6B9D' },
+  { id: 'cyber', name: 'Cyber Neon', color: '#00FFF0' },
+];
+
 interface Props {
   token: string;
   walletAddress: string;
+  /** Current themeColor, so the active swatch is marked on open. */
+  initialThemeColor?: string | null;
   onBack: () => void;
   onSubscribed: () => void;
+  onThemeChanged?: () => void;
+  onEditProfile?: () => void;
 }
 
-export function PremiumScreen({ token, walletAddress, onBack, onSubscribed }: Props) {
+export function PremiumScreen({
+  token,
+  walletAddress,
+  initialThemeColor,
+  onBack,
+  onSubscribed,
+  onThemeChanged,
+  onEditProfile,
+}: Props) {
   const [pricing, setPricing] = useState<Record<Plan, SubscriptionTier> | null>(null);
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
   const [plan, setPlan] = useState<Plan>('yearly');
@@ -34,6 +62,8 @@ export function PremiumScreen({ token, walletAddress, onBack, onSubscribed }: Pr
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [orphanSignature, setOrphanSignature] = useState<string | null>(null);
+  const [currentTheme, setCurrentTheme] = useState<string | null>(initialThemeColor ?? null);
+  const [savingTheme, setSavingTheme] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -93,6 +123,23 @@ export function PremiumScreen({ token, walletAddress, onBack, onSubscribed }: Pr
 
   const isActive = Boolean(status?.isPremium || status?.hasSubscription);
 
+  const applyTheme = useCallback(
+    async (color: string) => {
+      setSavingTheme(true);
+      try {
+        await usersAPI.updateProfile({ themeColor: color }, token);
+        setCurrentTheme(color);
+        onThemeChanged?.();
+        notify('Theme updated');
+      } catch (err) {
+        notify(err instanceof Error ? err.message : 'Could not save the theme');
+      } finally {
+        setSavingTheme(false);
+      }
+    },
+    [token, onThemeChanged]
+  );
+
   return (
     <View style={styles.root}>
       <View style={styles.navbar}>
@@ -110,15 +157,77 @@ export function PremiumScreen({ token, walletAddress, onBack, onSubscribed }: Pr
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
           {isActive ? (
-            <View style={styles.activeCard}>
-              <Text style={styles.activeTitle}>★ Premium active</Text>
-              {status?.daysUntilExpiration != null ? (
-                <Text style={styles.activeMeta}>
-                  {status.daysUntilExpiration} day
-                  {status.daysUntilExpiration === 1 ? '' : 's'} remaining
+            <>
+              <View style={styles.activeCard}>
+                <Text style={styles.activeTitle}>★ Premium active</Text>
+                {status?.daysUntilExpiration != null ? (
+                  <Text style={styles.activeMeta}>
+                    {status.daysUntilExpiration} day
+                    {status.daysUntilExpiration === 1 ? '' : 's'} remaining
+                    {status.subscriptionType ? ` · ${status.subscriptionType}` : ''}
+                  </Text>
+                ) : null}
+                <Text style={styles.activeNote}>
+                  This does not renew automatically — it expires and you drop
+                  back to standard.
                 </Text>
-              ) : null}
-            </View>
+              </View>
+
+              {/* The perks are only useful if you can reach them from here. */}
+              <Text style={styles.perksLabel}>Your premium perks</Text>
+
+              <Text style={styles.perkTitle}>Theme colour</Text>
+              <View style={styles.themes}>
+                {PREMIUM_THEMES.map((t) => (
+                  <Pressable
+                    key={t.id}
+                    onPress={() => applyTheme(t.color)}
+                    disabled={savingTheme}
+                    style={[
+                      styles.theme,
+                      { borderColor: t.color },
+                      currentTheme === t.color && styles.themeActive,
+                    ]}
+                  >
+                    <View style={[styles.themeSwatch, { backgroundColor: t.color }]} />
+                    <Text style={styles.themeName}>{t.name}</Text>
+                    {currentTheme === t.color ? (
+                      <Text style={[styles.themeCheck, { color: t.color }]}>✓</Text>
+                    ) : null}
+                  </Pressable>
+                ))}
+              </View>
+
+              <Pressable style={styles.perkRow} onPress={onEditProfile}>
+                <View style={styles.perkText}>
+                  <Text style={styles.perkRowTitle}>Change your username</Text>
+                  <Text style={styles.perkRowHint}>
+                    Free accounts can only set this once. Premium can change it
+                    any time.
+                  </Text>
+                </View>
+                <Text style={styles.perkChevron}>›</Text>
+              </Pressable>
+
+              <View style={styles.perkRow}>
+                <View style={styles.perkText}>
+                  <Text style={styles.perkRowTitle}>Premium badge</Text>
+                  <Text style={styles.perkRowHint}>
+                    The ★ next to your name across Korus.
+                  </Text>
+                </View>
+                <Text style={styles.star}>★</Text>
+              </View>
+
+              <View style={styles.perkRow}>
+                <View style={styles.perkText}>
+                  <Text style={styles.perkRowTitle}>Sponsored posts hidden</Text>
+                  <Text style={styles.perkRowHint}>
+                    Applied automatically while premium is active.
+                  </Text>
+                </View>
+              </View>
+            </>
           ) : null}
 
           {orphanSignature ? (
@@ -217,6 +326,51 @@ const styles = StyleSheet.create({
   },
   activeTitle: { color: theme.mint, fontSize: 16, fontWeight: '700' },
   activeMeta: { color: theme.textTertiary, fontSize: 13, marginTop: 4 },
+  activeNote: { color: theme.textTertiary, fontSize: 12, marginTop: 8, lineHeight: 17 },
+  perksLabel: {
+    color: theme.textTertiary,
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  perkTitle: {
+    color: theme.text,
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  themes: { gap: 8, marginBottom: 20 },
+  theme: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    opacity: 0.75,
+  },
+  themeActive: { opacity: 1, backgroundColor: 'rgba(255,255,255,0.04)' },
+  themeSwatch: { width: 26, height: 26, borderRadius: 13 },
+  themeName: { color: theme.text, fontSize: 14, fontWeight: '600', flex: 1 },
+  themeCheck: { fontSize: 16, fontWeight: '800' },
+  perkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.border,
+    marginBottom: 10,
+  },
+  perkText: { flex: 1 },
+  perkRowTitle: { color: theme.text, fontSize: 14, fontWeight: '600' },
+  perkRowHint: { color: theme.textTertiary, fontSize: 12, marginTop: 3, lineHeight: 17 },
+  perkChevron: { color: theme.textTertiary, fontSize: 20 },
+  star: { color: '#fbbf24', fontSize: 18 },
   plan: {
     padding: 16,
     borderRadius: 14,

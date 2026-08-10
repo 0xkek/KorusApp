@@ -201,12 +201,14 @@ export function EditProfileScreen({
         </Pressable>
 
         <Text style={styles.label}>Username</Text>
-        {profile?.username ? (
+        {/* Premium can change the username freely; free accounts get one shot,
+            so once set it is locked for them. Previously this locked it for
+            everyone, including the premium users who had paid for exactly
+            this. */}
+        {profile?.username && profile.tier !== 'premium' ? (
           <View style={styles.lockedRow}>
             <Text style={styles.lockedValue}>@{profile.username}</Text>
-            {profile.tier !== 'premium' && (
-              <Text style={styles.lockedNote}>Premium required to change</Text>
-            )}
+            <Text style={styles.lockedNote}>Premium required to change</Text>
           </View>
         ) : (
           <>
@@ -222,7 +224,9 @@ export function EditProfileScreen({
             />
             <Text style={usernameError ? styles.hintError : styles.hint}>
               {usernameError ??
-                '3–20 letters and numbers. Free accounts can set this only once.'}
+                (profile?.tier === 'premium'
+                  ? '3–20 letters and numbers. Premium lets you change this any time.'
+                  : '3–20 letters and numbers. Free accounts can set this only once.')}
             </Text>
           </>
         )}

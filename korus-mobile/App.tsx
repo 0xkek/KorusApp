@@ -204,11 +204,17 @@ function KorusApp() {
           <PremiumScreen
             token={auth.token}
             walletAddress={auth.walletAddress}
+            initialThemeColor={auth.profile?.themeColor}
             onBack={goFeed}
             onSubscribed={() => {
               void auth.refreshProfile();
               setRefreshKey((k) => k + 1);
             }}
+            onThemeChanged={() => {
+              void auth.refreshProfile();
+              setRefreshKey((k) => k + 1);
+            }}
+            onEditProfile={() => setScreen({ name: 'editProfile' })}
           />
         ) : screen.name === 'search' ? (
           // Public — searching does not require a wallet, same as reading.
