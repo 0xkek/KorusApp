@@ -11,6 +11,7 @@ import {
 import { postsAPI } from '../api/posts';
 import type { Post } from '../api/types';
 import { PostCard } from '../components/PostCard';
+import { ShoutoutCard } from '../components/ShoutoutCard';
 import { useTheme , type Theme } from '../theme';
 
 type Tab = 'home' | 'trending';
@@ -238,7 +239,12 @@ export function FeedScreen({
     <FlatList
       data={posts}
       keyExtractor={(item) => item.id}
-      renderItem={({ item }) => (
+      renderItem={({ item }) =>
+        // A shoutout is paid promotion and gets its own banner card, as on the
+        // web, rather than looking like an ordinary post.
+        item.isShoutout ? (
+          <ShoutoutCard post={item} onPress={onOpenPost} />
+        ) : (
         <PostCard
           post={item}
           onPress={onOpenPost}
@@ -251,7 +257,8 @@ export function FeedScreen({
           reposted={repostedIds.has(item.id)}
           currentWallet={currentWallet}
         />
-      )}
+        )
+      }
       style={[styles.list, { backgroundColor: t.background }]}
       ListHeaderComponent={
         <>

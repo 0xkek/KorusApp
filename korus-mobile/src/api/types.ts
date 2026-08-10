@@ -68,6 +68,9 @@ export interface Post {
   imageUrl: string | null;
   videoUrl: string | null;
   isShoutout: boolean;
+  /** Minutes of promotion, and when it stops being pinned. */
+  shoutoutDuration?: number | null;
+  shoutoutExpiresAt?: string | null;
   isRepost: boolean;
   originalPostId: string | null;
   originalReplyId?: string | null;
