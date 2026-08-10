@@ -79,3 +79,27 @@ solana-keygen new --outfile ~/korus-publisher.json
 ```
 
 Back it up the same way as the keystore: somewhere off this laptop.
+
+---
+
+# First release build — verified 2026-08-11
+
+EAS build `3da6529f-87fe-49b4-a447-c758f6c84a21`, profile `dapp-store`,
+version 1.0.0 (versionCode 1), 78 MB APK.
+
+Checked on a Seeker before treating it as submittable:
+
+- **Signature matches the keystore** — certificate SHA-256
+  `07a24a4d4ee8f9f2a1250fae4b927f8000b976c818d7938c50dbf7b68d6652e1`,
+  identical to the recorded fingerprint.
+- **Firebase is compiled in** — `google_app_id`, `gcm_defaultSenderId` and
+  `project_id` are present in the APK resources, so the
+  GOOGLE_SERVICES_JSON file secret resolved on the builder and push works
+  in release.
+- **Runs standalone** — installed with the Metro port forward removed and
+  it loaded live data, so nothing depends on a dev server.
+
+Note EAS warns "googleServicesFile ... won't be uploaded" on every build.
+That fires when the config is read locally, before the file secret is
+substituted on the builder. The resource check above is what actually
+proves it worked; the warning can be ignored.
