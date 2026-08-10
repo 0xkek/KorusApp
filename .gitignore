@@ -51,3 +51,10 @@ target/
 korus-mobile/android/
 korus-mobile/ios/
 korus-mobile/.expo/
+
+# Firebase config — kept local; upload to EAS as a file secret for cloud builds
+korus-mobile/google-services.json
+
+# FCM service account key — a real secret, grants send access to Firebase
+korus-mobile/fcm-service-account.json
+korus-mobile/*-firebase-adminsdk-*.json
