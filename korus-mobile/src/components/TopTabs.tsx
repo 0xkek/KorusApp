@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 /**
  * The four browsable sections.
@@ -23,14 +23,15 @@ interface Props {
 }
 
 export function TopTabs({ active, onChange }: Props) {
+  const t = useTheme();
   return (
-    <View style={styles.tabs}>
+    <View style={[styles.tabs, { borderBottomColor: t.border }]}>
       {TABS.map((tab) => (
         <Pressable key={tab.key} onPress={() => onChange(tab.key)} style={styles.tab}>
-          <Text style={[styles.tabText, active === tab.key && styles.tabTextActive]}>
+          <Text style={[styles.tabText, { color: t.textTertiary }, active === tab.key && { color: t.text }]}>
             {tab.label}
           </Text>
-          {active === tab.key && <View style={styles.underline} />}
+          {active === tab.key && <View style={[styles.underline, { backgroundColor: t.mint }]} />}
         </Pressable>
       ))}
     </View>

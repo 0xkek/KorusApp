@@ -1,7 +1,7 @@
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { shortAddress } from '../api/types';
 import { BellIcon, SearchIcon } from './Icons';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 interface Props {
   walletAddress: string | null;
@@ -36,8 +36,9 @@ export function FeedHeader({
   onOpenMenu,
   unreadCount = 0,
 }: Props) {
+  const t = useTheme();
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { borderBottomColor: t.border }]}>
       <View style={styles.row}>
         {/* The logo doubles as the menu button — it is the most reachable
             spot in the header and keeps the row from gaining another icon. */}
@@ -48,10 +49,10 @@ export function FeedHeader({
           hitSlop={8}
           accessibilityLabel="Menu"
         >
-          <View style={styles.logo}>
+          <View style={[styles.logo, { backgroundColor: t.mint }]}>
             <Text style={styles.logoText}>K</Text>
           </View>
-          <Text style={styles.title}>Korus</Text>
+          <Text style={[styles.title, { color: t.mint }]}>Korus</Text>
           {onOpenMenu ? <Text style={styles.chevron}>▾</Text> : null}
         </Pressable>
 
@@ -64,7 +65,7 @@ export function FeedHeader({
             style={styles.bell}
             accessibilityLabel="Search"
           >
-            <SearchIcon color={theme.text} />
+            <SearchIcon color={t.text} />
           </Pressable>
         ) : null}
 
@@ -75,9 +76,9 @@ export function FeedHeader({
             style={styles.bell}
             accessibilityLabel="Notifications"
           >
-            <BellIcon color={theme.text} />
+            <BellIcon color={t.text} />
             {unreadCount > 0 && (
-              <View style={styles.badge}>
+              <View style={[styles.badge, { backgroundColor: t.mint }]}>
                 <Text style={styles.badgeText}>
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </Text>
@@ -104,15 +105,15 @@ export function FeedHeader({
               )
             }
             delayLongPress={500}
-            style={styles.chip}
+            style={[styles.chip, { borderColor: t.border }]}
           >
-            <Text style={styles.chipText}>{shortAddress(walletAddress ?? '')}</Text>
+            <Text style={[styles.chipText, { color: t.text }]}>{shortAddress(walletAddress ?? '')}</Text>
           </Pressable>
         ) : (
           <Pressable
             onPress={onConnect}
             disabled={isBusy}
-            style={({ pressed }) => [styles.button, (pressed || isBusy) && styles.pressed]}
+            style={({ pressed }) => [styles.button, { backgroundColor: t.mint }, (pressed || isBusy) && styles.pressed]}
           >
             {isBusy ? (
               <ActivityIndicator color="#000" size="small" />
@@ -130,8 +131,8 @@ export function FeedHeader({
           Say why, rather than leaving someone wondering where the buttons
           went — particularly right after a disconnect. */}
       {!signedIn && !error ? (
-        <Pressable onPress={onConnect} disabled={isBusy} style={styles.notice}>
-          <Text style={styles.noticeText}>
+        <Pressable onPress={onConnect} disabled={isBusy} style={[styles.notice, { borderColor: t.border }]}>
+          <Text style={[styles.noticeText, { color: t.textSecondary }]}>
             You&apos;re browsing as a guest. Connect your wallet to post, reply,
             like and tip.
           </Text>

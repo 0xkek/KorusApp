@@ -32,7 +32,9 @@ import {
   useNotificationTap,
 } from './src/notifications/usePushRegistration';
 import type { Post } from './src/api/types';
-import { theme } from './src/theme';
+// `theme` is the static fallback for StyleSheet.create, which cannot read
+// context; live colours come from useTheme and are applied inline.
+import { theme, ThemeProvider, useTheme } from './src/theme';
 
 /** Screens are a small discriminated union — still simpler than a router. */
 type Screen =
@@ -56,13 +58,26 @@ type Screen =
 export default function App() {
   return (
     <SafeAreaProvider>
-      <KorusApp />
+      <ThemedApp />
     </SafeAreaProvider>
   );
 }
 
-function KorusApp() {
+/**
+ * The accent comes from the signed-in profile, so the provider sits inside a
+ * component that can read auth — hence the extra layer.
+ */
+function ThemedApp() {
   const auth = useWalletAuth();
+  return (
+    <ThemeProvider accent={auth.profile?.themeColor}>
+      <KorusApp auth={auth} />
+    </ThemeProvider>
+  );
+}
+
+function KorusApp({ auth }: { auth: ReturnType<typeof useWalletAuth> }) {
+  const t = useTheme();
   const [screen, setScreen] = useState<Screen>({ name: 'feed' });
   // Bumped after any write so the feed refetches instead of showing stale data.
   const [refreshKey, setRefreshKey] = useState(0);
@@ -176,8 +191,11 @@ function KorusApp() {
   return (
     // edges omits 'bottom' so scrollable content runs under the gesture bar;
     // the FAB is lifted by the bottom inset instead.
-    <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
-      <StatusBar style="light" />
+    <SafeAreaView
+      style={[styles.root, { backgroundColor: t.background }]}
+      edges={['top', 'left', 'right']}
+    >
+      <StatusBar style={t.isDark ? 'light' : 'dark'} />
       <OfflineBanner />
       <View style={styles.inner}>
         {screen.name === 'game' ? (
@@ -322,7 +340,7 @@ function KorusApp() {
           onPress={() => setScreen({ name: 'compose' })}
           style={({ pressed }) => [
             styles.fab,
-            { bottom: 28 + insets.bottom },
+            { bottom: 28 + insets.bottom, backgroundColor: t.mint },
             pressed && styles.fabPressed,
           ]}
           accessibilityLabel="New post"

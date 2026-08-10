@@ -12,7 +12,9 @@ import {
 import Constants from 'expo-constants';
 import { notificationsAPI } from '../api/notifications';
 import { notify } from '../notify';
-import { theme } from '../theme';
+// `theme` is the static fallback used by StyleSheet.create, which cannot read
+// context; live colours are applied inline from `t`.
+import { theme, useTheme, useThemeControls, type ThemeMode } from '../theme';
 
 interface Props {
   token: string;
@@ -32,6 +34,8 @@ export function SettingsScreen({
 }: Props) {
   const [enabled, setEnabled] = useState(notificationsEnabled);
   const [busy, setBusy] = useState(false);
+  const t = useTheme();
+  const { mode, setMode } = useThemeControls();
 
   async function toggleNotifications(next: boolean) {
     setEnabled(next); // optimistic — this is a preference, not money
@@ -48,21 +52,49 @@ export function SettingsScreen({
   }
 
   return (
-    <View style={styles.root}>
-      <View style={styles.navbar}>
+    <View style={[styles.root, { backgroundColor: t.background }]}>
+      <View style={[styles.navbar, { borderBottomColor: t.border }]}>
         <Pressable onPress={onBack} hitSlop={12}>
-          <Text style={styles.back}>‹ Back</Text>
+          <Text style={[styles.back, { color: t.mint }]}>‹ Back</Text>
         </Pressable>
-        <Text style={styles.navTitle}>Settings</Text>
+        <Text style={[styles.navTitle, { color: t.text }]}>Settings</Text>
         <View style={{ width: 54 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.sectionLabel}>Notifications</Text>
-        <View style={styles.row}>
+        <Text style={[styles.sectionLabel, { color: t.textTertiary }]}>Appearance</Text>
+        <View style={styles.modes}>
+          {(['system', 'light', 'dark'] as ThemeMode[]).map((m) => (
+            <Pressable
+              key={m}
+              onPress={() => setMode(m)}
+              style={[
+                styles.mode,
+                { borderColor: t.border },
+                mode === m && { borderColor: t.mint, backgroundColor: t.surface },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.modeText,
+                  { color: t.textTertiary },
+                  mode === m && { color: t.mint, fontWeight: '700' },
+                ]}
+              >
+                {m === 'system' ? 'System' : m === 'light' ? 'Light' : 'Dark'}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+        <Text style={[styles.rowHint, { color: t.textTertiary, marginBottom: 10 }]}>
+          System follows your phone&apos;s setting.
+        </Text>
+
+        <Text style={[styles.sectionLabel, { color: t.textTertiary }]}>Notifications</Text>
+        <View style={[styles.row, { borderColor: t.border, backgroundColor: t.surface }]}>
           <View style={styles.rowText}>
-            <Text style={styles.rowTitle}>Push notifications</Text>
-            <Text style={styles.rowHint}>
+            <Text style={[styles.rowTitle, { color: t.text }]}>Push notifications</Text>
+            <Text style={[styles.rowHint, { color: t.textTertiary }]}>
               Likes, replies, follows and tips. Turning this off stops them
               everywhere, including on the web.
             </Text>
@@ -71,36 +103,36 @@ export function SettingsScreen({
             value={enabled}
             onValueChange={toggleNotifications}
             disabled={busy}
-            trackColor={{ false: theme.border, true: theme.mint }}
+            trackColor={{ false: t.border, true: t.mint }}
             thumbColor="#fff"
           />
         </View>
 
         <Pressable
-          style={styles.link}
+          style={[styles.link, { borderColor: t.border }]}
           onPress={() => Linking.openSettings().catch(() => {})}
         >
-          <Text style={styles.linkText}>Android notification settings</Text>
-          <Text style={styles.linkHint}>
+          <Text style={[styles.linkText, { color: t.mint }]}>Android notification settings</Text>
+          <Text style={[styles.linkHint, { color: t.textTertiary }]}>
             System-level permissions for Korus
           </Text>
         </Pressable>
 
-        <Text style={styles.sectionLabel}>About</Text>
-        <View style={styles.row}>
+        <Text style={[styles.sectionLabel, { color: t.textTertiary }]}>About</Text>
+        <View style={[styles.row, { borderColor: t.border, backgroundColor: t.surface }]}>
           <View style={styles.rowText}>
-            <Text style={styles.rowTitle}>Version</Text>
-            <Text style={styles.rowHint}>
+            <Text style={[styles.rowTitle, { color: t.text }]}>Version</Text>
+            <Text style={[styles.rowHint, { color: t.textTertiary }]}>
               {Constants.expoConfig?.version ?? '1.0.0'}
             </Text>
           </View>
         </View>
 
         <Pressable
-          style={styles.link}
+          style={[styles.link, { borderColor: t.border }]}
           onPress={() => Linking.openURL('https://korus.fun').catch(() => {})}
         >
-          <Text style={styles.linkText}>korus.fun</Text>
+          <Text style={[styles.linkText, { color: t.mint }]}>korus.fun</Text>
         </Pressable>
 
         <Pressable
@@ -157,6 +189,15 @@ const styles = StyleSheet.create({
     backgroundColor: theme.surface,
     marginBottom: 10,
   },
+  modes: { flexDirection: 'row', gap: 8 },
+  mode: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  modeText: { fontSize: 13, fontWeight: '600' },
   rowText: { flex: 1 },
   rowTitle: { color: theme.text, fontSize: 15, fontWeight: '600' },
   rowHint: { color: theme.textTertiary, fontSize: 12, lineHeight: 17, marginTop: 3 },
