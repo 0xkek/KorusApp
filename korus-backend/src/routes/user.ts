@@ -272,12 +272,11 @@ router.put('/profile', authenticate, async (req: AuthRequest, res) => {
         website: website || undefined,
         twitter: twitter || undefined,
         themeColor: themeColor || undefined,
-        // 'system' | 'light' | 'dark'; anything else is ignored rather than
-        // stored, since this is read straight back into the UI.
-        themeMode:
-          themeMode === 'system' || themeMode === 'light' || themeMode === 'dark'
-            ? themeMode
-            : undefined,
+        // 'system' | 'light' | 'dim' | 'dark'; anything else is ignored rather
+        // than stored, since this is read straight back into the UI.
+        themeMode: ['system', 'light', 'dim', 'dark'].includes(themeMode)
+          ? themeMode
+          : undefined,
         nftAvatar: nftAvatar || undefined,
         // snsUsername can be explicitly set to null/empty to clear it
         ...(snsUsername !== undefined && { snsUsername: snsUsername || null })

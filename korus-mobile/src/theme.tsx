@@ -13,7 +13,7 @@ import { useColorScheme } from 'react-native';
  * with an NFT avatar.
  */
 
-export type ThemeMode = 'system' | 'light' | 'dark';
+export type ThemeMode = 'system' | 'light' | 'dim' | 'dark';
 
 export const DEFAULT_ACCENT = '#43e97b';
 
@@ -30,32 +30,56 @@ export interface Theme {
   isDark: boolean;
 }
 
-function buildTheme(accent: string, dark: boolean): Theme {
-  return dark
-    ? {
-        mint: accent,
-        mintSecondary: accent,
-        background: '#0a0a0a',
-        surface: '#141414',
-        border: withAlpha(accent, 0.15),
-        text: '#ffffff',
-        textSecondary: 'rgba(255,255,255,0.85)',
-        textTertiary: 'rgba(255,255,255,0.55)',
-        error: '#fca5a5',
-        isDark: true,
-      }
-    : {
-        mint: accent,
-        mintSecondary: accent,
-        background: '#ffffff',
-        surface: '#f5f5f5',
-        border: withAlpha(accent, 0.28),
-        text: '#0a0a0a',
-        textSecondary: 'rgba(0,0,0,0.75)',
-        textTertiary: 'rgba(0,0,0,0.5)',
-        error: '#b91c1c',
-        isDark: false,
-      };
+/** Which palette a resolved mode uses. 'system' is resolved before this. */
+type Palette = 'light' | 'dim' | 'dark';
+
+function buildTheme(accent: string, palette: Palette): Theme {
+  if (palette === 'light') {
+    return {
+      mint: accent,
+      mintSecondary: accent,
+      background: '#ffffff',
+      surface: '#f5f5f5',
+      border: withAlpha(accent, 0.28),
+      text: '#0a0a0a',
+      textSecondary: 'rgba(0,0,0,0.75)',
+      textTertiary: 'rgba(0,0,0,0.5)',
+      error: '#b91c1c',
+      isDark: false,
+    };
+  }
+
+  if (palette === 'dim') {
+    // Lifted and slightly blue-tinted, in the spirit of X's dim mode. Easier
+    // over long sessions than near-black, and cards separate from the
+    // background more clearly.
+    return {
+      mint: accent,
+      mintSecondary: accent,
+      background: '#15202b',
+      surface: '#1c2732',
+      border: withAlpha(accent, 0.2),
+      text: '#f7f9f9',
+      textSecondary: 'rgba(247,249,249,0.85)',
+      textTertiary: 'rgba(247,249,249,0.55)',
+      error: '#fca5a5',
+      isDark: true,
+    };
+  }
+
+  // Dark: near-black, matching korus.fun.
+  return {
+    mint: accent,
+    mintSecondary: accent,
+    background: '#0a0a0a',
+    surface: '#141414',
+    border: withAlpha(accent, 0.15),
+    text: '#ffffff',
+    textSecondary: 'rgba(255,255,255,0.85)',
+    textTertiary: 'rgba(255,255,255,0.55)',
+    error: '#fca5a5',
+    isDark: true,
+  };
 }
 
 /** #rrggbb -> rgba(), so borders can tint with the accent. */
@@ -77,7 +101,7 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  theme: buildTheme(DEFAULT_ACCENT, true),
+  theme: buildTheme(DEFAULT_ACCENT, 'dark'),
   mode: 'system',
   accent: DEFAULT_ACCENT,
   setMode: () => {},
@@ -109,15 +133,23 @@ export function ThemeProvider({
   }, [accentProp]);
 
   useEffect(() => {
-    if (modeProp === 'system' || modeProp === 'light' || modeProp === 'dark') {
+    if (
+      modeProp === 'system' ||
+      modeProp === 'light' ||
+      modeProp === 'dim' ||
+      modeProp === 'dark'
+    ) {
       setMode(modeProp);
     }
   }, [modeProp]);
 
   const value = useMemo(() => {
-    const dark = mode === 'system' ? system !== 'light' : mode === 'dark';
+    // 'system' follows the OS, which only distinguishes light from dark — it
+    // has no notion of dim, so that resolves to the near-black dark.
+    const palette: Palette =
+      mode === 'system' ? (system === 'light' ? 'light' : 'dark') : mode;
     return {
-      theme: buildTheme(accent, dark),
+      theme: buildTheme(accent, palette),
       mode,
       accent,
       setMode,
@@ -140,4 +172,4 @@ export function useThemeControls(): ThemeContextValue {
  * Static fallback for module-scope StyleSheet.create calls, which cannot read
  * context. Dynamic colours are applied inline at the call site.
  */
-export const theme = buildTheme(DEFAULT_ACCENT, true);
+export const theme = buildTheme(DEFAULT_ACCENT, 'dark');

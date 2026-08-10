@@ -66,7 +66,7 @@ export function SettingsScreen({
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={[styles.sectionLabel, { color: t.textTertiary }]}>Appearance</Text>
         <View style={styles.modes}>
-          {(['system', 'light', 'dark'] as ThemeMode[]).map((m) => (
+          {(['system', 'light', 'dim', 'dark'] as ThemeMode[]).map((m) => (
             <Pressable
               key={m}
               onPress={() => {
@@ -91,13 +91,25 @@ export function SettingsScreen({
                   mode === m && { color: t.mint, fontWeight: '700' },
                 ]}
               >
-                {m === 'system' ? 'System' : m === 'light' ? 'Light' : 'Dark'}
+                {m === 'system'
+                  ? 'System'
+                  : m === 'light'
+                    ? 'Light'
+                    : m === 'dim'
+                      ? 'Dim'
+                      : 'Dark'}
               </Text>
             </Pressable>
           ))}
         </View>
         <Text style={[styles.rowHint, { color: t.textTertiary, marginBottom: 10 }]}>
-          System follows your phone&apos;s setting.
+          {mode === 'system'
+            ? // Without this, System is indistinguishable from whichever mode
+              // the phone happens to be on, and looks like it did nothing.
+              `Following your phone, which is currently ${t.isDark ? 'dark' : 'light'}. Android has no dim setting, so System uses Dark.`
+            : mode === 'dim'
+              ? 'A softer, lifted dark. Easier over long sessions.'
+              : `Always ${mode}, ignoring your phone's setting.`}
         </Text>
 
         <Text style={[styles.sectionLabel, { color: t.textTertiary }]}>Notifications</Text>
@@ -200,9 +212,11 @@ const makeStyles = (theme: Theme) =>
     backgroundColor: theme.surface,
     marginBottom: 10,
   },
-  modes: { flexDirection: 'row', gap: 8 },
+  // 2x2 rather than a single row — four options across 400dp would be ~90dp
+  // each with padding, too tight to read comfortably.
+  modes: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   mode: {
-    flex: 1,
+    width: '48%',
     paddingVertical: 12,
     borderRadius: 10,
     borderWidth: 1,
