@@ -10,7 +10,8 @@
 publisher:
   name: Korus
   website: https://korus.fun
-  email: # your contact email — required, and public on the listing
+  # Required, and shown publicly on the listing.
+  email: kingkitty.sol@gmail.com
 
 app:
   name: Korus

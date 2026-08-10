@@ -58,3 +58,9 @@ korus-mobile/google-services.json
 # FCM service account key — a real secret, grants send access to Firebase
 korus-mobile/fcm-service-account.json
 korus-mobile/*-firebase-adminsdk-*.json
+
+# Release signing keys — NEVER commit. Losing these forfeits the ability to
+# update the dApp Store listing; committing them lets anyone publish as you.
+*.keystore
+*.jks
+korus-mobile/keystore.properties
