@@ -125,7 +125,14 @@ export function ComposeScreen({
         </Pressable>
       </View>
 
-      <View style={styles.body}>
+      {/* Scrollable so the counter and the promote options stay reachable with
+          the keyboard up. The window is set to adjustResize, so with a flex:1
+          input everything below it was pushed off-screen. */}
+      <ScrollView
+        style={styles.body}
+        contentContainerStyle={styles.bodyContent}
+        keyboardShouldPersistTaps="handled"
+      >
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <TextInput
@@ -200,7 +207,7 @@ export function ComposeScreen({
             </ScrollView>
           </View>
         ) : null}
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -220,9 +227,12 @@ const styles = StyleSheet.create({
   navTitle: { color: theme.text, fontSize: 16, fontWeight: '700' },
   post: { color: theme.mint, fontSize: 16, fontWeight: '700' },
   postDisabled: { color: theme.textTertiary },
-  body: { flex: 1, padding: 16 },
+  body: { flex: 1 },
+  bodyContent: { padding: 16, paddingBottom: 32 },
   input: {
-    flex: 1,
+    // A minimum rather than flex:1 — flex made the input swallow the whole
+    // scroll view and push the counter and promote options out of reach.
+    minHeight: 140,
     color: theme.text,
     fontSize: 18,
     lineHeight: 25,

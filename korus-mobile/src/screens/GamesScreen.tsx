@@ -8,8 +8,9 @@ import {
   Text,
   View,
 } from 'react-native';
-import { gamesAPI, gameLabel, type Game } from '../api/games';
+import { gamesAPI, gameLabel, type Game, type GameType } from '../api/games';
 import { relativeTime, shortAddress } from '../api/types';
+import { notify } from '../notify';
 import { theme } from '../theme';
 
 interface Props {
@@ -24,6 +25,8 @@ export function GamesScreen({ token, currentWallet, header, onOpenProfile }: Pro
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [joining, setJoining] = useState<string | null>(null);
 
   const load = useCallback(async (mode: 'initial' | 'refresh') => {
     if (mode === 'refresh') setRefreshing(true);
@@ -43,11 +46,74 @@ export function GamesScreen({ token, currentWallet, header, onOpenProfile }: Pro
     load('initial');
   }, [load]);
 
+  const create = useCallback(
+    async (type: GameType) => {
+      if (!token) {
+        notify('Connect your wallet to start a game');
+        return;
+      }
+      setCreating(true);
+      try {
+        await gamesAPI.create(type, token);
+        notify(`${gameLabel(type)} created — waiting for an opponent`);
+        await load('refresh');
+      } catch (err) {
+        notify(err instanceof Error ? err.message : 'Could not create the game');
+      } finally {
+        setCreating(false);
+      }
+    },
+    [token, load]
+  );
+
+  const join = useCallback(
+    async (game: Game) => {
+      if (!token) {
+        notify('Connect your wallet to join');
+        return;
+      }
+      setJoining(game.id);
+      try {
+        await gamesAPI.join(game.id, token);
+        notify('Joined');
+        await load('refresh');
+      } catch (err) {
+        notify(err instanceof Error ? err.message : 'Could not join');
+      } finally {
+        setJoining(null);
+      }
+    },
+    [token, load]
+  );
+
   return (
     <FlatList
       data={games}
       keyExtractor={(item) => item.id}
-      ListHeaderComponent={header}
+      ListHeaderComponent={
+        <>
+          {header}
+          {token ? (
+            <View style={styles.newGame}>
+              <Text style={styles.newGameLabel}>Start a game</Text>
+              <View style={styles.newGameRow}>
+                {(['connectfour', 'tictactoe', 'rps'] as GameType[]).map((type) => (
+                  <Pressable
+                    key={type}
+                    onPress={() => create(type)}
+                    disabled={creating}
+                    style={[styles.newGameButton, creating && styles.disabled]}
+                  >
+                    <Text style={styles.newGameButtonText}>{gameLabel(type)}</Text>
+                  </Pressable>
+                ))}
+              </View>
+              {/* Wagered games stay disabled, so these are free to play. */}
+              <Text style={styles.newGameHint}>Free to play</Text>
+            </View>
+          ) : null}
+        </>
+      }
       style={styles.list}
       refreshControl={
         <RefreshControl
@@ -74,6 +140,13 @@ export function GamesScreen({ token, currentWallet, header, onOpenProfile }: Pro
           game={item}
           currentWallet={currentWallet}
           onOpenProfile={onOpenProfile}
+          // Only offer to join a game that is open and not your own.
+          onJoin={
+            token && !item.player2 && item.player1 !== currentWallet
+              ? () => join(item)
+              : undefined
+          }
+          joining={joining === item.id}
         />
       )}
     />
@@ -84,10 +157,14 @@ function GameRow({
   game,
   currentWallet,
   onOpenProfile,
+  onJoin,
+  joining,
 }: {
   game: Game;
   currentWallet?: string | null;
   onOpenProfile?: (wallet: string) => void;
+  onJoin?: () => void;
+  joining?: boolean;
 }) {
   const p1 = game.player1DisplayName || shortAddress(game.player1);
   const p2 = game.player2
@@ -145,6 +222,16 @@ function GameRow({
           </Text>
         ) : null}
       </View>
+
+      {onJoin ? (
+        <Pressable onPress={onJoin} disabled={joining} style={styles.join}>
+          {joining ? (
+            <ActivityIndicator size="small" color="#000" />
+          ) : (
+            <Text style={styles.joinText}>Join game</Text>
+          )}
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -210,4 +297,40 @@ const styles = StyleSheet.create({
   meta: { color: theme.textTertiary, fontSize: 12 },
   wager: { color: '#f59e0b', fontSize: 12, fontWeight: '700' },
   winner: { color: theme.mint, fontSize: 12, fontWeight: '600' },
+  join: {
+    marginTop: 12,
+    paddingVertical: 11,
+    borderRadius: 10,
+    backgroundColor: theme.mint,
+    alignItems: 'center',
+  },
+  joinText: { color: '#000', fontWeight: '700', fontSize: 14 },
+  newGame: {
+    marginHorizontal: 16,
+    marginTop: 14,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: theme.border,
+    backgroundColor: theme.surface,
+  },
+  newGameLabel: { color: theme.text, fontSize: 14, fontWeight: '700' },
+  newGameRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
+  newGameButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: theme.mint,
+    alignItems: 'center',
+  },
+  newGameButtonText: {
+    color: theme.mint,
+    fontWeight: '600',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  newGameHint: { color: theme.textTertiary, fontSize: 11, marginTop: 10 },
+  disabled: { opacity: 0.5 },
 });

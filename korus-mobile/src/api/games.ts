@@ -40,6 +40,20 @@ export const gamesAPI = {
   byUser: (wallet: string) =>
     api.get<{ success: boolean; games: Game[] }>(`/api/games/user/${wallet}`),
 
+  /**
+   * Start a free game. The backend creates the backing post itself when no
+   * postId is given.
+   *
+   * No wager is sent: wagered games are disabled behind ENABLE_GAME_WAGERS and
+   * would be rejected, and they would also need an on-chain game id first.
+   */
+  create: (gameType: GameType, token: string) =>
+    api.post<{ success: boolean; game?: Game; error?: string }>(
+      '/api/games',
+      { gameType, wager: 0 },
+      token
+    ),
+
   join: (id: string, token: string) =>
     api.post<{ success: boolean; game?: Game }>(`/api/games/${id}/join`, {}, token),
 
