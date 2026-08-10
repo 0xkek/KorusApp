@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { identityAPI, WALLET_IDENTITY, type SNSDomain } from '../api/identity';
 import { shortAddress } from '../api/types';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 interface Props {
   visible: boolean;
@@ -32,6 +32,7 @@ export function IdentityPicker({
   onClose,
   onSelect,
 }: Props) {
+  const t = useTheme();
   const [domains, setDomains] = useState<SNSDomain[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,13 +65,13 @@ export function IdentityPicker({
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.handle} />
-          <Text style={styles.title}>Display identity</Text>
+          <Text style={[styles.title, { color: t.text }]}>Display identity</Text>
           <Text style={styles.subtitle}>
             How your name appears on posts. A custom username always wins if you
             have set one.
           </Text>
 
-          <ScrollView style={styles.list}>
+          <ScrollView style={[styles.list, { backgroundColor: t.background }]}>
             {username ? (
               <Row
                 label={`@${username}`}
@@ -89,7 +90,7 @@ export function IdentityPicker({
 
             {loading ? (
               <View style={styles.loading}>
-                <ActivityIndicator color={theme.mint} />
+                <ActivityIndicator color={t.mint} />
               </View>
             ) : error ? (
               <Text style={styles.error}>{error}</Text>

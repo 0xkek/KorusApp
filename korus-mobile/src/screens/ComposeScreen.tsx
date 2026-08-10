@@ -14,7 +14,7 @@ import { postsAPI } from '../api/posts';
 import { SHOUTOUT_OPTIONS, shoutoutPrice } from '../api/shoutouts';
 import { TREASURY_WALLET } from '../api/subscription';
 import { isUserDeclined, sendSol } from '../wallet/solTransfer';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 const MAX_LENGTH = 500;
 
@@ -35,6 +35,7 @@ export function ComposeScreen({
   onBack,
   onPosted,
 }: Props) {
+  const t = useTheme();
   const [content, setContent] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -102,17 +103,17 @@ export function ComposeScreen({
 
   return (
     <KeyboardAvoidingView
-      style={styles.root}
+      style={[styles.root, { backgroundColor: t.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.navbar}>
+      <View style={[styles.navbar, { borderBottomColor: t.border, backgroundColor: t.background }]}>
         <Pressable onPress={onBack} hitSlop={12}>
           <Text style={styles.cancel}>Cancel</Text>
         </Pressable>
-        <Text style={styles.navTitle}>{isReply ? 'Reply' : 'New post'}</Text>
+        <Text style={[styles.navTitle, { color: t.text }]}>{isReply ? 'Reply' : 'New post'}</Text>
         <Pressable onPress={submit} disabled={!canSubmit} hitSlop={12}>
           {busy ? (
-            <ActivityIndicator color={theme.mint} size="small" />
+            <ActivityIndicator color={t.mint} size="small" />
           ) : (
             <Text style={[styles.post, !canSubmit && styles.postDisabled]}>
               {isReply
@@ -139,7 +140,7 @@ export function ComposeScreen({
           value={content}
           onChangeText={setContent}
           placeholder={isReply ? 'Write a reply…' : "What's happening?"}
-          placeholderTextColor={theme.textTertiary}
+          placeholderTextColor={t.textTertiary}
           multiline
           autoFocus
           style={styles.input}

@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { identityAPI, type WalletNFT } from '../api/identity';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 interface Props {
   visible: boolean;
@@ -33,6 +33,7 @@ export function AvatarPicker({
   onClose,
   onSelect,
 }: Props) {
+  const t = useTheme();
   const [nfts, setNfts] = useState<WalletNFT[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,13 +65,13 @@ export function AvatarPicker({
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.handle} />
-          <Text style={styles.title}>Choose an avatar</Text>
+          <Text style={[styles.title, { color: t.text }]}>Choose an avatar</Text>
           <Text style={styles.subtitle}>NFTs held by this wallet.</Text>
 
           {loading ? (
             <View style={styles.center}>
-              <ActivityIndicator color={theme.mint} />
-              <Text style={styles.hint}>Reading your wallet…</Text>
+              <ActivityIndicator color={t.mint} />
+              <Text style={[styles.hint, { color: t.textTertiary }]}>Reading your wallet…</Text>
             </View>
           ) : error ? (
             <Text style={styles.error}>{error}</Text>

@@ -11,7 +11,7 @@ import {
 import { postsAPI } from '../api/posts';
 import type { Post } from '../api/types';
 import { PostCard } from '../components/PostCard';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 type Tab = 'home' | 'trending';
 
@@ -42,6 +42,7 @@ export function FeedScreen({
   refreshKey = 0,
   feed = 'home',
 }: Props) {
+  const t = useTheme();
   const tab = feed;
   const [posts, setPosts] = useState<Post[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -250,7 +251,7 @@ export function FeedScreen({
           currentWallet={currentWallet}
         />
       )}
-      style={styles.list}
+      style={[styles.list, { backgroundColor: t.background }]}
       ListHeaderComponent={
         <>
           {header}
@@ -264,7 +265,7 @@ export function FeedScreen({
       ListEmptyComponent={
         loading ? (
           <View style={styles.center}>
-            <ActivityIndicator color={theme.mint} />
+            <ActivityIndicator color={t.mint} />
           </View>
         ) : error ? (
           <View style={styles.center}>
@@ -275,7 +276,7 @@ export function FeedScreen({
           </View>
         ) : (
           <View style={styles.center}>
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyText, { color: t.textTertiary }]}>
               {tab === 'trending' ? 'Nothing trending yet' : 'No posts yet'}
             </Text>
           </View>
@@ -284,7 +285,7 @@ export function FeedScreen({
       ListFooterComponent={
         loadingMore ? (
           <View style={styles.footer}>
-            <ActivityIndicator color={theme.mint} />
+            <ActivityIndicator color={t.mint} />
           </View>
         ) : null
       }
@@ -292,7 +293,7 @@ export function FeedScreen({
         <RefreshControl
           refreshing={refreshing}
           onRefresh={() => load('refresh', tab)}
-          tintColor={theme.mint}
+          tintColor={t.mint}
         />
       }
       onEndReached={() => load('more', tab)}

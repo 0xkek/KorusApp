@@ -13,7 +13,7 @@ import { searchAPI, type SearchUser } from '../api/search';
 import type { Post } from '../api/types';
 import { resolveAvatarUrl, shortAddress } from '../api/types';
 import { PostCard } from '../components/PostCard';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 type Tab = 'posts' | 'people';
 
@@ -24,6 +24,7 @@ interface Props {
 }
 
 export function SearchScreen({ onBack, onOpenPost, onOpenProfile }: Props) {
+  const t = useTheme();
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState<Tab>('posts');
   const [posts, setPosts] = useState<Post[]>([]);
@@ -72,16 +73,16 @@ export function SearchScreen({ onBack, onOpenPost, onOpenProfile }: Props) {
   const results = tab === 'posts' ? posts : users;
 
   return (
-    <View style={styles.root}>
-      <View style={styles.navbar}>
+    <View style={[styles.root, { backgroundColor: t.background }]}>
+      <View style={[styles.navbar, { borderBottomColor: t.border, backgroundColor: t.background }]}>
         <Pressable onPress={onBack} hitSlop={12}>
-          <Text style={styles.back}>‹</Text>
+          <Text style={[styles.back, { color: t.mint }]}>‹</Text>
         </Pressable>
         <TextInput
           value={query}
           onChangeText={setQuery}
           placeholder="Search posts and people"
-          placeholderTextColor={theme.textTertiary}
+          placeholderTextColor={t.textTertiary}
           autoFocus
           autoCapitalize="none"
           autoCorrect={false}
@@ -111,7 +112,7 @@ export function SearchScreen({ onBack, onOpenPost, onOpenProfile }: Props) {
 
       {loading && results.length === 0 ? (
         <View style={styles.center}>
-          <ActivityIndicator color={theme.mint} />
+          <ActivityIndicator color={t.mint} />
         </View>
       ) : error ? (
         <View style={styles.center}>
@@ -119,11 +120,11 @@ export function SearchScreen({ onBack, onOpenPost, onOpenProfile }: Props) {
         </View>
       ) : !searched ? (
         <View style={styles.center}>
-          <Text style={styles.hint}>Find posts, usernames and .sol domains.</Text>
+          <Text style={[styles.hint, { color: t.textTertiary }]}>Find posts, usernames and .sol domains.</Text>
         </View>
       ) : results.length === 0 ? (
         <View style={styles.center}>
-          <Text style={styles.hint}>
+          <Text style={[styles.hint, { color: t.textTertiary }]}>
             No {tab} matching “{query.trim()}”.
           </Text>
         </View>
@@ -151,6 +152,7 @@ export function SearchScreen({ onBack, onOpenPost, onOpenProfile }: Props) {
 }
 
 function UserRow({ user, onPress }: { user: SearchUser; onPress: () => void }) {
+  const t = useTheme();
   const avatar = resolveAvatarUrl(user.nftAvatar);
   // Same precedence as everywhere else: username, then SNS, then wallet.
   const sns =
@@ -169,7 +171,7 @@ function UserRow({ user, onPress }: { user: SearchUser; onPress: () => void }) {
           style={[
             styles.userAvatar,
             styles.userAvatarFallback,
-            { backgroundColor: user.themeColor ?? theme.mint },
+            { backgroundColor: user.themeColor ?? t.mint },
           ]}
         >
           <Text style={styles.userAvatarText}>

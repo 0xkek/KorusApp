@@ -11,7 +11,7 @@ import {
 import { gamesAPI, gameLabel, type Game, type GameType } from '../api/games';
 import { relativeTime, shortAddress } from '../api/types';
 import { notify } from '../notify';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 interface Props {
   token?: string | null;
@@ -28,6 +28,7 @@ export function GamesScreen({
   onOpenProfile,
   onOpenGame,
 }: Props) {
+  const t = useTheme();
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -121,22 +122,22 @@ export function GamesScreen({
           ) : null}
         </>
       }
-      style={styles.list}
+      style={[styles.list, { backgroundColor: t.background }]}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={() => load('refresh')}
-          tintColor={theme.mint}
+          tintColor={t.mint}
         />
       }
       ListEmptyComponent={
         loading ? (
           <View style={styles.center}>
-            <ActivityIndicator color={theme.mint} />
+            <ActivityIndicator color={t.mint} />
           </View>
         ) : (
           <View style={styles.center}>
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyText, { color: t.textTertiary }]}>
               {error ?? 'No games yet. Games started on korus.fun show up here.'}
             </Text>
           </View>

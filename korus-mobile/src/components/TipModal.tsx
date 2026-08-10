@@ -11,7 +11,7 @@ import {
 import type { Post } from '../api/types';
 import { displayName } from '../api/types';
 import { useTip } from '../wallet/useTip';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 const PRESET_AMOUNTS = [0.01, 0.05, 0.1, 0.5];
 const TIP_COLOR = '#f59e0b';
@@ -25,6 +25,7 @@ interface Props {
 }
 
 export function TipModal({ post, senderWallet, token, onClose, onTipped }: Props) {
+  const t = useTheme();
   const { sendTip, isSending, error, clearError } = useTip();
   const [selected, setSelected] = useState<number | null>(null);
   const [custom, setCustom] = useState('');
@@ -77,7 +78,7 @@ export function TipModal({ post, senderWallet, token, onClose, onTipped }: Props
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.handle} />
 
-          <Text style={styles.title}>
+          <Text style={[styles.title, { color: t.text }]}>
             Tip {post ? displayName(post.author, post.authorWallet) : ''}
           </Text>
           <Text style={styles.subtitle}>
@@ -128,7 +129,7 @@ export function TipModal({ post, senderWallet, token, onClose, onTipped }: Props
                   clearError();
                 }}
                 placeholder="Custom amount"
-                placeholderTextColor={theme.textTertiary}
+                placeholderTextColor={t.textTertiary}
                 keyboardType="decimal-pad"
                 style={styles.input}
               />

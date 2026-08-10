@@ -13,7 +13,7 @@ import { eventsAPI, generateSignatureMessage, type KorusEvent } from '../api/eve
 import { signMessageWithWallet } from '../wallet/signMessage';
 import { isUserDeclined } from '../wallet/solTransfer';
 import { notify } from '../notify';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 interface Props {
   token?: string | null;
@@ -23,6 +23,7 @@ interface Props {
 }
 
 export function EventsScreen({ token, walletAddress, header }: Props) {
+  const t = useTheme();
   const [events, setEvents] = useState<KorusEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -95,22 +96,22 @@ export function EventsScreen({ token, walletAddress, header }: Props) {
       data={events}
       keyExtractor={(item) => item.id}
       ListHeaderComponent={header}
-      style={styles.list}
+      style={[styles.list, { backgroundColor: t.background }]}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={() => load('refresh')}
-          tintColor={theme.mint}
+          tintColor={t.mint}
         />
       }
       ListEmptyComponent={
         loading ? (
           <View style={styles.center}>
-            <ActivityIndicator color={theme.mint} />
+            <ActivityIndicator color={t.mint} />
           </View>
         ) : (
           <View style={styles.center}>
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyText, { color: t.textTertiary }]}>
               {error ?? 'No events right now. Whitelists and raffles show up here.'}
             </Text>
           </View>
@@ -139,20 +140,21 @@ function EventCard({
   registered: boolean;
   onRegister: () => void;
 }) {
+  const t = useTheme();
   const spotsLeft =
     event.maxSpots != null ? event.maxSpots - (event.registrationCount ?? 0) : null;
   const full = spotsLeft != null && spotsLeft <= 0;
   const closed = event.status && event.status !== 'active';
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: t.surface, borderColor: t.border }]}>
       {event.imageUrl ? (
         <Image source={{ uri: event.imageUrl }} style={styles.image} resizeMode="cover" />
       ) : null}
 
       <View style={styles.cardBody}>
         <View style={styles.titleRow}>
-          <Text style={styles.title} numberOfLines={2}>
+          <Text style={[styles.title, { color: t.text }]} numberOfLines={2}>
             {event.title}
           </Text>
           {event.verified && <Text style={styles.verified}>✓</Text>}

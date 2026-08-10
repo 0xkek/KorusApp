@@ -12,7 +12,7 @@ import {
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { rpc } from '../api/rpc';
 import { notify } from '../notify';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 interface Props {
   walletAddress: string;
@@ -20,6 +20,7 @@ interface Props {
 }
 
 export function WalletScreen({ walletAddress, onBack }: Props) {
+  const t = useTheme();
   const [balance, setBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -47,12 +48,12 @@ export function WalletScreen({ walletAddress, onBack }: Props) {
   }, [load]);
 
   return (
-    <View style={styles.root}>
-      <View style={styles.navbar}>
+    <View style={[styles.root, { backgroundColor: t.background }]}>
+      <View style={[styles.navbar, { borderBottomColor: t.border, backgroundColor: t.background }]}>
         <Pressable onPress={onBack} hitSlop={12}>
-          <Text style={styles.back}>‹ Back</Text>
+          <Text style={[styles.back, { color: t.mint }]}>‹ Back</Text>
         </Pressable>
-        <Text style={styles.navTitle}>Wallet</Text>
+        <Text style={[styles.navTitle, { color: t.text }]}>Wallet</Text>
         <View style={{ width: 54 }} />
       </View>
 
@@ -62,14 +63,14 @@ export function WalletScreen({ walletAddress, onBack }: Props) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => load('refresh')}
-            tintColor={theme.mint}
+            tintColor={t.mint}
           />
         }
       >
         <View style={styles.balanceCard}>
           <Text style={styles.balanceLabel}>Balance</Text>
           {loading ? (
-            <ActivityIndicator color={theme.mint} style={{ marginTop: 10 }} />
+            <ActivityIndicator color={t.mint} style={{ marginTop: 10 }} />
           ) : error ? (
             <Text style={styles.error}>{error}</Text>
           ) : (

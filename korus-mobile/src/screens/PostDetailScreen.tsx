@@ -14,7 +14,7 @@ import type { Post, Reply } from '../api/types';
 import { displayName, relativeTime, resolveAvatarUrl } from '../api/types';
 import { LikeIcon, ReplyIcon, RepostIcon, ShareIcon, TipIcon } from '../components/Icons';
 import { notify } from '../notify';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 const LIKE_COLOR = '#ef4444';
 const TIP_COLOR = '#f59e0b';
@@ -38,6 +38,7 @@ export function PostDetailScreen({
   token,
   currentWallet,
 }: Props) {
+  const t = useTheme();
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -224,12 +225,12 @@ export function PostDetailScreen({
   }, [postId, token]);
 
   return (
-    <View style={styles.root}>
-      <View style={styles.navbar}>
+    <View style={[styles.root, { backgroundColor: t.background }]}>
+      <View style={[styles.navbar, { borderBottomColor: t.border, backgroundColor: t.background }]}>
         <Pressable onPress={onBack} hitSlop={12}>
-          <Text style={styles.back}>‹ Back</Text>
+          <Text style={[styles.back, { color: t.mint }]}>‹ Back</Text>
         </Pressable>
-        <Text style={styles.navTitle}>Post</Text>
+        <Text style={[styles.navTitle, { color: t.text }]}>Post</Text>
         {/* Shares the web URL, not korus://, so it works for people without
             the app — and Android App Links open it here for those who have it. */}
         <Pressable
@@ -240,13 +241,13 @@ export function PostDetailScreen({
           }
           hitSlop={12}
         >
-          <ShareIcon size={20} color={theme.mint} />
+          <ShareIcon size={20} color={t.mint} />
         </Pressable>
       </View>
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator color={theme.mint} />
+          <ActivityIndicator color={t.mint} />
         </View>
       ) : error || !post ? (
         <View style={styles.center}>
@@ -272,7 +273,7 @@ export function PostDetailScreen({
                 style={[
                   styles.avatar,
                   styles.avatarFallback,
-                  { backgroundColor: post.author?.themeColor ?? theme.mint },
+                  { backgroundColor: post.author?.themeColor ?? t.mint },
                 ]}
               >
                 <Text style={styles.avatarText}>
@@ -296,7 +297,7 @@ export function PostDetailScreen({
 
           <View style={styles.statsRow}>
             <Stat
-              icon={<ReplyIcon size={20} color={theme.textTertiary} />}
+              icon={<ReplyIcon size={20} color={t.textTertiary} />}
               value={post.replyCount}
               onPress={token && onReply ? () => onReply(postId) : undefined}
             />
@@ -304,7 +305,7 @@ export function PostDetailScreen({
               icon={
                 <LikeIcon
                   size={20}
-                  color={liked ? LIKE_COLOR : theme.textTertiary}
+                  color={liked ? LIKE_COLOR : t.textTertiary}
                   fill={liked ? LIKE_COLOR : 'none'}
                 />
               }
@@ -315,11 +316,11 @@ export function PostDetailScreen({
             />
             <Stat
               icon={
-                <RepostIcon size={20} color={reposted ? theme.mint : theme.textTertiary} />
+                <RepostIcon size={20} color={reposted ? t.mint : t.textTertiary} />
               }
               value={post.repostCount}
               active={reposted}
-              activeColor={theme.mint}
+              activeColor={t.mint}
               onPress={
                 !token
                   ? undefined
@@ -332,7 +333,7 @@ export function PostDetailScreen({
               icon={
                 <TipIcon
                   size={20}
-                  color={Number(post.tipAmount) > 0 ? TIP_COLOR : theme.textTertiary}
+                  color={Number(post.tipAmount) > 0 ? TIP_COLOR : t.textTertiary}
                 />
               }
               value={Number(post.tipAmount) || 0}
@@ -383,7 +384,7 @@ export function PostDetailScreen({
                 >
                   <LikeIcon
                     size={16}
-                    color={likedReplies.has(reply.id) ? LIKE_COLOR : theme.textTertiary}
+                    color={likedReplies.has(reply.id) ? LIKE_COLOR : t.textTertiary}
                     fill={likedReplies.has(reply.id) ? LIKE_COLOR : 'none'}
                   />
                   <Text
@@ -411,7 +412,7 @@ export function PostDetailScreen({
                   <RepostIcon
                     size={16}
                     color={
-                      repostedReplies.has(reply.id) ? theme.mint : theme.textTertiary
+                      repostedReplies.has(reply.id) ? t.mint : t.textTertiary
                     }
                   />
                   <Text

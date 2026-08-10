@@ -18,7 +18,7 @@ import { AvatarPicker } from '../components/AvatarPicker';
 import type { UserProfile } from '../api/types';
 import { resolveAvatarUrl } from '../api/types';
 import { notify } from '../notify';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 interface Props {
   token: string;
@@ -40,6 +40,7 @@ export function EditProfileScreen({
   onSaved,
   onChanged,
 }: Props) {
+  const t = useTheme();
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState(profile?.bio ?? '');
   const [location, setLocation] = useState(profile?.location ?? '');
@@ -149,14 +150,14 @@ export function EditProfileScreen({
 
   return (
     <KeyboardAvoidingView
-      style={styles.root}
+      style={[styles.root, { backgroundColor: t.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.navbar}>
+      <View style={[styles.navbar, { borderBottomColor: t.border, backgroundColor: t.background }]}>
         <Pressable onPress={onBack} hitSlop={12}>
-          <Text style={styles.back}>‹ Back</Text>
+          <Text style={[styles.back, { color: t.mint }]}>‹ Back</Text>
         </Pressable>
-        <Text style={styles.navTitle}>Edit profile</Text>
+        <Text style={[styles.navTitle, { color: t.text }]}>Edit profile</Text>
         {/* Stays tappable with nothing to save so it can explain itself —
             a dead button reads as "the app is broken". */}
         <Pressable
@@ -167,7 +168,7 @@ export function EditProfileScreen({
           hitSlop={12}
         >
           {saving ? (
-            <ActivityIndicator color={theme.mint} size="small" />
+            <ActivityIndicator color={t.mint} size="small" />
           ) : (
             <Text style={[styles.save, !hasChanges && styles.saveDisabled]}>Save</Text>
           )}
@@ -216,7 +217,7 @@ export function EditProfileScreen({
               value={username}
               onChangeText={setUsername}
               placeholder="yourname"
-              placeholderTextColor={theme.textTertiary}
+              placeholderTextColor={t.textTertiary}
               autoCapitalize="none"
               autoCorrect={false}
               maxLength={20}
@@ -236,19 +237,19 @@ export function EditProfileScreen({
           value={bio}
           onChangeText={setBio}
           placeholder="Say something about yourself"
-          placeholderTextColor={theme.textTertiary}
+          placeholderTextColor={t.textTertiary}
           multiline
           maxLength={200}
           style={[styles.input, styles.multiline]}
         />
-        <Text style={styles.hint}>{bio.length}/200</Text>
+        <Text style={[styles.hint, { color: t.textTertiary }]}>{bio.length}/200</Text>
 
         <Text style={styles.label}>Location</Text>
         <TextInput
           value={location}
           onChangeText={setLocation}
           placeholder="Where you are"
-          placeholderTextColor={theme.textTertiary}
+          placeholderTextColor={t.textTertiary}
           maxLength={100}
           style={styles.input}
         />
@@ -258,7 +259,7 @@ export function EditProfileScreen({
           value={website}
           onChangeText={setWebsite}
           placeholder="https://yourwebsite.com"
-          placeholderTextColor={theme.textTertiary}
+          placeholderTextColor={t.textTertiary}
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="url"
@@ -271,7 +272,7 @@ export function EditProfileScreen({
           value={twitter}
           onChangeText={setTwitter}
           placeholder="username"
-          placeholderTextColor={theme.textTertiary}
+          placeholderTextColor={t.textTertiary}
           autoCapitalize="none"
           autoCorrect={false}
           maxLength={50}

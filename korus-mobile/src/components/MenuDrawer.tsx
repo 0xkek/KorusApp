@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { resolveAvatarUrl, shortAddress } from '../api/types';
 import type { UserProfile } from '../api/types';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 /**
  * Account menu.
@@ -44,6 +44,7 @@ export function MenuDrawer({
   onConnect,
   onSignOut,
 }: Props) {
+  const t = useTheme();
   const slide = useRef(new Animated.Value(-1)).current;
 
   useEffect(() => {

@@ -17,7 +17,7 @@ import {
 import { isUserDeclined, sendSol } from '../wallet/solTransfer';
 import { usersAPI } from '../api/users';
 import { notify } from '../notify';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 type Plan = 'monthly' | 'yearly';
 
@@ -55,6 +55,7 @@ export function PremiumScreen({
   onThemeChanged,
   onEditProfile,
 }: Props) {
+  const t = useTheme();
   const [pricing, setPricing] = useState<Record<Plan, SubscriptionTier> | null>(null);
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
   const [plan, setPlan] = useState<Plan>('yearly');
@@ -141,18 +142,18 @@ export function PremiumScreen({
   );
 
   return (
-    <View style={styles.root}>
-      <View style={styles.navbar}>
+    <View style={[styles.root, { backgroundColor: t.background }]}>
+      <View style={[styles.navbar, { borderBottomColor: t.border, backgroundColor: t.background }]}>
         <Pressable onPress={onBack} hitSlop={12}>
-          <Text style={styles.back}>‹ Back</Text>
+          <Text style={[styles.back, { color: t.mint }]}>‹ Back</Text>
         </Pressable>
-        <Text style={styles.navTitle}>Premium</Text>
+        <Text style={[styles.navTitle, { color: t.text }]}>Premium</Text>
         <View style={{ width: 54 }} />
       </View>
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator color={theme.mint} />
+          <ActivityIndicator color={t.mint} />
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.content}>

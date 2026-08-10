@@ -11,7 +11,7 @@ import {
 import { notificationsAPI, type Notification } from '../api/notifications';
 import { relativeTime, shortAddress } from '../api/types';
 import { LikeIcon, ReplyIcon, TipIcon } from '../components/Icons';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 const LIKE_COLOR = '#ef4444';
 const TIP_COLOR = '#f59e0b';
@@ -32,6 +32,7 @@ export function NotificationsScreen({
   onOpenProfile,
   onReadAll,
 }: Props) {
+  const t = useTheme();
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -87,12 +88,12 @@ export function NotificationsScreen({
   const unreadCount = items.filter((n) => !n.read).length;
 
   return (
-    <View style={styles.root}>
-      <View style={styles.navbar}>
+    <View style={[styles.root, { backgroundColor: t.background }]}>
+      <View style={[styles.navbar, { borderBottomColor: t.border, backgroundColor: t.background }]}>
         <Pressable onPress={onBack} hitSlop={12}>
-          <Text style={styles.back}>‹ Back</Text>
+          <Text style={[styles.back, { color: t.mint }]}>‹ Back</Text>
         </Pressable>
-        <Text style={styles.navTitle}>Notifications</Text>
+        <Text style={[styles.navTitle, { color: t.text }]}>Notifications</Text>
         {unreadCount > 0 ? (
           <Pressable onPress={markAllRead} hitSlop={12}>
             <Text style={styles.readAll}>Read all</Text>
@@ -104,7 +105,7 @@ export function NotificationsScreen({
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator color={theme.mint} />
+          <ActivityIndicator color={t.mint} />
         </View>
       ) : (
         <FlatList
@@ -114,12 +115,12 @@ export function NotificationsScreen({
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => load('refresh')}
-              tintColor={theme.mint}
+              tintColor={t.mint}
             />
           }
           ListEmptyComponent={
             <View style={styles.center}>
-              <Text style={styles.emptyText}>
+              <Text style={[styles.emptyText, { color: t.textTertiary }]}>
                 {error ?? 'Nothing yet. Likes, replies and follows show up here.'}
               </Text>
             </View>
@@ -155,8 +156,9 @@ export function NotificationsScreen({
 }
 
 function NotificationIcon({ type }: { type: string }) {
+  const t = useTheme();
   if (type === 'like') return <LikeIcon size={20} color={LIKE_COLOR} fill={LIKE_COLOR} />;
-  if (type === 'reply') return <ReplyIcon size={20} color={theme.mint} />;
+  if (type === 'reply') return <ReplyIcon size={20} color={t.mint} />;
   if (type === 'tip') return <TipIcon size={20} color={TIP_COLOR} />;
   // follow and the game types fall through to a neutral marker.
   return <View style={styles.genericIcon} />;

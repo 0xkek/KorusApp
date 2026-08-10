@@ -14,7 +14,7 @@ import { usersAPI } from '../api/users';
 import type { Post, UserProfile } from '../api/types';
 import { resolveAvatarUrl, shortAddress } from '../api/types';
 import { PostCard } from '../components/PostCard';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 interface Props {
   walletAddress: string;
@@ -36,6 +36,7 @@ export function ProfileScreen({
   onEditProfile,
   onOpenPremium,
 }: Props) {
+  const t = useTheme();
   const [following, setFollowing] = useState(false);
   const [followBusy, setFollowBusy] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -156,18 +157,18 @@ export function ProfileScreen({
   const name = chosenName ?? 'Unnamed';
 
   return (
-    <View style={styles.root}>
-      <View style={styles.navbar}>
+    <View style={[styles.root, { backgroundColor: t.background }]}>
+      <View style={[styles.navbar, { borderBottomColor: t.border, backgroundColor: t.background }]}>
         <Pressable onPress={onBack} hitSlop={12}>
-          <Text style={styles.back}>‹ Back</Text>
+          <Text style={[styles.back, { color: t.mint }]}>‹ Back</Text>
         </Pressable>
-        <Text style={styles.navTitle}>Profile</Text>
+        <Text style={[styles.navTitle, { color: t.text }]}>Profile</Text>
         <View style={{ width: 54 }} />
       </View>
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator color={theme.mint} />
+          <ActivityIndicator color={t.mint} />
         </View>
       ) : error ? (
         <View style={styles.center}>
@@ -230,7 +231,7 @@ export function ProfileScreen({
                   style={[styles.followButton, following && styles.followingButton]}
                 >
                   {followBusy ? (
-                    <ActivityIndicator size="small" color={following ? theme.text : '#000'} />
+                    <ActivityIndicator size="small" color={following ? t.text : '#000'} />
                   ) : (
                     <Text
                       style={[
@@ -294,13 +295,13 @@ export function ProfileScreen({
           }
           ListEmptyComponent={
             <View style={styles.center}>
-              <Text style={styles.emptyText}>No posts yet</Text>
+              <Text style={[styles.emptyText, { color: t.textTertiary }]}>No posts yet</Text>
             </View>
           }
           ListFooterComponent={
             loadingMore ? (
               <View style={styles.footer}>
-                <ActivityIndicator color={theme.mint} />
+                <ActivityIndicator color={t.mint} />
               </View>
             ) : null
           }

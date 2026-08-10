@@ -10,7 +10,7 @@ import {
 import { gamesAPI, gameLabel, type Game, type GameMove } from '../api/games';
 import { shortAddress } from '../api/types';
 import { notify } from '../notify';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 const RED = '#ef4444';
 const YELLOW = '#fbbf24';
@@ -23,6 +23,7 @@ interface Props {
 }
 
 export function GameDetailScreen({ gameId, token, currentWallet, onBack }: Props) {
+  const t = useTheme();
   const [game, setGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -83,12 +84,12 @@ export function GameDetailScreen({ gameId, token, currentWallet, onBack }: Props
   const waiting = !game?.player2;
 
   return (
-    <View style={styles.root}>
-      <View style={styles.navbar}>
+    <View style={[styles.root, { backgroundColor: t.background }]}>
+      <View style={[styles.navbar, { borderBottomColor: t.border, backgroundColor: t.background }]}>
         <Pressable onPress={onBack} hitSlop={12}>
-          <Text style={styles.back}>‹ Back</Text>
+          <Text style={[styles.back, { color: t.mint }]}>‹ Back</Text>
         </Pressable>
-        <Text style={styles.navTitle}>
+        <Text style={[styles.navTitle, { color: t.text }]}>
           {game ? gameLabel(game.gameType) : 'Game'}
         </Text>
         <View style={{ width: 54 }} />
@@ -96,7 +97,7 @@ export function GameDetailScreen({ gameId, token, currentWallet, onBack }: Props
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator color={theme.mint} />
+          <ActivityIndicator color={t.mint} />
         </View>
       ) : !game ? (
         <View style={styles.center}>

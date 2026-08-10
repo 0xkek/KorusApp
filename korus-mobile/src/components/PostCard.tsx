@@ -4,7 +4,7 @@ import type { Post } from '../api/types';
 import { displayName, relativeTime, resolveAvatarUrl } from '../api/types';
 import { LikeIcon, ReplyIcon, RepostIcon, TipIcon } from './Icons';
 import { notify } from '../notify';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 // Match the web app's action colours.
 const LIKE_COLOR = '#ef4444';
@@ -37,6 +37,7 @@ function PostCardBase({
   reposted,
   currentWallet,
 }: Props) {
+  const t = useTheme();
   // A repost renders what it reposted, with a "reposted" line above it. The
   // source is either a post or — since reply reposts — a reply, which has no
   // repost/tip counts of its own, so those render as zero.
@@ -92,7 +93,7 @@ function PostCardBase({
               style={[
                 styles.avatar,
                 styles.avatarFallback,
-                { backgroundColor: author?.themeColor ?? theme.mint },
+                { backgroundColor: author?.themeColor ?? t.mint },
               ]}
             >
               <Text style={styles.avatarText}>
@@ -113,7 +114,7 @@ function PostCardBase({
             </Text>
           </View>
 
-          {bodyText ? <Text style={styles.content}>{bodyText}</Text> : null}
+          {bodyText ? <Text style={[styles.content, { backgroundColor: t.background }]}>{bodyText}</Text> : null}
 
           {source.imageUrl ? (
             <Image
@@ -130,7 +131,7 @@ function PostCardBase({
               disabled={!onReply}
               style={styles.action}
             >
-              <ReplyIcon color={theme.textTertiary} />
+              <ReplyIcon color={t.textTertiary} />
               <Text style={styles.stat}>{source.replyCount ?? 0}</Text>
             </Pressable>
 
@@ -141,7 +142,7 @@ function PostCardBase({
               style={styles.action}
             >
               <LikeIcon
-                color={liked ? LIKE_COLOR : theme.textTertiary}
+                color={liked ? LIKE_COLOR : t.textTertiary}
                 fill={liked ? LIKE_COLOR : 'none'}
               />
               <Text style={[styles.stat, liked && styles.statLiked]}>
@@ -161,7 +162,7 @@ function PostCardBase({
               disabled={!canRepost && !(isOwnPost && onToggleRepost)}
               style={styles.action}
             >
-              <RepostIcon color={reposted ? theme.mint : theme.textTertiary} />
+              <RepostIcon color={reposted ? t.mint : t.textTertiary} />
               <Text style={[styles.stat, reposted && styles.statReposted]}>
                 {source.repostCount ?? 0}
               </Text>
@@ -180,7 +181,7 @@ function PostCardBase({
               style={styles.action}
             >
               <TipIcon
-                color={Number(source.tipAmount) > 0 ? TIP_COLOR : theme.textTertiary}
+                color={Number(source.tipAmount) > 0 ? TIP_COLOR : t.textTertiary}
               />
               <Text style={Number(source.tipAmount) > 0 ? styles.tip : styles.stat}>
                 {Number(source.tipAmount) > 0

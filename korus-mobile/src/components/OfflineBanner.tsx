@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 /**
  * Shown when the device has no usable connection.
@@ -14,6 +14,7 @@ import { theme } from '../theme';
  * identical to being online otherwise.
  */
 export function OfflineBanner() {
+  const t = useTheme();
   const [offline, setOffline] = useState(false);
 
   useEffect(() => {
@@ -29,7 +30,7 @@ export function OfflineBanner() {
   if (!offline) return null;
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: t.background }]}>
       <Text style={styles.text}>No connection — showing what was already loaded</Text>
     </View>
   );
