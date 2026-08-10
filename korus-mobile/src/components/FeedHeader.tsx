@@ -13,6 +13,7 @@ interface Props {
   onOpenProfile?: () => void;
   onOpenNotifications?: () => void;
   onOpenSearch?: () => void;
+  onOpenMenu?: () => void;
   unreadCount?: number;
 }
 
@@ -32,17 +33,27 @@ export function FeedHeader({
   onOpenProfile,
   onOpenNotifications,
   onOpenSearch,
+  onOpenMenu,
   unreadCount = 0,
 }: Props) {
   return (
     <View style={styles.root}>
       <View style={styles.row}>
-        <View style={styles.brand}>
+        {/* The logo doubles as the menu button — it is the most reachable
+            spot in the header and keeps the row from gaining another icon. */}
+        <Pressable
+          onPress={onOpenMenu}
+          disabled={!onOpenMenu}
+          style={styles.brand}
+          hitSlop={8}
+          accessibilityLabel="Menu"
+        >
           <View style={styles.logo}>
             <Text style={styles.logoText}>K</Text>
           </View>
           <Text style={styles.title}>Korus</Text>
-        </View>
+          {onOpenMenu ? <Text style={styles.chevron}>▾</Text> : null}
+        </Pressable>
 
         <View style={styles.actions}>
         {/* Search works signed out, so it is always available. */}
@@ -150,6 +161,7 @@ const styles = StyleSheet.create({
   },
   logoText: { color: '#000', fontWeight: '800', fontSize: 19 },
   title: { color: theme.mint, fontSize: 21, fontWeight: '800' },
+  chevron: { color: theme.textTertiary, fontSize: 12, marginLeft: -3 },
   button: {
     backgroundColor: theme.mint,
     paddingHorizontal: 18,

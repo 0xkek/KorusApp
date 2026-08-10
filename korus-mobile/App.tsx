@@ -19,6 +19,12 @@ import { useDeepLinks } from './src/useDeepLinks';
 import { NotificationsScreen } from './src/screens/NotificationsScreen';
 import { SearchScreen } from './src/screens/SearchScreen';
 import { PremiumScreen } from './src/screens/PremiumScreen';
+import { GamesScreen } from './src/screens/GamesScreen';
+import { EventsScreen } from './src/screens/EventsScreen';
+import { WalletScreen } from './src/screens/WalletScreen';
+import { SettingsScreen } from './src/screens/SettingsScreen';
+import { MenuDrawer } from './src/components/MenuDrawer';
+import { TopTabs, type TopTab } from './src/components/TopTabs';
 import { notificationsAPI } from './src/api/notifications';
 import {
   usePushRegistration,
@@ -36,7 +42,9 @@ type Screen =
   | { name: 'editProfile' }
   | { name: 'notifications' }
   | { name: 'search' }
-  | { name: 'premium' };
+  | { name: 'premium' }
+  | { name: 'wallet' }
+  | { name: 'settings' };
 
 /**
  * Minimal stack. Deliberately not expo-router yet — Phase 2 is three screens,
@@ -59,6 +67,8 @@ function KorusApp() {
   // Post being tipped; the modal is open whenever this is set.
   const [tipTarget, setTipTarget] = useState<Post | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [tab, setTab] = useState<TopTab>('home');
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Registers this device for push once signed in. No-ops cleanly until the
   // project is linked with `eas init` — see usePushRegistration.
@@ -126,6 +136,36 @@ function KorusApp() {
 
   const insets = useSafeAreaInsets();
   const goFeed = () => setScreen({ name: 'feed' });
+
+  const signOut = () => {
+    // Clear the push token first — after signOut there is no token to
+    // authenticate the call with, and otherwise this device keeps receiving
+    // the previous account's pushes.
+    if (auth.token) {
+      notificationsAPI.unregisterPushToken(auth.token).catch(() => {});
+    }
+    auth.signOut();
+  };
+
+  // Shared by all four tabs so switching between them does not rebuild the
+  // branding row.
+  const tabHeader = (
+    <>
+      <FeedHeader
+        walletAddress={auth.walletAddress}
+        signedIn={Boolean(auth.token)}
+        isBusy={auth.isBusy}
+        error={auth.error}
+        onConnect={auth.connectAndSignIn}
+        onSignOut={signOut}
+        onOpenMenu={() => setMenuOpen(true)}
+        onOpenNotifications={() => setScreen({ name: 'notifications' })}
+        onOpenSearch={() => setScreen({ name: 'search' })}
+        unreadCount={unreadCount}
+      />
+      <TopTabs active={tab} onChange={setTab} />
+    </>
+  );
   const afterWrite = () => {
     setRefreshKey((k) => k + 1);
     goFeed();
@@ -138,7 +178,20 @@ function KorusApp() {
       <StatusBar style="light" />
       <OfflineBanner />
       <View style={styles.inner}>
-        {screen.name === 'premium' && auth.token && auth.walletAddress ? (
+        {screen.name === 'wallet' && auth.walletAddress ? (
+          <WalletScreen walletAddress={auth.walletAddress} onBack={goFeed} />
+        ) : screen.name === 'settings' && auth.token ? (
+          <SettingsScreen
+            token={auth.token}
+            notificationsEnabled={auth.profile?.pushNotificationsEnabled ?? true}
+            onBack={goFeed}
+            onSignOut={() => {
+              signOut();
+              goFeed();
+            }}
+            onChanged={() => void auth.refreshProfile()}
+          />
+        ) : screen.name === 'premium' && auth.token && auth.walletAddress ? (
           <PremiumScreen
             token={auth.token}
             walletAddress={auth.walletAddress}
@@ -208,43 +261,38 @@ function KorusApp() {
             onOpenPremium={() => setScreen({ name: 'premium' })}
           />
         ) : (
-          // The feed is public — readable before signing in, same as the web
-          // app, so a new user sees content rather than a wall.
-          <FeedScreen
-            onOpenPost={(post) => setScreen({ name: 'post', postId: post.id })}
-            onOpenProfile={(wallet) => setScreen({ name: 'profile', walletAddress: wallet })}
-            onReply={(post) => setScreen({ name: 'compose', replyToPostId: post.id })}
-            onTip={(post) => setTipTarget(post)}
-            token={auth.token}
-            currentWallet={auth.walletAddress}
-            refreshKey={refreshKey}
-            header={
-              <FeedHeader
-                walletAddress={auth.walletAddress}
-                signedIn={Boolean(auth.token)}
-                isBusy={auth.isBusy}
-                error={auth.error}
-                onConnect={auth.connectAndSignIn}
-                onSignOut={() => {
-                  // Clear the push token first — after signOut there is no
-                  // token to authenticate the call with, and otherwise this
-                  // device keeps receiving the previous account's pushes.
-                  if (auth.token) {
-                    notificationsAPI.unregisterPushToken(auth.token).catch(() => {});
-                  }
-                  auth.signOut();
-                }}
-                onOpenProfile={
-                  auth.walletAddress
-                    ? () => setScreen({ name: 'profile', walletAddress: auth.walletAddress! })
-                    : undefined
+          // All four tabs share one header, so switching between them does not
+          // flash the branding away and back.
+          <>
+            {tab === 'games' ? (
+              <GamesScreen
+                token={auth.token}
+                currentWallet={auth.walletAddress}
+                header={tabHeader}
+                onOpenProfile={(wallet) =>
+                  setScreen({ name: 'profile', walletAddress: wallet })
                 }
-                onOpenNotifications={() => setScreen({ name: 'notifications' })}
-                onOpenSearch={() => setScreen({ name: 'search' })}
-                unreadCount={unreadCount}
               />
-            }
-          />
+            ) : tab === 'events' ? (
+              <EventsScreen token={auth.token} header={tabHeader} />
+            ) : (
+              // The feed is public — readable before signing in, same as the
+              // web app, so a new user sees content rather than a wall.
+              <FeedScreen
+                onOpenPost={(post) => setScreen({ name: 'post', postId: post.id })}
+                onOpenProfile={(wallet) =>
+                  setScreen({ name: 'profile', walletAddress: wallet })
+                }
+                onReply={(post) => setScreen({ name: 'compose', replyToPostId: post.id })}
+                onTip={(post) => setTipTarget(post)}
+                token={auth.token}
+                currentWallet={auth.walletAddress}
+                refreshKey={refreshKey}
+                feed={tab === 'trending' ? 'trending' : 'home'}
+                header={tabHeader}
+              />
+            )}
+          </>
         )}
       </View>
 
@@ -262,6 +310,30 @@ function KorusApp() {
           <Text style={styles.fabIcon}>+</Text>
         </Pressable>
       )}
+
+      <MenuDrawer
+        visible={menuOpen}
+        profile={auth.profile}
+        walletAddress={auth.walletAddress}
+        signedIn={Boolean(auth.token)}
+        onClose={() => setMenuOpen(false)}
+        onNavigate={(destination) => {
+          setMenuOpen(false);
+          if (destination === 'profile' && auth.walletAddress) {
+            setScreen({ name: 'profile', walletAddress: auth.walletAddress });
+          } else if (destination === 'wallet') setScreen({ name: 'wallet' });
+          else if (destination === 'settings') setScreen({ name: 'settings' });
+          else if (destination === 'premium') setScreen({ name: 'premium' });
+        }}
+        onConnect={() => {
+          setMenuOpen(false);
+          auth.connectAndSignIn();
+        }}
+        onSignOut={() => {
+          setMenuOpen(false);
+          signOut();
+        }}
+      />
 
       <TipModal
         post={tipTarget}

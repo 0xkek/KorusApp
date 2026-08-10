@@ -140,6 +140,33 @@ router.post('/push/subscribe', authenticate, async (req: AuthRequest, res) => {
 });
 
 /**
+ * POST /api/notifications/preferences
+ * Turn notifications on or off.
+ *
+ * pushNotificationsEnabled was read by every send path but nothing could ever
+ * write it, so there was no way to opt out. Both the Expo and Web Push senders
+ * already respect it.
+ */
+router.post('/preferences', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const { enabled } = req.body;
+    if (typeof enabled !== 'boolean') {
+      return res.status(400).json({ success: false, error: 'enabled must be a boolean' });
+    }
+
+    await prisma.user.update({
+      where: { walletAddress: req.userWallet! },
+      data: { pushNotificationsEnabled: enabled },
+    });
+
+    res.json({ success: true, pushNotificationsEnabled: enabled });
+  } catch (error) {
+    logger.error('Update notification preferences error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update preferences' });
+  }
+});
+
+/**
  * POST /api/notifications/push/register
  * Register an Expo push token for the mobile app.
  *

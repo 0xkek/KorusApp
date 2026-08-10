@@ -46,6 +46,8 @@ export interface UserProfile {
   website?: string | null;
   twitter?: string | null;
   themeColor?: string | null;
+  /** Own profile only. Gates both Expo and Web Push sends. */
+  pushNotificationsEnabled?: boolean;
 }
 
 export interface Post {

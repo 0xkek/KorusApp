@@ -27,6 +27,8 @@ interface Props {
   currentWallet?: string | null;
   /** Bumped by the parent after a write, to force a refetch. */
   refreshKey?: number;
+  /** Which feed to show. The tab row itself now lives above this screen. */
+  feed?: Tab;
 }
 
 export function FeedScreen({
@@ -38,8 +40,9 @@ export function FeedScreen({
   token,
   currentWallet,
   refreshKey = 0,
+  feed = 'home',
 }: Props) {
-  const [tab, setTab] = useState<Tab>('home');
+  const tab = feed;
   const [posts, setPosts] = useState<Post[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
@@ -251,16 +254,6 @@ export function FeedScreen({
       ListHeaderComponent={
         <>
           {header}
-          <View style={styles.tabs}>
-            {(['home', 'trending'] as Tab[]).map((t) => (
-              <Pressable key={t} onPress={() => setTab(t)} style={styles.tab}>
-                <Text style={[styles.tabText, tab === t && styles.tabTextActive]}>
-                  {t === 'home' ? 'Home' : 'Trending'}
-                </Text>
-                {tab === t && <View style={styles.tabUnderline} />}
-              </Pressable>
-            ))}
-          </View>
           {tab === 'trending' && posts.length > 0 && (
             <Text style={styles.trendingNote}>
               Posts people are liking, replying to and tipping.

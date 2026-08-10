@@ -50,4 +50,12 @@ export const notificationsAPI = {
   /** Clear it on sign-out so a shared device stops receiving these. */
   unregisterPushToken: (token: string) =>
     api.post<{ success: boolean }>('/api/notifications/push/unregister', {}, token),
+
+  /** Both the Expo and Web Push senders respect this flag. */
+  setEnabled: (enabled: boolean, token: string) =>
+    api.post<{ success: boolean; pushNotificationsEnabled: boolean }>(
+      '/api/notifications/preferences',
+      { enabled },
+      token
+    ),
 };
