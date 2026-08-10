@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Post } from '../api/types';
 import { displayName } from '../api/types';
@@ -16,12 +16,25 @@ import { useTheme, type Theme } from '../theme';
 interface Props {
   post: Post;
   onPress?: (post: Post) => void;
+  /** Fired once when the promotion ends, so the feed can unpin it. */
+  onExpire?: (postId: string) => void;
 }
 
-export function ShoutoutCard({ post, onPress }: Props) {
+export function ShoutoutCard({ post, onPress, onExpire }: Props) {
   const t = useTheme();
   const styles = useMemo(() => makeStyles(t), [t]);
   const remaining = useCountdown(post.shoutoutExpiresAt);
+  const expired = remaining === 'expired';
+
+  // Tell the feed once, so it can stop pinning a promotion that has ended
+  // rather than leaving it at the top indefinitely.
+  const notified = useRef(false);
+  useEffect(() => {
+    if (expired && !notified.current) {
+      notified.current = true;
+      onExpire?.(post.id);
+    }
+  }, [expired, onExpire, post.id]);
 
   return (
     <Pressable
@@ -44,8 +57,10 @@ export function ShoutoutCard({ post, onPress }: Props) {
         </View>
 
         {remaining ? (
-          <View style={styles.countdown}>
-            <Text style={styles.countdownText}>{remaining}</Text>
+          <View style={[styles.countdown, expired && styles.countdownExpired]}>
+            <Text style={[styles.countdownText, expired && styles.countdownTextExpired]}>
+              {expired ? 'Ended' : remaining}
+            </Text>
           </View>
         ) : null}
       </View>
@@ -53,7 +68,13 @@ export function ShoutoutCard({ post, onPress }: Props) {
   );
 }
 
-/** Ticks once a second; returns null once expired or with no expiry set. */
+/**
+ * Ticks once a second. Returns null when there is no expiry to count towards,
+ * and 'expired' once it passes, so the caller can say so rather than silently
+ * dropping the badge.
+ *
+ * Format matches korus-web: `1h 5m 30s`, `2m 15s`, `45s`.
+ */
 function useCountdown(expiresAt: string | null | undefined): string | null {
   const [now, setNow] = useState(() => Date.now());
 
@@ -65,16 +86,16 @@ function useCountdown(expiresAt: string | null | undefined): string | null {
 
   if (!expiresAt) return null;
   const ms = new Date(expiresAt).getTime() - now;
-  if (ms <= 0) return null;
+  if (ms <= 0) return 'expired';
 
   const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  if (minutes >= 60) {
-    const hours = Math.floor(minutes / 60);
-    return `${hours}h ${minutes % 60}m`;
-  }
-  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
 }
 
 const makeStyles = (theme: Theme) =>
@@ -119,4 +140,6 @@ const makeStyles = (theme: Theme) =>
       borderColor: theme.mint,
     },
     countdownText: { color: theme.mint, fontSize: 12, fontWeight: '800' },
+    countdownExpired: { borderColor: theme.textTertiary },
+    countdownTextExpired: { color: theme.textTertiary },
   });

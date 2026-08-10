@@ -243,7 +243,14 @@ export function FeedScreen({
         // A shoutout is paid promotion and gets its own banner card, as on the
         // web, rather than looking like an ordinary post.
         item.isShoutout ? (
-          <ShoutoutCard post={item} onPress={onOpenPost} />
+          <ShoutoutCard
+            post={item}
+            onPress={onOpenPost}
+            // Refetch when a promotion ends: the backend stops pinning it, so
+            // this brings the feed back in line without waiting for a manual
+            // pull to refresh.
+            onExpire={() => load('refresh', tab)}
+          />
         ) : (
         <PostCard
           post={item}
