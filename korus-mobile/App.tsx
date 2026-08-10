@@ -20,6 +20,7 @@ import { NotificationsScreen } from './src/screens/NotificationsScreen';
 import { SearchScreen } from './src/screens/SearchScreen';
 import { PremiumScreen } from './src/screens/PremiumScreen';
 import { GamesScreen } from './src/screens/GamesScreen';
+import { GameDetailScreen } from './src/screens/GameDetailScreen';
 import { EventsScreen } from './src/screens/EventsScreen';
 import { WalletScreen } from './src/screens/WalletScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
@@ -44,7 +45,8 @@ type Screen =
   | { name: 'search' }
   | { name: 'premium' }
   | { name: 'wallet' }
-  | { name: 'settings' };
+  | { name: 'settings' }
+  | { name: 'game'; gameId: string };
 
 /**
  * Minimal stack. Deliberately not expo-router yet — Phase 2 is three screens,
@@ -178,7 +180,14 @@ function KorusApp() {
       <StatusBar style="light" />
       <OfflineBanner />
       <View style={styles.inner}>
-        {screen.name === 'wallet' && auth.walletAddress ? (
+        {screen.name === 'game' ? (
+          <GameDetailScreen
+            gameId={screen.gameId}
+            token={auth.token}
+            currentWallet={auth.walletAddress}
+            onBack={goFeed}
+          />
+        ) : screen.name === 'wallet' && auth.walletAddress ? (
           <WalletScreen walletAddress={auth.walletAddress} onBack={goFeed} />
         ) : screen.name === 'settings' && auth.token ? (
           <SettingsScreen
@@ -272,6 +281,7 @@ function KorusApp() {
                 onOpenProfile={(wallet) =>
                   setScreen({ name: 'profile', walletAddress: wallet })
                 }
+                onOpenGame={(gameId) => setScreen({ name: 'game', gameId })}
               />
             ) : tab === 'events' ? (
               <EventsScreen token={auth.token} header={tabHeader} />

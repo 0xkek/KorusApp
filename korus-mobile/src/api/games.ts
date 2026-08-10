@@ -12,6 +12,25 @@ import type { Author } from './types';
 
 export type GameType = 'connectfour' | 'rps' | 'tictactoe';
 
+/**
+ * Move payloads, verified against the backend's processors:
+ *   tictactoe   { index: 0-8 }   flat 9-array, cells 'X' | 'O' | null
+ *   connectfour { column: 0-6 }  6x7 grid, cells 'red' | 'yellow' | null
+ *   rps         { choice }       simultaneous — no currentTurn, played in rounds
+ */
+export type GameMove =
+  | { index: number }
+  | { column: number }
+  | { choice: 'rock' | 'paper' | 'scissors' };
+
+export interface GameState {
+  board?: (string | null)[] | (string | null)[][];
+  moves?: unknown[];
+  round?: number;
+  playerMoves?: Record<string, string>;
+  roundResults?: { winner?: string | null }[];
+}
+
 export interface Game {
   id: string;
   postId: string | null;
@@ -19,7 +38,7 @@ export interface Game {
   player1: string;
   player2: string | null;
   currentTurn: string | null;
-  gameState: unknown;
+  gameState: GameState | null;
   wager: string | number | null;
   winner: string | null;
   status: string;
@@ -57,8 +76,12 @@ export const gamesAPI = {
   join: (id: string, token: string) =>
     api.post<{ success: boolean; game?: Game }>(`/api/games/${id}/join`, {}, token),
 
-  move: (id: string, move: unknown, token: string) =>
-    api.post<{ success: boolean; game?: Game }>(`/api/games/${id}/move`, { move }, token),
+  move: (id: string, move: GameMove, token: string) =>
+    api.post<{ success: boolean; game?: Game; error?: string }>(
+      `/api/games/${id}/move`,
+      { move },
+      token
+    ),
 };
 
 export function gameLabel(type: string): string {

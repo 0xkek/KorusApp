@@ -18,9 +18,16 @@ interface Props {
   currentWallet?: string | null;
   header?: React.ReactElement;
   onOpenProfile?: (wallet: string) => void;
+  onOpenGame?: (gameId: string) => void;
 }
 
-export function GamesScreen({ token, currentWallet, header, onOpenProfile }: Props) {
+export function GamesScreen({
+  token,
+  currentWallet,
+  header,
+  onOpenProfile,
+  onOpenGame,
+}: Props) {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -147,6 +154,7 @@ export function GamesScreen({ token, currentWallet, header, onOpenProfile }: Pro
               : undefined
           }
           joining={joining === item.id}
+          onOpen={onOpenGame ? () => onOpenGame(item.id) : undefined}
         />
       )}
     />
@@ -159,12 +167,14 @@ function GameRow({
   onOpenProfile,
   onJoin,
   joining,
+  onOpen,
 }: {
   game: Game;
   currentWallet?: string | null;
   onOpenProfile?: (wallet: string) => void;
   onJoin?: () => void;
   joining?: boolean;
+  onOpen?: () => void;
 }) {
   const p1 = game.player1DisplayName || shortAddress(game.player1);
   const p2 = game.player2
@@ -178,7 +188,15 @@ function GameRow({
   const wager = Number(game.wager) || 0;
 
   return (
-    <View style={[styles.card, isYours && styles.cardYours]}>
+    <Pressable
+      onPress={onOpen}
+      disabled={!onOpen}
+      style={({ pressed }) => [
+        styles.card,
+        isYours && styles.cardYours,
+        pressed && onOpen ? styles.cardPressed : null,
+      ]}
+    >
       <View style={styles.cardHeader}>
         <Text style={styles.type}>{gameLabel(game.gameType)}</Text>
         <StatusPill status={game.status} yourTurn={Boolean(yourTurn)} />
@@ -232,7 +250,7 @@ function GameRow({
           )}
         </Pressable>
       ) : null}
-    </View>
+    </Pressable>
   );
 }
 
@@ -273,6 +291,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.surface,
   },
   cardYours: { borderColor: theme.mint },
+  cardPressed: { opacity: 0.75 },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
