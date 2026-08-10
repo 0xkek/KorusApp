@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo} from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -14,7 +14,7 @@ import type { Post, Reply } from '../api/types';
 import { displayName, relativeTime, resolveAvatarUrl } from '../api/types';
 import { LikeIcon, ReplyIcon, RepostIcon, ShareIcon, TipIcon } from '../components/Icons';
 import { notify } from '../notify';
-import { theme, useTheme } from '../theme';
+import { useTheme , type Theme } from '../theme';
 
 const LIKE_COLOR = '#ef4444';
 const TIP_COLOR = '#f59e0b';
@@ -39,6 +39,7 @@ export function PostDetailScreen({
   currentWallet,
 }: Props) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -446,6 +447,8 @@ function Stat({
   activeColor?: string;
   onPress?: () => void;
 }) {
+  const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   return (
     <Pressable style={styles.stat} onPress={onPress} disabled={!onPress} hitSlop={10}>
       {icon}
@@ -456,7 +459,8 @@ function Stat({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.background },
   navbar: {
     flexDirection: 'row',

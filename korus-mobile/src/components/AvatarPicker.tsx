@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo} from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { identityAPI, type WalletNFT } from '../api/identity';
-import { theme, useTheme } from '../theme';
+import { useTheme , type Theme } from '../theme';
 
 interface Props {
   visible: boolean;
@@ -34,6 +34,7 @@ export function AvatarPicker({
   onSelect,
 }: Props) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const [nfts, setNfts] = useState<WalletNFT[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -114,7 +115,8 @@ export function AvatarPicker({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
   sheet: {
     backgroundColor: theme.surface,

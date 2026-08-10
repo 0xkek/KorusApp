@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo} from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -13,7 +13,7 @@ import { searchAPI, type SearchUser } from '../api/search';
 import type { Post } from '../api/types';
 import { resolveAvatarUrl, shortAddress } from '../api/types';
 import { PostCard } from '../components/PostCard';
-import { theme, useTheme } from '../theme';
+import { useTheme , type Theme } from '../theme';
 
 type Tab = 'posts' | 'people';
 
@@ -25,6 +25,7 @@ interface Props {
 
 export function SearchScreen({ onBack, onOpenPost, onOpenProfile }: Props) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState<Tab>('posts');
   const [posts, setPosts] = useState<Post[]>([]);
@@ -153,6 +154,7 @@ export function SearchScreen({ onBack, onOpenPost, onOpenProfile }: Props) {
 
 function UserRow({ user, onPress }: { user: SearchUser; onPress: () => void }) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const avatar = resolveAvatarUrl(user.nftAvatar);
   // Same precedence as everywhere else: username, then SNS, then wallet.
   const sns =
@@ -199,7 +201,8 @@ function UserRow({ user, onPress }: { user: SearchUser; onPress: () => void }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.background },
   navbar: {
     flexDirection: 'row',

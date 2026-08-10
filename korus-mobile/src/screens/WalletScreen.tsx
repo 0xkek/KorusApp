@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo} from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -12,7 +12,7 @@ import {
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { rpc } from '../api/rpc';
 import { notify } from '../notify';
-import { theme, useTheme } from '../theme';
+import { useTheme , type Theme } from '../theme';
 
 interface Props {
   walletAddress: string;
@@ -21,6 +21,7 @@ interface Props {
 
 export function WalletScreen({ walletAddress, onBack }: Props) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const [balance, setBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -109,7 +110,8 @@ export function WalletScreen({ walletAddress, onBack }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.background },
   navbar: {
     flexDirection: 'row',

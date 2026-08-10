@@ -1,7 +1,8 @@
+import { useMemo } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { shortAddress } from '../api/types';
 import { BellIcon, SearchIcon } from './Icons';
-import { theme, useTheme } from '../theme';
+import { useTheme , type Theme } from '../theme';
 
 interface Props {
   walletAddress: string | null;
@@ -37,6 +38,7 @@ export function FeedHeader({
   unreadCount = 0,
 }: Props) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   return (
     <View style={[styles.root, { borderBottomColor: t.border }]}>
       <View style={styles.row}>
@@ -142,7 +144,8 @@ export function FeedHeader({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
   root: {
     paddingHorizontal: 16,
     paddingTop: 8,

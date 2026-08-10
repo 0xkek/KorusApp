@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo} from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -18,7 +18,7 @@ import { AvatarPicker } from '../components/AvatarPicker';
 import type { UserProfile } from '../api/types';
 import { resolveAvatarUrl } from '../api/types';
 import { notify } from '../notify';
-import { theme, useTheme } from '../theme';
+import { useTheme , type Theme } from '../theme';
 
 interface Props {
   token: string;
@@ -41,6 +41,7 @@ export function EditProfileScreen({
   onChanged,
 }: Props) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState(profile?.bio ?? '');
   const [location, setLocation] = useState(profile?.location ?? '');
@@ -317,7 +318,8 @@ export function EditProfileScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.background },
   navbar: {
     flexDirection: 'row',

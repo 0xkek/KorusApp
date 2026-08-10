@@ -48,6 +48,8 @@ export interface UserProfile {
   themeColor?: string | null;
   /** Own profile only. Gates both Expo and Web Push sends. */
   pushNotificationsEnabled?: boolean;
+  /** 'system' | 'light' | 'dark'; null follows the OS. */
+  themeMode?: string | null;
 }
 
 export interface Post {

@@ -8,6 +8,7 @@ export interface UpdateProfileData {
   website?: string;
   twitter?: string;
   themeColor?: string;
+  themeMode?: string;
   nftAvatar?: string;
   snsUsername?: string | null;
 }

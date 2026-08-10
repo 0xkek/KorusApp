@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo} from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -11,7 +11,7 @@ import {
 import { gamesAPI, gameLabel, type Game, type GameType } from '../api/games';
 import { relativeTime, shortAddress } from '../api/types';
 import { notify } from '../notify';
-import { theme, useTheme } from '../theme';
+import { useTheme , type Theme } from '../theme';
 
 interface Props {
   token?: string | null;
@@ -29,6 +29,7 @@ export function GamesScreen({
   onOpenGame,
 }: Props) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -177,6 +178,8 @@ function GameRow({
   joining?: boolean;
   onOpen?: () => void;
 }) {
+  const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const p1 = game.player1DisplayName || shortAddress(game.player1);
   const p2 = game.player2
     ? game.player2DisplayName || shortAddress(game.player2)
@@ -256,6 +259,8 @@ function GameRow({
 }
 
 function StatusPill({ status, yourTurn }: { status: string; yourTurn: boolean }) {
+  const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   if (yourTurn) {
     return (
       <View style={[styles.pill, styles.pillTurn]}>
@@ -278,7 +283,8 @@ function StatusPill({ status, yourTurn }: { status: string; yourTurn: boolean })
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
   list: { flex: 1, backgroundColor: theme.background },
   center: { paddingVertical: 60, alignItems: 'center', paddingHorizontal: 32 },
   emptyText: { color: theme.textTertiary, fontSize: 14, textAlign: 'center', lineHeight: 20 },

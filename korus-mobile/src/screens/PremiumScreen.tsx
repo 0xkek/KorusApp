@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo} from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -17,7 +17,7 @@ import {
 import { isUserDeclined, sendSol } from '../wallet/solTransfer';
 import { usersAPI } from '../api/users';
 import { notify } from '../notify';
-import { theme, useTheme } from '../theme';
+import { useTheme , type Theme } from '../theme';
 
 type Plan = 'monthly' | 'yearly';
 
@@ -56,6 +56,7 @@ export function PremiumScreen({
   onEditProfile,
 }: Props) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const [pricing, setPricing] = useState<Record<Plan, SubscriptionTier> | null>(null);
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
   const [plan, setPlan] = useState<Plan>('yearly');
@@ -302,7 +303,8 @@ export function PremiumScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.background },
   navbar: {
     flexDirection: 'row',

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo} from 'react';
 import {
   Alert,
   Linking,
@@ -11,10 +11,11 @@ import {
 } from 'react-native';
 import Constants from 'expo-constants';
 import { notificationsAPI } from '../api/notifications';
+import { usersAPI } from '../api/users';
 import { notify } from '../notify';
 // `theme` is the static fallback used by StyleSheet.create, which cannot read
 // context; live colours are applied inline from `t`.
-import { theme, useTheme, useThemeControls, type ThemeMode } from '../theme';
+import { useTheme, useThemeControls, type ThemeMode , type Theme } from '../theme';
 
 interface Props {
   token: string;
@@ -35,6 +36,7 @@ export function SettingsScreen({
   const [enabled, setEnabled] = useState(notificationsEnabled);
   const [busy, setBusy] = useState(false);
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const { mode, setMode } = useThemeControls();
 
   async function toggleNotifications(next: boolean) {
@@ -67,7 +69,15 @@ export function SettingsScreen({
           {(['system', 'light', 'dark'] as ThemeMode[]).map((m) => (
             <Pressable
               key={m}
-              onPress={() => setMode(m)}
+              onPress={() => {
+                setMode(m); // apply immediately
+                // Persisted on the account, not the device — so it follows you
+                // and nothing is stored locally.
+                usersAPI
+                  .updateProfile({ themeMode: m }, token)
+                  .then(() => onChanged?.())
+                  .catch(() => notify('Could not save that preference'));
+              }}
               style={[
                 styles.mode,
                 { borderColor: t.border },
@@ -155,7 +165,8 @@ export function SettingsScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.background },
   navbar: {
     flexDirection: 'row',

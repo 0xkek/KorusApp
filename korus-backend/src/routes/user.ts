@@ -30,6 +30,7 @@ router.get('/profile', authenticate, async (req: AuthRequest, res) => {
         twitter: true,
         nftAvatar: true,
         themeColor: true,
+        themeMode: true,
         tier: true,
         reputationScore: true,
         followerCount: true,
@@ -254,7 +255,7 @@ router.get('/by-wallet/:wallet', async (req, res) => {
 router.put('/profile', authenticate, async (req: AuthRequest, res) => {
   try {
     const userWallet = req.userWallet!;
-    const { displayName, bio, location, website, twitter, themeColor, nftAvatar, snsUsername } = req.body;
+    const { displayName, bio, location, website, twitter, themeColor, themeMode, nftAvatar, snsUsername } = req.body;
 
     // Validate website URL if provided
     if (website && !website.match(/^https?:\/\/.+/)) {
@@ -271,6 +272,12 @@ router.put('/profile', authenticate, async (req: AuthRequest, res) => {
         website: website || undefined,
         twitter: twitter || undefined,
         themeColor: themeColor || undefined,
+        // 'system' | 'light' | 'dark'; anything else is ignored rather than
+        // stored, since this is read straight back into the UI.
+        themeMode:
+          themeMode === 'system' || themeMode === 'light' || themeMode === 'dark'
+            ? themeMode
+            : undefined,
         nftAvatar: nftAvatar || undefined,
         // snsUsername can be explicitly set to null/empty to clear it
         ...(snsUsername !== undefined && { snsUsername: snsUsername || null })
@@ -287,6 +294,7 @@ router.put('/profile', authenticate, async (req: AuthRequest, res) => {
         twitter: true,
         nftAvatar: true,
         themeColor: true,
+        themeMode: true,
         tier: true,
         reputationScore: true,
         createdAt: true

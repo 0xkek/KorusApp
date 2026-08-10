@@ -70,7 +70,7 @@ export default function App() {
 function ThemedApp() {
   const auth = useWalletAuth();
   return (
-    <ThemeProvider accent={auth.profile?.themeColor}>
+    <ThemeProvider accent={auth.profile?.themeColor} mode={auth.profile?.themeMode}>
       <KorusApp auth={auth} />
     </ThemeProvider>
   );

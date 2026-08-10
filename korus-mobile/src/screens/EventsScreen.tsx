@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo} from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -13,7 +13,7 @@ import { eventsAPI, generateSignatureMessage, type KorusEvent } from '../api/eve
 import { signMessageWithWallet } from '../wallet/signMessage';
 import { isUserDeclined } from '../wallet/solTransfer';
 import { notify } from '../notify';
-import { theme, useTheme } from '../theme';
+import { useTheme , type Theme } from '../theme';
 
 interface Props {
   token?: string | null;
@@ -24,6 +24,7 @@ interface Props {
 
 export function EventsScreen({ token, walletAddress, header }: Props) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const [events, setEvents] = useState<KorusEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -141,6 +142,7 @@ function EventCard({
   onRegister: () => void;
 }) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const spotsLeft =
     event.maxSpots != null ? event.maxSpots - (event.registrationCount ?? 0) : null;
   const full = spotsLeft != null && spotsLeft <= 0;
@@ -207,7 +209,8 @@ function EventCard({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
   list: { flex: 1, backgroundColor: theme.background },
   center: { paddingVertical: 60, alignItems: 'center', paddingHorizontal: 32 },
   emptyText: { color: theme.textTertiary, fontSize: 14, textAlign: 'center', lineHeight: 20 },

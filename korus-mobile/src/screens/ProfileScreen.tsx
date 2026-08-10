@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo} from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -14,7 +14,7 @@ import { usersAPI } from '../api/users';
 import type { Post, UserProfile } from '../api/types';
 import { resolveAvatarUrl, shortAddress } from '../api/types';
 import { PostCard } from '../components/PostCard';
-import { theme, useTheme } from '../theme';
+import { useTheme , type Theme } from '../theme';
 
 interface Props {
   walletAddress: string;
@@ -37,6 +37,7 @@ export function ProfileScreen({
   onOpenPremium,
 }: Props) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const [following, setFollowing] = useState(false);
   const [followBusy, setFollowBusy] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -312,6 +313,8 @@ export function ProfileScreen({
 }
 
 function Stat({ value, label }: { value: number; label: string }) {
+  const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   return (
     <View style={styles.stat}>
       <Text style={styles.statValue}>{value}</Text>
@@ -320,7 +323,8 @@ function Stat({ value, label }: { value: number; label: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.background },
   navbar: {
     flexDirection: 'row',

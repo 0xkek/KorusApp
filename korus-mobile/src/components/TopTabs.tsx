@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { theme, useTheme } from '../theme';
+import { useTheme , type Theme } from '../theme';
 
 /**
  * The four browsable sections.
@@ -24,6 +25,7 @@ interface Props {
 
 export function TopTabs({ active, onChange }: Props) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   return (
     <View style={[styles.tabs, { borderBottomColor: t.border }]}>
       {TABS.map((tab) => (
@@ -38,7 +40,8 @@ export function TopTabs({ active, onChange }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
   tabs: {
     flexDirection: 'row',
     borderBottomWidth: 1,

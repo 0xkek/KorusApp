@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo} from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -10,7 +10,7 @@ import {
 import { gamesAPI, gameLabel, type Game, type GameMove } from '../api/games';
 import { shortAddress } from '../api/types';
 import { notify } from '../notify';
-import { theme, useTheme } from '../theme';
+import { useTheme , type Theme } from '../theme';
 
 const RED = '#ef4444';
 const YELLOW = '#fbbf24';
@@ -24,6 +24,7 @@ interface Props {
 
 export function GameDetailScreen({ gameId, token, currentWallet, onBack }: Props) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const [game, setGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -156,6 +157,8 @@ function Status({
   finished: boolean;
   waiting: boolean;
 }) {
+  const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const p1 = game.player1DisplayName || shortAddress(game.player1);
   const p2 = game.player2
     ? game.player2DisplayName || shortAddress(game.player2)
@@ -193,6 +196,8 @@ function TicTacToeBoard({
   disabled: boolean;
   onPlay: (index: number) => void;
 }) {
+  const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const board = (state?.board as (string | null)[] | undefined) ?? Array(9).fill(null);
 
   return (
@@ -223,6 +228,8 @@ function ConnectFourBoard({
   disabled: boolean;
   onPlay: (column: number) => void;
 }) {
+  const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const board =
     (state?.board as (string | null)[][] | undefined) ??
     Array(6)
@@ -281,6 +288,8 @@ function RpsBoard({
   disabled: boolean;
   onPlay: (choice: 'rock' | 'paper' | 'scissors') => void;
 }) {
+  const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const state = game.gameState;
   const round = state?.round ?? 1;
   const playerMoves = state?.playerMoves ?? {};
@@ -332,7 +341,8 @@ function RpsBoard({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.background },
   navbar: {
     flexDirection: 'row',

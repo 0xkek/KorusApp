@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo} from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -11,7 +11,7 @@ import {
 import { postsAPI } from '../api/posts';
 import type { Post } from '../api/types';
 import { PostCard } from '../components/PostCard';
-import { theme, useTheme } from '../theme';
+import { useTheme , type Theme } from '../theme';
 
 type Tab = 'home' | 'trending';
 
@@ -43,6 +43,7 @@ export function FeedScreen({
   feed = 'home',
 }: Props) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const tab = feed;
   const [posts, setPosts] = useState<Post[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -302,7 +303,8 @@ export function FeedScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
   list: { flex: 1, backgroundColor: theme.background },
   tabs: {
     flexDirection: 'row',

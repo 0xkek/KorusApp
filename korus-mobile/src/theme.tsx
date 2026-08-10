@@ -87,10 +87,17 @@ const ThemeContext = createContext<ThemeContextValue>({
 export function ThemeProvider({
   children,
   accent: accentProp,
+  mode: modeProp,
 }: {
   children: React.ReactNode;
   /** From the signed-in profile's themeColor. */
   accent?: string | null;
+  /**
+   * From the signed-in profile's themeMode. Stored per account rather than on
+   * the device, so the preference follows the user — and because the app
+   * deliberately persists nothing locally.
+   */
+  mode?: string | null;
 }) {
   const system = useColorScheme();
   const [mode, setMode] = useState<ThemeMode>('system');
@@ -100,6 +107,12 @@ export function ThemeProvider({
   useEffect(() => {
     if (accentProp) setAccent(accentProp);
   }, [accentProp]);
+
+  useEffect(() => {
+    if (modeProp === 'system' || modeProp === 'light' || modeProp === 'dark') {
+      setMode(modeProp);
+    }
+  }, [modeProp]);
 
   const value = useMemo(() => {
     const dark = mode === 'system' ? system !== 'light' : mode === 'dark';

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo} from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -14,7 +14,7 @@ import { postsAPI } from '../api/posts';
 import { SHOUTOUT_OPTIONS, shoutoutPrice } from '../api/shoutouts';
 import { TREASURY_WALLET } from '../api/subscription';
 import { isUserDeclined, sendSol } from '../wallet/solTransfer';
-import { theme, useTheme } from '../theme';
+import { useTheme , type Theme } from '../theme';
 
 const MAX_LENGTH = 500;
 
@@ -36,6 +36,7 @@ export function ComposeScreen({
   onPosted,
 }: Props) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const [content, setContent] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -213,7 +214,8 @@ export function ComposeScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.background },
   navbar: {
     flexDirection: 'row',

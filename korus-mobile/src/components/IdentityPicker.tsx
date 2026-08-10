@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo} from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { identityAPI, WALLET_IDENTITY, type SNSDomain } from '../api/identity';
 import { shortAddress } from '../api/types';
-import { theme, useTheme } from '../theme';
+import { useTheme , type Theme } from '../theme';
 
 interface Props {
   visible: boolean;
@@ -33,6 +33,7 @@ export function IdentityPicker({
   onSelect,
 }: Props) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const [domains, setDomains] = useState<SNSDomain[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,6 +132,8 @@ function Row({
   selected: boolean;
   onPress?: () => void;
 }) {
+  const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   return (
     <Pressable
       onPress={onPress}
@@ -150,7 +153,8 @@ function Row({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
   sheet: {
     backgroundColor: theme.surface,

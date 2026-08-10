@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo} from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -11,7 +11,7 @@ import {
 import { notificationsAPI, type Notification } from '../api/notifications';
 import { relativeTime, shortAddress } from '../api/types';
 import { LikeIcon, ReplyIcon, TipIcon } from '../components/Icons';
-import { theme, useTheme } from '../theme';
+import { useTheme , type Theme } from '../theme';
 
 const LIKE_COLOR = '#ef4444';
 const TIP_COLOR = '#f59e0b';
@@ -33,6 +33,7 @@ export function NotificationsScreen({
   onReadAll,
 }: Props) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -157,6 +158,7 @@ export function NotificationsScreen({
 
 function NotificationIcon({ type }: { type: string }) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   if (type === 'like') return <LikeIcon size={20} color={LIKE_COLOR} fill={LIKE_COLOR} />;
   if (type === 'reply') return <ReplyIcon size={20} color={t.mint} />;
   if (type === 'tip') return <TipIcon size={20} color={TIP_COLOR} />;
@@ -178,7 +180,8 @@ function notificationText(item: Notification): string {
   return who ? `${who} ${item.message}${amount}` : `${item.title}${amount}`;
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.background },
   navbar: {
     flexDirection: 'row',

@@ -1,10 +1,10 @@
-import { memo } from 'react';
+import { memo, useMemo} from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Post } from '../api/types';
 import { displayName, relativeTime, resolveAvatarUrl } from '../api/types';
 import { LikeIcon, ReplyIcon, RepostIcon, TipIcon } from './Icons';
 import { notify } from '../notify';
-import { theme, useTheme } from '../theme';
+import { useTheme , type Theme } from '../theme';
 
 // Match the web app's action colours.
 const LIKE_COLOR = '#ef4444';
@@ -38,6 +38,7 @@ function PostCardBase({
   currentWallet,
 }: Props) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   // A repost renders what it reposted, with a "reposted" line above it. The
   // source is either a post or — since reply reposts — a reply, which has no
   // repost/tip counts of its own, so those render as zero.
@@ -199,7 +200,8 @@ function PostCardBase({
 // Feeds re-render often; posts are immutable once loaded.
 export const PostCard = memo(PostCardBase);
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
   card: {
     paddingHorizontal: 16,
     paddingVertical: 14,

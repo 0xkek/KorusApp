@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo} from 'react';
 import {
   Animated,
   Image,
@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { resolveAvatarUrl, shortAddress } from '../api/types';
 import type { UserProfile } from '../api/types';
-import { theme, useTheme } from '../theme';
+import { useTheme , type Theme } from '../theme';
 
 /**
  * Account menu.
@@ -45,6 +45,7 @@ export function MenuDrawer({
   onSignOut,
 }: Props) {
   const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const slide = useRef(new Animated.Value(-1)).current;
 
   useEffect(() => {
@@ -154,6 +155,8 @@ function Item({
   accent?: boolean;
   muted?: boolean;
 }) {
+  const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   return (
     <Pressable
       onPress={onPress}
@@ -172,7 +175,8 @@ function Item({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
   panel: { width: 280, height: '100%' },
   panelInner: {

@@ -41,6 +41,9 @@ model User {
   suspendedUntil           DateTime?
   suspensionReason         String?
   themeColor               String?             @db.VarChar(7)
+  // 'system' | 'light' | 'dark'. Stored per account rather than per device so
+  // the preference follows the user; null means follow the OS.
+  themeMode                String?             @db.VarChar(10)
   twitter                  String?             @db.VarChar(50)
   warningCount             Int                 @default(0)
   website                  String?             @db.VarChar(200)
