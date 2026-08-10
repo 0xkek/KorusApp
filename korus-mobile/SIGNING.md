@@ -46,3 +46,36 @@ eas build --platform android --profile dapp-store
 `dapp-store` extends `production` but emits an APK rather than the .aab
 Google Play wants, and pins the version so it matches the dApp Store
 config.
+
+---
+
+# The publisher keypair — a second key you cannot lose
+
+Separate from the signing keystore above, and just as unrecoverable.
+
+The dApp Store listing is **on-chain**. Publishing mints three NFTs:
+
+1. **Publisher NFT** — your identity as a developer
+2. **App NFT** — the Korus listing itself
+3. **Release NFT** — one per version
+
+All three are owned by a Solana keypair. That keypair, not the Android
+signing key, owns the listing:
+
+- **Lose it** → you cannot publish updates, and cannot prove the listing
+  is yours. There is no support channel; it is on-chain.
+- **Leak it** → someone else controls your listing.
+
+It also needs a small amount of SOL to cover minting and rent.
+
+**Do not reuse the app's treasury wallet for this.** Publishing is
+infrequent and the key wants to live offline, whereas the treasury
+receives payments. Different jobs, different risk, different keys.
+
+Generate one with:
+
+```bash
+solana-keygen new --outfile ~/korus-publisher.json
+```
+
+Back it up the same way as the keystore: somewhere off this laptop.
