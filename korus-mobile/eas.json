@@ -27,7 +27,8 @@
       "extends": "production",
       "android": {
         "buildType": "apk"
-      }
+      },
+      "autoIncrement": false
     }
   },
   "submit": {
