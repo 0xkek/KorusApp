@@ -64,3 +64,6 @@ korus-mobile/*-firebase-adminsdk-*.json
 *.keystore
 *.jks
 korus-mobile/keystore.properties
+
+# Holds the keystore password in plaintext for EAS uploads — never commit.
+korus-mobile/credentials.json
