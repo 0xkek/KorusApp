@@ -284,7 +284,11 @@ function KorusApp() {
                 onOpenGame={(gameId) => setScreen({ name: 'game', gameId })}
               />
             ) : tab === 'events' ? (
-              <EventsScreen token={auth.token} header={tabHeader} />
+              <EventsScreen
+                token={auth.token}
+                walletAddress={auth.walletAddress}
+                header={tabHeader}
+              />
             ) : (
               // The feed is public — readable before signing in, same as the
               // web app, so a new user sees content rather than a wall.

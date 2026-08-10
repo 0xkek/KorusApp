@@ -30,16 +30,35 @@ export interface KorusEvent {
   createdAt: string;
 }
 
+/**
+ * The message the wallet signs to register. Format must match what korus-web
+ * generates, since both go through the same backend verification.
+ */
+export function generateSignatureMessage(eventId: string, projectName: string): string {
+  const timestamp = Date.now();
+  const nonce = Math.random().toString(36).substring(7);
+  return `I want to join the ${projectName} whitelist.\nEvent ID: ${eventId}\nTimestamp: ${timestamp}\nNonce: ${nonce}`;
+}
+
 export const eventsAPI = {
   list: () => api.get<{ success: boolean; events: KorusEvent[] }>('/api/events'),
 
   get: (id: string) =>
     api.get<{ success: boolean; event: KorusEvent }>(`/api/events/${id}`),
 
-  register: (id: string, token: string) =>
+  /**
+   * Registering needs a fresh wallet signature, not just a session token —
+   * it proves the holder personally approved joining this specific whitelist.
+   * Being signed in is not enough.
+   */
+  register: (
+    id: string,
+    payload: { signature: string; signedMessage: string },
+    token: string
+  ) =>
     api.post<{ success: boolean; message?: string }>(
       `/api/events/${id}/register`,
-      {},
+      payload,
       token
     ),
 

@@ -9,16 +9,20 @@ import {
   Text,
   View,
 } from 'react-native';
-import { eventsAPI, type KorusEvent } from '../api/events';
+import { eventsAPI, generateSignatureMessage, type KorusEvent } from '../api/events';
+import { signMessageWithWallet } from '../wallet/signMessage';
+import { isUserDeclined } from '../wallet/solTransfer';
 import { notify } from '../notify';
 import { theme } from '../theme';
 
 interface Props {
   token?: string | null;
+  /** Needed to sign the registration message. */
+  walletAddress?: string | null;
   header?: React.ReactElement;
 }
 
-export function EventsScreen({ token, header }: Props) {
+export function EventsScreen({ token, walletAddress, header }: Props) {
   const [events, setEvents] = useState<KorusEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -46,13 +50,25 @@ export function EventsScreen({ token, header }: Props) {
 
   const register = useCallback(
     async (event: KorusEvent) => {
-      if (!token) {
+      if (!token || !walletAddress) {
         notify('Connect your wallet to register');
         return;
       }
       setRegistering(event.id);
       try {
-        await eventsAPI.register(event.id, token);
+        // Registering needs a fresh signature proving you approved joining
+        // this specific whitelist — a session token alone is rejected.
+        const message = generateSignatureMessage(
+          event.id,
+          event.projectName ?? event.title
+        );
+        const signature = await signMessageWithWallet(message, walletAddress);
+
+        await eventsAPI.register(
+          event.id,
+          { signature, signedMessage: message },
+          token
+        );
         setRegistered((prev) => new Set(prev).add(event.id));
         // Reflect the new count without a full refetch.
         setEvents((prev) =>
@@ -64,12 +80,14 @@ export function EventsScreen({ token, header }: Props) {
         );
         notify('Registered');
       } catch (err) {
-        notify(err instanceof Error ? err.message : 'Could not register');
+        const message = err instanceof Error ? err.message : 'Could not register';
+        // Dismissing the wallet sheet is a normal action, not an error.
+        if (!isUserDeclined(message)) notify(message);
       } finally {
         setRegistering(null);
       }
     },
-    [token]
+    [token, walletAddress]
   );
 
   return (
