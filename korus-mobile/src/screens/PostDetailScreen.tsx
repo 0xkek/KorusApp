@@ -4,6 +4,7 @@ import {
   Image,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   View,
@@ -11,7 +12,7 @@ import {
 import { postsAPI } from '../api/posts';
 import type { Post, Reply } from '../api/types';
 import { displayName, relativeTime, resolveAvatarUrl } from '../api/types';
-import { LikeIcon, ReplyIcon, RepostIcon, TipIcon } from '../components/Icons';
+import { LikeIcon, ReplyIcon, RepostIcon, ShareIcon, TipIcon } from '../components/Icons';
 import { notify } from '../notify';
 import { theme } from '../theme';
 
@@ -229,7 +230,18 @@ export function PostDetailScreen({
           <Text style={styles.back}>‹ Back</Text>
         </Pressable>
         <Text style={styles.navTitle}>Post</Text>
-        <View style={{ width: 54 }} />
+        {/* Shares the web URL, not korus://, so it works for people without
+            the app — and Android App Links open it here for those who have it. */}
+        <Pressable
+          onPress={() =>
+            Share.share({
+              message: `https://korus.fun/post/${postId}`,
+            }).catch(() => {})
+          }
+          hitSlop={12}
+        >
+          <ShareIcon size={20} color={theme.mint} />
+        </Pressable>
       </View>
 
       {loading ? (

@@ -14,6 +14,8 @@ import { ComposeScreen } from './src/screens/ComposeScreen';
 import { EditProfileScreen } from './src/screens/EditProfileScreen';
 import { FeedHeader } from './src/components/FeedHeader';
 import { TipModal } from './src/components/TipModal';
+import { OfflineBanner } from './src/components/OfflineBanner';
+import { useDeepLinks } from './src/useDeepLinks';
 import { NotificationsScreen } from './src/screens/NotificationsScreen';
 import { SearchScreen } from './src/screens/SearchScreen';
 import { PremiumScreen } from './src/screens/PremiumScreen';
@@ -61,6 +63,12 @@ function KorusApp() {
   // Registers this device for push once signed in. No-ops cleanly until the
   // project is linked with `eas init` — see usePushRegistration.
   usePushRegistration(auth.token);
+
+  // korus://post/<id> and https://korus.fun/post/<id>.
+  useDeepLinks((target) => {
+    if (target.type === 'post') setScreen({ name: 'post', postId: target.id });
+    else setScreen({ name: 'profile', walletAddress: target.id });
+  });
 
   // Tapping a push opens what it refers to.
   useNotificationTap((data) => {
@@ -128,6 +136,7 @@ function KorusApp() {
     // the FAB is lifted by the bottom inset instead.
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <StatusBar style="light" />
+      <OfflineBanner />
       <View style={styles.inner}>
         {screen.name === 'premium' && auth.token && auth.walletAddress ? (
           <PremiumScreen

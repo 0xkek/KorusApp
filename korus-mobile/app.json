@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Korus",
-    "slug": "korus-mobile",
+    "slug": "KorusApp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -25,13 +25,36 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "korus.fun",
+              "pathPrefix": "/post"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-notifications"
-    ]
+    ],
+    "owner": "kingkitty",
+    "extra": {
+      "eas": {
+        "projectId": "6f182b5a-61e8-4be6-83a4-0accb8873ca3"
+      }
+    }
   }
 }
