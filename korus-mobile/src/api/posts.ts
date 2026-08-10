@@ -25,9 +25,23 @@ export const postsAPI = {
     return api.get<PostsResponse>(`/api/posts?${q.toString()}`);
   },
 
-  /** Create a post. Auth required. */
-  createPost: (data: { content: string; imageUrl?: string }, token: string) =>
-    api.post<{ success: boolean; data?: Post; post?: Post }>('/api/posts', data, token),
+  /**
+   * Create a post. Auth required.
+   *
+   * Passing shoutoutDuration makes it a paid promoted post, which also
+   * requires transactionSignature — a confirmed SOL transfer to the treasury
+   * for exactly the price of that duration. The backend re-verifies it on
+   * mainnet, so both must be present or neither.
+   */
+  createPost: (
+    data: {
+      content: string;
+      imageUrl?: string;
+      shoutoutDuration?: number;
+      transactionSignature?: string;
+    },
+    token: string
+  ) => api.post<{ success: boolean; data?: Post; post?: Post }>('/api/posts', data, token),
 
   /** Reply to a post. Auth required. */
   createReply: (postId: string, content: string, token: string) =>

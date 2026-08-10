@@ -158,6 +158,7 @@ function KorusApp() {
           <ComposeScreen
             token={auth.token}
             replyToPostId={screen.replyToPostId}
+            walletAddress={auth.walletAddress}
             onBack={goFeed}
             onPosted={afterWrite}
           />
