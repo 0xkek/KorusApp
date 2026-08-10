@@ -18,20 +18,40 @@ export interface DeepLinkTarget {
   id: string;
 }
 
-/** Extracts a target from a URL, or null when it is not one we handle. */
+/**
+ * Extracts a target from a URL, or null when it is not one we handle.
+ *
+ * The two forms parse differently, which is easy to get wrong:
+ *   korus://post/<id>           -> hostname 'post',      path '<id>'
+ *   https://korus.fun/post/<id> -> hostname 'korus.fun', path 'post/<id>'
+ * so the kind comes from the hostname for the custom scheme and from the
+ * first path segment for the web URL. Handling only the latter silently
+ * breaks every korus:// link.
+ */
 export function parseDeepLink(url: string): DeepLinkTarget | null {
   try {
-    const { path } = Linking.parse(url);
-    if (!path) return null;
+    const { hostname, path } = Linking.parse(url);
+    const segments = (path ?? '').split('/').filter(Boolean);
 
-    const segments = path.split('/').filter(Boolean);
-    if (segments.length < 2) return null;
+    // Custom scheme: the kind is the host, the id is the whole path.
+    const isKind = (value?: string | null) =>
+      value === 'post' || value === 'profile' || value === 'user';
 
-    const [kind, id] = segments;
-    if (kind === 'post' && id) return { type: 'post', id };
+    let kind: string | undefined;
+    let id: string | undefined;
+
+    if (isKind(hostname)) {
+      kind = hostname ?? undefined;
+      id = segments[0];
+    } else {
+      [kind, id] = segments;
+    }
+
+    if (!kind || !id) return null;
+    if (kind === 'post') return { type: 'post', id };
     // The web uses /profile/<wallet>; accept /user/ as well since older
     // shared links used it.
-    if ((kind === 'profile' || kind === 'user') && id) return { type: 'profile', id };
+    if (kind === 'profile' || kind === 'user') return { type: 'profile', id };
     return null;
   } catch {
     return null;
