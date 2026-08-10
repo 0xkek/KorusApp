@@ -16,6 +16,7 @@ import { FeedHeader } from './src/components/FeedHeader';
 import { TipModal } from './src/components/TipModal';
 import { NotificationsScreen } from './src/screens/NotificationsScreen';
 import { SearchScreen } from './src/screens/SearchScreen';
+import { PremiumScreen } from './src/screens/PremiumScreen';
 import { notificationsAPI } from './src/api/notifications';
 import {
   usePushRegistration,
@@ -32,7 +33,8 @@ type Screen =
   | { name: 'compose'; replyToPostId?: string }
   | { name: 'editProfile' }
   | { name: 'notifications' }
-  | { name: 'search' };
+  | { name: 'search' }
+  | { name: 'premium' };
 
 /**
  * Minimal stack. Deliberately not expo-router yet — Phase 2 is three screens,
@@ -127,7 +129,17 @@ function KorusApp() {
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <StatusBar style="light" />
       <View style={styles.inner}>
-        {screen.name === 'search' ? (
+        {screen.name === 'premium' && auth.token && auth.walletAddress ? (
+          <PremiumScreen
+            token={auth.token}
+            walletAddress={auth.walletAddress}
+            onBack={goFeed}
+            onSubscribed={() => {
+              void auth.refreshProfile();
+              setRefreshKey((k) => k + 1);
+            }}
+          />
+        ) : screen.name === 'search' ? (
           // Public — searching does not require a wallet, same as reading.
           <SearchScreen
             onBack={goFeed}
@@ -183,6 +195,7 @@ function KorusApp() {
             isOwnProfile={Boolean(auth.token) && screen.walletAddress === auth.walletAddress}
             token={auth.token}
             onEditProfile={() => setScreen({ name: 'editProfile' })}
+            onOpenPremium={() => setScreen({ name: 'premium' })}
           />
         ) : (
           // The feed is public — readable before signing in, same as the web

@@ -24,6 +24,7 @@ interface Props {
   isOwnProfile?: boolean;
   token?: string | null;
   onEditProfile?: () => void;
+  onOpenPremium?: () => void;
 }
 
 export function ProfileScreen({
@@ -33,6 +34,7 @@ export function ProfileScreen({
   isOwnProfile,
   token,
   onEditProfile,
+  onOpenPremium,
 }: Props) {
   const [following, setFollowing] = useState(false);
   const [followBusy, setFollowBusy] = useState(false);
@@ -205,9 +207,22 @@ export function ProfileScreen({
               </View>
 
               {isOwnProfile && token ? (
-                <Pressable onPress={onEditProfile} style={styles.secondaryButton}>
-                  <Text style={styles.secondaryButtonText}>Edit profile</Text>
-                </Pressable>
+                <View style={styles.ownActions}>
+                  <Pressable
+                    onPress={onEditProfile}
+                    style={[styles.secondaryButton, styles.flex1]}
+                  >
+                    <Text style={styles.secondaryButtonText}>Edit profile</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={onOpenPremium}
+                    style={[styles.secondaryButton, styles.flex1, styles.premiumButton]}
+                  >
+                    <Text style={styles.premiumButtonText}>
+                      {profile?.tier === 'premium' ? '★ Premium' : 'Go Premium'}
+                    </Text>
+                  </Pressable>
+                </View>
               ) : token ? (
                 <Pressable
                   onPress={toggleFollow}
@@ -344,6 +359,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   secondaryButtonText: { color: theme.text, fontWeight: '600', fontSize: 14 },
+  ownActions: { flexDirection: 'row', gap: 10 },
+  flex1: { flex: 1 },
+  premiumButton: { borderColor: '#fbbf24' },
+  premiumButtonText: { color: '#fbbf24', fontWeight: '700', fontSize: 14 },
   followButton: {
     marginTop: 16,
     paddingVertical: 11,
