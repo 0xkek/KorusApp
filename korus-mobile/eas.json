@@ -21,14 +21,16 @@
       "autoIncrement": true,
       "android": {
         "buildType": "app-bundle"
-      }
+      },
+      "environment": "production"
     },
     "dapp-store": {
       "extends": "production",
       "android": {
         "buildType": "apk"
       },
-      "autoIncrement": false
+      "autoIncrement": false,
+      "environment": "production"
     }
   },
   "submit": {
