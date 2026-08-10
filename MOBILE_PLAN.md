@@ -187,6 +187,22 @@ MWA handles `signTransaction`; the existing `/api/rpc` proxy handles submission.
   - So this needs: a register endpoint for Expo tokens, and calls to
     `pushNotificationService` wherever notifications are currently created
     (like/reply/follow/tip in the controllers).
+  - ✅ Both done (`dfe48ba` backend, `111b4ea` client). All notification types
+    flow through one `createNotification` helper, so that was a single hook,
+    not one per controller.
+  - ✅ EAS project linked: `6f182b5a-61e8-4be6-83a4-0accb8873ca3`
+    (kingkitty/KorusApp). Note `slug` must be `KorusApp` — Expo resolves the
+    project by slug, and a mismatch breaks token minting even with a valid id.
+  - ⬜ **BLOCKED on Firebase.** Android push goes through FCM; Expo only relays
+    to it. Verified on device — `getExpoPushTokenAsync` fails with "Unable to
+    get Firebase Messaging instance… Default FirebaseApp is not initialized".
+    Needs:
+    1. A Firebase project with an Android app for package `fun.korus.app`
+    2. Its `google-services.json` in `korus-mobile/`, referenced by
+       `expo.android.googleServicesFile` in app.json
+    3. The FCM credential uploaded to Expo (`eas credentials`) so Expo can
+       send on our behalf
+    iOS needs an APNs key instead, when that comes.
 - Deep links (`korus://post/:id`) — pairs with the existing web OG metadata
 - Offline/error states
 

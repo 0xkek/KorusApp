@@ -62,6 +62,10 @@ export function usePushRegistration(token: string | null) {
       }
 
       const projectId = getProjectId();
+      // Logged because this silently determines whether push works at all, and
+      // a wrong or missing id is otherwise indistinguishable from a delivery
+      // problem further down the chain.
+      console.log('[push] projectId:', projectId ?? 'MISSING');
       if (!projectId) {
         // Expected until `eas init` has been run. Not an error worth shouting
         // about — the notification list still works by polling.
@@ -91,12 +95,15 @@ export function usePushRegistration(token: string | null) {
         }
 
         const expoToken = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+        console.log('[push] token:', expoToken);
         if (cancelled || registered.current === expoToken) return;
 
         await notificationsAPI.registerPushToken(expoToken, token);
+        console.log('[push] registered with backend');
         registered.current = expoToken;
         if (!cancelled) setStatus('registered');
-      } catch {
+      } catch (err) {
+        console.log('[push] failed:', err instanceof Error ? err.message : String(err));
         if (!cancelled) setStatus('error');
       }
     })();
