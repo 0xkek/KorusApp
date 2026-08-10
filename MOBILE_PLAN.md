@@ -193,16 +193,25 @@ MWA handles `signTransaction`; the existing `/api/rpc` proxy handles submission.
   - ✅ EAS project linked: `6f182b5a-61e8-4be6-83a4-0accb8873ca3`
     (kingkitty/KorusApp). Note `slug` must be `KorusApp` — Expo resolves the
     project by slug, and a mismatch breaks token minting even with a valid id.
-  - ⬜ **BLOCKED on Firebase.** Android push goes through FCM; Expo only relays
-    to it. Verified on device — `getExpoPushTokenAsync` fails with "Unable to
-    get Firebase Messaging instance… Default FirebaseApp is not initialized".
-    Needs:
-    1. A Firebase project with an Android app for package `fun.korus.app`
+  - ✅ **Working end to end** — verified on a Seeker: liking a post produced
+    "New like on your post" in the notification shade.
+
+    Android push is relayed through FCM, so it needed all three of:
+    1. A Firebase project (`korus-a93be`) with an Android app for package
+       `fun.korus.app`
     2. Its `google-services.json` in `korus-mobile/`, referenced by
-       `expo.android.googleServicesFile` in app.json
-    3. The FCM credential uploaded to Expo (`eas credentials`) so Expo can
-       send on our behalf
-    iOS needs an APNs key instead, when that comes.
+       `expo.android.googleServicesFile`. Without it
+       `getExpoPushTokenAsync` throws "Default FirebaseApp is not initialized"
+       and no token can be minted at all.
+    3. The FCM V1 service account key uploaded via `eas credentials`, or Expo
+       accepts the send and then fails with `InvalidCredentials`.
+
+    Both files are gitignored: `google-services.json` is not secret (it ships
+    in the APK) but the repo is public, and the service account key IS secret.
+    EAS cloud builds will need `google-services.json` uploaded as a file
+    secret.
+
+    iOS will need an APNs key instead, when that comes.
 - Deep links (`korus://post/:id`) — pairs with the existing web OG metadata
 - Offline/error states
 
