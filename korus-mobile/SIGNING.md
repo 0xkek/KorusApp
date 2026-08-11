@@ -103,3 +103,24 @@ Note EAS warns "googleServicesFile ... won't be uploaded" on every build.
 That fires when the config is read locally, before the file secret is
 substituted on the builder. The resource check above is what actually
 proves it worked; the warning can be ignored.
+
+---
+
+# Submission build — verified 2026-08-11
+
+EAS build `ab28b7bd-81e9-4d1a-8247-fb452efaf07c`, profile `dapp-store`,
+v1.0.0 (versionCode 1), 75 MB. **This is the APK to submit.**
+
+Supersedes `3da6529f`, which predated the shoutout card and timer.
+
+Verified the same three ways:
+
+- **Signature** — `07a24a4d4ee8f9f2a1250fae4b927f8000b976c818d7938c50dbf7b68d6652e1`,
+  matching the recorded keystore fingerprint
+- **Firebase** — `google_app_id` and `gcm_defaultSenderId` compiled into
+  resources, so push works in release
+- **Standalone** — installed with the Metro forward removed; loaded live
+  data with no dev server
+
+Artifact:
+https://expo.dev/artifacts/eas/7M5ZF7CXo6lP-PPWgkP574K39AcjY653wZlL2neu30Q.apk
