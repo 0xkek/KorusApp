@@ -20,6 +20,7 @@ import { transformPostAsync } from '@/utils/transformPost';
 import ProfileHeader from '@/components/ProfileHeader';
 import ProfileRepliesTab from '@/components/ProfileRepliesTab';
 import ProfileModals from '@/components/ProfileModals';
+import FollowListModal, { type FollowTab } from '@/components/FollowListModal';
 import type { Post } from '@/types';
 import type { UserProfile } from '@/lib/api/users';
 
@@ -42,6 +43,8 @@ export default function UserProfilePage() {
   const [followingCount, setFollowingCount] = useState(0);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  // null = closed; the tab it opens on doubles as the open flag.
+  const [followTab, setFollowTab] = useState<FollowTab | null>(null);
   const [reputationScore, setReputationScore] = useState(0);
   const isOwnProfile = publicKey?.toBase58() === profileWallet;
 
@@ -537,6 +540,7 @@ export default function UserProfilePage() {
               onTipUser={() => { setPostToTip(null); setShowTipModal(true); }}
               onCopyWallet={handleCopyWallet}
               onTabChange={setActiveTab}
+              onOpenFollows={(t) => setFollowTab(t)}
             />
 
             {/* Posts Feed */}
@@ -801,6 +805,14 @@ export default function UserProfilePage() {
       </div>
 
       {/* Modals */}
+      <FollowListModal
+        isOpen={followTab !== null}
+        onClose={() => setFollowTab(null)}
+        wallet={profileWallet}
+        displayName={displayName}
+        initialTab={followTab ?? 'followers'}
+      />
+
       <ProfileModals
         showTipModal={showTipModal}
         onCloseTip={() => { setShowTipModal(false); setPostToTip(null); }}

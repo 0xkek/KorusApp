@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { searchAPI, type SearchUser } from '../api/search';
+import { UserRow } from '../components/UserRow';
 import type { Post } from '../api/types';
 import { resolveAvatarUrl, shortAddress } from '../api/types';
 import { PostCard } from '../components/PostCard';
@@ -144,60 +145,15 @@ export function SearchScreen({ onBack, onOpenPost, onOpenProfile }: Props) {
           keyExtractor={(item) => item.walletAddress}
           keyboardShouldPersistTaps="handled"
           renderItem={({ item }) => (
-            <UserRow user={item} onPress={() => onOpenProfile(item.walletAddress)} />
+            <UserRow
+              user={item}
+              onPress={() => onOpenProfile(item.walletAddress)}
+              meta={`${item.postCount ?? 0} posts`}
+            />
           )}
         />
       )}
     </View>
-  );
-}
-
-function UserRow({ user, onPress }: { user: SearchUser; onPress: () => void }) {
-  const t = useTheme();
-  const styles = useMemo(() => makeStyles(t), [t]);
-  const avatar = resolveAvatarUrl(user.nftAvatar);
-  // Same precedence as everywhere else: username, then SNS, then wallet.
-  const sns =
-    user.snsUsername && user.snsUsername !== '__wallet__' ? user.snsUsername : null;
-  const name = user.username ? `@${user.username}` : sns ?? shortAddress(user.walletAddress);
-
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.userRow, pressed && styles.userRowPressed]}
-    >
-      {avatar ? (
-        <Image source={{ uri: avatar }} style={styles.userAvatar} />
-      ) : (
-        <View
-          style={[
-            styles.userAvatar,
-            styles.userAvatarFallback,
-            { backgroundColor: user.themeColor ?? t.mint },
-          ]}
-        >
-          <Text style={styles.userAvatarText}>
-            {user.walletAddress.slice(0, 2).toUpperCase()}
-          </Text>
-        </View>
-      )}
-      <View style={styles.userBody}>
-        <View style={styles.userNameRow}>
-          <Text style={styles.userName} numberOfLines={1}>
-            {name}
-          </Text>
-          {user.tier === 'premium' && <Text style={styles.star}>★</Text>}
-        </View>
-        {user.bio ? (
-          <Text style={styles.userBio} numberOfLines={1}>
-            {user.bio}
-          </Text>
-        ) : (
-          <Text style={styles.userMeta}>{shortAddress(user.walletAddress)}</Text>
-        )}
-      </View>
-      <Text style={styles.userMeta}>{user.postCount ?? 0} posts</Text>
-    </Pressable>
   );
 }
 

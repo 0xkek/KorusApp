@@ -25,6 +25,8 @@ interface Props {
   token?: string | null;
   onEditProfile?: () => void;
   onOpenPremium?: () => void;
+  /** Opens the follower/following list. Omit to leave the counts inert. */
+  onOpenFollows?: (tab: 'followers' | 'following') => void;
 }
 
 export function ProfileScreen({
@@ -35,6 +37,7 @@ export function ProfileScreen({
   token,
   onEditProfile,
   onOpenPremium,
+  onOpenFollows,
 }: Props) {
   const t = useTheme();
   const styles = useMemo(() => makeStyles(t), [t]);
@@ -276,8 +279,16 @@ export function ProfileScreen({
               ) : null}
 
               <View style={styles.stats}>
-                <Stat value={profile?.followerCount ?? 0} label="Followers" />
-                <Stat value={profile?.followingCount ?? 0} label="Following" />
+                <Stat
+                  value={profile?.followerCount ?? 0}
+                  label="Followers"
+                  onPress={onOpenFollows ? () => onOpenFollows('followers') : undefined}
+                />
+                <Stat
+                  value={profile?.followingCount ?? 0}
+                  label="Following"
+                  onPress={onOpenFollows ? () => onOpenFollows('following') : undefined}
+                />
                 <Stat value={profile?.reputationScore ?? 0} label="Reputation" />
               </View>
 
@@ -312,14 +323,35 @@ export function ProfileScreen({
   );
 }
 
-function Stat({ value, label }: { value: number; label: string }) {
+/** Pressable when `onPress` is given — reputation has no list behind it. */
+function Stat({
+  value,
+  label,
+  onPress,
+}: {
+  value: number;
+  label: string;
+  onPress?: () => void;
+}) {
   const t = useTheme();
   const styles = useMemo(() => makeStyles(t), [t]);
-  return (
-    <View style={styles.stat}>
+
+  const body = (
+    <>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
-    </View>
+    </>
+  );
+
+  if (!onPress) return <View style={styles.stat}>{body}</View>;
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.stat, pressed && styles.statPressed]}
+    >
+      {body}
+    </Pressable>
   );
 }
 
@@ -399,6 +431,7 @@ const makeStyles = (theme: Theme) =>
   },
   stats: { flexDirection: 'row', gap: 28, marginTop: 18 },
   stat: { alignItems: 'flex-start' },
+  statPressed: { opacity: 0.6 },
   statValue: { color: theme.text, fontSize: 17, fontWeight: '700' },
   statLabel: { color: theme.textTertiary, fontSize: 12, marginTop: 2 },
   joined: { color: theme.textTertiary, fontSize: 12, marginTop: 14 },

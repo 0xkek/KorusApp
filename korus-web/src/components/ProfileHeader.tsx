@@ -23,6 +23,8 @@ interface ProfileHeaderProps {
   onTipUser: () => void;
   onCopyWallet: () => void;
   onTabChange: (tab: 'posts' | 'replies') => void;
+  /** Opens the follower/following list. Omit to leave the counts inert. */
+  onOpenFollows?: (tab: 'followers' | 'following') => void;
 }
 
 export default function ProfileHeader({
@@ -46,6 +48,7 @@ export default function ProfileHeader({
   onTipUser,
   onCopyWallet,
   onTabChange,
+  onOpenFollows,
 }: ProfileHeaderProps) {
   return (
     <>
@@ -130,14 +133,22 @@ export default function ProfileHeader({
 
         {/* Follower / Following + Rep */}
         <div className="flex items-center gap-4 text-[14px]">
-          <span>
+          <button
+            onClick={() => onOpenFollows?.('following')}
+            disabled={!onOpenFollows}
+            className="hover:underline disabled:no-underline disabled:cursor-default"
+          >
             <strong className="text-[var(--color-text)]">{followingCount}</strong>
             <span className="text-[var(--color-text-tertiary)] ml-1">Following</span>
-          </span>
-          <span>
+          </button>
+          <button
+            onClick={() => onOpenFollows?.('followers')}
+            disabled={!onOpenFollows}
+            className="hover:underline disabled:no-underline disabled:cursor-default"
+          >
             <strong className="text-[var(--color-text)]">{followerCount}</strong>
             <span className="text-[var(--color-text-tertiary)] ml-1">Followers</span>
-          </span>
+          </button>
           {reputationScore > 0 && (
             <span className="flex items-center gap-1">
               <svg className="w-4 h-4 text-korus-primary" fill="currentColor" viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 12L2 9l4-6z"/></svg>

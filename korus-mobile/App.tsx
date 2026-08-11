@@ -24,6 +24,7 @@ import { GameDetailScreen } from './src/screens/GameDetailScreen';
 import { EventsScreen } from './src/screens/EventsScreen';
 import { WalletScreen } from './src/screens/WalletScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
+import { FollowListScreen } from './src/screens/FollowListScreen';
 import { MenuDrawer } from './src/components/MenuDrawer';
 import { TopTabs, type TopTab } from './src/components/TopTabs';
 import { notificationsAPI } from './src/api/notifications';
@@ -48,7 +49,13 @@ type Screen =
   | { name: 'premium' }
   | { name: 'wallet' }
   | { name: 'settings' }
-  | { name: 'game'; gameId: string };
+  | { name: 'game'; gameId: string }
+  | {
+      name: 'follows';
+      walletAddress: string;
+      tab: 'followers' | 'following';
+      displayName?: string | null;
+    };
 
 /**
  * Minimal stack. Deliberately not expo-router yet — Phase 2 is three screens,
@@ -292,6 +299,24 @@ function KorusApp({ auth }: { auth: ReturnType<typeof useWalletAuth> }) {
             token={auth.token}
             onEditProfile={() => setScreen({ name: 'editProfile' })}
             onOpenPremium={() => setScreen({ name: 'premium' })}
+            onOpenFollows={(followTab) =>
+              setScreen({
+                name: 'follows',
+                walletAddress: screen.walletAddress,
+                tab: followTab,
+              })
+            }
+          />
+        ) : screen.name === 'follows' ? (
+          <FollowListScreen
+            walletAddress={screen.walletAddress}
+            initialTab={screen.tab}
+            displayName={screen.displayName}
+            // Back goes to the profile these lists belong to, not the feed.
+            onBack={() =>
+              setScreen({ name: 'profile', walletAddress: screen.walletAddress })
+            }
+            onOpenProfile={(wallet) => setScreen({ name: 'profile', walletAddress: wallet })}
           />
         ) : (
           // All four tabs share one header, so switching between them does not

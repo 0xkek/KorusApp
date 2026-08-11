@@ -84,19 +84,44 @@ export const toggleFollow = async (req: AuthRequest, res: Response) => {
   }
 }
 
+/**
+ * Both follow lists are public and unauthenticated, and both page the same
+ * way. `count` stays the TOTAL rather than the page length, so a caller can
+ * render "1,204 followers" while holding only the first page.
+ */
+const FOLLOW_PAGE_SIZE = 30
+const FOLLOW_PAGE_MAX = 100
+
+function pageParams(req: AuthRequest) {
+  const limit = Math.min(
+    Math.max(parseInt(String(req.query.limit ?? FOLLOW_PAGE_SIZE), 10) || FOLLOW_PAGE_SIZE, 1),
+    FOLLOW_PAGE_MAX
+  )
+  const offset = Math.max(parseInt(String(req.query.offset ?? 0), 10) || 0, 0)
+  return { limit, offset }
+}
+
 export const getFollowers = async (req: AuthRequest, res: Response) => {
   try {
     const { wallet } = req.params
-    const followers = await prisma.follow.findMany({
-      where: { followingWallet: wallet },
-      include: { follower: { select: authorSelect } },
-      orderBy: { createdAt: 'desc' }
-    })
+    const { limit, offset } = pageParams(req)
+
+    const [rows, total] = await Promise.all([
+      prisma.follow.findMany({
+        where: { followingWallet: wallet },
+        include: { follower: { select: authorSelect } },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.follow.count({ where: { followingWallet: wallet } }),
+    ])
 
     res.json({
       success: true,
-      followers: followers.map(f => f.follower),
-      count: followers.length
+      followers: rows.map(f => f.follower),
+      count: total,
+      hasMore: offset + rows.length < total,
     })
   } catch (error) {
     logger.error('Get followers error:', error)
@@ -107,16 +132,24 @@ export const getFollowers = async (req: AuthRequest, res: Response) => {
 export const getFollowing = async (req: AuthRequest, res: Response) => {
   try {
     const { wallet } = req.params
-    const following = await prisma.follow.findMany({
-      where: { followerWallet: wallet },
-      include: { following: { select: authorSelect } },
-      orderBy: { createdAt: 'desc' }
-    })
+    const { limit, offset } = pageParams(req)
+
+    const [rows, total] = await Promise.all([
+      prisma.follow.findMany({
+        where: { followerWallet: wallet },
+        include: { following: { select: authorSelect } },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.follow.count({ where: { followerWallet: wallet } }),
+    ])
 
     res.json({
       success: true,
-      following: following.map(f => f.following),
-      count: following.length
+      following: rows.map(f => f.following),
+      count: total,
+      hasMore: offset + rows.length < total,
     })
   } catch (error) {
     logger.error('Get following error:', error)

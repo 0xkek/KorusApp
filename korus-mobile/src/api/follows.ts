@@ -1,4 +1,29 @@
 import { api } from './client';
+import type { ListUser } from '../components/UserRow';
+
+/**
+ * A user in a follow list. Matches authorSelect in the backend's
+ * followController — a deliberate allowlist, so no private fields here.
+ */
+export interface FollowUser extends ListUser {
+  followerCount: number | null;
+  followingCount: number | null;
+}
+
+/** `count` is the TOTAL, not the length of this page. */
+interface FollowersResponse {
+  success: boolean;
+  followers: FollowUser[];
+  count: number;
+  hasMore?: boolean;
+}
+
+interface FollowingResponse {
+  success: boolean;
+  following: FollowUser[];
+  count: number;
+  hasMore?: boolean;
+}
 
 export const followsAPI = {
   /**
@@ -18,5 +43,17 @@ export const followsAPI = {
       '/api/follows/check',
       { wallets },
       token
+    ),
+
+  /** Who follows this wallet. Public — no token needed. */
+  getFollowers: (wallet: string, params: { limit?: number; offset?: number } = {}) =>
+    api.get<FollowersResponse>(
+      `/api/follows/${wallet}/followers?limit=${params.limit ?? 30}&offset=${params.offset ?? 0}`
+    ),
+
+  /** Who this wallet follows. Public — no token needed. */
+  getFollowing: (wallet: string, params: { limit?: number; offset?: number } = {}) =>
+    api.get<FollowingResponse>(
+      `/api/follows/${wallet}/following?limit=${params.limit ?? 30}&offset=${params.offset ?? 0}`
     ),
 };

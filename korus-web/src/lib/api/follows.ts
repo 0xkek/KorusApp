@@ -21,12 +21,21 @@ export const followsAPI = {
     return api.post(`/api/follows/${wallet}/toggle`, {}, token);
   },
 
-  async getFollowers(wallet: string): Promise<{ success: boolean; followers: FollowUser[]; count: number }> {
-    return api.get(`/api/follows/${wallet}/followers`);
+  /** `count` is the total, not the length of this page. */
+  async getFollowers(
+    wallet: string,
+    params: { limit?: number; offset?: number } = {}
+  ): Promise<{ success: boolean; followers: FollowUser[]; count: number; hasMore?: boolean }> {
+    const { limit = 30, offset = 0 } = params;
+    return api.get(`/api/follows/${wallet}/followers?limit=${limit}&offset=${offset}`);
   },
 
-  async getFollowing(wallet: string): Promise<{ success: boolean; following: FollowUser[]; count: number }> {
-    return api.get(`/api/follows/${wallet}/following`);
+  async getFollowing(
+    wallet: string,
+    params: { limit?: number; offset?: number } = {}
+  ): Promise<{ success: boolean; following: FollowUser[]; count: number; hasMore?: boolean }> {
+    const { limit = 30, offset = 0 } = params;
+    return api.get(`/api/follows/${wallet}/following?limit=${limit}&offset=${offset}`);
   },
 
   async checkFollowing(wallets: string[], token: string): Promise<{ success: boolean; following: Record<string, boolean> }> {
