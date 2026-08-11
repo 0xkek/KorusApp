@@ -32,12 +32,16 @@ const config = {
   "android": {
     "package": "fun.korus.app",
     /*
-     * Pinned rather than left to EAS remote versioning: the dapp-store
-     * profile sets autoIncrement false, so a rebuild would reuse the
-     * versionCode of the 1.0.0 submission and the portal rejects a
-     * duplicate. Bump this by hand for every dApp Store release.
+     * No versionCode here on purpose. eas.json sets appVersionSource remote,
+     * so EAS holds the counter server-side and ignores this field entirely
+     * (it warns as much on build). The dapp-store profile also sets
+     * autoIncrement false so a rebuild does not silently advance it.
+     *
+     * To ship a new dApp Store release, raise the remote counter first —
+     * the portal rejects a duplicate versionCode:
+     *
+     *   eas build:version:set --platform android
      */
-    "versionCode": 2,
     /*
      * `permissions` ADDS to Expo's default manifest template; it does not
      * replace it. Removing a default therefore requires blockedPermissions,
