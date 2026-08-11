@@ -73,8 +73,9 @@ export class GameExpirationService {
 
       logger.info(`Processed ${expiredGames.length} expired games`);
     } catch (error) {
+      // Never rethrow: this runs unawaited from startPeriodicCheck, so a
+      // rejection here would surface as an unhandled rejection and exit the process.
       logger.error('Error in processExpiredGames:', error);
-      throw error;
     }
   }
 
@@ -206,15 +207,22 @@ export class GameExpirationService {
   startPeriodicCheck(): NodeJS.Timeout {
     logger.info('Starting periodic game expiration checks (every 60 seconds)');
 
+    // Belt-and-braces: the tasks already swallow their own errors, but the job must
+    // never be able to take the server down, so guard the unawaited calls too.
+    const runTick = () => {
+      void this.processExpiredGames().catch((error) => {
+        logger.error('Unexpected error from processExpiredGames tick:', error);
+      });
+      void this.processMoveTimeouts().catch((error) => {
+        logger.error('Unexpected error from processMoveTimeouts tick:', error);
+      });
+    };
+
     // Run immediately
-    this.processExpiredGames();
-    this.processMoveTimeouts();
+    runTick();
 
     // Then run every minute
-    return setInterval(() => {
-      this.processExpiredGames();
-      this.processMoveTimeouts();
-    }, 60 * 1000); // 60 seconds
+    return setInterval(runTick, 60 * 1000); // 60 seconds
   }
 }
 
