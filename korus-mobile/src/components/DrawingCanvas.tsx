@@ -203,7 +203,18 @@ export function DrawingCanvas({ onCancel, onSave }: Props) {
             style={[styles.canvas, { height: size.h }]}
             {...pan.panHandlers}
           >
-            <Svg ref={svgRef} width={size.w} height={size.h}>
+            {/* The viewBox is what makes the 2x export work. toDataURL's
+                width/height set the output bitmap size but do not scale the
+                coordinate space, so without it the strokes render at their
+                original 1:1 coordinates into a canvas twice the size — the
+                drawing lands in the top-left quadrant and is cropped on the
+                right and bottom. */}
+            <Svg
+              ref={svgRef}
+              width={size.w}
+              height={size.h}
+              viewBox={`0 0 ${size.w} ${size.h}`}
+            >
               {/* Explicit white ground: without it the exported PNG is
                   transparent, which reads as black in the feed's dark theme. */}
               <Rect x={0} y={0} width={size.w} height={size.h} fill="#FFFFFF" />
