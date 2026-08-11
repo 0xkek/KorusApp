@@ -90,7 +90,9 @@ const config = {
     "favicon": "./assets/favicon.png"
   },
   "plugins": [
-    "expo-notifications"
+    "expo-notifications",
+    // Drops the x86/x86_64 slices, which are emulator-only. See the plugin.
+    "./plugins/withArmOnlyAbis"
   ],
   "owner": "kingkitty",
   "extra": {

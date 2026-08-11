@@ -1,6 +1,7 @@
 import { useState, useMemo} from 'react';
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,6 +14,7 @@ import {
 import { postsAPI } from '../api/posts';
 import { SHOUTOUT_OPTIONS, shoutoutPrice } from '../api/shoutouts';
 import { TREASURY_WALLET } from '../api/subscription';
+import { DrawingCanvas } from '../components/DrawingCanvas';
 import { isUserDeclined, sendSol } from '../wallet/solTransfer';
 import { useTheme , type Theme } from '../theme';
 
@@ -43,10 +45,17 @@ export function ComposeScreen({
   // null = ordinary post. Replies cannot be promoted.
   const [shoutout, setShoutout] = useState<number | null>(null);
   const [orphanSignature, setOrphanSignature] = useState<string | null>(null);
+  // A finished drawing, as a base64 PNG data URL. The backend uploads it to
+  // Cloudinary, so it is sent inline rather than through the upload endpoint.
+  const [drawing, setDrawing] = useState<string | null>(null);
+  const [drawingOpen, setDrawingOpen] = useState(false);
 
   const isReply = Boolean(replyToPostId);
   const trimmed = content.trim();
-  const canSubmit = trimmed.length > 0 && trimmed.length <= MAX_LENGTH && !busy;
+  // A drawing on its own is a valid post, as on the web — but replies take
+  // text only, since createReply has no imageUrl.
+  const hasBody = trimmed.length > 0 || (!isReply && drawing !== null);
+  const canSubmit = hasBody && trimmed.length <= MAX_LENGTH && !busy;
 
   async function submit() {
     if (!canSubmit) return;
@@ -75,7 +84,12 @@ export function ComposeScreen({
 
         try {
           await postsAPI.createPost(
-            { content: trimmed, shoutoutDuration: shoutout, transactionSignature: signature },
+            {
+              content: trimmed,
+              ...(drawing ? { imageUrl: drawing } : {}),
+              shoutoutDuration: shoutout,
+              transactionSignature: signature,
+            },
             token
           );
           onPosted();
@@ -92,7 +106,10 @@ export function ComposeScreen({
         return;
       }
 
-      await postsAPI.createPost({ content: trimmed }, token);
+      await postsAPI.createPost(
+        { content: trimmed, ...(drawing ? { imageUrl: drawing } : {}) },
+        token
+      );
       onPosted();
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -150,6 +167,45 @@ export function ComposeScreen({
         <Text style={[styles.counter, trimmed.length > MAX_LENGTH && styles.counterOver]}>
           {trimmed.length}/{MAX_LENGTH}
         </Text>
+
+        {/* Drawings attach to top-level posts only — createReply takes text. */}
+        {!isReply ? (
+          drawing ? (
+            <View style={styles.drawingPreview}>
+              <Image
+                source={{ uri: drawing }}
+                style={styles.drawingImage}
+                resizeMode="contain"
+              />
+              <View style={styles.drawingActions}>
+                <Pressable
+                  onPress={() => {
+                    setDrawing(null);
+                    setDrawingOpen(true);
+                  }}
+                  hitSlop={8}
+                >
+                  <Text style={styles.drawingEdit}>Redraw</Text>
+                </Pressable>
+                <Pressable onPress={() => setDrawing(null)} hitSlop={8}>
+                  <Text style={styles.drawingRemove}>Remove</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : drawingOpen ? (
+            <DrawingCanvas
+              onCancel={() => setDrawingOpen(false)}
+              onSave={(dataUrl) => {
+                setDrawing(dataUrl);
+                setDrawingOpen(false);
+              }}
+            />
+          ) : (
+            <Pressable onPress={() => setDrawingOpen(true)} style={styles.drawButton}>
+              <Text style={styles.drawButtonText}>✏️  Draw something</Text>
+            </Pressable>
+          )
+        ) : null}
 
         {orphanSignature ? (
           <View style={styles.warning}>
@@ -243,6 +299,34 @@ const makeStyles = (theme: Theme) =>
   },
   counter: { color: theme.textTertiary, fontSize: 13, textAlign: 'right' },
   counterOver: { color: theme.error },
+  drawButton: {
+    marginTop: 14,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+  },
+  drawButtonText: { color: theme.textSecondary, fontSize: 14, fontWeight: '600' },
+  drawingPreview: {
+    marginTop: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.border,
+    overflow: 'hidden',
+  },
+  // 550:300 from the web canvas, so the preview matches what was drawn.
+  drawingImage: { width: '100%', aspectRatio: 550 / 300, backgroundColor: '#FFFFFF' },
+  drawingActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  drawingEdit: { color: theme.mint, fontSize: 13, fontWeight: '700' },
+  drawingRemove: { color: theme.textTertiary, fontSize: 13, fontWeight: '600' },
   shoutout: {
     marginTop: 14,
     paddingTop: 14,
