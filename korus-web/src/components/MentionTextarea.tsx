@@ -73,7 +73,11 @@ const MentionTextarea = forwardRef<MentionTextareaRef, MentionTextareaProps>(({
   const detectMention = useCallback((text: string, cursorPos: number) => {
     // Look backwards from cursor for an @ symbol
     const beforeCursor = text.slice(0, cursorPos);
-    const mentionMatch = beforeCursor.match(/@([a-zA-Z0-9_]{0,20})$/);
+    // Partial, mid-typing prefix — not the finished-mention pattern used by
+    // the backend parser and the linkifier. Dots are allowed so a user can
+    // keep typing "@kingkitty.sol" without the suggestion list vanishing at
+    // the dot; length matches those patterns' 32.
+    const mentionMatch = beforeCursor.match(/@([a-zA-Z0-9_.]{0,32})$/);
 
     if (mentionMatch) {
       const query = mentionMatch[1];

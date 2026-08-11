@@ -20,8 +20,15 @@ export interface SanitizeOptions {
  * Convert @username mentions to clickable links
  */
 function linkifyMentions(content: string): string {
+  // Must stay in step with parseMentions in korus-backend
+  // (src/utils/mentions.ts) — that decides who gets notified, this decides
+  // what looks like a link. When they disagree, a mention renders as a link
+  // that never notified anyone, or notifies someone with nothing to click.
+  //
+  // The `.sol` branch matters: SNS domains are a first-class identity on
+  // Korus, and the previous pattern stopped at the dot.
   return content.replace(
-    /@([a-zA-Z0-9_]{1,20})\b/g,
+    /@([a-zA-Z0-9_]{1,32}(?:\.sol)?)(?![a-zA-Z0-9_]|\.[a-zA-Z0-9_])/g,
     '<a href="/profile/$1" class="mention-link">@$1</a>'
   );
 }
