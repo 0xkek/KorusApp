@@ -11,6 +11,8 @@ const STATIC_ROUTES: MetadataRoute.Sitemap = [
   { url: `${SITE_URL}/events`, changeFrequency: 'daily', priority: 0.8 },
   { url: `${SITE_URL}/games`, changeFrequency: 'daily', priority: 0.8 },
   { url: `${SITE_URL}/welcome`, changeFrequency: 'monthly', priority: 0.5 },
+  { url: `${SITE_URL}/terms`, changeFrequency: 'yearly', priority: 0.3 },
+  { url: `${SITE_URL}/privacy`, changeFrequency: 'yearly', priority: 0.3 },
 ];
 
 // The API caps `limit` at 100, so walk cursor pages up to a sane ceiling.

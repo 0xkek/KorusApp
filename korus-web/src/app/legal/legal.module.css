@@ -1,0 +1,124 @@
+/* Shared styling for /terms and /privacy.
+   Plain long-form documents: readable measure, generous spacing, and the site
+   palette via the same CSS variables the rest of the app uses. */
+
+.page {
+  min-height: 100vh;
+  padding: 48px 24px 96px;
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.container {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.back {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--color-text-tertiary);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--korus-primary);
+}
+
+.title {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+}
+
+.updated {
+  color: var(--color-text-tertiary);
+  font-size: 14px;
+  margin: 0 0 40px;
+}
+
+.intro {
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+  margin: 0 0 40px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.section {
+  margin-bottom: 36px;
+}
+
+.heading {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 12px;
+  color: var(--color-text);
+}
+
+.section p {
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--color-text-secondary);
+  margin: 0 0 14px;
+}
+
+.section ul {
+  margin: 0 0 14px;
+  padding-left: 22px;
+}
+
+.section li {
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--color-text-secondary);
+  margin-bottom: 8px;
+}
+
+.section a {
+  color: var(--korus-primary);
+  text-decoration: none;
+}
+
+.section a:hover {
+  text-decoration: underline;
+}
+
+/* Pulled-out emphasis for the points that genuinely matter to a reader:
+   self-custody, and the irreversibility of on-chain actions. */
+.callout {
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin: 0 0 24px;
+  background: rgba(67, 233, 123, 0.06);
+}
+
+.callout p {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.footer {
+  margin-top: 56px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border-light);
+  color: var(--color-text-tertiary);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: 32px 18px 72px;
+  }
+
+  .title {
+    font-size: 30px;
+  }
+}
