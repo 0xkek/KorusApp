@@ -14,7 +14,7 @@
 const config = {
   "name": "Korus",
   "slug": "KorusApp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "orientation": "portrait",
   "icon": "./assets/icon.png",
   "scheme": "korus",
@@ -31,6 +31,13 @@ const config = {
   },
   "android": {
     "package": "fun.korus.app",
+    /*
+     * Pinned rather than left to EAS remote versioning: the dapp-store
+     * profile sets autoIncrement false, so a rebuild would reuse the
+     * versionCode of the 1.0.0 submission and the portal rejects a
+     * duplicate. Bump this by hand for every dApp Store release.
+     */
+    "versionCode": 2,
     /*
      * `permissions` ADDS to Expo's default manifest template; it does not
      * replace it. Removing a default therefore requires blockedPermissions,

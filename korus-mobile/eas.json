@@ -30,6 +30,7 @@
         "buildType": "apk"
       },
       "autoIncrement": false,
+      "appVersionSource": "local",
       "environment": "production"
     }
   },
