@@ -64,3 +64,17 @@ to update, so an hour of real use is cheap insurance.
   verification. Creating one with a future end date would confirm it.
 - The web still hides Games and Events — its sidebar links only Home and
   Profile. Mobile's navigation is now better than the site's.
+
+## Then Google Play
+
+A separate track, after the dApp Store. Two things differ:
+
+- **Format**: Play wants an `.aab`, not an APK. The `production` profile
+  already emits one — `eas build --profile production`.
+- **Signing key**: keep it separate. An APK signed with a Google Play key
+  is **rejected** by the dApp Store, so the current key stays
+  dApp-Store-only. Play App Signing will manage its own key, which is
+  fine and expected.
+
+Play also reviews crypto apps against its own policies, which the dApp
+Store does not, so expect a slower and more opinionated process.
