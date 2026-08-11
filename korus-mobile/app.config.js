@@ -31,6 +31,35 @@ const config = {
   },
   "android": {
     "package": "fun.korus.app",
+    /*
+     * `permissions` ADDS to Expo's default manifest template; it does not
+     * replace it. Removing a default therefore requires blockedPermissions,
+     * which strips it back out after the merge.
+     *
+     * The template ships SYSTEM_ALERT_WINDOW, VIBRATE and READ/WRITE_EXTERNAL_
+     * STORAGE under a comment reading "OPTIONAL PERMISSIONS, REMOVE WHATEVER
+     * YOU DO NOT NEED". Korus uses none of them: no image picker, no media
+     * library, no haptics.
+     *
+     * SYSTEM_ALERT_WINDOW is the one that actually matters. It grants drawing
+     * over other apps — the tap-jacking vector for spoofing a wallet approval
+     * dialog — and the dApp Store flags it as sensitive. A wallet-signing app
+     * requesting it invites exactly the scrutiny it should avoid. (React
+     * Native's debug manifest declares it too, for the dev overlay; that
+     * variant is debug-only and never ships.)
+     */
+    "permissions": [
+      "android.permission.INTERNET",
+      // @react-native-community/netinfo, for the offline banner.
+      "android.permission.ACCESS_NETWORK_STATE",
+      "android.permission.ACCESS_WIFI_STATE"
+    ],
+    "blockedPermissions": [
+      "android.permission.SYSTEM_ALERT_WINDOW",
+      "android.permission.VIBRATE",
+      "android.permission.READ_EXTERNAL_STORAGE",
+      "android.permission.WRITE_EXTERNAL_STORAGE"
+    ],
     "adaptiveIcon": {
       "backgroundColor": "#0a0a0a",
       "foregroundImage": "./assets/android-icon-foreground.png",
