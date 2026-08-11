@@ -25,20 +25,19 @@ aapt2 dump resources app.apk | grep google_app_id
 
 ## Still to do — needs you
 
-**1. A publisher keypair.** This owns the listing on-chain. Not the
-Android signing key; a separate Solana keypair.
-
-```bash
-solana-keygen new --outfile ~/korus-publisher.json
-```
+**1. A publisher keypair.** ✅ Done — `AML5LDd9mdQQ5uAUqQmTMh7t8NskpoATW7kMXXWz3vrX`,
+stored at `~/korus-publisher.json` (mode 600, outside the repo).
 
 Back it up off this laptop. Losing it means no further updates, with no
-support channel, because it is on-chain. Do not reuse the treasury
-wallet: publishing is rare and wants an offline key, while the treasury
-takes payments.
+support channel, because it is on-chain.
 
-**2. SOL for minting.** Publisher, App and Release NFTs each cost mint
-and rent. Balance was ~0.11 SOL, which should be ample.
+Note when importing into a browser wallet: import the **private key**
+(the JSON array), not the seed phrase. `solana-keygen` stores the key at
+the seed's root, while Phantom derives `m/44'/501'/0'/0'` — same phrase,
+different address. Importing the seed gives you a wallet that does *not*
+match the file, and funding that one would be a mistake.
+
+**2. SOL for minting.** ✅ Funded — 0.35 SOL on the publisher.
 
 **3. Create the app in the portal** at https://publish.solanamobile.com —
 this mints the NFTs. The CLI's flow changed from what MOBILE_PLAN.md
